@@ -29,7 +29,7 @@ class membership extends Model implements Auditable
     }
 
     public function user() {
-    	return $this->belongsTo("App\Group");
+    	return $this->belongsTo("App\User");
     }
 
 }

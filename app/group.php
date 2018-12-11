@@ -32,4 +32,8 @@ class group extends Model implements Auditable
     	return $this->hasMany("App\Membership");
     }
 
+    public function users() {
+        return $this->hasManyThrough('App\User', 'App\Membership', 'group_id', 'id', 'id', 'user_id');
+    }
+
 }

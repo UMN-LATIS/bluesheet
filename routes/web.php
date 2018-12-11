@@ -37,3 +37,7 @@ else {
 Route::group(['middleware' => 'auth'], function () {
 	Route::get('/', 'HomeController@index');
 });
+
+Route::group(['prefix'=>'/api/', 'middleware' => 'auth'], function () {
+    Route::resource('user', 'UserController');
+});
