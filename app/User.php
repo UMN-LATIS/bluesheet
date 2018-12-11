@@ -37,4 +37,8 @@ class User extends Authenticatable implements Auditable
         return $this->hasMany("App\Membership");
     }
 
+    public function groups() {
+        return $this->hasManyThrough('App\Group', 'App\Membership', 'user_id', 'id', 'id', 'group_id');
+    }
+
 }
