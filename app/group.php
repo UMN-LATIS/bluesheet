@@ -36,4 +36,8 @@ class group extends Model implements Auditable
         return $this->hasManyThrough('App\User', 'App\Membership', 'group_id', 'id', 'id', 'user_id');
     }
 
+    public function artifacts() {
+        return $this->hasMany("App\GroupArtifacts");
+    }
+
 }

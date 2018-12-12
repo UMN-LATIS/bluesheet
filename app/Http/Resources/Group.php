@@ -23,6 +23,7 @@ class Group extends JsonResource
             "parent_group"=>$this->parentGroup,
             "parent_group_id"=>$this->parent_group_id,
             "members"=>MembershipResource::collection($this->members),
+            "artifacts"=>$this->artifacts
         ];
     }
 }

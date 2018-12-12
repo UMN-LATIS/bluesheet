@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Resources\Group as GroupResource;
+use DB;
 
 class GroupController extends Controller
 {
@@ -60,5 +61,16 @@ class GroupController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    // get available roles for autocomplete.  Debating the samrter way to do this.
+    public function roles() {
+        $roles = DB::table('memberships')->select("role_id")
+        ->groupBy("role_id")
+        ->havingRaw("COUNT(role_id) > " . MINIMUM_ROLE_COUNT)->get()->pluck("role_id")->toArray();
+        
+        $rolesLoaded = \App\Role::find($roles);
+
+        return response()->json($rolesLoaded);
     }
 }
