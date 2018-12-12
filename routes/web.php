@@ -39,5 +39,13 @@ Route::group(['middleware' => 'auth'], function () {
 });
 
 Route::group(['prefix'=>'/api/', 'middleware' => 'auth'], function () {
+    Route::model('user', '\App\User', function() {
+
+    });
     Route::resource('user', 'UserController');
+    
+    Route::model('group', '\App\Group');
+    Route::resource('group', 'GroupController');
 });
+
+Route::any('{all}','HomeController@index')->where(['all' => '.*']);

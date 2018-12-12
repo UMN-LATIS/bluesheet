@@ -3,11 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Auth;
-use DB;
-use App\Http\Resources\User as UserResource;
+use App\Http\Resources\Group as GroupResource;
 
-class UserController extends Controller
+class GroupController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -36,20 +34,9 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($user=null)
+    public function show($group)
     {
-        // we might not get a user, and we override default laravel checks
-        if(!$user) {
-            $user = Auth::user();
-        }
-        else {
-            // TODO: check perms for this??
-        }
-        $user->load(['memberships', 'memberships.group', 'memberships.role']);
-        // $user->load('memberships');
-        // $user->load('memberships.group');
-
-        return new UserResource($user);
+        return new GroupResource($group);
     }
 
     /**
