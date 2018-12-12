@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Auth;
 
 class Membership extends JsonResource
 {
@@ -21,6 +22,7 @@ class Membership extends JsonResource
         }
 
         return [
+            "id"=>$this->id,
             "user"=>$this->user,
             "group"=>$group,
             "role"=>$this->role,

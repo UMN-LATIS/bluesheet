@@ -15,6 +15,7 @@ Vue.use(VueRouter)
 
 
 import VueSelect from 'vue-select';
+Vue.component('v-select', VueSelect)
 Vue.use(VueSelect);
 
 
@@ -37,6 +38,7 @@ Vue.component('viewgroup', require('./components/ViewGroup.vue'));
 Vue.component('editgroup', require('./components/EditGroup.vue'));
 Vue.component('members', require('./components/Members.vue'));
 Vue.component('roles', require('./components/Roles.vue'));
+Vue.component('modal', require('./components/Modal.vue'));
 
 
 /**

@@ -3,12 +3,10 @@
         <div class="alert alert-danger" role="alert" v-if="error">
             {{ error}}
         </div>
-        <button class="btn btn-outline-primary float-right" @click="editing=!editing">Edit Group</button>
-        <viewgroup :group="group" v-if="!editing && group">
+        <viewgroup :group="group" v-if="!editing && group" v-bind:editing.sync="editing">
         </viewgroup>
-        <editgroup :group="group" v-if="editing && group">
+        <editgroup :group="group" v-if="editing && group" v-bind:editing.sync="editing" v-on:update:reload="loadGroup()" >
         </editgroup>
-        <members :members="members" ></members>
     </div>
 </template>
 
@@ -24,14 +22,6 @@
         },
         mounted() {
             this.loadGroup();
-        },
-        computed: {
-            members: function() {
-                if(this.group) {
-                    return this.group.members;    
-                }
-                return [];
-            }
         },
         methods: {
             loadGroup() {

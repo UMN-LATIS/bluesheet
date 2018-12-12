@@ -47,9 +47,95 @@ class GroupController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $group)
     {
-        //
+        $group->fill($request->all());
+        $group->save();
+        $foundArtifactIds = [];
+        foreach($request->get('artifacts') as $artifact) {
+            if(isset($artifact['id'])) {
+                \App\GroupArtifact::find($artifact['id'])->fill($artifact)->save();
+                $foundArtifactIds[] = $artifact['id'];
+            }
+            else {
+                $newArtifact = new \App\GroupArtifact;
+                $newArtifact->fill($artifact);
+                $group->artifacts()->save($newArtifact);
+                $foundArtifactIds[] = $newArtifact->id;
+            }
+        }
+
+        foreach($group->artifacts as $artifact) {
+            if(!in_array($artifact->id, $foundArtifactIds)) {
+                $artifact->delete();
+            }
+        }
+
+
+        foreach($request->get('members') as $member) {
+            if(isset($member['id'])) {
+                $loadedMember = \App\Membership::find($member['id']);
+
+                // we're assigning a new role, make a new record
+                if(!isset($member['role']['id']) || $member['role']['id'] != $loadedMember->role_id) {
+                    $loadedMember->end_date = \Carbon\Carbon::now();
+                    $loadedMember->save();
+                    $newMember = $loadedMember->replicate();
+                    $newMember->fill($member);
+                    $newMember->start_date = \Carbon\Carbon::now();
+                    if(!isset($member['role']['id'])) {
+                        $role = $this->addOrFindRole($member['role']['label']);
+                        $newMember->role()->associate($role);
+                    }
+                    else {
+                        $role = $member['role']['id'];
+                        $newMember->role_id = $role;
+                    }
+
+                    if($role) {
+                        $newMember->save();    
+                    }
+                    else {
+                        return response()->json(["success"=>false, "error"=>"Could not save this role"]);
+                    }
+                    
+                }
+                else {
+                    $loadedMember->fill($member);
+                    $loadedMember->save();    
+                }
+                
+            }
+            else {
+                $newMember = new \App\Membership;
+                $newMember->fill($member);
+                $newMember->user_id = $member['user']['id'];
+                $newMember->group_id = $member['group_id'];
+                if(!$member['role']['id']) {
+                    $role = $this->addOrFindRole($member['role']['label']);
+                }
+                else {
+                    $role = $member['role']['id'];
+                }
+                $newMember->role_id = $role;
+                $group->members()->save($newMember);
+            }
+
+        }
+
+
+        return response()->json(["success"=>true]);
+    }
+
+    private function addOrFindRole($label) {
+        $role = \App\Role::where("label", $label)->first();
+        if(!$role) {
+            $role = new \App\Role;
+            $role->label = ucwords($label);
+            $role->save();
+        }
+        return $role;
+
     }
 
     /**

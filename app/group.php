@@ -13,6 +13,10 @@ class group extends Model implements Auditable
     use SoftDeletes;
     public $timestamps = true;
 
+    protected $fillable = [
+        'group_title', 'private_group'
+    ];
+
     /**
      * The attributes that should be mutated to dates.
      *
@@ -37,7 +41,7 @@ class group extends Model implements Auditable
     }
 
     public function artifacts() {
-        return $this->hasMany("App\GroupArtifacts");
+        return $this->hasMany("App\GroupArtifact");
     }
 
 }

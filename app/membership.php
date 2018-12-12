@@ -20,6 +20,8 @@ class Membership extends Model implements Auditable
      */
     protected $dates = ['deleted_at', 'start_date', 'end_date'];
 
+    protected $fillable = ['group_id', 'user_id', 'role_id', 'start_date', 'end_date', 'notes', 'admin'];
+    
     public function role() {
     	return $this->belongsTo("App\Role");
     }

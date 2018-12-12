@@ -18,7 +18,7 @@ class CreateGroupArtifactsTable extends Migration
             $table->string("label");
             $table->string("target");
             $table->integer("group_id")->unsigned();
-            $table->foreign("group_id")->references("id")->on("groups");
+            $table->foreign("group_id")->references("id")->on("groups")->onDelete('cascade');;
             $table->timestamps();
         });
 
