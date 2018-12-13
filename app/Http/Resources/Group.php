@@ -4,7 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 use App\Http\Resources\Membership as MembershipResource;
-
+use Auth;
 class Group extends JsonResource
 {
     /**
@@ -15,8 +15,10 @@ class Group extends JsonResource
      */
     public function toArray($request)
     {
+
         return [
             "id"=>$this->id,
+            "user_can_edit"=>$this->userCanEdit(Auth::user()),
             "group_title"=>$this->group_title,
             "group_type_id"=>$this->group_type_id,
             "group_type"=>$this->groupType->group_type,

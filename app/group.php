@@ -40,8 +40,29 @@ class group extends Model implements Auditable
         return $this->hasManyThrough('App\User', 'App\Membership', 'group_id', 'id', 'id', 'user_id');
     }
 
+    public function activeMembers() {
+        return $this->members()->whereNull("end_date");
+    }
+
     public function artifacts() {
         return $this->hasMany("App\GroupArtifact");
+    }
+
+    
+    public function activeUsers() {
+        return $this->activeMembers->pluck('user');
+    }
+
+    public function userCanEdit($user) {
+        $activeMembers = $this->activeMembers;
+        if($user->site_permissions >= 200 ) {
+            return true;
+        }
+        foreach($activeMembers as $member) {
+            if($member->user == $user && $member->admin) {
+                return true;
+            }
+        }
     }
 
 }

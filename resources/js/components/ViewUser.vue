@@ -2,9 +2,8 @@
     <div>
         <h1>{{ user.displayName }}</h1>
         <ul>
-            <li>{{ user.email }}</li>
-            <li>{{ user.phone }}</li>
-            <li>{{ user.office }}</li>
+            <li v-if="user.email"><a v-bind:href=" `mailto:${user.email}` ">{{user.email}}</a></li>
+            <li><a :href="'http://myaccount.umn.edu/lookup?CN=' + usernameOnly">Directory Entry</a></li>
         </ul>
     </div>
 </template>
@@ -15,6 +14,11 @@
         data() {
             return {
             
+            }
+        },
+        computed: {
+            usernameOnly: function() {
+                return this.user.email.split("@").shift();
             }
         },
         mounted() {

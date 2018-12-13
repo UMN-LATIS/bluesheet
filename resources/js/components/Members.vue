@@ -27,7 +27,7 @@
             <td>{{ member.start_date | moment("YYYY, MMM Do") }}</td>
             <td v-if="includePreviousMembers">{{ member.end_date  | moment("YYYY, MMM Do") }}</td>
             <td v-if="editing"><input class="form-check-input" type="checkbox" v-model="member.admin"></td>
-            <td v-if="editing"><button class="btn btn-danger" @click="removeMember(member)"><i class="fas fa-trash-alt"></i></button></td>
+            <td v-if="editing"><button class="btn btn-danger" @click="removeMember(member, key)"><i class="fas fa-trash-alt"></i></button></td>
         </tr>
     </tbody>
   </table>
@@ -70,8 +70,15 @@ export default {
         }
     },
     methods: {
-        removeMember: function(member) {
-            member.end_date = this.$moment().format("YYYY-MM-DD hh:mm:ss");
+        removeMember: function(removeMember, index) {
+            if(!removeMember.id) {
+                // this was an accidental record, just split it
+                this.$emit("update:members", this.members.filter(member => removeMember !== member));
+            }
+            else {
+                removeMember.end_date = this.$moment().format("YYYY-MM-DD hh:mm:ss");    
+            }
+            
         }
     }
 }

@@ -8,8 +8,9 @@
     </modal>
     <div class="row">
       <div class="col-md-12">
+        <button class="btn btn-success float-right" @click="save">Save</button>
         <button class="btn btn-outline-primary float-right" @click="$emit('update:editing', false); $emit('update:reload')">Cancel Editing</button>
-        <button class="btn btn-outline-success float-right" @click="save">Save</button>
+        
         <input class="form-control col-md-8" type="text" v-model="group.group_title">
       </div>
     </div>
@@ -24,7 +25,7 @@
 
         <div class="row">
           <div class="col-md-12">
-            <button class="btn btn-primary float-right" @click="addArtifact">Add Artifact <i class="fas fa-plus"></i></button>
+            <button class="btn btn-outline-primary float-right" @click="addArtifact">Add Artifact <i class="fas fa-plus"></i></button>
             <p>Artifacts:</p> 
           </div>
         </div>
@@ -47,11 +48,11 @@
 
 
       <div class="col-md-12">
-        <button class="btn btn-primary float-right" @click="addMember=true">Add Member <i class="fas fa-plus"></i></button>
+        <button class="btn btn-outline-primary float-right" @click="addMember=true">Add Member <i class="fas fa-plus"></i></button>
         <p>Members:</p> 
       </div>
     </div>
-    <members :members="group.members" editing="true"></members>
+    <members :members.sync="group.members" editing="true"></members>
     <modal :show="addMember" @close="addMember = !addMember">
       <div class="form-group row">
         <label for="internetId" class="col-sm-3 col-form-label">Internet ID:</label>
@@ -125,6 +126,10 @@ export default {
           this.$emit('update:reload')
         }
         this.$emit('update:editing', false); 
+      })
+      .catch(err => {
+        this.saveError = err.response.data.message;
+        this.showError = true;
       });
     },
     checkForm: function() {
@@ -150,7 +155,7 @@ export default {
    lookupMember: function() {
     axios.get("/api/user/lookup/" + this.newUserId)
     .then(res => {
-        var newMembershipRecord = { group_id: this.group.id, start_date: this.$moment().format("YYYY-MM-DD hh:mm:ss"), user: res.data};
+        var newMembershipRecord = { group_id: this.group.id, start_date: this.$moment().format("YYYY-MM-DD hh:mm:ss"), end_date: null, user: res.data};
         this.group.members.push(newMembershipRecord);
         this.addMember = false;
         this.newUserId = null;

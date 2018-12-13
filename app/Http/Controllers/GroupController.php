@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Resources\Group as GroupResource;
 use DB;
+use Auth;
 
 class GroupController extends Controller
 {
@@ -37,7 +38,13 @@ class GroupController extends Controller
      */
     public function show($group)
     {
-        return new GroupResource($group);
+        if($group->private_group && !$group->activeUsers()->contains(Auth::user()) && Auth::user()->site_permissions < 200) {
+
+        }
+        else {
+            return new GroupResource($group);    
+        }
+        
     }
 
     /**
@@ -49,6 +56,14 @@ class GroupController extends Controller
      */
     public function update(Request $request, $group)
     {
+        if(!$group->userCanEdit(Auth::user())) {
+            $returnData = array(
+                'status' => 'error',
+                'message' => "You don't have permission to edit this group"
+            );
+            return Response()->json($returnData, 500);
+        }
+
         $group->fill($request->all());
         $group->save();
         $foundArtifactIds = [];
