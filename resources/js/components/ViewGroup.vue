@@ -4,6 +4,7 @@
           <div class="col-md-12">
             <button class="btn btn-outline-primary float-right" @click="$emit('update:editing', true)" v-if="group.user_can_edit">Edit Group</button>
             <h1>{{ group.group_title }}</h1>
+            <p>{{group.notes}}</p>
         </div>
     </div>
     <p v-if="group.private_group"><strong>Private Group</strong></p>

@@ -25,6 +25,13 @@
 
         <div class="row">
           <div class="col-md-12">
+            <p>Group Notes:</p>
+            <textarea class="form-control" v-model="group.notes"></textarea>
+          </div>
+        </div>
+    
+        <div class="row">
+          <div class="col-md-12">
             <button class="btn btn-outline-primary float-right" @click="addArtifact">Add Artifact <i class="fas fa-plus"></i></button>
             <p>Artifacts:</p> 
           </div>
@@ -58,6 +65,9 @@
         <label for="internetId" class="col-sm-3 col-form-label">Internet ID:</label>
         <div class="col-sm-6">
           <input type="text" ref="addMemberRef" class="form-control" id="internetId" v-on:keyup="addMemberError = null" @keyup.enter="lookupMember" placeholder="Internet ID" v-model="newUserId">
+          <small id="addUserHelpBlock" class="form-text text-muted">
+  Comma separated list of InternetIds or email addresses works too.
+</small>
         </div>
         <div class="col-sm-3">
          <button class="btn btn-primary" @click="lookupMember">Add Member</button>
@@ -153,12 +163,22 @@ export default {
      this.group.artifacts.push({label: "", target:""});
    },
    lookupMember: function() {
-    axios.get("/api/user/lookup/" + this.newUserId)
+    axios.post("/api/user/lookup/",  {users: this.newUserId})
     .then(res => {
-        var newMembershipRecord = { group_id: this.group.id, start_date: this.$moment().format("YYYY-MM-DD hh:mm:ss"), end_date: null, user: res.data};
-        this.group.members.push(newMembershipRecord);
-        this.addMember = false;
-        this.newUserId = null;
+        for(var user of res.data.users) {
+          var newMembershipRecord = { group_id: this.group.id, start_date: this.$moment().format("YYYY-MM-DD hh:mm:ss"), end_date: null, user: user};
+          this.group.members.push(newMembershipRecord);  
+        }
+        
+        
+        
+        if(res.data.status == "Partial") {
+          this.addMemberError = res.data.message;
+        }
+        else {
+          this.newUserId = null;
+          this.addMember = false;
+        }
         // this.group = res.data;
       })
     .catch(err => {

@@ -69,8 +69,8 @@ class UserController extends Controller
         $user->fill($request->all());
         $user->save();
         $returnData = array(
-                'status' => 'success',
-            );
+            'status' => 'success',
+        );
         return Response()->json($returnData);
     }
 
@@ -85,51 +85,96 @@ class UserController extends Controller
         //
     }
 
-    public function userLookup($userId) {
+    function extract_emails($str){
+        // This regular expression extracts all emails from a string:
+        $regexp = '/([a-z0-9_\.\-])+\@(([a-z0-9\-])+\.)+([a-z0-9]{2,4})+/i';
+        preg_match_all($regexp, $str, $m);
 
-        $user = \App\User::where("email", $userId . "@umn.edu")->first();
-        if($user) {
-            return new UserResource($user);
+        return isset($m[0]) ? $m[0] : array();
+    }
+
+
+    public function userLookup(Request $request) {
+
+        $userIds = $request->get('users');
+        if(!strstr($userIds, "@")) {
+            $cleanedList = explode(",", $userIds);
         }
         else {
-            $foundUser = null;
-            putenv('LDAPTLS_REQCERT=never');
-            $connect = ldap_connect( 'ldaps://ldap-dsee.oit.umn.edu', 636);
-            $base_dn = array("o=University of Minnesota, c=US",);
-            ldap_set_option($connect, LDAP_OPT_PROTOCOL_VERSION, 3);
-            ldap_set_option($connect, LDAP_OPT_REFERRALS, 0);
-            $r=ldap_bind($connect);
-
-            $filter = "(cn=" . $userId . ")";
-            $search = ldap_search([$connect], $base_dn, $filter);
-            
-            foreach($search as $readItem) {
-
-                $info = ldap_get_entries($connect, $readItem);
-                $foundUser = new \App\User;
-                $foundUser->umndid = isset($info[0]["umndid"])?$info[0]["umndid"][0]:$username;
-                $foundUser->surname = isset($info[0]["sn"])?$info[0]["sn"][0]:$username;
-                $foundUser->givenname = isset($info[0]["givenname"])?$info[0]["givenname"][0]:$username;
-                $foundUser->displayName =isset( $info[0]["displayname"])?$info[0]["displayname"][0]:$username;
-                $foundUser->email =isset( $info[0]["mail"])?$info[0]["mail"][0]:$username;
-                $foundUser->office = isset($info[0]["umnofficeaddress1"])?$info[0]["umnofficeaddress1"][0]:$username;
-                $foundUser->site_permissions = 100;
-                break;
+            $emailList = $this->extract_emails($userIds);
+            $cleanedList = [];
+            foreach($emailList as $entry) {
+                $explodedAddress = explode("@", $entry);
+                $cleanedList[] = array_shift($explodedAddress);
             }
-            
-            if($foundUser) {
-                $foundUser->save();
-                return new UserResource($foundUser);    
+        }
+        
+        $outputArray = [];
+        $notFoundUser = [];
+        foreach($cleanedList as $userId) {
+            $user = \App\User::where("email", $userId . "@umn.edu")->first();
+            if($user) {
+                $outputArray[] = new UserResource($user);
             }
-            
+            else {
+                $foundUser = null;
+                putenv('LDAPTLS_REQCERT=never');
+                $connect = ldap_connect( 'ldaps://ldap-dsee.oit.umn.edu', 636);
+                $base_dn = array("o=University of Minnesota, c=US",);
+                ldap_set_option($connect, LDAP_OPT_PROTOCOL_VERSION, 3);
+                ldap_set_option($connect, LDAP_OPT_REFERRALS, 0);
+                $r=ldap_bind($connect);
+
+                $filter = "(cn=" . $userId . ")";
+                $search = ldap_search([$connect], $base_dn, $filter);
+                $foundUser = null;
+                foreach($search as $readItem) {
+
+                    $info = ldap_get_entries($connect, $readItem);
+                    if(!isset($info[0]["umndid"])) {
+                        continue;
+                    }
+                    $foundUser = new \App\User;
+                    $foundUser->umndid = isset($info[0]["umndid"])?$info[0]["umndid"][0]:$username;
+                    $foundUser->surname = isset($info[0]["sn"])?$info[0]["sn"][0]:$username;
+                    $foundUser->givenname = isset($info[0]["givenname"])?$info[0]["givenname"][0]:$username;
+                    $foundUser->displayName =isset( $info[0]["displayname"])?$info[0]["displayname"][0]:$username;
+                    $foundUser->email =isset( $info[0]["mail"])?$info[0]["mail"][0]:$username;
+                    $foundUser->office = isset($info[0]["umnofficeaddress1"])?$info[0]["umnofficeaddress1"][0]:$username;
+                    $foundUser->site_permissions = 100;
+                    break;
+                }
+                
+                if($foundUser) {
+                    $foundUser->save();
+                    $outputArray[] = new UserResource($foundUser);   
+                }
+                else {
+                    $notFoundUser[] = $userId;
+                }
+            }    
+        }
+        
+
+        $returnData = [];
+        $code = 200;
+        if(count($notFoundUser) == 0) {
+            $returnData['status'] = "Success";
+            $returnData['users'] = $outputArray;
+        }
+        else if(count($outputArray) == 0) {
+            $returnData['status'] = "Error";
+            $returnData['message'] = "We couldn't find that user.";
+            $code = 500;
+        }
+        else {
+            $returnData['status'] = "Partial";
+            $returnData['users'] = $outputArray;
+            $returnData['message'] = "We couldn't find these users: " . join(",", $notFoundUser);
         }
 
 
-        $returnData = array(
-            'status' => 'error',
-            'message' => "We couldn't find that user.  Make sure you're using a University of Minnesota InternetID (without the @umn.edu)"
-        );
-        return Response()->json($returnData, 500);
+        return Response()->json($returnData, $code);
     }
 
 }

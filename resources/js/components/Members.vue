@@ -11,6 +11,7 @@
             <tr>
               <th scope="col">Name</th>
               <th scope="col">Role</th>
+              <th scope="col">Notes</th>
               <th scope="col">From</th>
               <th scope="col" v-if="includePreviousMembers">Until</th>
               <th scope="col" v-if="editing">Group Admin</th>
@@ -24,6 +25,10 @@
             </td>
             <td v-if="!editing">{{ member.role.label }}</td>
             <td v-if="editing"><v-select taggable v-model="member.role" :options="roles"></v-select></td>
+            
+            <td v-if="!editing">{{ member.notes }}</td>
+            <td v-if="editing"><input class="form-control" v-model="member.notes"></textarea></td>
+            
             <td>{{ member.start_date | moment("YYYY, MMM Do") }}</td>
             <td v-if="includePreviousMembers">{{ member.end_date  | moment("YYYY, MMM Do") }}</td>
             <td v-if="editing"><input class="form-check-input" type="checkbox" v-model="member.admin"></td>
@@ -94,7 +99,7 @@ export default {
 content: normal;
 }
 .v-select.dropdown .form-control {
-height: normal;
+height: 2em;
 }
 
 </style>

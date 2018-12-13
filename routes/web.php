@@ -38,7 +38,7 @@ Route::group(['prefix'=>'/api/', 'middleware' => 'auth'], function () {
     Route::model('user', '\App\User', function() {
 
     });
-    Route::get('user/lookup/{userId}', 'UserController@userLookup');
+    Route::post('user/lookup', 'UserController@userLookup');
     Route::resource('user', 'UserController');
     
     Route::get('group/roles', 'GroupController@roles');
