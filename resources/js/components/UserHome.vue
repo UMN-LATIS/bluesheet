@@ -1,12 +1,11 @@
 <template>
-    <div class="container">
+    <div>
         <div class="alert alert-danger" role="alert" v-if="error">
             {{ error}}
         </div>
-        <button class="btn btn-outline-primary float-right" @click="editing=!editing">Edit User</button>
-        <viewuser :user="user" v-if="!editing && user">
+        <viewuser :user="user" v-if="!editing && user" v-bind:editing.sync="editing" :userperms="userperms">
         </viewuser>
-        <edituser :user="user" v-if="editing && user">
+        <edituser :user="user" v-if="editing && user" v-bind:editing.sync="editing" :userperms="userperms">
         </edituser>
         <roles :memberships="memberships" ></roles>
     </div>
@@ -14,7 +13,7 @@
 
 <script>
     export default {
-        props: ['userId'],
+        props: ['userId', 'userperms'],
         data() {
             return {
                 error: null,
@@ -31,6 +30,11 @@
                     return this.user.memberships;    
                 }
                 return [];
+            }
+        },
+        watch: {
+            userId: function(){
+                this.loadUser();
             }
         },
         methods: {

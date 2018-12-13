@@ -22,6 +22,7 @@ class User extends JsonResource
             'surname' => $this->surname,
             'displayName' => $this->displayName,
             'email' => $this->email,
+            'site_permissions' => $this->site_permissions,
             'memberships' => MembershipResource::collection($this->memberships),
         ];
     }

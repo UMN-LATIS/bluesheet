@@ -16,7 +16,7 @@
     </div>
     <div class="row">
       <div class="col-md-12">
-        <div class="form-check">
+        <div class="form-check d-none">
           <input class="form-check-input" type="checkbox" v-model="group.private_group" id="privateGroup">
           <label class="form-check-label" for="privateGroup">
             Private Group

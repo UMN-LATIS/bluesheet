@@ -57,9 +57,21 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $user)
     {
-        //
+        if(Auth::user()->site_permissions < 200) {
+            $returnData = array(
+                'status' => 'error',
+                'message' => "You don't have permission to create a user"
+            );
+            return Response()->json($returnData, 500);
+        }
+        $user->fill($request->all());
+        $user->save();
+        $returnData = array(
+                'status' => 'success',
+            );
+        return Response()->json($returnData);
     }
 
     /**

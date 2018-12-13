@@ -1,5 +1,5 @@
 @extends('base')
 
 @section('content')
-	<home></home>
+	<home :userperms="{{ Auth::user()->site_permissions }}"></home>
 @endsection

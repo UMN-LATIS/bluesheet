@@ -16,7 +16,8 @@ class GroupController extends Controller
      */
     public function index()
     {
-        //
+
+         return GroupResource::collection(\App\Group::all());
     }
 
     /**
@@ -27,7 +28,24 @@ class GroupController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        if(Auth::user()->site_permissions < 200) {
+             $returnData = array(
+                'status' => 'error',
+                'message' => "You don't have permission to create a group"
+            );
+            return Response()->json($returnData, 500);
+        }
+
+        $newGroup = new \App\Group;
+        $newGroup->group_title = $request->get("groupName");
+        $newGroup->group_type_id = 1;
+        $newGroup->active_group = 1;
+        $newGroup->save();
+        $returnData = array(
+            'status' => 'success',
+            'id' => $newGroup->id
+        );
+        return Response()->json($returnData);
     }
 
     /**
@@ -126,13 +144,15 @@ class GroupController extends Controller
                 $newMember->fill($member);
                 $newMember->user_id = $member['user']['id'];
                 $newMember->group_id = $member['group_id'];
-                if(!$member['role']['id']) {
+                if(!isset($member['role']['id'])) {
                     $role = $this->addOrFindRole($member['role']['label']);
+                    $newMember->role()->associate($role);
                 }
                 else {
                     $role = $member['role']['id'];
+                    $newMember->role_id = $role;
                 }
-                $newMember->role_id = $role;
+                
                 $group->members()->save($newMember);
             }
 

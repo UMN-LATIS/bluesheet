@@ -31,6 +31,9 @@ Vue.component('userhome', UserHome);
 import Group from './components/Group.vue';
 Vue.component('group', Group);
 
+import GroupList from './components/GroupList.vue';
+Vue.component('grouplist', GroupList);
+
 Vue.component('home', require('./components/Home.vue'));
 Vue.component('viewuser', require('./components/ViewUser.vue'));
 Vue.component('edituser', require('./components/EditUser.vue'));
@@ -39,6 +42,8 @@ Vue.component('editgroup', require('./components/EditGroup.vue'));
 Vue.component('members', require('./components/Members.vue'));
 Vue.component('roles', require('./components/Roles.vue'));
 Vue.component('modal', require('./components/Modal.vue'));
+Vue.component('userlookup', require('./components/UserLookup.vue'));
+Vue.component('creategroup', require('./components/CreateGroup.vue'));
 
 
 /**
@@ -54,6 +59,7 @@ const router = new VueRouter({
     { path: "/", component: UserHome },
     { name: 'user', path: "/user/:userId", component: UserHome, props:true },
     { name: 'group', path: "/group/:groupId", component: Group, props:true },
+    { name: 'groupList', path: "/groups/", component: GroupList, props:true },
   ]
 })
 

@@ -1,5 +1,10 @@
 <template>
     <div>
+         <div class="row">
+      <div class="col-md-12">
+        <button class="btn btn-outline-primary float-right" @click="$emit('update:editing', true)">Edit</button>
+      </div>
+    </div>
         <h1>{{ user.displayName }}</h1>
         <ul>
             <li v-if="user.email"><a v-bind:href=" `mailto:${user.email}` ">{{user.email}}</a></li>
