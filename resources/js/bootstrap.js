@@ -1,5 +1,12 @@
 
-window._ = require('lodash');
+// window._ = require('lodash');
+// 
+import sortBy from 'lodash/sortBy';
+import get from 'lodash/get';
+
+window._ = {};
+window._.sortBy = sortBy;
+window._.get = get;
 
 /**
  * We'll load jQuery and the Bootstrap jQuery plugin which provides support

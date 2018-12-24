@@ -45,10 +45,13 @@
                 this.$emit('close');
             },
             lookupUser: function() {
-                axios.get("/api/user/lookup/" + this.userLookupId)
+                axios.post("/api/user/lookup/", {users:this.userLookupId})
                 .then(res => {
-                    this.$router.push({ name: 'user', params: {'userId': res.data.id}});
+                    for(var user of res.data.users) {
+                    this.$router.push({ name: 'user', params: {'userId': user.id}});
                     this.close();
+                    }
+                    
                 })
                 .catch(err => {
                     this.findUserError = err.response.data.message;

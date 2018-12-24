@@ -28,7 +28,7 @@ class GroupController extends Controller
      */
     public function store(Request $request)
     {
-        if(Auth::user()->site_permissions < 200) {
+        if(Auth::user()->site_permissions < 100) {
              $returnData = array(
                 'status' => 'error',
                 'message' => "You don't have permission to create a group"
@@ -117,7 +117,7 @@ class GroupController extends Controller
                     $newMember->fill($member);
                     $newMember->start_date = \Carbon\Carbon::now();
                     if(!isset($member['role']['id'])) {
-                        $role = $this->addOrFindRole($member['role']['label']);
+                        $role = $this->addOrFindRole($member['role']);
                         $newMember->role()->associate($role);
                     }
                     else {
@@ -145,7 +145,7 @@ class GroupController extends Controller
                 $newMember->user_id = $member['user']['id'];
                 $newMember->group_id = $member['group_id'];
                 if(!isset($member['role']['id'])) {
-                    $role = $this->addOrFindRole($member['role']['label']);
+                    $role = $this->addOrFindRole($member['role']);
                     $newMember->role()->associate($role);
                 }
                 else {

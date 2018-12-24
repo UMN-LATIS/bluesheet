@@ -57,7 +57,7 @@ const router = new VueRouter({
     mode: 'history',
   routes: [
     { path: "/", component: UserHome },
-    { name: 'user', path: "/user/:userId", component: UserHome, props:true },
+    { name: 'user', path: "/user/:userId?", component: UserHome, props:true },
     { name: 'group', path: "/group/:groupId", component: Group, props:true },
     { name: 'groupList', path: "/groups/", component: GroupList, props:true },
   ]

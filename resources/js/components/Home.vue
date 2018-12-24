@@ -65,7 +65,7 @@
         },
         computed: {
             isAdmin: function() {
-                return this.userperms >= 100;
+                return this.userperms >= 200;
             }
         },
         methods: {

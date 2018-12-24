@@ -16,12 +16,15 @@
         "jquery": "^3.2",
         "laravel-mix": "^2.0",
         "lodash": "^4.17.5",
+        "node-sass": "^4.11.0",
         "popper.js": "^1.12",
+        "sass-loader": "^7.1.0",
         "vue": "^2.5.17"
     },
     "dependencies": {
         "vue-moment": "^4.0.0",
         "vue-router": "^3.0.2",
-        "vue-select": "^2.5.1"
+        "vue-select": "^2.5.1",
+        "webpack-bundle-analyzer": "^3.0.3"
     }
 }

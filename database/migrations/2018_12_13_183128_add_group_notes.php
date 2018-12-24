@@ -14,7 +14,7 @@ class AddGroupNotes extends Migration
     public function up()
     {
         Schema::table('groups', function(Blueprint $table) {
-            $table->text("notes");
+            $table->text("notes")->nullable();
         });
     }
 

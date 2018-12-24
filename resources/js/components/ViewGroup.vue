@@ -18,7 +18,7 @@
         <div class="row">
             <div class="col-md-12">
                 <p>Email list:</p>
-                <textarea class="form-control" @click="$event.target.select()" :value=emailList></textarea>
+                <textarea class="form-control" @click="$event.target.select()" :value=emailList rows=10></textarea>
             </div>
         </div>
     </modal>
