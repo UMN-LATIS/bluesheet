@@ -45,6 +45,14 @@ class GroupController extends Controller
             'status' => 'success',
             'id' => $newGroup->id
         );
+
+        $newMember = new \App\Membership;
+        $newMember->user()->associate(Auth::user());
+        $role = $this->addOrFindRole("member");
+        $newMember->role()->associate($role);
+        $newMember->start_date = \Carbon\Carbon::now();
+        $newMember->admin = true;
+        $newGroup->members()->save($newMember);
         return Response()->json($returnData);
     }
 
@@ -56,7 +64,7 @@ class GroupController extends Controller
      */
     public function show($group)
     {
-        if($group->private_group && !$group->activeUsers()->contains(Auth::user()) && Auth::user()->site_permissions < 200) {
+        if(!$group->activeUsers()->contains(Auth::user()) && Auth::user()->site_permissions < 200) {
 
         }
         else {

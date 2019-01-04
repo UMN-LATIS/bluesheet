@@ -28,6 +28,10 @@ Vue.use(VueMoment);
 import UserHome from './components/UserHome.vue';
 Vue.component('userhome', UserHome);
 
+import UserList from './components/UserList.vue';
+Vue.component('userlist', UserList);
+
+
 import Group from './components/Group.vue';
 Vue.component('group', Group);
 
@@ -58,6 +62,7 @@ const router = new VueRouter({
   routes: [
     { path: "/", component: UserHome },
     { name: 'user', path: "/user/:userId?", component: UserHome, props:true },
+    { name: 'userList', path: "/userList/", component: UserList, props: (route) => ({ users: route.query.users })},
     { name: 'group', path: "/group/:groupId", component: Group, props:true },
     { name: 'groupList', path: "/groups/", component: GroupList, props:true },
   ]

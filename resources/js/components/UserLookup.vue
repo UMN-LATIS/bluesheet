@@ -4,6 +4,9 @@
             <label for="internetId" class="col-sm-3 col-form-label">Internet ID:</label>
             <div class="col-sm-6">
                 <input type="text" ref="findMemberRef" class="form-control" id="internetId" v-on:keyup="findUserError = null" @keyup.enter="lookupUser" placeholder="Internet ID" v-model="userLookupId">
+                <small id="addUserHelpBlock" class="form-text text-muted">
+                Comma separated list of InternetIds or email addresses works too.
+            </small>
             </div>
             <div class="col-sm-3">
                 <button class="btn btn-primary" @click="lookupUser">Find User</button>
@@ -47,11 +50,14 @@
             lookupUser: function() {
                 axios.post("/api/user/lookup/", {users:this.userLookupId})
                 .then(res => {
-                    for(var user of res.data.users) {
-                    this.$router.push({ name: 'user', params: {'userId': user.id}});
-                    this.close();
-                    }
-                    
+                   if(res.data.users.length == 1) {
+                        this.$router.push({ name: 'user', params: {'userId': res.data.users[0].id}});
+                        this.close();  
+                   }
+                   else {
+                        this.$router.push({ name: 'userList', query: {'users': res.data.users.map(u=> u.id)}});
+                        this.close();
+                   }
                 })
                 .catch(err => {
                     this.findUserError = err.response.data.message;

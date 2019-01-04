@@ -42,12 +42,20 @@ class UserController extends Controller
         if(!$user) {
             $user = Auth::user();
         }
-        else {
-            // TODO: check perms for this??
-        }
-        $user->load(['memberships', 'memberships.group', 'memberships.role']);
         
-        return new UserResource($user);
+        if($user != Auth::user() && Auth::user()->site_permissions < 200) {
+            $returnData = array(
+                'status' => 'error',
+                'message' => "You don't have permission to view this user"
+            );
+            return Response()->json($returnData, 500);
+        }
+        else {
+            $user->load(['memberships', 'memberships.group', 'memberships.role']);
+        
+            return new UserResource($user);    
+        }
+        
     }
 
     /**
@@ -97,6 +105,14 @@ class UserController extends Controller
     public function userLookup(Request $request) {
 
         $userIds = $request->get('users');
+        if(is_array($userIds) && count($userIds) == count(array_filter($userIds, 'is_numeric'))) {
+            $users = \App\User::whereIn("id", $userIds)->get();
+            $code = 200;
+            $returnData['status'] = "Success";
+            $returnData['users'] = UserResource::collection($users);
+            return Response()->json($returnData, $code);
+        }
+
         if(!strstr($userIds, "@")) {
             $cleanedList = explode(",", $userIds);
         }
@@ -112,6 +128,7 @@ class UserController extends Controller
         $outputArray = [];
         $notFoundUser = [];
         foreach($cleanedList as $userId) {
+            $userId = trim($userId);
             $user = \App\User::where("email", $userId . "@umn.edu")->first();
             if($user) {
                 $outputArray[] = new UserResource($user);
