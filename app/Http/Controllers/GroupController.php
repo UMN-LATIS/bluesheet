@@ -197,6 +197,14 @@ class GroupController extends Controller
      */
     public function destroy($group)
     {
+        if(!$group->userCanEdit(Auth::user())) {
+            $returnData = array(
+                'status' => 'error',
+                'message' => "You don't have permission to edit this group"
+            );
+            return Response()->json($returnData, 500);
+        }
+        
         foreach($group->members as $member) {
             $member->end_date = \Carbon\Carbon::now();
             $member->save();
