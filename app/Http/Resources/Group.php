@@ -20,12 +20,12 @@ class Group extends JsonResource
             "id"=>$this->id,
             "user_can_edit"=>$this->userCanEdit(Auth::user()),
             "group_title"=>$this->group_title,
-            "group_type_id"=>$this->group_type_id,
-            "group_type"=>$this->groupType->group_type,
+            "group_type"=>$this->groupType,
             "private_group"=>$this->private_group,
-            "parent_group"=>$this->parentGroup,
-            "parent_group_id"=>$this->parent_group_id,
+            "parent_organization"=>$this->parentOrganization,
+            "parent_organization_id"=>$this->parent_organization_id,
             "members"=>MembershipResource::collection($this->members),
+            "active"=>$this->active_group,
             "artifacts"=>$this->artifacts,
             "notes"=>$this->notes
         ];

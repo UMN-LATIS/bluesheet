@@ -4,10 +4,15 @@
           <div class="col-md-12">
             <button class="btn btn-outline-primary float-right" @click="$emit('update:editing', true)" v-if="group.user_can_edit">Edit Group</button>
             <h1>{{ group.group_title }}</h1>
-            <p>{{group.notes}}</p>
+            <ul class="groupInfo">
+                <li v-if="group.parent_organization">Parent Organization: <strong>{{ group.parent_organization.group_title }}</strong></li>
+                <li v-if="group.group_type">Group Type: <strong>{{ group.group_type.group_type }}</strong></li>
+                <li>{{group.notes}}</li>
+            </ul>
         </div>
     </div>
     <p v-if="group.private_group"><strong>Private Group</strong></p>
+    
     <ul>
         <li v-for="artifact in group.artifacts"><a v-bind:href="artifact.target">{{ artifact.label }}</a></li>
     </ul>
@@ -22,6 +27,7 @@
             </div>
         </div>
     </modal>
+     <router-link :to="{'name':'userList', query:{'groupId':this.group.id}}" class="btn btn-outline-secondary">View membership counts</router-link>
 </div>
 </template>
 
@@ -53,5 +59,9 @@ export default {
 .row {
   margin-top: 10px;
   margin-bottom: 10px;
+}
+
+.groupInfo {
+    list-style: none;
 }
 </style>

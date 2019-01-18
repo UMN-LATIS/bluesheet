@@ -5,6 +5,20 @@
             <div class="col-sm-6">
                 <input type="text" ref="groupNameRef" class="form-control" id="groupName" v-on:keyup="groupNameError = null" @keyup.enter="createGroup" placeholder="Group Name" v-model="groupName">
             </div>
+        </div>
+        <div class="form-group row">
+                <label for="groupType" class="col-sm-3 col-form-label">Group Type</label>
+                <div class="col-sm-6">
+                    <v-select v-model="groupType" :options="groupTypes" label="group_type" v-if="groupTypes"></v-select>
+                </div>
+        </div>
+        <div class="form-group row" v-if="parentOrganizations">
+                <label for="parentOrganization" class="col-sm-3 col-form-label">Parent Organization</label>
+                <div class="col-sm-6">
+                    <v-select v-model="parentOrganization" :options="parentOrganizations" label="group_title" ></v-select>
+                </div>
+        </div>
+        <div class="form-group row">
             <div class="col-sm-3">
                 <button class="btn btn-primary" @click="createGroup">Create Group</button>
             </div>
@@ -26,6 +40,10 @@
             return {
                 groupNameError: null,
                 groupName: null,
+                groupType: null,
+                groupTypes: null,
+                parentOrganization: null,
+                parentOrganizations: null,
             }
         },
         watch: {
@@ -38,6 +56,20 @@
             }
         },
         mounted() {
+            axios.get("/api/group/types")
+            .then(res => {
+                this.groupTypes = res.data;
+            })
+            .catch(err => {
+
+            });
+            axios.get("/api/group/parents")
+            .then(res => {
+                this.parentOrganizations = res.data;
+            })
+            .catch(err => {
+
+            });
         },
         methods: {
             close: function () {
@@ -45,7 +77,20 @@
                 this.$emit('close');
             },
             createGroup: function() {
-                axios.post("/api/group/", {"groupName": this.groupName})
+                if(this.groupName == null) {
+                    this.groupNameError = "You must enter a group name";
+                    return;
+                }
+                if(this.groupType == null || this.groupType.id == null) {
+                    this.groupNameError = "You must select a group type";
+                    return;
+                }
+                if(this.parentOrganization == null || this.parentOrganization.id == null) {
+                    this.groupNameError = "You must select a parent organization";
+                    return;
+                }
+                this.groupNameError = null;
+                axios.post("/api/group/", {"groupName": this.groupName, "groupType":this.groupType.id, 'parentOrganization':this.parentOrganization.id})
                 .then(res => {
                     this.$router.push({ name: 'group', params: {'groupId': res.data.id}});
                     this.close();

@@ -132,16 +132,6 @@
 
 <style>
 
-.v-select {
-    background-color: white;
-}
-.v-select.dropdown .dropdown-toggle::after {
-    content: normal;
-}
-.v-select.dropdown .form-control {
-    height: 2em;
-}
-
 .sortableLink {
     cursor: pointer;
 }

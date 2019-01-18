@@ -3,10 +3,12 @@
 // 
 import sortBy from 'lodash/sortBy';
 import get from 'lodash/get';
+import uniq from 'lodash/uniq';
 
 window._ = {};
 window._.sortBy = sortBy;
 window._.get = get;
+window._.uniq = uniq;
 
 /**
  * We'll load jQuery and the Bootstrap jQuery plugin which provides support

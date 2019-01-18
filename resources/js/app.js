@@ -23,6 +23,7 @@ import VueMoment from 'vue-moment';
 Vue.use(VueMoment);
 
 
+
 // const files = require.context('./', true, /\.vue$/i)
 // files.keys().map(key => Vue.component(key.split('/').pop().split('.')[0], files(key)))
 import UserHome from './components/UserHome.vue';
@@ -60,9 +61,9 @@ Vue.component('creategroup', require('./components/CreateGroup.vue'));
 const router = new VueRouter({
     mode: 'history',
   routes: [
-    { path: "/", component: UserHome },
+    { name: 'home', path: "/", component: UserHome },
     { name: 'user', path: "/user/:userId?", component: UserHome, props:true },
-    { name: 'userList', path: "/userList/", component: UserList, props: (route) => ({ users: route.query.users })},
+    { name: 'userList', path: "/userList/", component: UserList, props: (route) => ({ users: route.query.users, groupId:route.query.groupId })},
     { name: 'group', path: "/group/:groupId", component: Group, props:true },
     { name: 'groupList', path: "/groups/", component: GroupList, props:true },
   ]

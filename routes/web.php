@@ -42,6 +42,8 @@ Route::group(['prefix'=>'/api/', 'middleware' => 'auth'], function () {
     Route::resource('user', 'UserController');
     
     Route::get('group/roles', 'GroupController@roles');
+    Route::get('group/types', 'GroupController@types');
+    Route::get('group/parents', 'GroupController@parents');
     Route::model('group', '\App\Group');
     Route::resource('group', 'GroupController');
 

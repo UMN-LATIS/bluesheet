@@ -24,8 +24,8 @@ class group extends Model implements Auditable
      */
     protected $dates = ['deleted_at', 'start_date', 'end_date'];
 
-    public function parentGroup() {
-    	return $this->belongsTo("App\Group");
+    public function parentOrganization() {
+    	return $this->belongsTo("App\ParentOrganization");
     }
 
     public function groupType() {

@@ -32,7 +32,7 @@
 </nav>
 </header>
     <div class="container">
-        <router-view :userperms="userperms"></router-view>
+        <router-view :userperms="userperms" :key="$route.fullPath"></router-view>
     </div>
 
     

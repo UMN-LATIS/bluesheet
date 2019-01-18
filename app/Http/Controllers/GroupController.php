@@ -38,7 +38,8 @@ class GroupController extends Controller
 
         $newGroup = new \App\Group;
         $newGroup->group_title = $request->get("groupName");
-        $newGroup->group_type_id = 1;
+        $newGroup->group_type_id = $request->get("groupType");
+        $newGroup->parent_organization_id = $request->get("parentOrganization");
         $newGroup->active_group = 1;
         $newGroup->save();
         $returnData = array(
@@ -91,6 +92,13 @@ class GroupController extends Controller
         }
 
         $group->fill($request->all());
+
+        $group->group_type_id = $request->get("group_type")["id"];
+        if($request->get("parent_organization")) {
+            $group->parent_organization_id = $request->get("parent_organization")["id"];    
+        }
+        
+
         $group->save();
         $foundArtifactIds = [];
         foreach($request->get('artifacts') as $artifact) {
@@ -187,9 +195,15 @@ class GroupController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($group)
     {
-        //
+        foreach($group->members as $member) {
+            $member->end_date = \Carbon\Carbon::now();
+            $member->save();
+        }
+        $group->active_group = 0;
+        $group->save();
+        return response()->json(["success"=>true]);
     }
 
     // get available roles for autocomplete.  Debating the samrter way to do this.
@@ -201,5 +215,18 @@ class GroupController extends Controller
         $rolesLoaded = \App\Role::find($roles);
 
         return response()->json($rolesLoaded);
+    }
+    // get available types for autocomplete.  Debating the samrter way to do this.
+    public function types() {        
+        $groupTypes = \App\GroupType::all();
+
+        return response()->json($groupTypes);
+    }
+
+    // get available parents for autocomplete.  Debating the samrter way to do this.
+    public function parents() {        
+        $groupTypes = \App\ParentOrganization::orderBy('group_title')->get();
+
+        return response()->json($groupTypes);
     }
 }

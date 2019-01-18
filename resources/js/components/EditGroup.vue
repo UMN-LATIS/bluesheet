@@ -8,10 +8,30 @@
     </modal>
     <div class="row">
       <div class="col-md-12">
-        <button class="btn btn-success float-right" @click="save">Save</button>
-        <button class="btn btn-outline-primary float-right" @click="$emit('update:editing', false); $emit('update:reload')">Cancel Editing</button>
         
-        <input class="form-control col-md-8" type="text" v-model="group.group_title">
+        <div class="form-group row">
+          
+            <div class="col-sm-8">
+              
+        <input class="form-control" type="text" v-model="group.group_title">
+            </div>
+            <div class="col-sm-4">
+              <button class="btn btn-success float-right" @click="save">Save</button>
+              <button class="btn btn-outline-primary float-right" @click="$emit('update:editing', false); $emit('update:reload')">Cancel Editing</button>
+          </div>
+        </div>
+         <div class="form-group row">
+          <div class="col-sm-8">
+            <label for="groupType" class="small">Group Type</label>
+              <v-select id="groupType" v-model="group.group_type" :options="groupTypes" label="group_type" v-if="groupTypes"></v-select>
+            </div>
+          </div>
+          <div class="form-group row">
+          <div class="col-sm-8">
+            <label for="parentOrganization" class="small">Parent Organization</label>
+              <v-select id="parentOrganization" v-model="group.parent_organization" :options="parentOrganizations" label="group_title" v-if="parentOrganizations"></v-select>
+            </div>
+          </div>
       </div>
     </div>
     <div class="row">
@@ -25,8 +45,8 @@
 
         <div class="row">
           <div class="col-md-12">
-            <p>Group Notes:</p>
-            <textarea class="form-control" v-model="group.notes"></textarea>
+            <label for="groupNotes" class="small">Group Notes</label>
+            <textarea id="groupNotes" class="form-control" v-model="group.notes"></textarea>
           </div>
         </div>
 
@@ -60,6 +80,16 @@
       </div>
     </div>
     <members :members.sync="group.members" editing="true" :roles="roles"></members>
+    
+
+    <div class="row border border-danger rounded deactivate">
+      <div class="col-sm-12">
+        <strong>If you deactivate this group, all members will be removed and an administrator will be required to reactivate it.</strong>
+        <button class="btn btn-danger float-right" @click="deactivate">Deactivate Group</button>
+      </div>
+    </div>
+
+
     <modal :show="addMember" @close="addMember = !addMember">
       <div class="row">
 
@@ -108,6 +138,10 @@ button {
   margin-right: 5px;
 }
 
+.deactivate {
+  padding: 10px;
+}
+
 </style>
 
 <script>
@@ -121,7 +155,9 @@ button {
         addMemberError: null,
         showError: false,
         saveError: null,
-        roles: null
+        roles: null,
+        groupTypes: null,
+        parentOrganizations: null
       }
     },
     mounted() {
@@ -131,6 +167,20 @@ button {
       })
       .catch(err => {
         this.error = err.response.data;
+      });
+      axios.get("/api/group/types")
+      .then(res => {
+          this.groupTypes = res.data;
+      })
+      .catch(err => {
+
+      });
+      axios.get("/api/group/parents")
+      .then(res => {
+          this.parentOrganizations = res.data;
+      })
+      .catch(err => {
+
       });
     },
     watch: {
@@ -171,6 +221,12 @@ button {
           }
         }
 
+        if(this.group.group_type == null || this.group.group_type.id == null) {
+          this.saveError = "You must select a group type";
+          this.showError = true;
+          return false;
+        }
+
         return true;
 
       },
@@ -179,6 +235,19 @@ button {
       },
       addArtifact: function() {
        this.group.artifacts.push({label: "", target:""});
+     },
+     deactivate: function() {
+      if(confirm("Are you sure you want to deactivate this group?")) {
+
+        axios.delete("/api/group/" + this.group.id)
+        .then(res => {
+          this.$router.push({ name: 'home'});
+        })
+        .catch(err => {
+          alert("Error deleting this group.  Hrm.");
+        })
+
+      }
      },
      lookupMember: function() {
       axios.post("/api/user/lookup/",  {users: this.newUserId})

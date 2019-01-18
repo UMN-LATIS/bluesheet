@@ -105,6 +105,7 @@ class UserController extends Controller
     public function userLookup(Request $request) {
 
         $userIds = $request->get('users');
+
         if(is_array($userIds) && count($userIds) == count(array_filter($userIds, 'is_numeric'))) {
             $users = \App\User::whereIn("id", $userIds)->get();
             $code = 200;
