@@ -8,39 +8,45 @@
     </modal>
     <div class="row">
       <div class="col-md-12">
-        
+
         <div class="form-group row">
-          
-            <div class="col-sm-8">
-              
-        <input class="form-control" type="text" v-model="group.group_title">
-            </div>
-            <div class="col-sm-4">
-              <button class="btn btn-success float-right" @click="save">Save</button>
-              <button class="btn btn-outline-primary float-right" @click="$emit('update:editing', false); $emit('update:reload')">Cancel Editing</button>
+
+          <div class="col-sm-8">
+
+            <input class="form-control" type="text" v-model="group.group_title">
+          </div>
+          <div class="col-sm-4">
+            <button class="btn btn-success float-right" @click="save">Save</button>
+            <button class="btn btn-outline-primary float-right" @click="$emit('update:editing', false); $emit('update:reload')">Cancel Editing</button>
           </div>
         </div>
-         <div class="form-group row">
-          <div class="col-sm-8">
-            <label for="groupType" class="small">Group Type</label>
+        <div class="row">
+
+          <div class="col-sm-6">
+            <div class="form-group">
+              <label for="groupType" class="small">Group Type</label>
               <v-select id="groupType" v-model="group.group_type" :options="groupTypes" label="group_type" v-if="groupTypes"></v-select>
             </div>
           </div>
-          <div class="form-group row">
-          <div class="col-sm-8">
-            <label for="parentOrganization" class="small">Parent Organization</label>
+
+          <div class="col-sm-6">
+            <div class="form-group">
+              <label for="parentOrganization" class="small">Parent Organization</label>
               <v-select id="parentOrganization" v-model="group.parent_organization" :options="parentOrganizations" label="group_title" v-if="parentOrganizations"></v-select>
             </div>
           </div>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-md-12">
-        <div class="form-check d-none">
+        </div>
+ <div class="form-check d-none">
           <input class="form-check-input" type="checkbox" v-model="group.private_group" id="privateGroup">
           <label class="form-check-label" for="privateGroup">
             Private Group
           </label>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <label for="googleGroup" class="small">Google Group Name</label>
+            <input id="googleGroup" class="form-control" v-model="group.google_group">
+          </div>
         </div>
 
         <div class="row">
@@ -50,6 +56,14 @@
           </div>
         </div>
 
+
+
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+      
+        
         <div class="row">
           <div class="col-md-12">
             <button class="btn btn-outline-primary float-right" @click="addArtifact">Add Artifact <i class="fas fa-plus"></i></button>
@@ -80,7 +94,7 @@
       </div>
     </div>
     <members :members.sync="group.members" editing="true" :roles="roles"></members>
-    
+
 
     <div class="row border border-danger rounded deactivate">
       <div class="col-sm-12">
@@ -100,30 +114,30 @@
             Comma separated list of InternetIds or email addresses works too.
           </small>
 
-      </div>
+        </div>
       </div>
       <div class="row">
 
-          <label for="roles" class="col-sm-3 col-form-label">Role:</label>
-          <div class="col-sm-6">
-            <v-select v-if="roles" id="roles" taggable v-model="newRole" :options="roles"></v-select>
-          </div>
-          <div class="col-sm-3">
-            <button class="btn btn-primary" @click="lookupMember">Add Member</button>
-          </div>
+        <label for="roles" class="col-sm-3 col-form-label">Role:</label>
+        <div class="col-sm-6">
+          <v-select v-if="roles" id="roles" taggable v-model="newRole" :options="roles"></v-select>
+        </div>
+        <div class="col-sm-3">
+          <button class="btn btn-primary" @click="lookupMember">Add Member</button>
+        </div>
 
-     </div>
-     <div class="row">
-      <div class="alert alert-danger col-sm-12" role="alert" v-if="addMemberError">
-        {{ addMemberError }}
+      </div>
+      <div class="row">
+        <div class="alert alert-danger col-sm-12" role="alert" v-if="addMemberError">
+          {{ addMemberError }}
+        </div>
+
       </div>
 
-    </div>
 
+    </modal>
 
-  </modal>
-
-</div>
+  </div>
 
 </template>
 
@@ -170,14 +184,14 @@ button {
       });
       axios.get("/api/group/types")
       .then(res => {
-          this.groupTypes = res.data;
+        this.groupTypes = res.data;
       })
       .catch(err => {
 
       });
       axios.get("/api/group/parents")
       .then(res => {
-          this.parentOrganizations = res.data;
+        this.parentOrganizations = res.data;
       })
       .catch(err => {
 
@@ -248,8 +262,8 @@ button {
         })
 
       }
-     },
-     lookupMember: function() {
+    },
+    lookupMember: function() {
       axios.post("/api/user/lookup/",  {users: this.newUserId})
       .then(res => {
         for(var user of res.data.users) {

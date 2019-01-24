@@ -22,6 +22,7 @@ class Group extends JsonResource
             "group_title"=>$this->group_title,
             "group_type"=>$this->groupType,
             "private_group"=>$this->private_group,
+            "google_group"=>$this->google_group,
             "parent_organization"=>$this->parentOrganization,
             "parent_organization_id"=>$this->parent_organization_id,
             "members"=>MembershipResource::collection($this->members),
