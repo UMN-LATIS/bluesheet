@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="form-group col-6">
-            <v-select v-model="filterOrg" :options="parentOrganizations" label="parent_organization" v-if="parentOrganizations"></v-select>
+            <treeselect v-model="filterOrg" :multiple="false" :options="parentOrganizations"  :clearable="false" :searchable="true" :open-on-click="true" :close-on-select="true" label="group_title" v-if="parentOrganizations.length" value-consists-of="ALL" :flat="false"/>
         </div>
         <table class="table">
             <thead>
@@ -25,7 +25,8 @@
             return {
                 groupList: [],
                 error: null,
-                filterOrg: 'All Groups'
+                filterOrg: 'All Groups',
+                parentOrganizations: []
             }
         },
         mounted() {
@@ -34,18 +35,55 @@
         computed: {
             sortedFilteredGroupList: function() {
                 return _.sortBy(this.groupList, [group => group.group_title.toLowerCase()]).filter((e)=>{
-                    if(this.filterOrg == 'All Groups' || (e.parent_organization && e.parent_organization.group_title == this.filterOrg)) {
+                    if(this.filterOrg == 'All Groups' || (e.parent_organization && this.getChildrenOrgs(this.filterOrg, this.parentOrganizations).includes(e.parent_organization.id))) {
                         return e;
                     }
                 });
-            },
-            parentOrganizations: function() {
-                var po = this.groupList.map(e=>e.parent_organization?e.parent_organization.group_title:null).filter(Boolean).sort();
-                po.unshift('All Groups');
-                return _.uniq(po);
             }
         },
         methods: {
+            remapParents: function(p) {
+                return p.map(org => { var result = {"id": org.id, "label": org.group_title }; if(org.child_organizations_recursive.length > 0) { result.children = this.remapParents(org.child_organizations_recursive)}; return result; });
+            },
+            flatten: function(items) {
+                const flat = [];
+
+                items.forEach(item => {
+                  if (Array.isArray(item)) {
+                    flat.push(...this.flatten(item));
+                } else {
+                    flat.push(item);
+                }
+                });
+
+                return flat;
+            },
+            getChildrenOrgs: function(targetId, targetGroup) {
+                for(var org of targetGroup) {
+                    if(org.id == targetId) {
+                        return this.flatten([org.id, this.getAllChildren(org.children)]);
+                    }
+                    else if(org.children) {
+                        return this.getChildrenOrgs(targetId, org.children);    
+                    }
+                }
+                return [];
+
+            },
+            getAllChildren: function(org) {
+                var returnArray = [];
+                if(!org) {
+                    return returnArray;
+                }
+                for(var child of org) {
+                    returnArray.push(child.id);
+                    if(child.children) {
+                        returnArray.push(this.getAllChildren(child.children));    
+                    }
+                    
+                }
+                return returnArray;
+            },
             loadGroups() {
                 axios.get("/api/group/")
                 .then(res => {
@@ -54,7 +92,14 @@
                 .catch(err => {
                     this.error = err.response.data;
                 });
+                 axios.get("/api/group/parents")
+                 .then(res => {
+                    this.parentOrganizations = this.remapParents(res.data);
+                    this.parentOrganizations.unshift({id: "All Groups", label: 'All Groups'});
+                })
+                .catch(err => {
 
+                });
             }
         }
     }

@@ -9,4 +9,16 @@ class ParentOrganization extends Model
     public function groups() {
     	return $this->hasMany("App\Group");
     }
+
+    public function parentOrganization() {
+    	return $this->belongsTo('App\ParentOrganization');
+    }
+
+    public function childOrganizations() {
+    	return $this->hasMany('App\ParentOrganization');
+    }
+
+    public function childOrganizationsRecursive() {
+    	return $this->hasMany('App\ParentOrganization')->with("childOrganizationsRecursive");	
+    }
 }

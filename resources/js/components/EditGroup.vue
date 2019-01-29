@@ -25,14 +25,14 @@
           <div class="col-sm-6">
             <div class="form-group">
               <label for="groupType" class="small">Group Type</label>
-              <v-select id="groupType" v-model="group.group_type" :options="groupTypes" label="group_type" v-if="groupTypes"></v-select>
+              <treeselect v-model="group.group_type.id" :multiple="false" :options="groupTypes" :clearable="false" :searchable="true" :open-on-click="true" :close-on-select="true" label="group_type" v-if="groupTypes" />
             </div>
           </div>
 
           <div class="col-sm-6">
             <div class="form-group">
               <label for="parentOrganization" class="small">Parent Organization</label>
-              <v-select id="parentOrganization" v-model="group.parent_organization" :options="parentOrganizations" label="group_title" v-if="parentOrganizations"></v-select>
+              <treeselect v-model="group.parent_organization.id" :multiple="false" :options="parentOrganizations"  :clearable="false" :searchable="true" :open-on-click="true" :close-on-select="true" label="group_title" v-if="parentOrganizations" />
             </div>
           </div>
         </div>
@@ -68,8 +68,8 @@
     </div>
     <div class="row">
       <div class="col-md-12">
-        
-        
+
+
         <div class="row">
           <div class="col-md-12">
             <button class="btn btn-outline-primary float-right" @click="addArtifact">Add Artifact <i class="fas fa-plus"></i></button>
@@ -190,14 +190,14 @@ button {
       });
       axios.get("/api/group/types")
       .then(res => {
-        this.groupTypes = res.data;
+        this.groupTypes = res.data.map(e => { return { id: e.id, label: e.group_type}});
       })
       .catch(err => {
 
       });
       axios.get("/api/group/parents")
       .then(res => {
-        this.parentOrganizations = res.data;
+        this.parentOrganizations = this.remapParents(res.data);
       })
       .catch(err => {
 
@@ -213,6 +213,9 @@ button {
       }
     },
     methods: {
+      remapParents: function(p) {
+        return p.map(org => { var result = {"id": org.id, "label": org.group_title }; if(org.child_organizations_recursive.length > 0) { result.children = this.remapParents(org.child_organizations_recursive)}; return result; });
+      },
       save: function() {
         if(!this.checkForm()) {
           return;

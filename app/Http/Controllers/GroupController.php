@@ -233,7 +233,7 @@ class GroupController extends Controller
 
     // get available parents for autocomplete.  Debating the samrter way to do this.
     public function parents() {        
-        $groupTypes = \App\ParentOrganization::orderBy('group_title')->get();
+        $groupTypes = \App\ParentOrganization::orderBy('group_title')->with("childOrganizationsRecursive")->whereNull("parent_organization_id")->get();
 
         return response()->json($groupTypes);
     }

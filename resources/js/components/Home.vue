@@ -37,8 +37,8 @@
 
     
 
-    <userlookup :show="findUser" @close="findUser = false"></userlookup>
-    <creategroup :show="createGroup" @close="createGroup = false"></creategroup>
+    <userlookup v-if="findUser" :show="findUser" @close="findUser = false"></userlookup>
+    <creategroup v-if="createGroup" :show="createGroup" @close="createGroup = false"></creategroup>
 </div>
 </template>
 

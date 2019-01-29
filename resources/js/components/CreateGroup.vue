@@ -9,13 +9,13 @@
         <div class="form-group row">
                 <label for="groupType" class="col-sm-3 col-form-label">Group Type</label>
                 <div class="col-sm-6">
-                    <v-select v-model="groupType" :options="groupTypes" label="group_type" v-if="groupTypes"></v-select>
+                    <treeselect v-model="groupType" :multiple="false" :options="groupTypes" :clearable="false" :searchable="true" :open-on-click="true" :close-on-select="true" label="group_type" />
                 </div>
         </div>
         <div class="form-group row" v-if="parentOrganizations">
                 <label for="parentOrganization" class="col-sm-3 col-form-label">Parent Organization</label>
                 <div class="col-sm-6">
-                    <v-select v-model="parentOrganization" :options="parentOrganizations" label="group_title" ></v-select>
+                     <treeselect v-model="parentOrganization" :multiple="false" :options="parentOrganizations"  :clearable="false" :searchable="true" :open-on-click="true" :close-on-select="true" label="group_title"/>
                 </div>
         </div>
         <div class="form-group row">
@@ -33,6 +33,13 @@
     </modal>
 </template>
 
+<style scoped>
+
+.vue-treeselect__control {
+    border: 1px solid rgba(60,60,60,.26);
+}
+</style>
+
 <script>
     export default {
         props: ['show'],
@@ -41,9 +48,9 @@
                 groupNameError: null,
                 groupName: null,
                 groupType: null,
-                groupTypes: null,
+                groupTypes: [],
                 parentOrganization: null,
-                parentOrganizations: null,
+                parentOrganizations: [],
             }
         },
         watch: {
@@ -58,20 +65,23 @@
         mounted() {
             axios.get("/api/group/types")
             .then(res => {
-                this.groupTypes = res.data;
+                this.groupTypes = res.data.map((o) => { return {"id": o.id, "label": o.group_type } });
             })
             .catch(err => {
 
             });
             axios.get("/api/group/parents")
             .then(res => {
-                this.parentOrganizations = res.data;
+                this.parentOrganizations = this.remapParents(res.data);
             })
             .catch(err => {
 
             });
         },
         methods: {
+            remapParents: function(p) {
+                return p.map(org => { var result = {"id": org.id, "label": org.group_title }; if(org.child_organizations_recursive.length > 0) { result.children = this.remapParents(org.child_organizations_recursive)}; return result; });
+            },
             close: function () {
                 this.groupName = null;
                 this.$emit('close');
@@ -81,16 +91,16 @@
                     this.groupNameError = "You must enter a group name";
                     return;
                 }
-                if(this.groupType == null || this.groupType.id == null) {
+                if(this.groupType == null ) {
                     this.groupNameError = "You must select a group type";
                     return;
                 }
-                if(this.parentOrganization == null || this.parentOrganization.id == null) {
+                if(this.parentOrganization == null) {
                     this.groupNameError = "You must select a parent organization";
                     return;
                 }
                 this.groupNameError = null;
-                axios.post("/api/group/", {"groupName": this.groupName, "groupType":this.groupType.id, 'parentOrganization':this.parentOrganization.id})
+                axios.post("/api/group/", {"groupName": this.groupName, "groupType":this.groupType, 'parentOrganization':this.parentOrganization})
                 .then(res => {
                     this.$router.push({ name: 'group', params: {'groupId': res.data.id}});
                     this.close();
