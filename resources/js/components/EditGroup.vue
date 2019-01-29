@@ -36,19 +36,25 @@
             </div>
           </div>
         </div>
- <div class="form-check d-none">
-          <input class="form-check-input" type="checkbox" v-model="group.private_group" id="privateGroup">
-          <label class="form-check-label" for="privateGroup">
-            Private Group
-          </label>
-        </div>
+        
+        
         <div class="row">
-          <div class="col-md-12">
+          <div class="col-md-6">
             <label for="googleGroup" class="small">Google Group Name</label>
             <input id="googleGroup" class="form-control" v-model="group.google_group">
           </div>
-        </div>
 
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" v-model="group.private_group" id="privateGroup">
+              <label class="form-check-label small" for="privateGroup">
+                Private Group
+              </label>
+            </div>
+          </div>
+        </div>
         <div class="row">
           <div class="col-md-12">
             <label for="groupNotes" class="small">Group Notes</label>
@@ -62,7 +68,7 @@
     </div>
     <div class="row">
       <div class="col-md-12">
-      
+        
         
         <div class="row">
           <div class="col-md-12">

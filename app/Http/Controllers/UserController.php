@@ -153,12 +153,12 @@ class UserController extends Controller
                         continue;
                     }
                     $foundUser = new \App\User;
-                    $foundUser->umndid = isset($info[0]["umndid"])?$info[0]["umndid"][0]:$username;
-                    $foundUser->surname = isset($info[0]["sn"])?$info[0]["sn"][0]:$username;
-                    $foundUser->givenname = isset($info[0]["givenname"])?$info[0]["givenname"][0]:$username;
-                    $foundUser->displayName =isset( $info[0]["displayname"])?$info[0]["displayname"][0]:$username;
-                    $foundUser->email =isset( $info[0]["mail"])?$info[0]["mail"][0]:$username;
-                    $foundUser->office = isset($info[0]["umnofficeaddress1"])?$info[0]["umnofficeaddress1"][0]:$username;
+                    $foundUser->umndid = isset($info[0]["umndid"])?$info[0]["umndid"][0]:"";
+                    $foundUser->surname = isset($info[0]["sn"])?$info[0]["sn"][0]:"";
+                    $foundUser->givenname = isset($info[0]["givenname"])?$info[0]["givenname"][0]:"";
+                    $foundUser->displayName =isset( $info[0]["displayname"])?$info[0]["displayname"][0]:"";
+                    $foundUser->email =isset( $info[0]["mail"])?$info[0]["mail"][0]:"";
+                    $foundUser->office = isset($info[0]["umnofficeaddress1"])?$info[0]["umnofficeaddress1"][0]:"";
                     $foundUser->site_permissions = 100;
                     break;
                 }

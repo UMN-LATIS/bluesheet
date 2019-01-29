@@ -8,16 +8,18 @@
                 <li v-if="group.parent_organization">Parent Organization: <strong>{{ group.parent_organization.group_title }}</strong></li>
                 <li v-if="group.group_type">Group Type: <strong>{{ group.group_type.group_type }}</strong></li>
                 <li v-if="group.google_group">Google Group: <strong>{{ group.google_group }}</strong></li>
+                <li v-if="group.private_group"><strong>Private Group</strong></li>
                 <li>{{group.notes}}</li>
             </ul>
         </div>
     </div>
-    <p v-if="group.private_group"><strong>Private Group</strong></p>
+    
     
     <ul>
         <li v-for="artifact in group.artifacts"><a v-bind:href="artifact.target">{{ artifact.label }}</a></li>
     </ul>
     <button class="btn btn-success" @click="showEmailList = !showEmailList">Show Email List</button>
+    <button class="btn btn-info" @click="downloadList">Download List</button>
     <members :members="group.members" ></members>
     
     <modal :show="showEmailList" @close="showEmailList = !showEmailList">
@@ -43,7 +45,29 @@ export default {
     mounted() {
     },
     methods: {
+        downloadList: function() {
+            const rows = this.group.members.map(r => {
+                return [
+                '"' + r.user.surname + '"',
+                '"' + r.user.givenname + '"',
+                '"' + r.role.label + '"',
+                '"' + r.notes + '"',
+                r.start_date,
+                r.end_date
+                ]
+            });
 
+            let row_str = 'Surname, GivenName, Label, Notes, Start Date, End Date\n'
+            row_str += rows.join('\n');
+            
+            console.log(row_str);
+
+            const link = document.createElement("a");
+            const file = new Blob([row_str], {type: 'text/csv'});
+            link.href = URL.createObjectURL(file);
+            link.download = '' + this.group.group_title + '.csv';
+            link.click();
+        }
     },
     computed: {
         emailList: function() {
