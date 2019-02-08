@@ -218,6 +218,7 @@ class GroupController extends Controller
     public function roles() {
         $roles = DB::table('memberships')->select("role_id")
         ->groupBy("role_id")
+        ->whereNotNull("end_date")
         ->havingRaw("COUNT(role_id) > " . MINIMUM_ROLE_COUNT)->get()->pluck("role_id")->toArray();
         
         $rolesLoaded = \App\Role::find($roles);
