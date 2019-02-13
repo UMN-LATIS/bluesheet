@@ -7,7 +7,7 @@ require 'recipe/npm.php';
 set('ssh_type', 'native');
 set('ssh_multiplexing', true);
 
-// set('repository', 'https://github.umn.edu/mcfa0086/caligari.git');
+set('repository', 'git@github.umn.edu:mcfa0086/caligari.git');
 
 add('shared_files', []);
 add('shared_dirs', []);
