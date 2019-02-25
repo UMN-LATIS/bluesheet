@@ -71,12 +71,7 @@
 									</span>
 									<span><i class="fa fa-phone"></i><a href="tel:6126252020">612-625-2020</a></span>
 								</div>
-								<p class="social">
-									<a href="http://facebook.com/umncla"><i class="fa fa-facebook-square fa-lg"><span>Visit College of Liberal Arts on Facebook</span></i></a>
-									<a href="http://twitter.com/umncla"><i class="fa fa-twitter fa-lg"><span>Visit College of Liberal Arts on Twitter</span></i></a>
-									<a href="https://www.linkedin.com/groups?gid=2997319&amp;trk=anet_ug_hm&amp;home="><i class="fa fa-linkedin fa-lg"><span>Visit College of Liberal Arts on LinkedIn</span></i></a>
-									<a href="http://youtube.com/umncla"><i class="fa fa-youtube-play fa-lg"><span>Visit College of Liberal Arts on YouTube</span></i></a>
-								</p>
+								
 
 							</div>
 						</div>

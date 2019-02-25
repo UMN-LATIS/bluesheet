@@ -10,7 +10,7 @@
         </div>
     </div>
     <div class="col">
-        <div class="form-check float-right checkContainer" v-if="!editing">
+        <div class="form-check float-right checkContainer" v-if="">
           <input class="form-check-input" type="checkbox" v-model="includePreviousMembers" id="pastMembers">
           <label class="form-check-label" for="pastMembers">
             Include Previous Members
@@ -43,11 +43,14 @@
             <td v-if="editing"><v-select taggable v-model="member.role" :options="roles" v-if="roles"></v-select></td>
             
             <td v-if="!editing">{{ member.notes }}</td>
-            <td v-if="editing"><input class="form-control" v-model="member.notes"></textarea></td>
+            <td v-if="editing"><input class="form-control" v-model="member.notes"></td>
             
-            <td>{{ member.start_date | moment("YYYY, MMM Do") }}</td>
-            <td v-if="includePreviousMembers"><span v-if="member.end_date">{{ member.end_date  | moment("YYYY, MMM Do") }}</span></td>
-            <td v-if="editing"><input class="form-check-input" type="checkbox" v-model="member.admin"></td>
+            <td v-if="!editing">{{ member.start_date | moment("YYYY, MMM Do") }}</td>
+            <td v-if="editing"><input type="date" class="form-control" v-model.lazy="member.start_date"></td>
+            
+            <td v-if="includePreviousMembers && !editing"><span v-if="member.end_date">{{ member.end_date  | moment("YYYY, MMM Do") }}</span></td>
+            <td v-if="includePreviousMembers && editing"><span v-if="member.end_date"><input type="date" class="form-control" v-model.lazy="member.end_date"></span></td>
+            <td v-if="editing" class="text-right"><input class="form-check-input" type="checkbox" v-model="member.admin"></td>
             <td v-if="editing"><button class="btn btn-danger" @click="removeMember(member, key)"><i class="fas fa-trash-alt"></i></button></td>
         </tr>
     </tbody>
