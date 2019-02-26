@@ -133,7 +133,13 @@ class GroupController extends Controller
                     $newMember->fill($member);
                     $newMember->start_date = \Carbon\Carbon::now();
                     if(!isset($member['role']['id'])) {
-                        $role = $this->addOrFindRole($member['role']['label']);
+                        if(isset($member['role']['label'])) {
+                            $role = $this->addOrFindRole($member['role']['label']);    
+                        }
+                        else {
+                            $role = $this->addOrFindRole($member['role']);
+                        }
+                        
                         $newMember->role()->associate($role);
                     }
                     else {
