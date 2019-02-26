@@ -3,7 +3,7 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Http\Resources\Membership as MembershipResource;
+use App\Http\Resources\MembershipWithGroups as MembershipWithGroups;
 
 
 class User extends JsonResource
@@ -23,7 +23,7 @@ class User extends JsonResource
             'displayName' => $this->displayName,
             'email' => $this->email,
             'site_permissions' => $this->site_permissions,
-            'memberships' => MembershipResource::collection($this->memberships),
+            'memberships' => MembershipWithGroups::collection($this->memberships),
         ];
     }
 }

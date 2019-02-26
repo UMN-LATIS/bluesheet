@@ -15,16 +15,9 @@ class Membership extends JsonResource
      */
     public function toArray($request)
     {
-        $group = $this->group;
-        if($group->private_group &&  Auth::user()->id !== $this->user_id && Auth::user()->site_permissions < 200) {
-            $group->group_title = "Private Group";
-            $group->id = null;
-        }
-
         return [
             "id"=>$this->id,
             "user"=>$this->user,
-            "group"=>$this->group,
             "role"=>$this->role,
             "start_date"=>$this->start_date?$this->start_date->format('Y-m-d'):null,
             "end_date"=>$this->end_date?$this->end_date->format('Y-m-d'):null,
