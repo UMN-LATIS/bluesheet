@@ -167,7 +167,12 @@ class GroupController extends Controller
                 $newMember->user_id = $member['user']['id'];
                 $newMember->group_id = $member['group_id'];
                 if(!isset($member['role']['id'])) {
-                    $role = $this->addOrFindRole($member['role']['label']);
+                    if(isset($member['role']['label'])) {
+                        $role = $this->addOrFindRole($member['role']['label']);    
+                    }
+                    else {
+                        $role = $this->addOrFindRole($member['role']);
+                    }
                     $newMember->role()->associate($role);
                 }
                 else {
