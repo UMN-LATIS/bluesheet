@@ -276,7 +276,7 @@ button {
       axios.post("/api/user/lookup",  {users: this.newUserId})
       .then(res => {
         for(var user of res.data.users) {
-          var newMembershipRecord = { group_id: this.group.id, start_date: this.$moment().format("YYYY-MM-DD hh:mm:ss"), end_date: null, user: user, role: this.newRole};
+          var newMembershipRecord = { group_id: this.group.id, start_date: this.$moment().format("YYYY-MM-DD"), end_date: null, user: user, role: this.newRole};
           this.group.members.push(newMembershipRecord);  
         }
         
