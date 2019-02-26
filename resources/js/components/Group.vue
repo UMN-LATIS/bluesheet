@@ -30,6 +30,15 @@
                 axios.get("/api/group/" + this.groupId)
                 .then(res => {
                     this.group = res.data;
+                    Vue.set(this.group, 'members', []);
+                    this.group.members = [];
+                    axios.get("/api/group/" + this.groupId + "/members")
+                    .then(res => {
+                        Vue.set(this.group, 'members', res.data);
+                    })
+                    .catch(err => {
+                        this.error = err.response.data;
+                    });
                 })
                 .catch(err => {
                     this.error = err.response.data;

@@ -25,7 +25,6 @@ class Group extends JsonResource
             "google_group"=>$this->google_group,
             "parent_organization"=>$this->parentOrganization,
             "parent_organization_id"=>$this->parent_organization_id,
-            "members"=>MembershipResource::collection($this->members),
             "active"=>$this->active_group,
             "artifacts"=>$this->artifacts,
             "notes"=>$this->notes

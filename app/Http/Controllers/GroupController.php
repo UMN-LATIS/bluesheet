@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Resources\Group as GroupResource;
+use App\Http\Resources\Membership as MembershipResource;
 use DB;
 use Auth;
 
@@ -65,13 +66,12 @@ class GroupController extends Controller
      */
     public function show($group)
     {
-        if(!$group->activeUsers()->contains(Auth::user()) && Auth::user()->site_permissions < 200) {
+        if(!$group->activeMembers()->where('user_id', Auth::user()->id)->count() && Auth::user()->site_permissions < 200) {
 
         }
         else {
-            return new GroupResource($group);    
+            return new GroupResource($group->load('members', 'members.user', 'members.role'));
         }
-        
     }
 
     /**
@@ -223,6 +223,11 @@ class GroupController extends Controller
         $group->active_group = 0;
         $group->save();
         return response()->json(["success"=>true]);
+    }
+
+    public function members($group) {
+        $members = $group->members()->with('user','role')->get();
+        return MembershipResource::collection($members);
     }
 
     // get available roles for autocomplete.  Debating the samrter way to do this.
