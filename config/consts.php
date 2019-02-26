@@ -1,10 +1,8 @@
 <?php
 
-
-if(!defined("MINIMUM_ROLE_COUNT")) {
-define("MINIMUM_ROLE_COUNT", 2);	
-}
-
+return [
+    'MINIMUM_ROLE_COUNT' =>2,
+]
 
 
 ?>
