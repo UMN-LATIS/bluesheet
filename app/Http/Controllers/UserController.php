@@ -136,7 +136,7 @@ class UserController extends Controller
                 $outputArray[] = new UserResource($user);
             }
             else {
-                $foundUser = LDAP::lookupValue($userId);
+                $foundUser = LDAP::lookupUser($userId);
                 
                 
                 if($foundUser) {
