@@ -100,7 +100,7 @@
                     return;
                 }
                 this.groupNameError = null;
-                axios.post("/api/group/", {"groupName": this.groupName, "groupType":this.groupType, 'parentOrganization':this.parentOrganization})
+                axios.post("/api/group", {"groupName": this.groupName, "groupType":this.groupType, 'parentOrganization':this.parentOrganization})
                 .then(res => {
                     this.$router.push({ name: 'group', params: {'groupId': res.data.id}});
                     this.close();

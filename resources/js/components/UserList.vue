@@ -80,7 +80,7 @@
         },
         methods: {
           loadUsers(userList) {
-            axios.post("/api/user/lookup/", {users:userList})
+            axios.post("/api/user/lookup", {users:userList})
             .then(res => {
                this.loadedUsers = res.data.users;
             })

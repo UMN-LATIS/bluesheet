@@ -48,7 +48,7 @@
                 this.$emit('close');
             },
             lookupUser: function() {
-                axios.post("/api/user/lookup/", {users:this.userLookupId})
+                axios.post("/api/user/lookup", {users:this.userLookupId})
                 .then(res => {
                    if(res.data.users.length == 1) {
                         this.$router.push({ name: 'user', params: {'userId': res.data.users[0].id}});
