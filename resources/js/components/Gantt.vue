@@ -1,30 +1,25 @@
 <template>
-    <table width=100%>
-        <thead>
-            <tr>
-                <th width=20%></th>
-                <th width=80%><span>{{ mindate | moment("YYYY-MM-DD") }}</span>
-                <span class="float-right">
-                    {{ maxdate | moment("YYYY-MM-DD")}}
-                    </span>
-                </th>
-            </tr>
-        </thead>
         <tbody>
-            <gantt-row :key="member.id" v-for="member in members" :member="member" :mindate="mindate" :maxdate="maxdate"></gantt-row>
-        </tbody>
-        <tfoot>
             <tr>
                 <th width=20%></th>
-                <th width=80%><span>{{ mindate | moment("YYYY-MM-DD") }}</span>
+                <th colspan=4 width=80%><span>{{ mindate | moment("YYYY-MM-DD") }}</span>
                 <span class="float-right">
                     {{ maxdate | moment("YYYY-MM-DD")}}
                     </span>
                 </th>
             </tr>
-        </tfoot>
-  
-    </table>
+            <gantt-row :key="member.id" v-for="member in members" :member="member" :mindate="mindate" :maxdate="maxdate"></gantt-row>
+
+            <tr>
+                <th width=20%></th>
+                <th colspan="4" width=80%><span>{{ mindate | moment("YYYY-MM-DD") }}</span>
+                <span class="float-right">
+                    {{ maxdate | moment("YYYY-MM-DD")}}
+                    </span>
+                </th>
+            </tr>
+        </tbody>
+
 </template>
 
 <script>

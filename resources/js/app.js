@@ -57,6 +57,7 @@ Vue.component('userlookup', require('./components/UserLookup.vue'));
 Vue.component('creategroup', require('./components/CreateGroup.vue'));
 Vue.component('gantt', require('./components/Gantt.vue'));
 Vue.component('gantt-row', require('./components/GanttRow.vue'));
+Vue.component('member-list', require('./components/MemberList.vue'));
 
 
 /**
