@@ -23,17 +23,17 @@
             <td v-if="includePreviousMembers && editing"><span v-if="member.end_date"><input type="date" class="form-control"
                         v-model.lazy="member.end_date"></span></td>
             <td v-if="editing" class="text-right"><input class="form-check-input" type="checkbox" v-model="member.admin"></td>
-            <td v-if="editing"><button class="btn btn-danger" @click="removeMember(member, key)"><i class="fas fa-trash-alt"></i></button></td>
+            <td v-if="editing"><button class="btn btn-danger" @click="$emit('remove', member, key)"><i class="fas fa-trash-alt"></i></button></td>
         </tr>
     </tbody>
 </template>
 
 <script>
 export default {
-    props: ['editing', 'filteredList', 'includePreviousMembers'],
+    props: ['editing', 'filteredList', 'includePreviousMembers', 'roles'],
     data() {
         return {
-            
+
         }
     }
 }

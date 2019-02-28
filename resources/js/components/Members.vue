@@ -13,7 +13,7 @@
         </div>
         <div class="row controlRow">
             <div class="col">
-                <div class="search-container" v-bind:class="{ expandBox: showSearch  }" v-if="!editing">
+                <div class="search-container" v-bind:class="{ expandBox: showSearch  }">
                     <input v-model="searchValue" class="searchBox" ref="searchbox" v-if="showSearch" placeholder="Search">
                     <a class=" button" @click="showSearch = !showSearch">
                         <i class="searchIcon fa fa-search"></i>
@@ -48,7 +48,7 @@
                     <th scope="col" v-if="editing">Remove</th>
                 </tr>
             </thead>
-            <member-list v-if="!showGantt" :editing="editing" :filteredList="filteredList" :includePreviousMembers="includePreviousMembers"></member-list>
+            <member-list v-if="!showGantt" v-on:remove="removeMember"  :roles="roles" :editing="editing" :filteredList="filteredList" :includePreviousMembers="includePreviousMembers"></member-list>
             <gantt :members="filteredList" :mindate="lowestValue" :maxdate="highestValue"></gantt>
         </table>
     </div>
