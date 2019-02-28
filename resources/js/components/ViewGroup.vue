@@ -19,8 +19,11 @@
         <li v-for="artifact in group.artifacts"><a v-bind:href="artifact.target">{{ artifact.label }}</a></li>
     </ul>
     <button class="btn btn-success" @click="showEmailList = !showEmailList">Show Email List</button>
-    <button class="btn btn-info" @click="downloadList">Download List</button>
+    <button class="btn btn-info" @click="downloadList" >Download List</button>
+    <gantt :members="group.members" :mindate="lowestValue" :maxdate="highestValue"></gantt>
     <members :members="group.members" ></members>
+    
+    
     
     <modal :show="showEmailList" @close="showEmailList = !showEmailList">
         <div class="row">
@@ -70,6 +73,15 @@ export default {
         }
     },
     computed: {
+        lowestValue: function() {
+            if(this.group && this.group.members && this.group.members.length > 0) {
+                return  this.group.members.map(m => this.$moment(m.start_date).unix() ).reduce((a,b) => Math.min(a,b))
+            }
+            
+        },
+        highestValue: function() {
+            return  this.$moment().unix();
+        },
         emailList: function() {
             // return a list of email addresses of users that are currently active, de-duplicated and with null values removed
             return this.group.members.map(function(elem, index) {

@@ -23,6 +23,7 @@
     },
     "dependencies": {
         "@riophae/vue-treeselect": "0.0.38",
+        "v-tooltip": "^2.0.0-rc.33",
         "vue-moment": "^4.0.0",
         "vue-router": "^3.0.2",
         "vue-select": "^2.5.1",

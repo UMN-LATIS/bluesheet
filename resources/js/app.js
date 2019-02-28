@@ -22,6 +22,8 @@ Vue.use(VueSelect);
 import VueMoment from 'vue-moment';
 Vue.use(VueMoment);
 
+import VTooltip from 'v-tooltip'
+Vue.use(VTooltip);
 
 import Treeselect from '@riophae/vue-treeselect'
 Vue.component('treeselect', Treeselect)
@@ -53,6 +55,8 @@ Vue.component('roles', require('./components/Roles.vue'));
 Vue.component('modal', require('./components/Modal.vue'));
 Vue.component('userlookup', require('./components/UserLookup.vue'));
 Vue.component('creategroup', require('./components/CreateGroup.vue'));
+Vue.component('gantt', require('./components/Gantt.vue'));
+Vue.component('gantt-row', require('./components/GanttRow.vue'));
 
 
 /**
