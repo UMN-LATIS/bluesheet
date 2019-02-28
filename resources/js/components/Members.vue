@@ -49,7 +49,7 @@
                 </tr>
             </thead>
             <member-list v-if="!showGantt" v-on:remove="removeMember"  :roles="roles" :editing="editing" :filteredList="filteredList" :includePreviousMembers="includePreviousMembers"></member-list>
-            <gantt :members="filteredList" :mindate="lowestValue" :maxdate="highestValue"></gantt>
+            <gantt v-if="showGantt" :members="filteredList" :mindate="lowestValue" :maxdate="highestValue"></gantt>
         </table>
     </div>
 </template>
