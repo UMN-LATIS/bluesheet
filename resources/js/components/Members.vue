@@ -92,13 +92,15 @@
                 return this.$moment().unix();
             },
             filteredList: function () {
-                return this.sortedList.filter(function (role) {
-                    if (role.end_date == null || this.includePreviousMembers) {
-                        if (this.searchValue === null || (role.user.displayName.toLowerCase().includes(this
-                                .searchValue.toLowerCase()) || role.user.email.includes(this.searchValue
-                                .toLowerCase()) || role.role.label.toLowerCase().includes(this.searchValue
-                                .toLowerCase()))) {
-                            return role;
+                return this.sortedList.filter(function (membership) {
+                    if (membership.end_date == null || this.includePreviousMembers) {
+                        var searchTerm = null;
+                        if(this.searchValue) {
+                            var searchTerm = this.searchValue.toLowerCase();
+                        }
+                        
+                        if (searchTerm === null || (membership.user.displayName.toLowerCase().includes(searchTerm) || membership.user.email.includes(searchTerm) || membership.role.label.toLowerCase().includes(searchTerm) || membership.user.ou.toLowerCase().includes(searchTerm))) {
+                            return membership;
                         }
 
                     }
