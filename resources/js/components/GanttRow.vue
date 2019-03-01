@@ -21,7 +21,15 @@ export default {
     },
     computed: {
         toolTipText: function() {
-            var returnString = this.member.user.displayName + '<br>From: ' + this.member.start_date;
+            
+            var returnString = this.member.user.displayName + '<br>';
+            if(this.member.user.ou) {
+                returnString += 'Unit: ' + this.member.user.ou + '<br>';
+            }
+            if(this.member.notes) {
+                returnString += 'Notes: ' + this.member.notes + '<br>';
+            }
+            returnString += 'From: ' + this.member.start_date + '<br>';
             if(this.member.end_date) {
                 returnString +=  '<br>Until: ' + this.member.end_date;
             }

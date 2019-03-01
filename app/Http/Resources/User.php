@@ -23,6 +23,7 @@ class User extends JsonResource
             'displayName' => $this->displayName,
             'email' => $this->email,
             'site_permissions' => $this->site_permissions,
+            'ou' => $this->ou,
             'memberships' => MembershipWithGroups::collection($this->memberships),
         ];
     }

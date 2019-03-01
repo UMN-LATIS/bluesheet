@@ -25,6 +25,7 @@ class populateUser
                 Auth::user()->displayName = $foundUser->displayName;
                 Auth::user()->email = $foundUser->email;
                 Auth::user()->office = $foundUser->office;
+                Auth::user()->ou = $foundUser->ou;
                 Auth::user()->save();
             }
         }

@@ -30,7 +30,7 @@ class User extends Authenticatable implements Auditable
      * @var array
      */
     protected $fillable = [
-        'givenname', 'surname', 'displayname','email','umndid', 'site_permissions'
+        'givenname', 'surname', 'displayname','email','umndid', 'site_permissions', 'ou'
     ];
 
     public function memberships() {

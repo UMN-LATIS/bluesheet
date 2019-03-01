@@ -48,13 +48,13 @@ class GroupController extends Controller
             'id' => $newGroup->id
         );
 
-        $newMember = new \App\Membership;
-        $newMember->user()->associate(Auth::user());
-        $role = $this->addOrFindRole("member");
-        $newMember->role()->associate($role);
-        $newMember->start_date = \Carbon\Carbon::now();
-        $newMember->admin = true;
-        $newGroup->members()->save($newMember);
+        // $newMember = new \App\Membership;
+        // $newMember->user()->associate(Auth::user());
+        // $role = $this->addOrFindRole("member");
+        // $newMember->role()->associate($role);
+        // $newMember->start_date = \Carbon\Carbon::now();
+        // $newMember->admin = true;
+        // $newGroup->members()->save($newMember);
         return Response()->json($returnData);
     }
 

@@ -30,6 +30,7 @@ class LDAP
             $foundUser->displayName =isset( $info[0]["displayname"])?$info[0]["displayname"][0]:"";
             $foundUser->email =isset( $info[0]["mail"])?$info[0]["mail"][0]:"";
             $foundUser->office = isset($info[0]["umnofficeaddress1"])?$info[0]["umnofficeaddress1"][0]:"";
+            $foundUser->ou = isset($info[0]["ou"])?$info[0]["ou"][0]:"";
             $foundUser->site_permissions = 100;
             break;
         }

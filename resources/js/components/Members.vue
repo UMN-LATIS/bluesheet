@@ -37,6 +37,8 @@
                 <tr>
                     <th scope="col"><span @click="sort('user.surname')" class="sortableLink">Name <i class="fas"
                                 v-bind:class="{ 'fa-sort-alpha-up': currentSortDir == 'desc' && currentSort == 'user.surname', 'fa-sort-alpha-down': currentSortDir == 'asc' && currentSort == 'user.surname'}"></i></span></th>
+                    <th scope="col"><span @click="sort('user.ou')" class="sortableLink">Unit <i class="fas"
+                                v-bind:class="{ 'fa-sort-alpha-up': currentSortDir == 'desc' && currentSort == 'user.ou', 'fa-sort-alpha-down': currentSortDir == 'asc' && currentSort == 'user.ou'}"></i></span></th>
                     <th scope="col"><span @click="sort('role.label')" class="sortableLink">Role <i class="fas"
                                 v-bind:class="{ 'fa-sort-alpha-up': currentSortDir == 'desc' && currentSort == 'role.label', 'fa-sort-alpha-down': currentSortDir == 'asc' && currentSort == 'role.label'}"></i></span></th>
                     <th scope="col">Notes</th>

@@ -7,6 +7,7 @@
                 </router-link>
                 <span v-if="!member.user.id">{{ member.user.surname }}, {{ member.user.givenname }}</span>
             </td>
+            <td>{{ member.user.ou }}</td>
             <td v-if="!editing">{{ member.role.label }}</td>
             <td v-if="editing">
                 <v-select taggable v-model="member.role" :options="roles" v-if="roles"></v-select>
