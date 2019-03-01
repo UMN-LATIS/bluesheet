@@ -8,7 +8,7 @@
                     </span>
                 </th>
             </tr>
-            <gantt-row :key="member.id" v-for="member in members" :member="member" :mindate="mindate" :maxdate="maxdate"></gantt-row>
+            <gantt-row :show_unit="show_unit" :key="member.id" v-for="member in members" :member="member" :mindate="mindate" :maxdate="maxdate"></gantt-row>
 
             <tr>
                 <th width=20%></th>
@@ -24,7 +24,7 @@
 
 <script>
 export default {
-    props: ['members', 'mindate','maxdate'],
+    props: ['members', 'mindate','maxdate', 'show_unit'],
     data() {
         return {
         }

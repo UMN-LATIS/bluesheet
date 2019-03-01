@@ -14,7 +14,7 @@ $(function () {
         $("[data-toggle='tooltip']").tooltip();
     });
 export default {
-    props: ['member', 'mindate','maxdate'],
+    props: ['member', 'mindate','maxdate', 'show_unit'],
     data() {
         return {
         }
@@ -23,7 +23,7 @@ export default {
         toolTipText: function() {
             
             var returnString = this.member.user.displayName + '<br>';
-            if(this.member.user.ou) {
+            if(this.member.user.ou && this.show_unit) {
                 returnString += 'Unit: ' + this.member.user.ou + '<br>';
             }
             if(this.member.notes) {

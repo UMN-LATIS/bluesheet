@@ -14,7 +14,7 @@ class group extends Model implements Auditable
     public $timestamps = true;
 
     protected $fillable = [
-        'group_title', 'private_group', 'notes', 'google_group'
+        'group_title', 'private_group', 'notes', 'google_group', 'show_unit'
     ];
 
     /**

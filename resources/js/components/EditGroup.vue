@@ -54,6 +54,14 @@
               </label>
             </div>
           </div>
+          <div class="col-md-6">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" v-model="group.show_unit" id="showunit">
+              <label class="form-check-label small" for="showunit">
+                Show Unit
+              </label>
+            </div>
+          </div>
         </div>
         <div class="row">
           <div class="col-md-12">
@@ -99,7 +107,7 @@
         <p>Members:</p> 
       </div>
     </div>
-    <members :members.sync="group.members" editing="true" :roles="roles"></members>
+    <members :members.sync="group.members" :show_unit="group.show_unit" editing="true" :roles="roles"></members>
 
 
     <div class="row border border-danger rounded deactivate">

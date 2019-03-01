@@ -23,6 +23,7 @@ class Group extends JsonResource
             "group_type"=>$this->groupType,
             "private_group"=>$this->private_group,
             "google_group"=>$this->google_group,
+            "show_unit"=>$this->show_unit,
             "parent_organization"=>$this->parentOrganization,
             "parent_organization_id"=>$this->parent_organization_id,
             "active"=>$this->active_group,

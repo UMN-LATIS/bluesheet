@@ -21,7 +21,7 @@
     <button class="btn btn-success" @click="showEmailList = !showEmailList">Show Email List</button>
     <button class="btn btn-info" @click="downloadList" >Download List</button>
     
-    <members :members="group.members" :editing="false"></members>
+    <members :members="group.members" :editing="false" :show_unit="group.show_unit"></members>
     
     
     
