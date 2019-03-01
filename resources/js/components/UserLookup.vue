@@ -1,12 +1,39 @@
 <template>
     <modal :show="show" @close="close">
-        <div class="form-group row">
-            <label for="internetId" class="col-sm-3 col-form-label">Internet ID:</label>
-            <div class="col-sm-6">
-                <input type="text" ref="findMemberRef" class="form-control" id="internetId" v-on:keyup="findUserError = null" @keyup.enter="lookupUser" placeholder="Internet ID" v-model="userLookupId">
-                <small id="addUserHelpBlock" class="form-text text-muted">
-                Comma separated list of InternetIds or email addresses works too.
-            </small>
+        <div class="row">
+          <label for="nameLookup" class="col-sm-3 col-form-label">Name:</label>
+          <div class="col-sm-6">
+          <autocomplete
+            source="/api/autocompleter/user?searchType=nameAndInternetId&q="
+            id="nameLookup"
+            results-property="items"
+            results-display="full_name"
+            results-value="mail"
+            ref="userAutocompleter"
+            input-class="form-control"
+            v-model="userLookupId"
+            >
+          </autocomplete>
+          <small id="addUserHelpBlock" class="form-text text-muted">
+            Optional: Enter a name and select the person from the list
+          </small>
+      </div>
+      </div>
+
+      
+      <div class="row">
+          <label for="internetId" class="col-sm-3 col-form-label">Internet ID:</label>
+          <div class="col-sm-6">
+          <input type="text" ref="addMemberRef" class="form-control" id="internetId" v-on:keyup="addMemberError = null" @keyup.enter="lookupUser" placeholder="Internet ID" v-model="userLookupId">
+          <small id="addUserHelpBlock" class="form-text text-muted">
+            Enter one or more InternetIds or email addresses (comma-seperated ).
+          </small>
+        </div>
+      </div>
+        
+
+    <div class="form-group row">
+            
             </div>
             <div class="col-sm-3">
                 <button class="btn btn-primary" @click="lookupUser">Find User</button>
