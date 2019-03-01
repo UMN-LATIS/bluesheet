@@ -112,14 +112,33 @@
 
     <modal :show="addMember" @close="addMember = !addMember">
       <div class="row">
+          <label for="nameLookup" class="col-sm-3 col-form-label">Name:</label>
+          <div class="col-sm-6">
+          <autocomplete
+            source="/api/autocompleter/user?searchType=nameAndInternetId&q="
+            id="nameLookup"
+            results-property="items"
+            results-display="full_name"
+            results-value="mail"
+            ref="userAutocompleter"
+            input-class="form-control"
+            v-model="newUserId"
+            >
+          </autocomplete>
+          <small id="addUserHelpBlock" class="form-text text-muted">
+            Optional: Enter a name and select the person from the list
+          </small>
+      </div>
+      </div>
 
-        <label for="internetId" class="col-sm-3 col-form-label">Internet ID:</label>
-        <div class="col-sm-6">
+      
+      <div class="row">
+          <label for="internetId" class="col-sm-3 col-form-label">Internet ID:</label>
+          <div class="col-sm-6">
           <input type="text" ref="addMemberRef" class="form-control" id="internetId" v-on:keyup="addMemberError = null" @keyup.enter="lookupMember" placeholder="Internet ID" v-model="newUserId">
           <small id="addUserHelpBlock" class="form-text text-muted">
-            Comma separated list of InternetIds or email addresses works too.
+            Enter one or more InternetIds or email addresses (comma-seperated ).
           </small>
-
         </div>
       </div>
       <div class="row">
@@ -287,6 +306,7 @@ button {
         }
         else {
           this.newUserId = null;
+          this.$refs.userAutocompleter.display = "";
           this.addMember = false;
         }
         // this.group = res.data;

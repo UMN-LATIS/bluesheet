@@ -38,6 +38,9 @@ Route::group(['prefix'=>'/api/', 'middleware' => 'auth'], function () {
     Route::model('user', '\App\User', function() {
 
     });
+
+    Route::get('autocompleter/user', 'AutocompleteController@userAutocompleter');
+
     Route::post('user/lookup', 'UserController@userLookup');
     Route::resource('user', 'UserController');
     
