@@ -1,6 +1,6 @@
 module.exports = {
     title: 'CLA Groups Tool Documentation',
-    base: '/',
+    base: '/Caligari/',
     themeConfig: {
             // Assumes GitHub. Can also be a full GitLab url.
             
