@@ -2,7 +2,7 @@
         <tbody>
             <tr>
                 <th width=20%></th>
-                <th colspan=5 width=80%><span>{{ mindate | moment("YYYY-MM-DD") }}</span>
+                <th colspan=6 width=80%><span>{{ mindate | moment("YYYY-MM-DD") }}</span>
                 <span class="float-right">
                     {{ maxdate | moment("YYYY-MM-DD")}}
                     </span>
@@ -12,7 +12,7 @@
 
             <tr>
                 <th width=20%></th>
-                <th colspan="5" width=80%><span>{{ mindate | moment("YYYY-MM-DD") }}</span>
+                <th colspan="6" width=80%><span>{{ mindate | moment("YYYY-MM-DD") }}</span>
                 <span class="float-right">
                     {{ maxdate | moment("YYYY-MM-DD")}}
                     </span>
