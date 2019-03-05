@@ -1,7 +1,7 @@
 <template>
     <tr>
         <td>{{ member.user.displayName }}</td>
-        <td colspan="4"><div class="ganttBubble" v-bind:style="{ width: width + '%', 'margin-left': startPercent  + '%'}" v-tooltip.top-center="toolTipText">
+        <td colspan="6"><div class="ganttBubble" v-bind:style="{ width: width + '%', 'margin-left': startPercent  + '%'}" v-tooltip.top-center="toolTipText">
 
             </div>
             </td>
