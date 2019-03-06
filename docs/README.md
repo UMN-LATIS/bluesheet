@@ -4,7 +4,7 @@ sidebarDepth: 3
 
 # CLA Groups Tool
 
-The CLA Groups Tool is an easy way to track membership in commitees, departments, or anywhere else in which you need to maintain a list of people and their role.  In addition to current membership, the tool tracks historical membership, so you can ask questions like "Who was the chair of our faculty advisory group two years ago?".  The Groups Tool also allows you to query information how many groups a person is currently participating in, so you know whether it's safe to ask them to join another one.  
+The CLA Groups Tool is an easy way to track membership in committees, departments, or anywhere else in which you need to maintain a list of people and their role.  In addition to current membership, the tool tracks historical membership, so you can ask questions like "Who was the chair of our faculty advisory group two years ago?".  The Groups Tool also allows you to query information how many groups a person is currently participating in, so you know whether it's safe to ask them to join another one.  
 
 ## Gaining Access
 
@@ -12,7 +12,7 @@ Anyone with a University of Minnesota Internet ID has access to the groups tool.
 
 ### Group Management Access
 
-In order to create groups or browse existing groups, you need to be granted elevated priviledges.  As we're currently in development on this tool, those permissions are site-wide.  We may move to a more granular structure in the future, based on feedback from our users.  For now, to request the ability to create and manage groups, just [send us an email](mailto:mcfa0086@umn.edu).
+In order to create groups or browse existing groups, you need to be granted elevated privileges.  As we're currently in development on this tool, those permissions are site-wide.  We may move to a more granular structure in the future, based on feedback from our users.  For now, to request the ability to create and manage groups, just [send us an email](mailto:mcfa0086@umn.edu).
 
 ## Creating a Group
 
@@ -24,11 +24,11 @@ After creating a group, you can click "Edit Group" to adjust some additional set
 
 ### Show Unit Checkbox
 
-The "Show Unit" checkbox will include members' organizatonal unit in the list of members.  If all of your members are from one organization, you can turn this off to remove some clutter.
+The "Show Unit" checkbox will include members' organizational unit in the list of members.  If all of your members are from one organization, you can turn this off to remove some clutter.
 
 ### Artifacts
 
-Artifacts provide you a way to add arbitrary links to your group.  For example, you can link to the group's team drive, charter document, or shared calender.  Each artifact gets a title and a link.  **You must click save after adding artifacts**
+Artifacts provide you a way to add arbitrary links to your group.  For example, you can link to the group's team drive, charter document, or shared calendar.  Each artifact gets a title and a link.  **You must click save after adding artifacts**
 
 ## Adding Members
 
