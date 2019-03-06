@@ -18,10 +18,11 @@
     <ul>
         <li v-for="artifact in group.artifacts"><a v-bind:href="artifact.target">{{ artifact.label }}</a></li>
     </ul>
+    <template v-if="userperms > 0">
     <button class="btn btn-success" @click="showEmailList = !showEmailList">Show Email List</button>
     <button class="btn btn-info" @click="downloadList" >Download List</button>
-    
-    <members :members="group.members" :editing="false" :show_unit="group.show_unit"></members>
+    </template>
+    <members :members="group.members" :editing="false" :show_unit="group.show_unit" :userperms='userperms'></members>
     
     
     
@@ -33,13 +34,13 @@
             </div>
         </div>
     </modal>
-     <router-link :to="{'name':'userList', query:{'groupId':this.group.id}}" class="btn btn-outline-secondary">View membership counts</router-link>
+     <router-link v-if="userperms>0" :to="{'name':'userList', query:{'groupId':this.group.id}}" class="btn btn-outline-secondary">View membership counts</router-link>
 </div>
 </template>
 
 <script>
 export default {
-    props: ['group', 'editing'],
+    props: ['group', 'editing', 'userperms'],
     data() {
         return {
             showEmailList: false

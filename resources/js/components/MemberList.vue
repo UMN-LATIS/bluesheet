@@ -2,10 +2,10 @@
     <tbody>
         <tr :key="key" v-for="(member, key) in filteredList">
             <td>
-                <router-link :to="{ name: 'user', params: { userId: member.user.id } }" v-if="member.user.id">
+                <router-link :to="{ name: 'user', params: { userId: member.user.id } }" v-if="member.user.id && userperms>0">
                     {{ member.user.surname }}, {{ member.user.givenname }}
                 </router-link>
-                <span v-if="!member.user.id">{{ member.user.surname }}, {{ member.user.givenname }}</span>
+                <span v-if="!member.user.id || userperms == 0">{{ member.user.surname }}, {{ member.user.givenname }}</span>
             </td>
             <td v-if="show_unit">{{ member.user.ou }}</td>
             <td v-if="!editing">{{ member.role.label }}</td>
@@ -31,7 +31,7 @@
 
 <script>
 export default {
-    props: ['editing', 'filteredList', 'includePreviousMembers', 'roles', 'show_unit'],
+    props: ['editing', 'filteredList', 'includePreviousMembers', 'roles', 'show_unit', 'userperms'],
     data() {
         return {
 

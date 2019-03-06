@@ -1,8 +1,8 @@
 <template>
     <div>
         <header class="app-header">
-            <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-                <a class="navbar-brand" href="#">Caligari</a>
+            <nav class="navbar navbar-expand-lg navbar-dark bg-dark" v-if="userperms > 0">
+                <a class="navbar-brand" href="#">Groups</a>
               <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>

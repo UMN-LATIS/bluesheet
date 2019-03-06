@@ -45,15 +45,25 @@
           </div>
 
         </div>
-        <div class="row">
+         <div class="row">
           <div class="col-md-6">
+            <label for="groupURL" class="small">Public Group URL</label>
+            <input id="groupURL" class="form-control" @click="$event.target.select()" :value="groupURL">
+            <label class="form-check-label small" for="groupURL">
+                This URL will allow the group to be viewed without logging in.
+              </label>
+          </div>
+
+        </div>
+        <div class="row">
+          <!-- <div class="col-md-6">
             <div class="form-check">
               <input class="form-check-input" type="checkbox" v-model="group.private_group" id="privateGroup">
               <label class="form-check-label small" for="privateGroup">
                 Private Group
               </label>
             </div>
-          </div>
+          </div> -->
           <div class="col-md-6">
             <div class="form-check">
               <input class="form-check-input" type="checkbox" v-model="group.show_unit" id="showunit">
@@ -237,6 +247,11 @@ button {
            this.$refs.addMemberRef.focus();
          });
         }
+      }
+    },
+    computed: {
+      groupURL: function() {
+        return window.location.protocol + "//" + window.location.hostname +(window.location.port ? ':'+window.location.port: '') + "/group/" + this.group.id + "/" + this.group.secret_hash;
       }
     },
     methods: {

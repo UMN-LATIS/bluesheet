@@ -51,12 +51,17 @@ Route::group(['prefix'=>'/api/', 'middleware' => 'auth'], function () {
     Route::model('group', '\App\Group');
     Route::resource('group', 'GroupController');
     Route::get('group/{group}/members', 'GroupController@members');
+    
+    
 
 });
 
+// routes with hash to allow unauthenticated loads
+Route::get('/api/group/{group}/{hash}', 'GroupController@show');
+Route::get('/api/group/{group}/members/{hash}', 'GroupController@members');
 
 
-
+Route::get('/group/{group}/{hash}', 'HomeController@index');
 Route::group(['middleware' => 'auth'], function () {
     Route::get('/', 'HomeController@index');
     Route::any('{all}','HomeController@index')->where(['all' => '.*']);

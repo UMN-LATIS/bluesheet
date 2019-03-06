@@ -96,8 +96,19 @@
           if(this.groupId) {
             axios.get("/api/group/" + this.groupId)
             .then(res => {
-              var users = res.data.members.map(elem=>elem.user.id);
-              this.loadUsers(users);
+              this.group = res.data;
+              Vue.set(this.group, 'members', []);
+              this.group.members = [];
+              axios.get("/api/group/" + this.groupId + "/members")
+              .then(res => {
+                  Vue.set(this.group, 'members', res.data);
+                  var users = this.group.members.map(elem=>elem.user.id);
+                  this.loadUsers(users);
+              })
+              .catch(err => {
+                  this.error = err.response.data;
+              });
+              
             })
           }
           

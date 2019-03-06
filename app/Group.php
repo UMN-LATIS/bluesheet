@@ -65,4 +65,9 @@ class group extends Model implements Auditable
         }
     }
 
+    public function getHashAttribute()
+    {
+        return substr(sha1($this->id . config("app.key")), 0, 10);
+    }
+
 }

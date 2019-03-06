@@ -51,7 +51,7 @@
                     <th scope="col" v-if="editing">Remove</th>
                 </tr>
             </thead>
-            <member-list v-if="!showGantt" v-on:remove="removeMember" :show_unit="show_unit" :roles="roles" :editing="editing" :filteredList="filteredList" :includePreviousMembers="includePreviousMembers"></member-list>
+            <member-list v-if="!showGantt" v-on:remove="removeMember" :show_unit="show_unit" :roles="roles" :editing="editing" :filteredList="filteredList" :includePreviousMembers="includePreviousMembers" :userperms='userperms'></member-list>
             <gantt v-if="showGantt" :members="filteredList" :mindate="lowestValue" :maxdate="highestValue" :show_unit="show_unit"></gantt>
         </table>
     </div>
@@ -59,7 +59,7 @@
 
 <script>
     export default {
-        props: ['members', 'editing', 'roles', 'show_unit'],
+        props: ['members', 'editing', 'roles', 'show_unit', 'userperms'],
         data() {
             return {
                 includePreviousMembers: false,

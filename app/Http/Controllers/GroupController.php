@@ -64,10 +64,14 @@ class GroupController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($group)
+    public function show($group, $hash=null)
     {
-        if(!$group->activeMembers()->where('user_id', Auth::user()->id)->count() && Auth::user()->site_permissions < 200) {
-
+        if(($hash != $group->hash) && !$group->activeMembers()->where('user_id', Auth::user()->id)->count() && Auth::user()->site_permissions < 200) {
+            $returnData = array(
+                'status' => 'error',
+                'message' => "You don't have permission to access this group"
+            );
+            return Response()->json($returnData, 500);
         }
         else {
             return new GroupResource($group->load('members', 'members.user', 'members.role'));
@@ -225,9 +229,20 @@ class GroupController extends Controller
         return response()->json(["success"=>true]);
     }
 
-    public function members($group) {
-        $members = $group->members()->with('user','role')->get();
-        return MembershipResource::collection($members);
+    public function members($group, $hash=null) {
+
+        if(($hash != $group->hash) && !$group->activeMembers()->where('user_id', Auth::user()->id)->count() && Auth::user()->site_permissions < 200) {
+            $returnData = array(
+                'status' => 'error',
+                'message' => "You don't have permission to access this group"
+            );
+            return Response()->json($returnData, 500);
+        }
+        else {
+            $members = $group->members()->with('user','role')->get();
+            return MembershipResource::collection($members);
+        }
+        
     }
 
     // get available roles for autocomplete.  Debating the samrter way to do this.
