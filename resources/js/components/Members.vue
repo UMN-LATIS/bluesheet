@@ -41,7 +41,8 @@
                                 v-bind:class="{ 'fa-sort-alpha-up': currentSortDir == 'desc' && currentSort == 'user.ou', 'fa-sort-alpha-down': currentSortDir == 'asc' && currentSort == 'user.ou'}"></i></span></th>
                     <th scope="col"><span @click="sort('role.label')" class="sortableLink">Role <i class="fas"
                                 v-bind:class="{ 'fa-sort-alpha-up': currentSortDir == 'desc' && currentSort == 'role.label', 'fa-sort-alpha-down': currentSortDir == 'asc' && currentSort == 'role.label'}"></i></span></th>
-                    <th scope="col">Notes</th>
+                    <th scope="col"><span @click="sort('role.notes')" class="sortableLink">Notes<i class="fas"
+                                v-bind:class="{ 'fa-sort-alpha-up': currentSortDir == 'desc' && currentSort == 'role.notes', 'fa-sort-alpha-down': currentSortDir == 'asc' && currentSort == 'role.notes'}"></i></span></th>
                     <th scope="col"><span @click="sort('start_date')" class="sortableLink">From <i class="fas"
                                 v-bind:class="{ 'fa-sort-amount-up': currentSortDir == 'asc' && currentSort == 'start_date', 'fa-sort-amount-down': currentSortDir == 'desc' && currentSort == 'start_date'}"></i></span></th>
                     <th scope="col" v-if="includePreviousMembers"><span @click="sort('end_date')" class="sortableLink">Until
