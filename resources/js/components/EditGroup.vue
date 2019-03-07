@@ -117,7 +117,7 @@
         <p>Members:</p> 
       </div>
     </div>
-    <members :members.sync="group.members" :show_unit="group.show_unit" editing="true" :roles="roles"></members>
+    <members :members.sync="group.members" :show_unit="group.show_unit" editing="true" :roles="roles" :userperms='userperms'></members>
 
 
     <div class="row border border-danger rounded deactivate">
@@ -203,7 +203,7 @@ button {
 
 <script>
   export default {
-    props: ['group'],
+    props: ['group', 'userperms'],
     data() {
       return {
         addMember:false,

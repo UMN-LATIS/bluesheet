@@ -5,7 +5,7 @@
         </div>
         <viewgroup :group="group" v-if="!editing && group" v-bind:editing.sync="editing" :userperms='userperms'>
         </viewgroup>
-        <editgroup :group="group" v-if="editing && group" v-bind:editing.sync="editing" v-on:update:reload="loadGroup()" >
+        <editgroup :group="group" v-if="editing && group" v-bind:editing.sync="editing" :userperms='userperms' v-on:update:reload="loadGroup()" >
         </editgroup>
     </div>
 </template>
