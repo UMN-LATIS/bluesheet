@@ -118,7 +118,10 @@ export default {
 <style lang="stylus">
 @import './styles/config.styl'
 
+
 .nav-links
+  margin-top auto 
+  margin-bottom auto
   display inline-block
   a
     line-height 1.4rem
