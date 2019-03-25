@@ -13,7 +13,7 @@ class DefaultValueForOU extends Migration
      */
     public function up()
     {
-        Schema::table("group_types", function(Blueprint $table) {
+        Schema::table("users", function(Blueprint $table) {
             $table->string("ou")->nullable()->change();
         });
     }
