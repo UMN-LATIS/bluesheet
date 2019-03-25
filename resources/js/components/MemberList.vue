@@ -1,6 +1,10 @@
 <template>
     <tbody>
         <tr :key="key" v-for="(member, key) in filteredList">
+            <td v-if="filterList">
+                <input type="checkbox" @click="member.filtered = $event.target.value?true:false">
+            </td>
+
             <td>
                 <router-link :to="{ name: 'user', params: { userId: member.user.id } }" v-if="member.user.id && userperms>0">
                     {{ member.user.surname }}, {{ member.user.givenname }}
@@ -31,7 +35,7 @@
 
 <script>
 export default {
-    props: ['editing', 'filteredList', 'includePreviousMembers', 'roles', 'show_unit', 'userperms'],
+    props: ['editing', 'filteredList', 'filterList', 'includePreviousMembers', 'roles', 'show_unit', 'userperms'],
     data() {
         return {
 

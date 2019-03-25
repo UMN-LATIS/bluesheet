@@ -9,7 +9,7 @@
         <div class="form-group row">
                 <label for="groupType" class="col-sm-3 col-form-label">Group Type</label>
                 <div class="col-sm-6">
-                    <v-select v-if="groupTypes" id="groupTypes" taggable v-model="groupType" :options="groupTypes"></v-select>
+                    <v-select v-if="groupTypes" id="groupTypes" taggable v-model="groupType" :options="groupTypes" placeholder="Select..."></v-select>
                 </div>
         </div>
         <div class="form-group row" v-if="parentOrganizations">
@@ -38,6 +38,7 @@
 .vue-treeselect__control {
     border: 1px solid rgba(60,60,60,.26);
 }
+
 </style>
 
 <script>

@@ -35,6 +35,7 @@
         <table class="table">
             <thead>
                 <tr>
+                    <th scope="col" v-if="filterList">Filter</th>
                     <th scope="col"><span @click="sort('user.surname')" class="sortableLink">Name <i class="fas"
                                 v-bind:class="{ 'fa-sort-alpha-up': currentSortDir == 'desc' && currentSort == 'user.surname', 'fa-sort-alpha-down': currentSortDir == 'asc' && currentSort == 'user.surname'}"></i></span></th>
                     <th v-if="show_unit" scope="col"><span @click="sort('user.ou')" class="sortableLink">Unit <i class="fas"
@@ -51,15 +52,15 @@
                     <th scope="col" v-if="editing">Remove</th>
                 </tr>
             </thead>
-            <member-list v-if="!showGantt" v-on:remove="removeMember" :show_unit="show_unit" :roles="roles" :editing="editing" :filteredList="filteredList" :includePreviousMembers="includePreviousMembers" :userperms='userperms'></member-list>
-            <gantt v-if="showGantt" :members="filteredList" :mindate="lowestValue" :maxdate="highestValue" :show_unit="show_unit"></gantt>
+            <member-list v-if="!showGantt" v-on:remove="removeMember" :show_unit="show_unit" :roles="roles" :editing="editing" :filteredList="filteredList" :filterList="filterList" :includePreviousMembers="includePreviousMembers" :userperms='userperms'></member-list>
+            <gantt v-if="showGantt" :members="filteredList" :filterList="filterList" :mindate="lowestValue" :maxdate="highestValue" :show_unit="show_unit"></gantt>
         </table>
     </div>
 </template>
 
 <script>
     export default {
-        props: ['members', 'editing', 'roles', 'show_unit', 'userperms'],
+        props: ['members', 'editing', 'roles', 'show_unit', 'userperms', 'filterList'],
         data() {
             return {
                 includePreviousMembers: false,

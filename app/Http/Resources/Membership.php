@@ -16,6 +16,7 @@ class Membership extends JsonResource
     public function toArray($request)
     {
         return [
+            "filtered"=>false,
             "id"=>$this->id,
             "user"=>$this->user,
             "role"=>$this->role,

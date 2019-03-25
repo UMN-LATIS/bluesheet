@@ -32,6 +32,9 @@ Vue.use(Treeselect);
 import Autocomplete from 'vuejs-auto-complete'
 Vue.component('autocomplete', Autocomplete);
 
+import JsonCSV from 'vue-json-csv'
+Vue.component('downloadCsv', JsonCSV);
+
 
 // const files = require.context('./', true, /\.vue$/i)
 // files.keys().map(key => Vue.component(key.split('/').pop().split('.')[0], files(key)))
