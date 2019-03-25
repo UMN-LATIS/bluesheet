@@ -39,7 +39,23 @@ class GroupController extends Controller
 
         $newGroup = new \App\Group;
         $newGroup->group_title = $request->get("groupName");
-        $newGroup->group_type_id = $request->get("groupType");
+        
+        if($groupType = $request->get("groupType")) {
+            if(isset($groupType["id"])) {
+                $newGroup->group_type_id = $groupType["id"];
+            }
+            else {
+                $newGroup->group_type_id = $this->addOrFindGroupType($groupType["label"])->id;
+            }
+        }
+        else {
+            $returnData = array(
+            'status' => 'error',
+            'message' => 'Could Not Add or Update Group Type'
+            );
+            return Response()->json($returnData, 500);
+        }
+        
         $newGroup->parent_organization_id = $request->get("parentOrganization");
         $newGroup->active_group = 1;
         $newGroup->save();
@@ -97,7 +113,22 @@ class GroupController extends Controller
 
         $group->fill($request->all());
 
-        $group->group_type_id = $request->get("group_type")["id"];
+        if($groupType = $request->get("group_type")) {
+            if(isset($groupType["id"])) {
+                $group->group_type_id = $groupType["id"];
+            }
+            else {
+                $group->group_type_id = $this->addOrFindGroupType($groupType["label"])->id;
+            }
+        }
+        else {
+            $returnData = array(
+            'status' => 'error',
+            'message' => 'Could Not Add or Update Group Type'
+            );
+            return Response()->json($returnData, 500);
+        }
+        
         if($request->get("parent_organization")) {
             $group->parent_organization_id = $request->get("parent_organization")["id"];    
         }
@@ -204,6 +235,17 @@ class GroupController extends Controller
 
     }
 
+     private function addOrFindGroupType($label) {
+        $groupType = \App\GroupType::where("label", $label)->first();
+        if(!$groupType) {
+            $groupType = new \App\GroupType;
+            $groupType->label = ucwords($label);
+            $groupType->save();
+        }
+        return $groupType;
+
+    }
+
     /**
      * Remove the specified resource from storage.
      *
@@ -258,7 +300,11 @@ class GroupController extends Controller
     }
     // get available types for autocomplete.  Debating the samrter way to do this.
     public function types() {        
-        $groupTypes = \App\GroupType::all();
+        $roles = DB::table('groups')->select("group_type_id")
+        ->groupBy("group_type_id")
+        ->havingRaw("COUNT(group_type_id) > " . config('consts.MINIMUM_ROLE_COUNT'))->get()->pluck("group_type_id")->toArray();
+        
+        $groupTypes = \App\GroupType::find($roles);
 
         return response()->json($groupTypes);
     }

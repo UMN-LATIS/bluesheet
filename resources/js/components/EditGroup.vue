@@ -25,7 +25,7 @@
           <div class="col-sm-6">
             <div class="form-group">
               <label for="groupType" class="small">Group Type</label>
-              <treeselect v-model="group.group_type.id" :multiple="false" :options="groupTypes" :clearable="false" :searchable="true" :open-on-click="true" :close-on-select="true" label="group_type" v-if="groupTypes" />
+              <v-select v-if="groupTypes" id="roles" taggable v-model="group.group_type" :options="groupTypes"></v-select>
             </div>
           </div>
 
@@ -227,7 +227,8 @@ button {
       });
       axios.get("/api/group/types")
       .then(res => {
-        this.groupTypes = res.data.map(e => { return { id: e.id, label: e.group_type}});
+        this.groupTypes = res.data;
+        this.groupTypes.push(this.group.group_type);
       })
       .catch(err => {
 
@@ -286,7 +287,7 @@ button {
           }
         }
 
-        if(this.group.group_type == null || this.group.group_type.id == null) {
+        if(this.group.group_type == null) {
           this.saveError = "You must select a group type";
           this.showError = true;
           return false;

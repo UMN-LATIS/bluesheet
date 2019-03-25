@@ -6,7 +6,7 @@
             <h1>{{ group.group_title }}</h1>
             <ul class="groupInfo">
                 <li v-if="group.parent_organization">Parent Organization: <strong>{{ group.parent_organization.group_title }}</strong></li>
-                <li v-if="group.group_type">Group Type: <strong>{{ group.group_type.group_type }}</strong></li>
+                <li v-if="group.group_type">Group Type: <strong>{{ group.group_type.label }}</strong></li>
                 <li v-if="group.google_group">Google Group: <strong>{{ group.google_group }}</strong></li>
                 <li v-if="group.private_group"><strong>Private Group</strong></li>
                 <li>{{group.notes}}</li>

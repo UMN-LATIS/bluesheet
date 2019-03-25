@@ -9,7 +9,7 @@
         <div class="form-group row">
                 <label for="groupType" class="col-sm-3 col-form-label">Group Type</label>
                 <div class="col-sm-6">
-                    <treeselect v-model="groupType" :multiple="false" :options="groupTypes" :clearable="false" :searchable="true" :open-on-click="true" :close-on-select="true" label="group_type" />
+                    <v-select v-if="groupTypes" id="groupTypes" taggable v-model="groupType" :options="groupTypes"></v-select>
                 </div>
         </div>
         <div class="form-group row" v-if="parentOrganizations">
@@ -65,7 +65,7 @@
         mounted() {
             axios.get("/api/group/types")
             .then(res => {
-                this.groupTypes = res.data.map((o) => { return {"id": o.id, "label": o.group_type } });
+                this.groupTypes = res.data;
             })
             .catch(err => {
 
