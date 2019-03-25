@@ -228,7 +228,10 @@ button {
       axios.get("/api/group/types")
       .then(res => {
         this.groupTypes = res.data;
-        this.groupTypes.push(this.group.group_type);
+        if(this.groupTypes.filter(e => e.id == this.group.group_type.id).length == 0) {
+          this.groupTypes.push(this.group.group_type);
+        }
+        
       })
       .catch(err => {
 
