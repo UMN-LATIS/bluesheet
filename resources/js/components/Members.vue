@@ -35,7 +35,7 @@
         <table class="table">
             <thead>
                 <tr>
-                    <th scope="col" v-if="filterList">Filter</th>
+                    <th scope="col" v-if="filterList"  width=5%>Filter</th>
                     <th scope="col"><span @click="sort('user.surname')" class="sortableLink">Name <i class="fas"
                                 v-bind:class="{ 'fa-sort-alpha-up': currentSortDir == 'desc' && currentSort == 'user.surname', 'fa-sort-alpha-down': currentSortDir == 'asc' && currentSort == 'user.surname'}"></i></span></th>
                     <th v-if="show_unit" scope="col"><span @click="sort('user.ou')" class="sortableLink">Unit <i class="fas"

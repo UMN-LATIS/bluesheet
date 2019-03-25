@@ -2,7 +2,7 @@
     <tbody>
         <tr :key="key" v-for="(member, key) in filteredList">
             <td v-if="filterList">
-                <input type="checkbox" @click="member.filtered = $event.target.value?true:false">
+                <input type="checkbox" v-model="member.filtered">
             </td>
 
             <td>

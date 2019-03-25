@@ -1,5 +1,8 @@
 <template>
     <tr>
+        <td v-if="filterList">
+            <input type="checkbox" v-model="member.filtered">
+        </td>
         <td>{{ member.user.displayName }}</td>
         <td colspan="6"><div class="ganttBubble" v-bind:style="{ width: width + '%', 'margin-left': startPercent  + '%'}" v-tooltip.top-center="toolTipText">
 
@@ -14,7 +17,7 @@ $(function () {
         $("[data-toggle='tooltip']").tooltip();
     });
 export default {
-    props: ['member', 'mindate','maxdate', 'show_unit'],
+    props: ['member', 'mindate','maxdate', 'show_unit', 'filterList'],
     data() {
         return {
         }
