@@ -236,7 +236,7 @@ class GroupController extends Controller
     }
 
      private function addOrFindGroupType($groupType) {
-         if(is_array($groupType) & array_key_exists("label", $groupType)) {
+         if(is_array($groupType) && array_key_exists("label", $groupType)) {
              $label = $groupType["label"];
          }
          else {
