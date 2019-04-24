@@ -21,8 +21,8 @@
             <span v-if="!membership.group.id">{{ membership.group.group_title }}</span>
             </td>
             <td>{{ membership.role.label }}</td>
-            <td>{{ membership.start_date | moment("YYYY, MMM do") }}</td>
-            <td>{{ membership.end_date  | moment("YYYY, MMM do") }}</td>
+            <td>{{ membership.start_date | moment("YYYY, MMM Do") }}</td>
+            <td>{{ membership.end_date  | moment("YYYY, MMM Do") }}</td>
         </tr>
     </tbody>
   </table>
