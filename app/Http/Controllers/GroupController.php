@@ -45,7 +45,7 @@ class GroupController extends Controller
                 $newGroup->group_type_id = $groupType["id"];
             }
             else {
-                $newGroup->group_type_id = $this->addOrFindGroupType($groupType["label"])->id;
+                $newGroup->group_type_id = $this->addOrFindGroupType($groupType)->id;
             }
         }
         else {
@@ -235,7 +235,13 @@ class GroupController extends Controller
 
     }
 
-     private function addOrFindGroupType($label) {
+     private function addOrFindGroupType($groupType) {
+         if(array_key_exists("label", $groupType)) {
+             $label = $groupType["label"];
+         }
+         else {
+             $label = $groupType;
+         }
         $groupType = \App\GroupType::where("label", $label)->first();
         if(!$groupType) {
             $groupType = new \App\GroupType;
