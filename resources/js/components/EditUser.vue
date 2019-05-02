@@ -13,7 +13,11 @@
           <label class="form-check-label" for="privateGroup">
             Site Permissions
           </label>
-          <input class="form-control col-md-2" type="text" v-model="user.site_permissions" id="sitePermissions">
+          <select class="form-control col-md-2" v-model="user.site_permissions" id="sitePermissions">
+            <option value="100">User</option>
+            <option value="300">Administrator</option>
+          </select>
+
           
         </div>
       
