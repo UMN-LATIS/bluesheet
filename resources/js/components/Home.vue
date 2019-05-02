@@ -13,7 +13,7 @@
                     <router-link :to="{ name: 'user' }" class="nav-link">My Groups <i class="fas fa-user"></i></router-link>
                    </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#" @click.prevent="createGroup = true">Create Group <i class="fas fa-plus"></i></a>
+                    <a class="nav-link" href="#" @click.prevent="createGroup = true" v-if="isAdmin">Create Group <i class="fas fa-plus"></i></a>
                 </li>
                 <li class="nav-item">
                     <router-link :to="{ name: 'groupList' }" class="nav-link" v-if="isAdmin">Browse Groups <i class="fas fa-search"></i></router-link>

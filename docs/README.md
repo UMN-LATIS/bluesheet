@@ -58,3 +58,6 @@ The "Browse Groups" link in the header allows you to navigate through existing g
 
 Organizations provide a way to "group groups", based on College or other high-level organization.  Parent Organizations don't have their own memberships, they're just folders that hold other groups.  To request that a new parent organization be added, please [send us an email](mailto:mcfa0086@umn.edu).
 
+## Introduction Video
+
+<iframe width="100%" height="400" src="https://www.youtube.com/embed/PYuqWjCXaAk" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
