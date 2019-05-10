@@ -51,19 +51,19 @@ Vue.component('group', Group);
 import GroupList from './components/GroupList.vue';
 Vue.component('grouplist', GroupList);
 
-Vue.component('home', require('./components/Home.vue'));
-Vue.component('viewuser', require('./components/ViewUser.vue'));
-Vue.component('edituser', require('./components/EditUser.vue'));
-Vue.component('viewgroup', require('./components/ViewGroup.vue'));
-Vue.component('editgroup', require('./components/EditGroup.vue'));
-Vue.component('members', require('./components/Members.vue'));
-Vue.component('roles', require('./components/Roles.vue'));
-Vue.component('modal', require('./components/Modal.vue'));
-Vue.component('userlookup', require('./components/UserLookup.vue'));
-Vue.component('creategroup', require('./components/CreateGroup.vue'));
-Vue.component('gantt', require('./components/Gantt.vue'));
-Vue.component('gantt-row', require('./components/GanttRow.vue'));
-Vue.component('member-list', require('./components/MemberList.vue'));
+Vue.component('home', require('./components/Home.vue').default);
+Vue.component('viewuser', require('./components/ViewUser.vue').default);
+Vue.component('edituser', require('./components/EditUser.vue').default);
+Vue.component('viewgroup', require('./components/ViewGroup.vue').default);
+Vue.component('editgroup', require('./components/EditGroup.vue').default);
+Vue.component('members', require('./components/Members.vue').default);
+Vue.component('roles', require('./components/Roles.vue').default);
+Vue.component('modal', require('./components/Modal.vue').default);
+Vue.component('userlookup', require('./components/UserLookup.vue').default);
+Vue.component('creategroup', require('./components/CreateGroup.vue').default);
+Vue.component('gantt', require('./components/Gantt.vue').default);
+Vue.component('gantt-row', require('./components/GanttRow.vue').default);
+Vue.component('member-list', require('./components/MemberList.vue').default);
 
 
 /**
