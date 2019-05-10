@@ -13,7 +13,7 @@
           <label class="form-check-label" for="privateGroup">
             Site Permissions
           </label>
-          <select class="form-control col-md-2" v-model="user.site_permissions" id="sitePermissions">
+          <select class="form-control col-md-2" v-model="user.site_permissions" v-if="userperms > 100" id="sitePermissions">
             <option value="100">User</option>
             <option value="300">Administrator</option>
           </select>
