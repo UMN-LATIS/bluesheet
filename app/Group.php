@@ -14,7 +14,7 @@ class group extends Model implements Auditable
     public $timestamps = true;
 
     protected $fillable = [
-        'group_title', 'private_group', 'notes', 'google_group', 'show_unit'
+        'group_title', 'private_group', 'notes', 'google_group', 'show_unit', 'parent_group_id'
     ];
 
     /**
@@ -48,6 +48,13 @@ class group extends Model implements Auditable
         return $this->hasMany("App\GroupArtifact");
     }
 
+    public function parentGroup() {
+        return $this->belongsTo("App\Group");
+    }
+
+    public function childGroups() {
+        return $this->hasMany("App\Group", "parent_group_id");
+    }
     
     public function activeUsers() {
         return $this->activeMembers->pluck('user');

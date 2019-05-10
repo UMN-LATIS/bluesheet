@@ -22,17 +22,23 @@
         </div>
         <div class="row">
 
-          <div class="col-sm-6">
+          <div class="col-sm-4">
             <div class="form-group">
               <label for="groupType" class="small">Group Type</label>
               <v-select v-if="groupTypes" id="roles" taggable v-model="group.group_type" :options="groupTypes"></v-select>
             </div>
           </div>
 
-          <div class="col-sm-6">
+          <div class="col-sm-4">
             <div class="form-group">
               <label for="parentOrganization" class="small">Parent Organization</label>
               <treeselect v-model="group.parent_organization.id" :multiple="false" :options="parentOrganizations"  :clearable="false" :searchable="true" :open-on-click="true" :close-on-select="true" label="group_title" v-if="parentOrganizations" />
+            </div>
+          </div>
+           <div class="col-sm-4">
+            <div class="form-group">
+              <label for="parentGroup" class="small">Parent Group</label>
+              <v-select v-if="groups" id="roles" v-model="group.parent_group_id" :options="groups" :reduce="parent_group => parent_group.id"></v-select>
             </div>
           </div>
         </div>
@@ -214,7 +220,8 @@ button {
         saveError: null,
         roles: null,
         groupTypes: null,
-        parentOrganizations: null
+        parentOrganizations: null,
+        groups: null
       }
     },
     mounted() {
@@ -239,6 +246,13 @@ button {
       axios.get("/api/group/parents")
       .then(res => {
         this.parentOrganizations = this.remapParents(res.data);
+      })
+      .catch(err => {
+
+      });
+      axios.get("/api/group")
+      .then(res => {
+        this.groups = res.data.map(e => { return {id: e.id, label: e.group_title}});
       })
       .catch(err => {
 

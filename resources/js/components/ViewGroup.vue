@@ -6,10 +6,17 @@
             <h1>{{ group.group_title }}</h1>
             <ul class="groupInfo">
                 <li v-if="group.parent_organization">Parent Organization: <strong>{{ group.parent_organization.group_title }}</strong></li>
+                <li v-if="group.parent_group">Parent Group: <strong><router-link :to="{'name':'group', params: { groupId: group.parent_group.id }}">{{ group.parent_group.group_title }}</router-link></strong></li>
                 <li v-if="group.group_type">Group Type: <strong>{{ group.group_type.label }}</strong></li>
                 <li v-if="group.google_group">Google Group: <strong>{{ group.google_group }}</strong></li>
                 <li v-if="group.private_group"><strong>Private Group</strong></li>
                 <li>{{group.notes}}</li>
+                <li v-if="group.child_groups.length > 0">Sub Groups: <ul v-if="group.child_groups">
+                    <li v-for="child_group in group.child_groups">
+                        <router-link :to="{'name':'group', params: { groupId: child_group.id }}">{{ child_group.group_title }}</router-link>
+                    </li>
+                    </ul>
+                </li>
             </ul>
         </div>
     </div>

@@ -12,6 +12,8 @@
 
 @import '~@riophae/vue-treeselect/dist/vue-treeselect.css';
 
+@import '~vue-select/dist/vue-select.css';
+
 .navbar-laravel {
   background-color: #fff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
@@ -25,8 +27,8 @@
 .v-select.dropdown .dropdown-toggle::after {
     content: normal;
 }
-.v-select.dropdown .form-control {
-    height: 2em;
+.vs__selected-options {
+    height: 2.1em;
 }
 
 .tooltip {

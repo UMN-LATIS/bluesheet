@@ -56,6 +56,7 @@ class GroupController extends Controller
             return Response()->json($returnData, 500);
         }
         
+        
         $newGroup->parent_organization_id = $request->get("parentOrganization");
         $newGroup->active_group = 1;
         $newGroup->save();
@@ -132,7 +133,6 @@ class GroupController extends Controller
         if($request->get("parent_organization")) {
             $group->parent_organization_id = $request->get("parent_organization")["id"];    
         }
-        
 
         $group->save();
         $foundArtifactIds = [];
