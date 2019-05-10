@@ -22,6 +22,10 @@ If you've got the appropriate permissions, you can create a group by clicking "c
 
 After creating a group, you can click "Edit Group" to adjust some additional settings. You can change the group name, organization or type. 
 
+### Parent Group
+
+The "parent group" is a way to specify that this group is a sub-group or sub-committee.  For example, if you've got working groups that split off from a primary group to accomplish a task, you might use this feature to keep track of them. 
+
 ### Show Unit Checkbox
 
 The "Show Unit" checkbox will include members' organizational unit in the list of members.  If all of your members are from one organization, you can turn this off to remove some clutter.

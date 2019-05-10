@@ -11,8 +11,8 @@
                 <li v-if="group.google_group">Google Group: <strong>{{ group.google_group }}</strong></li>
                 <li v-if="group.private_group"><strong>Private Group</strong></li>
                 <li>{{group.notes}}</li>
-                <li v-if="group.child_groups.length > 0">Sub Groups: <ul v-if="group.child_groups">
-                    <li v-for="child_group in group.child_groups">
+                <li v-if="group.child_groups.filter(e=>e.active_group).length > 0">Sub Groups: <ul v-if="group.child_groups">
+                    <li v-for="child_group in group.child_groups.filter(e=>e.active_group)">
                         <router-link :to="{'name':'group', params: { groupId: child_group.id }}">{{ child_group.group_title }}</router-link>
                     </li>
                     </ul>
