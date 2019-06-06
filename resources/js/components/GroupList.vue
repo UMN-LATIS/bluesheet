@@ -16,6 +16,14 @@
             </tr>
         </tbody>
     </table>
+     <div class="form-group col-md-6">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" v-model="includeSubgroups" id="subgroups">
+              <label class="form-check-label " for="subgroups">
+                Include Sub-groups
+              </label>
+            </div>
+          </div>
 </div>
 </template>
 
@@ -26,7 +34,8 @@
                 groupList: [],
                 error: null,
                 filterOrg: 'All Groups',
-                parentOrganizations: []
+                parentOrganizations: [],
+                includeSubgroups: false
             }
         },
         mounted() {
@@ -38,7 +47,7 @@
                     if(this.filterOrg == 'All Groups' || (e.parent_organization && this.getChildrenOrgs(this.filterOrg, this.parentOrganizations).includes(e.parent_organization.id))) {
                         return e;
                     }
-                });
+                }).filter( x => (this.includeSubgroups || x.parent_group_id == null));
             }
         },
         methods: {
