@@ -42,7 +42,7 @@ export default {
     computed: {
         filteredList: function() {
             return this.sortedList.filter(function(role) {
-                if(role.end_date == null || this.includePastRoles) {
+                if(this.includePastRoles || this.$moment(role.end_date).isAfter(this.$moment())) {
                     return role;
                 }
 

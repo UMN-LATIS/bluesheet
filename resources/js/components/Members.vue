@@ -46,7 +46,7 @@
                                 v-bind:class="{ 'fa-sort-alpha-up': currentSortDir == 'desc' && currentSort == 'notes', 'fa-sort-alpha-down': currentSortDir == 'asc' && currentSort == 'notes'}"></i></span></th>
                     <th scope="col"><span @click="sort('start_date')" class="sortableLink">From <i class="fas"
                                 v-bind:class="{ 'fa-sort-amount-up': currentSortDir == 'asc' && currentSort == 'start_date', 'fa-sort-amount-down': currentSortDir == 'desc' && currentSort == 'start_date'}"></i></span></th>
-                    <th scope="col" v-if="includePreviousMembers"><span @click="sort('end_date')" class="sortableLink">Until
+                    <th scope="col" v-if="includePreviousMembers || editing"><span @click="sort('end_date')" class="sortableLink">Until
                             <i class="fas" v-bind:class="{ 'fa-sort-amount-up': currentSortDir == 'asc' && currentSort == 'end_date', 'fa-sort-amount-down': currentSortDir == 'desc' && currentSort == 'end_date'}"></i></span></th>
                     <th scope="col" v-if="editing">Group Admin</th>
                     <th scope="col" v-if="editing">Remove</th>
@@ -95,7 +95,7 @@
             },
             filteredList: function () {
                 return this.sortedList.filter(function (membership) {
-                    if (membership.end_date == null || this.includePreviousMembers) {
+                    if (this.includePreviousMembers || this.$moment(membership.end_date).isAfter(this.$moment())) {
                         var searchTerm = null;
                         if(this.searchValue) {
                             var searchTerm = this.searchValue.toLowerCase();
