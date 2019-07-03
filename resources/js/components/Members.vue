@@ -95,7 +95,7 @@
             },
             filteredList: function () {
                 return this.sortedList.filter(function (membership) {
-                    if (this.includePreviousMembers || membership.end_date == NULL || this.$moment(membership.end_date).isAfter(this.$moment())) {
+                    if (this.includePreviousMembers || membership.end_date == null || this.$moment(membership.end_date).isAfter(this.$moment())) {
                         var searchTerm = null;
                         if(this.searchValue) {
                             var searchTerm = this.searchValue.toLowerCase();
