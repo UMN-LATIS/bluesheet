@@ -91,7 +91,13 @@
                 }
             },
             highestValue: function () {
-                return this.$moment().unix();
+                var maxDate = null;
+                if (this.filteredList.length > 0) {
+                    maxDate = this.filteredList.map(m => this.$moment(m.end_date?m.end_date:this.$moment()).unix()).reduce((a, b) => Math.max(
+                        a, b))
+                }
+                return maxDate;
+                
             },
             filteredList: function () {
                 return this.sortedList.filter(function (membership) {
