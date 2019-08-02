@@ -38,18 +38,18 @@
                     <th scope="col" v-if="filterList"  width=5%>Filter</th>
                     <th scope="col"><span @click="sort('user.surname')" class="sortableLink">Name <i class="fas"
                                 v-bind:class="{ 'fa-sort-alpha-up': currentSortDir == 'desc' && currentSort == 'user.surname', 'fa-sort-alpha-down': currentSortDir == 'asc' && currentSort == 'user.surname'}"></i></span></th>
-                    <th v-if="show_unit" scope="col"><span @click="sort('user.ou')" class="sortableLink">Unit <i class="fas"
+                    <th v-if="show_unit && !showGantt" scope="col"><span @click="sort('user.ou')" class="sortableLink">Unit <i class="fas"
                                 v-bind:class="{ 'fa-sort-alpha-up': currentSortDir == 'desc' && currentSort == 'user.ou', 'fa-sort-alpha-down': currentSortDir == 'asc' && currentSort == 'user.ou'}"></i></span></th>
-                    <th scope="col"><span @click="sort('role.label')" class="sortableLink">Role <i class="fas"
+                    <th v-if="!showGantt" scope="col"><span @click="sort('role.label')" class="sortableLink">Role <i class="fas"
                                 v-bind:class="{ 'fa-sort-alpha-up': currentSortDir == 'desc' && currentSort == 'role.label', 'fa-sort-alpha-down': currentSortDir == 'asc' && currentSort == 'role.label'}"></i></span></th>
-                    <th scope="col"><span @click="sort('notes')" class="sortableLink">Notes<i class="fas"
+                    <th v-if="!showGantt" scope="col"><span @click="sort('notes')" class="sortableLink">Notes<i class="fas"
                                 v-bind:class="{ 'fa-sort-alpha-up': currentSortDir == 'desc' && currentSort == 'notes', 'fa-sort-alpha-down': currentSortDir == 'asc' && currentSort == 'notes'}"></i></span></th>
-                    <th scope="col"><span @click="sort('start_date')" class="sortableLink">From <i class="fas"
+                    <th v-if="!showGantt" scope="col"><span @click="sort('start_date')" class="sortableLink">From <i class="fas"
                                 v-bind:class="{ 'fa-sort-amount-up': currentSortDir == 'asc' && currentSort == 'start_date', 'fa-sort-amount-down': currentSortDir == 'desc' && currentSort == 'start_date'}"></i></span></th>
-                    <th scope="col" v-if="includePreviousMembers || editing"><span @click="sort('end_date')" class="sortableLink">Until
+                    <th scope="col" v-if="!showGantt && (includePreviousMembers || editing)"><span @click="sort('end_date')" class="sortableLink">Until
                             <i class="fas" v-bind:class="{ 'fa-sort-amount-up': currentSortDir == 'asc' && currentSort == 'end_date', 'fa-sort-amount-down': currentSortDir == 'desc' && currentSort == 'end_date'}"></i></span></th>
-                    <th scope="col" v-if="editing">Group Admin</th>
-                    <th scope="col" v-if="editing">Remove</th>
+                    <th scope="col" v-if="editing && !showGantt">Group Admin</th>
+                    <th scope="col" v-if="editing && !showGantt">Remove</th>
                 </tr>
             </thead>
             <member-list v-if="!showGantt" v-on:remove="removeMember" :show_unit="show_unit" :roles="roles" :editing="editing" :filteredList="filteredList" :filterList="filterList" :includePreviousMembers="includePreviousMembers" :userperms='userperms'></member-list>
