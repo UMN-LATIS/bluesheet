@@ -26,6 +26,10 @@ class RouteServiceProvider extends ServiceProvider
         //
 
         parent::boot();
+        Route::model('user', '\App\User', function() {
+
+        });
+        Route::model('group', '\App\Group');
     }
 
     /**
