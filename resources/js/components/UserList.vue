@@ -13,10 +13,10 @@
                 {{ user.surname }}, {{ user.givenname }}
               </router-link></td>
                 <td>
-                  <span v-if="committee" class="committee groupBadge" >{{ user.memberships.filter(elem=>((elem.end_date == null || this.$moment(elem.end_date).isAfter(this.$moment())) && elem.group.group_type_id == 1)).length }}</span>
-                  <span v-if="department" class="department groupBadge" >{{ user.memberships.filter(elem=>((elem.end_date == null || this.$moment(elem.end_date).isAfter(this.$moment()))  && elem.group.group_type_id == 2)).length }}</span>
-                  <span v-if="list" class="list groupBadge" >{{ user.memberships.filter(elem=>((elem.end_date == null || this.$moment(elem.end_date).isAfter(this.$moment())) && elem.group.group_type_id == 3)).length }}</span>
-                  <span v-if="group" class="group groupBadge" >{{ user.memberships.filter(elem=>((elem.end_date == null || this.$moment(elem.end_date).isAfter(this.$moment())) && elem.group.group_type_id == 4)).length }}</span>
+                  <span v-if="committee" class="committee groupBadge" >{{ user.memberships.filter(elem=>((elem.end_date == null || $moment(elem.end_date).isAfter($moment())) && elem.group.group_type_id == 1)).length }}</span>
+                  <span v-if="department" class="department groupBadge" >{{ user.memberships.filter(elem=>((elem.end_date == null || $moment(elem.end_date).isAfter($moment()))  && elem.group.group_type_id == 2)).length }}</span>
+                  <span v-if="list" class="list groupBadge" >{{ user.memberships.filter(elem=>((elem.end_date == null || $moment(elem.end_date).isAfter($moment())) && elem.group.group_type_id == 3)).length }}</span>
+                  <span v-if="group" class="group groupBadge" >{{ user.memberships.filter(elem=>((elem.end_date == null || $moment(elem.end_date).isAfter($moment())) && elem.group.group_type_id == 4)).length }}</span>
                 </td>
             </tr>
         </tbody>
