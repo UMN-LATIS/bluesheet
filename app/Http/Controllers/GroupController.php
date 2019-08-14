@@ -220,6 +220,14 @@ class GroupController extends Controller
 
         }
 
+        // if the submissions from the browser are missing some users, we assume they've been really deleted.  Let's remove the membership.
+        // this is the kind of thing that would happen automatically if we were using sync() but ...
+        $memberIds = array_column($request->get('members'), "id");
+        $missingMembers = array_diff($group->members()->pluck("id")->toArray(), $memberIds);
+        foreach($missingMembers as $missingMember) {
+            $loadedMember = \App\Membership::find($missingMember);
+            $loadedMember->delete();
+        }   
 
         return response()->json(["success"=>true]);
     }

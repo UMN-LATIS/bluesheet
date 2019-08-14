@@ -144,7 +144,16 @@
                     // this was an accidental record, just split it
                     this.$emit("update:members", this.members.filter(member => removeMember !== member));
                 } else {
-                    removeMember.end_date = this.$moment().format("YYYY-MM-DD hh:mm:ss");
+                    if(removeMember.end_date) {
+                        if(confirm("Are you sure you wish remove all record of this user within this group?")) {
+                            this.$emit("update:members", this.members.filter(member => removeMember !== member));
+                        }
+                    }
+                    else {
+                        removeMember.end_date = this.$moment().format("YYYY-MM-DD hh:mm:ss");
+                    }
+
+                    
                 }
 
             }
