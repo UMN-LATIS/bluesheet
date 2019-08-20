@@ -172,7 +172,7 @@
           <v-select v-if="roles" id="roles" taggable v-model="newRole" :options="roles"></v-select>
         </div>
         <div class="col-sm-3">
-          <button class="btn btn-primary" @click="lookupMember">Add Member</button>
+          <button class="btn btn-primary" style="white-space:nowrap;" @click="lookupMember">Add Member</button>
         </div>
 
       </div>
