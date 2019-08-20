@@ -230,7 +230,6 @@ class GroupController extends Controller
         unset($group->members);
         $memberIds = array_merge(array_column($request->get('members'), "id"), $newMemberIds);
         $missingMembers = array_diff($group->members()->pluck("id")->toArray(), $memberIds);
-        var_dump($missingMembers);
         foreach($missingMembers as $missingMember) {
             $loadedMember = \App\Membership::find($missingMember);
             $loadedMember->delete();
