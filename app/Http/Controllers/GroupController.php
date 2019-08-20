@@ -7,6 +7,7 @@ use App\Http\Resources\Group as GroupResource;
 use App\Http\Resources\Membership as MembershipResource;
 use DB;
 use Auth;
+Use Log;
 
 class GroupController extends Controller
 {
@@ -155,6 +156,7 @@ class GroupController extends Controller
             }
         }
 
+        $newMemberIds = array();
 
         foreach($request->get('members') as $member) {
             if(isset($member['id'])) {
@@ -216,18 +218,23 @@ class GroupController extends Controller
                 }
                 
                 $group->members()->save($newMember);
+                $newMemberIds[] = $newMember->id;
             }
 
         }
 
+        
+
         // if the submissions from the browser are missing some users, we assume they've been really deleted.  Let's remove the membership.
         // this is the kind of thing that would happen automatically if we were using sync() but ...
-        $memberIds = array_column($request->get('members'), "id");
+        unset($group->members);
+        $memberIds = array_merge(array_column($request->get('members'), "id"), $newMemberIds);
         $missingMembers = array_diff($group->members()->pluck("id")->toArray(), $memberIds);
+        var_dump($missingMembers);
         foreach($missingMembers as $missingMember) {
             $loadedMember = \App\Membership::find($missingMember);
             $loadedMember->delete();
-        }   
+        } 
 
         return response()->json(["success"=>true]);
     }
