@@ -190,6 +190,7 @@ class GroupController extends Controller
                     else {
                         return response()->json(["success"=>false, "error"=>"Could not save this role"]);
                     }
+                    $newMemberIds[] = $newMember->id;
                     
                 }
                 else {
@@ -227,7 +228,6 @@ class GroupController extends Controller
 
         // if the submissions from the browser are missing some users, we assume they've been really deleted.  Let's remove the membership.
         // this is the kind of thing that would happen automatically if we were using sync() but ...
-        unset($group->members);
         $memberIds = array_merge(array_column($request->get('members'), "id"), $newMemberIds);
         $missingMembers = array_diff($group->members()->pluck("id")->toArray(), $memberIds);
         foreach($missingMembers as $missingMember) {
