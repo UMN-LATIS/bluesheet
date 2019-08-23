@@ -64,10 +64,11 @@ export default {
             if(this.filterList) {
                 targetList = this.group.members.filter(e => e.filtered);
             }
+
             // return a list of email addresses of users that are currently active, de-duplicated and with null values removed
-            return targetList.map(function(elem, index) {
-                    return (elem.end_date == null)?elem.user.email:null;
-            }).filter(x => x).filter((elem, pos, arr) => {return arr.indexOf(elem) == pos;}).join(", ");
+            return targetList.map((elem, index) => 
+                    (elem.end_date == null || this.$moment(elem.end_date).isAfter(this.$moment()))?elem.user.email:null
+            ).filter(x => x).filter((elem, pos, arr) => {return arr.indexOf(elem) == pos;}).join(", ");
         },
         csvlist: function() {
             var targetList = this.group.members;
