@@ -45,6 +45,12 @@ task('assets:generate', function() {
   run('npm run production');
 })->desc('Assets generation');
 
+task('fix_storage_perms', '
+    touch storage/logs/laravel.log
+    sudo chown apache storage/logs/laravel.log
+    sudo chgrp apache storage/logs/laravel.log
+')->desc("Fix Apache Logs");
+after('artisan:migrate', 'fix_storage_perms');
 
 // $result = run("scl enable rh-php56 'php -v'");
 // Tasks
