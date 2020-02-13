@@ -40,8 +40,10 @@ Route::group(['prefix'=>'/api/', 'middleware' => 'auth'], function () {
 
     Route::post('user/lookup', 'UserController@userLookup');
     Route::resource('user', 'UserController');
+    Route::get('role/{role}', 'GroupController@role');
     
     Route::get('group/roles', 'GroupController@roles');
+    
     Route::get('group/types', 'GroupController@types');
     Route::get('group/parents', 'GroupController@parents');
 

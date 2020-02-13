@@ -123,7 +123,7 @@
         <p>Members:</p> 
       </div>
     </div>
-    <members :members.sync="group.members" :show_unit="group.show_unit" editing="true" :roles="roles" :userperms='userperms'></members>
+    <members :groupType="group.group_type.label" :members.sync="group.members" :show_unit="group.show_unit" editing="true" :roles="roles" :userperms='userperms' viewType="group"></members>
 
 
     <div class="row border border-danger rounded deactivate">

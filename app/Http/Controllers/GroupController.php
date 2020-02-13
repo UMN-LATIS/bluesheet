@@ -316,7 +316,16 @@ class GroupController extends Controller
         
         $rolesLoaded = \App\Role::find($roles);
 
-        return response()->json($rolesLoaded);
+        $officialRoles = \App\Role::where("official_department_role", 1)->get();
+
+
+        return response()->json($rolesLoaded->union($officialRoles));
+    }
+
+    public function role($role) {
+        $role->load("members", "members.user", "members.role", "members.group");
+        return response()->json($role);
+
     }
     // get available types for autocomplete.  Debating the samrter way to do this.
     public function types() {        

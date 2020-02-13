@@ -18,6 +18,9 @@
                 <li class="nav-item">
                     <router-link :to="{ name: 'groupList' }" class="nav-link" v-if="isAdmin">Browse Groups <i class="fas fa-search"></i></router-link>
                 </li>
+                 <li class="nav-item">
+                    <router-link :to="{ name: 'roleList' }" class="nav-link" v-if="isAdmin">Browse Roles <i class="fas fa-search"></i></router-link>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link" href="#" @click.prevent="findUser=true" v-if="isAdmin">User Lookup <i class="fas fa-users"></i></a>
                 </li>

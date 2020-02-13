@@ -30,6 +30,7 @@ class RouteServiceProvider extends ServiceProvider
 
         });
         Route::model('group', '\App\Group');
+        Route::model('role', '\App\Role');
     }
 
     /**

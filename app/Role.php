@@ -9,7 +9,7 @@ class Role extends Model
     public $timestamps = true;
 
     public function members() {
-    	return $this->belongsTo("App\Membership");
+    	return $this->hasMany("App\Membership");
     }
 
 }

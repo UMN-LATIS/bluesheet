@@ -11,10 +11,21 @@
                 </router-link>
                 <span v-if="!member.user.id || userperms == 0">{{ member.user.surname }}, {{ member.user.givenname }}</span>
             </td>
-            <td v-if="show_unit">{{ member.user.ou }}</td>
-            <td v-if="!editing">{{ member.role.label }}</td>
-            <td v-if="editing">
-                <v-select taggable v-model="member.role" :options="roles" v-if="roles"></v-select>
+            <td v-if="show_unit && viewType=='group'">{{ member.user.ou }}</td>
+            
+            <template v-if="viewType=='group'">
+                <td v-if="!editing">{{ member.role.label }}</td>
+                <td v-if="editing">
+                    <v-select taggable v-model="member.role" :options="roles" v-if="roles"></v-select>
+                </td>
+            </template>
+
+            <td v-if="viewType=='role'">
+                <router-link :to="{ name: 'group', params: { groupId: member.group.id } }" v-if="member.group.id && userperms>0">
+                     {{ member.group.group_title}}
+                </router-link>
+                <span v-if="!member.group.id || userperms == 0">{{ member.group.group_title}}</span>
+               
             </td>
 
             <td v-if="!editing">{{ member.notes }}</td>
@@ -27,6 +38,9 @@
                     moment("YYYY, MMM Do") }}</span></td>
             <td v-if="editing"><input type="date" class="form-control"
                         v-model.lazy="member.end_date"></td>
+            <td><i v-if="viewType=='group' && member.role.official_department_role && !editing" class="fa fa-check"></i>
+                <i v-else class="searchIcon fa fa-close"></i>
+                </td>
             <td v-if="editing" class="text-right"><input class="form-check-input" type="checkbox" v-model="member.admin"></td>
             <td v-if="editing"><button class="btn btn-danger" @click="$emit('remove', member, key)"><i class="fas fa-trash-alt"></i></button></td>
         </tr>
@@ -35,7 +49,7 @@
 
 <script>
 export default {
-    props: ['editing', 'filteredList', 'filterList', 'includePreviousMembers', 'roles', 'show_unit', 'userperms'],
+    props: ['editing', 'filteredList', 'filterList', 'includePreviousMembers', 'roles', 'show_unit', 'userperms', 'viewType'],
     data() {
         return {
 

@@ -1,5 +1,20 @@
 <template>
     <div>
+        <template v-if="userperms > 0 && !editing">
+            <button class="btn btn-success" @click="showEmailList = !showEmailList">Show Email List</button>
+            <download-csv class="btn btn-info" :data="csvlist">Download List</download-csv>
+            <button class="btn btn-primary" v-bind:class="{ active: filterList }" aria-pressed="false"
+                @click="filterList =! filterList">Filter List</button>
+        </template>
+        <modal :show="showEmailList" @close="showEmailList = !showEmailList">
+            <div class="row">
+                <div class="col-md-12">
+                    <p>Email list:</p>
+                    <textarea class="form-control" @click="$event.target.select()" :value=emailList rows=10></textarea>
+                </div>
+            </div>
+        </modal>
+
         <div class="row controlRow">
 
             <div class="col">
@@ -14,7 +29,8 @@
         <div class="row controlRow">
             <div class="col">
                 <div class="search-container" v-bind:class="{ expandBox: showSearch  }">
-                    <input v-model="searchValue" class="searchBox" ref="searchbox" v-if="showSearch" placeholder="Search">
+                    <input v-model="searchValue" class="searchBox" ref="searchbox" v-if="showSearch"
+                        placeholder="Search">
                     <a class=" button" @click="showSearch = !showSearch">
                         <i class="searchIcon fa fa-search"></i>
                     </a>
@@ -35,32 +51,69 @@
         <table class="table">
             <thead>
                 <tr>
-                    <th scope="col" v-if="filterList"  width=5%>Filter</th>
-                    <th scope="col"><span @click="sort('user.surname')" class="sortableLink">Name <i class="fas"
-                                v-bind:class="{ 'fa-sort-alpha-up': currentSortDir == 'desc' && currentSort == 'user.surname', 'fa-sort-alpha-down': currentSortDir == 'asc' && currentSort == 'user.surname'}"></i></span></th>
-                    <th v-if="show_unit && !showGantt" scope="col"><span @click="sort('user.ou')" class="sortableLink">Unit <i class="fas"
-                                v-bind:class="{ 'fa-sort-alpha-up': currentSortDir == 'desc' && currentSort == 'user.ou', 'fa-sort-alpha-down': currentSortDir == 'asc' && currentSort == 'user.ou'}"></i></span></th>
-                    <th v-if="!showGantt" scope="col"><span @click="sort('role.label')" class="sortableLink">Role <i class="fas"
-                                v-bind:class="{ 'fa-sort-alpha-up': currentSortDir == 'desc' && currentSort == 'role.label', 'fa-sort-alpha-down': currentSortDir == 'asc' && currentSort == 'role.label'}"></i></span></th>
-                    <th v-if="!showGantt" scope="col"><span @click="sort('notes')" class="sortableLink">Notes<i class="fas"
-                                v-bind:class="{ 'fa-sort-alpha-up': currentSortDir == 'desc' && currentSort == 'notes', 'fa-sort-alpha-down': currentSortDir == 'asc' && currentSort == 'notes'}"></i></span></th>
-                    <th v-if="!showGantt" scope="col"><span @click="sort('start_date')" class="sortableLink">From <i class="fas"
-                                v-bind:class="{ 'fa-sort-amount-up': currentSortDir == 'asc' && currentSort == 'start_date', 'fa-sort-amount-down': currentSortDir == 'desc' && currentSort == 'start_date'}"></i></span></th>
-                    <th scope="col" v-if="!showGantt && (includePreviousMembers || editing)"><span @click="sort('end_date')" class="sortableLink">Until
-                            <i class="fas" v-bind:class="{ 'fa-sort-amount-up': currentSortDir == 'asc' && currentSort == 'end_date', 'fa-sort-amount-down': currentSortDir == 'desc' && currentSort == 'end_date'}"></i></span></th>
+                    <th scope="col" v-if="filterList" width=5%>Filter</th>
+                    <th scope="col">
+                        <sortableLink sortLabel="Name" sortElement="user.surname" :currentSort="currentSort"
+                            :currentSortDir="currentSortDir" v-on:sort="sort" />
+                    </th>
+                    <th v-if="show_unit && !showGantt && viewType == 'group'" scope="col">
+                        <sortableLink sortLabel="Unit" sortElement="user.ou" :currentSort="currentSort"
+                            :currentSortDir="currentSortDir" v-on:sort="sort" />
+                    </th>
+                    <th v-if="!showGantt &&  viewType == 'group'" scope="col">
+                        <sortableLink sortLabel="Role" sortElement="role.label" :currentSort="currentSort"
+                            :currentSortDir="currentSortDir" v-on:sort="sort" />
+                    </th>
+                    
+                    <th v-if="!showGantt && viewType == 'role'" scope="col">
+                        <sortableLink sortLabel="Group" sortElement="group.group_title" :currentSort="currentSort"
+                            :currentSortDir="currentSortDir" v-on:sort="sort" />
+                    </th>
+
+
+                    <th v-if="!showGantt" scope="col">
+                        <sortableLink sortLabel="Notes" sortElement="notes" :currentSort="currentSort"
+                            :currentSortDir="currentSortDir" v-on:sort="sort" />
+                    </th>
+
+                    <th v-if="!showGantt" scope="col">
+                        <sortableLink sortLabel="From" sortElement="start_date" :currentSort="currentSort"
+                            :currentSortDir="currentSortDir" v-on:sort="sort" />
+                    </th>
+
+                    <th scope="col" v-if="!showGantt && (includePreviousMembers || editing)">
+                        <sortableLink sortLabel="Until" sortElement="end_date" :currentSort="currentSort"
+                            :currentSortDir="currentSortDir" v-on:sort="sort" />
+                    </th>
+                    <th scope="col" width=11% v-if="!showGantt && !editing &&  viewType == 'group'">
+                        <sortableLink sortLabel="Official Role" sortElement="official_department_role"
+                            :currentSort="currentSort" :currentSortDir="currentSortDir" v-on:sort="sort" />
+                    </th>
                     <th scope="col" v-if="editing && !showGantt">Group Admin</th>
                     <th scope="col" v-if="editing && !showGantt">Remove</th>
                 </tr>
             </thead>
-            <member-list v-if="!showGantt" v-on:remove="removeMember" :show_unit="show_unit" :roles="roles" :editing="editing" :filteredList="filteredList" :filterList="filterList" :includePreviousMembers="includePreviousMembers" :userperms='userperms'></member-list>
-            <gantt v-if="showGantt" :members="filteredList" :filterList="filterList" :mindate="lowestValue" :maxdate="highestValue" :show_unit="show_unit"></gantt>
+            <member-list v-if="!showGantt" v-on:remove="removeMember" :show_unit="show_unit" :roles="filteredRoles"
+                :editing="editing" :filteredList="filteredList" :filterList="filterList"
+                :includePreviousMembers="includePreviousMembers" :userperms='userperms' :viewType="viewType"></member-list>
+            <gantt v-if="showGantt" :members="filteredList" :filterList="filterList" :mindate="lowestValue"
+                :maxdate="highestValue" :show_unit="show_unit"></gantt>
         </table>
+        <div class="card mt-3 mb-3 col-sm-6" v-if="isDepartment && unfilledRoles.length > 0 ">
+            <div class="card-body">
+                <h4 class="card-title">Unassigned Official Roles</h4>
+                <p class="card-text">This department currently does not have people assigned to these official roles</p>
+            </div>
+            <ul class="list-group list-group-flush" v-for="officialRole in unfilledRoles" :key="officialRole.id">
+                <li class="list-group-item">{{ officialRole.label }}</li>
+            </ul>
+        </div>
     </div>
 </template>
 
 <script>
     export default {
-        props: ['members', 'editing', 'roles', 'show_unit', 'userperms', 'filterList'],
+        props: ['members', 'editing', 'roles', 'show_unit', 'userperms', 'groupType', 'viewType'],
         data() {
             return {
                 includePreviousMembers: false,
@@ -68,7 +121,9 @@
                 currentSort: 'start_date',
                 showSearch: false,
                 searchValue: null,
-                showGantt: false
+                showGantt: false,
+                showEmailList: false,
+                filterList: false,
             }
         },
         watch: {
@@ -84,6 +139,18 @@
             },
         },
         computed: {
+            officialRoles: function () {
+                return this.roles ? this.roles.filter(r => r.official_department_role == 1) : [];
+            },
+            filteredRoles: function () {
+                return this.isDepartment ? this.roles : this.roles.filter(r => r.official_department_role == 0);
+            },
+            unfilledRoles: function () {
+                return this.officialRoles.filter(r => !this.members.map(m => m.role.id).includes(r.id));
+            },
+            isDepartment: function () {
+                return this.groupType == 'Department';
+            },
             lowestValue: function () {
                 if (this.filteredList.length > 0) {
                     return this.filteredList.map(m => this.$moment(m.start_date).unix()).reduce((a, b) => Math.min(
@@ -93,21 +160,26 @@
             highestValue: function () {
                 var maxDate = null;
                 if (this.filteredList.length > 0) {
-                    maxDate = this.filteredList.map(m => this.$moment(m.end_date?m.end_date:this.$moment()).unix()).reduce((a, b) => Math.max(
+                    maxDate = this.filteredList.map(m => this.$moment(m.end_date ? m.end_date : this.$moment())
+                        .unix()).reduce((a, b) => Math.max(
                         a, b))
                 }
                 return maxDate;
-                
+
             },
             filteredList: function () {
                 return this.sortedList.filter(function (membership) {
-                    if (this.includePreviousMembers || membership.end_date == null || this.$moment(membership.end_date).isAfter(this.$moment())) {
+                    if (this.includePreviousMembers || membership.end_date == null || this.$moment(
+                            membership.end_date).isAfter(this.$moment())) {
                         var searchTerm = null;
-                        if(this.searchValue) {
+                        if (this.searchValue) {
                             var searchTerm = this.searchValue.toLowerCase();
                         }
-                        
-                        if (searchTerm === null || (membership.user.displayName.toLowerCase().includes(searchTerm) || membership.user.email.includes(searchTerm) || membership.role.label.toLowerCase().includes(searchTerm) || membership.user.ou.toLowerCase().includes(searchTerm))) {
+
+                        if (searchTerm === null || (membership.user.displayName.toLowerCase().includes(
+                                    searchTerm) || membership.user.email.includes(searchTerm) || membership
+                                .role.label.toLowerCase().includes(searchTerm) || membership.user.ou
+                                .toLowerCase().includes(searchTerm))) {
                             return membership;
                         }
 
@@ -127,6 +199,48 @@
                     if (a > b) return 1 * modifier;
                     return 0;
                 }.bind(this));
+            },
+            emailList: function () {
+                var targetList = this.members;
+                if (this.filterList) {
+                    targetList = this.members.filter(e => e.filtered);
+                }
+
+                // return a list of email addresses of users that are currently active, de-duplicated and with null values removed
+                return targetList.map((elem, index) =>
+                    (elem.end_date == null || this.$moment(elem.end_date).isAfter(this.$moment())) ? elem.user
+                    .email : null
+                ).filter(x => x).filter((elem, pos, arr) => {
+                    return arr.indexOf(elem) == pos;
+                }).join(", ");
+            },
+            csvlist: function () {
+                var targetList = this.members;
+                if (this.filterList) {
+                    targetList = this.members.filter(e => e.filtered);
+                }
+                const rows = targetList.map(r => {
+                    return {
+                        "surname": r.user.surname,
+                        "given name": r.user.givenname,
+                        "email": r.user.email,
+                        "role": r.role.label,
+                        "notes": r.notes,
+                        "start date": r.start_date,
+                        "end date": r.end_date
+                    }
+                });
+                return rows;
+                // let row_str = 'Surname, GivenName, Label, Notes, Start Date, End Date\n'
+                // row_str += rows.join('\n');
+
+                // console.log(row_str);
+
+                // const link = document.createElement("a");
+                // const file = new Blob([row_str], {type: 'text/csv'});
+                // link.href = URL.createObjectURL(file);
+                // link.download = '' + this.group.group_title + '.csv';
+                // link.click();
             }
         },
         methods: {
@@ -144,16 +258,15 @@
                     // this was an accidental record, just split it
                     this.$emit("update:members", this.members.filter(member => removeMember !== member));
                 } else {
-                    if(removeMember.end_date) {
-                        if(confirm("Are you sure you wish remove all record of this user within this group?")) {
+                    if (removeMember.end_date) {
+                        if (confirm("Are you sure you wish remove all record of this user within this group?")) {
                             this.$emit("update:members", this.members.filter(member => removeMember !== member));
                         }
-                    }
-                    else {
+                    } else {
                         removeMember.end_date = this.$moment().format("YYYY-MM-DD hh:mm:ss");
                     }
 
-                    
+
                 }
 
             }

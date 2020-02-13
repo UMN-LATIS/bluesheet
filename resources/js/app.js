@@ -48,8 +48,16 @@ Vue.component('userlist', UserList);
 import Group from './components/Group.vue';
 Vue.component('group', Group);
 
+import Role from './components/Role.vue';
+Vue.component('role', Role);
+
+
 import GroupList from './components/GroupList.vue';
 Vue.component('grouplist', GroupList);
+
+import RoleList from './components/RoleList.vue';
+Vue.component('roleList', GroupList);
+
 
 Vue.component('home', require('./components/Home.vue').default);
 Vue.component('viewuser', require('./components/ViewUser.vue').default);
@@ -64,6 +72,7 @@ Vue.component('creategroup', require('./components/CreateGroup.vue').default);
 Vue.component('gantt', require('./components/Gantt.vue').default);
 Vue.component('gantt-row', require('./components/GanttRow.vue').default);
 Vue.component('member-list', require('./components/MemberList.vue').default);
+Vue.component('sortableLink', require('./components/Sortable.vue').default);
 
 
 /**
@@ -80,7 +89,9 @@ const router = new VueRouter({
     { name: 'user', path: "/user/:userId?", component: UserHome, props:true },
     { name: 'userList', path: "/userList/", component: UserList, props: (route) => ({ users: route.query.users, groupId:route.query.groupId })},
     { name: 'group', path: "/group/:groupId/:hash?", component: Group, props:true },
+    { name: 'role', path: "/role/:roleId", component: Role, props:true },
     { name: 'groupList', path: "/groups/", component: GroupList, props:true },
+    { name: 'roleList', path: "/roles/", component: RoleList, props:true },
   ]
 })
 
