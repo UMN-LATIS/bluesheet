@@ -104,10 +104,11 @@
                 <h4 class="card-title">Unassigned Official Roles</h4>
                 <p class="card-text">This department currently does not have people assigned to these official roles</p>
             </div>
-            <ul class="list-group list-group-flush" v-for="officialRole in unfilledRoles" :key="officialRole.id">
-                <li class="list-group-item">{{ officialRole.label }}</li>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item" v-for="officialRole in unfilledRoles" :key="officialRole.id">{{ officialRole.label }}</li>
             </ul>
         </div>
+
     </div>
 </template>
 

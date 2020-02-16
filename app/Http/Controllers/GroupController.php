@@ -318,8 +318,9 @@ class GroupController extends Controller
 
         $officialRoles = \App\Role::where("official_department_role", 1)->get();
 
-
-        return response()->json($rolesLoaded->union($officialRoles));
+        $merged = $rolesLoaded->merge($officialRoles);
+        $sorted = $merged->sortBy("label")->values()->all();
+        return response()->json($sorted);
     }
 
     public function role($role) {
