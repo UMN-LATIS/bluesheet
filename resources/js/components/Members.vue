@@ -64,7 +64,7 @@
                         <sortableLink sortLabel="Role" sortElement="role.label" :currentSort="currentSort"
                             :currentSortDir="currentSortDir" v-on:sort="sort" />
                     </th>
-                    
+
                     <th v-if="!showGantt && viewType == 'role'" scope="col">
                         <sortableLink sortLabel="Group" sortElement="group.group_title" :currentSort="currentSort"
                             :currentSortDir="currentSortDir" v-on:sort="sort" />
@@ -86,7 +86,7 @@
                             :currentSortDir="currentSortDir" v-on:sort="sort" />
                     </th>
                     <th scope="col" width=11% v-if="!showGantt && !editing &&  viewType == 'group'">
-                        <sortableLink sortLabel="Official Role" sortElement="official_department_role"
+                        <sortableLink sortLabel="Official Role" sortElement="role.official_department_role"
                             :currentSort="currentSort" :currentSortDir="currentSortDir" v-on:sort="sort" />
                     </th>
                     <th scope="col" v-if="editing && !showGantt">Group Admin</th>
@@ -95,7 +95,8 @@
             </thead>
             <member-list v-if="!showGantt" v-on:remove="removeMember" :show_unit="show_unit" :roles="filteredRoles"
                 :editing="editing" :filteredList="filteredList" :filterList="filterList"
-                :includePreviousMembers="includePreviousMembers" :userperms='userperms' :viewType="viewType"></member-list>
+                :includePreviousMembers="includePreviousMembers" :userperms='userperms' :viewType="viewType">
+            </member-list>
             <gantt v-if="showGantt" :members="filteredList" :filterList="filterList" :mindate="lowestValue"
                 :maxdate="highestValue" :show_unit="show_unit"></gantt>
         </table>
@@ -104,9 +105,23 @@
                 <h4 class="card-title">Unassigned Official Roles</h4>
                 <p class="card-text">This department currently does not have people assigned to these official roles</p>
             </div>
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item" v-for="officialRole in unfilledRoles" :key="officialRole.id">{{ officialRole.label }}</li>
-            </ul>
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item"  v-for="(officialCategory, index) in officialRoleCategories" :key="index">
+                        <a class="nav-link" :class="{ 'active': index === 0 }" :id="officialCategory + '-tab'" data-toggle="tab" :href="'#' + officialCategory" role="tab"
+                            aria-controls="home" aria-selected="true">{{ officialCategory }} <span class="badge badge-secondary">{{ rolesForOfficialCategory(officialCategory).length }}</span></a>
+                    </li>
+                </ul>
+                <div class="tab-content" id="myTabContent">
+                    
+                    <div v-for="(officialCategory, index) in officialRoleCategories" :key="index" class="tab-pane fade" :id="officialCategory" role="tabpanel" aria-labelledby="officialCategory + '-tab'" :class="{ 'show active': index === 0 }">
+                        <ul class="list-group list-group-flush">
+                                <li class="list-group-item" v-for="officialRole in rolesForOfficialCategory(officialCategory)" :key="officialRole.id">
+                                {{ officialRole.label }}</li>
+                        </ul>
+
+                    </div>
+                </div>
+                
         </div>
 
     </div>
@@ -142,6 +157,11 @@
         computed: {
             officialRoles: function () {
                 return this.roles ? this.roles.filter(r => r.official_department_role == 1) : [];
+            },
+            officialRoleCategories: function () {
+                var allOfficialRoles = this.officialRoles ? this.officialRoles.map(r => r.official_role_category.category)
+                 : [];
+                return [...new Set(allOfficialRoles)];
             },
             filteredRoles: function () {
                 return this.isDepartment ? this.roles : this.roles.filter(r => r.official_department_role == 0);
@@ -245,6 +265,9 @@
             }
         },
         methods: {
+            rolesForOfficialCategory: function(category) {
+                return this.unfilledRoles.filter(r => r.official_role_category.category == category);
+            },
             sort: function (s) {
                 //if s == current sort, reverse
                 if (s === this.currentSort) {

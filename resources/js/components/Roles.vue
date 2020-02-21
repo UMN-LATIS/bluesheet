@@ -17,8 +17,8 @@
       </thead>
       <tbody>
         <tr v-for="membership in filteredList">
-            <td><router-link :to="{ name: 'group', params: { groupId: membership.group.id } }" v-if="membership.group.id">{{ membership.group.group_title }}</router-link>
-            <span v-if="!membership.group.id">{{ membership.group.group_title }}</span>
+            <td><router-link :to="{ name: 'group', params: { groupId: membership.group.id } }" v-if="membership.group.id"><group-title :group="membership.group" /></router-link>
+            <span v-if="!membership.group.id"><group-title :group="membership.group" /></span>
             </td>
             <td>{{ membership.role.label }}</td>
             <td>{{ membership.start_date | moment("YYYY, MMM Do") }}</td>

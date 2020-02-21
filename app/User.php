@@ -41,4 +41,12 @@ class User extends Authenticatable implements Auditable
         return $this->hasManyThrough('App\Group', 'App\Membership', 'user_id', 'id', 'id', 'group_id');
     }
 
+    public function favoriteGroups() {
+        return $this->belongsToMany('App\Group', 'favorite_groups');
+    }
+
+    public function favoriteRoles() {
+        return $this->belongsToMany('App\Role', 'favorite_roles');
+    }
+
 }

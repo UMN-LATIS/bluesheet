@@ -11,11 +11,19 @@
 
         <div class="form-group row">
 
-          <div class="col-sm-8">
-
-            <input class="form-control" type="text" v-model="group.group_title">
+          <div class="col-sm-6">
+             <div class="form-group">
+              <label for="groupTitle" class="small">Group Title</label>
+              <input  id="groupTitle" class="form-control" type="text" v-model="group.group_title">
+            </div>
           </div>
-          <div class="col-sm-4">
+           <div class="col-sm-3">
+             <div class="form-group">
+              <label for="abbreviation" class="small">Abbreviation</label>
+              <input id="abbreviation" class="form-control" v-model="group.abbreviation">
+            </div>
+          </div>
+          <div class="col-sm-3">
             <button class="btn btn-success float-right" @click="save">Save</button>
             <button class="btn btn-outline-primary float-right" @click="$emit('update:editing', false); $emit('update:reload')">Cancel Editing</button>
           </div>

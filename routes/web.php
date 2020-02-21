@@ -50,7 +50,10 @@ Route::group(['prefix'=>'/api/', 'middleware' => 'auth'], function () {
     Route::resource('group', 'GroupController');
     Route::get('group/{group}/members', 'GroupController@members');
     
-    
+    Route::post("user/favorite/groups/{group}", "UserController@addFavoriteGroup");
+    Route::post("user/favorite/roles/{role}", "UserController@addFavoriteRole");
+    Route::delete("user/favorite/groups/{group}", "UserController@destroyFavoriteGroup");
+    Route::delete("user/favorite/roles/{role}", "UserController@destroyFavoriteRole");
 
 });
 

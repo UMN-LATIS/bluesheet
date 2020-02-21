@@ -78,6 +78,7 @@
 
         },
         mounted() {
+            this.$store.dispatch('fetchUser')
             console.log('Component mounted.')
         }
     }

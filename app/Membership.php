@@ -12,7 +12,7 @@ class Membership extends Model implements Auditable
     use \OwenIt\Auditing\Auditable;
     use SoftDeletes;
     public $timestamps = true;
-
+    protected $touches = ['group'];
     /**
      * The attributes that should be mutated to dates.
      *

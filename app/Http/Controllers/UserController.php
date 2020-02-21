@@ -52,7 +52,7 @@ class UserController extends Controller
             return Response()->json($returnData, 500);
         }
         else {
-            $user->load(['memberships', 'memberships.group', 'memberships.role']);
+            $user->load(['memberships', 'memberships.group', 'memberships.role', 'favoriteGroups', 'favoriteRoles']);
         
             return new UserResource($user);    
         }
@@ -92,6 +92,42 @@ class UserController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    public function addFavoriteRole($role) {
+        $user = Auth::user();
+        $user->favoriteRoles()->attach($role);
+        $returnData = array(
+            'status' => 'success',
+        );
+        return Response()->json($returnData);
+    }
+
+    public function addFavoriteGroup($group) {
+        $user = Auth::user();
+        $user->favoriteGroups()->attach($group);
+        $returnData = array(
+            'status' => 'success',
+        );
+        return Response()->json($returnData);
+    }
+    
+    public function destroyFavoriteGroup($group) {
+        $user = Auth::user();
+        $user->favoriteGroups()->detach($group);
+        $returnData = array(
+            'status' => 'success',
+        );
+        return Response()->json($returnData);
+    }
+
+    public function destroyFavoriteRole($role) {
+        $user = Auth::user();
+        $user->favoriteRoles()->detach($role);
+        $returnData = array(
+            'status' => 'success',
+        );
+        return Response()->json($returnData);
     }
 
     function extract_emails($str){

@@ -8,6 +8,17 @@
         <edituser :user="user" v-if="editing && user" v-bind:editing.sync="editing" :userperms="userperms">
         </edituser>
         <roles :memberships="memberships" ></roles>
+
+        <div class="row mt-5">
+            <div class="col" v-if="user.favoriteGroups.length > 0">
+                <h3>Favorite Groups</h3>
+                <favorites v-if="!userId" :user="user" type="group"></favorites>
+            </div>
+            <div class="col" v-if="user.favoriteRoles.length > 0">
+                <h3>Favorite Roles</h3>
+                <favorites v-if="!userId" :user="user" type="role"></favorites>
+            </div>
+        </div>
     </div>
 </template>
 

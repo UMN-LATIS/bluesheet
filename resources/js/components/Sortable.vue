@@ -9,6 +9,7 @@
 
 .sortableLink {
     cursor: pointer;
+    text-transform:capitalize;
 }
 
 </style>

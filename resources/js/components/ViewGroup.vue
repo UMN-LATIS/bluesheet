@@ -2,8 +2,12 @@
     <div>
         <div class="row">
           <div class="col-md-12">
-            <button class="btn btn-outline-primary float-right" @click="$emit('update:editing', true)" v-if="group.user_can_edit">Edit Group</button>
-            <h1>{{ group.group_title }}</h1>
+            <div class="btn-group float-right" role="group" aria-label="Edit Controls">
+            <button class="btn btn-outline-primary" @click="$store.dispatch('toggleFavorite', {type: 'groups', item: group})"><i class="fa-star" v-bind:class="{ 'fas' : groupFavorited, 'far': !groupFavorited} "></i> Favorite</button>
+            <button class="btn btn-outline-primary" @click="$emit('update:editing', true)" v-if="group.user_can_edit">Edit Group</button>
+            
+            </div>
+            <h1><group-title :group="group" /></h1>
             <ul class="groupInfo">
                 <li v-if="group.parent_organization">Parent Organization: <strong>{{ group.parent_organization.group_title }}</strong></li>
                 <li v-if="group.parent_group">Parent Group: <strong><router-link :to="{'name':'group', params: { groupId: group.parent_group.id }}">{{ group.parent_group.group_title }}</router-link></strong></li>
@@ -34,12 +38,24 @@
 </div>
 </template>
 
+<style scoped>
+
+</style>
+
 <script>
 export default {
     props: ['group', 'editing', 'userperms'],
     data() {
         return {
-            roles: []
+            roles: [],
+        }
+    },
+    computed: {
+        groupFavorited: function() {
+            if(this.$store.state.favorites["groups"]) {
+                return this.$store.state.favorites["groups"].filter(g => g.id == this.group.id).length > 0;
+            }
+            
         }
     },
     mounted() {
@@ -50,9 +66,6 @@ export default {
       .catch(err => {
         this.error = err.response.data;
       });
-    },
-    computed: {
-        
     }
 }
 </script>

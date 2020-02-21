@@ -11,7 +11,9 @@
           </thead>
           <tbody>
             <tr v-for="(group, key) in sortedFilteredGroupList" v-if="groupList">
-                <td v-if="group.active"><router-link :to="{ name: 'group', params: { groupId: group.id } }">{{ group.group_title }}</router-link></td>
+                <td v-if="group.active"><router-link :to="{ name: 'group', params: { groupId: group.id } }">
+                        <group-title :group="group" />
+                    </router-link></td>
                 
             </tr>
         </tbody>

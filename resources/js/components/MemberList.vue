@@ -22,7 +22,7 @@
 
             <td v-if="viewType=='role'">
                 <router-link :to="{ name: 'group', params: { groupId: member.group.id } }" v-if="member.group.id && userperms>0">
-                     {{ member.group.group_title}}
+                    <group-title :group="member.group" />
                 </router-link>
                 <span v-if="!member.group.id || userperms == 0">{{ member.group.group_title}}</span>
                

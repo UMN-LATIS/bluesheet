@@ -12,4 +12,8 @@ class Role extends Model
     	return $this->hasMany("App\Membership");
     }
 
+    public function officialRoleCategory() {
+        return $this->belongsTo("App\OfficialRoleCategory");
+    }
+
 }

@@ -9,6 +9,8 @@ require('./bootstrap');
 
 window.Vue = require('vue');
 
+import Vuex from 'vuex'
+Vue.use(Vuex)
 
 import VueRouter from 'vue-router'
 Vue.use(VueRouter)
@@ -56,6 +58,7 @@ import GroupList from './components/GroupList.vue';
 Vue.component('grouplist', GroupList);
 
 import RoleList from './components/RoleList.vue';
+import Axios from 'axios';
 Vue.component('roleList', GroupList);
 
 
@@ -73,6 +76,56 @@ Vue.component('gantt', require('./components/Gantt.vue').default);
 Vue.component('gantt-row', require('./components/GanttRow.vue').default);
 Vue.component('member-list', require('./components/MemberList.vue').default);
 Vue.component('sortableLink', require('./components/Sortable.vue').default);
+Vue.component('favorites', require('./components/Favorites.vue').default);
+Vue.component('group-title', require('./components/GroupTitle.vue').default);
+
+const store = new Vuex.Store({
+  state: {
+    favorites: {
+      groups: [],
+      roles: []
+    }
+  },
+  actions: {
+    toggleFavorite({commit, state}, payload) {
+      var type = payload.type;
+      var item = payload.item;
+      if (state.favorites[type].filter(f => f.id == item.id).length > 0) {
+        axios.delete('/api/user/favorite/' + type + '/' + item.id)
+        .then(response => {
+          commit('removeFavorite', payload);
+        });
+      }
+      else {
+        axios.post('/api/user/favorite/' + type + '/' + item.id)
+            .then(response => {
+                commit('addFavorite', payload);
+            });
+      }
+    },
+    fetchUser(context) {
+      axios.get("/api/user/show")
+      .then(response => {
+        context.commit('setFavorites', {type: "groups", content: response.data.favoriteGroups});
+        context.commit('setFavorites', {
+                    type: "roles",
+                    content: response.data.favoriteRoles});
+      });
+    }
+  },
+  mutations: {
+    addFavorite(state, payload) {
+      state.favorites[payload.type].push(payload.item);
+    },
+    removeFavorite(state, payload) {
+      state.favorites[payload.type] = state.favorites[payload.type].filter(f => f.id != payload.item.id);
+    },
+    setFavorites(state, payload) {
+      state.favorites[payload.type] = payload.content;
+    }
+  }
+});
+
 
 
 /**
@@ -98,5 +151,6 @@ const router = new VueRouter({
 
 const app = new Vue({
     el: '#app',
+    store,
     router
 });
