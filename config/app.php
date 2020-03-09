@@ -177,7 +177,7 @@ return [
 
         StudentAffairsUwm\Shibboleth\ShibbolethServiceProvider::class,
         StudentAffairsUwm\Shibboleth\ShibalikeServiceProvider::class,
-
+        Barryvdh\Debugbar\ServiceProvider::class,
     ],
 
     /*

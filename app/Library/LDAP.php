@@ -6,7 +6,7 @@ namespace App\Library;
 class LDAP
 {
 
-	public static function lookupUser($lookupValue, $lookupType="cn") {
+	public static function lookupUser($lookupValue, $lookupType="cn", $existingUser =null) {
 		putenv('LDAPTLS_REQCERT=never');
         $connect = ldap_connect( 'ldaps://ldap-dsee.oit.umn.edu', 636);
         $base_dn = array("o=University of Minnesota, c=US",);
@@ -23,15 +23,23 @@ class LDAP
             if(!isset($info[0]["umndid"])) {
                 continue;
             }
-            $foundUser = new \App\User;
+            if($existingUser) {
+                $foundUser = $existingUser;
+            }
+            else {
+                $foundUser = new \App\User;
+                $foundUser->site_permissions = 100;
+            }
+            
             $foundUser->umndid = isset($info[0]["umndid"])?$info[0]["umndid"][0]:"";
             $foundUser->surname = isset($info[0]["sn"])?$info[0]["sn"][0]:"";
             $foundUser->givenname = isset($info[0]["givenname"])?$info[0]["givenname"][0]:"";
             $foundUser->displayName =isset( $info[0]["displayname"])?$info[0]["displayname"][0]:"";
             $foundUser->email =isset( $info[0]["mail"])?$info[0]["mail"][0]:"";
             $foundUser->office = isset($info[0]["umnofficeaddress1"])?$info[0]["umnofficeaddress1"][0]:"";
+            $foundUser->title = isset($info[0]["title"])?$info[0]["title"][0]:"";
             $foundUser->ou = isset($info[0]["ou"])?$info[0]["ou"][0]:"";
-            $foundUser->site_permissions = 100;
+            
             break;
         }
         return $foundUser;

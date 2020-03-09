@@ -248,7 +248,9 @@
                         "role": r.role.label,
                         "notes": r.notes,
                         "start date": r.start_date,
-                        "end date": r.end_date
+                        "end date": r.end_date,
+                        "office": r.user.office.replace(/ \$ /g, "\n"),
+                        "title": r.user.title
                     }
                 });
                 return rows;
