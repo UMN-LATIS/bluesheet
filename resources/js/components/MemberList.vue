@@ -38,9 +38,10 @@
                     moment("YYYY, MMM Do") }}</span></td>
             <td v-if="editing"><input type="date" class="form-control"
                         v-model.lazy="member.end_date"></td>
-            <td><i v-if="viewType=='group' && member.role.official_department_role && !editing" class="fa fa-check"></i>
+            
+            <td v-if="!editing"><i v-if="viewType=='group' && member.role.official_department_role" class="fa fa-check"></i>
                 <i v-else class="searchIcon fa fa-close"></i>
-                </td>
+            </td>
             <td v-if="editing" class="text-right"><input class="form-check-input" type="checkbox" v-model="member.admin"></td>
             <td v-if="editing"><button class="btn btn-danger" @click="$emit('remove', member, key)"><i class="fas fa-trash-alt"></i></button></td>
         </tr>
