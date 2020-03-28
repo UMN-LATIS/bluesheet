@@ -19,7 +19,7 @@
                 </div>
         </div>
         <div class="form-group row">
-            <div class="col-sm-3">
+            <div class="col-sm-4">
                 <button class="btn btn-primary" @click="createGroup">Create Group</button>
             </div>
         </div>
