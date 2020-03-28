@@ -9,7 +9,7 @@
             </div>
             <h1><group-title :group="group" /></h1>
             <ul class="groupInfo">
-                <li v-if="group.parent_organization">Parent Organization: <strong>{{ group.parent_organization.group_title }}</strong></li>
+                <li v-if="group.parent_organization">Parent Organization: <strong><router-link :to="{ name: 'groupList', params: { parent: group.parent_organization.id } }">{{ group.parent_organization.group_title }}</router-link></strong></li>
                 <li v-if="group.parent_group">Parent Group: <strong><router-link :to="{'name':'group', params: { groupId: group.parent_group.id }}">{{ group.parent_group.group_title }}</router-link></strong></li>
                 <li v-if="group.group_type">Group Type: <strong>{{ group.group_type.label }}</strong></li>
                 <li v-if="group.google_group">Google Group: <strong>{{ group.google_group }}</strong></li>
