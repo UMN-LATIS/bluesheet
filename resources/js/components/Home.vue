@@ -54,7 +54,7 @@
     margin-top: 10px;
 }
 
-.router-link-exact-active {
+.router-link-active {
     color: white !important;
 }
 

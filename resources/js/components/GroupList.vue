@@ -81,7 +81,7 @@
 
                 var cumulativeRoute = [];
                 var breadCrumbArray = [{"title":"Groups", "path": "/groups/"}];
-
+                console.log(pathToItem)
                 for(var item of pathToItem) {
                     cumulativeRoute.push(item);
 
@@ -127,6 +127,9 @@
                 return flat;
             },
             getPathToChild: function(targetId, targetGroup) {
+                if(!targetId) {
+                    return [];
+                }
                 for(var org of targetGroup) {
                     if(org.id == targetId) {
                         // we've found our target, flatten the rest
