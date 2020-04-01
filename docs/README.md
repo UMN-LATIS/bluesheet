@@ -78,6 +78,9 @@ The notes field can be used to capture any extra data - for example, a reminder 
 
 When a group is deactivated, all of the current members are marked as inactive.  The group is not deleted though, so it will still be available for historical purposes, and membership can still be accessed.  This is a good way to retire a group that is no longer functioning.
 
+## Favorites
+
+
 ## Browsing Groups
 
 The "Browse Groups" link in the header allows you to navigate through existing groups, or filter by folder hierarchy. 
@@ -92,4 +95,4 @@ Folders provide a way to "group groups", based on College or other high-level or
 
 ## Introduction Video
 
-<iframe width="100%" height="400" src="https://www.youtube.com/embed/PYuqWjCXaAk" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="100%" height="400" src="https://www.youtube.com/embed/yKkhzgQW8jU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
