@@ -9,7 +9,7 @@
          <table class="table" v-if="currentOrganizations.length > 0">
             <thead>
                 <tr>
-                    <th scope="col">Child Organizations</th>
+                    <th scope="col">Folders</th>
               </tr>
           </thead>
           <tbody>
@@ -25,7 +25,7 @@
         <table class="table" v-if="sortedFilteredGroupList.length > 0">
             <thead>
                 <tr>
-                    <th scope="col">Group Name</th>
+                    <th scope="col">Groups</th>
               </tr>
           </thead>
           <tbody>

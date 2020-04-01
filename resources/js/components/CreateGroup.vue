@@ -13,7 +13,7 @@
                 </div>
         </div>
         <div class="form-group row" v-if="parentOrganizations">
-                <label for="parentOrganization" class="col-sm-3 col-form-label">Parent Organization</label>
+                <label for="parentOrganization" class="col-sm-3 col-form-label">Folder</label>
                 <div class="col-sm-6">
                      <treeselect v-model="parentOrganization" :multiple="false" :options="parentOrganizations"  :clearable="false" :searchable="true" :open-on-click="true" :close-on-select="true" label="group_title"/>
                 </div>
@@ -97,7 +97,7 @@
                     return;
                 }
                 if(this.parentOrganization == null) {
-                    this.groupNameError = "You must select a parent organization";
+                    this.groupNameError = "You must select a folder";
                     return;
                 }
                 this.groupNameError = null;

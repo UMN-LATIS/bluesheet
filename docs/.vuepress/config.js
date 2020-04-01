@@ -1,10 +1,11 @@
 module.exports = {
-    title: 'CLA Groups Tool Documentation',
+    plugins: ['vuepress-plugin-export'],
+    title: 'Groups Tool Documentation',
     base: '/Caligari/',
     themeConfig: {
             // Assumes GitHub. Can also be a full GitLab url.
             
-        repo: 'https://github.umn.edu/mcfa0086/caligari',
+            repo: 'umn-latis/ChimeIn2.0',
             // Customising the header label
             // Defaults to "GitHub"/"GitLab"/"Bitbucket" depending on `themeConfig.repo`
             repoLabel: 'Contribute!',

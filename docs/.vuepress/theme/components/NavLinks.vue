@@ -34,9 +34,9 @@
 </template>
 
 <script>
-import DropdownLink from './DropdownLink.vue'
-import { resolveNavLinkItem } from './util'
-import NavLink from './NavLink.vue'
+import DropdownLink from '@theme/components/DropdownLink.vue'
+import { resolveNavLinkItem } from '../util'
+import NavLink from '@theme/components/NavLink.vue'
 
 export default {
   components: { NavLink, DropdownLink },
@@ -116,12 +116,7 @@ export default {
 </script>
 
 <style lang="stylus">
-@import './styles/config.styl'
-
-
 .nav-links
-  margin-top auto 
-  margin-bottom auto
   display inline-block
   a
     line-height 1.4rem
