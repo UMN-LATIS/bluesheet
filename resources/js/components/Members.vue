@@ -100,7 +100,7 @@
             <gantt v-if="showGantt" :members="filteredList" :filterList="filterList" :mindate="lowestValue"
                 :maxdate="highestValue" :show_unit="show_unit"></gantt>
         </table>
-        <div class="card mt-3 mb-3 col-sm-6" v-if="isDepartment && unfilledRoles.length > 0 ">
+        <div class="card mt-3 mb-3 col-sm-6" v-if="isDepartment && unfilledRoles.length > 0 && editing">
             <div class="card-body">
                 <h4 class="card-title">Unassigned Official Roles</h4>
                 <p class="card-text">This department currently does not have people assigned to these official roles</p>
