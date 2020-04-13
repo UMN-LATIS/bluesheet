@@ -163,9 +163,7 @@
                 }
                 for(var child of org) {
                     returnArray.push(child);
-                    if(child.children) {
-                        returnArray.push(this.getAllChildren(child.children));    
-                    }
+                    
                     
                 }
                 return returnArray;
