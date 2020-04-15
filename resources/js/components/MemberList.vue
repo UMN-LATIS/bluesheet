@@ -32,12 +32,12 @@
             <td v-if="editing"><input class="form-control" v-model="member.notes"></td>
 
             <td v-if="!editing">{{ member.start_date | moment("YYYY, MMM Do") }}</td>
-            <td v-if="editing"><input type="date" class="form-control" v-model.lazy="member.start_date"></td>
+            <td v-if="editing"><input type="date" class="form-control" :value="member.start_date" @blur="member.start_date = $event.target.value"></td>
 
             <td v-if="includePreviousMembers && !editing"><span v-if="member.end_date">{{ member.end_date |
                     moment("YYYY, MMM Do") }}</span></td>
             <td v-if="editing"><input type="date" class="form-control"
-                        v-model.lazy="member.end_date"></td>
+                        :value="member.end_date" @blur="member.end_date = $event.target.value"></td>
             
             <td v-if="!editing"><i v-if="viewType=='group' && member.role.official_department_role" class="fa fa-check"></i>
                 <i v-else class="searchIcon fa fa-close"></i>

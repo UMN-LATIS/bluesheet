@@ -164,6 +164,9 @@
                 return [...new Set(allOfficialRoles)];
             },
             filteredRoles: function () {
+                if(!this.roles) {
+                    return [];
+                }
                 return this.isDepartment ? this.roles : this.roles.filter(r => r.official_department_role == 0);
             },
             unfilledRoles: function () {
