@@ -170,7 +170,7 @@
                 return this.isDepartment ? this.roles : this.roles.filter(r => r.official_department_role == 0);
             },
             unfilledRoles: function () {
-                return this.officialRoles.filter(r => !this.filteredList.map(m => m.role.id).includes(r.id));
+                return this.officialRoles.filter(r => !this.filteredList.map(m => m.role?m.role.id:null).includes(r.id));
             },
             isDepartment: function () {
                 return this.groupType == 'Department';
