@@ -71,7 +71,7 @@
                 groupList: [],
                 error: null,
                 parentOrganizations: [],
-                includeSubgroups: false,
+                includeSubgroups: true,
                 showAllGroups: false
             }
         },
