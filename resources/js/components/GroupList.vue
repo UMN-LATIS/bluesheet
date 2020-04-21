@@ -29,10 +29,17 @@
               </tr>
           </thead>
           <tbody>
-            <tr v-for="(group, key) in sortedFilteredGroupList" v-if="groupList">
-                <td v-if="group.active"><router-link :to="{ name: 'group', params: { groupId: group.id } }">
+            <tr v-for="(group, key) in sortedFilteredGroupList" :key="key" v-if="groupList">
+                <td v-if="group.active">
+                    <router-link :to="{ name: 'group', params: { groupId: group.id } }">
                         <group-title :group="group" />
-                    </router-link></td>
+                    </router-link>
+                    <ul v-if="includeSubgroups && getChildrenOrgs(group.id, groupList)[0].child_groups.length > 0">
+                        <li v-for="subgroup in getChildrenOrgs(group.id, groupList)[0].child_groups" :key="subgroup.id">
+                            <router-link :to="{ name: 'group', params: { groupId: subgroup.id } }"><group-title :group="subgroup" /></router-link>
+                        </li>
+                    </ul>
+                    </td>
                 
             </tr>
         </tbody>
@@ -106,7 +113,7 @@
                     if(e.parent_organization && e.parent_organization.id == this.parent) {
                         return e;
                     }
-                }).filter( x => (this.includeSubgroups || x.parent_group_id == null));
+                }).filter( x => (x.parent_group_id == null));
             }
         },
         methods: {
