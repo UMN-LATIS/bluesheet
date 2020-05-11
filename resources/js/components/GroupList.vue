@@ -1,11 +1,20 @@
 <template>
     <div>
-        <nav class="breadcrumb">
+        <div class="row">
+            <div class="col-10">
+                <nav class="breadcrumb">
             <router-link v-for="breadcrumb in breadCrumbs" :key="breadcrumb.title" class="breadcrumb-item" :to="{path: breadcrumb.path}" active-class="active" exact-active-class="" exact>{{ breadcrumb.title }}</router-link>
-            <!-- <a class="breadcrumb-item" href="#"></a> -->
-            <!-- <span class="breadcrumb-item active"></span> -->
         </nav>
 
+            </div>
+            <div class="col-2 p-1">
+                
+
+              <input type="text"
+                class="form-control" v-model="searchTerm"  placeholder="Search">
+                </div>
+        </div>
+        
          <!-- <table class="table" v-if="currentOrganizations.length > 0">
             <thead>
                 <tr>
@@ -72,11 +81,25 @@
                 error: null,
                 parentOrganizations: [],
                 includeSubgroups: true,
-                showAllGroups: false
+                showAllGroups: false,
+                searchTerm: null
             }
         },
         mounted() {
             this.loadGroups();
+        },
+        watch: {
+            searchTerm: function() {
+                if(this.searchTerm.length > 0) {
+                    axios.post("/api/group/search", {searchTerm: this.searchTerm})
+                    .then(res => {
+                        this.groupList = res.data;
+                    });
+                }
+                else {
+                    this.loadGroups();
+                }
+            }
         },
         computed: {
             breadCrumbs: function() {
