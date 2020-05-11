@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Resources\Group as GroupResource;
 use App\Http\Resources\Membership as MembershipResource;
+use App\ParentOrganization;
 use DB;
 use Auth;
 Use Log;
@@ -20,6 +21,21 @@ class GroupController extends Controller
     {
 
          return GroupResource::collection(\App\Group::where("active_group",1)->get()->load("groupType", "parentGroup", "childGroups", "parentOrganization", "artifacts", "activeMembers"));
+    }
+
+    public function getGroupsByFolder(ParentOrganization $parentOrganization=null) {
+        if(!$parentOrganization) {
+            $childFolders = \App\ParentOrganization::whereNull("parent_organization_id")->get();
+            $childGroups = [];
+
+        }
+        else {
+            $childFolders = $parentOrganization->childOrganizations;
+            $childGroups = $parentOrganization->groups->load("childGroups");
+            
+        }
+        return response()->json(["folders"=>$childFolders, "groups"=>$childGroups]);
+
     }
 
     /**

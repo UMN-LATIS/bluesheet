@@ -90,7 +90,7 @@
                             :currentSort="currentSort" :currentSortDir="currentSortDir" v-on:sort="sort" />
                     </th>
                     <th scope="col" v-if="editing && !showGantt">Group Admin</th>
-                    <th scope="col" v-if="editing && !showGantt">Remove</th>
+                    <th scope="col" v-if="editing && !showGantt">End Active Membership</th>
                 </tr>
             </thead>
             <member-list v-if="!showGantt" v-on:remove="removeMember" :show_unit="show_unit" :roles="filteredRoles"

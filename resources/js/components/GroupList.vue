@@ -6,10 +6,10 @@
             <!-- <span class="breadcrumb-item active"></span> -->
         </nav>
 
-         <table class="table" v-if="currentOrganizations.length > 0">
+         <!-- <table class="table" v-if="currentOrganizations.length > 0">
             <thead>
                 <tr>
-                    <th scope="col">Folders</th>
+                    <th scope="col">Groups</th>
               </tr>
           </thead>
           <tbody>
@@ -18,29 +18,29 @@
                 </td>
             </tr>
           </tbody>
-         </table>
+         </table> -->
 
-
-
-        <table class="table" v-if="sortedFilteredGroupList.length > 0">
+        <table class="table" v-if="groupList">
             <thead>
                 <tr>
                     <th scope="col">Groups</th>
               </tr>
           </thead>
           <tbody>
-            <tr v-for="(group, key) in sortedFilteredGroupList" :key="key" v-if="groupList">
-                <td v-if="group.active">
-                    <router-link :to="{ name: 'group', params: { groupId: group.id } }">
+            <tr v-for="(group, key) in mergedSortedList" :key="key">
+                <td v-if="group.active_group">
+                    <i class="fas fa-users"></i> <router-link :to="{ name: 'group', params: { groupId: group.id } }">
                         <group-title :group="group" />
                     </router-link>
-                    <ul v-if="includeSubgroups && getChildrenOrgs(group.id, groupList)[0].child_groups.length > 0">
-                        <li v-for="subgroup in getChildrenOrgs(group.id, groupList)[0].child_groups" :key="subgroup.id">
+                    <ul v-if="includeSubgroups && group.child_groups.length > 0">
+                        <li v-for="subgroup in group.child_groups" :key="subgroup.id">
                             <router-link :to="{ name: 'group', params: { groupId: subgroup.id } }"><group-title :group="subgroup" /></router-link>
                         </li>
                     </ul>
                     </td>
-                
+                <td v-if="!group.active_group && !group.created_at">
+                    <i class="fas fa-folder"></i> <router-link :to='{ path: "/groups/" + group.id }'>{{ group.group_title }}</router-link>
+                </td>
             </tr>
         </tbody>
     </table>
@@ -68,7 +68,7 @@
         props: ["parent"],
         data() {
             return {
-                groupList: [],
+                groupList: null,
                 error: null,
                 parentOrganizations: [],
                 includeSubgroups: true,
@@ -88,7 +88,7 @@
 
                 var cumulativeRoute = [];
                 var breadCrumbArray = [{"title":"Groups", "path": "/groups/"}];
-                console.log(pathToItem)
+
                 for(var item of pathToItem) {
                     cumulativeRoute.push(item);
 
@@ -96,24 +96,18 @@
                 }
                 return breadCrumbArray;
             },
-            currentOrganizations: function() {
-                if(!this.parent) {
-                    return this.parentOrganizations;
-                }
-                else {
-                    return this.getChildrenOrgs(this.parent, this.parentOrganizations).filter(o => o.id != this.parent);
-                }
-                
-            },
-            sortedFilteredGroupList: function() {
-                if(this.showAllGroups) {
-                    return _.sortBy(this.groupList, [group => group.group_title.toLowerCase()]);
-                }
-                return _.sortBy(this.groupList, [group => group.group_title.toLowerCase()]).filter((e)=>{
-                    if(e.parent_organization && e.parent_organization.id == this.parent) {
-                        return e;
+
+            mergedSortedList: function() {
+
+                var merged = this.groupList.folders.concat(this.groupList.groups);
+                merged.sort((a, b)=> {
+                    if(!a.group_title || !b.group_title) { 
+                        return 0;
                     }
-                }).filter( x => (x.parent_group_id == null));
+
+                    return a.group_title.localeCompare(b.group_title);
+                });
+                return merged;
             }
         },
         methods: {
@@ -149,46 +143,18 @@
                 }
                 return [];
             },
-            getChildrenOrgs: function(targetId, targetGroup) {
-                for(var org of targetGroup) {
-                    if(org.id == targetId) {
-                        // we've found our target, flatten the rest
-                        return this.flatten([org, this.getAllChildren(org.children)]);
-                    }
-                    else if(org.children) {
-                        // walk the tree to find our target
-                        return this.getChildrenOrgs(targetId, org.children);    
-                    }
-                }
-                return [];
-
-            },
-            getAllChildren: function(org) {
-                var returnArray = [];
-                if(!org) {
-                    return returnArray;
-                }
-                for(var child of org) {
-                    returnArray.push(child);
-                    
-                    
-                }
-                return returnArray;
-            },
+         
             loadGroups() {
-                axios.get("/api/group/")
+                axios.get("/api/folder/" + (this.parent?this.parent:""))
                 .then(res => {
                     this.groupList = res.data;
                 })
-                .catch(err => {
-                    this.error = err.response.data;
-                });
+         
                  axios.get("/api/group/parents")
                  .then(res => {
                     this.parentOrganizations = this.remapParents(res.data);
                 })
                 .catch(err => {
-
                 });
             }
         }

@@ -46,6 +46,7 @@ Route::group(['prefix'=>'/api/', 'middleware' => 'auth'], function () {
     
     Route::get('group/types', 'GroupController@types');
     Route::get('group/parents', 'GroupController@parents');
+    Route::get('folder/{parentOrganization?}', 'GroupController@getGroupsByFolder');
 
     Route::resource('group', 'GroupController');
     Route::get('group/{group}/members', 'GroupController@members');

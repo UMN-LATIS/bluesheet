@@ -43,7 +43,7 @@
                 <i v-else class="searchIcon fa fa-close"></i>
             </td>
             <td v-if="editing" class="text-right"><input class="form-check-input" type="checkbox" v-model="member.admin"></td>
-            <td v-if="editing"><button class="btn btn-danger" @click="$emit('remove', member, key)"><i class="fas fa-trash-alt"></i></button></td>
+            <td v-if="editing"><button class="btn btn-danger" @click="$emit('remove', member, key)"><i class="fas fa-user-minus"></i></button></td>
         </tr>
     </tbody>
 </template>
