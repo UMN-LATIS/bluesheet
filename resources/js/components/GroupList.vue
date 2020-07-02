@@ -111,12 +111,12 @@
 
                 var cumulativeRoute = [];
                 var breadCrumbArray = [{"title":"Groups", "path": "/groups/"}];
-
                 for(var item of pathToItem) {
                     cumulativeRoute.push(item);
 
                     breadCrumbArray.push({"title": item.label, "path": "/groups/" + item.id});
                 }
+                console.log(breadCrumbArray)
                 return breadCrumbArray;
             },
 
@@ -154,14 +154,20 @@
                 if(!targetId) {
                     return [];
                 }
+
                 for(var org of targetGroup) {
+
                     if(org.id == targetId) {
                         // we've found our target, flatten the rest
                         return [org];
                     }
                     else if(org.children) {
                         // walk the tree to find our target
-                        return this.flatten([org, this.getPathToChild(targetId, org.children)]);
+                        var childrenGroups = this.getPathToChild(targetId, org.children);
+                        if(childrenGroups.length > 0) {
+                            return this.flatten([org, childrenGroups]);
+                        }
+                    
                     }
                 }
                 return [];
