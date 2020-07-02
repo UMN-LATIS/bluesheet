@@ -30,7 +30,7 @@
         <li v-for="artifact in group.artifacts"><a v-bind:href="artifact.target">{{ artifact.label }}</a></li>
     </ul>
 
-    <members :groupType="group.group_type.label" :members.sync="group.members" :editing="false" :show_unit="group.show_unit" :userperms='userperms' :roles='roles' viewType="group" :group="group"></members>
+    <members :groupType="group.group_type.label" :members.sync="group.members" :editing="false" :show_unit="group.show_unit" :userperms='userperms' :roles='roles' viewType="group" :downloadTitle="group.group_title"></members>
     
 
  
