@@ -37,7 +37,7 @@
           </thead>
           <tbody>
             <tr v-for="(group, key) in mergedSortedList" :key="key">
-                <td v-if="group.active_group">
+                <td v-if="group.active_group && ! group.parent_group_id">
                     <i class="fas fa-users"></i> <router-link :to="{ name: 'group', params: { groupId: group.id } }">
                         <group-title :group="group" />
                     </router-link>
