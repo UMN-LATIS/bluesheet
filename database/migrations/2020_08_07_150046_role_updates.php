@@ -46,7 +46,7 @@ class RoleUpdates extends Migration
         $permission = Permission::create(['name' => 'edit groups']);
         $permission->assignRole($admin_role);
         $permission->assignRole($group_admin_role);
-        $permission = Permission::create(['name' => 'edit user']);
+        $permission = Permission::create(['name' => 'edit users']);
         $permission->assignRole($admin_role);
         
         $users = \App\User::all();
