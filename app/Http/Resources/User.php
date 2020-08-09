@@ -24,7 +24,6 @@ class User extends JsonResource
             'email' => $this->email,
             'office' => $this->office,
             'title' => $this->title,
-            'site_permissions' => $this->site_permissions,
             'ou' => $this->ou,
             'memberships' => MembershipWithGroups::collection($this->memberships),
             'favoriteGroups' => $this->favoriteGroups,

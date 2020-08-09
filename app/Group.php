@@ -41,7 +41,9 @@ class group extends Model implements Auditable
     }
 
     public function activeMembers() {
-        return $this->members()->whereNull("end_date");
+        return $this->members()->where(function($query) {
+            return $query->whereNull("end_date")->orWhere("end_date", ">", date('Y-m-d'));
+        });
     }
 
     public function artifacts() {
@@ -62,14 +64,13 @@ class group extends Model implements Auditable
 
     public function userCanEdit($user) {
         $activeMembers = $this->activeMembers;
-        if($user->site_permissions >= 200 ) {
-            return true;
-        }
+        
         foreach($activeMembers as $member) {
-            if($member->user == $user && $member->admin) {
+            if($member->user->is($user) && $member->admin) {
                 return true;
             }
         }
+        return false;
     }
 
     public function getHashAttribute()

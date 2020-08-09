@@ -28,7 +28,7 @@ class LDAP
             }
             else {
                 $foundUser = new \App\User;
-                $foundUser->site_permissions = 100;
+                $foundUser->assignRole("basic user");
             }
             
             $foundUser->umndid = isset($info[0]["umndid"])?$info[0]["umndid"][0]:"";

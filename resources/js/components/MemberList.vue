@@ -6,10 +6,10 @@
             </td>
 
             <td>
-                <router-link :to="{ name: 'user', params: { userId: member.user.id } }" v-if="member.user.id && userperms>0">
+                <router-link :to="{ name: 'user', params: { userId: member.user.id } }" v-if="member.user.id && $can('view users')">
                     {{ member.user.surname }}, {{ member.user.givenname }}
                 </router-link>
-                <span v-if="!member.user.id || userperms == 0">{{ member.user.surname }}, {{ member.user.givenname }}</span>
+                <span v-if="!member.user.id || !$can('view users')">{{ member.user.surname }}, {{ member.user.givenname }}</span>
             </td>
             <td v-if="show_unit && viewType=='group'">{{ member.user.ou }}</td>
             
@@ -21,10 +21,10 @@
             </template>
 
             <td v-if="viewType=='role'">
-                <router-link :to="{ name: 'group', params: { groupId: member.group.id } }" v-if="member.group.id && userperms>0">
+                <router-link :to="{ name: 'group', params: { groupId: member.group.id } }" v-if="member.group.id && $can('edit users')">
                     <group-title :group="member.group" />
                 </router-link>
-                <span v-if="!member.group.id || userperms == 0">{{ member.group.group_title}}</span>
+                <span v-if="!member.group.id || !$can('edit users')">{{ member.group.group_title}}</span>
                
             </td>
 
@@ -61,7 +61,7 @@
 
 <script>
 export default {
-    props: ['editing', 'filteredList', 'filterList', 'includePreviousMembers', 'roles', 'show_unit', 'userperms', 'viewType'],
+    props: ['editing', 'filteredList', 'filterList', 'includePreviousMembers', 'roles', 'show_unit', 'viewType'],
     data() {
         return {
 

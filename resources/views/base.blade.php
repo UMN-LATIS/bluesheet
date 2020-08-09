@@ -53,7 +53,9 @@
 			<div class="home" id="app">
 				@yield('content')
 			</div>
-
+            @impersonating
+            <a class="" href="/impersonate/leave">End Impersonation</a>
+            @endImpersonating
 		</main>
 		<footer id="page-footer">
 			<div class="regions-2-only">
@@ -139,9 +141,15 @@
 					<!-- END UofM FOOTER -->
 				</body>
 				
-
+				<script>
+					@auth
+						window.Permissions = {!! json_encode(Auth::user()->allPermissions, true) !!};
+					@else
+						window.Permissions = [];
+					@endauth
+				</script>
 				<script src="{{ mix('js/app.js') }}"></script>
-
+				
 				@yield('footer')
 
 				</html>

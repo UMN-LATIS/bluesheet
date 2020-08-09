@@ -68,7 +68,7 @@
 
 <script>
     export default {
-        props: ['users', 'groupId', 'userperms'],
+        props: ['users', 'groupId'],
         data() {
             return {
               loadedUsers: [],

@@ -1,6 +1,6 @@
 <template>
     <div>
-        <template v-if="userperms > 0 && !editing">
+        <template v-if="$can('view groups') && !editing">
             <button class="btn btn-success" @click="showEmailList = !showEmailList">Show Email List</button>
             <download-csv class="btn btn-info" :data="csvlist" :name="downloadTitle + '.csv'">Download List</download-csv>
             <button class="btn btn-primary" v-bind:class="{ active: filterList }" aria-pressed="false"
@@ -95,7 +95,7 @@
             </thead>
             <member-list v-if="!showGantt" v-on:remove="removeMember" :show_unit="show_unit" :roles="filteredRoles"
                 :editing="editing" :filteredList="filteredList" :filterList="filterList"
-                :includePreviousMembers="includePreviousMembers" :userperms='userperms' :viewType="viewType">
+                :includePreviousMembers="includePreviousMembers"  :viewType="viewType">
             </member-list>
             <gantt v-if="showGantt" :members="filteredList" :filterList="filterList" :mindate="lowestValue"
                 :maxdate="highestValue" :show_unit="show_unit"></gantt>
@@ -129,7 +129,7 @@
 
 <script>
     export default {
-        props: ['members', 'editing', 'roles', 'show_unit', 'userperms', 'groupType', 'viewType', "downloadTitle"],
+        props: ['members', 'editing', 'roles', 'show_unit', 'groupType', 'viewType', "downloadTitle"],
         data() {
             return {
                 includePreviousMembers: false,

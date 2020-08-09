@@ -21,6 +21,9 @@ Vue.component('v-select', VueSelect)
 Vue.use(VueSelect);
 
 
+import Permissions from './mixins/Permissions';
+Vue.mixin(Permissions);
+
 import VueMoment from 'vue-moment';
 Vue.use(VueMoment);
 
@@ -64,7 +67,6 @@ Vue.component('roleList', GroupList);
 
 Vue.component('home', require('./components/Home.vue').default);
 Vue.component('viewuser', require('./components/ViewUser.vue').default);
-Vue.component('edituser', require('./components/EditUser.vue').default);
 Vue.component('viewgroup', require('./components/ViewGroup.vue').default);
 Vue.component('editgroup', require('./components/EditGroup.vue').default);
 Vue.component('members', require('./components/Members.vue').default);

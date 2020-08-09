@@ -7,13 +7,16 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use OwenIt\Auditing\Contracts\Auditable;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
+use Spatie\Permission\Traits\HasRoles;
+use Spatie\Permission\Models\Permission;
 
 class User extends Authenticatable implements Auditable
 {
     use \OwenIt\Auditing\Auditable;
     use Notifiable;
     use SoftDeletes;
+    use HasRoles;
+    use \Lab404\Impersonate\Models\Impersonate;
 
     public $timestamps = true;
 
@@ -30,7 +33,7 @@ class User extends Authenticatable implements Auditable
      * @var array
      */
     protected $fillable = [
-        'givenname', 'surname', 'displayname','email','umndid', 'site_permissions', 'ou'
+        'givenname', 'surname', 'displayname','email','umndid', 'ou'
     ];
 
     public function memberships() {
@@ -49,4 +52,13 @@ class User extends Authenticatable implements Auditable
         return $this->belongsToMany('App\Role', 'favorite_roles');
     }
 
+     public function getAllPermissionsAttribute() {
+        $permissions = [];
+        foreach (Permission::all() as $permission) {
+            if ($this->can($permission->name)) {
+                $permissions[] = $permission->name;
+            }
+        }
+        return $permissions;
+    }
 }

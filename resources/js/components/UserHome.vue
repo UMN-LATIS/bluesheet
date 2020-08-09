@@ -3,10 +3,8 @@
         <div class="alert alert-danger" role="alert" v-if="error">
             {{ error}}
         </div>
-        <viewuser :user="user" v-if="!editing && user" v-bind:editing.sync="editing" :userperms="userperms">
+        <viewuser :user="user" v-if="user">
         </viewuser>
-        <edituser :user="user" v-if="editing && user" v-bind:editing.sync="editing" :userperms="userperms">
-        </edituser>
         <roles :memberships="memberships" ></roles>
 
         <div class="row mt-5" v-if="user">
@@ -24,12 +22,11 @@
 
 <script>
     export default {
-        props: ['userId', 'userperms'],
+        props: ['userId'],
         data() {
             return {
                 error: null,
-                user: null,
-                editing: false
+                user: null
             }
         },
         mounted() {

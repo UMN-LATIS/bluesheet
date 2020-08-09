@@ -6,7 +6,7 @@
         <button class="btn btn-outline-primary float-right" @click="$store.dispatch('toggleFavorite', {type: 'roles', item: role})"><i class="fa-star" v-bind:class="{ 'fas' : roleFavorited, 'far': !roleFavorited} "></i> Favorite</button>
         <h1>{{ role.label}}</h1>
         
-        <members :members="role.members" :editing="false" :roles="[role]" :show_unit="false" :filterList="null" groupType="department" :userperms='userperms' viewType="role" :downloadTitle="role.label"></members>
+        <members :members="role.members" :editing="false" :roles="[role]" :show_unit="false" :filterList="null" groupType="department"  viewType="role" :downloadTitle="role.label"></members>
 
 
     </div>
@@ -14,7 +14,7 @@
 
 <script>
     export default {
-        props: ['roleId', 'userperms'],
+        props: ['roleId'],
         data() {
             return {
                 error: null,

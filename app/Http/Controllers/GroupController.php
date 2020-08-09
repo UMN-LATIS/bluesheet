@@ -51,15 +51,15 @@ class GroupController extends Controller
      */
     public function store(Request $request)
     {
-        if(Auth::user()->site_permissions < 100) {
+        if(!$this->authorize('create', \App\Group::class)) {
              $returnData = array(
                 'status' => 'error',
                 'message' => "You don't have permission to create a group"
             );
             return Response()->json($returnData, 500);
         }
-
         $newGroup = new \App\Group;
+        
         $newGroup->group_title = $request->get("groupName");
         
         if($groupType = $request->get("groupType")) {
@@ -105,7 +105,7 @@ class GroupController extends Controller
      */
     public function show($group, $hash=null)
     {
-        if(($hash != $group->hash) && !$group->activeMembers()->where('user_id', Auth::user()->id)->count() && Auth::user()->site_permissions < 200) {
+        if(!$this->authorize('view', $group) && ($hash != $group->hash)) {
             $returnData = array(
                 'status' => 'error',
                 'message' => "You don't have permission to access this group"
@@ -126,7 +126,7 @@ class GroupController extends Controller
      */
     public function update(Request $request, $group)
     {
-        if(!$group->userCanEdit(Auth::user())) {
+        if(!$this->authorize('update', $group)) {
             $returnData = array(
                 'status' => 'error',
                 'message' => "You don't have permission to edit this group"
@@ -295,7 +295,7 @@ class GroupController extends Controller
      */
     public function destroy($group)
     {
-        if(!$group->userCanEdit(Auth::user())) {
+        if(!$this->authorize('delete', $group)) {
             $returnData = array(
                 'status' => 'error',
                 'message' => "You don't have permission to edit this group"
@@ -314,7 +314,7 @@ class GroupController extends Controller
 
     public function members($group, $hash=null) {
 
-        if(($hash != $group->hash) && !$group->activeMembers()->where('user_id', Auth::user()->id)->count() && Auth::user()->site_permissions < 200) {
+        if(!$this->authorize('view', $group) && ($hash != $group->hash)) {
             $returnData = array(
                 'status' => 'error',
                 'message' => "You don't have permission to access this group"

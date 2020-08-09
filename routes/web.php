@@ -11,6 +11,8 @@
 |
 */
 
+Route::impersonate();
+
 if (config('shibboleth.emulate_idp') ) {
 
     Route::name('login')->get("login", '\StudentAffairsUwm\Shibboleth\Controllers\ShibbolethController@emulateLogin');
@@ -64,9 +66,13 @@ Route::get('/api/group/{group}/{hash}', 'GroupController@show');
 Route::get('/api/group/{group}/members/{hash}', 'GroupController@members');
 
 
+// Route::resource('users', 'Admin\\UsersController');
+Route::group(['prefix'=>'admin', 'middleware' => ['auth', 'permission:edit users']], function () {
+    Route::resource('users', 'Admin\\UsersController');
+});
+
 Route::get('/group/{group}/{hash}', 'HomeController@index');
 Route::group(['middleware' => 'auth'], function () {
     Route::get('/', 'HomeController@index');
     Route::any('{all}','HomeController@index')->where(['all' => '.*']);
 });
-
