@@ -105,6 +105,7 @@ class GroupController extends Controller
      */
     public function show($group, $hash=null)
     {
+
         if(!$this->authorize('view', $group) && ($hash != $group->hash)) {
             $returnData = array(
                 'status' => 'error',

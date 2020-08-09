@@ -1,24 +1,11 @@
 <?php
 
 namespace App\Providers;
-
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Http\Resources\Json\Resource;
-
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
-    public function boot()
-    {
-        Resource::withoutWrapping();
-    }
-
-
     /**
      * Register any application services.
      *
@@ -27,5 +14,15 @@ class AppServiceProvider extends ServiceProvider
     public function register()
     {
         //
+    }
+
+    /**
+     * Bootstrap any application services.
+     *
+     * @return void
+     */
+    public function boot()
+    {
+        JsonResource::withoutWrapping();
     }
 }
