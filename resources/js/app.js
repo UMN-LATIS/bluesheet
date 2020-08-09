@@ -21,7 +21,7 @@ Vue.component('v-select', VueSelect)
 Vue.use(VueSelect);
 
 
-import Permissions from './mixins/Permissions';
+import Permissions from './mixins/permissions';
 Vue.mixin(Permissions);
 
 import VueMoment from 'vue-moment';
