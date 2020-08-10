@@ -5,7 +5,7 @@ module.exports = {
     themeConfig: {
             // Assumes GitHub. Can also be a full GitLab url.
             
-            repo: 'umn-latis/ChimeIn2.0',
+            repo: 'umn-latis/Caligari',
             // Customising the header label
             // Defaults to "GitHub"/"GitLab"/"Bitbucket" depending on `themeConfig.repo`
             repoLabel: 'Contribute!',

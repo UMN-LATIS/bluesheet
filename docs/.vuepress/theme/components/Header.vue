@@ -2,7 +2,7 @@
   
 			<header class="umnhf" id="umnhf-h" role="banner">
                  
-            <link rel="stylesheet" href="https://chimein2.cla.umn.edu/umn/css/2015-tc.css">
+            <link rel="stylesheet" href="/umn/css/2015-tc.css">
 		<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet">
 		<link href="https://fonts.googleapis.com/css?family=Amatic+SC" rel="stylesheet">
 		<link href="https://fonts.googleapis.com/css?family=Itim" rel="stylesheet">
@@ -44,7 +44,7 @@
 export default {
     mounted() {
         let umnhf = document.createElement('script');    
-        umnhf.setAttribute('src',"https://chimein2.cla.umn.edu/umn/js/umnhf-2015.js");
+        umnhf.setAttribute('src',"/js/umnhf-2015.js");
         document.head.appendChild(umnhf);
     }
 }

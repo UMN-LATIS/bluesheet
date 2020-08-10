@@ -17,9 +17,8 @@ class RoleUpdates extends Migration
     {
         $user_role = Role::create(['name' => 'basic user']);
         $view_user_role = Role::create(['name' => 'view user']);
-        
-        $admin_role = Role::create(['name' => 'site admin']);
         $group_admin_role = Role::create(['name' => 'group admin']);
+        $admin_role = Role::create(['name' => 'site admin']);
         $super_admin_role = Role::create(['name' => 'super admin']);
 
         $permission = Permission::create(['name' => 'view own groups']);
@@ -35,7 +34,7 @@ class RoleUpdates extends Migration
         $permission = Permission::create(['name' => 'view private groups']);
         $permission->assignRole($admin_role);
         $permission->assignRole($group_admin_role);
-        $permission = Permission::create(['name' => 'view user']);
+        $permission = Permission::create(['name' => 'view users']);
         $permission->assignRole($view_user_role);
         $permission->assignRole($admin_role);
         $permission->assignRole($group_admin_role);
