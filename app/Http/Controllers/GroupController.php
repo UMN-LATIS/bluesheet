@@ -31,7 +31,9 @@ class GroupController extends Controller
         }
         else {
             $childFolders = $parentOrganization->childOrganizations;
-            $childGroups = $parentOrganization->groups->load("childGroups");
+            $childGroups = $parentOrganization->groups()->with(['childGroups' => function ($query) {
+                $query->where('active_group', 1);
+            }])->get();
             
         }
         return response()->json(["folders"=>$childFolders, "groups"=>$childGroups]);
