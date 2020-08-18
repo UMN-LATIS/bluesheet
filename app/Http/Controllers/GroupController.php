@@ -167,10 +167,13 @@ class GroupController extends Controller
                 $foundArtifactIds[] = $artifact['id'];
             }
             else {
-                $newArtifact = new \App\GroupArtifact;
-                $newArtifact->fill($artifact);
-                $group->artifacts()->save($newArtifact);
-                $foundArtifactIds[] = $newArtifact->id;
+                if($artifact["label"]) {
+                    $newArtifact = new \App\GroupArtifact;
+                    $newArtifact->fill($artifact);
+                    $group->artifacts()->save($newArtifact);
+                    $foundArtifactIds[] = $newArtifact->id;
+                }
+                
             }
         }
 
