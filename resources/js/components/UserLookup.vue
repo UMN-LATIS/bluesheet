@@ -15,7 +15,7 @@
             >
           </autocomplete>
           <small id="addUserHelpBlock" class="form-text text-muted">
-            Optional: Enter a name and select the person from the list
+            Optional: Enter a name and select the person from the list. For common names, we recommend using internet ID (below) to be sure you get the right person.
           </small>
       </div>
       </div>

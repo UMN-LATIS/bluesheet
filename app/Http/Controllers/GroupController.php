@@ -20,7 +20,7 @@ class GroupController extends Controller
     public function index()
     {
 
-         return GroupResource::collection(\App\Group::where("active_group",1)->get()->load("groupType", "parentGroup", "childGroups", "parentOrganization", "artifacts", "activeMembers"));
+         return \App\Group::where("active_group",1)->get()->load("groupType", "parentGroup", "childGroups", "parentOrganization", "artifacts", "activeMembers");
     }
 
     public function getGroupsByFolder(ParentOrganization $parentOrganization=null) {

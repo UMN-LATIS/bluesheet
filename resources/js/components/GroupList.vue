@@ -99,6 +99,18 @@
                 else {
                     this.loadGroups();
                 }
+            },
+            showAllGroups: function() {
+                if(this.showAllGroups) {
+                    axios.get("/api/group")
+                    .then(res => {
+                        this.groupList.groups = res.data;
+                        this.groupList.folders = [];
+                    })
+                }
+                else {
+                    this.loadGroups();
+                }
             }
         },
         computed: {

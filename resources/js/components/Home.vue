@@ -25,7 +25,7 @@
                     <a class="nav-link" href="#" @click.prevent="findUser=true" v-if="$can('view users')">User Lookup <i class="fas fa-users"></i></a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="https://umn-latis.github.io/Caligari/" >Help <i class="fas fa-question-circle"></i></a>
+                    <a class="nav-link" href="https://umn-latis.github.io/Caligari/" target="_blank" >Help <i class="fas fa-question-circle"></i></a>
                 </li>
                 
         </ul>

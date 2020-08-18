@@ -66,7 +66,7 @@ class Group extends Model implements Auditable
         $activeMembers = $this->activeMembers;
         
         foreach($activeMembers as $member) {
-            if($member->user->is($user) && $member->admin) {
+            if($member->user && $member->user->is($user) && $member->admin) {
                 return true;
             }
         }

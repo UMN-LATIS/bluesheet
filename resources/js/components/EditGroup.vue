@@ -260,7 +260,9 @@ button {
       });
       axios.get("/api/group")
       .then(res => {
-        this.groups = res.data.filter(e=> e.active).filter(e=>e.id != this.group.id).map(e => { return {id: e.id, label: e.group_title}});
+        this.groups = res.data.filter(e=> e.active_group).filter(e=>e.id != this.group.id).map(e => { return {id: e.id, label: e.group_title}}).sort(function (a, b) { 
+          return a.label > b.label;
+        });
       })
       .catch(err => {
 
