@@ -133,8 +133,8 @@
         data() {
             return {
                 includePreviousMembers: false,
-                currentSortDir: 'desc',
-                currentSort: 'start_date',
+                currentSortDir: 'asc',
+                currentSort: 'user.surname',
                 showSearch: false,
                 searchValue: null,
                 showGantt: false,
