@@ -8,11 +8,12 @@ class LDAP
 
 	public static function lookupUser($lookupValue, $lookupType="cn", $existingUser =null) {
 		putenv('LDAPTLS_REQCERT=never');
-        $connect = ldap_connect( 'ldaps://ldap-dsee.oit.umn.edu', 636);
+        $connect = ldap_connect( 'ldaps://ldapauth.umn.edu', 636);
         $base_dn = array("o=University of Minnesota, c=US",);
         ldap_set_option($connect, LDAP_OPT_PROTOCOL_VERSION, 3);
         ldap_set_option($connect, LDAP_OPT_REFERRALS, 0);
-        $r=ldap_bind($connect);
+
+        $r=ldap_bind($connect, 'cn=' . config("ldap.username") . ',ou=Organizations,o=University of Minnesota,c=US', config("ldap.password"));
 
         $filter = "(" . $lookupType . "=" . $lookupValue . ")";
         $search = ldap_search([$connect], $base_dn, $filter);
@@ -39,7 +40,7 @@ class LDAP
             $foundUser->office = isset($info[0]["umnofficeaddress1"])?$info[0]["umnofficeaddress1"][0]:"";
             $foundUser->title = isset($info[0]["title"])?$info[0]["title"][0]:"";
             $foundUser->ou = isset($info[0]["ou"])?$info[0]["ou"][0]:"";
-            
+
             break;
         }
         return $foundUser;

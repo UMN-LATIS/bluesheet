@@ -13,3 +13,6 @@ use Illuminate\Http\Request;
 |
 */
 
+Route::group(['prefix'=>'/remote/', 'middleware' => 'auth:sanctum'], function () {
+    Route::get('role/{role}', 'GroupController@role');
+});

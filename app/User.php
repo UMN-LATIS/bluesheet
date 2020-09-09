@@ -9,6 +9,7 @@ use OwenIt\Auditing\Contracts\Auditable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Permission\Traits\HasRoles;
 use Spatie\Permission\Models\Permission;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements Auditable
 {
@@ -17,6 +18,7 @@ class User extends Authenticatable implements Auditable
     use SoftDeletes;
     use HasRoles;
     use \Lab404\Impersonate\Models\Impersonate;
+    use HasApiTokens;
 
     public $timestamps = true;
 
