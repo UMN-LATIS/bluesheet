@@ -39,6 +39,7 @@ class UserController extends Controller
      */
     public function show($user=null)
     {
+
         // we might not get a user, and we override default laravel checks
         if(!$user) {
             $user = Auth::user();
