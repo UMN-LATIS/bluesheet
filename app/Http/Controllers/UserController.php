@@ -45,7 +45,7 @@ class UserController extends Controller
             $user = Auth::user();
         }
         
-        if($user != Auth::user() && !Auth::user()->hasPermissionTo('view users')) {
+        if($user != Auth::user() && !Auth::user()->hasPermissionTo('view users') && !Auth::user()->hasRole('super admin')) {
             $returnData = array(
                 'status' => 'error',
                 'message' => "You don't have permission to view this user"
@@ -69,7 +69,7 @@ class UserController extends Controller
      */
     public function update(Request $request, $user)
     {
-        if(Auth::user()->can("edit users")) {
+        if(!Auth::user()->can("edit users") && !Auth::user()->hasRole('super admin')) {
             $returnData = array(
                 'status' => 'error',
                 'message' => "You don't have permission to create a user"
