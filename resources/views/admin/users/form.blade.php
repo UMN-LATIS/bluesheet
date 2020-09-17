@@ -17,7 +17,7 @@
 
 <div class="form-group">
   <label for="">Roles</label>
-  <select class="form-control" name="roles[]" id="" multiple>
+  <select class="form-control" name="roles[]" id="">
     @foreach ( \Spatie\Permission\Models\Role::all() as $role)
     <option value={{ $role->id }} {{ ($user->roles->contains($role->id))?"SELECTED":null }}>{{ $role->name }}</option>
 

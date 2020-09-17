@@ -29,7 +29,7 @@ class populateUser
                 Auth::user()->save();
             }
         }
-        if(Auth::user() && !Auth::user()->hasRole("basic user")) {
+        if(Auth::user() && !Auth::user()->hasRole("basic user") && count(Auth::user()->roles) == 0) {
             Auth::user()->assignRole("basic user");
         }
         return $next($request);
