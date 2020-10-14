@@ -343,7 +343,7 @@ class GroupController extends Controller
         
         $rolesLoaded = \App\Role::find($roles);
 
-        $officialRoles = \App\Role::where("official_department_role", 1)->get();
+        $officialRoles = \App\Role::with('officialGroupType')->has('officialGroupType')->get();
 
         $merged = $rolesLoaded->merge($officialRoles);
         $sorted = $merged->sortBy("label")->values()->load("officialRoleCategory")->all();

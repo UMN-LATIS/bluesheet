@@ -16,4 +16,9 @@ class Role extends Model
         return $this->belongsTo("App\OfficialRoleCategory");
     }
 
+    public function officialGroupType()
+    {
+        return $this->belongsToMany('App\GroupType');
+    }
+
 }

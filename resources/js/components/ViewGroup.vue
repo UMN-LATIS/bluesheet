@@ -30,7 +30,7 @@
         <li v-for="artifact in group.artifacts"><a v-bind:href="artifact.target">{{ artifact.label }}</a></li>
     </ul>
 
-    <members :groupType="group.group_type.label" :members.sync="group.members" :editing="false" :show_unit="group.show_unit"  :roles='roles' viewType="group" :downloadTitle="group.group_title"></members>
+    <members :groupType="group.group_type.label" :members.sync="group.members" :editing="false" :show_unit="group.show_unit"  :roles='filteredRoles' viewType="group" :downloadTitle="group.group_title"></members>
     
 
  
@@ -56,7 +56,13 @@ export default {
                 return this.$store.state.favorites["groups"].filter(g => g.id == this.group.id).length > 0;
             }
             
-        }
+        },
+        filteredRoles: function () {
+            if (!this.roles) {
+                return [];
+            }
+            return this.roles.filter(r => !r.official_group_type || r.official_group_type.map(gt=>gt.label).includes(this.group.group_type.label));
+        },
     },
     mounted() {
         axios.get("/api/group/roles/")

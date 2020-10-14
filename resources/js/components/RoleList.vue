@@ -8,7 +8,7 @@
               </tr>
           </thead>
           <tbody v-if="roleList">
-            <tr v-for="(role, key) in roleList.filter(r=>r.official_department_role==1)"  :key="key">
+            <tr v-for="(role, key) in roleList.filter(r=>r.official_group_type)"  :key="key">
                 <td><router-link :to="{ name: 'role', params: { roleId: role.id } }">{{ role.label }}</router-link></td>
                 
             </tr>
@@ -21,12 +21,12 @@
               </tr>
           </thead>
           <tbody v-if="roleList">
-            <tr v-for="(role, key) in roleList.filter(r=>r.official_department_role==0)" :key="key">
+            <tr v-for="(role, key) in roleList.filter(r=>!r.official_group_type)" :key="key">
                 <td><router-link :to="{ name: 'role', params: { roleId: role.id } }">{{ role.label }}</router-link></td>
             </tr>
         </tbody>
     </table>
-</div>
+    </div>
 </template>
 
 <script>

@@ -86,7 +86,7 @@
                             :currentSortDir="currentSortDir" v-on:sort="sort" />
                     </th>
                     <th scope="col" width=11% v-if="!showGantt && !editing &&  viewType == 'group'">
-                        <sortableLink sortLabel="Official Role" sortElement="role.official_department_role"
+                        <sortableLink sortLabel="Official Role" sortElement="role.official_group_type"
                             :currentSort="currentSort" :currentSortDir="currentSortDir" v-on:sort="sort" />
                     </th>
                     <th scope="col" v-if="editing && !showGantt">Group Admin</th>
@@ -100,10 +100,10 @@
             <gantt v-if="showGantt" :members="filteredList" :filterList="filterList" :mindate="lowestValue"
                 :maxdate="highestValue" :show_unit="show_unit"></gantt>
         </table>
-        <div class="card mt-3 mb-3 col-sm-6" v-if="isDepartment && unfilledRoles.length > 0 && editing">
+        <div class="card mt-3 mb-3 col-sm-6" v-if="officialRoles.length > 0 && unfilledRoles.length > 0 && editing">
             <div class="card-body">
                 <h4 class="card-title">Unassigned Official Roles</h4>
-                <p class="card-text">This department currently does not have people assigned to these official roles</p>
+                <p class="card-text">This {{ groupType.toLowerCase() }} currently does not have people assigned to these official roles</p>
             </div>
                 <ul class="nav nav-tabs" id="myTab" role="tablist">
                     <li class="nav-item"  v-for="(officialCategory, index) in officialRoleCategories" :key="index">
@@ -156,7 +156,7 @@
         },
         computed: {
             officialRoles: function () {
-                return this.roles ? this.roles.filter(r => r.official_department_role == 1) : [];
+                return this.roles.filter(r => r.official_group_type?r.official_group_type.map(gt=>gt.label).includes(this.groupType):false);
             },
             officialRoleCategories: function () {
                 var allOfficialRoles = this.officialRoles ? this.officialRoles.map(r => r.official_role_category.category)
@@ -165,9 +165,6 @@
             },
             unfilledRoles: function () {
                 return this.officialRoles.filter(r => !this.filteredList.map(m => m.role?m.role.id:null).includes(r.id));
-            },
-            isDepartment: function () {
-                return this.groupType == 'Department';
             },
             lowestValue: function () {
                 if (this.filteredList.length > 0) {

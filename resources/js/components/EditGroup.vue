@@ -295,7 +295,7 @@
                 if (!this.roles) {
                     return [];
                 }
-                return this.group.group_type.label == 'Department' ? this.roles : this.roles.filter(r => r.official_department_role == 0);
+                return this.roles.filter(r => !r.official_group_type || r.official_group_type.map(gt=>gt.label).includes(this.group.group_type.label));
             },
             groupURL: function () {
                 return window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' +

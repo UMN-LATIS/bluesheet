@@ -12,4 +12,9 @@ class GroupType extends Model
     public function groups() {
     	return $this->belongsTo("App\Group");
     }
+
+    public function officialRoles()
+    {
+        return $this->belongsToMany('App\Role');
+    }
 }
