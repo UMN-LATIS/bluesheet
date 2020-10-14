@@ -4,13 +4,25 @@
         <table class="table">
             <thead>
                 <tr>
-                    <th scope="col">Role</th>
+                    <th scope="col">Official Departmental Roles</th>
               </tr>
           </thead>
-          <tbody>
-            <tr v-for="(role, key) in roleList" v-if="roleList">
+          <tbody v-if="roleList">
+            <tr v-for="(role, key) in roleList.filter(r=>r.official_department_role==1)"  :key="key">
                 <td><router-link :to="{ name: 'role', params: { roleId: role.id } }">{{ role.label }}</router-link></td>
                 
+            </tr>
+        </tbody>
+        </table>
+         <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Unofficial Roles</th>
+              </tr>
+          </thead>
+          <tbody v-if="roleList">
+            <tr v-for="(role, key) in roleList.filter(r=>r.official_department_role==0)" :key="key">
+                <td><router-link :to="{ name: 'role', params: { roleId: role.id } }">{{ role.label }}</router-link></td>
             </tr>
         </tbody>
     </table>

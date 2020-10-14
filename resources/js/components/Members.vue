@@ -93,7 +93,7 @@
                     <th scope="col" v-if="editing && !showGantt">End Active Membership</th>
                 </tr>
             </thead>
-            <member-list v-if="!showGantt" v-on:remove="removeMember" :show_unit="show_unit" :roles="filteredRoles"
+            <member-list v-if="!showGantt" v-on:remove="removeMember" :show_unit="show_unit" :roles="roles"
                 :editing="editing" :filteredList="filteredList" :filterList="filterList"
                 :includePreviousMembers="includePreviousMembers"  :viewType="viewType">
             </member-list>
@@ -162,12 +162,6 @@
                 var allOfficialRoles = this.officialRoles ? this.officialRoles.map(r => r.official_role_category.category)
                  : [];
                 return [...new Set(allOfficialRoles)];
-            },
-            filteredRoles: function () {
-                if(!this.roles) {
-                    return [];
-                }
-                return this.isDepartment ? this.roles : this.roles.filter(r => r.official_department_role == 0);
             },
             unfilledRoles: function () {
                 return this.officialRoles.filter(r => !this.filteredList.map(m => m.role?m.role.id:null).includes(r.id));

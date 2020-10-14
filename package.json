@@ -24,7 +24,7 @@
         "vue-template-compiler": "^2.6.11"
     },
     "dependencies": {
-        "@riophae/vue-treeselect": "0.0.38",
+        "@riophae/vue-treeselect": "https://github.com/cmcfadden/vue-treeselect.git",
         "laravel-mix": "^4.1.4",
         "sass": "^1.26.3",
         "v-tooltip": "^2.0.3",
