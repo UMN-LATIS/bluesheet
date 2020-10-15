@@ -8,7 +8,7 @@ class GroupType extends Model
 {
 
 	public $timestamps = false;
-	
+	public $fillable = ["label"];
     public function groups() {
     	return $this->belongsTo("App\Group");
     }
