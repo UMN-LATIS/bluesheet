@@ -39,6 +39,7 @@ class LDAP
             $foundUser->email =isset( $info[0]["mail"])?$info[0]["mail"][0]:"";
             $foundUser->office = isset($info[0]["umnofficeaddress1"])?$info[0]["umnofficeaddress1"][0]:"";
             $foundUser->title = isset($info[0]["title"])?$info[0]["title"][0]:"";
+            $foundUser->emplid = isset($info[0]["umnemplid"])?$info[0]["umnemplid"][0]:"";
             $foundUser->ou = isset($info[0]["ou"])?$info[0]["ou"][0]:"";
 
             break;
