@@ -58,7 +58,7 @@ class LDAP
                     continue;
                 }
 
-                $foundUser->emplid = isset($info[0]["umnemplid"])?$info[0]["umnemplid"][0]:"";
+                $foundUser->emplid = isset($info[0]["umnemplid"])?$info[0]["umnemplid"][0]:null;
 
                 break;
             }
