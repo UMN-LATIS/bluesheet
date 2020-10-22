@@ -13,7 +13,7 @@ class LDAP
         ldap_set_option($connect, LDAP_OPT_PROTOCOL_VERSION, 3);
         ldap_set_option($connect, LDAP_OPT_REFERRALS, 0);
 
-        $r=ldap_bind($connect, 'cn=' . config("ldap.username") . ',ou=Organizations,o=University of Minnesota,c=US', config("ldap.password"));
+        $r=ldap_bind($connect);
 
         $filter = "(" . $lookupType . "=" . $lookupValue . ")";
         $search = ldap_search([$connect], $base_dn, $filter);
@@ -44,6 +44,26 @@ class LDAP
 
             break;
         }
+
+        // reconect and grab emplid if needed
+        if($foundUser && $foundUser->umndid) {
+            $r=ldap_bind($connect, 'cn=' . config("ldap.username") . ',ou=Organizations,o=University of Minnesota,c=US', config("ldap.password"));
+
+            $filter = "(umndid=" . $foundUser->umndid . ")";
+            $search = ldap_search([$connect], $base_dn, $filter);
+            foreach($search as $readItem) {
+
+                $info = ldap_get_entries($connect, $readItem);
+                if(!isset($info[0]["umndid"])) {
+                    continue;
+                }
+
+                $foundUser->emplid = isset($info[0]["umnemplid"])?$info[0]["umnemplid"][0]:"";
+
+                break;
+            }
+        }
+        
         return $foundUser;
 	}
 
