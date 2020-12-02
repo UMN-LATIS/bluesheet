@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'MINIMUM_ROLE_COUNT' =>1,
+    'MINIMUM_ROLE_COUNT' =>4,
 ]
 
 
