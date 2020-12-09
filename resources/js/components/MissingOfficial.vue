@@ -1,4 +1,12 @@
 <template>
+    <div>
+         <div class="form-group row">
+                <label for="officialRole" class="col-sm-2 col-form-label">Filter by Official Role</label>
+                <div class="col-sm-6">
+                    <v-select v-if="officialRoles" id="groupTypes"  v-model="officialRoleFilter" :options="officialRoles" placeholder="Select..."></v-select>
+                 
+                </div>
+        </div>
       <table class="table">
         <thead>
             <tr>
@@ -12,7 +20,7 @@
             </tr>
         </thead>
         <tbody>
-            <tr v-for="group in filteredList" :key="group.id">
+            <tr v-for="group in filteredList" :key="group.id" >
                 <td>
                     <router-link :to="{ name: 'group', params: { groupId: group.id } }">
                         <group-title :group="group" />
@@ -28,6 +36,7 @@
             </tr>
         </tbody>
     </table>
+    </div>
 </template>
 
 <script>
@@ -37,13 +46,14 @@ export default {
             groupList: [],
             currentSort: "group_title",
             currentSortDir: "asc",
+            officialRoleFilter: null,
             roles: []
         }
     },
     computed: {
         filteredList: function() {
             let departmentList = this.groupList.filter(g => g.group_type.label == "Department");
-            return departmentList.sort(function (a, b) {
+            return departmentList.sort((a, b) =>{
                 let modifier = 1;
                 if (this.currentSortDir === 'desc') modifier = -1;
 
@@ -53,7 +63,7 @@ export default {
                 if (a.toLowerCase() < b.toLowerCase()) return -1 * modifier;
                 if (a.toLowerCase() > b.toLowerCase()) return 1 * modifier;
                 return 0;
-            }.bind(this));
+            }).filter(g => this.unfilledRoles(g).length > 0);
         },
         officialRoles: function () {
             return this.roles.filter(r => r.official_group_type?r.official_group_type.map(gt=>gt.label).includes("Department"):false);
@@ -76,8 +86,12 @@ export default {
             this.currentSort = s;
         },
         unfilledRoles: function(group) {
-
-            return this.officialRoles.filter(r => !group.active_members.map(m => m.role_id?m.role_id:null).includes(r.id));
+            if(this.officialRoleFilter) {
+                return group.active_members.map(m => m.role_id?m.role_id:null).includes(this.officialRoleFilter.id)?[]:[this.officialRoleFilter]
+            }
+            else {
+                return this.officialRoles.filter(r => !group.active_members.map(m => m.role_id?m.role_id:null).includes(r.id));
+            }
         }
     },
     mounted() {
