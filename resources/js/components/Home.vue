@@ -22,6 +22,9 @@
                     <router-link :to="{ name: 'roleList' }" class="nav-link" v-if="$can('view groups')">Browse Roles <i class="fas fa-search"></i></router-link>
                 </li>
                 <li class="nav-item">
+                    <router-link :to="{ name: 'reportList' }" class="nav-link" v-if="$can('view reports')">View Reports <i class="fas fa-search"></i></router-link>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link" href="#" @click.prevent="findUser=true" v-if="$can('view users')">User Lookup <i class="fas fa-users"></i></a>
                 </li>
                 <li class="nav-item">

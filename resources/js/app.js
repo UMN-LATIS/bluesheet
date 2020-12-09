@@ -65,6 +65,16 @@ import Axios from 'axios';
 Vue.component('roleList', GroupList);
 
 
+import ReportList from './components/ReportList.vue';
+Vue.component('reportList', ReportList);
+
+import MissingOfficial from './components/MissingOfficial.vue';
+Vue.component('missingOfficial', MissingOfficial);
+
+import LastModified from './components/LastModified.vue';
+Vue.component('lastModified', LastModified);
+
+
 Vue.component('home', require('./components/Home.vue').default);
 Vue.component('viewuser', require('./components/ViewUser.vue').default);
 Vue.component('viewgroup', require('./components/ViewGroup.vue').default);
@@ -147,6 +157,9 @@ const router = new VueRouter({
     { name: 'role', path: "/role/:roleId", component: Role, props:true },
     { name: 'groupList', path: "/groups/:parent?", component: GroupList, props:true },
     { name: 'roleList', path: "/roles/", component: RoleList, props:true },
+    { name: 'reportList', path: "/reports/", component: ReportList, props:true },
+    { name: 'missingOfficial', path: "/reports/missingOfficialRoles", component: MissingOfficial, props:true },
+    { name: 'lastModified', path: "/reports/lastModified", component: LastModified, props:true },
   ]
 })
 
