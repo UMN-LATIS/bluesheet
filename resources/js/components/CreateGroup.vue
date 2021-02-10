@@ -81,7 +81,14 @@
         },
         methods: {
             remapParents: function(p) {
-                return p.map(org => { var result = {"id": org.id, "label": org.group_title }; if(org.child_organizations_recursive.length > 0) { result.children = this.remapParents(org.child_organizations_recursive)}; return result; });
+                return p.map(org => { 
+                    var result = {"id": org.id, "label": org.group_title }; 
+                    if(org.child_organizations_recursive.length > 0) { 
+                        result.children = this.remapParents(org.child_organizations_recursive);
+                        result.children.sort((a,b) => a.label < b.label?-1:1);
+                    }; 
+                    return result; 
+                });
             },
             close: function () {
                 this.groupName = null;
