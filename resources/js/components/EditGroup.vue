@@ -311,6 +311,7 @@
                     };
                     if (org.child_organizations_recursive.length > 0) {
                         result.children = this.remapParents(org.child_organizations_recursive)
+                        result.children.sort((a,b) => a.label < b.label?-1:1);
                     };
                     return result;
                 });
