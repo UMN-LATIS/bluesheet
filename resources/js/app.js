@@ -95,6 +95,7 @@ Vue.component('member-list', require('./components/MemberList.vue').default);
 Vue.component('sortableLink', require('./components/Sortable.vue').default);
 Vue.component('favorites', require('./components/Favorites.vue').default);
 Vue.component('group-title', require('./components/GroupTitle.vue').default);
+Vue.component('folder-widget', require('./components/FolderWidget.vue').default);
 
 const store = new Vuex.Store({
   state: {

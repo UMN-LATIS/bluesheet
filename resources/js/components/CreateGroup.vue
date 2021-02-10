@@ -12,10 +12,11 @@
                     <v-select v-if="groupTypes" id="groupTypes" taggable v-model="groupType" :options="groupTypes" placeholder="Select..."></v-select>
                 </div>
         </div>
-        <div class="form-group row" v-if="parentOrganizations">
+        <div class="form-group row">
                 <label for="parentOrganization" class="col-sm-3 col-form-label">Folder</label>
                 <div class="col-sm-6">
-                     <treeselect v-model="parentOrganization" :multiple="false" :options="parentOrganizations"  :clearable="false" :searchable="true" :open-on-click="true" :close-on-select="true" label="group_title"/>
+                    <folder-widget v-model="parentOrganization"></folder-widget>
+                     
                 </div>
         </div>
         <div class="form-group row">
@@ -51,7 +52,6 @@
                 groupType: null,
                 groupTypes: [],
                 parentOrganization: null,
-                parentOrganizations: [],
             }
         },
         watch: {
@@ -71,25 +71,8 @@
             .catch(err => {
 
             });
-            axios.get("/api/group/parents")
-            .then(res => {
-                this.parentOrganizations = this.remapParents(res.data);
-            })
-            .catch(err => {
-
-            });
         },
         methods: {
-            remapParents: function(p) {
-                return p.map(org => { 
-                    var result = {"id": org.id, "label": org.group_title }; 
-                    if(org.child_organizations_recursive.length > 0) { 
-                        result.children = this.remapParents(org.child_organizations_recursive);
-                        result.children.sort((a,b) => a.label < b.label?-1:1);
-                    }; 
-                    return result; 
-                });
-            },
             close: function () {
                 this.groupName = null;
                 this.$emit('close');

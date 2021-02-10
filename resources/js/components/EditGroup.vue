@@ -42,10 +42,7 @@
                     <div class="col-sm-4">
                         <div class="form-group">
                             <label for="parentOrganization" class="small">Folder</label>
-                            <treeselect v-model="group.parent_organization.id" :multiple="false"
-                                :options="parentOrganizations" :clearable="false" :searchable="true"
-                                :open-on-click="true" :close-on-select="true" label="group_title"
-                                v-if="parentOrganizations" />
+                            <folder-widget v-model="group.parent_organization.id"></folder-widget>
                         </div>
                     </div>
                     <div class="col-sm-4">
@@ -236,7 +233,6 @@
                 saveError: null,
                 roles: null,
                 groupTypes: null,
-                parentOrganizations: null,
                 groups: null
             }
         },
@@ -259,13 +255,7 @@
                 .catch(err => {
 
                 });
-            axios.get("/api/group/parents")
-                .then(res => {
-                    this.parentOrganizations = this.remapParents(res.data);
-                })
-                .catch(err => {
 
-                });
             axios.get("/api/group")
                 .then(res => {
                     this.groups = res.data.filter(e => e.active_group).filter(e => e.id != this.group.id).map(e => {
@@ -303,19 +293,7 @@
             }
         },
         methods: {
-            remapParents: function (p) {
-                return p.map(org => {
-                    var result = {
-                        "id": org.id,
-                        "label": org.group_title
-                    };
-                    if (org.child_organizations_recursive.length > 0) {
-                        result.children = this.remapParents(org.child_organizations_recursive)
-                        result.children.sort((a,b) => a.label < b.label?-1:1);
-                    };
-                    return result;
-                });
-            },
+            
             save: function () {
                 if (!this.checkForm()) {
                     return;
