@@ -30,6 +30,7 @@ class LDAP
             else {
                 $foundUser = new \App\User;
                 $foundUser->assignRole("basic user");
+                $foundUser->assignRole("view user");
             }
             
             $foundUser->umndid = isset($info[0]["umndid"])?$info[0]["umndid"][0]:"";

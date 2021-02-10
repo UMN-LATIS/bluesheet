@@ -8,7 +8,12 @@ use Auth;
 class HomeController extends Controller
 {
     public function index() {
-
-    	return view('home');
+        $showTour = false;
+        if(!Auth::user()->seen_tour) {
+            $showTour = true;
+            Auth::user()->seen_tour = true;
+            Auth::user()->save();
+        }
+    	return view('home', compact('showTour'));
     }
 }

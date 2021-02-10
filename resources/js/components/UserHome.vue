@@ -5,7 +5,7 @@
         </div>
         <viewuser :user="user" v-if="user">
         </viewuser>
-        <roles :memberships="memberships" ></roles>
+        <roles :memberships="memberships" id="v-step-4"></roles>
 
         <div class="row mt-5" v-if="user">
             <div class="col" v-if="user.favoriteGroups.length > 0">

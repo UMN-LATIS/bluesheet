@@ -21,6 +21,11 @@ Vue.component('v-select', VueSelect)
 Vue.use(VueSelect);
 
 
+import VueTour from 'vue-tour'
+require('vue-tour/dist/vue-tour.css')
+Vue.use(VueTour)
+
+
 import Permissions from './mixins/permissions';
 Vue.mixin(Permissions);
 
