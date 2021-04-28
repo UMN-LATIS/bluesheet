@@ -177,7 +177,8 @@ return [
 
         StudentAffairsUwm\Shibboleth\ShibbolethServiceProvider::class,
         StudentAffairsUwm\Shibboleth\ShibalikeServiceProvider::class,
-
+        // Barryvdh\Debugbar\ServiceProvider::class,
+        Lab404\Impersonate\ImpersonateServiceProvider::class,
     ],
 
     /*
@@ -226,7 +227,7 @@ return [
         'URL' => Illuminate\Support\Facades\URL::class,
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
-
+        'Debugbar' => Barryvdh\Debugbar\Facade::class,
     ],
 
 ];

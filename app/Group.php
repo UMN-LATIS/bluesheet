@@ -7,14 +7,14 @@ use OwenIt\Auditing\Contracts\Auditable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 
-class group extends Model implements Auditable
+class Group extends Model implements Auditable
 {
     use \OwenIt\Auditing\Auditable;
     use SoftDeletes;
     public $timestamps = true;
 
     protected $fillable = [
-        'group_title', 'private_group', 'notes', 'google_group', 'show_unit'
+        'group_title', 'private_group', 'notes', 'google_group', 'show_unit', 'parent_group_id', 'abbreviation'
     ];
 
     /**
@@ -41,13 +41,22 @@ class group extends Model implements Auditable
     }
 
     public function activeMembers() {
-        return $this->members()->whereNull("end_date");
+        return $this->members()->where(function($query) {
+            return $query->whereNull("end_date")->orWhere("end_date", ">", date('Y-m-d'));
+        });
     }
 
     public function artifacts() {
         return $this->hasMany("App\GroupArtifact");
     }
 
+    public function parentGroup() {
+        return $this->belongsTo("App\Group");
+    }
+
+    public function childGroups() {
+        return $this->hasMany("App\Group", "parent_group_id");
+    }
     
     public function activeUsers() {
         return $this->activeMembers->pluck('user');
@@ -55,14 +64,18 @@ class group extends Model implements Auditable
 
     public function userCanEdit($user) {
         $activeMembers = $this->activeMembers;
-        if($user->site_permissions >= 200 ) {
-            return true;
-        }
+        
         foreach($activeMembers as $member) {
-            if($member->user == $user && $member->admin) {
+            if($member->user && $member->user->is($user) && $member->admin) {
                 return true;
             }
         }
+        return false;
+    }
+
+    public function getHashAttribute()
+    {
+        return substr(sha1($this->id . config("app.key")), 0, 10);
     }
 
 }

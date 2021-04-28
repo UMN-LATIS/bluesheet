@@ -1,44 +1,148 @@
 <template>
     <div>
-        <div class="form-group col-6">
-            <treeselect v-model="filterOrg" :multiple="false" :options="parentOrganizations"  :clearable="false" :searchable="true" :open-on-click="true" :close-on-select="true" label="group_title" v-if="parentOrganizations.length" value-consists-of="ALL" :flat="false"/>
+        <div class="row">
+            <div class="col-10">
+                <nav class="breadcrumb">
+            <router-link v-for="breadcrumb in breadCrumbs" :key="breadcrumb.title" class="breadcrumb-item" :to="{path: breadcrumb.path}" active-class="active" exact-active-class="" exact>{{ breadcrumb.title }}</router-link>
+        </nav>
+
+            </div>
+            <div class="col-2 p-1">
+                
+
+              <input type="text"
+                class="form-control" v-model="searchTerm"  placeholder="Search">
+                </div>
         </div>
-        <table class="table">
+        
+         <!-- <table class="table" v-if="currentOrganizations.length > 0">
             <thead>
                 <tr>
-                    <th scope="col">Group Name</th>
+                    <th scope="col">Groups</th>
               </tr>
           </thead>
           <tbody>
-            <tr v-for="(group, key) in sortedFilteredGroupList" v-if="groupList">
-                <td v-if="group.active"><router-link :to="{ name: 'group', params: { groupId: group.id } }">{{ group.group_title }}</router-link></td>
-                
+                <tr v-for="currentOrg in currentOrganizations" :key="currentOrg.id" >
+                <td><router-link :to='{ path: "/groups/" + currentOrg.id }'>{{ currentOrg.label }}</router-link>
+                </td>
+            </tr>
+          </tbody>
+         </table> -->
+
+        <table class="table" v-if="groupList">
+            <thead>
+                <tr>
+                    <th scope="col">Groups</th>
+              </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(group, key) in mergedSortedList" :key="key">
+                <td v-if="group.active_group && ! group.parent_group_id">
+                    <i class="fas fa-users"></i> <router-link :to="{ name: 'group', params: { groupId: group.id } }">
+                        <group-title :group="group" />
+                    </router-link>
+                    <ul v-if="includeSubgroups && group.child_groups.length > 0">
+                        <li v-for="subgroup in group.child_groups" :key="subgroup.id">
+                            <router-link :to="{ name: 'group', params: { groupId: subgroup.id } }"><group-title :group="subgroup" /></router-link>
+                        </li>
+                    </ul>
+                    </td>
+                <td v-if="!group.active_group && !group.created_at">
+                    <i class="fas fa-folder"></i> <router-link :to='{ path: "/groups/" + group.id }'>{{ group.group_title }}</router-link>
+                </td>
             </tr>
         </tbody>
     </table>
+     <div class="form-group col-md-6">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" v-model="includeSubgroups" id="subgroups">
+              <label class="form-check-label " for="subgroups">
+                Include Sub-groups
+              </label>
+            </div>
+          </div>
+          <div class="form-group col-md-6" v-if="!parent">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" v-model="showAllGroups" id="allGroups">
+              <label class="form-check-label " for="allGroups">
+                Show All Groups
+              </label>
+            </div>
+          </div>
 </div>
 </template>
 
 <script>
     export default {
+        props: ["parent"],
         data() {
             return {
-                groupList: [],
+                groupList: null,
                 error: null,
-                filterOrg: 'All Groups',
-                parentOrganizations: []
+                parentOrganizations: [],
+                includeSubgroups: true,
+                showAllGroups: false,
+                searchTerm: null
             }
         },
         mounted() {
             this.loadGroups();
         },
+        watch: {
+            searchTerm: function() {
+                if(this.searchTerm.length > 0) {
+                    axios.post("/api/group/search", {searchTerm: this.searchTerm})
+                    .then(res => {
+                        this.groupList = res.data;
+                    });
+                }
+                else {
+                    this.loadGroups();
+                }
+            },
+            showAllGroups: function() {
+                if(this.showAllGroups) {
+                    axios.get("/api/group")
+                    .then(res => {
+                        this.groupList.groups = res.data;
+                        this.groupList.folders = [];
+                    })
+                }
+                else {
+                    this.loadGroups();
+                }
+            }
+        },
         computed: {
-            sortedFilteredGroupList: function() {
-                return _.sortBy(this.groupList, [group => group.group_title.toLowerCase()]).filter((e)=>{
-                    if(this.filterOrg == 'All Groups' || (e.parent_organization && this.getChildrenOrgs(this.filterOrg, this.parentOrganizations).includes(e.parent_organization.id))) {
-                        return e;
+            breadCrumbs: function() {
+                if(this.parentOrganizations.length == 0) {
+                    return [];
+                }
+
+                var pathToItem = this.getPathToChild(this.parent, this.parentOrganizations);
+
+                var cumulativeRoute = [];
+                var breadCrumbArray = [{"title":"Groups", "path": "/groups/"}];
+                for(var item of pathToItem) {
+                    cumulativeRoute.push(item);
+
+                    breadCrumbArray.push({"title": item.label, "path": "/groups/" + item.id});
+                }
+                console.log(breadCrumbArray)
+                return breadCrumbArray;
+            },
+
+            mergedSortedList: function() {
+
+                var merged = this.groupList.folders.concat(this.groupList.groups);
+                merged.sort((a, b)=> {
+                    if(!a.group_title || !b.group_title) { 
+                        return 0;
                     }
+
+                    return a.group_title.localeCompare(b.group_title);
                 });
+                return merged;
             }
         },
         methods: {
@@ -58,47 +162,40 @@
 
                 return flat;
             },
-            getChildrenOrgs: function(targetId, targetGroup) {
+            getPathToChild: function(targetId, targetGroup) {
+                if(!targetId) {
+                    return [];
+                }
+
                 for(var org of targetGroup) {
+
                     if(org.id == targetId) {
-                        return this.flatten([org.id, this.getAllChildren(org.children)]);
+                        // we've found our target, flatten the rest
+                        return [org];
                     }
                     else if(org.children) {
-                        return this.getChildrenOrgs(targetId, org.children);    
+                        // walk the tree to find our target
+                        var childrenGroups = this.getPathToChild(targetId, org.children);
+                        if(childrenGroups.length > 0) {
+                            return this.flatten([org, childrenGroups]);
+                        }
+                    
                     }
                 }
                 return [];
-
             },
-            getAllChildren: function(org) {
-                var returnArray = [];
-                if(!org) {
-                    return returnArray;
-                }
-                for(var child of org) {
-                    returnArray.push(child.id);
-                    if(child.children) {
-                        returnArray.push(this.getAllChildren(child.children));    
-                    }
-                    
-                }
-                return returnArray;
-            },
+         
             loadGroups() {
-                axios.get("/api/group/")
+                axios.get("/api/folder/" + (this.parent?this.parent:""))
                 .then(res => {
                     this.groupList = res.data;
                 })
-                .catch(err => {
-                    this.error = err.response.data;
-                });
+         
                  axios.get("/api/group/parents")
                  .then(res => {
                     this.parentOrganizations = this.remapParents(res.data);
-                    this.parentOrganizations.unshift({id: "All Groups", label: 'All Groups'});
                 })
                 .catch(err => {
-
                 });
             }
         }

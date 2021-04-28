@@ -22,9 +22,12 @@ class User extends JsonResource
             'surname' => $this->surname,
             'displayName' => $this->displayName,
             'email' => $this->email,
-            'site_permissions' => $this->site_permissions,
+            'office' => $this->office,
+            'title' => $this->title,
             'ou' => $this->ou,
             'memberships' => MembershipWithGroups::collection($this->memberships),
+            'favoriteGroups' => $this->favoriteGroups,
+            'favoriteRoles' => $this->favoriteRoles
         ];
     }
 }

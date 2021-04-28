@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Resources\Group as GroupResource;
 use App\Http\Resources\Membership as MembershipResource;
+use App\ParentOrganization;
 use DB;
 use Auth;
+Use Log;
 
 class GroupController extends Controller
 {
@@ -18,7 +20,29 @@ class GroupController extends Controller
     public function index()
     {
 
-         return GroupResource::collection(\App\Group::all());
+         return \App\Group::where("active_group",1)->get()->load("groupType", "parentGroup", "childGroups", "parentOrganization", "artifacts", "activeMembers");
+    }
+
+    public function getGroupsByFolder(ParentOrganization $parentOrganization=null) {
+        if(!$parentOrganization) {
+            $childFolders = \App\ParentOrganization::whereNull("parent_organization_id")->get();
+            $childGroups = [];
+
+        }
+        else {
+            $childFolders = $parentOrganization->childOrganizations;
+            $childGroups = $parentOrganization->groups()->with(['childGroups' => function ($query) {
+                $query->where('active_group', 1);
+            }])->get();
+            
+        }
+        return response()->json(["folders"=>$childFolders, "groups"=>$childGroups]);
+    }
+
+    public function groupSearch(Request $request) {
+        $searchTerm = $request->get("searchTerm");
+        $groups = \App\Group::where("group_title","like", "%" . $searchTerm . "%")->get()->load("childGroups");
+        return response()->json(["folders"=>[], "groups"=>$groups]);
     }
 
     /**
@@ -29,17 +53,34 @@ class GroupController extends Controller
      */
     public function store(Request $request)
     {
-        if(Auth::user()->site_permissions < 100) {
+        if(!$this->authorize('create', \App\Group::class)) {
              $returnData = array(
                 'status' => 'error',
                 'message' => "You don't have permission to create a group"
             );
             return Response()->json($returnData, 500);
         }
-
         $newGroup = new \App\Group;
+        
         $newGroup->group_title = $request->get("groupName");
-        $newGroup->group_type_id = $request->get("groupType");
+        
+        if($groupType = $request->get("groupType")) {
+            if(isset($groupType["id"])) {
+                $newGroup->group_type_id = $groupType["id"];
+            }
+            else {
+                $newGroup->group_type_id = $this->addOrFindGroupType($groupType)->id;
+            }
+        }
+        else {
+            $returnData = array(
+            'status' => 'error',
+            'message' => 'Could Not Add or Update Group Type'
+            );
+            return Response()->json($returnData, 500);
+        }
+        
+        
         $newGroup->parent_organization_id = $request->get("parentOrganization");
         $newGroup->active_group = 1;
         $newGroup->save();
@@ -64,10 +105,15 @@ class GroupController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($group)
+    public function show($group, $hash=null)
     {
-        if(!$group->activeMembers()->where('user_id', Auth::user()->id)->count() && Auth::user()->site_permissions < 200) {
 
+        if(!$this->authorize('view', $group) && ($hash != $group->hash)) {
+            $returnData = array(
+                'status' => 'error',
+                'message' => "You don't have permission to access this group"
+            );
+            return Response()->json($returnData, 500);
         }
         else {
             return new GroupResource($group->load('members', 'members.user', 'members.role'));
@@ -83,7 +129,7 @@ class GroupController extends Controller
      */
     public function update(Request $request, $group)
     {
-        if(!$group->userCanEdit(Auth::user())) {
+        if(!$this->authorize('update', $group)) {
             $returnData = array(
                 'status' => 'error',
                 'message' => "You don't have permission to edit this group"
@@ -93,11 +139,25 @@ class GroupController extends Controller
 
         $group->fill($request->all());
 
-        $group->group_type_id = $request->get("group_type")["id"];
+        if($groupType = $request->get("group_type")) {
+            if(isset($groupType["id"])) {
+                $group->group_type_id = $groupType["id"];
+            }
+            else {
+                $group->group_type_id = $this->addOrFindGroupType($groupType["label"])->id;
+            }
+        }
+        else {
+            $returnData = array(
+            'status' => 'error',
+            'message' => 'Could Not Add or Update Group Type'
+            );
+            return Response()->json($returnData, 500);
+        }
+        
         if($request->get("parent_organization")) {
             $group->parent_organization_id = $request->get("parent_organization")["id"];    
         }
-        
 
         $group->save();
         $foundArtifactIds = [];
@@ -107,10 +167,13 @@ class GroupController extends Controller
                 $foundArtifactIds[] = $artifact['id'];
             }
             else {
-                $newArtifact = new \App\GroupArtifact;
-                $newArtifact->fill($artifact);
-                $group->artifacts()->save($newArtifact);
-                $foundArtifactIds[] = $newArtifact->id;
+                if($artifact["label"]) {
+                    $newArtifact = new \App\GroupArtifact;
+                    $newArtifact->fill($artifact);
+                    $group->artifacts()->save($newArtifact);
+                    $foundArtifactIds[] = $newArtifact->id;
+                }
+                
             }
         }
 
@@ -120,6 +183,7 @@ class GroupController extends Controller
             }
         }
 
+        $newMemberIds = array();
 
         foreach($request->get('members') as $member) {
             if(isset($member['id'])) {
@@ -153,6 +217,7 @@ class GroupController extends Controller
                     else {
                         return response()->json(["success"=>false, "error"=>"Could not save this role"]);
                     }
+                    $newMemberIds[] = $newMember->id;
                     
                 }
                 else {
@@ -181,10 +246,21 @@ class GroupController extends Controller
                 }
                 
                 $group->members()->save($newMember);
+                $newMemberIds[] = $newMember->id;
             }
 
         }
 
+        
+
+        // if the submissions from the browser are missing some users, we assume they've been really deleted.  Let's remove the membership.
+        // this is the kind of thing that would happen automatically if we were using sync() but ...
+        $memberIds = array_merge(array_column($request->get('members'), "id"), $newMemberIds);
+        $missingMembers = array_diff($group->members()->pluck("id")->toArray(), $memberIds);
+        foreach($missingMembers as $missingMember) {
+            $loadedMember = \App\Membership::find($missingMember);
+            $loadedMember->delete();
+        } 
 
         return response()->json(["success"=>true]);
     }
@@ -200,6 +276,23 @@ class GroupController extends Controller
 
     }
 
+     private function addOrFindGroupType($groupType) {
+         if(is_array($groupType) && array_key_exists("label", $groupType)) {
+             $label = $groupType["label"];
+         }
+         else {
+             $label = $groupType;
+         }
+        $groupType = \App\GroupType::where("label", $label)->first();
+        if(!$groupType) {
+            $groupType = new \App\GroupType;
+            $groupType->label = ucwords($label);
+            $groupType->save();
+        }
+        return $groupType;
+
+    }
+
     /**
      * Remove the specified resource from storage.
      *
@@ -208,7 +301,7 @@ class GroupController extends Controller
      */
     public function destroy($group)
     {
-        if(!$group->userCanEdit(Auth::user())) {
+        if(!$this->authorize('delete', $group)) {
             $returnData = array(
                 'status' => 'error',
                 'message' => "You don't have permission to edit this group"
@@ -225,9 +318,20 @@ class GroupController extends Controller
         return response()->json(["success"=>true]);
     }
 
-    public function members($group) {
-        $members = $group->members()->with('user','role')->get();
-        return MembershipResource::collection($members);
+    public function members($group, $hash=null) {
+
+        if(!$this->authorize('view', $group) && ($hash != $group->hash)) {
+            $returnData = array(
+                'status' => 'error',
+                'message' => "You don't have permission to access this group"
+            );
+            return Response()->json($returnData, 500);
+        }
+        else {
+            $members = $group->members()->with('user','role')->get();
+            return MembershipResource::collection($members);
+        }
+        
     }
 
     // get available roles for autocomplete.  Debating the samrter way to do this.
@@ -239,11 +343,25 @@ class GroupController extends Controller
         
         $rolesLoaded = \App\Role::find($roles);
 
-        return response()->json($rolesLoaded);
+        $officialRoles = \App\Role::with('officialGroupType')->has('officialGroupType')->get();
+
+        $merged = $rolesLoaded->merge($officialRoles);
+        $sorted = $merged->sortBy("label")->values()->load("officialRoleCategory")->all();
+        return response()->json($sorted);
+    }
+
+    public function role($role) {
+        $role->load("members", "members.user", "members.role", "members.group");
+        return response()->json($role);
+
     }
     // get available types for autocomplete.  Debating the samrter way to do this.
     public function types() {        
-        $groupTypes = \App\GroupType::all();
+        $roles = DB::table('groups')->select("group_type_id")
+        ->groupBy("group_type_id")
+        ->havingRaw("COUNT(group_type_id) > " . config('consts.MINIMUM_ROLE_COUNT'))->get()->pluck("group_type_id")->toArray();
+        
+        $groupTypes = \App\GroupType::find($roles);
 
         return response()->json($groupTypes);
     }

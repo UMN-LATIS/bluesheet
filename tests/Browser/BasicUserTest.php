@@ -13,17 +13,17 @@ class BasicUserTest extends DuskTestCase
      *
      * @return void
      */
-    public function userViewGroup()
+    public function testUserViewGroup()
     {
         $this->browse(function (Browser $browser) {
-            $user = \App\User::where(["email"=>"test@umn.edu"])->first();
+            $user = \App\User::where(["email"=>"mcfa0086@umn.edu"])->first();
             
             $browser->loginAs($user);
-            $browser->visit('/')->assertSee("Test User");
-            $browser->assertSee("Test Group");
-            $browser->clickLink("Test Group");
+            $browser->visit('/')->assertSee("Colin");
+            $browser->assertSee("LATIS");
+            $browser->clickLink("LATIS");
             $browser->press("Show Email List");
-            $browser->assertSee("Email list");
+            $browser->waitForText("list:")->assertSee("list:");
 
         });
     }

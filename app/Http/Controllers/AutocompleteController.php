@@ -49,7 +49,9 @@ class AutocompleteController extends Controller
             if(count($userDiscovery) > 0) {
                 \array_unshift($returnArray, $userDiscovery[0]);
             }
-        }     
+        }
+
+        $returnArray = array_values(array_intersect_key($returnArray, array_unique(array_column($returnArray, 'umndid'))));
 
         return response()->json(["items" => $returnArray]);
         

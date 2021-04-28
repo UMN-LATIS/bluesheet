@@ -9,17 +9,18 @@
         <div class="form-group row">
                 <label for="groupType" class="col-sm-3 col-form-label">Group Type</label>
                 <div class="col-sm-6">
-                    <treeselect v-model="groupType" :multiple="false" :options="groupTypes" :clearable="false" :searchable="true" :open-on-click="true" :close-on-select="true" label="group_type" />
-                </div>
-        </div>
-        <div class="form-group row" v-if="parentOrganizations">
-                <label for="parentOrganization" class="col-sm-3 col-form-label">Parent Organization</label>
-                <div class="col-sm-6">
-                     <treeselect v-model="parentOrganization" :multiple="false" :options="parentOrganizations"  :clearable="false" :searchable="true" :open-on-click="true" :close-on-select="true" label="group_title"/>
+                    <v-select v-if="groupTypes" id="groupTypes" taggable v-model="groupType" :options="groupTypes" placeholder="Select..."></v-select>
                 </div>
         </div>
         <div class="form-group row">
-            <div class="col-sm-3">
+                <label for="parentOrganization" class="col-sm-3 col-form-label">Folder</label>
+                <div class="col-sm-6">
+                    <folder-widget v-model="parentOrganization"></folder-widget>
+                     
+                </div>
+        </div>
+        <div class="form-group row">
+            <div class="col-sm-4">
                 <button class="btn btn-primary" @click="createGroup">Create Group</button>
             </div>
         </div>
@@ -38,6 +39,7 @@
 .vue-treeselect__control {
     border: 1px solid rgba(60,60,60,.26);
 }
+
 </style>
 
 <script>
@@ -50,7 +52,6 @@
                 groupType: null,
                 groupTypes: [],
                 parentOrganization: null,
-                parentOrganizations: [],
             }
         },
         watch: {
@@ -65,23 +66,13 @@
         mounted() {
             axios.get("/api/group/types")
             .then(res => {
-                this.groupTypes = res.data.map((o) => { return {"id": o.id, "label": o.group_type } });
-            })
-            .catch(err => {
-
-            });
-            axios.get("/api/group/parents")
-            .then(res => {
-                this.parentOrganizations = this.remapParents(res.data);
+                this.groupTypes = res.data;
             })
             .catch(err => {
 
             });
         },
         methods: {
-            remapParents: function(p) {
-                return p.map(org => { var result = {"id": org.id, "label": org.group_title }; if(org.child_organizations_recursive.length > 0) { result.children = this.remapParents(org.child_organizations_recursive)}; return result; });
-            },
             close: function () {
                 this.groupName = null;
                 this.$emit('close');
@@ -96,7 +87,7 @@
                     return;
                 }
                 if(this.parentOrganization == null) {
-                    this.groupNameError = "You must select a parent organization";
+                    this.groupNameError = "You must select a folder";
                     return;
                 }
                 this.groupNameError = null;

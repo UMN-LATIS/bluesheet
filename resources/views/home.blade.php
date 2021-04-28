@@ -1,5 +1,12 @@
 @extends('base')
 
 @section('content')
-	<home :userperms="{{ Auth::user()->site_permissions }}"></home>
+
+	<home></home>
+@endsection
+
+@section('header')
+	<script>
+		window.showTour = {!! json_encode($showTour) !!};
+	</script>
 @endsection

@@ -12,7 +12,7 @@
 
 <script>
     export default {
-        props: ['groupId'],
+        props: ['groupId', 'hash'],
         data() {
             return {
                 error: null,
@@ -26,13 +26,12 @@
         methods: {
             loadGroup() {
                 this.error = null;
-                
-                axios.get("/api/group/" + this.groupId)
+                axios.get("/api/group/" + this.groupId + (this.hash ?('/'+ this.hash) : ''))
                 .then(res => {
                     this.group = res.data;
                     Vue.set(this.group, 'members', []);
                     this.group.members = [];
-                    axios.get("/api/group/" + this.groupId + "/members")
+                    axios.get("/api/group/" + this.groupId + "/members"+ (this.hash ?('/'+ this.hash) : ''))
                     .then(res => {
                         Vue.set(this.group, 'members', res.data);
                     })

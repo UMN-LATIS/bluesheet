@@ -54,6 +54,7 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
+            'timezone'  => '+00:00'
         ],
 
         'pgsql' => [
