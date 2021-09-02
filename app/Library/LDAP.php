@@ -7,14 +7,8 @@ class LDAP
 {
 
 	public static function lookupUser($lookupValue, $lookupType="cn", $existingUser =null) {
-		putenv('LDAPTLS_REQCERT=never');
-        $connect = ldap_connect( 'ldaps://ldapauth.umn.edu', 636);
+		$connect = LDAP::getConnection();
         $base_dn = array("o=University of Minnesota, c=US",);
-        ldap_set_option($connect, LDAP_OPT_PROTOCOL_VERSION, 3);
-        ldap_set_option($connect, LDAP_OPT_REFERRALS, 0);
-
-        $r=ldap_bind($connect, 'cn=' . config("ldap.username") . ',ou=Organizations,o=University of Minnesota,c=US', config("ldap.password"));
-
         $filter = "(" . $lookupType . "=" . $lookupValue . ")";
         $search = ldap_search([$connect], $base_dn, $filter);
         $foundUser = null;
@@ -50,5 +44,44 @@ class LDAP
         
         return $foundUser;
 	}
+
+    public static function userSearch($lookupValue, $lookupType="cn") {
+        $connect = LDAP::getConnection();
+        $base_dn = array("o=University of Minnesota, c=US",);
+        $filter = "(" . $lookupType . "=" . $lookupValue . ")";
+        $search = ldap_search([$connect], $base_dn, $filter, [], 0, 10)
+        or exit(">>Unable to search ldap server<<");
+        
+        $returnArray = [];
+
+        foreach($search as $readItem) {
+            
+            $info = ldap_get_entries($connect, $readItem);
+            if($info["count"] == 0) {
+                break;
+            }
+            foreach($info as $entry) {
+                if(!isset($entry["umndid"])) {
+                    continue;
+                }
+                if(isset($entry["umndisplaymail"][0])) {
+                    $returnArray[] = ["full_name"=>$entry["displayname"][0], "mail"=>$entry["umndisplaymail"][0], "uid"=>$entry['uid'][0], "umndid"=>$entry["umndid"][0]];
+                }
+                
+                
+            }
+        }
+        return $returnArray;
+	}
+
+    private static function getConnection() {
+        putenv('LDAPTLS_REQCERT=never');
+        $connect = ldap_connect( 'ldaps://ldapauth.umn.edu', 636);
+        ldap_set_option($connect, LDAP_OPT_PROTOCOL_VERSION, 3);
+        ldap_set_option($connect, LDAP_OPT_REFERRALS, 0);
+
+        $r=ldap_bind($connect, 'cn=' . config("ldap.username") . ',ou=Organizations,o=University of Minnesota,c=US', config("ldap.password"));
+        return $connect;
+    }
 
 }

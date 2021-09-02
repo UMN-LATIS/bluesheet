@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use DB;
 use Auth;
+use App\Library\LDAP as LDAP;
+
 
 class AutocompleteController extends Controller
 {
@@ -41,11 +43,11 @@ class AutocompleteController extends Controller
         
         
         
-        $filter = "(" . $field ."=" . $searchString. ")";
-        $returnArray = $this->ldapLookup($filter);
+
+        $returnArray = LDAP::userSearch($searchString, $field);
 
         if($mergedSearch) {
-            $userDiscovery = $this->ldapLookup("(uid=" . $searchValue . ")");
+            $userDiscovery = LDAP::userSearch($searchValue, "uid");
             if(count($userDiscovery) > 0) {
                 \array_unshift($returnArray, $userDiscovery[0]);
             }
@@ -57,39 +59,6 @@ class AutocompleteController extends Controller
         
         
         
-    }
-
-    private function ldapLookup($filter) {
-        $ldap_host = "ldaps://ldapauth.umn.edu";
-        $base_dn = "o=University of Minnesota,c=US";
-
-		$connect = ldap_connect( $ldap_host);
-		ldap_set_option($connect, LDAP_OPT_PROTOCOL_VERSION, 3);
-		ldap_set_option($connect, LDAP_OPT_REFERRALS, 0);
-        $r=ldap_bind($connect);
-        $search = ldap_search([$connect], $base_dn, $filter, [], 0, 10)
-        or exit(">>Unable to search ldap server<<");
-        
-        $returnArray = [];
-
-        foreach($search as $readItem) {
-            
-            $info = ldap_get_entries($connect, $readItem);
-            if($info["count"] == 0) {
-                break;
-            }
-            foreach($info as $entry) {
-                if(!isset($entry["umndid"])) {
-                    continue;
-                }
-                if(isset($entry["umndisplaymail"][0])) {
-                    $returnArray[] = ["full_name"=>$entry["displayname"][0], "mail"=>$entry["umndisplaymail"][0], "uid"=>$entry['uid'][0], "umndid"=>$entry["umndid"][0]];
-                }
-                
-                
-            }
-        }
-        return $returnArray;
     }
 
 }
