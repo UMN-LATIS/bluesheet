@@ -12,11 +12,11 @@ Anyone with a University of Minnesota Internet ID has access to the groups tool.
 
 ### Group Management Access
 
-In order to create groups or browse existing groups, you need to be granted elevated privileges.  As we're currently in development on this tool, those permissions are site-wide.  We may move to a more granular structure in the future, based on feedback from our users.  For now, to request the ability to create and manage groups, just [send us an email](mailto:mcfa0086@umn.edu).
+In order to create groups or browse existing groups, you need to be granted elevated privileges.  As we're currently in development on this tool, those permissions are site-wide.  We may move to a more granular structure in the future, based on feedback from our users.  For now, to request the ability to create and manage groups, just [send us an email](mailto:latistecharch@umn.edu).
 
 ## Creating a Group
 
-If you've got the appropriate permissions, you can create a group by clicking "create a group" in the navigation bar. You'll be asked to enter a name, select a [folder](/#adding-organizations), and a group type.  If you'd like additional folders added, please [send us an email](mailto:mcfa0086@umn.edu).
+If you've got the appropriate permissions, you can create a group by clicking "create a group" in the navigation bar. You'll be asked to enter a name, select a [folder](/#adding-organizations), and a group type.  If you'd like additional folders added, please [send us an email](mailto:latistecharch@umn.edu).
 
 
 ## Group Settings
@@ -91,7 +91,7 @@ The "Browse Roles" link allows you to see all of the people who have been tagged
 
 ## Adding folders
 
-Folders provide a way to "group groups", based on College or other high-level organization.  Folders don't have their own memberships, they just hold other groups.  To request that a new folder be added, please [send us an email](mailto:mcfa0086@umn.edu).
+Folders provide a way to "group groups", based on College or other high-level organization.  Folders don't have their own memberships, they just hold other groups.  To request that a new folder be added, please [send us an email](mailto:latistecharch@umn.edu).
 
 ## Introduction Video
 

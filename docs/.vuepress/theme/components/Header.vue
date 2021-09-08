@@ -2,7 +2,7 @@
   
 			<header class="umnhf" id="umnhf-h" role="banner">
                  
-            <link rel="stylesheet" href="/umn/css/2015-tc.css">
+            <link rel="stylesheet" href="https://groups.cla.umn.edu/umn/css/2015-tc.css">
 		<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet">
 		<link href="https://fonts.googleapis.com/css?family=Amatic+SC" rel="stylesheet">
 		<link href="https://fonts.googleapis.com/css?family=Itim" rel="stylesheet">
