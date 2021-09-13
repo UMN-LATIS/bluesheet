@@ -180,7 +180,7 @@ body, .tb_properties{font-family: Verdana, Geneva, sans-serif !important; font-s
 
 <h1 style="color:#900021;font-family:Verdana,Geneva,sans-serif;font-size:16px;font-style:normal;font-weight:bold;line-height:1.8;"">CLA Groups Tool update reminder</h1>
 
-<p style="font-family:Verdana,Geneva,sans-serif; font-size: 15px; color: #333333;line-height:1.5;">Below {{ $groups->count()==1?"is":"are" }} the {{ Illuminate\Support\Str::plural('group', $groups->count()) }} that you manage in the CLA Groups Tool. Please take a look and update them if necessary.</p>
+<p style="font-family:Verdana,Geneva,sans-serif; font-size: 15px; color: #333333;line-height:1.5;">Below {{ $groups->count()==1?"is":"are" }} the {{ Illuminate\Support\Str::plural('group', $groups->count()) }} that you manage in the CLA Groups Tool. Please take a look and update {{ $groups->count()==1?"it":"them" }} if necessary.</p>
 
 @foreach ($groups as $group)
 
