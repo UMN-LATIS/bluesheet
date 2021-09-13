@@ -28,6 +28,6 @@ class GroupUpdateReminder extends Mailable
      */
     public function build()
     {
-        return $this->from("latistecharch@umn.edu")->subject("CLA Groups Tool Update Reminder")->view('email.updateReminder', ["groups"=>$this->userGroups]);
+        return $this->from("latistecharch@umn.edu", "LATIS Technology Architecture")->subject("CLA Groups Tool Update Reminder")->view('email.updateReminder', ["groups"=>$this->userGroups]);
     }
 }
