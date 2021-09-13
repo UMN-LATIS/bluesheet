@@ -26,6 +26,11 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('sync:users')
                  ->daily();
+        
+        // send a reminder email on the 10th of January and July.
+        $schedule->command('email:periodicUpdate')
+            ->yearlyOn(1, 10, '10:00')
+            ->yearlyOn(7, 10, '10:00');
     }
 
     /**
