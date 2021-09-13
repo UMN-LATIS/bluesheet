@@ -4,7 +4,7 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
-
+use Illuminate\Support\Facades\App;
 class Kernel extends ConsoleKernel
 {
     /**
@@ -27,10 +27,12 @@ class Kernel extends ConsoleKernel
         $schedule->command('sync:users')
                  ->daily();
         
-        // send a reminder email on the 10th of January and July.
-        $schedule->command('email:periodicUpdate')
-            ->yearlyOn(1, 10, '10:00')
-            ->yearlyOn(7, 10, '10:00');
+        if (App::environment('production')) {
+            // send a reminder email on the 10th of January and July.
+            $schedule->command('email:periodicUpdate')
+                ->yearlyOn(1, 10, '10:00')
+                ->yearlyOn(7, 10, '10:00');
+        }
     }
 
     /**
