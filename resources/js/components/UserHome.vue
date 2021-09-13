@@ -3,7 +3,7 @@
         <div class="alert alert-danger" role="alert" v-if="error">
             {{ error}}
         </div>
-        <viewuser :user="user" :v-if="user">
+        <viewuser :user="user" v-if="user">
         </viewuser>
         <div class="col-md-6" v-if="user && !userId">
             <div class="form-check">
