@@ -214,7 +214,7 @@ th {
 
 @endforeach
 
-<p>If you've got any questions, please <a style="font-family:Verdana,Geneva,sans-serif; font-size: 15px; color: #900021;line-height:1.5;"  href="mailto:latistecharch@umn.edu">let us know</a>.</p>
+<p>If you've got any questions, please <a style="font-family:Verdana,Geneva,sans-serif; font-size: 15px; color: #900021;line-height:1.5;"  href="mailto:latistecharch@umn.edu">let us know</a>. You can disable these e-mail reminders in the <a style="font-family:Verdana,Geneva,sans-serif; font-size: 15px; color: #900021;line-height:1.5;" href="{{ url("/user")}}">Groups Tool.</a></p>
 
 </td></tr></table>
                                                 </td>
