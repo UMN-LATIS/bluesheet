@@ -184,9 +184,9 @@ body, .tb_properties{font-family: Verdana, Geneva, sans-serif !important; font-s
 
 @foreach ($groups as $group)
 
-<h2 style="color:#900021;font-family:Verdana,Geneva,sans-serif;font-size:16px;font-style:normal;font-weight:bold;line-height:1.5;"><a style="font-family:Verdana,Geneva,sans-serif; font-size: 15px; color: #900021;line-height:1.5;" href="{{url("/group/" . $group->id)}}">{{ $group->group_title }}</a></h2>
+<h2 style="color:#900021;font-family:Verdana,Geneva,sans-serif;font-size:16px;font-style:normal;font-weight:bold;line-height:1.6;"><a style="font-family:Verdana,Geneva,sans-serif; font-size: 15px; color: #900021;line-height:1.6;" href="{{url("/group/" . $group->id)}}">{{ $group->group_title }}</a></h2>
 
-<table class="responsive-td" style="width:100%">
+<table class="responsive-td groupTable" style="width:100%">
     <thead>
         <tr>
           <th scope="col" text-align="left">Person</th>
@@ -194,7 +194,7 @@ body, .tb_properties{font-family: Verdana, Geneva, sans-serif !important; font-s
         </tr>
     </thead>
     <tbody>
-      @foreach($group->activeMembers->sortBy("user.surname") as $member)
+      @foreach($group->activeMembers as $member)
       <tr>
         <td>{{ $member->user->displayName}}</td>
         <td>{{ $member->role->label }}</td>
@@ -204,10 +204,12 @@ body, .tb_properties{font-family: Verdana, Geneva, sans-serif !important; font-s
 </table>
 
 <style>
-td {
-  text-align: left;
+.groupTable {
+  border-collapse: collapse;
 }
-th {
+
+.groupTable td, .groupTable th {
+  border: 1px solid #ddd;
   text-align: left;
 }
 </style>
