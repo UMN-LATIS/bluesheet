@@ -22,7 +22,7 @@ class MembershipWithGroups extends JsonResource
     public function toArray($request)
     {
         $group = $this->group;
-        if($group->private_group &&  Auth::user()->id !== $this->user_id && !Auth::user()->can('group admin')) {
+        if($group->private_group && Auth::user()->id !== $this->user_id && !Auth::user()->can('group admin')) {
             $group->group_title = "Private Group";
             $group->id = null;
         }
