@@ -184,9 +184,14 @@ body, .tb_properties{font-family: Verdana, Geneva, sans-serif !important; font-s
 
 @foreach ($groups as $group)
 
-<h2 style="color:#900021;font-family:Verdana,Geneva,sans-serif;font-size:16px;font-style:normal;font-weight:bold;line-height:1.6;"><a style="font-family:Verdana,Geneva,sans-serif; font-size: 15px; color: #900021;line-height:1.6;" href="{{url("/group/" . $group->id)}}">{{ $group->group_title }}</a></h2>
+
 
 <table class="responsive-td groupTable" style="width:100%">
+  <thead>
+        <tr>
+          <th scope="col" colspan=2><h2 style="color:#900021;font-family:Verdana,Geneva,sans-serif;font-size:16px;font-style:normal;font-weight:bold;line-height:1.6;margin-top:3px; margin-bottom:3px;"><a style="font-family:Verdana,Geneva,sans-serif; font-size: 16px; color: #900021" href="{{url("/group/" . $group->id)}}">{{ $group->group_title }}</a></h2></th>
+        </tr>
+    </thead>  
     <thead>
         <tr>
           <th scope="col" text-align="left">Person</th>
@@ -203,7 +208,11 @@ body, .tb_properties{font-family: Verdana, Geneva, sans-serif !important; font-s
     </tbody>
 </table>
 
+
 <style>
+.groupTable {
+  margin-bottom: 1.2em;
+}
 .groupTable {
   border-collapse: collapse;
 }
@@ -211,6 +220,7 @@ body, .tb_properties{font-family: Verdana, Geneva, sans-serif !important; font-s
 .groupTable td, .groupTable th {
   border: 1px solid #ddd;
   text-align: left;
+  padding: 8px;
 }
 </style>
 
