@@ -30,9 +30,18 @@ class Kernel extends ConsoleKernel
         if (App::environment('production')) {
             // send a reminder email on the 10th of January and July.
             $schedule->command('email:periodicUpdate')
-                ->yearlyOn(1, 10, '10:00')
-                ->yearlyOn(7, 10, '10:00');
+                ->when(function () {
+                    return (
+                        \Carbon\Carbon::now()->isSameDay($this->findSecondTuesdayOfMonth("January"))
+                        ||
+                        \Carbon\Carbon::now()->isSameDay($this->findSecondTuesdayOfMonth("July"))
+                    );
+                })->at('09:30');
         }
+    }
+    
+    private function findSecondTuesdayOfMonth(string $month): object {
+        return \Carbon\Carbon::parse("second tuesday of " . $month);
     }
 
     /**
