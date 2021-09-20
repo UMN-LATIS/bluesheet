@@ -144,7 +144,7 @@ class GroupController extends Controller
                 $group->group_type_id = $groupType["id"];
             }
             else {
-                $group->group_type_id = $this->addOrFindGroupType($groupType["label"])->id;
+                $group->group_type_id = $this->addOrFindGroupType($groupType)->id;
             }
         }
         else {
