@@ -79,7 +79,7 @@ Vue.component('missingOfficial', MissingOfficial);
 import LastModified from './components/LastModified.vue';
 Vue.component('lastModified', LastModified);
 
-import CeddLike from './components/CeddLike.vue';
+import CeddLike from './components/ceddLike.vue';
 Vue.component('ceddLike', CeddLike);
 
 
