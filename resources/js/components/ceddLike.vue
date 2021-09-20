@@ -8,7 +8,7 @@
             <li>All CLA center directors (users with the role "director" in a group of type "center"</li>
             <li>All members of the CLA Executive Committee (tbd)</li>
             <li>All Dean's Group members (tbd)</li>
-            <li>All OLT members (tbd)</li>
+            <li><router-link :to="{ name: 'group', params: { groupId: 83 } }">All OLT members</router-link></li>
             <li>And a list of other misc people (tbd)</li>
         </ul>
         <members :members="groupList" :editing="false" :roles="[]" :show_unit="true" groupType="list" viewType="role" downloadTitle="CEDD Like"/>
