@@ -31,6 +31,15 @@
                         return g;
                     });
                 });
+
+            var oltGroup = await axios.get("/api/group/83")
+            axios.get("/api/group/83/members")
+                .then(res => {
+                    this.groupList = res.data.map(g => {
+                        g.group = oltGroup.data;
+                        return g;
+                    });
+                });
             
             // var adminGroup = await axios.get("/api/role/22")
             axios.get("/api/role/22")
