@@ -83,6 +83,7 @@ class GroupController extends Controller
         
         $newGroup->parent_organization_id = $request->get("parentOrganization");
         $newGroup->active_group = 1;
+        $newGroup->show_unit = false;
         $newGroup->save();
         $returnData = array(
             'status' => 'success',
