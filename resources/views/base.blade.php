@@ -47,7 +47,7 @@
 		<a name="main-nav"></a>
 		<a name="main-content"></a>
 		
-		<main id="umn-main" role="main">
+		<main role="main">
 
 
 			<div class="home" id="app">
