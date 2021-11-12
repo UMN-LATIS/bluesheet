@@ -51,6 +51,10 @@ Vue.component('downloadCsv', JsonCSV);
 import UserHome from './components/UserHome.vue';
 Vue.component('userhome', UserHome);
 
+import LandingPage from './components/LandingPage.vue';
+Vue.component('landingpage', LandingPage);
+
+
 import UserList from './components/UserList.vue';
 Vue.component('userlist', UserList);
 
@@ -79,6 +83,9 @@ Vue.component('missingOfficial', MissingOfficial);
 import LastModified from './components/LastModified.vue';
 Vue.component('lastModified', LastModified);
 
+import CeddLike from './components/ceddLike.vue';
+Vue.component('ceddLike', CeddLike);
+
 
 Vue.component('home', require('./components/Home.vue').default);
 Vue.component('viewuser', require('./components/ViewUser.vue').default);
@@ -102,7 +109,8 @@ const store = new Vuex.Store({
     favorites: {
       groups: [],
       roles: []
-    }
+    },
+    user: null
   },
   actions: {
     toggleFavorite({commit, state}, payload) {
@@ -124,6 +132,7 @@ const store = new Vuex.Store({
     fetchUser(context) {
       axios.get("/api/user/show")
       .then(response => {
+        context.commit('setUser', response.data);
         context.commit('setFavorites', {type: "groups", content: response.data.favoriteGroups});
         context.commit('setFavorites', {
                     type: "roles",
@@ -140,6 +149,9 @@ const store = new Vuex.Store({
     },
     setFavorites(state, payload) {
       state.favorites[payload.type] = payload.content;
+    },
+    setUser(state, payload) {
+      state.user = payload
     }
   }
 });
@@ -156,7 +168,7 @@ const store = new Vuex.Store({
 const router = new VueRouter({
     mode: 'history',
   routes: [
-    { name: 'home', path: "/", component: UserHome },
+    { name: 'home', path: "/", component: LandingPage },
     { name: 'user', path: "/user/:userId?", component: UserHome, props:true },
     { name: 'userList', path: "/userList/", component: UserList, props: (route) => ({ users: route.query.users, groupId:route.query.groupId })},
     { name: 'group', path: "/group/:groupId/:hash?", component: Group, props:true },
@@ -166,6 +178,7 @@ const router = new VueRouter({
     { name: 'reportList', path: "/reports/", component: ReportList, props:true },
     { name: 'missingOfficial', path: "/reports/missingOfficialRoles", component: MissingOfficial, props:true },
     { name: 'lastModified', path: "/reports/lastModified", component: LastModified, props:true },
+    { name: 'ceddLike', path: "/reports/ceddLike", component: CeddLike, props:true },
   ]
 })
 

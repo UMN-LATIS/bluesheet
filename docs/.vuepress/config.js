@@ -20,6 +20,7 @@ module.exports = {
             editLinkText: 'Help us improve this page!',
         sidebar: [
             '/',
+            '/using-the-groups-tool'
     ],
 
     }
