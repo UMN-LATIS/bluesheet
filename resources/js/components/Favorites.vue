@@ -42,10 +42,10 @@ export default {
         },
         sortedList: function () {
             if(this.type =="group") {
-                var sortItem = this.user.favoriteGroups;
+                var sortItem = this.$store.state.favorites.groups;
             }
             if(this.type =="role") {
-                var sortItem = this.user.favoriteRoles;
+                var sortItem = this.$store.state.favorites.roles;
             }
                 return sortItem.sort(function (a, b) {
                     let modifier = 1;

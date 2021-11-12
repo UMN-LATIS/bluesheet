@@ -15,11 +15,11 @@
 
         <div class="row mt-5" v-if="$store.state.user">
 
-            <div class="col" v-if="$store.state.user.favoriteGroups.length > 0">
+            <div class="col" v-if="$store.state.favorites.groups.length > 0">
                 <h3>Favorite Groups</h3>
                 <favorites :user="$store.state.user" type="group"></favorites>
             </div>
-            <div class="col" v-if="$store.state.user.favoriteRoles.length > 0">
+            <div class="col" v-if="$store.state.favorites.roles.length > 0">
                 <h3>Favorite Roles</h3>
                 <favorites :user="$store.state.user" type="role"></favorites>
             </div>
