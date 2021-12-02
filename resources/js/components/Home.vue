@@ -1,58 +1,85 @@
 <template>
     <div>
-        <header class="app-header">
-            <nav class="navbar navbar-expand-lg navbar-light bg-light" v-if="$can('view own groups')">
-                 <router-link :to="{ name: 'home' }" class="navbar-brand"  id="v-step-0">BlueSheet</router-link>
-                <button class="navbar-toggler" type="button" data-toggle="collapse"
-                    data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
-                    aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+        <div class="region--masthead-fourth--wrapper">
+        
+<div class="region region--masthead-fourth clearfix" id="masthead-fourth">
+                <div class="region__inner">
 
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav mr-auto">
-                        <li class="nav-item" id="v-step-1">
-                            <router-link :to="{ name: 'user' }" class="nav-link">My Groups <i class="fas fa-user"></i>
+                    <nav role="navigation" aria-labelledby="block-groupmenus-menu" id="block-groupmenus"
+                        data-block-plugin-id="groupmenus"
+                        class="block block-menu navigation header-menu groupmenu--header-menu">
+
+                        <h2 class="visually-hidden" id="block-groupmenus-menu">Group Navigation</h2>
+
+
+
+                        <div class="header-menu--toggle">
+                            <span class="header-menu--toggle--label">Menu</span>
+                            <svg class="svg-inline--fa fa-bars fa-w-14 header-menu--toggle--accent" aria-hidden="true"
+                                focusable="false" data-prefix="fas" data-icon="bars" role="img"
+                                xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" data-fa-i2svg="">
+                                <path fill="currentColor"
+                                    d="M16 132h416c8.837 0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163 0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837 0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837 0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837 0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837 0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z">
+                                </path>
+                            </svg><!-- <span class="header-menu--toggle--accent fas fa-bars"></span> -->
+                        </div>
+
+                        <div class="header-menu--menu-wrapper">
+
+                            <ul class="menu menu-level--1">
+
+    <li class="menu-item menu-item--level-1" id="v-step-1">
+                            <router-link :to="{ name: 'home' }" class="nav-link">
+                                <span> Home <i class="fas fa-home"></i></span>
                             </router-link>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" @click.prevent="createGroup = true"
-                                v-if="$can('create groups')">Create Group <i class="fas fa-plus"></i></a>
+
+                        <li class="menu-item menu-item--level-1" id="v-step-1">
+                            <router-link :to="{ name: 'user' }" class="nav-link">
+                                <span> My Groups <i class="fas fa-user"></i></span>
+                            </router-link>
                         </li>
-                        <li class="nav-item" id="v-step-6">
-                            <router-link :to="{ name: 'groupList' }" class="nav-link" v-if="$can('view groups')">Browse
-                                Groups <i class="fas fa-search"></i></router-link>
+                        <li class="menu-item menu-item--collapsed menu-item--level-1" v-if="$can('create groups')">
+                            <a class="nav-link" href="#" @click.prevent="createGroup = true" ><span>Create Group <i class="fas fa-plus"></i></span></a>
                         </li>
-                        <li class="nav-item" id="v-step-7">
-                            <router-link :to="{ name: 'roleList' }" class="nav-link" v-if="$can('view groups')">Browse
-                                Roles <i class="fas fa-search"></i></router-link>
+                        <li class="menu-item menu-item--collapsed menu-item--level-1" id="v-step-6" v-if="$can('view groups')">
+                            <router-link :to="{ name: 'groupList' }" class="nav-link" ><span>Browse Groups <i class="fas fa-search"></i></span></router-link>
                         </li>
-                        <li class="nav-item">
-                            <router-link :to="{ name: 'reportList' }" class="nav-link" v-if="$can('view reports')">View
-                                Reports <i class="fas fa-table"></i></router-link>
+                        <li class="menu-item menu-item--collapsed menu-item--level-1" id="v-step-7" v-if="$can('view groups')">
+                            <router-link :to="{ name: 'roleList' }" class="nav-link" ><span>Browse Roles <i class="fas fa-search"></i></span></router-link>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" @click.prevent="findUser=true" v-if="$can('view users')">User
-                                Lookup <i class="fas fa-users"></i></a>
+                        <li class="menu-item menu-item--collapsed menu-item--level-1" v-if="$can('view reports')">
+                            <router-link :to="{ name: 'reportList' }" class="nav-link" ><span> View Reports <i class="fas fa-table"></i></span></router-link>
                         </li>
-                        <li class="nav-item" id="v-step-8">
-                            <a class="nav-link" href="https://umn-latis.github.io/Caligari/" target="_blank">Help <i
-                                    class="fas fa-question-circle"></i></a>
+                        <li class="menu-item menu-item--collapsed menu-item--level-1" v-if="$can('view users')">
+                            <a class="nav-link" href="#" @click.prevent="findUser=true" ><span>User Lookup <i class="fas fa-users"></i></span></a>
+                        </li>
+                        <li class="menu-item menu-item--collapsed menu-item--level-1" id="v-step-8">
+                            <a class="nav-link" href="https://umn-latis.github.io/Caligari/" target="_blank"><span>Help <i
+                                    class="fas fa-question-circle"></i></span></a>
                         </li>
 
                     </ul>
-                    <ul class="navbar-nav">
-                        <li class="nav-item">
-                            <a href="/shibboleth-logout" class="nav-link">Logout</a>
-                        </li>
-                    </ul>
+               
+                        </div>
+
+                    </nav>
                 </div>
-            </nav>
-        </header>
-        <div class="container">
-            <router-view :userperms="userperms" :key="$route.fullPath"></router-view>
-        </div>
+            </div>
+</div>
 
+<div class="layout-background--maroon-gradient layout--full-width layout layout-container layout--onecol">
+        <div class="container">
+            <div class="layout-white-box layout--narrow layout layout-container layout--onecol">
+            <div class="layout__region layout__region--content region-full">
+    <div data-block-plugin-id="entity_view:group" class="block block-ctools block-entity-view--group">
+
+            <router-view :userperms="userperms" :key="$route.fullPath"></router-view>
+    </div>
+    </div>
+        </div>
+</div>
+</div>
 
 
         <userlookup v-if="findUser" :show="findUser" @close="findUser = false"></userlookup>

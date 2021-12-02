@@ -13,20 +13,20 @@
             </div>
         </div>
 
-        <div class="row mt-5" v-if="$store.state.user">
+        <div class="row mt-2" v-if="$store.state.user">
 
             <div class="col" v-if="$store.state.favorites.groups.length > 0">
-                <h3>Favorite Groups</h3>
+                <h2>Favorite Groups</h2>
                 <favorites :user="$store.state.user" type="group"></favorites>
             </div>
             <div class="col" v-if="$store.state.favorites.roles.length > 0">
-                <h3>Favorite Roles</h3>
+                <h2>Favorite Roles</h2>
                 <favorites :user="$store.state.user" type="role"></favorites>
             </div>
         </div>
-        <div class="row mt-5">
+        <div class="row mt-2">
             <div class="col">
-                <h3>Frequently Accessed Roles</h3>
+                <h2>Frequently Accessed Roles</h2>
                 <table class="table">
                     <thead>
                         <tr>
