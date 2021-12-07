@@ -3,7 +3,7 @@
         <div class="row">
           <div class="col-md-12">
             <div class="btn-group float-right" role="group" aria-label="Edit Controls">
-            <button class="btn btn-outline-primary" @click="$store.dispatch('toggleFavorite', {type: 'groups', item: group})"><i class="fa-star" v-bind:class="{ 'fas' : groupFavorited, 'far': !groupFavorited} "></i> Favorite</button>
+            <button class="btn-primary--small" @click="$store.dispatch('toggleFavorite', {type: 'groups', item: group})"><i class="fa-star" v-bind:class="{ 'fas' : groupFavorited, 'far': !groupFavorited} "></i> Favorite</button>
             <button class="btn btn-outline-primary" @click="$emit('update:editing', true)" v-if="$can('edit groups') || group.user_can_edit">Edit Group</button>
             
             </div>
