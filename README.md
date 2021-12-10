@@ -64,11 +64,11 @@ Stop the application: `sail down`.
 
 ## Deploy
 
-| Enviroment Name | URL                          |
-| --------------- | ---------------------------- |
-| `dev`           | <cla-groups-dev.oit.umn.edu> |
-| `stage`         | <cla-groups-tst.oit.umn.edu> |
-| `prod`          | <cla-groups-prd.oit.umn.edu> |
+| Enviroment Name | URL                                  |
+| --------------- | ------------------------------------ |
+| `dev`           | <https://cla-groups-dev.oit.umn.edu> |
+| `stage`         | <https://cla-groups-tst.oit.umn.edu> |
+| `prod`          | <https://cla-groups-prd.oit.umn.edu> |
 
 ```sh
 ./vendor/bin/dep deploy <environment name>
