@@ -39,8 +39,7 @@
             <td v-if="editing"><input type="date" class="form-control"
                         :value="member.end_date" @blur="member.end_date = $event.target.value"></td>
             
-            <td v-if="!editing">
-                <i v-if="viewType=='group' && member.role.official_group_type.length > 0" class="fa fa-check"></i>
+            <td v-if="!editing"><i v-if="viewType=='group' && member.role.official_group_type.length > 0" class="fa fa-check"></i>
                 <i v-else class="searchIcon fa fa-close"></i>
             </td>
             <td v-if="editing" class="text-right"><input class="form-check-input" type="checkbox" v-model="member.admin"></td>

@@ -13,7 +13,6 @@
             </div>
         </div>
 
-
         <div class="row mt-2" v-if="$store.state.user">
 
             <div class="col" v-if="$store.state.favorites.groups.length > 0">
