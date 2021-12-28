@@ -55,7 +55,9 @@
 </template>
 
 <style>
-
+    .container {
+        margin-top: 10px;
+    }
 
     .router-link-active {
         color: black !important;

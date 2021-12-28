@@ -1,9 +1,9 @@
 <template>
     <div>
         <template v-if="$can('view groups') && !editing">
-            <button class="btn-secondary" @click="showEmailList = !showEmailList">Show Email List</button>
-            <download-csv class="btn-tertiary" :data="csvlist" :name="downloadTitle + '.csv'">Download List</download-csv>
-            <button class="btn-primary" v-bind:class="{ active: filterList }" aria-pressed="false"
+            <button class="btn btn-success" @click="showEmailList = !showEmailList">Show Email List</button>
+            <download-csv class="btn btn-info" :data="csvlist" :name="downloadTitle + '.csv'">Download List</download-csv>
+            <button class="btn btn-primary" v-bind:class="{ active: filterList }" aria-pressed="false"
                 @click="filterList =! filterList">Filter List</button>
         </template>
         <modal :show="showEmailList" @close="showEmailList = !showEmailList">
