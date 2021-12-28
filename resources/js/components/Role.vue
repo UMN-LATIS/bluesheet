@@ -3,7 +3,7 @@
         <div class="alert alert-danger" role="alert" v-if="error">
             {{ error}}
         </div>
-        <button class="btn btn-outline-primary float-right" @click="$store.dispatch('toggleFavorite', {type: 'roles', item: role})"><i class="fa-star" v-bind:class="{ 'fas' : roleFavorited, 'far': !roleFavorited} "></i> Favorite</button>
+        <button class="btn-primary--small float-right" @click="$store.dispatch('toggleFavorite', {type: 'roles', item: role})"><i class="fa-star" v-bind:class="{ 'fas' : roleFavorited, 'far': !roleFavorited} "></i> Favorite</button>
         <h1>{{ role.label}}</h1>
         <div class="form-group row" v-if="parentOrganizations">
                 <label for="parentOrganization" class="col-sm-2 col-form-label">Filter by Folder</label>

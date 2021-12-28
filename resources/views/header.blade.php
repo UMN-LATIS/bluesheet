@@ -2,9 +2,6 @@
 <script src="/umn/js/umnhf-2015.js" type="text/javascript"></script>
 <script src="/umn/js/html5shiv-printshiv.js" type="text/javascript"></script> --}}
 
-<script src="https://cla.umn.edu/sites/cla.umn.edu/files/js/js_a3PP_9aomCu91cS1JYMk_tcvekNLIphhosC6AiZnlkY.js"></script>
-<script src="https://cla.umn.edu/sites/cla.umn.edu/files/js/js_F5mQIP0bHBUt58abkKPiG5bgPe9dSuKld3Cco3yz4UI.js"></script>
-<script src="https://cla.umn.edu/sites/cla.umn.edu/files/js/js_QHqjxhGPGgZFwOfW92tmrVpssmC1sbO0zDG4TgLmaEI.js"></script>
 
 <link rel="stylesheet" media="all" href="https://cla.umn.edu/sites/cla.umn.edu/files/css/css_hz57ostSO7NSHWD7hxs7q4RBIqgX8twdEEkOXdiCB00.css">
 <link rel="stylesheet" media="all" href="https://cla.umn.edu/sites/cla.umn.edu/files/css/css_TIPVfsFduUrSH7v3cS9XB7R-jQ6ZpzGqsmqv8zgS8Uw.css">
