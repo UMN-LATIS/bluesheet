@@ -1,8 +1,8 @@
 <template>
     <div>
         <header class="app-header">
-            <nav class="navbar navbar-expand-lg navbar-dark bg-dark" v-if="$can('view own groups')">
-                <a class="navbar-brand" href="#" id="v-step-0">Groups</a>
+            <nav class="navbar navbar-expand-lg navbar-light bg-light" v-if="$can('view own groups')">
+                 <router-link :to="{ name: 'home' }" class="navbar-brand"  id="v-step-0">BlueSheet</router-link>
                 <button class="navbar-toggler" type="button" data-toggle="collapse"
                     data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
                     aria-label="Toggle navigation">
@@ -67,8 +67,9 @@
     }
 
     .router-link-active {
-        color: white !important;
+        color: black !important;
     }
+    
 
 </style>
 
@@ -82,21 +83,21 @@
                 steps: [{
                         target: '#v-step-0', // We're using document.querySelector() under the hood
                         header: {
-                            title: 'Welcome to the Groups Tool',
+                            title: 'Welcome to the BlueSheet Tool',
                         },
-                        content: `Discover the <strong>Groups Tool</strong> with this quick tour. <br/> We'll show you the basics, and you can always reach out for assistance.`
+                        content: `Discover the <strong>BlueSheet Tool</strong> with this quick tour. <br/> We'll show you the basics, and you can always reach out for assistance.`
                     },
                     {
                         target: '#v-step-1',
-                        content: `Right now, you're on the "My Groups" page. This shows you any groups that you're a member of, as well as your personal information loaded from the University directory.`
+                        content: `Right now, you're on the home page. This gives you quick access to some common needs.`
                     },
                     {
                         target: '#v-step-4',
-                        content: `The Groups Tool is used to keep track of the membership of groups, committees, and departments. This includes both the people involved and their roles. If someone has two roles within a group, they'll have two entries in the list.`
+                        content: `The BlueSheet Tool is used to keep track of the membership of groups, committees, and departments. This includes both the people involved and their roles. If someone has two roles within a group, they'll have two entries in the list.`
                     },
                     {
                         target: '#pastRoles',
-                        content: 'One of the powerful features of the Groups Tool is that it keeps track of any previous group memberships as well. As you use the tool, this checkbox will let you view historical data.',
+                        content: 'One of the powerful features of the BlueSheet Tool is that it keeps track of any previous group memberships as well. As you use the tool, this checkbox will let you view historical data.',
                     },
                     {
                         target: '#v-step-6',
