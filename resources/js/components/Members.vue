@@ -243,7 +243,7 @@
                         "notes": r.notes,
                         "start date": r.start_date,
                         "end date": r.end_date,
-                        "office": r.user.office.replace(/ \$ /g, "\n"),
+                        "office": r.user.office?r.user.office.replace(/ \$ /g, "\n"):null,
                         "title": r.user.title
                     }
                 });

@@ -5,8 +5,15 @@
         </div>
         <viewuser :user="user" v-if="user">
         </viewuser>
+        <div class="col-md-6" v-if="user && !userId">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" v-model="user.send_email_reminders" @change="updateUser" id="send_email_reminders">
+                <label class="form-check-label small" for="send_email_reminders">
+                    Send me occasional reminders to update my groups
+                </label>
+            </div>
+        </div>
         <roles :memberships="memberships" id="v-step-4"></roles>
-
     </div>
 </template>
 
@@ -36,6 +43,9 @@
             }
         },
         methods: {
+            updateUser() {
+                axios.put('/api/user/' + this.user.id, this.user);
+            },
             loadUser() {
                 this.error = null;
                 var targetUser = "local";

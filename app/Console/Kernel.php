@@ -4,7 +4,7 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
-
+use Illuminate\Support\Facades\App;
 class Kernel extends ConsoleKernel
 {
     /**
@@ -26,6 +26,22 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('sync:users')
                  ->daily();
+        
+        if (App::environment('production')) {
+            // send a reminder email on the 10th of January and July.
+            $schedule->command('email:periodicUpdate')
+                ->when(function () {
+                    return (
+                        \Carbon\Carbon::now()->isSameDay($this->findSecondTuesdayOfMonth("January"))
+                        ||
+                        \Carbon\Carbon::now()->isSameDay($this->findSecondTuesdayOfMonth("July"))
+                    );
+                })->at('09:30');
+        }
+    }
+    
+    private function findSecondTuesdayOfMonth(string $month): object {
+        return \Carbon\Carbon::parse("second tuesday of " . $month);
     }
 
     /**
