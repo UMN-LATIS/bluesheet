@@ -7,7 +7,7 @@ require 'recipe/npm.php';
 set('ssh_type', 'native');
 set('ssh_multiplexing', true);
 
-set('repository', 'git@github.umn.edu:mcfa0086/caligari.git');
+set('repository', 'git@github.com:umn-latis/bluesheet.git');
 
 add('shared_files', []);
 add('shared_dirs', []);
@@ -18,7 +18,7 @@ add('writable_dirs', []);
 
 host('dev')
     ->hostname("cla-groups-dev.oit.umn.edu")
-    ->user('mcfa0086')
+    ->user('swadm')
     ->stage('development')
     // ->identityFile()
     ->set('bin/php', '/opt/rh/rh-php73/root/usr/bin/php')
