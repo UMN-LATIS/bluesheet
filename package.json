@@ -2,12 +2,11 @@
     "private": true,
     "scripts": {
         "dev": "npm run development",
-        "development": "cross-env NODE_ENV=development node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
-        "watch": "npm run development -- --watch",
-        "watch-poll": "npm run watch -- --watch-poll",
-        "hot": "cross-env NODE_ENV=development node_modules/webpack-dev-server/bin/webpack-dev-server.js --inline --hot --config=node_modules/laravel-mix/setup/webpack.config.js",
-        "prod": "npm run production",
-        "production": "cross-env NODE_ENV=production node_modules/webpack/bin/webpack.js --no-progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
+        "development": "mix",
+        "watch": "mix watch",
+        "watch-poll": "mix watch -- --watch-options-poll=1000",
+        "hot": "mix watch --hot",
+        "production": "mix --production",
         "docs:build": "cd docs; vuepress build"
     },
     "devDependencies": {
@@ -19,14 +18,17 @@
         "popper.js": "^1.16.1",
         "resolve-url-loader": "2.3.1",
         "sass": "^1.44.0",
-        "sass-loader": "^7.3.1",
+        "sass-loader": "^12.2.0",
         "vue": "^2.6.11",
+        "vue-loader": "^15.9.7",
         "vue-template-compiler": "^2.6.11"
     },
     "dependencies": {
         "@riophae/vue-treeselect": "https://github.com/cmcfadden/vue-treeselect.git",
-        "laravel-mix": "^4.1.4",
+        "@vue/composition-api": "^1.4.3",
+        "laravel-mix": "^6.0.39",
         "v-tooltip": "^2.0.3",
+        "vue-demi": "^0.12.1",
         "vue-json-csv": "^1.2.10",
         "vue-moment": "^4.1.0",
         "vue-router": "^3.1.6",

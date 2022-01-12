@@ -1,76 +1,68 @@
 <template>
-    <div>
-        <header class="app-header">
-            <nav class="navbar navbar-expand-lg navbar-light bg-light" v-if="$can('view own groups')">
-                 <router-link :to="{ name: 'home' }" class="navbar-brand"  id="v-step-0">BlueSheet</router-link>
-                <button class="navbar-toggler" type="button" data-toggle="collapse"
-                    data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
-                    aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
 
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav mr-auto">
-                        <li class="nav-item" id="v-step-1">
-                            <router-link :to="{ name: 'user' }" class="nav-link">My Groups <i class="fas fa-user"></i>
-                            </router-link>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" @click.prevent="createGroup = true"
-                                v-if="$can('create groups')">Create Group <i class="fas fa-plus"></i></a>
-                        </li>
-                        <li class="nav-item" id="v-step-6">
-                            <router-link :to="{ name: 'groupList' }" class="nav-link" v-if="$can('view groups')">Browse
-                                Groups <i class="fas fa-search"></i></router-link>
-                        </li>
-                        <li class="nav-item" id="v-step-7">
-                            <router-link :to="{ name: 'roleList' }" class="nav-link" v-if="$can('view groups')">Browse
-                                Roles <i class="fas fa-search"></i></router-link>
-                        </li>
-                        <li class="nav-item">
-                            <router-link :to="{ name: 'reportList' }" class="nav-link" v-if="$can('view reports')">View
-                                Reports <i class="fas fa-table"></i></router-link>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" @click.prevent="findUser=true" v-if="$can('view users')">User
-                                Lookup <i class="fas fa-users"></i></a>
-                        </li>
-                        <li class="nav-item" id="v-step-8">
-                            <a class="nav-link" href="https://umn-latis.github.io/Caligari/" target="_blank">Help <i
-                                    class="fas fa-question-circle"></i></a>
-                        </li>
-
-                    </ul>
-                    <ul class="navbar-nav">
-                        <li class="nav-item">
+    <body>
+        <app-header>
+            <template #app-link><a href="/">BlueSheet</a></template>
+            <template #navbar-links>
+                <navbar-item>
+                    <router-link :to="{ name: 'user' }" class="nav-link">My Groups <i class="fas fa-user"></i>
+                    </router-link>
+                </navbar-item>
+                <navbar-item>
+                    <a class="nav-link" href="#" @click.prevent="createGroup = true" v-if="$can('create groups')">Create
+                        Group <i class="fas fa-plus"></i></a>
+                </navbar-item>
+                <navbar-item>
+                    <router-link :to="{ name: 'groupList' }" class="nav-link" v-if="$can('view groups')">Browse
+                        Groups <i class="fas fa-search"></i></router-link>
+                </navbar-item>
+                <navbar-item>
+                    <router-link :to="{ name: 'roleList' }" class="nav-link" v-if="$can('view groups')">Browse
+                        Roles <i class="fas fa-search"></i></router-link>
+                </navbar-item>
+                <navbar-item>
+                    <router-link :to="{ name: 'reportList' }" class="nav-link" v-if="$can('view reports')">View
+                        Reports <i class="fas fa-table"></i></router-link>
+                </navbar-item>
+                <navbar-item>
+                    <a class="nav-link" href="#" @click.prevent="findUser=true" v-if="$can('view users')">User
+                        Lookup <i class="fas fa-users"></i></a>
+                </navbar-item>
+                <navbar-item>
+                    <a class="nav-link" href="https://umn-latis.github.io/Caligari/" target="_blank">Help <i
+                            class="fas fa-question-circle"></i></a>
+                </navbar-item>
+                <navbar-item>
                             <a href="/shibboleth-logout" class="nav-link">Logout</a>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
-        </header>
-        <div class="container">
+                        </navbar-item>
+
+            </template>
+        </app-header>
+        
+        <postit class="container">
             <router-view :userperms="userperms" :key="$route.fullPath"></router-view>
-        </div>
+        </postit>
 
-
+        <app-footer/>
 
         <userlookup v-if="findUser" :show="findUser" @close="findUser = false"></userlookup>
         <creategroup v-if="createGroup" :show="createGroup" @close="createGroup = false"></creategroup>
         <v-tour name="intro_tour" :steps="steps"></v-tour>
-    </div>
+    </body>
 </template>
 
 <style>
-    .container {
+    /* .container {
         margin-top: 10px;
-    }
+    } */
 
     .router-link-active {
         color: black !important;
     }
-    
 
+    .fas {
+        margin-left: 5px;
+    }
 </style>
 
 <script>
