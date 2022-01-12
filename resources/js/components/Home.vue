@@ -62,6 +62,7 @@
 
     .fas {
         margin-left: 5px;
+        margin-top: 3px;
     }
 </style>
 
