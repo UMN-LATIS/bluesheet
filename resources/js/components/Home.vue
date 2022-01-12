@@ -11,24 +11,24 @@
                     <router-link :to="{ name: 'user' }" class="nav-link">My Groups <i class="fas fa-user"></i>
                     </router-link>
                 </navbar-item>
-                <navbar-item>
-                    <a class="nav-link" href="#" @click.prevent="createGroup = true" v-if="$can('create groups')">Create
+                <navbar-item v-if="$can('create groups')">
+                    <a class="nav-link" href="#" @click.prevent="createGroup = true" >Create
                         Group <i class="fas fa-plus"></i></a>
                 </navbar-item>
-                <navbar-item>
-                    <router-link :to="{ name: 'groupList' }" class="nav-link" v-if="$can('view groups')">Browse
+                <navbar-item v-if="$can('view groups')">
+                    <router-link :to="{ name: 'groupList' }" class="nav-link" >Browse
                         Groups <i class="fas fa-search"></i></router-link>
                 </navbar-item>
-                <navbar-item>
-                    <router-link :to="{ name: 'roleList' }" class="nav-link" v-if="$can('view groups')">Browse
+                <navbar-item v-if="$can('view groups')">
+                    <router-link :to="{ name: 'roleList' }" class="nav-link" >Browse
                         Roles <i class="fas fa-search"></i></router-link>
                 </navbar-item>
-                <navbar-item>
-                    <router-link :to="{ name: 'reportList' }" class="nav-link" v-if="$can('view reports')">View
+                <navbar-item v-if="$can('view reports')">
+                    <router-link :to="{ name: 'reportList' }" class="nav-link" >View
                         Reports <i class="fas fa-table"></i></router-link>
                 </navbar-item>
-                <navbar-item>
-                    <a class="nav-link" href="#" @click.prevent="findUser=true" v-if="$can('view users')">User
+                <navbar-item v-if="$can('view users')">
+                    <a class="nav-link" href="#" @click.prevent="findUser=true" >User
                         Lookup <i class="fas fa-users"></i></a>
                 </navbar-item>
                 <navbar-item>
