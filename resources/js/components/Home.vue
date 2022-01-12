@@ -2,8 +2,11 @@
 
     <body>
         <app-header>
-            <template #app-link><a href="/">BlueSheet</a></template>
+            <template #app-link> <router-link :to="{ name: 'home' }">BlueSheet</router-link></template>
             <template #navbar-links>
+                <navbar-item>
+                    <router-link :to="{ name: 'home' }">Home</router-link>
+                </navbar-item>
                 <navbar-item>
                     <router-link :to="{ name: 'user' }" class="nav-link">My Groups <i class="fas fa-user"></i>
                     </router-link>
