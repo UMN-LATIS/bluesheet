@@ -59,7 +59,7 @@
         margin-top: 10px;
     } */
 
-    .router-link-active {
+    .navbar-block .router-link-exact-active {
         color: black !important;
     }
 
