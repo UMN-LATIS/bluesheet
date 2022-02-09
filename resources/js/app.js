@@ -7,7 +7,9 @@
 
 require('./bootstrap');
 
-window.Vue = require('vue');
+import Vue from 'vue'
+
+window.Vue = Vue;
 
 import Vuex from 'vuex'
 Vue.use(Vuex)
@@ -103,6 +105,14 @@ Vue.component('sortableLink', require('./components/Sortable.vue').default);
 Vue.component('favorites', require('./components/Favorites.vue').default);
 Vue.component('group-title', require('./components/GroupTitle.vue').default);
 Vue.component('folder-widget', require('./components/FolderWidget.vue').default);
+
+import VueCompositionAPI from "@vue/composition-api";
+Vue.use(VueCompositionAPI);
+
+Vue.component('app-header', require('./cla-vue-template/src/components/AppHeader.vue').default);
+Vue.component('navbar-item', require('./cla-vue-template/src/components/NavbarItem.vue').default);
+Vue.component('app-footer', require('./cla-vue-template/src/components/AppFooter.vue').default);
+Vue.component('postit', require('./cla-vue-template/src/components/PostIt.vue').default);
 
 const store = new Vuex.Store({
   state: {

@@ -3,6 +3,8 @@
 // @import url('https://fonts.googleapis.com/css?family=Nunito');
 @import url("https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,700;1,400&display=swap");
 // Variables
+@import "../js/cla-vue-template/src/index.css";
+
 @import 'variables';
 
 // Bootstrap
@@ -14,15 +16,7 @@
 
 @import '~vue-select/dist/vue-select.css';
 
-body {
-    height: 100%;
-    font-family: "Open Sans", sans-serif;
 
-
-    line-height: 1.4;
-    display: flex;
-    flex-direction: column;
-}
 
 p {
     font-size: 1rem;

@@ -1,0 +1,3 @@
+[submodule "resources/js/cla-vue-template"]
+	path = resources/js/cla-vue-template
+	url = https://github.com/UMN-LATIS/CLA-vue-template.git
