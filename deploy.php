@@ -1,7 +1,7 @@
 <?php
 namespace Deployer;
-require 'recipe/laravel.php';
-require 'recipe/npm.php';
+require 'contrib/laravel.php';
+require 'contrib/npm.php';
 
 // Configuration
 set('ssh_type', 'native');
@@ -17,24 +17,24 @@ add('writable_dirs', []);
 // Servers
 
 host('dev')
-    ->hostname("cla-groups-dev.oit.umn.edu")
-    ->user('swadm')
+    ->alias("cla-groups-dev.oit.umn.edu")
+    ->remote_user('swadm')
     ->stage('development')
     // ->identityFile()
     ->set('bin/php', '/opt/rh/rh-php73/root/usr/bin/php')
 	->set('deploy_path', '/swadm/var/www/html/');
 
 host('stage')
-    ->hostname("cla-groups-tst.oit.umn.edu")
-    ->user('swadm')
+    ->alias("cla-groups-tst.oit.umn.edu")
+    ->remote_user('swadm')
     ->stage('stage')
     // ->identityFile()
     ->set('bin/php', '/opt/rh/rh-php73/root/usr/bin/php')
     ->set('deploy_path', '/swadm/var/www/html/');
 
 host('prod')
-    ->hostname("cla-groups-prd.oit.umn.edu")
-    ->user('swadm')
+    ->alias("cla-groups-prd.oit.umn.edu")
+    ->remote_user('swadm')
     ->stage('production')
     // ->identityFile()
     ->set('bin/php', '/opt/rh/rh-php73/root/usr/bin/php')
