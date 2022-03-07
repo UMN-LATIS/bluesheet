@@ -2,7 +2,7 @@
 sidebarDepth: 3
 ---
 
-# Using the Groups Tool
+# Using BlueSheet
 
 
 ## Introduction Video
@@ -12,7 +12,7 @@ sidebarDepth: 3
 
 ## Gaining Access
 
-Anyone with a University of Minnesota Internet ID has access to the groups tool.  By logging in, you'll see which groups you're currently a member of.  
+Anyone with a University of Minnesota Internet ID has access to BlueSheet.  By logging in, you'll see which groups you're currently a member of.  
 
 ### Group Management Access
 
@@ -54,7 +54,7 @@ Artifacts provide you a way to add arbitrary links to your group.  For example, 
 
 ## Adding Members
 
-After adding a group, you can add members.  Click on "edit group" and then click "add member". You can either enter a name to look someone up, or enter their internetId (x500) or email address.  You can bulk-add people using a comma-separated list of email addresses or internetIds.  Even if these lists include other information (names, etc), the groups tool will automatically find the email addresses with in a list. 
+After adding a group, you can add members.  Click on "edit group" and then click "add member". You can either enter a name to look someone up, or enter their internetId (x500) or email address.  You can bulk-add people using a comma-separated list of email addresses or internetIds.  Even if these lists include other information (names, etc), BlueSheet will automatically find the email addresses with in a list. 
 
 You can also assign a role when adding a member.  The dropdown shows commonly used roles, but you can type to add your own.  **Every member must be assigned a role.**
 
@@ -62,13 +62,13 @@ You can also assign a role when adding a member.  The dropdown shows commonly us
 
 ### Roles
 
-The Groups Tool automatically suggests commonly used roles, but you can type anything you want into the role field.  
+BlueSheet automatically suggests commonly used roles, but you can type anything you want into the role field.  
 
 ### Member options
 
-If you're adding a "department", the Groups Tool will show a list of "official roles" for departments.  These are just reminders for you, and aren't required.
+If you're adding a "department", BlueSheet will show a list of "official roles" for departments.  These are just reminders for you, and aren't required.
 
-You can set both start and end dates.  End dates can be in the future as well - the Groups Tool will automatically remove users when the date passes. 
+You can set both start and end dates.  End dates can be in the future as well - BlueSheet will automatically remove users when the date passes. 
 
 ## Editing Membership
 
