@@ -47,7 +47,8 @@ task('assets:generate', function() {
 })->desc('Assets generation');
 
 task('fix_storage_perms', function() {
-    run('touch storage/logs/laravel.log');
+    cd('{{release_path}}');
+    run('touch storage/logs/laravel.log', no_throw: true );
     run('sudo chown apache storage/logs/laravel.log');
     run('sudo chgrp apache storage/logs/laravel.log');
 })->desc("Fix Apache Logs");

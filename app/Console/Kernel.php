@@ -37,6 +37,8 @@ class Kernel extends ConsoleKernel
                         \Carbon\Carbon::now()->isSameDay($this->findSecondTuesdayOfMonth("July"))
                     );
                 })->at('09:30');
+            
+            $schedule->command('email:favorites')->dailyAt('8:30');
         }
     }
     
