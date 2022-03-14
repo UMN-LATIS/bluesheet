@@ -31,6 +31,7 @@
     "dependencies": {
         "@riophae/vue-treeselect": "https://github.com/cmcfadden/vue-treeselect.git",
         "@vue/composition-api": "^1.4.3",
+        "cypress-image-snapshot": "^4.0.1",
         "laravel-mix": "^6.0.39",
         "v-tooltip": "^2.0.3",
         "vue-demi": "^0.12.1",
