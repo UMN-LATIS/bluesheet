@@ -56,12 +56,12 @@ describe("Groups UI", () => {
             cy.visit("/group/1");
             cy.contains("Edit Group").click();
             cy.contains("Add Member").click();
-            cy.get("#internetId").type("elevator");
+            cy.get("#internetId").type("admin");
             cy.get(".modal-container .vs__search").type("Member{enter}");
             cy.get(".modal-container").contains("Add Member").click();
-            cy.contains("CLA OIT");
+            cy.contains("Admin User");
             cy.contains("Save").click();
-            cy.contains("CLA OIT");
+            cy.contains("Admin User");
         });
     });
 
@@ -84,7 +84,7 @@ describe("Groups UI", () => {
         it("cannot edit a group", () => {
             cy.visit("/group/1");
             cy.get("body").should('not.have.text', "Create Group");
-            cy.contains("CLA OIT");
+            cy.contains("Admin User");
         });
 
         it("favorites a group", () => {
