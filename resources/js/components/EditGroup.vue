@@ -35,7 +35,7 @@
                         <div class="form-group">
                             <label for="groupType" class="small">Group Type</label>
                             <v-select v-if="groupTypes" id="roles" taggable v-model="group.group_type"
-                                :options="groupTypes"></v-select>
+                                :options="groupTypes" data-cy="groupType"></v-select>
                         </div>
                     </div>
 

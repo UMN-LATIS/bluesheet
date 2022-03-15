@@ -44,8 +44,8 @@ describe("Groups UI", () => {
 
         it("edits a group", () => {
             cy.visit("/group/1");
-            cy.contains("Edit Group").click();
-            cy.get(".vs__search").type("List{enter}");
+            cy.contains("Edit Group").click().wait(1000);
+            cy.get("[data-cy=groupType] input").type("List{enter}");
             cy.get("#groupNotes").type("Test Notes");
             cy.contains("Save").click();
             cy.contains("Test Notes");
@@ -59,9 +59,9 @@ describe("Groups UI", () => {
             cy.get("#internetId").type("admin");
             cy.get(".modal-container .vs__search").type("Member{enter}");
             cy.get(".modal-container").contains("Add Member").click();
-            cy.contains("Admin User");
+            cy.contains("McAdmin");
             cy.contains("Save").click();
-            cy.contains("Admin User");
+            cy.contains("McAdmin");
         });
     });
 
