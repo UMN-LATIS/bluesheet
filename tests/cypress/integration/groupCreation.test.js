@@ -84,7 +84,7 @@ describe("Groups UI", () => {
         it("cannot edit a group", () => {
             cy.visit("/group/1");
             cy.get("body").should('not.have.text', "Create Group");
-            cy.contains("Admin User");
+            cy.contains("McAdmin");
         });
 
         it("favorites a group", () => {
