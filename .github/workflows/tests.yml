@@ -38,6 +38,8 @@ jobs:
       - run: docker-compose exec -T app php artisan migrate:fresh
       - run: docker-compose exec -T app php artisan db:seed
       - run: docker-compose exec -T app ls -al storage/framework/cache
+      - run: docker-compose exec -T app chmod -R 777 storage
+      - run: docker-compose exec -T app ls -al storage/framework/cache
       
 
       - name: Run E2E tests with Cypress
