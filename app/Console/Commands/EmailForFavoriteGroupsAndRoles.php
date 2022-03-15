@@ -102,7 +102,7 @@ class EmailForFavoriteGroupsAndRoles extends Command
 
 
         foreach($outputArray as $userChanges) {
-            Mail::to($userChanges["user"]->email)->send(new \App\Mail\GroupUpdateReminder($userChanges["favorites"]));
+            Mail::to($userChanges["user"]->email)->send(new \App\Mail\GroupUpdateReminder(collect($userChanges["favorites"])));
         }
         
     }
