@@ -16,7 +16,7 @@ class GroupUpdateReminder extends Mailable
      *
      * @return void
      */
-    public function __construct(\Illuminate\Database\Eloquent\Collection $groups)
+    public function __construct(\Illuminate\Support\Collection $groups)
     {
         $this->userGroups = $groups;
     }
