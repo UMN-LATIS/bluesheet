@@ -31,12 +31,14 @@ jobs:
         run: |
           docker-compose ps --all
 
-      - run: docker-compose exec -T app ./bin/ci.sh
       - run: yarn install --frozen-lockfile
       - run: yarn run prod
+      - run: docker-compose exec -T app ./bin/ci.sh
       - run: docker-compose exec -T app php artisan key:generate
       - run: docker-compose exec -T app php artisan migrate:fresh
       - run: docker-compose exec -T app php artisan db:seed
+      - run: docker-compose exec -T app ls -al storage/framework/cache
+      
 
       - name: Run E2E tests with Cypress
         uses: cypress-io/github-action@v2
