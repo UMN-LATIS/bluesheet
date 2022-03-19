@@ -27,7 +27,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('sync:users')
                  ->daily();
         
-        $schedule->command('email:favorites')->dailyAt('8:30');
+        $schedule->command('email:favorites')->dailyAt('08:30')->timezone('America/Chicago');;
         
         if (App::environment('production')) {
             // send a reminder email on the 10th of January and July.
@@ -38,7 +38,7 @@ class Kernel extends ConsoleKernel
                         ||
                         \Carbon\Carbon::now()->isSameDay($this->findSecondTuesdayOfMonth("July"))
                     );
-                })->at('09:30');    
+                })->at('09:30')->timezone('America/Chicago');;    
         }
         
     }
