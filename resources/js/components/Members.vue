@@ -233,19 +233,18 @@
                 return this.filteredList.map((member) => ({
                     group_title: member.group.group_title,
                     group_abbr: member.group.abbreviation,
-                    group_id: member.group.id,
+                    group_link: `${window.location.origin}/groups/${member.group.id}`,
                     role: member.role.label,
                     surname: member.user.surname,
-                    "given name": member.user.givenname,
+                    given_name: member.user.givenname,
                     email: member.user.email,
-                    role: member.role.label,
+                    title: member.user.title,
                     notes: member.notes,
-                    "start date": member.start_date,
-                    "end date": member.end_date,
                     office: member.user.office
                         ? member.user.office.replace(/ \$ /g, "\n")
                         : "",
-                    title: member.user.title
+                    start_date: member.start_date,
+                    end_date: member.end_date,
                 }));
             }
         },
