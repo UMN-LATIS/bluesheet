@@ -229,35 +229,25 @@
                     return arr.indexOf(elem) == pos;
                 }).join(", ");
             },
-            csvlist: function () {
-                var targetList = this.members;
-                if (this.filterList) {
-                    targetList = this.members.filter(e => e.filtered);
-                }
-                const rows = targetList.map(r => {
-                    return {
-                        "surname": r.user.surname,
-                        "given name": r.user.givenname,
-                        "email": r.user.email,
-                        "role": r.role.label,
-                        "notes": r.notes,
-                        "start date": r.start_date,
-                        "end date": r.end_date,
-                        "office": r.user.office?r.user.office.replace(/ \$ /g, "\n"):null,
-                        "title": r.user.title
-                    }
-                });
-                return rows;
-                // let row_str = 'Surname, GivenName, Label, Notes, Start Date, End Date\n'
-                // row_str += rows.join('\n');
-
-                // console.log(row_str);
-
-                // const link = document.createElement("a");
-                // const file = new Blob([row_str], {type: 'text/csv'});
-                // link.href = URL.createObjectURL(file);
-                // link.download = '' + this.group.group_title + '.csv';
-                // link.click();
+            csvlist() {
+                // name, group, role,
+                return this.filteredList.map((member) => ({
+                    group_title: member.group.group_title,
+                    group_abbr: member.group.abbreviation,
+                    group_id: member.group.id,
+                    role: member.role.label,
+                    surname: member.user.surname,
+                    "given name": member.user.givenname,
+                    email: member.user.email,
+                    role: member.role.label,
+                    notes: member.notes,
+                    "start date": member.start_date,
+                    "end date": member.end_date,
+                    office: member.user.office
+                        ? member.user.office.replace(/ \$ /g, "\n")
+                        : "",
+                    title: member.user.title
+                }));
             }
         },
         methods: {
