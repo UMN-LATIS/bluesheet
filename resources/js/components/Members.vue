@@ -112,7 +112,7 @@
                     </li>
                 </ul>
                 <div class="tab-content" id="myTabContent">
-                    
+
                     <div v-for="(officialCategory, index) in officialRoleCategories" :key="index" class="tab-pane fade" :id="officialCategory" role="tabpanel" aria-labelledby="officialCategory + '-tab'" :class="{ 'show active': index === 0 }">
                         <ul class="list-group list-group-flush">
                                 <li class="list-group-item" v-for="officialRole in rolesForOfficialCategory(officialCategory)" :key="officialRole.id">
@@ -121,7 +121,7 @@
 
                     </div>
                 </div>
-                
+
         </div>
 
     </div>
@@ -230,7 +230,6 @@
                 }).join(", ");
             },
             csvlist() {
-                // name, group, role,
                 return this.filteredList.map((member) => ({
                     group_title: member.group.group_title,
                     group_abbr: member.group.abbreviation,
