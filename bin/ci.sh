@@ -5,7 +5,6 @@ php artisan key:generate
 
 # Directory Permissions
 php artisan storage:link
-chmod -R 777 ./storage
-chmod -R 777 ./bootstrap/cache
+chmod -R 777 storage bootstrap/cache
 php artisan config:clear
 # php artisan config:cache

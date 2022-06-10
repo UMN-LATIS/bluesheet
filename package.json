@@ -6,13 +6,19 @@
         "watch": "mix watch",
         "watch-poll": "mix watch -- --watch-options-poll=1000",
         "hot": "mix watch --hot",
+        "prod": "npm run production",
         "production": "mix --production",
-        "docs:build": "cd docs; vuepress build"
+        "docs:build": "cd docs; vuepress build",
+        "cypress": "cypress open --env failOnSnapshotDiff=false",
+        "cypress:headless": "cypress run --browser chrome",
+        "test:e2e": "npm run cypress:headless",
+        "test": "npm run test:unit && npm run test:e2e"
     },
     "devDependencies": {
         "axios": "^0.18.1",
         "bootstrap": "^4.4.1",
         "cross-env": "^5.2.1",
+        "cypress": "^9.5.1",
         "jquery": "^3.4.1",
         "lodash": "^4.17.15",
         "popper.js": "^1.16.1",
@@ -26,6 +32,7 @@
     "dependencies": {
         "@riophae/vue-treeselect": "https://github.com/cmcfadden/vue-treeselect.git",
         "@vue/composition-api": "^1.4.3",
+        "cypress-image-snapshot": "^4.0.1",
         "laravel-mix": "^6.0.39",
         "v-tooltip": "^2.0.3",
         "vue-demi": "^0.12.1",

@@ -13,6 +13,14 @@
                 </label>
             </div>
         </div>
+        <div class="col-md-6" v-if="user && !userId">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" v-model="user.notify_of_favorite_changes" @change="updateUser" id="notify_of_favorite_changes">
+                <label class="form-check-label small" for="notify_of_favorite_changes">
+                    Notify me when my favorite groups and roles change
+                </label>
+            </div>
+        </div>
         <roles :memberships="memberships" id="v-step-4"></roles>
     </div>
 </template>

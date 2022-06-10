@@ -178,31 +178,31 @@ body, .tb_properties{font-family: Verdana, Geneva, sans-serif !important; font-s
                                                 <td class="responsive-td" valign="top" style="width: 100%;">
                                                   <table style="background-color: transparent; min-width: 100%; " class="stylingblock-content-wrapper" width="100%" cellspacing="0" cellpadding="0"><tr><td style="padding: 0px 20px; " class="stylingblock-content-wrapper camarker-inner">
 
-<h1 style="color:#900021;font-family:Verdana,Geneva,sans-serif;font-size:16px;font-style:normal;font-weight:bold;line-height:1.8;"">CLA BlueSheet update reminder</h1>
+<h1 style="color:#900021;font-family:Verdana,Geneva,sans-serif;font-size:16px;font-style:normal;font-weight:bold;line-height:1.8;"">CLA BlueSheet Favorites have Changed</h1>
 
-<p style="font-family:Verdana,Geneva,sans-serif; font-size: 15px; color: #333333;line-height:1.5;">Below {{ $groups->count()==1?"is":"are" }} the {{ Illuminate\Support\Str::plural('group', $groups->count()) }} that you manage in the CLA BlueSheet. Please take a look and update {{ $groups->count()==1?"it":"them" }} if necessary.</p>
+<p style="font-family:Verdana,Geneva,sans-serif; font-size: 15px; color: #333333;line-height:1.5;">There have been changes to the groups and roles you follow in CLA BlueSheet. Below, you'll find a summary of those changes.</p>
 
-@foreach ($groups as $group)
+@foreach ($changes as $change)
 
 
 
 <table class="responsive-td groupTable" style="width:100%">
   <thead>
         <tr>
-          <th scope="col" colspan=2><h2 style="color:#900021;font-family:Verdana,Geneva,sans-serif;font-size:16px;font-style:normal;font-weight:bold;line-height:1.6;margin-top:3px; margin-bottom:3px;"><a style="font-family:Verdana,Geneva,sans-serif; font-size: 16px; color: #900021" href="{{url("/group/" . $group->id)}}">{{ $group->group_title }}</a></h2></th>
+          <th scope="col" colspan=2><h2 style="color:#900021;font-family:Verdana,Geneva,sans-serif;font-size:16px;font-style:normal;font-weight:bold;line-height:1.6;margin-top:3px; margin-bottom:3px;"><a style="font-family:Verdana,Geneva,sans-serif; font-size: 16px; color: #900021" href="{{$change['link']}}">{{ $change['category'] }}</a></h2></th>
         </tr>
     </thead>  
     <thead>
         <tr>
           <th scope="col" text-align="left">Person</th>
-          <th scope="col">Role</th>
+          <th scope="col">Action</th>
         </tr>
     </thead>
     <tbody>
-      @foreach($group->activeMembers as $member)
+      @foreach($change["changes"] as $member)
       <tr>
         <td>{{ $member->user->displayName}}</td>
-        <td>{{ $member->role->label }}</td>
+        <td>{{ $member->end_date < \Carbon\Carbon::now()?"removed":"updated" }}</td>
       </tr>
       @endforeach
     </tbody>
