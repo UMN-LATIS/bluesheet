@@ -112,7 +112,7 @@
                     </li>
                 </ul>
                 <div class="tab-content" id="myTabContent">
-                    
+
                     <div v-for="(officialCategory, index) in officialRoleCategories" :key="index" class="tab-pane fade" :id="officialCategory" role="tabpanel" aria-labelledby="officialCategory + '-tab'" :class="{ 'show active': index === 0 }">
                         <ul class="list-group list-group-flush">
                                 <li class="list-group-item" v-for="officialRole in rolesForOfficialCategory(officialCategory)" :key="officialRole.id">
@@ -121,7 +121,7 @@
 
                     </div>
                 </div>
-                
+
         </div>
 
     </div>
@@ -216,9 +216,10 @@
                 }.bind(this));
             },
             emailList: function () {
-                var targetList = this.members;
+                let targetList = this.filteredList;
+
                 if (this.filterList) {
-                    targetList = this.members.filter(e => e.filtered);
+                    targetList = targetList.filter(e => e.filtered);
                 }
 
                 // return a list of email addresses of users that are currently active, de-duplicated and with null values removed
@@ -229,35 +230,36 @@
                     return arr.indexOf(elem) == pos;
                 }).join(", ");
             },
-            csvlist: function () {
-                var targetList = this.members;
+            csvlist() {
+                let targetList = this.filteredList;
+
                 if (this.filterList) {
-                    targetList = this.members.filter(e => e.filtered);
+                    targetList = targetList.filter(e => e.filtered);
                 }
-                const rows = targetList.map(r => {
-                    return {
-                        "surname": r.user.surname,
-                        "given name": r.user.givenname,
-                        "email": r.user.email,
-                        "role": r.role.label,
-                        "notes": r.notes,
-                        "start date": r.start_date,
-                        "end date": r.end_date,
-                        "office": r.user.office.replace(/ \$ /g, "\n"),
-                        "title": r.user.title
+                return targetList.map((member) => {
+                    let userRow = {};
+                    if (this.viewType == 'role') {
+                        userRow["group title"] = member.group.group_title;
+                        userRow["group abbr"] = member.group.abbreviation;
+                        userRow["link"] = `${window.location.origin}/groups/${member.group.id}`;
                     }
+                    userRow = {
+                        ...userRow,
+                        "role": member.role.label,
+                        "surname": member.user.surname,
+                        "given name": member.user.givenname,
+                        "email": member.user.email,
+                        "title": member.user.title,
+                        "notes": member.notes,
+                        "office": member.user.office
+                            ? member.user.office.replace(/ \$ /g, "\n")
+                            : "",
+                        "unit": member.user.ou,
+                        "start_date": member.start_date,
+                        "end_date": member.end_date,
+                    };
+                    return userRow;
                 });
-                return rows;
-                // let row_str = 'Surname, GivenName, Label, Notes, Start Date, End Date\n'
-                // row_str += rows.join('\n');
-
-                // console.log(row_str);
-
-                // const link = document.createElement("a");
-                // const file = new Blob([row_str], {type: 'text/csv'});
-                // link.href = URL.createObjectURL(file);
-                // link.download = '' + this.group.group_title + '.csv';
-                // link.click();
             }
         },
         methods: {

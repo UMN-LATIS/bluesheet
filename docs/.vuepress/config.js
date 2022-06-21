@@ -1,6 +1,6 @@
 module.exports = {
     plugins: ['vuepress-plugin-export'],
-    title: 'Groups Tool Documentation',
+    title: 'BlueSheet Documentation',
     base: '/Caligari/',
     themeConfig: {
             // Assumes GitHub. Can also be a full GitLab url.
@@ -20,6 +20,8 @@ module.exports = {
             editLinkText: 'Help us improve this page!',
         sidebar: [
             '/',
+            '/using-bluesheet',
+            '/get-help'
     ],
 
     }

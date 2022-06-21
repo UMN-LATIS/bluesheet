@@ -39,7 +39,7 @@ return array(
             'surname'   => 'McAdmin',
             'sn'          => 'User',
             'eppn'        => 'admin@umn.edu',
-            'umnDID'      => 'fdsklj25',
+            'umnDID'      => 'admin',
             'umnEmplId'      => '2328381',
         ),
         'staff' => array(
@@ -49,7 +49,7 @@ return array(
             'surName'   => 'McStaff',
             'sn'          => 'User',
             'eppn'        => 'staff@umn.edu',
-            'umnDID'      => 'fdskl225',
+            'umnDID'      => 'staff',
         ),
         'user'  => array(
             'uid'         => 'user',
@@ -58,7 +58,7 @@ return array(
             'surname'   => 'McUser',
             'sn'          => 'User',
             'mail'        => 'user@umn.edu',
-            'umnDID'      => 'fdsk2j25',
+            'umnDID'      => 'user',
         ),
     ),
 

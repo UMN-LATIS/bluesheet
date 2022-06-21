@@ -5,18 +5,23 @@
         </div>
         <viewuser :user="user" v-if="user">
         </viewuser>
-        <roles :memberships="memberships" id="v-step-4"></roles>
-
-        <div class="row mt-5" v-if="user">
-            <div class="col" v-if="user.favoriteGroups.length > 0">
-                <h3>Favorite Groups</h3>
-                <favorites v-if="!userId" :user="user" type="group"></favorites>
-            </div>
-            <div class="col" v-if="user.favoriteRoles.length > 0">
-                <h3>Favorite Roles</h3>
-                <favorites v-if="!userId" :user="user" type="role"></favorites>
+        <div class="col-md-6" v-if="user && !userId">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" v-model="user.send_email_reminders" @change="updateUser" id="send_email_reminders">
+                <label class="form-check-label small" for="send_email_reminders">
+                    Send me occasional reminders to update my groups
+                </label>
             </div>
         </div>
+        <div class="col-md-6" v-if="user && !userId">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" v-model="user.notify_of_favorite_changes" @change="updateUser" id="notify_of_favorite_changes">
+                <label class="form-check-label small" for="notify_of_favorite_changes">
+                    Notify me when my favorite groups and roles change
+                </label>
+            </div>
+        </div>
+        <roles :memberships="memberships" id="v-step-4"></roles>
     </div>
 </template>
 
@@ -46,6 +51,9 @@
             }
         },
         methods: {
+            updateUser() {
+                axios.put('/api/user/' + this.user.id, this.user);
+            },
             loadUser() {
                 this.error = null;
                 var targetUser = "local";

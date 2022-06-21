@@ -27,7 +27,9 @@ class User extends JsonResource
             'ou' => $this->ou,
             'memberships' => MembershipWithGroups::collection($this->memberships),
             'favoriteGroups' => $this->favoriteGroups,
-            'favoriteRoles' => $this->favoriteRoles
+            'favoriteRoles' => $this->favoriteRoles,
+            'send_email_reminders' => $this->send_email_reminders,
+            'notify_of_favorite_changes' => $this->notify_of_favorite_changes
         ];
     }
 }

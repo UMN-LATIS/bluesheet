@@ -1,5 +1,5 @@
 <div class="form-group {{ $errors->has('displayName') ? 'has-error' : ''}}">
-    <label for="name" class="control-label">{{ 'Dispaly Name' }}</label>
+    <label for="name" class="control-label">{{ 'Display Name' }}</label>
     <input class="form-control" name="displayName" type="text" id="displayName" value="{{ isset($user->displayName) ? $user->displayName : ''}}" >
     {!! $errors->first('name', '<p class="help-block">:message</p>') !!}
 </div>

@@ -52,7 +52,7 @@ export default {
     },
     computed: {
         filteredList: function() {
-            let departmentList = this.groupList.filter(g => g.group_type.label == "Department");
+            let departmentList = this.groupList.filter(g => g.group_type.label.includes("Department"));
             return departmentList.sort((a, b) =>{
                 let modifier = 1;
                 if (this.currentSortDir === 'desc') modifier = -1;
@@ -66,7 +66,9 @@ export default {
             }).filter(g => this.unfilledRoles(g).length > 0);
         },
         officialRoles: function () {
-            return this.roles.filter(r => r.official_group_type?r.official_group_type.map(gt=>gt.label).includes("Department"):false);
+            return this.roles.filter(r => 
+                r.official_group_type?r.official_group_type.map(gt=>gt.label)[0].includes("Department"):false
+            );
         },
         officialRoleCategories: function () {
             var allOfficialRoles = this.officialRoles ? this.officialRoles.map(r => r.official_role_category.category)

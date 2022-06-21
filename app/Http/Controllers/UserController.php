@@ -69,7 +69,7 @@ class UserController extends Controller
      */
     public function update(Request $request, $user)
     {
-        if(!Auth::user()->can("edit users") && !Auth::user()->hasRole('super admin')) {
+        if(!Auth::user()->can("edit users") && !Auth::user()->hasRole('super admin') && Auth::user()->id !== $user->id) {
             $returnData = array(
                 'status' => 'error',
                 'message' => "You don't have permission to create a user"

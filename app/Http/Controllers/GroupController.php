@@ -83,6 +83,7 @@ class GroupController extends Controller
         
         $newGroup->parent_organization_id = $request->get("parentOrganization");
         $newGroup->active_group = 1;
+        $newGroup->show_unit = false;
         $newGroup->save();
         $returnData = array(
             'status' => 'success',
@@ -144,7 +145,7 @@ class GroupController extends Controller
                 $group->group_type_id = $groupType["id"];
             }
             else {
-                $group->group_type_id = $this->addOrFindGroupType($groupType["label"])->id;
+                $group->group_type_id = $this->addOrFindGroupType($groupType)->id;
             }
         }
         else {

@@ -4,7 +4,7 @@
             <tr>
                 <th><sortableLink :sortLabel="type" :sortElement="titleItem" :currentSort="currentSort"
                             :currentSortDir="currentSortDir" v-on:sort="sort" /></th>
-                <th v-if="type == 'group'" width=25%><sortableLink sortLabel="Last Modified" sortElement="updated_at" :currentSort="currentSort"
+                <th v-if="type == 'group'" width="30%"><sortableLink sortLabel="Updated" sortElement="updated_at" :currentSort="currentSort"
                             :currentSortDir="currentSortDir" v-on:sort="sort" /></th>
             </tr>
         </thead>
@@ -21,7 +21,7 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
+
 export default {
     // we use newly loaded user, not state
     props: ["user", "type"],
@@ -42,10 +42,10 @@ export default {
         },
         sortedList: function () {
             if(this.type =="group") {
-                var sortItem = this.user.favoriteGroups;
+                var sortItem = this.$store.state.favorites.groups;
             }
             if(this.type =="role") {
-                var sortItem = this.user.favoriteRoles;
+                var sortItem = this.$store.state.favorites.roles;
             }
                 return sortItem.sort(function (a, b) {
                     let modifier = 1;

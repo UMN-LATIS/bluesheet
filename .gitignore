@@ -1,7 +1,10 @@
 /node_modules
 /public/hot
 /public/storage
+/public/js
+/public/css
 /storage/*.key
+/storage/debugbar
 /vendor
 .env
 .phpunit.result.cache
@@ -12,3 +15,4 @@ yarn-error.log
 .phpintel
 .DS_Store
 docs/.vuepress/dist
+
