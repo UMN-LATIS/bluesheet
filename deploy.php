@@ -7,6 +7,7 @@ require 'recipe/laravel.php';
 // Configuration
 set('ssh_type', 'native');
 set('ssh_multiplexing', true);
+set('git_ssh_command', 'ssh -o StrictHostKeyChecking=no');
 set('update_code_strategy', 'clone');
 set('repository', 'git@github.com:umn-latis/bluesheet.git');
 
@@ -16,44 +17,38 @@ add('shared_dirs', []);
 add('writable_dirs', []);
 
 // Servers
+$devHost = 'cla-groups-dev.oit.umn.edu';
+$tstHost = 'cla-groups-tst.oit.umn.edu';
+$prodHost = 'cla-groups-prd.oit.umn.edu';
+$phpPath = '/opt/remi/php81/root/usr/bin/php';
 
 host('dev')
-    ->setHostname("cla-groups-dev.oit.umn.edu")
-    ->setRemoteUser('swadm')
-    ->set('labels', ['stage' => 'development'])
-    // ->identityFile()
-    ->set('bin/php', '/opt/remi/php81/root/usr/bin/php')
-	->set('deploy_path', '/swadm/var/www/html/');
+  ->set('hostname', $devHost)
+  ->set('remote_user', 'swadm')
+  ->set('labels', ['stage' => 'development'])
+  // ->identityFile()
+  ->set('bin/php', $phpPath)
+  ->set('deploy_path', '/swadm/var/www/html/');
 
 host('stage')
-    ->setHostname("cla-groups-tst.oit.umn.edu")
-    ->setRemoteUser('swadm')
-    ->set('labels', ['stage' => 'stage'])
-    // ->identityFile()
-    ->set('bin/php', '/opt/remi/php81/root/usr/bin/php')
-    ->set('deploy_path', '/swadm/var/www/html/');
+  ->set('hostname', $tstHost)
+  ->set('remote_user', 'swadm')
+  ->set('labels', ['stage' => 'stage'])
+  // ->identityFile()
+  ->set('bin/php', $phpPath)
+  ->set('deploy_path', '/swadm/var/www/html/');
 
 host('prod')
-    ->setHostname("cla-groups-prd.oit.umn.edu")
-    ->setRemoteUser('swadm')
-    ->set('labels', ['stage' => 'production'])
-    // ->identityFile()
-    ->set('bin/php', '/opt/remi/php81/root/usr/bin/php')
-	->set('deploy_path', '/swadm/var/www/html/');
+  ->set('hostname', $prodHost)
+  ->set('remote_user', 'swadm')
+  ->set('labels', ['stage' => 'production'])
+  ->set('bin/php', $phpPath)
+  ->set('deploy_path', '/swadm/var/www/html/');
 
 task('assets:generate', function() {
   cd('{{release_path}}');
   run('yarn run production');
 })->desc('Assets generation');
-
-task('fix_storage_perms', function() {
-    cd('{{release_path}}');
-    run('touch storage/logs/laravel.log', no_throw: true );
-    run('sudo chown apache storage/logs/laravel.log');
-    run('sudo chgrp apache storage/logs/laravel.log');
-})->desc("Fix Apache Logs");
-
-after('artisan:migrate', 'fix_storage_perms');
 
 
 // [Optional] if deploy fails automatically unlock.
