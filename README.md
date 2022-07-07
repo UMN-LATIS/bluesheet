@@ -38,7 +38,7 @@ sail artisan migrate:fresh --seed
 npm ci
 
 # Start Laravel Mix to compile Vue
-npm run watch
+npm run dev
 
 ```
 
@@ -48,7 +48,7 @@ The application will be running on <http://localhost>.
 
 ```sh
 sail up
-npm run watch
+npm run dev
 ```
 
 Load <http://localhost> in your browser.

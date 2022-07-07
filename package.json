@@ -1,18 +1,13 @@
 {
     "private": true,
     "scripts": {
-        "dev": "npm run development",
-        "development": "mix",
-        "watch": "mix watch",
-        "watch-poll": "mix watch -- --watch-options-poll=1000",
-        "hot": "mix watch --hot",
-        "prod": "npm run production",
-        "production": "mix --production",
         "docs:build": "cd docs; vuepress build",
         "cypress": "cypress open --env failOnSnapshotDiff=false",
         "cypress:headless": "cypress run --browser chrome",
         "test:e2e": "npm run cypress:headless",
-        "test": "npm run test:unit && npm run test:e2e"
+        "test": "npm run test:unit && npm run test:e2e",
+        "dev": "vite",
+        "build": "vite build"
     },
     "devDependencies": {
         "axios": "^0.18.1",
