@@ -1,10 +1,9 @@
 {
     "repositories": [
-    {
-      "type": "vcs",
-      "url": "https://github.com/UMN-LATIS/laravel-shibboleth"
-    }
-    
+        {
+            "type": "vcs",
+            "url": "https://github.com/UMN-LATIS/laravel-shibboleth"
+        }
     ],
     "name": "laravel/laravel",
     "type": "project",
@@ -19,7 +18,7 @@
         "doctrine/dbal": "^2.9",
         "lab404/laravel-impersonate": "^1.7.3",
         "laracasts/cypress": "^2.2",
-        "laravel/framework": "^9.0",
+        "laravel/framework": "^9.19",
         "laravel/sanctum": "^2.6",
         "laravel/tinker": "^2.7",
         "orangehill/iseed": "^3.0",
