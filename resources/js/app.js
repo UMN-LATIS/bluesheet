@@ -5,7 +5,7 @@
  * building robust, powerful web applications using Vue and Laravel.
  */
 
-require('./bootstrap');
+import './bootstrap';
 
 import Vue from 'vue'
 
@@ -24,7 +24,7 @@ Vue.use(VueSelect);
 
 
 import VueTour from 'vue-tour'
-require('vue-tour/dist/vue-tour.css')
+import 'vue-tour/dist/vue-tour.css'
 Vue.use(VueTour)
 
 
