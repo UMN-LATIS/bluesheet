@@ -8,7 +8,7 @@
 		{{-- <link href="https://fonts.googleapis.com/css?family=Amatic+SC" rel="stylesheet"> --}}
 		{{-- <link href="https://fonts.googleapis.com/css?family=Itim" rel="stylesheet"> --}}
 	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.0/css/all.css" integrity="sha384-aOkxzJ5uQz7WBObEZcHvV5JvRW3TUc2rNPA7pe3AwnsUohiw1Vj2Rgx2KSOkF5+h" crossorigin="anonymous">
-	<link href="{{ mix('css/app.css') }}" rel="stylesheet" type="text/css">
+	@vite('resources/css/app.css')
 	<span id="app">
 	@yield('content')
 	</span>
@@ -23,7 +23,7 @@
 						window.Permissions = [];
 					@endauth
 				</script>
-				<script src="{{ mix('js/app.js') }}"></script>
+				@vite('resources/js/app.js')
 				
 				@yield('footer')
 
