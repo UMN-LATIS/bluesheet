@@ -109,8 +109,8 @@ Vue.component('favorites', require('./components/Favorites.vue').default);
 Vue.component('group-title', require('./components/GroupTitle.vue').default);
 Vue.component('folder-widget', require('./components/FolderWidget.vue').default);
 
-import VueCompositionAPI from "@vue/composition-api";
-Vue.use(VueCompositionAPI);
+// import VueCompositionAPI from "@vue/composition-api";
+// Vue.use(VueCompositionAPI);
 
 Vue.component('app-header', require('./cla-vue-template/src/components/AppHeader.vue').default);
 Vue.component('navbar-item', require('./cla-vue-template/src/components/NavbarItem.vue').default);

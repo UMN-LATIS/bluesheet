@@ -1,8 +1,9 @@
 <template>
-
-    <body>
+    <div>
         <app-header>
-            <template #app-link> <router-link :to="{ name: 'home' }">BlueSheet</router-link></template>
+            <template #app-link>
+                <router-link :to="{ name: 'home' }">BlueSheet</router-link>
+            </template>
             <template #navbar-links>
                 <navbar-item>
                     <router-link :to="{ name: 'home' }">Home</router-link>
@@ -12,23 +13,23 @@
                     </router-link>
                 </navbar-item>
                 <navbar-item v-if="$can('create groups')">
-                    <a class="nav-link" href="#" @click.prevent="createGroup = true" >Create
+                    <a class="nav-link" href="#" @click.prevent="createGroup = true">Create
                         Group <i class="fas fa-plus"></i></a>
                 </navbar-item>
                 <navbar-item v-if="$can('view groups')">
-                    <router-link :to="{ name: 'groupList' }" class="nav-link" >Browse
+                    <router-link :to="{ name: 'groupList' }" class="nav-link">Browse
                         Groups <i class="fas fa-search"></i></router-link>
                 </navbar-item>
                 <navbar-item v-if="$can('view groups')">
-                    <router-link :to="{ name: 'roleList' }" class="nav-link" >Browse
+                    <router-link :to="{ name: 'roleList' }" class="nav-link">Browse
                         Roles <i class="fas fa-search"></i></router-link>
                 </navbar-item>
                 <navbar-item v-if="$can('view reports')">
-                    <router-link :to="{ name: 'reportList' }" class="nav-link" >View
+                    <router-link :to="{ name: 'reportList' }" class="nav-link">View
                         Reports <i class="fas fa-table"></i></router-link>
                 </navbar-item>
                 <navbar-item v-if="$can('view users')">
-                    <a class="nav-link" href="#" @click.prevent="findUser=true" >User
+                    <a class="nav-link" href="#" @click.prevent="findUser = true">User
                         Lookup <i class="fas fa-users"></i></a>
                 </navbar-item>
                 <navbar-item>
@@ -36,22 +37,22 @@
                             class="fas fa-question-circle"></i></a>
                 </navbar-item>
                 <navbar-item>
-                            <a href="/shibboleth-logout" class="nav-link">Logout</a>
-                        </navbar-item>
+                    <a href="/shibboleth-logout" class="nav-link">Logout</a>
+                </navbar-item>
 
             </template>
         </app-header>
-        
+
         <postit class="container">
             <router-view :userperms="userperms" :key="$route.fullPath"></router-view>
         </postit>
 
-        <app-footer/>
+        <app-footer />
 
         <userlookup v-if="findUser" :show="findUser" @close="findUser = false"></userlookup>
         <creategroup v-if="createGroup" :show="createGroup" @close="createGroup = false"></creategroup>
         <v-tour name="intro_tour" :steps="steps"></v-tour>
-    </body>
+    </div>
 </template>
 
 <style>
