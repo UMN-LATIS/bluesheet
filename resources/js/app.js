@@ -88,6 +88,9 @@ Vue.component('lastModified', LastModified);
 import CeddLike from './components/ceddLike.vue';
 Vue.component('ceddLike', CeddLike);
 
+import CeddLike from './components/orgp.vue';
+Vue.component('orgp', orgp);
+
 
 Vue.component('home', require('./components/Home.vue').default);
 Vue.component('viewuser', require('./components/ViewUser.vue').default);
@@ -189,6 +192,7 @@ const router = new VueRouter({
     { name: 'missingOfficial', path: "/reports/missingOfficialRoles", component: MissingOfficial, props:true },
     { name: 'lastModified', path: "/reports/lastModified", component: LastModified, props:true },
     { name: 'ceddLike', path: "/reports/ceddLike", component: CeddLike, props:true },
+    { name: 'orgp', path: "/reports/orgp", component: orgp, props:true },
   ]
 })
 
