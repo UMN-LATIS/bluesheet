@@ -1,17 +1,39 @@
 <template>
     <div>
-        <p>This list combines the following data. Clicking the "show email list" button will give you a de-duplicated set of email addreses.</p>
+        <p>This list combines the following data. Clicking the "show email list" button will give you a de-duplicated
+            set of email addreses.</p>
         <ul>
             <li>
-                All department administrators for  <router-link :to="{ name: 'group', params: { groupId: 23 } }">academic</router-link> and  <router-link :to="{ name: 'group', params: { groupId: 39 } }">non-academic units</router-link></li>
-            <li><router-link :to="{ name: 'role', params: { roleId: 22 } }">All members of Council of Chairs (all faculty leaders for the 31 academic departments)</router-link> (all users with "Academic Chair" role)</li>
-            <li><router-link :to="{ name: 'role', params: { roleId: 22 } }">All CLA center directors (users with the role "director" in a group of type "center"</router-link></li>
-            <li><router-link :to="{ name: 'group', params: { groupId: 129 } }">All members of the CLA Executive Committee</router-link></li>
-            <li><router-link :to="{ name: 'group', params: { groupId: 128 } }">All Dean's Group members</router-link></li>
-            <li><router-link :to="{ name: 'group', params: { groupId: 83 } }">All OLT members</router-link></li>
-            <li><router-link :to="{ name: 'group', params: { groupId: 130 } }">And a list of other misc people </router-link></li>
+                All department administrators for <router-link :to="{ name: 'role', params: { roleId: 23 } }">academic
+                </router-link> and <router-link :to="{ name: 'role', params: { roleId: 39 } }">non-academic units
+                </router-link>
+            </li>
+            <li>
+                <router-link :to="{ name: 'role', params: { roleId: 22 } }">All members of Council of Chairs (all
+                    faculty leaders for the 31 academic departments)</router-link> (all users with "Academic Chair"
+                role)
+            </li>
+            <li>
+                <router-link :to="{ name: 'role', params: { roleId: 22 } }">All CLA center directors (users with the
+                    role "director" in a group of type "center"</router-link>
+            </li>
+            <li>
+                <router-link :to="{ name: 'group', params: { groupId: 129 } }">All members of the CLA Executive
+                    Committee</router-link>
+            </li>
+            <li>
+                <router-link :to="{ name: 'group', params: { groupId: 128 } }">All Dean's Group members</router-link>
+            </li>
+            <li>
+                <router-link :to="{ name: 'group', params: { groupId: 83 } }">All OLT members</router-link>
+            </li>
+            <li>
+                <router-link :to="{ name: 'group', params: { groupId: 130 } }">And a list of other misc people
+                </router-link>
+            </li>
         </ul>
-        <members v-if="groupList" :members="groupList" :editing="false" :roles="[]" :show_unit="true" groupType="list" viewType="role" downloadTitle="CEDD Like"/>
+        <members v-if="groupList" :members="groupList" :editing="false" :roles="[]" :show_unit="true" groupType="list"
+            viewType="role" downloadTitle="CEDD Like" />
     </div>
 </template>
 
