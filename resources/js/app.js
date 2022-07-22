@@ -88,7 +88,7 @@ Vue.component('lastModified', LastModified);
 import CeddLike from './components/ceddLike.vue';
 Vue.component('ceddLike', CeddLike);
 
-import CeddLike from './components/orgp.vue';
+import orgp from './components/orgp.vue';
 Vue.component('orgp', orgp);
 
 
