@@ -4,8 +4,8 @@
             set of email addreses.</p>
         <ul>
             <li>
-                All department administrators for <router-link :to="{ name: 'role', params: { roleId: 23 } }">academic
-                </router-link> and <router-link :to="{ name: 'role', params: { roleId: 39 } }">non-academic units
+                <router-link :to="{ name: 'role', params: { roleId: 23 } }">All department administrators for academic
+                    units
                 </router-link>
             </li>
             <li>
@@ -50,10 +50,6 @@ export default {
             {
                 "roleId": 23, // academic chair
                 "groupType": 3
-            },
-            {
-                "roleId": 39, // academic chair
-                "groupType": null
             },
             {
                 "roleId": 22, // academic chair
