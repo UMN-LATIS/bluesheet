@@ -61,7 +61,7 @@ export default {
             },
             {
                 "roleId": 18, // Research support center admin
-                "groupType": null
+                "groupType": 3
             }
         ];
 
@@ -75,6 +75,8 @@ export default {
                     else {
                         filteredMembers = res.data.members;;
                     }
+                    // filter IGS
+                    filteredMembers = res.data.members.filter(m => m.group.id != 54);
                     this.groupList = [...this.groupList, ...filteredMembers];
                 })
         }
