@@ -42,7 +42,12 @@ class GroupController extends Controller
     public function groupSearch(Request $request) {
         $searchTerm = $request->get("searchTerm");
         $groups = \App\Group::where("group_title","like", "%" . $searchTerm . "%")->get()->load("childGroups");
-        return response()->json(["folders"=>[], "groups"=>$groups]);
+        foreach($groups as $group) {
+            if($group->parentGroup) {
+                $groups[] = $group->parentGroup->load("childGroups");
+            }
+        }
+        return response()->json(["folders"=>[], "groups"=>$groups->unique()]);
     }
 
     /**
