@@ -88,6 +88,9 @@ Vue.component('lastModified', LastModified);
 import CeddLike from './components/ceddLike.vue';
 Vue.component('ceddLike', CeddLike);
 
+import orgp from './components/orgp.vue';
+Vue.component('orgp', orgp);
+
 
 Vue.component('home', require('./components/Home.vue').default);
 Vue.component('viewuser', require('./components/ViewUser.vue').default);
@@ -106,8 +109,8 @@ Vue.component('favorites', require('./components/Favorites.vue').default);
 Vue.component('group-title', require('./components/GroupTitle.vue').default);
 Vue.component('folder-widget', require('./components/FolderWidget.vue').default);
 
-import VueCompositionAPI from "@vue/composition-api";
-Vue.use(VueCompositionAPI);
+// import VueCompositionAPI from "@vue/composition-api";
+// Vue.use(VueCompositionAPI);
 
 Vue.component('app-header', require('./cla-vue-template/src/components/AppHeader.vue').default);
 Vue.component('navbar-item', require('./cla-vue-template/src/components/NavbarItem.vue').default);
@@ -189,6 +192,7 @@ const router = new VueRouter({
     { name: 'missingOfficial', path: "/reports/missingOfficialRoles", component: MissingOfficial, props:true },
     { name: 'lastModified', path: "/reports/lastModified", component: LastModified, props:true },
     { name: 'ceddLike', path: "/reports/ceddLike", component: CeddLike, props:true },
+    { name: 'orgp', path: "/reports/orgp", component: orgp, props:true },
   ]
 })
 

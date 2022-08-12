@@ -27,9 +27,10 @@ class Kernel extends ConsoleKernel
         $schedule->command('sync:users')
                  ->daily();
         
-        $schedule->command('email:favorites')->dailyAt('08:30')->timezone('America/Chicago');;
+        
         
         if (App::environment('production')) {
+            $schedule->command('email:favorites')->dailyAt('08:30')->timezone('America/Chicago');;
             // send a reminder email on the 10th of January and July.
             $schedule->command('email:periodicUpdate')
                 ->when(function () {
