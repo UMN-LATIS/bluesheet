@@ -1,7 +1,7 @@
 <template>
     <div>
         <p>This list combines the following data. Clicking the "show email list" button will give you a de-duplicated
-            set of email addreses.</p>
+            set of email addresses.</p>
         <ul>
             <li>
                 <router-link :to="{ name: 'role', params: { roleId: 23 } }">All department administrators for academic

@@ -250,6 +250,9 @@
                     if (this.groupTypes.filter(e => e.id == this.group.group_type.id).length == 0) {
                         this.groupTypes.push(this.group.group_type);
                     }
+                    this.groupTypes = this.groupTypes.sort((a, b) => {
+                        return a.label.localeCompare(b.label);
+                    });
 
                 })
                 .catch(err => {

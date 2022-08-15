@@ -3,21 +3,24 @@
         <div class="form-group row">
             <label for="internetId" class="col-sm-3 col-form-label">Group Name:</label>
             <div class="col-sm-6">
-                <input type="text" ref="groupNameRef" class="form-control" id="groupName" v-on:keyup="groupNameError = null" @keyup.enter="createGroup" placeholder="Group Name" v-model="groupName">
+                <input type="text" ref="groupNameRef" class="form-control" id="groupName"
+                    v-on:keyup="groupNameError = null" @keyup.enter="createGroup" placeholder="Group Name"
+                    v-model="groupName">
             </div>
         </div>
         <div class="form-group row">
-                <label for="groupType" class="col-sm-3 col-form-label">Group Type</label>
-                <div class="col-sm-6">
-                    <v-select v-if="groupTypes" id="groupTypes" taggable v-model="groupType" :options="groupTypes" placeholder="Select..."></v-select>
-                </div>
+            <label for="groupType" class="col-sm-3 col-form-label">Group Type</label>
+            <div class="col-sm-6">
+                <v-select v-if="groupTypes" id="groupTypes" taggable v-model="groupType" :options="groupTypes"
+                    placeholder="Select..."></v-select>
+            </div>
         </div>
         <div class="form-group row">
-                <label for="parentOrganization" class="col-sm-3 col-form-label">Folder</label>
-                <div class="col-sm-6">
-                    <folder-widget v-model="parentOrganization"></folder-widget>
-                     
-                </div>
+            <label for="parentOrganization" class="col-sm-3 col-form-label">Folder</label>
+            <div class="col-sm-6">
+                <folder-widget v-model="parentOrganization"></folder-widget>
+
+            </div>
         </div>
         <div class="form-group row">
             <div class="col-sm-4">
@@ -66,7 +69,7 @@
         mounted() {
             axios.get("/api/group/types")
             .then(res => {
-                this.groupTypes = res.data;
+                this.groupTypes = res.data.sort((a, b) => a.label.localeCompare(b.label));
             })
             .catch(err => {
 
