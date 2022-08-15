@@ -5,7 +5,7 @@
         <ul>
             <li>
                 <router-link :to="{ name: 'role', params: { roleId: 23 } }">All department administrators for academic
-                    units
+                    units and graduate minors
                 </router-link>
             </li>
             <li>
