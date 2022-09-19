@@ -26,7 +26,6 @@
         "sass": "^1.44.0",
         "sass-loader": "^12.2.0",
         "vue": "^2.7.0",
-        "vue-demi": "^0.13.1",
         "vue-loader": "^15.10.0",
         "vue-template-compiler": "^2.7.10"
     },
