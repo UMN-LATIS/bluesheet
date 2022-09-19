@@ -47,9 +47,6 @@ Vue.component('autocomplete', Autocomplete);
 import JsonCSV from 'vue-json-csv'
 Vue.component('downloadCsv', JsonCSV);
 
-
-// const files = require.context('./', true, /\.vue$/i)
-// files.keys().map(key => Vue.component(key.split('/').pop().split('.')[0], files(key)))
 import UserHome from './components/UserHome.vue';
 Vue.component('userhome', UserHome);
 
@@ -108,9 +105,6 @@ Vue.component('sortableLink', require('./components/Sortable.vue').default);
 Vue.component('favorites', require('./components/Favorites.vue').default);
 Vue.component('group-title', require('./components/GroupTitle.vue').default);
 Vue.component('folder-widget', require('./components/FolderWidget.vue').default);
-
-// import VueCompositionAPI from "@vue/composition-api";
-// Vue.use(VueCompositionAPI);
 
 Vue.component('app-header', require('./cla-vue-template/src/components/AppHeader.vue').default);
 Vue.component('navbar-item', require('./cla-vue-template/src/components/NavbarItem.vue').default);
