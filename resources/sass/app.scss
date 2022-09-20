@@ -1,22 +1,9 @@
-
-// Fonts
-// @import url('https://fonts.googleapis.com/css?family=Nunito');
-@import url("https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,700;1,400&display=swap");
-// Variables
 @import "../js/cla-vue-template/src/index.css";
-
 @import 'variables';
-
-// Bootstrap
 @import '~bootstrap/scss/bootstrap';
-
 @import "footer";
-
 @import '~@riophae/vue-treeselect/dist/vue-treeselect.css';
-
 @import '~vue-select/dist/vue-select.css';
-
-
 
 p {
     font-size: 1rem;
