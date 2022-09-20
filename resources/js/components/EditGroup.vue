@@ -172,7 +172,7 @@
                         v-on:keyup="addMemberError = null" @keyup.enter="lookupMember" placeholder="Internet ID"
                         v-model="newUserId">
                     <small id="addUserHelpBlock" class="form-text text-muted">
-                        Enter one or more InternetIds or email addresses (comma-seperated). You can add a list of users,
+                        Enter one or more InternetIds or email addresses (comma-separated). You can add a list of users,
                         even if it's in the format "John Smith &lt;smith@umn.edu&gt;, Jane Doe &lt;jane@umn.edu&gt;".
                     </small>
                 </div>
@@ -288,7 +288,8 @@
                 if (!this.roles) {
                     return [];
                 }
-                return this.roles.filter(r => !r.official_group_type || r.official_group_type.map(gt=>gt.label).includes(this.group.group_type.label));
+                return this.roles;
+                // return this.roles.filter(r => !r.official_group_type || r.official_group_type.map(gt=>gt.label).includes(this.group.group_type.label));
             },
             groupURL: function () {
                 return window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' +

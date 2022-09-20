@@ -26,7 +26,7 @@
           <div class="col-sm-6">
           <input type="text" ref="addMemberRef" class="form-control" id="internetId" v-on:keyup="addMemberError = null" @keyup.enter="lookupUser" placeholder="Internet ID" v-model="userLookupId">
           <small id="addUserHelpBlock" class="form-text text-muted">
-            Enter one or more InternetIds or email addresses (comma-seperated ).
+            Enter one or more InternetIds or email addresses (comma-separated ).
           </small>
         </div>
       </div>

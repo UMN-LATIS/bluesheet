@@ -43,7 +43,7 @@
             </template>
         </app-header>
 
-        <postit class="container">
+        <postit class="container post-it">
             <router-view :userperms="userperms" :key="$route.fullPath"></router-view>
         </postit>
 
@@ -124,3 +124,9 @@
     }
 
 </script>
+<style scoped>
+.post-it {
+    position:relative;
+    z-index: 1;
+}
+</style>
