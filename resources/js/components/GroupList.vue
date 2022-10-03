@@ -91,61 +91,64 @@
         watch: {
             searchTerm: function() {
                 if(this.searchTerm.length > 0) {
-                    axios.post("/api/group/search", {searchTerm: this.searchTerm})
-                    .then(res => {
-                        this.groupList = res.data;
-                    });
+                    this.filterListBySearchTerm();
                 }
                 else {
                     this.loadGroups();
                 }
             },
-            showAllGroups: function() {
-                if(this.showAllGroups) {
+            showAllGroups: function () {
+                if (this.showAllGroups) {
                     axios.get("/api/group")
                     .then(res => {
                         this.groupList.groups = res.data;
                         this.groupList.folders = [];
                     })
-                }
-                else {
-                    this.loadGroups();
-                }
             }
-        },
-        computed: {
-            breadCrumbs: function() {
-                if(this.parentOrganizations.length == 0) {
-                    return [];
+            else {
+                this.loadGroups();
+            }
+        }
+    },
+    computed: {
+        breadCrumbs: window._.debounce(function () {
+            if (this.parentOrganizations.length == 0) {
+                return [];
+            }
+
+            var pathToItem = this.getPathToChild(this.parent, this.parentOrganizations);
+
+            var cumulativeRoute = [];
+            var breadCrumbArray = [{ "title": "Groups", "path": "/groups/" }];
+            for (var item of pathToItem) {
+                cumulativeRoute.push(item);
+
+                breadCrumbArray.push({ "title": item.label, "path": "/groups/" + item.id });
+            }
+            console.log(breadCrumbArray)
+            return breadCrumbArray;
+        }, 100),
+
+        mergedSortedList: function () {
+
+            var merged = this.groupList.folders.concat(this.groupList.groups);
+            merged.sort((a, b) => {
+                if (!a.group_title || !b.group_title) {
+                    return 0;
                 }
 
-                var pathToItem = this.getPathToChild(this.parent, this.parentOrganizations);
-
-                var cumulativeRoute = [];
-                var breadCrumbArray = [{"title":"Groups", "path": "/groups/"}];
-                for(var item of pathToItem) {
-                    cumulativeRoute.push(item);
-
-                    breadCrumbArray.push({"title": item.label, "path": "/groups/" + item.id});
-                }
-                console.log(breadCrumbArray)
-                return breadCrumbArray;
-            },
-
-            mergedSortedList: function() {
-
-                var merged = this.groupList.folders.concat(this.groupList.groups);
-                merged.sort((a, b)=> {
-                    if(!a.group_title || !b.group_title) { 
-                        return 0;
-                    }
-
-                    return a.group_title.localeCompare(b.group_title);
+                return a.group_title.localeCompare(b.group_title);
+            });
+            return merged;
+        }
+    },
+    methods: {
+        filterListBySearchTerm: function () {
+            axios.post("/api/group/search", { searchTerm: this.searchTerm })
+                .then(res => {
+                    this.groupList = res.data;
                 });
-                return merged;
-            }
         },
-        methods: {
             remapParents: function(p) {
                 return p.map(org => { var result = {"id": org.id, "label": org.group_title }; if(org.child_organizations_recursive.length > 0) { result.children = this.remapParents(org.child_organizations_recursive)}; return result; });
             },

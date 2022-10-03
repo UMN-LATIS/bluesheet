@@ -4,11 +4,13 @@
 import sortBy from 'lodash/sortBy';
 import get from 'lodash/get';
 import uniq from 'lodash/uniq';
+import debounce from 'lodash/debounce';
 
 window._ = {};
 window._.sortBy = sortBy;
 window._.get = get;
 window._.uniq = uniq;
+window._.debounce = debounce;
 
 /**
  * We'll load jQuery and the Bootstrap jQuery plugin which provides support
