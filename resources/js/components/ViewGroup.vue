@@ -13,6 +13,7 @@
                 <li v-if="group.parent_group && $can('view groups')">Parent Group: <strong><router-link :to="{'name':'group', params: { groupId: group.parent_group.id }}">{{ group.parent_group.group_title }}</router-link></strong></li>
                 <li v-if="group.group_type">Group Type: <strong>{{ group.group_type.label }}</strong></li>
                 <li v-if="group.google_group">Google Group: <strong>{{ group.google_group }}</strong></li>
+                <li v-if="group.dept_id">Department ID: <strong>{{ group.dept_id }}</strong></li>
                 <li v-if="group.private_group"><strong>Private Group</strong></li>
                 <li>{{group.notes}}</li>
                 <li v-if="group.child_groups.filter(e=>e.active_group).length > 0 && $can('view groups')">Sub Groups: <ul v-if="group.child_groups">

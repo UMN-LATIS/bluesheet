@@ -60,7 +60,12 @@
                         <label for="googleGroup" class="small">Google Group Name</label>
                         <input id="googleGroup" class="form-control" v-model="group.google_group">
                     </div>
-
+                    <div class="col-sm-3">
+                        <div class="form-group">
+                            <label for="abbreviation" class="small">Department ID</label>
+                            <input id="abbreviation" class="form-control" v-model="group.dept_id">
+                        </div>
+                    </div>
                 </div>
                 <!-- <div class="row">
           <div class="col-md-6">

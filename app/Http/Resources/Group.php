@@ -21,6 +21,7 @@ class Group extends JsonResource
             "user_can_edit"=>Auth::user()?$this->userCanEdit(Auth::user()):false,
             "group_title"=>$this->group_title,
             "abbreviation"=>$this->abbreviation,
+            "dept_id"=>$this->dept_id,
             "group_type"=>$this->groupType,
             "private_group"=>$this->private_group,
             "parent_group_id"=>$this->parent_group_id,

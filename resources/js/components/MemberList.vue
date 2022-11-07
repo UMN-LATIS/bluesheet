@@ -16,7 +16,7 @@
             <template v-if="viewType=='group'">
                 <td v-if="!editing">{{ member.role.label }}</td>
                 <td v-if="editing">
-                    <v-select taggable v-model="member.role" :options="roles" v-if="roles" class=""></v-select>
+                        <v-select taggable v-model="member.role" :options="roles" v-if="roles"></v-select>
                 </td>
             </template>
 
@@ -49,14 +49,17 @@
 </template>
 
 <style>
-
 .vs__selected-options {
 
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    max-width: 120px;
 }
 
+.vs__dropdown-menu {
+    width: 300px;
+}
 </style>
 
 <script>
