@@ -88,6 +88,8 @@ Vue.component('ceddLike', CeddLike);
 import orgp from './components/orgp.vue';
 Vue.component('orgp', orgp);
 
+import fiscal from './components/fiscal.vue';
+Vue.component('fiscal', fiscal);
 
 Vue.component('home', require('./components/Home.vue').default);
 Vue.component('viewuser', require('./components/ViewUser.vue').default);
@@ -187,6 +189,7 @@ const router = new VueRouter({
     { name: 'lastModified', path: "/reports/lastModified", component: LastModified, props:true },
     { name: 'ceddLike', path: "/reports/ceddLike", component: CeddLike, props:true },
     { name: 'orgp', path: "/reports/orgp", component: orgp, props:true },
+    { name: 'fiscal', path: "/reports/fiscal", component: fiscal, props:true },
   ]
 })
 
