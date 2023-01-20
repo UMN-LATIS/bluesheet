@@ -31,7 +31,7 @@
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.3",
         "beyondcode/laravel-dump-server": "^1.0",
-        "deployer/dist": "^7.0",
+        "deployer/deployer": "^7.1",
         "filp/whoops": "^2.0",
         "fzaninotto/faker": "^1.9",
         "laravel/dusk": "^6.0",
