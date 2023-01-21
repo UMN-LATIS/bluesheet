@@ -23,6 +23,10 @@
                         :currentSortDir="currentSortDir" v-on:sort="sort" />
                 </th>
                 <th>
+                    <sortableLink sortLabel="ZDeptId" sortElement="zdept_id" :currentSort="currentSort"
+                        :currentSortDir="currentSortDir" v-on:sort="sort" />
+                </th>
+                <th>
                     <sortableLink sortLabel="Department" sortElement="department" :currentSort="currentSort"
                         :currentSortDir="currentSortDir" v-on:sort="sort" />
                 </th>
@@ -43,6 +47,7 @@
         <tbody>
             <tr v-for="department in sortedListByDepartment" :key="department.dept_id" >
                 <td>{{  department.dept_id }}</td>
+                <td>{{  department.zdept_id }}</td>
                 <td><router-link :to="{ name: 'group', params: { groupId: department.group.id } }">{{ department.department }}</router-link></td>
                 <td><userWithLink :memberList=department.accountant></userWithLink></td>
                 <td><userWithLink :memberList=department.financeManager></userWithLink></td>
@@ -66,7 +71,9 @@ export default {
             groupsToLoad: [],
             currentSort: "dept_id",
             currentSortDir: "asc",
-            listByDepartment: []
+            uniqueGroups: [],
+            fullList: [],
+            extraDepartmentInfo: []
         }
     },
     async mounted() {
@@ -111,24 +118,39 @@ export default {
         let groups = fullList.map(m => {
             return m.group.id
         })
-        let uniqueGroups = [...new Set(groups)];
-        let listByDepartment = [];
-        for (let group of uniqueGroups) {
-            let members = fullList.filter(m => m.group.id == group);
-            let outputObject = {};
-            outputObject.dept_id = members[0].group.dept_id;
-            outputObject.department = members[0].group.group_title;
-            outputObject.group = members[0].group;
-            outputObject.financeManager = members.filter(m => m.role.id == 24);
-            outputObject.payrollSpecialist = members.filter(m => m.role.id == 14);
-            outputObject.accountant = members.filter(m => m.role.id == 11);
-            listByDepartment.push(outputObject);
+        this.uniqueGroups = [...new Set(groups)];
+        let deptIds = fullList.map(m => m.group.dept_id).filter(d => d != null);
+        this.fullList = fullList;
+        let uniqueDeptIds = [...new Set(deptIds)];
+
+        if(uniqueDeptIds.length > 0) {
+            let deptIdQueryString = new URLSearchParams(uniqueDeptIds.map(s=>['deptId[]',s]));
+            axios.get("/api/lookup/department/?" + deptIdQueryString.toString())
+            .then(res => {
+                this.extraDepartmentInfo = res.data;
+            });
         }
-        this.listByDepartment = listByDepartment;
-
-
     },
     computed: {
+        listByDepartment: function() {
+            let listByDepartment = [];
+            for (let group of this.uniqueGroups) {
+                let members = this.fullList.filter(m => m.group.id == group);
+                let outputObject = {};
+                let deptInfo = this.extraDepartmentInfo.filter(d => d.DEPT_ID == members[0].group.dept_id);
+                if(deptInfo.length > 0) {
+                    outputObject.zdept_id = deptInfo[0].ZDEPT_ID;
+                }
+                outputObject.dept_id = members[0].group.dept_id;
+                outputObject.department = members[0].group.group_title;
+                outputObject.group = members[0].group;
+                outputObject.financeManager = members.filter(m => m.role.id == 24);
+                outputObject.payrollSpecialist = members.filter(m => m.role.id == 14);
+                outputObject.accountant = members.filter(m => m.role.id == 11);
+                listByDepartment.push(outputObject);
+            }
+            return listByDepartment;
+        },
         sortedListByDepartment: function() {
             return this.listByDepartment.sort((a, b) =>{
                 let modifier = 1;
@@ -163,6 +185,7 @@ export default {
         }
     },
     methods: {
+        
         sort: function (s) {
             //if s == current sort, reverse
             if (s === this.currentSort) {

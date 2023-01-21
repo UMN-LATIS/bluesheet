@@ -17,6 +17,7 @@
     "require": {
         "php": "^8.0",
         "doctrine/dbal": "^2.9",
+        "guzzlehttp/guzzle": "^7.5",
         "lab404/laravel-impersonate": "^1.7.3",
         "laracasts/cypress": "^2.2",
         "laravel/framework": "^9.0",

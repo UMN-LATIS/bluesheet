@@ -46,6 +46,7 @@ Route::group(['prefix'=>'/api/', 'middleware' => 'auth'], function () {
     
     Route::get('group/roles', 'GroupController@roles');
     
+    
     Route::get('group/types', 'GroupController@types');
     Route::get('group/parents', 'GroupController@parents');
     Route::get('folder/{parentOrganization?}', 'GroupController@getGroupsByFolder');
@@ -58,6 +59,8 @@ Route::group(['prefix'=>'/api/', 'middleware' => 'auth'], function () {
     Route::post("user/favorite/roles/{role}", "UserController@addFavoriteRole");
     Route::delete("user/favorite/groups/{group}", "UserController@destroyFavoriteGroup");
     Route::delete("user/favorite/roles/{role}", "UserController@destroyFavoriteRole");
+
+    Route::get('lookup/department/{deptId?}', 'LookupController@departmentInfo');
 
 });
 
