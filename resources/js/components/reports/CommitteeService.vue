@@ -3,6 +3,26 @@
         <p>This list combines the following data. Clicking the "show email list" button will give you a de-duplicated
             set of email addresses.</p>
         <ul>
+
+            <li>Collegiate Governance<ul>
+                <li><router-link :to="{ name: 'groups', params: { groupId: 2 } }">CLA Assembly</router-link></li>
+                <li><router-link :to="{ name: 'groups', params: { groupId: 4 } }">Curriculum, Instruction & Advisory</router-link></li>
+                <li><router-link :to="{ name: 'groups', params: { groupId: 19 } }">P&A Board</router-link></li>
+                <li><router-link :to="{ name: 'groups', params: { groupId: 25 } }">Course Review Committee</router-link></li>
+                <li><router-link :to="{ name: 'groups', params: { groupId: 28 } }">University Senate</router-link></li>
+                <li><router-link :to="{ name: 'groups', params: { groupId: 108 } }">CLA Staff Council Executive Committee</router-link></li>
+                <li><router-link :to="{ name: 'groups', params: { groupId: 157 } }">Council of Chairs (CoC)</router-link></li>
+
+            </ul></li>
+            <li>Dean's Office
+                <ul>
+                    <li>
+                        <router-link :to="{ name: 'groups', params: { groupId: 1 } }">CLA Promotion and Tenure Review Committee</router-link>
+                    </li>
+                </ul>
+            </li>
+
+
             <li>
                 <router-link :to="{ name: 'role', params: { roleId: 23 } }">All department administrators for academic
                     units and graduate minors
