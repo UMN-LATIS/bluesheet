@@ -25,7 +25,7 @@
 
         </ul>
         <members v-if="groupList" :members="groupList" :editing="false" :roles="[]" :show_unit="true" groupType="list"
-            viewType="role" downloadTitle="ORGP" />
+            viewType="role" downloadTitle="CommitteeService" />
     </div>
 </template>
 
