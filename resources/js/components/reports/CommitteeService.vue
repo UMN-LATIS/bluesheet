@@ -23,22 +23,6 @@
             </li>
 
 
-            <li>
-                <router-link :to="{ name: 'role', params: { roleId: 23 } }">All department administrators for academic
-                    units and graduate minors
-                </router-link>
-            </li>
-            <li>
-                <router-link :to="{ name: 'role', params: { roleId: 22 } }">Academic Chairs</router-link>
-            </li>
-            <li>
-                <router-link :to="{ name: 'role', params: { roleId: 30 } }">Graduate Program Coordinators</router-link>
-            </li>
-            <li>
-                <router-link :to="{ name: 'role', params: { roleId: 18 } }">Director of Graduate Studies</router-link>
-            </li>
-
-
         </ul>
         <members v-if="groupList" :members="groupList" :editing="false" :roles="[]" :show_unit="true" groupType="list"
             viewType="role" downloadTitle="ORGP" />
