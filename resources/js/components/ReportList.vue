@@ -22,6 +22,10 @@
                 <router-link :to="{ name: 'fiscal' }" class="nav-link" v-if="$can('view reports')">Fiscal Unit Assignments
                 </router-link>
             </li>
+            <li class="list-group-item">
+                <router-link :to="{ name: 'committeeService' }" class="nav-link" v-if="$can('view reports')">Committee Service
+                </router-link>
+            </li>
         </ul>
         <p>Got an idea for a report? <a href="mailto:mcfa0086@umn.edu">Let us know</a>!</p>
     </div>

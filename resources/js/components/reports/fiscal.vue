@@ -60,7 +60,7 @@
 </template>
 
 <script>
-import userWithLink from "./userWithLink.vue";
+import userWithLink from "./../userWithLink.vue";
 export default {
     components:  {
         userWithLink
