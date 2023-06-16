@@ -5,19 +5,19 @@
         <ul>
 
             <li>Collegiate Governance<ul>
-                <li><router-link :to="{ name: 'groups', params: { groupId: 2 } }">CLA Assembly</router-link></li>
-                <li><router-link :to="{ name: 'groups', params: { groupId: 4 } }">Curriculum, Instruction & Advisory</router-link></li>
-                <li><router-link :to="{ name: 'groups', params: { groupId: 19 } }">P&A Board</router-link></li>
-                <li><router-link :to="{ name: 'groups', params: { groupId: 25 } }">Course Review Committee</router-link></li>
-                <li><router-link :to="{ name: 'groups', params: { groupId: 28 } }">University Senate</router-link></li>
-                <li><router-link :to="{ name: 'groups', params: { groupId: 108 } }">CLA Staff Council Executive Committee</router-link></li>
-                <li><router-link :to="{ name: 'groups', params: { groupId: 157 } }">Council of Chairs (CoC)</router-link></li>
+                <li><router-link :to="{ name: 'group', params: { groupId: 2 } }">CLA Assembly</router-link></li>
+                <li><router-link :to="{ name: 'group', params: { groupId: 4 } }">Curriculum, Instruction & Advisory</router-link></li>
+                <li><router-link :to="{ name: 'group', params: { groupId: 19 } }">P&A Board</router-link></li>
+                <li><router-link :to="{ name: 'group', params: { groupId: 25 } }">Course Review Committee</router-link></li>
+                <li><router-link :to="{ name: 'group', params: { groupId: 28 } }">University Senate</router-link></li>
+                <li><router-link :to="{ name: 'group', params: { groupId: 108 } }">CLA Staff Council Executive Committee</router-link></li>
+                <li><router-link :to="{ name: 'group', params: { groupId: 157 } }">Council of Chairs (CoC)</router-link></li>
 
             </ul></li>
             <li>Dean's Office
                 <ul>
                     <li>
-                        <router-link :to="{ name: 'groups', params: { groupId: 1 } }">CLA Promotion and Tenure Review Committee</router-link>
+                        <router-link :to="{ name: 'group', params: { groupId: 1 } }">CLA Promotion and Tenure Review Committee</router-link>
                     </li>
                 </ul>
             </li>
