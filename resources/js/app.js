@@ -40,16 +40,16 @@ import AppFooter from "./cla-vue-template/src/components/AppFooter.vue";
 import PostIt from "./cla-vue-template/src/components/PostIt.vue";
 
 // pages
-import UserHomePage from "./components/UserHomePage.vue";
-import LandingPage from "./components/LandingPage.vue";
-import UserListPage from "./components/UserListPage.vue";
-import GroupPage from "./components/GroupPage.vue";
-import GroupListPage from "./components/GroupListPage.vue";
-import ReportListPage from "./components/ReportListPage.vue";
-import MissingOfficialPage from "./components/MissingOfficialPage.vue";
-import LastModifiedPage from "./components/LastModifiedPage.vue";
-import CeddLikePage from "./components/CeddLikePage.vue";
-import OrgpPage from "./components/OrgpPage.vue";
+import UserHomePage from "./pages/UserHomePage.vue";
+import LandingPage from "./pages/LandingPage.vue";
+import UserListPage from "./pages/UserListPage.vue";
+import GroupPage from "./pages/GroupPage.vue";
+import GroupListPage from "./pages/GroupListPage.vue";
+import ReportListPage from "./pages/ReportListPage.vue";
+import MissingOfficialPage from "./pages/MissingOfficialPage.vue";
+import LastModifiedPage from "./pages/LastModifiedPage.vue";
+import CeddLikePage from "./pages/CeddLikePage.vue";
+import OrgpPage from "./pages/OrgpPage.vue";
 
 // Global CSS
 import "vue-tour/dist/vue-tour.css";
