@@ -16,18 +16,18 @@ import VTooltip from "v-tooltip";
 import Treeselect from "@riophae/vue-treeselect";
 import Autocomplete from "vuejs-auto-complete";
 import JsonCSV from "vue-json-csv";
-import UserHome from "./components/UserHome.vue";
+import UserHomePage from "./components/UserHome.vue";
 import LandingPage from "./components/LandingPage.vue";
-import UserList from "./components/UserList.vue";
+import UserListPage from "./components/UserList.vue";
 import RoleList from "./components/RoleList.vue";
-import Group from "./components/Group.vue";
+import GroupPage from "./components/Group.vue";
 import Role from "./components/Role.vue";
-import GroupList from "./components/GroupList.vue";
-import ReportList from "./components/ReportList.vue";
-import MissingOfficial from "./components/MissingOfficial.vue";
-import LastModified from "./components/LastModified.vue";
-import CeddLike from "./components/ceddLike.vue";
-import orgp from "./components/orgp.vue";
+import GroupListPage from "./components/GroupList.vue";
+import ReportListPage from "./components/ReportList.vue";
+import MissingOfficialPage from "./components/MissingOfficial.vue";
+import LastModifiedPage from "./components/LastModified.vue";
+import CeddLikePage from "./components/ceddLike.vue";
+import OrgpPage from "./components/orgp.vue";
 import Home from "./components/Home.vue";
 import ViewUser from "./components/ViewUser.vue";
 import ViewGroup from "./components/ViewGroup.vue";
@@ -66,18 +66,18 @@ Vue.component("v-select", VueSelect);
 Vue.component("treeselect", Treeselect);
 Vue.component("autocomplete", Autocomplete);
 Vue.component("downloadCsv", JsonCSV);
-Vue.component("userhome", UserHome);
+Vue.component("userhome", UserHomePage);
 Vue.component("landingpage", LandingPage);
-Vue.component("userlist", UserList);
-Vue.component("group", Group);
+Vue.component("userlist", UserListPage);
+Vue.component("group", GroupPage);
 Vue.component("role", Role);
-Vue.component("grouplist", GroupList);
-Vue.component("roleList", GroupList);
-Vue.component("reportList", ReportList);
-Vue.component("missingOfficial", MissingOfficial);
-Vue.component("lastModified", LastModified);
-Vue.component("ceddLike", CeddLike);
-Vue.component("orgp", orgp);
+Vue.component("grouplist", GroupListPage);
+Vue.component("roleList", GroupListPage);
+Vue.component("reportList", ReportListPage);
+Vue.component("missingOfficial", MissingOfficialPage);
+Vue.component("lastModified", LastModifiedPage);
+Vue.component("ceddLike", CeddLikePage);
+Vue.component("orgp", OrgpPage);
 Vue.component("home", Home);
 Vue.component("viewuser", ViewUser);
 Vue.component("viewgroup", ViewGroup);
@@ -170,13 +170,13 @@ const router = new VueRouter({
     {
       name: "user",
       path: "/user/:userId?",
-      component: UserHome,
+      component: UserHomePage,
       props: true,
     },
     {
       name: "userList",
       path: "/userList/",
-      component: UserList,
+      component: UserListPage,
       props: (route) => ({
         users: route.query.users,
         groupId: route.query.groupId,
@@ -185,42 +185,42 @@ const router = new VueRouter({
     {
       name: "group",
       path: "/group/:groupId/:hash?",
-      component: Group,
+      component: GroupPage,
       props: true,
     },
     { name: "role", path: "/role/:roleId", component: Role, props: true },
     {
       name: "groupList",
       path: "/groups/:parent?",
-      component: GroupList,
+      component: GroupListPage,
       props: true,
     },
     { name: "roleList", path: "/roles/", component: RoleList, props: true },
     {
       name: "reportList",
       path: "/reports/",
-      component: ReportList,
+      component: ReportListPage,
       props: true,
     },
     {
       name: "missingOfficial",
       path: "/reports/missingOfficialRoles",
-      component: MissingOfficial,
+      component: MissingOfficialPage,
       props: true,
     },
     {
       name: "lastModified",
       path: "/reports/lastModified",
-      component: LastModified,
+      component: LastModifiedPage,
       props: true,
     },
     {
       name: "ceddLike",
       path: "/reports/ceddLike",
-      component: CeddLike,
+      component: CeddLikePage,
       props: true,
     },
-    { name: "orgp", path: "/reports/orgp", component: orgp, props: true },
+    { name: "orgp", path: "/reports/orgp", component: OrgpPage, props: true },
   ],
 });
 
