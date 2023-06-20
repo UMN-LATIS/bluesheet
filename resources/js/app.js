@@ -16,18 +16,8 @@ import VTooltip from "v-tooltip";
 import Treeselect from "@riophae/vue-treeselect";
 import Autocomplete from "vuejs-auto-complete";
 import JsonCSV from "vue-json-csv";
-import UserHomePage from "./components/UserHome.vue";
-import LandingPage from "./components/LandingPage.vue";
-import UserListPage from "./components/UserList.vue";
 import RoleList from "./components/RoleList.vue";
-import GroupPage from "./components/Group.vue";
 import Role from "./components/Role.vue";
-import GroupListPage from "./components/GroupList.vue";
-import ReportListPage from "./components/ReportList.vue";
-import MissingOfficialPage from "./components/MissingOfficial.vue";
-import LastModifiedPage from "./components/LastModified.vue";
-import CeddLikePage from "./components/ceddLike.vue";
-import OrgpPage from "./components/orgp.vue";
 import Home from "./components/Home.vue";
 import ViewUser from "./components/ViewUser.vue";
 import ViewGroup from "./components/ViewGroup.vue";
@@ -49,6 +39,19 @@ import NavbarItem from "./cla-vue-template/src/components/NavbarItem.vue";
 import AppFooter from "./cla-vue-template/src/components/AppFooter.vue";
 import PostIt from "./cla-vue-template/src/components/PostIt.vue";
 
+// pages
+import UserHomePage from "./components/UserHomePage.vue";
+import LandingPage from "./components/LandingPage.vue";
+import UserListPage from "./components/UserListPage.vue";
+import GroupPage from "./components/GroupPage.vue";
+import GroupListPage from "./components/GroupListPage.vue";
+import ReportListPage from "./components/ReportListPage.vue";
+import MissingOfficialPage from "./components/MissingOfficialPage.vue";
+import LastModifiedPage from "./components/LastModifiedPage.vue";
+import CeddLikePage from "./components/CeddLikePage.vue";
+import OrgpPage from "./components/OrgpPage.vue";
+
+// Global CSS
 import "vue-tour/dist/vue-tour.css";
 
 window.Vue = Vue;
