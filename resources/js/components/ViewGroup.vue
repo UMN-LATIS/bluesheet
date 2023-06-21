@@ -5,7 +5,7 @@
             <div class="btn-group float-right" role="group" aria-label="Edit Controls">
             <button class="btn btn-outline-primary" @click="$store.dispatch('toggleFavorite', {type: 'groups', item: group})"><i class="fa-star" v-bind:class="{ 'fas' : groupFavorited, 'far': !groupFavorited} "></i> Favorite</button>
             <button class="btn btn-outline-primary" @click="$emit('update:editing', true)" v-if="$can('edit groups') || group.user_can_edit">Edit Group</button>
-            
+
             </div>
             <h1><group-title :group="group" /></h1>
             <ul class="groupInfo">
@@ -17,7 +17,7 @@
                 <li v-if="group.private_group"><strong>Private Group</strong></li>
                 <li>{{group.notes}}</li>
                 <li v-if="group.child_groups.filter(e=>e.active_group).length > 0 && $can('view groups')">Sub Groups: <ul v-if="group.child_groups">
-                    <li v-for="child_group in group.child_groups.filter(e=>e.active_group)">
+                    <li v-for="child_group in group.child_groups.filter(e=>e.active_group)" :key="child_group.id">
                         <router-link :to="{'name':'group', params: { groupId: child_group.id }}">{{ child_group.group_title }}</router-link>
                     </li>
                     </ul>
@@ -25,16 +25,16 @@
             </ul>
         </div>
     </div>
-    
-    
+
+
     <ul>
         <li v-for="artifact in group.artifacts"><a v-bind:href="artifact.target">{{ artifact.label }}</a></li>
     </ul>
 
     <members :groupType="group.group_type.label" :members.sync="group.members" :editing="false" :show_unit="group.show_unit"  :roles='filteredRoles' viewType="group" :downloadTitle="group.group_title"></members>
-    
 
- 
+
+
      <router-link v-if="$can('view groups')" :to="{'name':'userList', query:{'groupId':this.group.id}}" class="btn btn-outline-secondary">View membership counts</router-link>
 </div>
 </template>
@@ -56,7 +56,7 @@ export default {
             if(this.$store.state.favorites["groups"]) {
                 return this.$store.state.favorites["groups"].filter(g => g.id == this.group.id).length > 0;
             }
-            
+
         },
         filteredRoles: function () {
             if (!this.roles) {
