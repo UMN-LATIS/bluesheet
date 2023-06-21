@@ -28,7 +28,7 @@
 
 
     <ul>
-        <li v-for="artifact in group.artifacts"><a v-bind:href="artifact.target">{{ artifact.label }}</a></li>
+        <li v-for="(artifact, index) in group.artifacts" :key="index"><a v-bind:href="artifact.target">{{ artifact.label }}</a></li>
     </ul>
 
     <members :groupType="group.group_type.label" :members.sync="group.members" :editing="false" :show_unit="group.show_unit"  :roles='filteredRoles' viewType="group" :downloadTitle="group.group_title"></members>
