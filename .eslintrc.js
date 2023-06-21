@@ -38,13 +38,13 @@ module.exports = {
     "vue/attribute-hyphenation": ["error", "never"],
     "vue/v-on-event-hyphenation": ["error", "never"],
     "vue/component-definition-name-casing": "off",
-    "vue/component-name-in-template-casing": [
-      "warn",
-      "PascalCase",
-      {
-        registeredComponentsOnly: false,
-        ignores: ["component", "router-link", "router-view"],
-      },
-    ],
+    // "vue/component-name-in-template-casing": [
+    //   "warn",
+    //   "PascalCase",
+    //   {
+    //     registeredComponentsOnly: false,
+    //     ignores: ["component", "router-link", "router-view"],
+    //   },
+    // ],
   },
 };
