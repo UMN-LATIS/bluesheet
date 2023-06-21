@@ -11,7 +11,7 @@ module.exports = {
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
     // "plugin:vue/vue3-essential", // Use this if you are using Vue.js 3.x.
-     'plugin:vue/recommended' // Use this if you are using Vue.js 2.x.
+    "plugin:vue/essential" // Use this if you are using Vue.js 2.x.
   ],
   overrides: [
     {
@@ -46,12 +46,5 @@ module.exports = {
         ignores: ["component", "router-link", "router-view"],
       },
     ],
-
-    // temporarily disable style warnings until after vue3 migration
-    "vue/script-indent": "off",
-    "vue/html-indent": "off",
-    "vue/max-attributes-per-line": "off",
-    "vue/attributes-order": "off",
-    "vue/multiline-html-element-content-newline": "off",
   },
 };
