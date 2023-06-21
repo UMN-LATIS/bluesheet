@@ -207,11 +207,11 @@
                     let modifier = 1;
                     if (this.currentSortDir === 'desc') modifier = -1;
 
-                    var a = window._.get(a, this.currentSort) || " ";
-                    var b = window._.get(b, this.currentSort) || " ";
+                    const aCurrentSort = window._.get(a, this.currentSort) || " ";
+                    const bCurrentSort = window._.get(b, this.currentSort) || " ";
 
-                    if (a < b) return -1 * modifier;
-                    if (a > b) return 1 * modifier;
+                    if (aCurrentSort < bCurrentSort) return -1 * modifier;
+                    if (aCurrentSort > bCurrentSort) return 1 * modifier;
                     return 0;
                 }.bind(this));
             },
