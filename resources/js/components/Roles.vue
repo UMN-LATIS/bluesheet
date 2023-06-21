@@ -16,7 +16,7 @@
           </tr>
       </thead>
       <tbody>
-        <tr v-for="membership in filteredList">
+        <tr v-for="(membership, index) in filteredList" :key="index">
             <td><router-link :to="{ name: 'group', params: { groupId: membership.group.id } }" v-if="membership.group.id"><group-title :group="membership.group" /></router-link>
             <span v-if="!membership.group.id"><group-title :group="membership.group" /></span>
             </td>
