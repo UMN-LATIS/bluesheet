@@ -73,7 +73,7 @@ export default {
                         filteredMembers = res.data.members.filter(m => m.group.group_type_id == role.groupType);
                     }
                     else {
-                        filteredMembers = res.data.members;;
+                        filteredMembers = res.data.members;
                     }
                     // filter IGS
                     filteredMembers = filteredMembers.filter(m => m.group.id != 54);
