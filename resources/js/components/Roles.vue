@@ -47,7 +47,7 @@ export default {
             }.bind(this));
         },
         sortedList: function() {
-            return this.memberships.sort(function (a, b) {
+            return [...this.memberships].sort(function (a, b) {
                 return a.start_date < b.start_date;
             });
         }
