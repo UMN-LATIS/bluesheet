@@ -171,6 +171,7 @@
                     return this.filteredList.map(m => this.$moment(m.start_date).unix()).reduce((a, b) => Math.min(
                         a, b))
                 }
+                return 0;
             },
             highestValue: function () {
                 var maxDate = null;
