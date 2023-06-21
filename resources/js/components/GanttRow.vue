@@ -9,10 +9,12 @@
             </div>
             </td>
     </tr>
-   
+
 </template>
 
 <script>
+import $ from 'jquery';
+
 $(function () {
         $("[data-toggle='tooltip']").tooltip();
     });
@@ -24,7 +26,7 @@ export default {
     },
     computed: {
         toolTipText: function() {
-            
+
             var returnString = this.member.user.displayName + '<br>';
             if(this.member.user.ou && this.show_unit) {
                 returnString += 'Unit: ' + this.member.user.ou + '<br>';
@@ -41,22 +43,22 @@ export default {
         startPercent: function() {
             return ((this.startDate - this.mindate) / (this.maxdate - this.mindate)) * 100
         },
-        
+
         startDate: function() {
-            return this.$moment(this.member.start_date).unix() 
+            return this.$moment(this.member.start_date).unix()
         },
         endDate: function() {
             if(this.member.end_date) {
-                return this.$moment(this.member.end_date).unix() 
+                return this.$moment(this.member.end_date).unix()
             }
             return this.maxdate;
-            
+
         },
         width: function() {
             return (((this.endDate - this.mindate) / (this.maxdate - this.mindate)) * 100) - this.startPercent
         }
     }
-  
+
 }
 </script>
 
