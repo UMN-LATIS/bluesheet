@@ -96,7 +96,7 @@
                 if(this.$store.state.favorites["roles"]) {
                     return this.$store.state.favorites["roles"].filter(g => g.id == this.role.id).length > 0;
                 }
-
+                return false;
             }
         }
     }
