@@ -67,8 +67,6 @@
                 }
             }
         },
-        mounted() {
-        },
         methods: {
             close: function () {
                 this.userLookupId = null;
