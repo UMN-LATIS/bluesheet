@@ -203,7 +203,7 @@
                 }.bind(this));
             },
             sortedList: function () {
-                return this.members.sort(function (a, b) {
+                return [...this.members].sort(function (a, b) {
                     let modifier = 1;
                     if (this.currentSortDir === 'desc') modifier = -1;
 
