@@ -1,6 +1,4 @@
-import sortBy from 'lodash/sortBy';
 import get from 'lodash/get';
-import uniq from 'lodash/uniq';
 import debounce from 'lodash/debounce';
 import Popper from 'popper.js';
 import jquery from 'jquery';

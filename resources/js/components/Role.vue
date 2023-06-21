@@ -8,7 +8,7 @@
         <div class="form-group row" v-if="parentOrganizations">
                 <label for="parentOrganization" class="col-sm-2 col-form-label">Filter by Folder</label>
                 <div class="col-sm-6">
-                     <treeselect v-model="parentOrganization" :multiple="false" :options="parentOrganizations"  :clearable="true" :searchable="true" :open-on-click="true" :close-on-select="true" label="group_title"/>
+                     <treeselect v-model="parentOrganization" :multiple="false" :options="parentOrganizations"  :clearable="true" :searchable="true" :openOnClick="true" :closeOnSelect="true" label="group_title"/>
                 </div>
         </div>
         <members :members="filteredMembers" :editing="false" :roles="[role]" :show_unit="false" :filterList="null" groupType="department"  viewType="role" :downloadTitle="role.label"></members>
@@ -42,12 +42,12 @@
                 this.parentOrganizations = this.remapParents(res.data);
             })
             .catch(err => {
-
+                console.error(err);
             });
         },
         methods: {
              remapParents: function(p) {
-                return p.map(org => { var result = {"id": org.id, "label": org.group_title }; if(org.child_organizations_recursive.length > 0) { result.children = this.remapParents(org.child_organizations_recursive)}; return result; });
+                return p.map(org => { var result = {"id": org.id, "label": org.group_title }; if(org.child_organizations_recursive.length > 0) { result.children = this.remapParents(org.child_organizations_recursive)} return result; });
             },
             findLeaf: function(element, id) {
                 if(element.id == id) {
@@ -63,7 +63,7 @@
                             }
                         }
                     }
-                    
+
                 }
                 return false;
             },
@@ -75,7 +75,7 @@
                             returnArray.push(this.recursivePluckId(child));
                         }
                     }
-                    
+
                     returnArray.push(organization.id);
                 }
                 return returnArray.flat();
@@ -97,7 +97,7 @@
                 if(this.$store.state.favorites["roles"]) {
                     return this.$store.state.favorites["roles"].filter(g => g.id == this.role.id).length > 0;
                 }
-                
+
             }
         }
     }

@@ -3,18 +3,18 @@
         <div class="row">
             <div class="col-10">
                 <nav class="breadcrumb">
-            <router-link v-for="breadcrumb in breadCrumbs" :key="breadcrumb.title" class="breadcrumb-item" :to="{path: breadcrumb.path}" active-class="active" exact-active-class="" exact>{{ breadcrumb.title }}</router-link>
+            <router-link v-for="breadcrumb in breadCrumbs" :key="breadcrumb.title" class="breadcrumb-item" :to="{path: breadcrumb.path}" activeClass="active" exactActiveClass="" exact>{{ breadcrumb.title }}</router-link>
         </nav>
 
             </div>
             <div class="col-2 p-1">
-                
+
 
               <input type="text"
                 class="form-control" v-model="searchTerm"  placeholder="Search">
                 </div>
         </div>
-        
+
          <!-- <table class="table" v-if="currentOrganizations.length > 0">
             <thead>
                 <tr>
@@ -152,7 +152,7 @@
             debounced();
         },
             remapParents: function(p) {
-                return p.map(org => { var result = {"id": org.id, "label": org.group_title }; if(org.child_organizations_recursive.length > 0) { result.children = this.remapParents(org.child_organizations_recursive)}; return result; });
+                return p.map(org => { var result = {"id": org.id, "label": org.group_title }; if(org.child_organizations_recursive.length > 0) { result.children = this.remapParents(org.child_organizations_recursive)} return result; });
             },
             flatten: function(items) {
                 const flat = [];
@@ -184,23 +184,24 @@
                         if(childrenGroups.length > 0) {
                             return this.flatten([org, childrenGroups]);
                         }
-                    
+
                     }
                 }
                 return [];
             },
-         
+
             loadGroups() {
                 axios.get("/api/folder/" + (this.parent?this.parent:""))
                 .then(res => {
                     this.groupList = res.data;
                 })
-         
+
                  axios.get("/api/group/parents")
                  .then(res => {
                     this.parentOrganizations = this.remapParents(res.data);
                 })
                 .catch(err => {
+                    console.error(err);
                 });
             }
         }

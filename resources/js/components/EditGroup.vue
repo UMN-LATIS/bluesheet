@@ -160,8 +160,8 @@
                 <label for="nameLookup" class="col-sm-3 col-form-label">Name:</label>
                 <div class="col-sm-6">
                     <autocomplete source="/api/autocompleter/user?searchType=nameAndInternetId&q=" id="nameLookup"
-                        results-property="items" results-display="full_name" results-value="mail"
-                        ref="userAutocompleter" input-class="form-control" v-model="newUserId">
+                        resultsProperty="items" resultsDisplay="full_name" resultsValue="mail"
+                        ref="userAutocompleter" inputClass="form-control" v-model="newUserId">
                     </autocomplete>
                     <small id="addUserHelpBlock" class="form-text text-muted">
                         Optional: Enter a name and select the person from the list
@@ -261,7 +261,7 @@
 
                 })
                 .catch(err => {
-
+                    console.error(err);
                 });
 
             axios.get("/api/group")
@@ -276,11 +276,11 @@
                     });
                 })
                 .catch(err => {
-
+                    console.error(err);
                 });
         },
         watch: {
-            addMember: function (newVal, oldVal) {
+            addMember: function (newVal) {
                 if (newVal == true) {
                     this.$nextTick(() => {
                         this.$refs.addMemberRef.focus();
@@ -302,7 +302,7 @@
             }
         },
         methods: {
-            
+
             save: function () {
                 if (!this.checkForm()) {
                     return;
@@ -355,12 +355,13 @@
                 if (confirm("Are you sure you want to deactivate this group?")) {
 
                     axios.delete("/api/group/" + this.group.id)
-                        .then(res => {
+                        .then(() => {
                             this.$router.push({
                                 name: 'home'
                             });
                         })
                         .catch(err => {
+                            console.error(err);
                             alert("Error deleting this group.  Hrm.");
                         })
 

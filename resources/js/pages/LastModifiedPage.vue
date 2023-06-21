@@ -4,7 +4,7 @@
                 <label for="parentOrganization" class="col-sm-2 col-form-label">Filter by Folder</label>
                 <div class="col-sm-6">
                    <treeselect v-model="parentOrganization" :multiple="false" :options="parentOrganizations" :clearable="false"
-                :searchable="true" :open-on-click="true" :close-on-select="true" label="parent_folder" />
+                :searchable="true" :openOnClick="true" :closeOnSelect="true" label="parent_folder" />
                 </div>
         </div>
 
@@ -71,7 +71,7 @@
                     this.parentOrganizations = this.remapParents(res.data);
                 })
                 .catch(err => {
-
+                    console.error(err);
                 });
 
         },
@@ -114,7 +114,7 @@
                             return result;
                         }
                     }
-                   
+
                 }
                 return false;
             },
@@ -127,11 +127,11 @@
                         resultArray.push(this.flattenBranch(child))
                     });
                 }
-                
+
                 return resultArray;
             },
             remapParents: function(p) {
-                return p.map(org => { var result = {"id": org.id, "label": org.group_title }; if(org.child_organizations_recursive.length > 0) { result.children = this.remapParents(org.child_organizations_recursive)}; return result; });
+                return p.map(org => { var result = {"id": org.id, "label": org.group_title }; if(org.child_organizations_recursive.length > 0) { result.children = this.remapParents(org.child_organizations_recursive)} return result; });
             },
             sort: function (s) {
                 //if s == current sort, reverse

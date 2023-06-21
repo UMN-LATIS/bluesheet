@@ -1,6 +1,6 @@
 <template>
     <treeselect v-if="parentOrganizations" v-model="parentOrganizationValue" :multiple="false" :options="parentOrganizations" :clearable="false"
-        :searchable="true" :open-on-click="true" :close-on-select="true" label="group_title" />
+        :searchable="true" :openOnClick="true" :closeOnSelect="true" label="group_title" />
 </template>
 
 <script>
@@ -31,10 +31,10 @@
                     if (org.child_organizations_recursive.length > 0) {
                         result.children = this.remapParents(org.child_organizations_recursive)
                         result.children.sort((a, b) => a.label < b.label ? -1 : 1);
-                    };
+                    }
                     return result;
                 });
-            }  
+            }
         },
         mounted: function() {
             axios.get("/api/group/parents")
@@ -42,7 +42,7 @@
                 this.parentOrganizations = this.remapParents(res.data);
             })
             .catch(err => {
-
+                console.error(err);
             });
         }
 

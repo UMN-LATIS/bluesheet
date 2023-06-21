@@ -143,7 +143,7 @@
             }
         },
         watch: {
-            showSearch: function (newVal, oldVal) {
+            showSearch: function (newVal) {
                 if (newVal == true) {
                     setTimeout(function () {
                         this.$refs.searchbox.focus()
@@ -223,7 +223,7 @@
                 }
 
                 // return a list of email addresses of users that are currently active, de-duplicated and with null values removed
-                return targetList.map((elem, index) =>
+                return targetList.map((elem) =>
                     (elem.end_date == null || this.$moment(elem.end_date).isAfter(this.$moment())) ? elem.user
                     .email : null
                 ).filter(x => x).filter((elem, pos, arr) => {
@@ -275,7 +275,7 @@
                 }
                 this.currentSort = s;
             },
-            removeMember: function (removeMember, index) {
+            removeMember: function (removeMember) {
                 if (!removeMember.id) {
                     // this was an accidental record, just split it
                     this.$emit("update:members", this.members.filter(member => removeMember !== member));

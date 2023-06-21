@@ -6,11 +6,11 @@
           <autocomplete
             source="/api/autocompleter/user?searchType=nameAndInternetId&q="
             id="nameLookup"
-            results-property="items"
-            results-display="full_name"
-            results-value="mail"
+            resultsProperty="items"
+            resultsDisplay="full_name"
+            resultsValue="mail"
             ref="userAutocompleter"
-            input-class="form-control"
+            inputClass="form-control"
             v-model="userLookupId"
             >
           </autocomplete>
@@ -20,7 +20,7 @@
       </div>
       </div>
 
-      
+
       <div class="row">
           <label for="internetId" class="col-sm-3 col-form-label">Internet ID:</label>
           <div class="col-sm-6">
@@ -30,10 +30,10 @@
           </small>
         </div>
       </div>
-        
+
 
     <div class="form-group row">
-            
+
             </div>
             <div class="col-sm-3">
                 <button class="btn btn-primary" @click="lookupUser">Find User</button>
@@ -59,7 +59,7 @@
             }
         },
         watch: {
-            show: function(newVal, oldVal) {
+            show: function(newVal) {
                 if(newVal) {
                     this.$nextTick(() => {
                         this.$refs.findMemberRef.focus();
@@ -79,7 +79,7 @@
                 .then(res => {
                    if(res.data.users.length == 1) {
                         this.$router.push({ name: 'user', params: {'userId': res.data.users[0].id}});
-                        this.close();  
+                        this.close();
                    }
                    else {
                         this.$router.push({ name: 'userList', query: {'users': res.data.users.map(u=> u.id)}});
@@ -89,7 +89,7 @@
                 .catch(err => {
                     this.findUserError = err.response.data.message;
                 });
-                
+
             }
         }
     }

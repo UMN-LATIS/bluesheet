@@ -58,7 +58,7 @@
             }
         },
         watch: {
-            show: function(newVal, oldVal) {
+            show: function(newVal) {
                 if(newVal) {
                     this.$nextTick(() => {
                         this.$refs.groupNameRef.focus();
@@ -72,7 +72,7 @@
                 this.groupTypes = res.data.sort((a, b) => a.label.localeCompare(b.label));
             })
             .catch(err => {
-
+                console.error(err);
             });
         },
         methods: {
@@ -102,7 +102,7 @@
                 .catch(err => {
                     this.groupNameError = err.response.data.message;
                 });
-                
+
             }
         }
     }

@@ -117,13 +117,13 @@ const store = new Vuex.Store({
       if (state.favorites[type].filter((f) => f.id == item.id).length > 0) {
         axios
           .delete("/api/user/favorite/" + type + "/" + item.id)
-          .then((response) => {
+          .then(() => {
             commit("removeFavorite", payload);
           });
       } else {
         axios
           .post("/api/user/favorite/" + type + "/" + item.id)
-          .then((response) => {
+          .then(() => {
             commit("addFavorite", payload);
           });
       }
@@ -227,7 +227,7 @@ const router = new VueRouter({
   ],
 });
 
-const app = new Vue({
+new Vue({
   el: "#app",
   store,
   router,
