@@ -42,11 +42,12 @@ export default {
             throw new Error(`Cannot compute titleItem in Favorites: Unknown type: ${this.type}`);
         },
         sortedList: function () {
+            let sortItem = [];
             if(this.type =="group") {
-                var sortItem = this.$store.state.favorites.groups;
+                sortItem = this.$store.state.favorites.groups;
             }
             if(this.type =="role") {
-                var sortItem = this.$store.state.favorites.roles;
+                sortItem = this.$store.state.favorites.roles;
             }
                 return sortItem.sort(function (a, b) {
                     let modifier = 1;
