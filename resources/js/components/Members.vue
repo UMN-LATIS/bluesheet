@@ -188,7 +188,7 @@
                             membership.end_date).isAfter(this.$moment())) {
                         var searchTerm = null;
                         if (this.searchValue) {
-                            var searchTerm = this.searchValue.toLowerCase();
+                            searchTerm = this.searchValue.toLowerCase();
                         }
 
                         if (searchTerm === null || (membership.user.displayName.toLowerCase().includes(
