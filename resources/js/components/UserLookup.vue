@@ -34,7 +34,6 @@
 
     <div class="form-group row">
 
-            </div>
             <div class="col-sm-3">
                 <button class="btn btn-primary" @click="lookupUser">Find User</button>
             </div>
