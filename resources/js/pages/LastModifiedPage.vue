@@ -77,7 +77,7 @@
         },
         computed: {
             sortedList: function () {
-                return this.groupList.sort(function (a, b) {
+                return [...this.groupList].sort(function (a, b) {
                     let modifier = 1;
                     if (this.currentSortDir === 'desc') modifier = -1;
 
