@@ -5,7 +5,7 @@
         <ul>
             <li>
                 All department administrators for <router-link :to="{ name: 'role', params: { roleId: 23 } }">academic
-                </router-link> and <router-link :to="{ name: 'role', params: { roleId: 39 } }">non-academic units
+                </router-link> and <router-link :to="{ name: 'role', params: { roleId: 39 } }">non-academic units
                 </router-link>
             </li>
             <li>
@@ -46,7 +46,7 @@
             }
         },
         async mounted() {
-            
+
             for(let group of this.groupsToLoad) {
                 var groupData = await axios.get("/api/group/" + group)
                 await axios.get("/api/group/" + group + "/members")
@@ -57,7 +57,7 @@
                     })];
                 });
             }
-            
+
             const roleList = [
                 {
                     "roleId": 22, // academic chair
@@ -85,19 +85,19 @@
                         filteredMembers = res.data.members.filter(m => m.group.group_type_id == role.groupType);
                     }
                     else {
-                        filteredMembers = res.data.members;;
+                        filteredMembers = res.data.members;
                     }
                     this.groupList = [...this.groupList, ... filteredMembers];
                 })
             }
-            
+
 
         },
         computed: {
-           
+
         },
         methods: {
-            
+
         }
     }
 
