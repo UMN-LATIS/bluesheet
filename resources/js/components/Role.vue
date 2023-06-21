@@ -54,7 +54,6 @@
                     return element;
                 }
                 else {
-                    var element;
                     if(element.children) {
                         for (const child of element.children) {
                             element = this.findLeaf(child, id);
