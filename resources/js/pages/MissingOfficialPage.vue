@@ -4,7 +4,7 @@
                 <label for="officialRole" class="col-sm-2 col-form-label">Filter by Official Role</label>
                 <div class="col-sm-6">
                     <v-select v-if="officialRoles" id="groupTypes"  v-model="officialRoleFilter" :options="officialRoles" placeholder="Select..."></v-select>
-                 
+
                 </div>
         </div>
       <table class="table">
@@ -57,16 +57,16 @@ export default {
                 let modifier = 1;
                 if (this.currentSortDir === 'desc') modifier = -1;
 
-                var a = window._.get(a, this.currentSort) || " ";
-                var b = window._.get(b, this.currentSort) || " ";
+                const aCurrentSort = window._.get(a, this.currentSort) || " ";
+                const bCurrentSort = window._.get(b, this.currentSort) || " ";
 
-                if (a.toLowerCase() < b.toLowerCase()) return -1 * modifier;
-                if (a.toLowerCase() > b.toLowerCase()) return 1 * modifier;
+                if (aCurrentSort.toLowerCase() < bCurrentSort.toLowerCase()) return -1 * modifier;
+                if (aCurrentSort.toLowerCase() > bCurrentSort.toLowerCase()) return 1 * modifier;
                 return 0;
             }).filter(g => this.unfilledRoles(g).length > 0);
         },
         officialRoles: function () {
-            return this.roles.filter(r => 
+            return this.roles.filter(r =>
                 r.official_group_type?r.official_group_type.map(gt=>gt.label)[0].includes("Department"):false
             );
         },
@@ -110,6 +110,6 @@ export default {
         });
     }
 
-    
+
 }
 </script>
