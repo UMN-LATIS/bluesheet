@@ -37,8 +37,6 @@ export default {
             includePastRoles: false
         }
     },
-    mounted() {
-    },
     computed: {
         filteredList: function() {
             return this.sortedList.filter(function(role) {
