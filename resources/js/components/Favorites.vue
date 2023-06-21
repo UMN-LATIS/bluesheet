@@ -39,6 +39,7 @@ export default {
             if(this.type == "role") {
                 return "label";
             }
+            throw new Error(`Cannot compute titleItem in Favorites: Unknown type: ${this.type}`);
         },
         sortedList: function () {
             if(this.type =="group") {
