@@ -1,6 +1,6 @@
 <template>
     <div>
-      
+
         <h1>{{ user.displayName }}</h1>
         <ul>
             <li v-if="user.title"><strong>Title: </strong>{{user.title}}</li>
@@ -25,11 +25,6 @@ ul li {
 <script>
     export default {
         props: ['user'],
-        data() {
-            return {
-            
-            }
-        },
         computed: {
             usernameOnly: function() {
                 return this.user.email.split("@").shift();
@@ -38,10 +33,5 @@ ul li {
                 return this.user.office.replace(/ \$ /g, "<br />");
             }
         },
-        mounted() {
-        },
-        methods: {
-            
-        }
     }
 </script>
