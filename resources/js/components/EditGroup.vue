@@ -14,13 +14,15 @@
                     <div class="col-sm-6">
                         <div class="form-group">
                             <label for="groupTitle" class="small">Group Title</label>
-                            <input id="groupTitle" class="form-control" type="text" v-model="group.group_title">
+                            <input id="groupTitle" class="form-control" type="text"
+                            v-model="localGroup.group_title"
+                            >
                         </div>
                     </div>
                     <div class="col-sm-3">
                         <div class="form-group">
                             <label for="abbreviation" class="small">Abbreviation</label>
-                            <input id="abbreviation" class="form-control" v-model="group.abbreviation">
+                            <input id="abbreviation" class="form-control" v-model="localGroup.abbreviation">
                         </div>
                     </div>
                     <div class="col-sm-3">
@@ -34,7 +36,7 @@
                     <div class="col-sm-4">
                         <div class="form-group">
                             <label for="groupType" class="small">Group Type</label>
-                            <v-select v-if="groupTypes" id="roles" taggable v-model="group.group_type"
+                            <v-select v-if="groupTypes" id="roles" taggable v-model="localGroup.group_type"
                                 :options="groupTypes" data-cy="groupType"></v-select>
                         </div>
                     </div>
@@ -42,13 +44,13 @@
                     <div class="col-sm-4">
                         <div class="form-group">
                             <label for="parentOrganization" class="small">Folder</label>
-                            <folder-widget v-model="group.parent_organization.id"></folder-widget>
+                            <folder-widget v-model="localGroup.parent_organization.id"></folder-widget>
                         </div>
                     </div>
                     <div class="col-sm-4">
                         <div class="form-group">
                             <label for="parentGroup" class="small">Parent Group</label>
-                            <v-select v-if="groups" id="groups" v-model="group.parent_group_id" :options="groups"
+                            <v-select v-if="groups" id="groups" v-model="localGroup.parent_group_id" :options="groups"
                                 :reduce="parent_group => parent_group.id"></v-select>
                         </div>
                     </div>
@@ -58,12 +60,12 @@
                 <div class="row">
                     <div class="col-md-6">
                         <label for="googleGroup" class="small">Google Group Name</label>
-                        <input id="googleGroup" class="form-control" v-model="group.google_group">
+                        <input id="googleGroup" class="form-control" v-model="localGroup.google_group">
                     </div>
                     <div class="col-sm-3">
                         <div class="form-group">
                             <label for="abbreviation" class="small">Department ID</label>
-                            <input id="abbreviation" class="form-control" v-model="group.dept_id">
+                            <input id="abbreviation" class="form-control" v-model="localGroup.dept_id">
                         </div>
                     </div>
                 </div>
@@ -88,7 +90,7 @@
           </div> -->
                     <div class="col-md-6">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" v-model="group.show_unit" id="showunit">
+                            <input class="form-check-input" type="checkbox" v-model="localGroup.show_unit" id="showunit">
                             <label class="form-check-label small" for="showunit">
                                 Show Unit
                             </label>
@@ -98,7 +100,7 @@
                 <div class="row">
                     <div class="col-md-12">
                         <label for="groupNotes" class="small">Group Notes</label>
-                        <textarea id="groupNotes" class="form-control" v-model="group.notes"></textarea>
+                        <textarea id="groupNotes" class="form-control" v-model="localGroup.notes"></textarea>
                     </div>
                 </div>
 
@@ -117,7 +119,7 @@
                         <p>Artifacts:</p>
                     </div>
                 </div>
-                <div class="form-row" v-for="(artifact, key) in group.artifacts" :key="key">
+                <div class="form-row" v-for="(artifact, key) in localGroup.artifacts" :key="key">
 
                     <div class="form-group col-md-5">
                         <input type="" v-model="artifact.label" class="form-control" placeholder="Label">
@@ -142,8 +144,8 @@
                 <p>Members:</p>
             </div>
         </div>
-        <members :groupType="group.group_type.label" :members.sync="group.members" :show_unit="group.show_unit"
-            editing="true" :roles="filteredRoles" viewType="group" :downloadTitle="group.group_title"></members>
+        <members :groupType="localGroup.group_type.label" :members.sync="localGroup.members" :show_unit="localGroup.show_unit"
+            editing="true" :roles="filteredRoles" viewType="group" :downloadTitle="localGroup.group_title"></members>
 
 
         <div class="row border border-danger rounded deactivate">
@@ -230,6 +232,9 @@
         props: ['group'],
         data() {
             return {
+                // copy of the group object to avoid
+                // mutating the prop directly
+                localGroup: this.group,
                 addMember: false,
                 newUserId: null,
                 newRole: null,
@@ -238,7 +243,7 @@
                 saveError: null,
                 roles: null,
                 groupTypes: null,
-                groups: null
+                groups: null,
             }
         },
         mounted() {
@@ -252,8 +257,8 @@
             axios.get("/api/group/types")
                 .then(res => {
                     this.groupTypes = res.data;
-                    if (this.groupTypes.filter(e => e.id == this.group.group_type.id).length == 0) {
-                        this.groupTypes.push(this.group.group_type);
+                    if (this.groupTypes.filter(e => e.id == this.localGroup.group_type.id).length == 0) {
+                        this.groupTypes.push(this.localGroup.group_type);
                     }
                     this.groupTypes = this.groupTypes.sort((a, b) => {
                         return a.label.localeCompare(b.label);
@@ -266,7 +271,7 @@
 
             axios.get("/api/group")
                 .then(res => {
-                    this.groups = res.data.filter(e => e.active_group).filter(e => e.id != this.group.id).map(e => {
+                    this.groups = res.data.filter(e => e.active_group).filter(e => e.id != this.localGroup.id).map(e => {
                         return {
                             id: e.id,
                             label: e.group_title
@@ -298,7 +303,7 @@
             },
             groupURL: function () {
                 return window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' +
-                    window.location.port : '') + "/group/" + this.group.id + "/" + this.group.secret_hash;
+                    window.location.port : '') + "/group/" + this.localGroup.id + "/" + this.localGroup.secret_hash;
             }
         },
         methods: {
@@ -308,7 +313,7 @@
                     return;
                 }
 
-                axios.patch("/api/group/" + this.group.id, this.group)
+                axios.patch("/api/group/" + this.localGroup.id, this.localGroup)
                     .then(({
                         data
                     }) => {
@@ -325,7 +330,7 @@
             checkForm: function () {
                 this.saveError = null;
 
-                for (var member of this.group.members) {
+                for (var member of this.localGroup.members) {
                     if (!member.role) {
                         this.saveError = "Every member must have a role assigned";
                         this.showError = true;
@@ -333,7 +338,7 @@
                     }
                 }
 
-                if (this.group.group_type == null) {
+                if (this.localGroup.group_type == null) {
                     this.saveError = "You must select a group type";
                     this.showError = true;
                     return false;
@@ -343,10 +348,10 @@
 
             },
             removeArtifact: function (index) {
-                this.group.artifacts.splice(index, 1);
+                this.localGroup.artifacts.splice(index, 1);
             },
             addArtifact: function () {
-                this.group.artifacts.push({
+                this.localGroup.artifacts.push({
                     label: "",
                     target: ""
                 });
@@ -354,7 +359,7 @@
             deactivate: function () {
                 if (confirm("Are you sure you want to deactivate this group?")) {
 
-                    axios.delete("/api/group/" + this.group.id)
+                    axios.delete("/api/group/" + this.localGroup.id)
                         .then(() => {
                             this.$router.push({
                                 name: 'home'
@@ -374,13 +379,13 @@
                     .then(res => {
                         for (var user of res.data.users) {
                             var newMembershipRecord = {
-                                group_id: this.group.id,
+                                group_id: this.localGroup.id,
                                 start_date: this.$moment().format("YYYY-MM-DD"),
                                 end_date: null,
                                 user: user,
                                 role: this.newRole
                             };
-                            this.group.members.push(newMembershipRecord);
+                            this.localGroup.members.push(newMembershipRecord);
                         }
 
 
