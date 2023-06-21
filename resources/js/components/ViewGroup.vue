@@ -56,7 +56,7 @@ export default {
             if(this.$store.state.favorites["groups"]) {
                 return this.$store.state.favorites["groups"].filter(g => g.id == this.group.id).length > 0;
             }
-
+            return false;
         },
         filteredRoles: function () {
             if (!this.roles) {
