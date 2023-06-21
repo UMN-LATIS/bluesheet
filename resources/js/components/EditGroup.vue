@@ -117,7 +117,7 @@
                         <p>Artifacts:</p>
                     </div>
                 </div>
-                <div class="form-row" v-for="(artifact, key) in group.artifacts">
+                <div class="form-row" v-for="(artifact, key) in group.artifacts" :key="key">
 
                     <div class="form-group col-md-5">
                         <input type="" v-model="artifact.label" class="form-control" placeholder="Label">
