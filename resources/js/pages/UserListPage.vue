@@ -17,7 +17,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="user in loadedUsers">
+                <tr v-for="user in loadedUsers" :key="user.id">
                     <td>
                         <router-link :to="{ name: 'user', params: { userId: user.id } }" v-if="user.id">
                             {{ user.surname }}, {{ user.givenname }}
