@@ -6,7 +6,7 @@ namespace App\Library;
 class LDAP
 {
 
-	public static function lookupUser($lookupValue, $lookupType="cn", $existingUser =null) {
+	public static function lookupUser($lookupValue, $lookupType="uid", $existingUser =null) {
 		$connect = LDAP::getConnection();
         $base_dn = array("o=University of Minnesota, c=US",);
         $filter = "(" . $lookupType . "=" . $lookupValue . ")";
@@ -45,7 +45,7 @@ class LDAP
         return $foundUser;
 	}
 
-    public static function userSearch($lookupValue, $lookupType="cn") {
+    public static function userSearch($lookupValue, $lookupType="uid") {
         $connect = LDAP::getConnection();
         $base_dn = array("o=University of Minnesota, c=US",);
         $filter = "(" . $lookupType . "=" . $lookupValue . ")";
