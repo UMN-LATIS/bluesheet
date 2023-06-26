@@ -19,7 +19,7 @@
 
 <div class="form-group">
   <label for="">Official Role Group Type</label>
-  <select class="form-control" name="groupType" id="">
+  <select class="form-control" name="groupType[]" id="" multiple size=10>
       <option></option>
     @foreach ( \App\GroupType::all() as $groupType)
     <option value={{ $groupType->id }} {{ ($role->officialGroupType->contains($groupType->id))?"SELECTED":null }}>{{ $groupType->label }}</option>
