@@ -20,5 +20,8 @@ class TestDatabaseSeeder extends Seeder
         $this->call(TestGroupsRolesTableSeeder::class);
         $this->call(TestGroupsGroupTypeRoleTableSeeder::class);
         $this->call(ParentOrganizationsTableSeeder::class);
+
+        $user = \App\User::find(1);
+        $user->assignRole('admin');
     }
 }
