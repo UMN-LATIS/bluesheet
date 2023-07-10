@@ -33,7 +33,7 @@
                         Lookup <i class="fas fa-users"></i></a>
                 </navbar-item>
                 <navbar-item>
-                    <a class="nav-link" href="https://umn-latis.github.io/Caligari/" target="_blank">Help <i
+                    <a class="nav-link" href="https://umn-latis.github.io/bluesheet/" target="_blank">Help <i
                             class="fas fa-question-circle"></i></a>
                 </navbar-item>
                 <navbar-item>

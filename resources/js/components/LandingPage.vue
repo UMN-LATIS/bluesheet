@@ -7,7 +7,7 @@
                 <p>BlueSheet provides easy access to information about the roles people hold, and the groups they're a
                     member of. Below are some of the most frequently accessed lists. As you browse the site, use the
                     "star" icon to flag your most commonly accessed groups and roles. They'll show up on this home
-                    screen next time you log in. Check our <a href="https://umn-latis.github.io/Caligari/">help
+                    screen next time you log in. Check our <a href="https://umn-latis.github.io/bluesheet/">help
                         guide</a> for more information, or <a href="mailto:latistecharch@umn.edu">contact us</a> to
                     arrange a personal orientation.</p>
             </div>
