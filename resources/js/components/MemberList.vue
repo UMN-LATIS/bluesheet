@@ -1,14 +1,14 @@
 <template>
   <tbody>
-    <tr :key="key" v-for="(member, key) in filteredList">
+    <tr v-for="(member, key) in filteredList" :key="key">
       <td v-if="filterList">
-        <input type="checkbox" v-model="member.filtered" />
+        <input v-model="member.filtered" type="checkbox" />
       </td>
 
       <td>
         <router-link
-          :to="{ name: 'user', params: { userId: member.user.id } }"
           v-if="member.user.id && $can('view users')"
+          :to="{ name: 'user', params: { userId: member.user.id } }"
         >
           {{ member.user.surname }}, {{ member.user.givenname }}
         </router-link>
@@ -21,21 +21,21 @@
       <template v-if="viewType == 'group'">
         <td v-if="!editing">{{ member.role.label }}</td>
         <td v-if="editing">
-          <v-select
-            taggable
-            v-model="member.role"
-            :options="roles"
+          <VSelect
             v-if="roles"
-          ></v-select>
+            v-model="member.role"
+            taggable
+            :options="roles"
+          ></VSelect>
         </td>
       </template>
 
       <td v-if="viewType == 'role'">
         <router-link
-          :to="{ name: 'group', params: { groupId: member.group.id } }"
           v-if="member.group.id && $can('edit users')"
+          :to="{ name: 'group', params: { groupId: member.group.id } }"
         >
-          <group-title :group="member.group" />
+          <GroupTitle :group="member.group" />
         </router-link>
         <span v-if="!member.group.id || !$can('edit users')">{{
           member.group.group_title
@@ -44,7 +44,7 @@
 
       <td v-if="!editing">{{ member.notes }}</td>
       <td v-if="editing">
-        <input class="form-control" v-model="member.notes" />
+        <input v-model="member.notes" class="form-control" />
       </td>
 
       <td v-if="!editing">{{ member.start_date | moment("YYYY, MMM Do") }}</td>
@@ -82,9 +82,9 @@
       </td>
       <td v-if="editing" class="text-right">
         <input
+          v-model="member.admin"
           class="form-check-input"
           type="checkbox"
-          v-model="member.admin"
         />
       </td>
       <td v-if="editing">
@@ -95,6 +95,30 @@
     </tr>
   </tbody>
 </template>
+
+<script>
+import VSelect from "vue-select";
+import GroupTitle from "./GroupTitle.vue";
+
+export default {
+  components: {
+    VSelect,
+    GroupTitle,
+  },
+  props: [
+    "editing",
+    "filteredList",
+    "filterList",
+    "includePreviousMembers",
+    "roles",
+    "show_unit",
+    "viewType",
+  ],
+  data() {
+    return {};
+  },
+};
+</script>
 
 <style>
 .vs__selected-options {
@@ -108,27 +132,3 @@
   width: 300px;
 }
 </style>
-
-<script>
-import VSelect from "vue-select";
-import GroupTitle from "./GroupTitle.vue";
-
-export default {
-  props: [
-    "editing",
-    "filteredList",
-    "filterList",
-    "includePreviousMembers",
-    "roles",
-    "show_unit",
-    "viewType",
-  ],
-  components: {
-    VSelect,
-    GroupTitle,
-  },
-  data() {
-    return {};
-  },
-};
-</script>

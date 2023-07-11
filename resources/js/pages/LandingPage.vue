@@ -18,14 +18,14 @@
       </div>
     </div>
 
-    <div class="row mt-5" v-if="$store.state.user">
-      <div class="col" v-if="$store.state.favorites.groups.length > 0">
+    <div v-if="$store.state.user" class="row mt-5">
+      <div v-if="$store.state.favorites.groups.length > 0" class="col">
         <h3>Favorite Groups</h3>
-        <favorites :user="$store.state.user" type="group"></favorites>
+        <Favorites :user="$store.state.user" type="group"></Favorites>
       </div>
-      <div class="col" v-if="$store.state.favorites.roles.length > 0">
+      <div v-if="$store.state.favorites.roles.length > 0" class="col">
         <h3>Favorite Roles</h3>
-        <favorites :user="$store.state.user" type="role"></favorites>
+        <Favorites :user="$store.state.user" type="role"></Favorites>
       </div>
     </div>
     <div class="row mt-5">

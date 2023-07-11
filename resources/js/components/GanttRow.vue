@@ -12,9 +12,9 @@
     <td>{{ member.user.displayName }}</td>
     <td colspan="6">
       <div
-        class="ganttBubble"
-        v-bind:style="{ width: width + '%', 'margin-left': startPercent + '%' }"
         v-tooltip.top-center="toolTipText"
+        class="ganttBubble"
+        :style="{ width: width + '%', 'margin-left': startPercent + '%' }"
       ></div>
     </td>
   </tr>
@@ -28,10 +28,10 @@ $(function () {
 });
 export default {
   props: ["member", "mindate", "maxdate", "show_unit", "filterList"],
+  emits: ["update:member"],
   data() {
     return {};
   },
-  emits: ["update:member"],
   computed: {
     toolTipText: function () {
       var returnString = this.member.user.displayName + "<br>";

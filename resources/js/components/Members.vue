@@ -12,35 +12,35 @@
       >
       <button
         class="btn btn-primary"
-        v-bind:class="{ active: filterList }"
+        :class="{ active: filterList }"
         aria-pressed="false"
         @click="filterList = !filterList"
       >
         Filter List
       </button>
     </template>
-    <modal :show="showEmailList" @close="showEmailList = !showEmailList">
+    <Modal :show="showEmailList" @close="showEmailList = !showEmailList">
       <div class="row">
         <div class="col-md-12">
           <p>Email list:</p>
           <textarea
             class="form-control"
-            @click="$event.target.select()"
             :value="emailList"
             rows="10"
+            @click="$event.target.select()"
           ></textarea>
         </div>
       </div>
-    </modal>
+    </Modal>
 
     <div class="row controlRow">
       <div class="col">
         <div class="form-check float-right checkContainer">
           <input
+            id="pastMembers"
+            v-model="includePreviousMembers"
             class="form-check-input"
             type="checkbox"
-            v-model="includePreviousMembers"
-            id="pastMembers"
           />
           <label class="form-check-label" for="pastMembers">
             Include Previous Members
@@ -50,12 +50,12 @@
     </div>
     <div class="row controlRow">
       <div class="col">
-        <div class="search-container" v-bind:class="{ expandBox: showSearch }">
+        <div class="search-container" :class="{ expandBox: showSearch }">
           <input
+            v-if="showSearch"
+            ref="searchbox"
             v-model="searchValue"
             class="searchBox"
-            ref="searchbox"
-            v-if="showSearch"
             placeholder="Search"
           />
           <a class="button" @click="showSearch = !showSearch">
@@ -67,23 +67,23 @@
         <div class="btn-group btn-group-toggle float-right">
           <label
             class="btn btn-outline-secondary"
-            v-bind:class="{ active: !showGantt }"
+            :class="{ active: !showGantt }"
           >
             <input
+              v-model="showGantt"
               type="radio"
               name="viewOptions"
-              v-model="showGantt"
               :value="false"
             />List
           </label>
           <label
             class="btn btn-outline-secondary"
-            v-bind:class="{ active: showGantt }"
+            :class="{ active: showGantt }"
           >
             <input
+              v-model="showGantt"
               type="radio"
               name="viewOptions"
-              v-model="showGantt"
               :value="true"
             />Chart
           </label>
@@ -94,99 +94,98 @@
     <table class="table">
       <thead>
         <tr>
-          <th scope="col" v-if="filterList" width="5%">Filter</th>
+          <th v-if="filterList" scope="col" width="5%">Filter</th>
           <th scope="col">
-            <sortableLink
+            <SortableLink
               sortLabel="Name"
               sortElement="user.surname"
               :currentSort="currentSort"
               :currentSortDir="currentSortDir"
-              v-on:sort="sort"
+              @sort="sort"
             />
           </th>
           <th v-if="show_unit && !showGantt && viewType == 'group'" scope="col">
-            <sortableLink
+            <SortableLink
               sortLabel="Unit"
               sortElement="user.ou"
               :currentSort="currentSort"
               :currentSortDir="currentSortDir"
-              v-on:sort="sort"
+              @sort="sort"
             />
           </th>
           <th v-if="!showGantt && viewType == 'group'" scope="col">
-            <sortableLink
+            <SortableLink
               sortLabel="Role"
               sortElement="role.label"
               :currentSort="currentSort"
               :currentSortDir="currentSortDir"
-              v-on:sort="sort"
+              @sort="sort"
             />
           </th>
 
           <th v-if="!showGantt && viewType == 'role'" scope="col">
-            <sortableLink
+            <SortableLink
               sortLabel="Group"
               sortElement="group.group_title"
               :currentSort="currentSort"
               :currentSortDir="currentSortDir"
-              v-on:sort="sort"
+              @sort="sort"
             />
           </th>
 
           <th v-if="!showGantt" scope="col">
-            <sortableLink
+            <SortableLink
               sortLabel="Notes"
               sortElement="notes"
               :currentSort="currentSort"
               :currentSortDir="currentSortDir"
-              v-on:sort="sort"
+              @sort="sort"
             />
           </th>
 
           <th v-if="!showGantt" scope="col">
-            <sortableLink
+            <SortableLink
               sortLabel="From"
               sortElement="start_date"
               :currentSort="currentSort"
               :currentSortDir="currentSortDir"
-              v-on:sort="sort"
+              @sort="sort"
             />
           </th>
 
           <th
-            scope="col"
             v-if="!showGantt && (includePreviousMembers || editing)"
+            scope="col"
           >
-            <sortableLink
+            <SortableLink
               sortLabel="Until"
               sortElement="end_date"
               :currentSort="currentSort"
               :currentSortDir="currentSortDir"
-              v-on:sort="sort"
+              @sort="sort"
             />
           </th>
           <th
+            v-if="!showGantt && !editing && viewType == 'group'"
             scope="col"
             width="11%"
-            v-if="!showGantt && !editing && viewType == 'group'"
           >
-            <sortableLink
+            <SortableLink
               sortLabel="Official Role"
               sortElement="role.official_group_type"
               :currentSort="currentSort"
               :currentSortDir="currentSortDir"
-              v-on:sort="sort"
+              @sort="sort"
             />
           </th>
-          <th scope="col" v-if="editing && !showGantt">Group Admin</th>
-          <th scope="col" v-if="editing && !showGantt">
+          <th v-if="editing && !showGantt" scope="col">Group Admin</th>
+          <th v-if="editing && !showGantt" scope="col">
             End Active Membership
           </th>
         </tr>
       </thead>
-      <member-list
+      <MemberList
         v-if="!showGantt"
-        v-on:remove="removeMember"
         :show_unit="show_unit"
         :roles="roles"
         :editing="editing"
@@ -194,9 +193,10 @@
         :filterList="filterList"
         :includePreviousMembers="includePreviousMembers"
         :viewType="viewType"
+        @remove="removeMember"
       >
-      </member-list>
-      <gantt
+      </MemberList>
+      <Gantt
         v-if="showGantt"
         :members="filteredList"
         :filterList="filterList"
@@ -204,11 +204,11 @@
         :maxdate="highestValue"
         :show_unit="show_unit"
         @update:member="handleUpdateMember"
-      ></gantt>
+      ></Gantt>
     </table>
     <div
-      class="card mt-3 mb-3 col-sm-6"
       v-if="officialRoles.length > 0 && unfilledRoles.length > 0 && editing"
+      class="card mt-3 mb-3 col-sm-6"
     >
       <div class="card-body">
         <h4 class="card-title">Unassigned Official Roles</h4>
@@ -217,16 +217,16 @@
           assigned to these official roles
         </p>
       </div>
-      <ul class="nav nav-tabs" id="myTab" role="tablist">
+      <ul id="myTab" class="nav nav-tabs" role="tablist">
         <li
-          class="nav-item"
           v-for="(officialCategory, index) in officialRoleCategories"
           :key="index"
+          class="nav-item"
         >
           <a
+            :id="officialCategory + '-tab'"
             class="nav-link"
             :class="{ active: index === 0 }"
-            :id="officialCategory + '-tab'"
             data-toggle="tab"
             :href="'#' + officialCategory"
             role="tab"
@@ -239,21 +239,21 @@
           >
         </li>
       </ul>
-      <div class="tab-content" id="myTabContent">
+      <div id="myTabContent" class="tab-content">
         <div
           v-for="(officialCategory, index) in officialRoleCategories"
+          :id="officialCategory"
           :key="index"
           class="tab-pane fade"
-          :id="officialCategory"
           role="tabpanel"
           aria-labelledby="officialCategory + '-tab'"
           :class="{ 'show active': index === 0 }"
         >
           <ul class="list-group list-group-flush">
             <li
-              class="list-group-item"
               v-for="officialRole in rolesForOfficialCategory(officialCategory)"
               :key="officialRole.id"
+              class="list-group-item"
             >
               {{ officialRole.label }}
             </li>
@@ -272,6 +272,13 @@ import Gantt from "./Gantt.vue";
 import Modal from "./Modal.vue";
 
 export default {
+  components: {
+    SortableLink,
+    DownloadCSV,
+    MemberList,
+    Gantt,
+    Modal,
+  },
   props: [
     "members",
     "editing",
@@ -282,13 +289,6 @@ export default {
     "downloadTitle",
   ],
   emits: ["update:members"],
-  components: {
-    SortableLink,
-    DownloadCSV,
-    MemberList,
-    Gantt,
-    Modal,
-  },
   data() {
     return {
       includePreviousMembers: false,
@@ -300,20 +300,6 @@ export default {
       showEmailList: false,
       filterList: false,
     };
-  },
-  watch: {
-    showSearch: function (newVal) {
-      if (newVal == true) {
-        setTimeout(
-          function () {
-            this.$refs.searchbox.focus();
-          }.bind(this),
-          250,
-        );
-      } else {
-        this.searchValue = null;
-      }
-    },
   },
   computed: {
     officialRoles: function () {
@@ -450,6 +436,20 @@ export default {
         };
         return userRow;
       });
+    },
+  },
+  watch: {
+    showSearch: function (newVal) {
+      if (newVal == true) {
+        setTimeout(
+          function () {
+            this.$refs.searchbox.focus();
+          }.bind(this),
+          250,
+        );
+      } else {
+        this.searchValue = null;
+      }
     },
   },
   methods: {

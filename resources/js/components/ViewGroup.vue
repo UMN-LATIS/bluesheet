@@ -15,19 +15,19 @@
           >
             <i
               class="fa-star"
-              v-bind:class="{ fas: groupFavorited, far: !groupFavorited }"
+              :class="{ fas: groupFavorited, far: !groupFavorited }"
             ></i>
             Favorite
           </button>
           <button
+            v-if="$can('edit groups') || group.user_can_edit"
             class="btn btn-outline-primary"
             @click="$emit('update:editing', true)"
-            v-if="$can('edit groups') || group.user_can_edit"
           >
             Edit Group
           </button>
         </div>
-        <h1><group-title :group="group" /></h1>
+        <h1><GroupTitle :group="group" /></h1>
         <ul class="groupInfo">
           <li v-if="group.parent_organization && $can('view groups')">
             Folder:
@@ -91,11 +91,11 @@
 
     <ul>
       <li v-for="(artifact, index) in group.artifacts" :key="index">
-        <a v-bind:href="artifact.target">{{ artifact.label }}</a>
+        <a :href="artifact.target">{{ artifact.label }}</a>
       </li>
     </ul>
 
-    <members
+    <Members
       :groupType="group.group_type.label"
       :members="group.members"
       :editing="false"
@@ -103,29 +103,27 @@
       :roles="filteredRoles"
       viewType="group"
       :downloadTitle="group.group_title"
-    ></members>
+    ></Members>
 
     <router-link
       v-if="$can('view groups')"
-      :to="{ name: 'userList', query: { groupId: this.group.id } }"
+      :to="{ name: 'userList', query: { groupId: group.id } }"
       class="btn btn-outline-secondary"
       >View membership counts</router-link
     >
   </div>
 </template>
 
-<style scoped></style>
-
 <script>
 import GroupTitle from "./GroupTitle.vue";
 import Members from "./Members.vue";
 
 export default {
-  props: ["group", "editing"],
   components: {
     GroupTitle,
     Members,
   },
+  props: ["group", "editing"],
   data() {
     return {
       roles: [],
@@ -167,6 +165,8 @@ export default {
   },
 };
 </script>
+
+<style scoped></style>
 
 <style scoped>
 .row {

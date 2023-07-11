@@ -15,10 +15,10 @@
 <script>
 import TreeSelect from "@riophae/vue-treeselect";
 export default {
-  props: ["value"],
   components: {
     TreeSelect,
   },
+  props: ["value"],
   data() {
     return {
       parentOrganizations: [],
@@ -33,6 +33,16 @@ export default {
         this.$emit("input", val);
       },
     },
+  },
+  mounted: function () {
+    axios
+      .get("/api/group/parents")
+      .then((res) => {
+        this.parentOrganizations = this.remapParents(res.data);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
   },
   methods: {
     remapParents: function (p) {
@@ -50,16 +60,6 @@ export default {
         return result;
       });
     },
-  },
-  mounted: function () {
-    axios
-      .get("/api/group/parents")
-      .then((res) => {
-        this.parentOrganizations = this.remapParents(res.data);
-      })
-      .catch((err) => {
-        console.error(err);
-      });
   },
 };
 </script>

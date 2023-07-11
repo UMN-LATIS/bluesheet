@@ -1,11 +1,11 @@
 <template>
   <div>
-    <modal :show="showError" @close="showError = !error">
-      <div class="alert alert-danger col-sm-12" role="alert" v-if="saveError">
+    <Modal :show="showError" @close="showError = !error">
+      <div v-if="saveError" class="alert alert-danger col-sm-12" role="alert">
         {{ saveError }}
       </div>
       <button class="btn btn-primary" @click="showError = false">Close</button>
-    </modal>
+    </Modal>
     <div class="row">
       <div class="col-md-12">
         <div class="form-group row">
@@ -14,9 +14,9 @@
               <label for="groupTitle" class="small">Group Title</label>
               <input
                 id="groupTitle"
+                v-model="localGroup.group_title"
                 class="form-control"
                 type="text"
-                v-model="localGroup.group_title"
               />
             </div>
           </div>
@@ -25,8 +25,8 @@
               <label for="abbreviation" class="small">Abbreviation</label>
               <input
                 id="abbreviation"
-                class="form-control"
                 v-model="localGroup.abbreviation"
+                class="form-control"
               />
             </div>
           </div>
@@ -49,35 +49,35 @@
           <div class="col-sm-4">
             <div class="form-group">
               <label for="groupType" class="small">Group Type</label>
-              <v-select
+              <VSelect
                 v-if="groupTypes"
                 id="roles"
-                taggable
                 v-model="localGroup.group_type"
+                taggable
                 :options="groupTypes"
                 data-cy="groupType"
-              ></v-select>
+              ></VSelect>
             </div>
           </div>
 
           <div class="col-sm-4">
             <div class="form-group">
               <label for="parentOrganization" class="small">Folder</label>
-              <folder-widget
+              <FolderWidget
                 v-model="localGroup.parent_organization.id"
-              ></folder-widget>
+              ></FolderWidget>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label for="parentGroup" class="small">Parent Group</label>
-              <v-select
+              <VSelect
                 v-if="groups"
                 id="groups"
                 v-model="localGroup.parent_group_id"
                 :options="groups"
                 :reduce="(parent_group) => parent_group.id"
-              ></v-select>
+              ></VSelect>
             </div>
           </div>
         </div>
@@ -87,8 +87,8 @@
             <label for="googleGroup" class="small">Google Group Name</label>
             <input
               id="googleGroup"
-              class="form-control"
               v-model="localGroup.google_group"
+              class="form-control"
             />
           </div>
           <div class="col-sm-3">
@@ -96,8 +96,8 @@
               <label for="abbreviation" class="small">Department ID</label>
               <input
                 id="abbreviation"
-                class="form-control"
                 v-model="localGroup.dept_id"
+                class="form-control"
               />
             </div>
           </div>
@@ -106,10 +106,10 @@
           <div class="col-md-6">
             <div class="form-check">
               <input
+                id="showunit"
+                v-model="localGroup.show_unit"
                 class="form-check-input"
                 type="checkbox"
-                v-model="localGroup.show_unit"
-                id="showunit"
               />
               <label class="form-check-label small" for="showunit">
                 Show Unit
@@ -122,8 +122,8 @@
             <label for="groupNotes" class="small">Group Notes</label>
             <textarea
               id="groupNotes"
-              class="form-control"
               v-model="localGroup.notes"
+              class="form-control"
             ></textarea>
           </div>
         </div>
@@ -143,14 +143,14 @@
           </div>
         </div>
         <div
-          class="form-row"
           v-for="(artifact, key) in localGroup.artifacts"
           :key="key"
+          class="form-row"
         >
           <div class="form-group col-md-5">
             <input
-              type=""
               v-model="artifact.label"
+              type=""
               class="form-control"
               placeholder="Label"
             />
@@ -181,16 +181,16 @@
         <p>Members:</p>
       </div>
     </div>
-    <members
+    <Members
+      v-model:members="localGroup.members"
       :groupType="localGroup.group_type.label"
-      :members.sync="localGroup.members"
       :show_unit="localGroup.show_unit"
       editing="true"
       :roles="filteredRoles"
       viewType="group"
       :downloadTitle="localGroup.group_title"
       @update:members="handleUpdateMembers"
-    ></members>
+    ></Members>
 
     <div class="row border border-danger rounded deactivate">
       <div class="col-sm-12">
@@ -204,19 +204,19 @@
       </div>
     </div>
 
-    <modal :show="addMember" @close="addMember = !addMember">
+    <Modal :show="addMember" @close="addMember = !addMember">
       <div class="row">
         <label for="nameLookup" class="col-sm-3 col-form-label">Name:</label>
         <div class="col-sm-6">
           <AutoComplete
-            source="/api/autocompleter/user?searchType=nameAndInternetId&q="
             id="nameLookup"
+            ref="userAutocompleter"
+            v-model="newUserId"
+            source="/api/autocompleter/user?searchType=nameAndInternetId&q="
             resultsProperty="items"
             resultsDisplay="full_name"
             resultsValue="mail"
-            ref="userAutocompleter"
             inputClass="form-control"
-            v-model="newUserId"
           />
           <small id="addUserHelpBlock" class="form-text text-muted">
             Optional: Enter a name and select the person from the list
@@ -230,14 +230,14 @@
         >
         <div class="col-sm-6">
           <input
-            type="text"
-            ref="addMemberRef"
-            class="form-control"
             id="internetId"
-            v-on:keyup="addMemberError = null"
-            @keyup.enter="lookupMember"
-            placeholder="Internet ID"
+            ref="addMemberRef"
             v-model="newUserId"
+            type="text"
+            class="form-control"
+            placeholder="Internet ID"
+            @keyup="addMemberError = null"
+            @keyup.enter="lookupMember"
           />
           <small id="addUserHelpBlock" class="form-text text-muted">
             Enter one or more InternetIds or email addresses (comma-separated).
@@ -249,13 +249,13 @@
       <div class="row">
         <label for="roles" class="col-sm-3 col-form-label">Role:</label>
         <div class="col-sm-6">
-          <v-select
+          <VSelect
             v-if="roles"
             id="roles"
-            taggable
             v-model="newRole"
+            taggable
             :options="filteredRoles"
-          ></v-select>
+          ></VSelect>
         </div>
         <div class="col-sm-3">
           <button
@@ -269,32 +269,16 @@
       </div>
       <div class="row">
         <div
+          v-if="addMemberError"
           class="alert alert-danger col-sm-12"
           role="alert"
-          v-if="addMemberError"
         >
           {{ addMemberError }}
         </div>
       </div>
-    </modal>
+    </Modal>
   </div>
 </template>
-
-<style scoped>
-.row {
-  margin-top: 10px;
-  margin-bottom: 10px;
-}
-
-button {
-  margin-left: 5px;
-  margin-right: 5px;
-}
-
-.deactivate {
-  padding: 10px;
-}
-</style>
 
 <script>
 import VSelect from "vue-select";
@@ -304,7 +288,6 @@ import FolderWidget from "./FolderWidget.vue";
 import AutoComplete from "vuejs-auto-complete";
 
 export default {
-  props: ["group"],
   components: {
     VSelect,
     Members,
@@ -312,6 +295,7 @@ export default {
     FolderWidget,
     AutoComplete,
   },
+  props: ["group"],
   data() {
     return {
       // copy of the group object to avoid
@@ -327,6 +311,35 @@ export default {
       groupTypes: null,
       groups: null,
     };
+  },
+  computed: {
+    filteredRoles: function () {
+      if (!this.roles) {
+        return [];
+      }
+      return this.roles;
+    },
+    groupURL: function () {
+      return (
+        window.location.protocol +
+        "//" +
+        window.location.hostname +
+        (window.location.port ? ":" + window.location.port : "") +
+        "/group/" +
+        this.localGroup.id +
+        "/" +
+        this.localGroup.secret_hash
+      );
+    },
+  },
+  watch: {
+    addMember: function (newVal) {
+      if (newVal == true) {
+        this.$nextTick(() => {
+          this.$refs.addMemberRef.focus();
+        });
+      }
+    },
   },
   mounted() {
     axios
@@ -374,35 +387,6 @@ export default {
       .catch((err) => {
         console.error(err);
       });
-  },
-  watch: {
-    addMember: function (newVal) {
-      if (newVal == true) {
-        this.$nextTick(() => {
-          this.$refs.addMemberRef.focus();
-        });
-      }
-    },
-  },
-  computed: {
-    filteredRoles: function () {
-      if (!this.roles) {
-        return [];
-      }
-      return this.roles;
-    },
-    groupURL: function () {
-      return (
-        window.location.protocol +
-        "//" +
-        window.location.hostname +
-        (window.location.port ? ":" + window.location.port : "") +
-        "/group/" +
-        this.localGroup.id +
-        "/" +
-        this.localGroup.secret_hash
-      );
-    },
   },
   methods: {
     handleUpdateMembers: function (members) {
@@ -502,3 +486,19 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.row {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+button {
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+.deactivate {
+  padding: 10px;
+}
+</style>

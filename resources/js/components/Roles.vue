@@ -2,10 +2,10 @@
   <div>
     <div class="form-check float-right">
       <input
+        id="pastRoles"
+        v-model="includePastRoles"
         class="form-check-input"
         type="checkbox"
-        v-model="includePastRoles"
-        id="pastRoles"
       />
       <label class="form-check-label" for="pastRoles">
         Include Past Roles
@@ -24,12 +24,12 @@
         <tr v-for="(membership, index) in filteredList" :key="index">
           <td>
             <router-link
-              :to="{ name: 'group', params: { groupId: membership.group.id } }"
               v-if="membership.group.id"
-              ><group-title :group="membership.group"
+              :to="{ name: 'group', params: { groupId: membership.group.id } }"
+              ><GroupTitle :group="membership.group"
             /></router-link>
             <span v-if="!membership.group.id"
-              ><group-title :group="membership.group"
+              ><GroupTitle :group="membership.group"
             /></span>
           </td>
           <td>{{ membership.role.label }}</td>
@@ -45,10 +45,10 @@
 import GroupTitle from "../components/GroupTitle.vue";
 
 export default {
-  props: ["memberships"],
   components: {
     GroupTitle,
   },
+  props: ["memberships"],
   data() {
     return {
       includePastRoles: false,

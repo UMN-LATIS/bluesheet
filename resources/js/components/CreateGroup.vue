@@ -1,33 +1,33 @@
 <template>
-  <modal :show="show" @close="close">
+  <Modal :show="show" @close="close">
     <div class="form-group row">
       <label for="internetId" class="col-sm-3 col-form-label"
         >Group Name:</label
       >
       <div class="col-sm-6">
         <input
-          type="text"
-          ref="groupNameRef"
-          class="form-control"
           id="groupName"
-          v-on:keyup="groupNameError = null"
-          @keyup.enter="createGroup"
-          placeholder="Group Name"
+          ref="groupNameRef"
           v-model="groupName"
+          type="text"
+          class="form-control"
+          placeholder="Group Name"
+          @keyup="groupNameError = null"
+          @keyup.enter="createGroup"
         />
       </div>
     </div>
     <div class="form-group row">
       <label for="groupType" class="col-sm-3 col-form-label">Group Type</label>
       <div class="col-sm-6">
-        <v-select
+        <VSelect
           v-if="groupTypes"
           id="groupTypes"
-          taggable
           v-model="groupType"
+          taggable
           :options="groupTypes"
           placeholder="Select..."
-        ></v-select>
+        ></VSelect>
       </div>
     </div>
     <div class="form-group row">
@@ -35,7 +35,7 @@
         >Folder</label
       >
       <div class="col-sm-6">
-        <folder-widget v-model="parentOrganization"></folder-widget>
+        <FolderWidget v-model="parentOrganization"></FolderWidget>
       </div>
     </div>
     <div class="form-group row">
@@ -47,21 +47,15 @@
     </div>
     <div class="row">
       <div
+        v-if="groupNameError"
         class="alert alert-danger col-sm-12"
         role="alert"
-        v-if="groupNameError"
       >
         {{ groupNameError }}
       </div>
     </div>
-  </modal>
+  </Modal>
 </template>
-
-<style scoped>
-.vue-treeselect__control {
-  border: 1px solid rgba(60, 60, 60, 0.26);
-}
-</style>
 
 <script>
 import VSelect from "vue-select";
@@ -144,3 +138,9 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.vue-treeselect__control {
+  border: 1px solid rgba(60, 60, 60, 0.26);
+}
+</style>

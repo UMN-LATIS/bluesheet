@@ -1,9 +1,9 @@
 <template>
   <div>
     <table
-      class="table"
       v-for="officialGroupType in officialGroupTypes"
       :key="officialGroupType"
+      class="table"
     >
       <thead>
         <tr>
@@ -59,9 +59,6 @@ export default {
       error: null,
     };
   },
-  mounted() {
-    this.loadRoles();
-  },
   computed: {
     officialGroupTypes: function () {
       console.log(this.roleList.map((r) => r.official_group_type).flat());
@@ -72,6 +69,9 @@ export default {
         .map((r) => (r ? r.label : false));
       return [...new Set(allLabels)];
     },
+  },
+  mounted() {
+    this.loadRoles();
   },
   methods: {
     loadRoles() {

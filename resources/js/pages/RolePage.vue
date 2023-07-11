@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="alert alert-danger" role="alert" v-if="error">
+    <div v-if="error" class="alert alert-danger" role="alert">
       {{ error }}
     </div>
     <button
@@ -9,12 +9,12 @@
     >
       <i
         class="fa-star"
-        v-bind:class="{ fas: roleFavorited, far: !roleFavorited }"
+        :class="{ fas: roleFavorited, far: !roleFavorited }"
       ></i>
       Favorite
     </button>
     <h1>{{ role.label }}</h1>
-    <div class="form-group row" v-if="parentOrganizations">
+    <div v-if="parentOrganizations" class="form-group row">
       <label for="parentOrganization" class="col-sm-2 col-form-label"
         >Filter by Folder</label
       >
@@ -31,7 +31,7 @@
         />
       </div>
     </div>
-    <members
+    <Members
       :members="filteredMembers"
       :editing="false"
       :roles="[role]"
@@ -40,7 +40,7 @@
       groupType="department"
       viewType="role"
       :downloadTitle="role.label"
-    ></members>
+    ></Members>
   </div>
 </template>
 
@@ -48,11 +48,11 @@
 import TreeSelect from "@riophae/vue-treeselect";
 import Members from "../components/Members.vue";
 export default {
-  props: ["roleId"],
   components: {
     TreeSelect,
     Members,
   },
+  props: ["roleId"],
   data() {
     return {
       error: null,
@@ -61,6 +61,32 @@ export default {
       parentOrganization: null,
       parentOrganizations: null,
     };
+  },
+  computed: {
+    filteredMembers: function () {
+      if (!this.parentOrganization) {
+        return this.role.members;
+      } else {
+        let targetLeaf = this.findLeaf(
+          this.parentOrganizations[0],
+          this.parentOrganization,
+        );
+        let targetOrganizations = this.recursivePluckId(targetLeaf);
+        return this.role.members.filter((m) =>
+          targetOrganizations.includes(m.group.parent_organization_id),
+        );
+      }
+    },
+    roleFavorited: function () {
+      if (this.$store.state.favorites["roles"]) {
+        return (
+          this.$store.state.favorites["roles"].filter(
+            (g) => g.id == this.role.id,
+          ).length > 0
+        );
+      }
+      return false;
+    },
   },
   mounted() {
     axios
@@ -119,32 +145,6 @@ export default {
         returnArray.push(organization.id);
       }
       return returnArray.flat();
-    },
-  },
-  computed: {
-    filteredMembers: function () {
-      if (!this.parentOrganization) {
-        return this.role.members;
-      } else {
-        let targetLeaf = this.findLeaf(
-          this.parentOrganizations[0],
-          this.parentOrganization,
-        );
-        let targetOrganizations = this.recursivePluckId(targetLeaf);
-        return this.role.members.filter((m) =>
-          targetOrganizations.includes(m.group.parent_organization_id),
-        );
-      }
-    },
-    roleFavorited: function () {
-      if (this.$store.state.favorites["roles"]) {
-        return (
-          this.$store.state.favorites["roles"].filter(
-            (g) => g.id == this.role.id,
-          ).length > 0
-        );
-      }
-      return false;
     },
   },
 };

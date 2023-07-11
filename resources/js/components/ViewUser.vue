@@ -8,7 +8,7 @@
       </li>
       <li v-if="user.email">
         <strong>Email: </strong
-        ><a v-bind:href="`mailto:${user.email}`">{{ user.email }}</a>
+        ><a :href="`mailto:${user.email}`">{{ user.email }}</a>
       </li>
       <li>
         <a
@@ -24,16 +24,6 @@
   </div>
 </template>
 
-<style scoped>
-ul {
-  list-style: none;
-}
-ul li {
-  margin-top: 5px;
-  margin-bottom: 5px;
-}
-</style>
-
 <script>
 export default {
   props: ["user"],
@@ -47,3 +37,13 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+ul {
+  list-style: none;
+}
+ul li {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+</style>

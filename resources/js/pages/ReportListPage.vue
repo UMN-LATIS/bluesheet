@@ -4,33 +4,33 @@
     <ul class="list-group">
       <li class="list-group-item">
         <router-link
+          v-if="$can('view reports')"
           :to="{ name: 'missingOfficial' }"
           class="nav-link"
-          v-if="$can('view reports')"
           >Departments with missing official roles</router-link
         >
       </li>
       <li class="list-group-item">
         <router-link
+          v-if="$can('view reports')"
           :to="{ name: 'lastModified' }"
           class="nav-link"
-          v-if="$can('view reports')"
           >Last Modified Dates</router-link
         >
       </li>
       <li class="list-group-item">
         <router-link
+          v-if="$can('view reports')"
           :to="{ name: 'ceddLike' }"
           class="nav-link"
-          v-if="$can('view reports')"
           >"CEDD-Like-Groups"
         </router-link>
       </li>
       <li class="list-group-item">
         <router-link
+          v-if="$can('view reports')"
           :to="{ name: 'orgp' }"
           class="nav-link"
-          v-if="$can('view reports')"
           >ORGP List
         </router-link>
       </li>

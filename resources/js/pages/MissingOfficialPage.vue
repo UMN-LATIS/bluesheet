@@ -5,25 +5,25 @@
         >Filter by Official Role</label
       >
       <div class="col-sm-6">
-        <v-select
+        <VSelect
           v-if="officialRoles"
           id="groupTypes"
           v-model="officialRoleFilter"
           :options="officialRoles"
           placeholder="Select..."
-        ></v-select>
+        ></VSelect>
       </div>
     </div>
     <table class="table">
       <thead>
         <tr>
           <th>
-            <sortableLink
+            <SortableLink
               sortLabel="Group"
               sortElement="group_title"
               :currentSort="currentSort"
               :currentSortDir="currentSortDir"
-              v-on:sort="sort"
+              @sort="sort"
             />
           </th>
           <th>Missing Roles</th>
@@ -33,7 +33,7 @@
         <tr v-for="group in filteredList" :key="group.id">
           <td>
             <router-link :to="{ name: 'group', params: { groupId: group.id } }">
-              <group-title :group="group" />
+              <GroupTitle :group="group" />
             </router-link>
           </td>
           <td>
@@ -109,6 +109,19 @@ export default {
       return [...new Set(allOfficialRoles)];
     },
   },
+  mounted() {
+    axios.get("/api/group/").then((res) => {
+      this.groupList = res.data;
+    });
+    axios
+      .get("/api/group/roles/")
+      .then((res) => {
+        this.roles = res.data;
+      })
+      .catch((err) => {
+        this.error = err.response.data;
+      });
+  },
   methods: {
     sort: function (s) {
       //if s == current sort, reverse
@@ -135,19 +148,6 @@ export default {
         );
       }
     },
-  },
-  mounted() {
-    axios.get("/api/group/").then((res) => {
-      this.groupList = res.data;
-    });
-    axios
-      .get("/api/group/roles/")
-      .then((res) => {
-        this.roles = res.data;
-      })
-      .catch((err) => {
-        this.error = err.response.data;
-      });
   },
 };
 </script>

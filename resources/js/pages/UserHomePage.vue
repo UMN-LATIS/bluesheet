@@ -1,38 +1,38 @@
 <template>
   <div>
-    <div class="alert alert-danger" role="alert" v-if="error">
+    <div v-if="error" class="alert alert-danger" role="alert">
       {{ error }}
     </div>
-    <ViewUser :user="user" v-if="user" />
-    <div class="col-md-6" v-if="user && !userId">
+    <ViewUser v-if="user" :user="user" />
+    <div v-if="user && !userId" class="col-md-6">
       <div class="form-check">
         <input
+          id="send_email_reminders"
+          v-model="user.send_email_reminders"
           class="form-check-input"
           type="checkbox"
-          v-model="user.send_email_reminders"
           @change="updateUser"
-          id="send_email_reminders"
         />
         <label class="form-check-label small" for="send_email_reminders">
           Send me occasional reminders to update my groups
         </label>
       </div>
     </div>
-    <div class="col-md-6" v-if="user && !userId">
+    <div v-if="user && !userId" class="col-md-6">
       <div class="form-check">
         <input
+          id="notify_of_favorite_changes"
+          v-model="user.notify_of_favorite_changes"
           class="form-check-input"
           type="checkbox"
-          v-model="user.notify_of_favorite_changes"
           @change="updateUser"
-          id="notify_of_favorite_changes"
         />
         <label class="form-check-label small" for="notify_of_favorite_changes">
           Notify me when my favorite groups and roles change
         </label>
       </div>
     </div>
-    <roles :memberships="memberships" id="v-step-4"></roles>
+    <Roles id="v-step-4" :memberships="memberships"></Roles>
   </div>
 </template>
 
@@ -40,19 +40,16 @@
 import ViewUser from "../components/ViewUser.vue";
 import Roles from "../components/Roles.vue";
 export default {
-  props: ["userId"],
   components: {
     ViewUser,
     Roles,
   },
+  props: ["userId"],
   data() {
     return {
       error: null,
       user: null,
     };
-  },
-  mounted() {
-    this.loadUser();
   },
   computed: {
     memberships: function () {
@@ -66,6 +63,9 @@ export default {
     userId: function () {
       this.loadUser();
     },
+  },
+  mounted() {
+    this.loadUser();
   },
   methods: {
     updateUser() {

@@ -26,7 +26,7 @@
         >
       </li>
     </ul>
-    <members
+    <Members
       v-if="groupList"
       :members="groupList"
       :editing="false"
@@ -52,6 +52,7 @@ export default {
       groupsToLoad: [],
     };
   },
+  computed: {},
   async mounted() {
     for (let group of this.groupsToLoad) {
       var groupData = await axios.get("/api/group/" + group);
@@ -101,7 +102,6 @@ export default {
       });
     }
   },
-  computed: {},
   methods: {},
 };
 </script>

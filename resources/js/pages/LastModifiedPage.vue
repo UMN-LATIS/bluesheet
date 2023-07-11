@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="form-group row" v-if="parentOrganizations">
+    <div v-if="parentOrganizations" class="form-group row">
       <label for="parentOrganization" class="col-sm-2 col-form-label"
         >Filter by Folder</label
       >
@@ -27,7 +27,7 @@
               sortElement="group_title"
               :currentSort="currentSort"
               :currentSortDir="currentSortDir"
-              v-on:sort="sort"
+              @sort="sort"
             />
           </th>
           <th>
@@ -36,7 +36,7 @@
               sortElement="lastModified"
               :currentSort="currentSort"
               :currentSortDir="currentSortDir"
-              v-on:sort="sort"
+              @sort="sort"
             />
           </th>
         </tr>
@@ -45,7 +45,7 @@
         <tr v-for="group in sortedList" :key="group.id">
           <td>
             <router-link :to="{ name: 'group', params: { groupId: group.id } }">
-              <group-title :group="group" />
+              <GroupTitle :group="group" />
             </router-link>
           </td>
           <td>{{ group.lastModified | moment("YYYY, MMM Do") }}</td>
@@ -75,33 +75,6 @@ export default {
       parentOrganization: null,
       parentOrganizations: [],
     };
-  },
-  mounted() {
-    axios.get("/api/group/").then((res) => {
-      this.groupList = res.data.map((g) => {
-        let modifiedArray = g.active_members.map((m) => {
-          return m.updated_at;
-        });
-
-        if (modifiedArray && modifiedArray.length > 0) {
-          g.lastModified = modifiedArray.reduce((a, b) => {
-            return a > b ? a : b;
-          });
-        } else {
-          g.lastModified = null;
-        }
-
-        return g;
-      });
-    });
-    axios
-      .get("/api/group/parents")
-      .then((res) => {
-        this.parentOrganizations = this.remapParents(res.data);
-      })
-      .catch((err) => {
-        console.error(err);
-      });
   },
   computed: {
     sortedList: function () {
@@ -139,6 +112,33 @@ export default {
       let flattened = this.flattenBranch(branch);
       return flattened.flat();
     },
+  },
+  mounted() {
+    axios.get("/api/group/").then((res) => {
+      this.groupList = res.data.map((g) => {
+        let modifiedArray = g.active_members.map((m) => {
+          return m.updated_at;
+        });
+
+        if (modifiedArray && modifiedArray.length > 0) {
+          g.lastModified = modifiedArray.reduce((a, b) => {
+            return a > b ? a : b;
+          });
+        } else {
+          g.lastModified = null;
+        }
+
+        return g;
+      });
+    });
+    axios
+      .get("/api/group/parents")
+      .then((res) => {
+        this.parentOrganizations = this.remapParents(res.data);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
   },
   methods: {
     recursiveHuntForOrg: function (targetOrg, branch) {

@@ -1,7 +1,7 @@
 <template>
   <tbody>
     <tr>
-      <th width="5%" v-if="filterList"></th>
+      <th v-if="filterList" width="5%"></th>
       <th width="20%"></th>
       <th colspan="6" width="80%">
         <span>{{ mindate | moment("YYYY-MM-DD") }}</span>
@@ -10,10 +10,10 @@
         </span>
       </th>
     </tr>
-    <gantt-row
-      :show_unit="show_unit"
-      :key="member.id"
+    <GanttRow
       v-for="member in members"
+      :key="member.id"
+      :show_unit="show_unit"
       :member="member"
       :mindate="mindate"
       :maxdate="maxdate"
@@ -22,7 +22,7 @@
     />
 
     <tr>
-      <th width="5%" v-if="filterList"></th>
+      <th v-if="filterList" width="5%"></th>
       <th width="20%"></th>
       <th colspan="6" width="80%">
         <span>{{ mindate | moment("YYYY-MM-DD") }}</span>
@@ -37,11 +37,11 @@
 <script>
 import GanttRow from "./GanttRow.vue";
 export default {
-  props: ["members", "mindate", "maxdate", "show_unit", "filterList"],
-  emits: ["update:member"],
   components: {
     GanttRow,
   },
+  props: ["members", "mindate", "maxdate", "show_unit", "filterList"],
+  emits: ["update:member"],
   data() {
     return {};
   },

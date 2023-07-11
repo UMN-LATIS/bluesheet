@@ -17,9 +17,9 @@
       </div>
       <div class="col-2 p-1">
         <input
+          v-model="searchTerm"
           type="text"
           class="form-control"
-          v-model="searchTerm"
           placeholder="Search"
         />
       </div>
@@ -39,7 +39,7 @@
           </tbody>
          </table> -->
 
-    <table class="table" v-if="groupList">
+    <table v-if="groupList" class="table">
       <thead>
         <tr>
           <th scope="col">Groups</th>
@@ -50,13 +50,13 @@
           <td v-if="group.active_group && !group.parent_group_id">
             <i class="fas fa-users"></i>
             <router-link :to="{ name: 'group', params: { groupId: group.id } }">
-              <group-title :group="group" />
+              <GroupTitle :group="group" />
             </router-link>
             <ul v-if="includeSubgroups && group.child_groups.length > 0">
               <li v-for="subgroup in group.child_groups" :key="subgroup.id">
                 <router-link
                   :to="{ name: 'group', params: { groupId: subgroup.id } }"
-                  ><group-title :group="subgroup"
+                  ><GroupTitle :group="subgroup"
                 /></router-link>
               </li>
             </ul>
@@ -73,23 +73,23 @@
     <div class="form-group col-md-6">
       <div class="form-check">
         <input
+          id="subgroups"
+          v-model="includeSubgroups"
           class="form-check-input"
           type="checkbox"
-          v-model="includeSubgroups"
-          id="subgroups"
         />
         <label class="form-check-label" for="subgroups">
           Include Sub-groups
         </label>
       </div>
     </div>
-    <div class="form-group col-md-6" v-if="!parent">
+    <div v-if="!parent" class="form-group col-md-6">
       <div class="form-check">
         <input
+          id="allGroups"
+          v-model="showAllGroups"
           class="form-check-input"
           type="checkbox"
-          v-model="showAllGroups"
-          id="allGroups"
         />
         <label class="form-check-label" for="allGroups">
           Show All Groups
@@ -103,10 +103,10 @@
 import GroupTitle from "../components/GroupTitle.vue";
 
 export default {
-  props: ["parent"],
   components: {
     GroupTitle,
   },
+  props: ["parent"],
   data() {
     return {
       groupList: null,
@@ -116,28 +116,6 @@ export default {
       showAllGroups: false,
       searchTerm: null,
     };
-  },
-  mounted() {
-    this.loadGroups();
-  },
-  watch: {
-    searchTerm: function () {
-      if (this.searchTerm.length > 0) {
-        this.filterListBySearchTerm();
-      } else {
-        this.loadGroups();
-      }
-    },
-    showAllGroups: function () {
-      if (this.showAllGroups) {
-        axios.get("/api/group").then((res) => {
-          this.groupList.groups = res.data;
-          this.groupList.folders = [];
-        });
-      } else {
-        this.loadGroups();
-      }
-    },
   },
   computed: {
     breadCrumbs: function () {
@@ -171,6 +149,28 @@ export default {
       });
       return merged;
     },
+  },
+  watch: {
+    searchTerm: function () {
+      if (this.searchTerm.length > 0) {
+        this.filterListBySearchTerm();
+      } else {
+        this.loadGroups();
+      }
+    },
+    showAllGroups: function () {
+      if (this.showAllGroups) {
+        axios.get("/api/group").then((res) => {
+          this.groupList.groups = res.data;
+          this.groupList.folders = [];
+        });
+      } else {
+        this.loadGroups();
+      }
+    },
+  },
+  mounted() {
+    this.loadGroups();
   },
   methods: {
     filterListBySearchTerm: function () {

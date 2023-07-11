@@ -1,17 +1,17 @@
 <template>
-  <modal :show="show" @close="close">
+  <Modal :show="show" @close="close">
     <div class="row">
       <label for="nameLookup" class="col-sm-3 col-form-label">Name:</label>
       <div class="col-sm-6">
         <AutoComplete
-          source="/api/autocompleter/user?searchType=nameAndInternetId&q="
           id="nameLookup"
+          ref="userAutocompleter"
+          v-model="userLookupId"
+          source="/api/autocompleter/user?searchType=nameAndInternetId&q="
           resultsProperty="items"
           resultsDisplay="full_name"
           resultsValue="mail"
-          ref="userAutocompleter"
           inputClass="form-control"
-          v-model="userLookupId"
         />
         <small id="addUserHelpBlock" class="form-text text-muted">
           Optional: Enter a name and select the person from the list. For common
@@ -27,14 +27,14 @@
       >
       <div class="col-sm-6">
         <input
-          type="text"
-          ref="addMemberRef"
-          class="form-control"
           id="internetId"
-          v-on:keyup="addMemberError = null"
-          @keyup.enter="lookupUser"
-          placeholder="Internet ID"
+          ref="addMemberRef"
           v-model="userLookupId"
+          type="text"
+          class="form-control"
+          placeholder="Internet ID"
+          @keyup="addMemberError = null"
+          @keyup.enter="lookupUser"
         />
         <small id="addUserHelpBlock" class="form-text text-muted">
           Enter one or more InternetIds or email addresses (comma-separated ).
@@ -49,14 +49,14 @@
     </div>
     <div class="row">
       <div
+        v-if="findUserError"
         class="alert alert-danger col-sm-12"
         role="alert"
-        v-if="findUserError"
       >
         {{ findUserError }}
       </div>
     </div>
-  </modal>
+  </Modal>
 </template>
 
 <script>
@@ -64,11 +64,11 @@ import Modal from "./Modal.vue";
 import AutoComplete from "vuejs-auto-complete";
 
 export default {
-  props: ["show"],
   components: {
     Modal,
     AutoComplete,
   },
+  props: ["show"],
   data() {
     return {
       findUserError: null,

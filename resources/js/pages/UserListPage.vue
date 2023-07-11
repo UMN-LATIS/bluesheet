@@ -3,26 +3,26 @@
     <div class="toggles">
       <span
         class="committee groupBadge"
+        :class="{ badgeOn: committee }"
         @click="committee = !committee"
-        v-bind:class="{ badgeOn: committee }"
         >Committee</span
       >
       <span
         class="department groupBadge"
+        :class="{ badgeOn: department }"
         @click="department = !department"
-        v-bind:class="{ badgeOn: department }"
         >Department</span
       >
       <span
         class="list groupBadge"
+        :class="{ badgeOn: list }"
         @click="list = !list"
-        v-bind:class="{ badgeOn: list }"
         >List</span
       >
       <span
         class="group groupBadge"
+        :class="{ badgeOn: group }"
         @click="group = !group"
-        v-bind:class="{ badgeOn: group }"
         >Group</span
       >
     </div>
@@ -38,8 +38,8 @@
         <tr v-for="user in loadedUsers" :key="user.id">
           <td>
             <router-link
-              :to="{ name: 'user', params: { userId: user.id } }"
               v-if="user.id"
+              :to="{ name: 'user', params: { userId: user.id } }"
             >
               {{ user.surname }}, {{ user.givenname }}
             </router-link>
@@ -84,31 +84,90 @@
     <div class="toggles">
       <span
         class="committee groupBadge"
+        :class="{ badgeOn: committee }"
         @click="committee = !committee"
-        v-bind:class="{ badgeOn: committee }"
         >Committee</span
       >
       <span
         class="department groupBadge"
+        :class="{ badgeOn: department }"
         @click="department = !department"
-        v-bind:class="{ badgeOn: department }"
         >Department</span
       >
       <span
         class="list groupBadge"
+        :class="{ badgeOn: list }"
         @click="list = !list"
-        v-bind:class="{ badgeOn: list }"
         >List</span
       >
       <span
         class="group groupBadge"
+        :class="{ badgeOn: group }"
         @click="group = !group"
-        v-bind:class="{ badgeOn: group }"
         >Group</span
       >
     </div>
   </div>
 </template>
+
+<script>
+import Vue from "vue";
+
+export default {
+  props: ["users", "groupId"],
+  data() {
+    return {
+      loadedUsers: [],
+      committee: true,
+      group: true,
+      list: true,
+      department: true,
+    };
+  },
+  mounted() {
+    if (this.users) {
+      this.loadUsers(this.users);
+    }
+    if (this.groupId) {
+      axios.get("/api/group/" + this.groupId).then((res) => {
+        this.group = res.data;
+        Vue.set(this.group, "members", []);
+        this.group.members = [];
+        axios
+          .get("/api/group/" + this.groupId + "/members")
+          .then((res) => {
+            Vue.set(this.group, "members", res.data);
+            var users = this.group.members
+              .filter(
+                (e) =>
+                  e.end_date == null ||
+                  this.$moment(e.end_date).isAfter(this.$moment()),
+              )
+              .map((elem) => elem.user.id);
+            this.loadUsers(users);
+          })
+          .catch((err) => {
+            this.error = err.response.data;
+          });
+      });
+    }
+  },
+  methods: {
+    loadUsers(userList) {
+      axios
+        .post("/api/user/lookup", {
+          users: userList,
+        })
+        .then((res) => {
+          this.loadedUsers = res.data.users;
+        })
+        .catch((err) => {
+          this.error = err.response.data.message;
+        });
+    },
+  },
+};
+</script>
 
 <style scoped>
 .groupBadge {
@@ -144,62 +203,3 @@
     inset 0 1px 2px #193047;
 }
 </style>
-
-<script>
-import Vue from "vue";
-
-export default {
-  props: ["users", "groupId"],
-  data() {
-    return {
-      loadedUsers: [],
-      committee: true,
-      group: true,
-      list: true,
-      department: true,
-    };
-  },
-  methods: {
-    loadUsers(userList) {
-      axios
-        .post("/api/user/lookup", {
-          users: userList,
-        })
-        .then((res) => {
-          this.loadedUsers = res.data.users;
-        })
-        .catch((err) => {
-          this.error = err.response.data.message;
-        });
-    },
-  },
-  mounted() {
-    if (this.users) {
-      this.loadUsers(this.users);
-    }
-    if (this.groupId) {
-      axios.get("/api/group/" + this.groupId).then((res) => {
-        this.group = res.data;
-        Vue.set(this.group, "members", []);
-        this.group.members = [];
-        axios
-          .get("/api/group/" + this.groupId + "/members")
-          .then((res) => {
-            Vue.set(this.group, "members", res.data);
-            var users = this.group.members
-              .filter(
-                (e) =>
-                  e.end_date == null ||
-                  this.$moment(e.end_date).isAfter(this.$moment()),
-              )
-              .map((elem) => elem.user.id);
-            this.loadUsers(users);
-          })
-          .catch((err) => {
-            this.error = err.response.data;
-          });
-      });
-    }
-  },
-};
-</script>
