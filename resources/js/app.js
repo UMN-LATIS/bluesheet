@@ -105,6 +105,7 @@ Vue.component('sortableLink', require('./components/Sortable.vue').default);
 Vue.component('favorites', require('./components/Favorites.vue').default);
 Vue.component('group-title', require('./components/GroupTitle.vue').default);
 Vue.component('folder-widget', require('./components/FolderWidget.vue').default);
+Vue.component('leaves', require('./components/Leaves.vue').default);
 
 Vue.component('app-header', require('./cla-vue-template/src/components/AppHeader.vue').default);
 Vue.component('navbar-item', require('./cla-vue-template/src/components/NavbarItem.vue').default);

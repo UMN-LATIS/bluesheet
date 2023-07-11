@@ -29,7 +29,8 @@ class User extends JsonResource
             'favoriteGroups' => $this->favoriteGroups,
             'favoriteRoles' => $this->favoriteRoles,
             'send_email_reminders' => $this->send_email_reminders,
-            'notify_of_favorite_changes' => $this->notify_of_favorite_changes
+            'notify_of_favorite_changes' => $this->notify_of_favorite_changes,
+            'leaves'=>$this->when(($request->user()->hasPermissionTo('view leaves') || $request->user()->id == $this->id), $this->leaves)
         ];
     }
 }

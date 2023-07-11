@@ -22,6 +22,7 @@
             </div>
         </div>
         <roles :memberships="memberships" id="v-step-4"></roles>
+        <leaves v-if="user.leaves" :leaves="leaves"></leaves>
     </div>
 </template>
 
