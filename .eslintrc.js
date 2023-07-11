@@ -12,6 +12,7 @@ module.exports = {
         "plugin:@typescript-eslint/recommended",
         // "plugin:vue/vue3-essential", // Use this if you are using Vue.js 3.x.
         "plugin:vue/essential", // Use this if you are using Vue.js 2.x.
+        "prettier",
     ],
     overrides: [
         {
