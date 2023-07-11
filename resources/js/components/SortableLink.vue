@@ -16,6 +16,7 @@
 <script>
 export default {
   props: ["sortLabel", "sortElement", "currentSort", "currentSortDir"],
+  emits: ["sort"],
 };
 </script>
 

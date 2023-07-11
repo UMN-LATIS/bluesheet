@@ -286,6 +286,7 @@ import Members from "./Members.vue";
 import Modal from "./Modal.vue";
 import FolderWidget from "./FolderWidget.vue";
 import AutoComplete from "vuejs-auto-complete";
+import dayjs from "../lib/dayjs";
 
 export default {
   components: {
@@ -296,6 +297,7 @@ export default {
     AutoComplete,
   },
   props: ["group"],
+  emits: ["update:editing", "update:reload"],
   data() {
     return {
       // copy of the group object to avoid
@@ -463,7 +465,7 @@ export default {
           for (var user of res.data.users) {
             var newMembershipRecord = {
               group_id: this.localGroup.id,
-              start_date: this.$moment().format("YYYY-MM-DD"),
+              start_date: dayjs().format("YYYY-MM-DD"),
               end_date: null,
               user: user,
               role: this.newRole,

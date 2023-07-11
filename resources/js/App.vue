@@ -77,6 +77,7 @@ import {
 } from "@umn-latis/cla-vue-template";
 import UserLookup from "./components/UserLookup.vue";
 import CreateGroup from "./components/CreateGroup.vue";
+import { $can } from "./lib";
 
 export default {
   components: {
@@ -135,7 +136,9 @@ export default {
       this.$tours["intro_tour"].start();
     }
   },
-  methods: {},
+  methods: {
+    $can,
+  },
 };
 </script>
 

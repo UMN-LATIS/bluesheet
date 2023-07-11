@@ -4,9 +4,9 @@
       <th v-if="filterList" width="5%"></th>
       <th width="20%"></th>
       <th colspan="6" width="80%">
-        <span>{{ mindate | moment("YYYY-MM-DD") }}</span>
+        <span>{{ dayjs(mindate).format("YYYY-MM-DD") }}</span>
         <span class="float-right">
-          {{ maxdate | moment("YYYY-MM-DD") }}
+          {{ dayjs(maxdate).format("YYYY-MM-DD") }}
         </span>
       </th>
     </tr>
@@ -25,17 +25,19 @@
       <th v-if="filterList" width="5%"></th>
       <th width="20%"></th>
       <th colspan="6" width="80%">
-        <span>{{ mindate | moment("YYYY-MM-DD") }}</span>
+        <span>{{ dayjs(mindate).format("YYYY-MM-DD") }}</span>
         <span class="float-right">
-          {{ maxdate | moment("YYYY-MM-DD") }}
+          {{ dayjs(maxdate).format("YYYY-MM-DD") }}
         </span>
       </th>
     </tr>
   </tbody>
 </template>
 
-<script>
+<script lang="ts">
 import GanttRow from "./GanttRow.vue";
+import dayjs from "../lib/dayjs";
+
 export default {
   components: {
     GanttRow,
@@ -44,6 +46,9 @@ export default {
   emits: ["update:member"],
   data() {
     return {};
+  },
+  methods: {
+    dayjs,
   },
 };
 </script>

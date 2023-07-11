@@ -10,7 +10,6 @@ import Vue from "vue";
 import Vuex from "vuex";
 import VueRouter from "vue-router";
 import VTooltip from "v-tooltip";
-import permissions from "./mixins/permissions";
 import App from "./App.vue";
 import VueTour from "vue-tour";
 

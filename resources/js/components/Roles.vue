@@ -33,16 +33,17 @@
             /></span>
           </td>
           <td>{{ membership.role.label }}</td>
-          <td>{{ membership.start_date | moment("YYYY, MMM Do") }}</td>
-          <td>{{ membership.end_date | moment("YYYY, MMM Do") }}</td>
+          <td>{{ dayjs(membership.start_date).format("YYYY, MMM Do") }}</td>
+          <td>{{ dayjs(membership.end_date).format("YYYY, MMM Do") }}</td>
         </tr>
       </tbody>
     </table>
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import GroupTitle from "../components/GroupTitle.vue";
+import { dayjs } from "../lib";
 
 export default {
   components: {
@@ -61,7 +62,7 @@ export default {
           if (
             this.includePastRoles ||
             role.end_date == null ||
-            this.$moment(role.end_date).isAfter(this.$moment())
+            dayjs(role.end_date).isAfter(dayjs())
           ) {
             return role;
           }
@@ -77,6 +78,8 @@ export default {
       });
     },
   },
-  methods: {},
+  methods: {
+    dayjs,
+  },
 };
 </script>

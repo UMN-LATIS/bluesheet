@@ -48,7 +48,7 @@
               <GroupTitle :group="group" />
             </router-link>
           </td>
-          <td>{{ group.lastModified | moment("YYYY, MMM Do") }}</td>
+          <td>{{ dayjs(group.lastModified).format("YYYY, MMM Do") }}</td>
         </tr>
       </tbody>
     </table>
@@ -59,6 +59,8 @@
 import TreeSelect from "@riophae/vue-treeselect";
 import SortableLink from "../components/SortableLink.vue";
 import GroupTitle from "../components/GroupTitle.vue";
+import { dayjs } from "../lib";
+import _ from "lodash";
 
 export default {
   components: {
@@ -79,21 +81,19 @@ export default {
   computed: {
     sortedList: function () {
       return [...this.groupList]
-        .sort(
-          function (a, b) {
-            let modifier = 1;
-            if (this.currentSortDir === "desc") modifier = -1;
+        .sort((a, b) => {
+          let modifier = 1;
+          if (this.currentSortDir === "desc") modifier = -1;
 
-            const aCurrentSort = window._.get(a, this.currentSort) || " ";
-            const bCurrentSort = window._.get(b, this.currentSort) || " ";
+          const aCurrentSort = _.get(a, this.currentSort) || " ";
+          const bCurrentSort = _.get(b, this.currentSort) || " ";
 
-            if (aCurrentSort.toLowerCase() < bCurrentSort.toLowerCase())
-              return -1 * modifier;
-            if (aCurrentSort.toLowerCase() > bCurrentSort.toLowerCase())
-              return 1 * modifier;
-            return 0;
-          }.bind(this),
-        )
+          if (aCurrentSort.toLowerCase() < bCurrentSort.toLowerCase())
+            return -1 * modifier;
+          if (aCurrentSort.toLowerCase() > bCurrentSort.toLowerCase())
+            return 1 * modifier;
+          return 0;
+        })
         .filter((g) => {
           return (
             !this.parentOrganization ||
@@ -141,6 +141,7 @@ export default {
       });
   },
   methods: {
+    dayjs,
     recursiveHuntForOrg: function (targetOrg, branch) {
       if (branch.id == targetOrg) {
         return branch;

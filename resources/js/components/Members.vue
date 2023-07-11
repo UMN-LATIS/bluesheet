@@ -270,6 +270,7 @@ import DownloadCSV from "vue-json-csv";
 import MemberList from "./MemberList.vue";
 import Gantt from "./Gantt.vue";
 import Modal from "./Modal.vue";
+import { $can } from "../lib";
 
 export default {
   components: {
@@ -453,6 +454,7 @@ export default {
     },
   },
   methods: {
+    $can,
     handleUpdateMember(updatedMember) {
       this.$emit(
         "update:members",

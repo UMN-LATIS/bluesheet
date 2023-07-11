@@ -69,6 +69,7 @@ export default {
     AutoComplete,
   },
   props: ["show"],
+  emits: ["close"],
   data() {
     return {
       findUserError: null,

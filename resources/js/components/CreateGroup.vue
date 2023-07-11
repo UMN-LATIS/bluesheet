@@ -69,6 +69,7 @@ export default {
     FolderWidget,
   },
   props: ["show"],
+  emits: ["close"],
   data() {
     return {
       groupNameError: null,

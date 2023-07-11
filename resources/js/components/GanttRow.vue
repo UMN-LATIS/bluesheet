@@ -5,7 +5,10 @@
         type="checkbox"
         :value="member.filtered"
         @input="
-          $emit('update:member', { ...member, filtered: $event.target.value })
+          $emit('update:member', {
+            ...member,
+            filtered: ($event.target as HTMLInputElement).value,
+          })
         "
       />
     </td>
@@ -20,14 +23,16 @@
   </tr>
 </template>
 
-<script>
+<script lang="ts">
 import $ from "jquery";
+import dayjs from "../lib/dayjs";
 
 $(function () {
   $("[data-toggle='tooltip']").tooltip();
 });
 export default {
-  props: ["member", "mindate", "maxdate", "show_unit", "filterList"],
+  // eslint-disable-next-line vue/require-prop-types
+  props: ["member", "mindate", "maxdate", "showUnit", "filterList"],
   emits: ["update:member"],
   data() {
     return {};
@@ -35,7 +40,7 @@ export default {
   computed: {
     toolTipText: function () {
       var returnString = this.member.user.displayName + "<br>";
-      if (this.member.user.ou && this.show_unit) {
+      if (this.member.user.ou && this.showUnit) {
         returnString += "Unit: " + this.member.user.ou + "<br>";
       }
       if (this.member.notes) {
@@ -54,11 +59,11 @@ export default {
     },
 
     startDate: function () {
-      return this.$moment(this.member.start_date).unix();
+      return dayjs(this.member.start_date).unix();
     },
     endDate: function () {
       if (this.member.end_date) {
-        return this.$moment(this.member.end_date).unix();
+        return dayjs(this.member.end_date).unix();
       }
       return this.maxdate;
     },

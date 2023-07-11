@@ -117,6 +117,7 @@
 <script>
 import GroupTitle from "./GroupTitle.vue";
 import Members from "./Members.vue";
+import { $can } from "../lib";
 
 export default {
   components: {
@@ -124,6 +125,7 @@ export default {
     Members,
   },
   props: ["group", "editing"],
+  emits: ["update:editing"],
   data() {
     return {
       roles: [],
@@ -162,6 +164,9 @@ export default {
       .catch((err) => {
         this.error = err.response.data;
       });
+  },
+  methods: {
+    $can,
   },
 };
 </script>

@@ -47,19 +47,21 @@
         <input v-model="member.notes" class="form-control" />
       </td>
 
-      <td v-if="!editing">{{ member.start_date | moment("YYYY, MMM Do") }}</td>
+      <td v-if="!editing">
+        {{ dayjs(member.start_date).format("YYYY, MMM Do") }}
+      </td>
       <td v-if="editing">
         <input
           type="date"
           class="form-control"
           :value="member.start_date"
-          @blur="member.start_date = $event.target.value"
+          @blur="member.start_date = ($event.target as HTMLInputElement).value"
         />
       </td>
 
       <td v-if="includePreviousMembers && !editing">
         <span v-if="member.end_date">{{
-          member.end_date | moment("YYYY, MMM Do")
+          dayjs(member.end_date).format("YYYY, MMM Do")
         }}</span>
       </td>
       <td v-if="editing">
@@ -67,7 +69,7 @@
           type="date"
           class="form-control"
           :value="member.end_date"
-          @blur="member.end_date = $event.target.value"
+          @blur="member.end_date = ($event.target as HTMLInputElement).value"
         />
       </td>
 
@@ -96,9 +98,10 @@
   </tbody>
 </template>
 
-<script>
+<script lang="ts">
 import VSelect from "vue-select";
 import GroupTitle from "./GroupTitle.vue";
+import { dayjs, $can } from "../lib";
 
 export default {
   components: {
@@ -114,8 +117,13 @@ export default {
     "show_unit",
     "viewType",
   ],
+  emits: ["remove"],
   data() {
     return {};
+  },
+  methods: {
+    dayjs,
+    $can,
   },
 };
 </script>
