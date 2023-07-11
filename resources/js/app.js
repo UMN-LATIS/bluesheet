@@ -9,7 +9,6 @@ import "./bootstrap";
 import Vue from "vue";
 import Vuex from "vuex";
 import VueRouter from "vue-router";
-import VueMoment from "vue-moment";
 import VTooltip from "v-tooltip";
 import permissions from "./mixins/permissions";
 import App from "./App.vue";
@@ -38,8 +37,6 @@ window.Vue = Vue;
 
 Vue.use(Vuex);
 Vue.use(VueRouter);
-Vue.mixin(permissions);
-Vue.use(VueMoment);
 Vue.use(VTooltip);
 Vue.use(VueTour);
 Vue.component("app", App);
