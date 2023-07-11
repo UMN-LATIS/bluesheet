@@ -31,7 +31,7 @@
         <li v-for="(artifact, index) in group.artifacts" :key="index"><a v-bind:href="artifact.target">{{ artifact.label }}</a></li>
     </ul>
 
-    <members :groupType="group.group_type.label" :members.sync="group.members" :editing="false" :show_unit="group.show_unit"  :roles='filteredRoles' viewType="group" :downloadTitle="group.group_title"></members>
+    <members :groupType="group.group_type.label" :members="group.members" :editing="false" :show_unit="group.show_unit"  :roles='filteredRoles' viewType="group" :downloadTitle="group.group_title"></members>
 
 
 
