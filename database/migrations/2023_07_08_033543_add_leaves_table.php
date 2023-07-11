@@ -17,8 +17,8 @@ return new class extends Migration
         // Add leaves table, which is a one-to-many with the users table. Each user can have multiple leaves. Leaves have a start date, an end date, a description, a type (sick, vacation, etc.), and a status (confirmed, potential, etc.)
         Schema::create('leaves', function (Blueprint $table) {
             $table->id();
-            $table->integer('user_id')->unsigned()->references('id')->on('users');
-            // $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->integer('user_id')->unsigned();
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->date('start_date');
             $table->date('end_date');
             $table->string('description');
