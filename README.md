@@ -35,10 +35,10 @@ sail exec laravel.test ./bin/ci.sh
 sail artisan migrate:fresh --seed
 
 # Install node modules
-npm ci
+yarn install
 
-# Start Laravel Mix to compile Vue
-npm run watch
+# Start Vite
+yarn dev
 
 ```
 
@@ -48,7 +48,7 @@ The application will be running on <http://localhost>.
 
 ```sh
 sail up
-npm run watch
+yarn dev
 ```
 
 Load <http://localhost> in your browser.
