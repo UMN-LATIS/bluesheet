@@ -5,7 +5,7 @@
   "defaultCommandTimeout": 5000,
   "watchForFileChanges": true,
   "integrationFolder": "tests/cypress/integration",
-  "pluginsFile": "tests/cypress/plugins/index.js",
+  "pluginsFile": "tests/cypress/plugins/index.cjs",
   "videosFolder": "tests/cypress/videos",
   "supportFile": "tests/cypress/support/index.js",
   "screenshotsFolder": "tests/cypress/screenshots",
