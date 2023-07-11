@@ -84,10 +84,12 @@
 </style>
 
 <script>
-import AppHeader from "./cla-vue-template/src/components/AppHeader.vue";
-import NavbarItem from "./cla-vue-template/src/components/NavbarItem.vue";
-import AppFooter from "./cla-vue-template/src/components/AppFooter.vue";
-import PostIt from "./cla-vue-template/src/components/PostIt.vue";
+import {
+  AppHeader,
+  NavbarItem,
+  AppFooter,
+  PostIt,
+} from "@umn-latis/cla-vue-template";
 import UserLookup from "./components/UserLookup.vue";
 import CreateGroup from "./components/CreateGroup.vue";
 

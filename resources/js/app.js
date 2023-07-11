@@ -30,6 +30,7 @@ import RoleListPage from "./pages/RoleListPage.vue";
 import RolePage from "./pages/RolePage.vue";
 
 // Global CSS
+import "@umn-latis/cla-vue-template/dist/style.css";
 import "vue-tour/dist/vue-tour.css";
 import "../sass/app.scss";
 
