@@ -16,9 +16,8 @@
 </head>
 
 <body>
-  <span id="app">
-    @yield('content')
-  </span>
+  @yield('content')
+
   @impersonating
     <a class="" href="/impersonate/leave">End Impersonation</a>
   @endImpersonating
