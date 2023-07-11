@@ -8,6 +8,19 @@
      3. fetch all of the leave data for the aforementioned staff
      4. do that in a performant way
 
+     for #2 - maybe we need to be caching this in bandaid? how hard is this to query? otherwise we could do a nightly scrape from terms.umn.edu by iterating term ids (https://terms.umn.edu/umntc/ugrd/1179)
+
+     SELECT
+          CAST(ORA_HASH(institution || acad_career || strm ) AS INTEGER) id,
+          institution,
+          strm,
+          term_begin_dt,
+          term_end_dt,
+          descr,
+          acad_career
+        FROM
+          #{Rails.configuration.asr_warehouse_schema}.cs_ps_term_tbl
+
     </div>
 </template>
 
