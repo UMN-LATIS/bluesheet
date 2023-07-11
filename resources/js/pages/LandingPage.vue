@@ -50,7 +50,12 @@
 </template>
 
 <script>
+import Favorites from '../components/Favorites.vue';
+
     export default {
+        components: {
+            Favorites
+        },
         data() {
             return {
                 frequentRoles: [{

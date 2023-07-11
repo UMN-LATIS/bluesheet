@@ -3,7 +3,7 @@
         <div class="row">
           <label for="nameLookup" class="col-sm-3 col-form-label">Name:</label>
           <div class="col-sm-6">
-          <autocomplete
+          <AutoComplete
             source="/api/autocompleter/user?searchType=nameAndInternetId&q="
             id="nameLookup"
             resultsProperty="items"
@@ -12,8 +12,7 @@
             ref="userAutocompleter"
             inputClass="form-control"
             v-model="userLookupId"
-            >
-          </autocomplete>
+            />
           <small id="addUserHelpBlock" class="form-text text-muted">
             Optional: Enter a name and select the person from the list. For common names, we recommend using internet ID (below) to be sure you get the right person.
           </small>
@@ -49,8 +48,15 @@
 </template>
 
 <script>
+import Modal from './Modal.vue';
+import AutoComplete from "vuejs-auto-complete";
+
     export default {
         props: ['show'],
+        components: {
+            Modal,
+            AutoComplete,
+        },
         data() {
             return {
                 findUserError: null,

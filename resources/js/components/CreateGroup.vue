@@ -46,7 +46,16 @@
 </style>
 
 <script>
+import VSelect from 'vue-select';
+import Modal from './Modal.vue';
+import FolderWidget from './FolderWidget.vue';
+
     export default {
+        components: {
+            VSelect,
+            Modal,
+            FolderWidget
+        },
         props: ['show'],
         data() {
             return {

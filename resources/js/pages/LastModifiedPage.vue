@@ -3,7 +3,7 @@
          <div class="form-group row" v-if="parentOrganizations">
                 <label for="parentOrganization" class="col-sm-2 col-form-label">Filter by Folder</label>
                 <div class="col-sm-6">
-                   <treeselect v-model="parentOrganization" :multiple="false" :options="parentOrganizations" :clearable="false"
+                   <TreeSelect v-model="parentOrganization" :multiple="false" :options="parentOrganizations" :clearable="false"
                 :searchable="true" :openOnClick="true" :closeOnSelect="true" label="parent_folder" />
                 </div>
         </div>
@@ -12,11 +12,11 @@
             <thead>
                 <tr>
                     <th>
-                        <sortableLink sortLabel="Group" sortElement="group_title" :currentSort="currentSort"
+                        <SortableLink sortLabel="Group" sortElement="group_title" :currentSort="currentSort"
                             :currentSortDir="currentSortDir" v-on:sort="sort" />
                     </th>
                     <th>
-                        <sortableLink sortLabel="Last Modified" sortElement="lastModified" :currentSort="currentSort"
+                        <SortableLink sortLabel="Last Modified" sortElement="lastModified" :currentSort="currentSort"
                             :currentSortDir="currentSortDir" v-on:sort="sort" />
                     </th>
                 </tr>
@@ -36,7 +36,16 @@
 </template>
 
 <script>
+import TreeSelect from '@riophae/vue-treeselect';
+import SortableLink from '../components/SortableLink.vue';
+import GroupTitle from '../components/GroupTitle.vue';
+
     export default {
+        components: {
+            TreeSelect,
+            SortableLink,
+            GroupTitle,
+        },
         data() {
             return {
                 currentSortDir: 'desc',

@@ -1,6 +1,6 @@
 <template>
     <div>
-       
+
         <table class="table" v-for="officialGroupType in officialGroupTypes" :key="officialGroupType">
             <thead>
                 <tr>
@@ -10,7 +10,7 @@
           <tbody v-if="roleList">
             <tr v-for="(role, key) in roleList.filter(r=>r.official_group_type && r.official_group_type.map(gt=>gt.label).includes(officialGroupType))"  :key="key">
                 <td><router-link :to="{ name: 'role', params: { roleId: role.id } }">{{ role.label }}</router-link></td>
-                
+
             </tr>
         </tbody>
         </table>
@@ -30,6 +30,7 @@
 </template>
 
 <script>
+
     export default {
         data() {
             return {

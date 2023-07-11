@@ -1,11 +1,15 @@
 <template>
-    <treeselect v-if="parentOrganizations" v-model="parentOrganizationValue" :multiple="false" :options="parentOrganizations" :clearable="false"
+    <TreeSelect v-if="parentOrganizations" v-model="parentOrganizationValue" :multiple="false" :options="parentOrganizations" :clearable="false"
         :searchable="true" :openOnClick="true" :closeOnSelect="true" label="group_title" />
 </template>
 
 <script>
+import TreeSelect from '@riophae/vue-treeselect';
     export default {
         props: ['value'],
+        components: {
+            TreeSelect
+        },
         data() {
             return {
                 parentOrganizations: []

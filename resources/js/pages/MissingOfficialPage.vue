@@ -40,7 +40,16 @@
 </template>
 
 <script>
+import VSelect from 'vue-select';
+import SortableLink from '../components/SortableLink.vue';
+import GroupTitle from '../components/GroupTitle.vue';
+
 export default {
+    components: {
+        VSelect,
+        SortableLink,
+        GroupTitle,
+    },
     data() {
         return {
             groupList: [],

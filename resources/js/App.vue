@@ -43,15 +43,15 @@
             </template>
         </app-header>
 
-        <postit class="container post-it">
+        <PostIt class="container post-it">
             <router-view :userperms="userperms" :key="$route.fullPath"></router-view>
-        </postit>
+        </PostIt>
 
         <app-footer />
 
-        <userlookup v-if="findUser" :show="findUser" @close="findUser = false"></userlookup>
-        <creategroup v-if="createGroup" :show="createGroup" @close="createGroup = false"></creategroup>
-        <v-tour name="intro_tour" :steps="steps"></v-tour>
+        <UserLookup v-if="findUser" :show="findUser" @close="findUser = false" />
+        <CreateGroup v-if="createGroup" :show="createGroup" @close="createGroup = false" />
+        <v-tour name="intro_tour" :steps="steps" ></v-tour>
     </div>
 </template>
 
@@ -71,8 +71,23 @@
 </style>
 
 <script>
+import AppHeader from "./cla-vue-template/src/components/AppHeader.vue";
+import NavbarItem from "./cla-vue-template/src/components/NavbarItem.vue";
+import AppFooter from "./cla-vue-template/src/components/AppFooter.vue";
+import PostIt from "./cla-vue-template/src/components/PostIt.vue";
+import UserLookup from './components/UserLookup.vue';
+import CreateGroup from './components/CreateGroup.vue';
+
     export default {
         props: ["userperms"],
+        components: {
+            AppHeader,
+            AppFooter,
+            UserLookup,
+            CreateGroup,
+            NavbarItem,
+            PostIt,
+        },
         data() {
             return {
                 findUser: false,

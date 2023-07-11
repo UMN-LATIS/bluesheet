@@ -3,17 +3,22 @@
         <div class="alert alert-danger" role="alert" v-if="error">
             {{ error}}
         </div>
-        <viewgroup :group="group" v-if="!editing && group" v-bind:editing.sync="editing">
-        </viewgroup>
-        <editgroup :group="group" v-if="editing && group" v-bind:editing.sync="editing" v-on:update:reload="loadGroup()" >
-        </editgroup>
+        <ViewGroup :group="group" v-if="!editing && group" v-bind:editing.sync="editing" />
+        <EditGroup :group="group" v-if="editing && group" v-bind:editing.sync="editing" v-on:update:reload="loadGroup()" />
     </div>
 </template>
 
 <script>
 import Vue from 'vue';
+import ViewGroup from '../components/ViewGroup.vue';
+import EditGroup from '../components/EditGroup.vue';
+
     export default {
         props: ['groupId', 'hash'],
+        components: {
+            ViewGroup,
+            EditGroup
+        },
         data() {
             return {
                 error: null,

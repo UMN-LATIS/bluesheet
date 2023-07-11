@@ -73,8 +73,13 @@
 </template>
 
 <script>
+import GroupTitle from "../components/GroupTitle.vue";
+
     export default {
         props: ["parent"],
+        components: {
+            GroupTitle
+        },
         data() {
             return {
                 groupList: null,

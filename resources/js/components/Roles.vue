@@ -30,8 +30,13 @@
 </template>
 
 <script>
+import GroupTitle from '../components/GroupTitle.vue';
+
 export default {
     props: ['memberships'],
+    components: {
+        GroupTitle
+    },
     data() {
         return {
             includePastRoles: false

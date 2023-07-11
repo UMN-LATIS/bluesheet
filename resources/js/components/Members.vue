@@ -2,7 +2,7 @@
     <div>
         <template v-if="$can('view groups') && !editing">
             <button class="btn btn-success" @click="showEmailList = !showEmailList">Show Email List</button>
-            <download-csv class="btn btn-info" :data="csvlist" :name="downloadTitle + '.csv'">Download List</download-csv>
+            <DownloadCSV class="btn btn-info" :data="csvlist" :name="downloadTitle + '.csv'">Download List</DownloadCSV>
             <button class="btn btn-primary" v-bind:class="{ active: filterList }" aria-pressed="false"
                 @click="filterList =! filterList">Filter List</button>
         </template>
@@ -128,9 +128,22 @@
 </template>
 
 <script>
+import SortableLink from './SortableLink.vue'
+import DownloadCSV from "vue-json-csv";
+import MemberList from './MemberList.vue'
+import Gantt from './Gantt.vue'
+import Modal from './Modal.vue';
+
     export default {
         props: ['members', 'editing', 'roles', 'show_unit', 'groupType', 'viewType', "downloadTitle"],
         emits: ['update:members'],
+        components: {
+            SortableLink,
+            DownloadCSV,
+            MemberList,
+            Gantt,
+            Modal
+        },
         data() {
             return {
                 includePreviousMembers: false,

@@ -25,9 +25,13 @@
 </template>
 
 <script>
+import GanttRow from './GanttRow.vue';
 export default {
     props: ['members', 'mindate','maxdate', 'show_unit', 'filterList'],
     emits: ['update:member'],
+    components: {
+        GanttRow
+    },
     data() {
         return {
         }

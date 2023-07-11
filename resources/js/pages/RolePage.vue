@@ -8,7 +8,7 @@
         <div class="form-group row" v-if="parentOrganizations">
                 <label for="parentOrganization" class="col-sm-2 col-form-label">Filter by Folder</label>
                 <div class="col-sm-6">
-                     <treeselect v-model="parentOrganization" :multiple="false" :options="parentOrganizations"  :clearable="true" :searchable="true" :openOnClick="true" :closeOnSelect="true" label="group_title"/>
+                     <TreeSelect v-model="parentOrganization" :multiple="false" :options="parentOrganizations"  :clearable="true" :searchable="true" :openOnClick="true" :closeOnSelect="true" label="group_title"/>
                 </div>
         </div>
         <members :members="filteredMembers" :editing="false" :roles="[role]" :show_unit="false" :filterList="null" groupType="department"  viewType="role" :downloadTitle="role.label"></members>
@@ -18,8 +18,14 @@
 </template>
 
 <script>
+import TreeSelect from '@riophae/vue-treeselect';
+import Members from '../components/Members.vue';
     export default {
         props: ['roleId'],
+        components: {
+            TreeSelect,
+            Members
+        },
         data() {
             return {
                 error: null,

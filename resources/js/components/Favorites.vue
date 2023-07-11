@@ -2,9 +2,9 @@
     <table class="table" v-if="user">
         <thead>
             <tr>
-                <th><sortableLink :sortLabel="type" :sortElement="titleItem" :currentSort="currentSort"
+                <th><SortableLink :sortLabel="type" :sortElement="titleItem" :currentSort="currentSort"
                             :currentSortDir="currentSortDir" v-on:sort="sort" /></th>
-                <th v-if="type == 'group'" width="30%"><sortableLink sortLabel="Updated" sortElement="updated_at" :currentSort="currentSort"
+                <th v-if="type == 'group'" width="30%"><SortableLink sortLabel="Updated" sortElement="updated_at" :currentSort="currentSort"
                             :currentSortDir="currentSortDir" v-on:sort="sort" /></th>
             </tr>
         </thead>
@@ -21,10 +21,14 @@
 </template>
 
 <script>
+import SortableLink from './SortableLink.vue';
 
 export default {
     // we use newly loaded user, not state
     props: ["user", "type"],
+    components: {
+        SortableLink
+    },
     data() {
         return {
             currentSortDir: 'desc',

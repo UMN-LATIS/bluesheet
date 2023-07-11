@@ -1,8 +1,7 @@
 @extends('base')
 
 @section('content')
-
-	<home></home>
+	<App></App>
 @endsection
 
 @section('header')

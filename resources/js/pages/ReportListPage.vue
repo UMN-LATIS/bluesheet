@@ -23,8 +23,4 @@
     </div>
 </template>
 
-<script>
-export default {
-    
-}
-</script>
+<script></script>

@@ -3,8 +3,7 @@
         <div class="alert alert-danger" role="alert" v-if="error">
             {{ error}}
         </div>
-        <viewuser :user="user" v-if="user">
-        </viewuser>
+        <ViewUser :user="user" v-if="user" />
         <div class="col-md-6" v-if="user && !userId">
             <div class="form-check">
                 <input class="form-check-input" type="checkbox" v-model="user.send_email_reminders" @change="updateUser" id="send_email_reminders">
@@ -26,8 +25,14 @@
 </template>
 
 <script>
+import ViewUser from '../components/ViewUser.vue';
+import Roles from '../components/Roles.vue';
     export default {
         props: ['userId'],
+        components: {
+            ViewUser,
+            Roles
+        },
         data() {
             return {
                 error: null,
@@ -40,7 +45,7 @@
         computed: {
             memberships: function() {
                 if(this.user) {
-                    return this.user.memberships;    
+                    return this.user.memberships;
                 }
                 return [];
             }

@@ -44,8 +44,15 @@
 </style>
 
 <script>
+import GroupTitle from './GroupTitle.vue';
+import Members from './Members.vue';
+
 export default {
     props: ['group', 'editing'],
+    components: {
+        GroupTitle,
+        Members,
+    },
     data() {
         return {
             roles: [],

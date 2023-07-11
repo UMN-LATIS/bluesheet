@@ -12,7 +12,7 @@
                 <span v-if="!member.user.id || !$can('view users')">{{ member.user.surname }}, {{ member.user.givenname }}</span>
             </td>
             <td v-if="show_unit && viewType=='group'">{{ member.user.ou }}</td>
-            
+
             <template v-if="viewType=='group'">
                 <td v-if="!editing">{{ member.role.label }}</td>
                 <td v-if="editing">
@@ -25,7 +25,7 @@
                     <group-title :group="member.group" />
                 </router-link>
                 <span v-if="!member.group.id || !$can('edit users')">{{ member.group.group_title}}</span>
-               
+
             </td>
 
             <td v-if="!editing">{{ member.notes }}</td>
@@ -38,7 +38,7 @@
                     moment("YYYY, MMM Do") }}</span></td>
             <td v-if="editing"><input type="date" class="form-control"
                         :value="member.end_date" @blur="member.end_date = $event.target.value"></td>
-            
+
             <td v-if="!editing"><i v-if="viewType=='group' && member.role.official_group_type.length > 0" class="fa fa-check"></i>
                 <i v-else class="searchIcon fa fa-close"></i>
             </td>
@@ -63,8 +63,15 @@
 </style>
 
 <script>
+import VSelect from 'vue-select';
+import GroupTitle from './GroupTitle.vue';
+
 export default {
     props: ['editing', 'filteredList', 'filterList', 'includePreviousMembers', 'roles', 'show_unit', 'viewType'],
+    components: {
+        VSelect,
+        GroupTitle
+    },
     data() {
         return {
 

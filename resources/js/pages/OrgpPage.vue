@@ -26,7 +26,12 @@
 </template>
 
 <script>
+import Members from '../components/Members.vue';
+
 export default {
+    components: {
+        Members,
+    },
     data() {
         return {
             groupList: [],

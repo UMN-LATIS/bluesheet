@@ -143,10 +143,9 @@
             <div class="row">
                 <label for="nameLookup" class="col-sm-3 col-form-label">Name:</label>
                 <div class="col-sm-6">
-                    <autocomplete source="/api/autocompleter/user?searchType=nameAndInternetId&q=" id="nameLookup"
+                    <AutoComplete source="/api/autocompleter/user?searchType=nameAndInternetId&q=" id="nameLookup"
                         resultsProperty="items" resultsDisplay="full_name" resultsValue="mail"
-                        ref="userAutocompleter" inputClass="form-control" v-model="newUserId">
-                    </autocomplete>
+                        ref="userAutocompleter" inputClass="form-control" v-model="newUserId" />
                     <small id="addUserHelpBlock" class="form-text text-muted">
                         Optional: Enter a name and select the person from the list
                     </small>
@@ -210,8 +209,21 @@
 </style>
 
 <script>
+import VSelect from 'vue-select'
+import Members from './Members.vue'
+import Modal from './Modal.vue'
+import FolderWidget from './FolderWidget.vue'
+import AutoComplete from "vuejs-auto-complete";
+
     export default {
         props: ['group'],
+        components: {
+            VSelect,
+            Members,
+            Modal,
+            FolderWidget,
+            AutoComplete
+        },
         data() {
             return {
                 // copy of the group object to avoid
