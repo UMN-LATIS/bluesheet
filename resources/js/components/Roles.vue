@@ -69,8 +69,11 @@ export default {
       );
     },
     sortedList: function () {
-      return [...this.memberships].sort(function (a, b) {
-        return a.start_date < b.start_date;
+      return [...this.memberships].sort((a, b) => {
+        const dateA = dayjs(a.start_date);
+        const dateB = dayjs(b.start_date);
+
+        return dateA.isBefore(dateB) ? -1 : dateA.isAfter(dateB) ? 1 : 0;
       });
     },
   },
