@@ -88,17 +88,14 @@ Vue.component('ceddLike', CeddLike);
 import orgp from './components/reports/orgp.vue';
 Vue.component('orgp', orgp);
 
-<<<<<<< HEAD
-import schedulingReport from './components/schedulingReport.vue';
+import schedulingReport from './components/reports/schedulingReport.vue';
 Vue.component('schedulingReport', schedulingReport);
 
-=======
 import fiscal from './components/reports/fiscal.vue';
 Vue.component('fiscal', fiscal);
 
 import committeeService from './components/reports/CommitteeService.vue';
 Vue.component('committeeService', committeeService);
->>>>>>> develop
 
 Vue.component('home', require('./components/Home.vue').default);
 Vue.component('viewuser', require('./components/ViewUser.vue').default);
