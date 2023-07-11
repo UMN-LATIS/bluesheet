@@ -293,7 +293,6 @@ import AutoComplete from "vuejs-auto-complete";
                     return [];
                 }
                 return this.roles;
-                // return this.roles.filter(r => !r.official_group_type || r.official_group_type.map(gt=>gt.label).includes(this.group.group_type.label));
             },
             groupURL: function () {
                 return window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' +
@@ -394,7 +393,6 @@ import AutoComplete from "vuejs-auto-complete";
                             this.$refs.userAutocompleter.display = "";
                             this.addMember = false;
                         }
-                        // this.group = res.data;
                     })
                     .catch(err => {
                         this.addMemberError = err.response.data.message;
