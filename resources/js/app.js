@@ -55,17 +55,13 @@ const store = new Vuex.Store({
       var type = payload.type;
       var item = payload.item;
       if (state.favorites[type].filter((f) => f.id == item.id).length > 0) {
-        axios
-          .delete("/api/user/favorite/" + type + "/" + item.id)
-          .then(() => {
-            commit("removeFavorite", payload);
-          });
+        axios.delete("/api/user/favorite/" + type + "/" + item.id).then(() => {
+          commit("removeFavorite", payload);
+        });
       } else {
-        axios
-          .post("/api/user/favorite/" + type + "/" + item.id)
-          .then(() => {
-            commit("addFavorite", payload);
-          });
+        axios.post("/api/user/favorite/" + type + "/" + item.id).then(() => {
+          commit("addFavorite", payload);
+        });
       }
     },
     fetchUser(context) {
@@ -88,7 +84,7 @@ const store = new Vuex.Store({
     },
     removeFavorite(state, payload) {
       state.favorites[payload.type] = state.favorites[payload.type].filter(
-        (f) => f.id != payload.item.id
+        (f) => f.id != payload.item.id,
       );
     },
     setFavorites(state, payload) {

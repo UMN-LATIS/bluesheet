@@ -4,556 +4,398 @@
     "domain": null,
     "action": "Barryvdh\\Debugbar\\Controllers\\OpenHandlerController@handle",
     "uri": "_debugbar/open",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "debugbar.clockwork": {
     "name": "debugbar.clockwork",
     "domain": null,
     "action": "Barryvdh\\Debugbar\\Controllers\\OpenHandlerController@clockwork",
     "uri": "_debugbar/clockwork/{id}",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "debugbar.assets.css": {
     "name": "debugbar.assets.css",
     "domain": null,
     "action": "Barryvdh\\Debugbar\\Controllers\\AssetController@css",
     "uri": "_debugbar/assets/stylesheets",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "debugbar.assets.js": {
     "name": "debugbar.assets.js",
     "domain": null,
     "action": "Barryvdh\\Debugbar\\Controllers\\AssetController@js",
     "uri": "_debugbar/assets/javascript",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "debugbar.cache.delete": {
     "name": "debugbar.cache.delete",
     "domain": null,
     "action": "Barryvdh\\Debugbar\\Controllers\\CacheController@delete",
     "uri": "_debugbar/cache/{key}/{tags?}",
-    "method": [
-      "DELETE"
-    ]
+    "method": ["DELETE"]
   },
   "cypress.factory": {
     "name": "cypress.factory",
     "domain": null,
     "action": "Laracasts\\Cypress\\Controllers\\CypressController@factory",
     "uri": "__cypress__/factory",
-    "method": [
-      "POST"
-    ]
+    "method": ["POST"]
   },
   "cypress.login": {
     "name": "cypress.login",
     "domain": null,
     "action": "Laracasts\\Cypress\\Controllers\\CypressController@login",
     "uri": "__cypress__/login",
-    "method": [
-      "POST"
-    ]
+    "method": ["POST"]
   },
   "cypress.logout": {
     "name": "cypress.logout",
     "domain": null,
     "action": "Laracasts\\Cypress\\Controllers\\CypressController@logout",
     "uri": "__cypress__/logout",
-    "method": [
-      "POST"
-    ]
+    "method": ["POST"]
   },
   "cypress.artisan": {
     "name": "cypress.artisan",
     "domain": null,
     "action": "Laracasts\\Cypress\\Controllers\\CypressController@artisan",
     "uri": "__cypress__/artisan",
-    "method": [
-      "POST"
-    ]
+    "method": ["POST"]
   },
   "cypress.run-php": {
     "name": "cypress.run-php",
     "domain": null,
     "action": "Laracasts\\Cypress\\Controllers\\CypressController@runPhp",
     "uri": "__cypress__/run-php",
-    "method": [
-      "POST"
-    ]
+    "method": ["POST"]
   },
   "cypress.csrf-token": {
     "name": "cypress.csrf-token",
     "domain": null,
     "action": "Laracasts\\Cypress\\Controllers\\CypressController@csrfToken",
     "uri": "__cypress__/csrf_token",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "cypress.routes": {
     "name": "cypress.routes",
     "domain": null,
     "action": "Laracasts\\Cypress\\Controllers\\CypressController@routes",
     "uri": "__cypress__/routes",
-    "method": [
-      "POST"
-    ]
+    "method": ["POST"]
   },
   "cypress.current-user": {
     "name": "cypress.current-user",
     "domain": null,
     "action": "Laracasts\\Cypress\\Controllers\\CypressController@currentUser",
     "uri": "__cypress__/current-user",
-    "method": [
-      "POST"
-    ]
+    "method": ["POST"]
   },
   "dusk.login": {
     "name": "dusk.login",
     "domain": null,
     "action": "Laravel\\Dusk\\Http\\Controllers\\UserController@login",
     "uri": "_dusk/login/{userId}/{guard?}",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "dusk.logout": {
     "name": "dusk.logout",
     "domain": null,
     "action": "Laravel\\Dusk\\Http\\Controllers\\UserController@logout",
     "uri": "_dusk/logout/{guard?}",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "dusk.user": {
     "name": "dusk.user",
     "domain": null,
     "action": "Laravel\\Dusk\\Http\\Controllers\\UserController@user",
     "uri": "_dusk/user/{guard?}",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "": {
     "name": null,
     "domain": null,
     "action": "App\\Http\\Controllers\\HomeController@index",
     "uri": "{all}",
-    "method": [
-      "GET",
-      "HEAD",
-      "POST",
-      "PUT",
-      "PATCH",
-      "DELETE",
-      "OPTIONS"
-    ]
+    "method": ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
   },
   "shibboleth-login": {
     "name": "shibboleth-login",
     "domain": null,
     "action": "\\StudentAffairsUwm\\Shibboleth\\Controllers\\ShibbolethController@login",
     "uri": "shibboleth-login",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "shibboleth-authenticate": {
     "name": "shibboleth-authenticate",
     "domain": null,
     "action": "\\StudentAffairsUwm\\Shibboleth\\Controllers\\ShibbolethController@idpAuthenticate",
     "uri": "shibboleth-authenticate",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "impersonate": {
     "name": "impersonate",
     "domain": null,
     "action": "\\Lab404\\Impersonate\\Controllers\\ImpersonateController@take",
     "uri": "impersonate/take/{id}/{guardName?}",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "impersonate.leave": {
     "name": "impersonate.leave",
     "domain": null,
     "action": "\\Lab404\\Impersonate\\Controllers\\ImpersonateController@leave",
     "uri": "impersonate/leave",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "login": {
     "name": "login",
     "domain": null,
     "action": "\\StudentAffairsUwm\\Shibboleth\\Controllers\\ShibbolethController@emulateLogin",
     "uri": "login",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "user.index": {
     "name": "user.index",
     "domain": null,
     "action": "App\\Http\\Controllers\\UserController@index",
     "uri": "api/user",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "user.create": {
     "name": "user.create",
     "domain": null,
     "action": "App\\Http\\Controllers\\UserController@create",
     "uri": "api/user/create",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "user.store": {
     "name": "user.store",
     "domain": null,
     "action": "App\\Http\\Controllers\\UserController@store",
     "uri": "api/user",
-    "method": [
-      "POST"
-    ]
+    "method": ["POST"]
   },
   "user.show": {
     "name": "user.show",
     "domain": null,
     "action": "App\\Http\\Controllers\\UserController@show",
     "uri": "api/user/{user}",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "user.edit": {
     "name": "user.edit",
     "domain": null,
     "action": "App\\Http\\Controllers\\UserController@edit",
     "uri": "api/user/{user}/edit",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "user.update": {
     "name": "user.update",
     "domain": null,
     "action": "App\\Http\\Controllers\\UserController@update",
     "uri": "api/user/{user}",
-    "method": [
-      "PUT",
-      "PATCH"
-    ]
+    "method": ["PUT", "PATCH"]
   },
   "user.destroy": {
     "name": "user.destroy",
     "domain": null,
     "action": "App\\Http\\Controllers\\UserController@destroy",
     "uri": "api/user/{user}",
-    "method": [
-      "DELETE"
-    ]
+    "method": ["DELETE"]
   },
   "group.index": {
     "name": "group.index",
     "domain": null,
     "action": "App\\Http\\Controllers\\GroupController@index",
     "uri": "api/group",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "group.create": {
     "name": "group.create",
     "domain": null,
     "action": "App\\Http\\Controllers\\GroupController@create",
     "uri": "api/group/create",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "group.store": {
     "name": "group.store",
     "domain": null,
     "action": "App\\Http\\Controllers\\GroupController@store",
     "uri": "api/group",
-    "method": [
-      "POST"
-    ]
+    "method": ["POST"]
   },
   "group.show": {
     "name": "group.show",
     "domain": null,
     "action": "App\\Http\\Controllers\\GroupController@show",
     "uri": "api/group/{group}",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "group.edit": {
     "name": "group.edit",
     "domain": null,
     "action": "App\\Http\\Controllers\\GroupController@edit",
     "uri": "api/group/{group}/edit",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "group.update": {
     "name": "group.update",
     "domain": null,
     "action": "App\\Http\\Controllers\\GroupController@update",
     "uri": "api/group/{group}",
-    "method": [
-      "PUT",
-      "PATCH"
-    ]
+    "method": ["PUT", "PATCH"]
   },
   "group.destroy": {
     "name": "group.destroy",
     "domain": null,
     "action": "App\\Http\\Controllers\\GroupController@destroy",
     "uri": "api/group/{group}",
-    "method": [
-      "DELETE"
-    ]
+    "method": ["DELETE"]
   },
   "users.index": {
     "name": "users.index",
     "domain": null,
     "action": "App\\Http\\Controllers\\Admin\\UsersController@index",
     "uri": "admin/users",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "users.create": {
     "name": "users.create",
     "domain": null,
     "action": "App\\Http\\Controllers\\Admin\\UsersController@create",
     "uri": "admin/users/create",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "users.store": {
     "name": "users.store",
     "domain": null,
     "action": "App\\Http\\Controllers\\Admin\\UsersController@store",
     "uri": "admin/users",
-    "method": [
-      "POST"
-    ]
+    "method": ["POST"]
   },
   "users.show": {
     "name": "users.show",
     "domain": null,
     "action": "App\\Http\\Controllers\\Admin\\UsersController@show",
     "uri": "admin/users/{user}",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "users.edit": {
     "name": "users.edit",
     "domain": null,
     "action": "App\\Http\\Controllers\\Admin\\UsersController@edit",
     "uri": "admin/users/{user}/edit",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "users.update": {
     "name": "users.update",
     "domain": null,
     "action": "App\\Http\\Controllers\\Admin\\UsersController@update",
     "uri": "admin/users/{user}",
-    "method": [
-      "PUT",
-      "PATCH"
-    ]
+    "method": ["PUT", "PATCH"]
   },
   "users.destroy": {
     "name": "users.destroy",
     "domain": null,
     "action": "App\\Http\\Controllers\\Admin\\UsersController@destroy",
     "uri": "admin/users/{user}",
-    "method": [
-      "DELETE"
-    ]
+    "method": ["DELETE"]
   },
   "group-type.index": {
     "name": "group-type.index",
     "domain": null,
     "action": "App\\Http\\Controllers\\Admin\\GroupTypeController@index",
     "uri": "admin/group-type",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "group-type.create": {
     "name": "group-type.create",
     "domain": null,
     "action": "App\\Http\\Controllers\\Admin\\GroupTypeController@create",
     "uri": "admin/group-type/create",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "group-type.store": {
     "name": "group-type.store",
     "domain": null,
     "action": "App\\Http\\Controllers\\Admin\\GroupTypeController@store",
     "uri": "admin/group-type",
-    "method": [
-      "POST"
-    ]
+    "method": ["POST"]
   },
   "group-type.show": {
     "name": "group-type.show",
     "domain": null,
     "action": "App\\Http\\Controllers\\Admin\\GroupTypeController@show",
     "uri": "admin/group-type/{group_type}",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "group-type.edit": {
     "name": "group-type.edit",
     "domain": null,
     "action": "App\\Http\\Controllers\\Admin\\GroupTypeController@edit",
     "uri": "admin/group-type/{group_type}/edit",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "group-type.update": {
     "name": "group-type.update",
     "domain": null,
     "action": "App\\Http\\Controllers\\Admin\\GroupTypeController@update",
     "uri": "admin/group-type/{group_type}",
-    "method": [
-      "PUT",
-      "PATCH"
-    ]
+    "method": ["PUT", "PATCH"]
   },
   "group-type.destroy": {
     "name": "group-type.destroy",
     "domain": null,
     "action": "App\\Http\\Controllers\\Admin\\GroupTypeController@destroy",
     "uri": "admin/group-type/{group_type}",
-    "method": [
-      "DELETE"
-    ]
+    "method": ["DELETE"]
   },
   "role.index": {
     "name": "role.index",
     "domain": null,
     "action": "App\\Http\\Controllers\\Admin\\RoleController@index",
     "uri": "admin/role",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "role.create": {
     "name": "role.create",
     "domain": null,
     "action": "App\\Http\\Controllers\\Admin\\RoleController@create",
     "uri": "admin/role/create",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "role.store": {
     "name": "role.store",
     "domain": null,
     "action": "App\\Http\\Controllers\\Admin\\RoleController@store",
     "uri": "admin/role",
-    "method": [
-      "POST"
-    ]
+    "method": ["POST"]
   },
   "role.show": {
     "name": "role.show",
     "domain": null,
     "action": "App\\Http\\Controllers\\Admin\\RoleController@show",
     "uri": "admin/role/{role}",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "role.edit": {
     "name": "role.edit",
     "domain": null,
     "action": "App\\Http\\Controllers\\Admin\\RoleController@edit",
     "uri": "admin/role/{role}/edit",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
+    "method": ["GET", "HEAD"]
   },
   "role.update": {
     "name": "role.update",
     "domain": null,
     "action": "App\\Http\\Controllers\\Admin\\RoleController@update",
     "uri": "admin/role/{role}",
-    "method": [
-      "PUT",
-      "PATCH"
-    ]
+    "method": ["PUT", "PATCH"]
   },
   "role.destroy": {
     "name": "role.destroy",
     "domain": null,
     "action": "App\\Http\\Controllers\\Admin\\RoleController@destroy",
     "uri": "admin/role/{role}",
-    "method": [
-      "DELETE"
-    ]
+    "method": ["DELETE"]
   }
 }

@@ -2,8 +2,8 @@
 
 > Track membership and roles within various groups, committees, taskforces, and departments at UMN.
 
--   aka: groups.cla.umn.edu
--   aka: caligari
+- aka: groups.cla.umn.edu
+- aka: caligari
 
 ## Set Up
 
@@ -11,10 +11,10 @@ Blue Sheeet uses Laravel's docker environment, [Laravel Sail](https://laravel.co
 
 Prereqs:
 
--   Docker
--   PHP v7.4
--   Composer
--   Node LTS
+- Docker
+- PHP v7.4
+- Composer
+- Node LTS
 
 To get started:
 
@@ -55,8 +55,8 @@ Load <http://localhost> in your browser.
 
 Login with:
 
--   username: `admin`
--   password: `admin`
+- username: `admin`
+- password: `admin`
 
 Additional users can be configured in `config/shibboleth.php`.
 

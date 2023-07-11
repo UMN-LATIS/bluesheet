@@ -1,17 +1,16 @@
-import get from 'lodash/get';
-import debounce from 'lodash/debounce';
-import Popper from 'popper.js';
-import jquery from 'jquery';
-import axios from 'axios';
+import get from "lodash/get";
+import debounce from "lodash/debounce";
+import Popper from "popper.js";
+import jquery from "jquery";
+import axios from "axios";
 
-import 'bootstrap';
+import "bootstrap";
 
 window._ = {};
 window._.get = get;
 window._.debounce = debounce;
 window.Popper = Popper;
 window.$ = window.jQuery = jquery;
-
 
 /**
  * We'll load the axios HTTP library which allows us to easily issue requests
@@ -20,7 +19,7 @@ window.$ = window.jQuery = jquery;
  */
 
 window.axios = axios;
-window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+window.axios.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
 
 /**
  * Next we will register the CSRF Token as a common header with Axios so that
@@ -31,7 +30,9 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 let token = document.head.querySelector('meta[name="csrf-token"]');
 
 if (token) {
-    window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token.content;
+  window.axios.defaults.headers.common["X-CSRF-TOKEN"] = token.content;
 } else {
-    console.error('CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token');
+  console.error(
+    "CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token",
+  );
 }

@@ -1,4 +1,4 @@
-const mix = require('laravel-mix');
+const mix = require("laravel-mix");
 
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
@@ -20,14 +20,16 @@ const mix = require('laravel-mix');
  */
 
 mix.webpackConfig({
-    resolve: {
-        symlinks: false
-    }
+  resolve: {
+    symlinks: false,
+  },
 });
 
-mix.js('resources/js/app.js', 'public/js').vue()
-    .sass('resources/sass/app.scss', 'public/css');
+mix
+  .js("resources/js/app.js", "public/js")
+  .vue()
+  .sass("resources/sass/app.scss", "public/css");
 
 if (mix.inProduction()) {
-    mix.version();
+  mix.version();
 }

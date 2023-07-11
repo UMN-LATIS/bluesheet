@@ -1,406 +1,504 @@
 <template>
-    <div>
-        <modal :show="showError" @close="showError = !error">
-            <div class="alert alert-danger col-sm-12" role="alert" v-if="saveError">
-                {{ saveError }}
+  <div>
+    <modal :show="showError" @close="showError = !error">
+      <div class="alert alert-danger col-sm-12" role="alert" v-if="saveError">
+        {{ saveError }}
+      </div>
+      <button class="btn btn-primary" @click="showError = false">Close</button>
+    </modal>
+    <div class="row">
+      <div class="col-md-12">
+        <div class="form-group row">
+          <div class="col-sm-6">
+            <div class="form-group">
+              <label for="groupTitle" class="small">Group Title</label>
+              <input
+                id="groupTitle"
+                class="form-control"
+                type="text"
+                v-model="localGroup.group_title"
+              />
             </div>
-            <button class="btn btn-primary" @click="showError=false">Close</button>
-        </modal>
-        <div class="row">
-            <div class="col-md-12">
-
-                <div class="form-group row">
-
-                    <div class="col-sm-6">
-                        <div class="form-group">
-                            <label for="groupTitle" class="small">Group Title</label>
-                            <input id="groupTitle" class="form-control" type="text"
-                            v-model="localGroup.group_title"
-                            >
-                        </div>
-                    </div>
-                    <div class="col-sm-3">
-                        <div class="form-group">
-                            <label for="abbreviation" class="small">Abbreviation</label>
-                            <input id="abbreviation" class="form-control" v-model="localGroup.abbreviation">
-                        </div>
-                    </div>
-                    <div class="col-sm-3">
-                        <button class="btn btn-success float-right" @click="save">Save</button>
-                        <button class="btn btn-outline-primary float-right"
-                            @click="$emit('update:editing', false); $emit('update:reload')">Cancel Editing</button>
-                    </div>
-                </div>
-                <div class="row">
-
-                    <div class="col-sm-4">
-                        <div class="form-group">
-                            <label for="groupType" class="small">Group Type</label>
-                            <v-select v-if="groupTypes" id="roles" taggable v-model="localGroup.group_type"
-                                :options="groupTypes" data-cy="groupType"></v-select>
-                        </div>
-                    </div>
-
-                    <div class="col-sm-4">
-                        <div class="form-group">
-                            <label for="parentOrganization" class="small">Folder</label>
-                            <folder-widget v-model="localGroup.parent_organization.id"></folder-widget>
-                        </div>
-                    </div>
-                    <div class="col-sm-4">
-                        <div class="form-group">
-                            <label for="parentGroup" class="small">Parent Group</label>
-                            <v-select v-if="groups" id="groups" v-model="localGroup.parent_group_id" :options="groups"
-                                :reduce="parent_group => parent_group.id"></v-select>
-                        </div>
-                    </div>
-                </div>
-
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <label for="googleGroup" class="small">Google Group Name</label>
-                        <input id="googleGroup" class="form-control" v-model="localGroup.google_group">
-                    </div>
-                    <div class="col-sm-3">
-                        <div class="form-group">
-                            <label for="abbreviation" class="small">Department ID</label>
-                            <input id="abbreviation" class="form-control" v-model="localGroup.dept_id">
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" v-model="localGroup.show_unit" id="showunit">
-                            <label class="form-check-label small" for="showunit">
-                                Show Unit
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <label for="groupNotes" class="small">Group Notes</label>
-                        <textarea id="groupNotes" class="form-control" v-model="localGroup.notes"></textarea>
-                    </div>
-                </div>
-
-
-
+          </div>
+          <div class="col-sm-3">
+            <div class="form-group">
+              <label for="abbreviation" class="small">Abbreviation</label>
+              <input
+                id="abbreviation"
+                class="form-control"
+                v-model="localGroup.abbreviation"
+              />
             </div>
+          </div>
+          <div class="col-sm-3">
+            <button class="btn btn-success float-right" @click="save">
+              Save
+            </button>
+            <button
+              class="btn btn-outline-primary float-right"
+              @click="
+                $emit('update:editing', false);
+                $emit('update:reload');
+              "
+            >
+              Cancel Editing
+            </button>
+          </div>
         </div>
         <div class="row">
-            <div class="col-md-12">
-
-
-                <div class="row">
-                    <div class="col-md-12">
-                        <button class="btn btn-outline-primary float-right" @click="addArtifact">Add Artifact <i
-                                class="fas fa-plus"></i></button>
-                        <p>Artifacts:</p>
-                    </div>
-                </div>
-                <div class="form-row" v-for="(artifact, key) in localGroup.artifacts" :key="key">
-
-                    <div class="form-group col-md-5">
-                        <input type="" v-model="artifact.label" class="form-control" placeholder="Label">
-                    </div>
-                    <div class="form-group col-md-6">
-                        <input v-model="artifact.target" class="form-control" placeholder="Target URL">
-                    </div>
-                    <div class="form-group col-md-1 d-flex flex-column">
-
-                        <button class="btn btn-danger" @click="removeArtifact(key)"><i
-                                class="fas fa-trash-alt"></i></button>
-                    </div>
-                </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label for="groupType" class="small">Group Type</label>
+              <v-select
+                v-if="groupTypes"
+                id="roles"
+                taggable
+                v-model="localGroup.group_type"
+                :options="groupTypes"
+                data-cy="groupType"
+              ></v-select>
             </div>
+          </div>
+
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label for="parentOrganization" class="small">Folder</label>
+              <folder-widget
+                v-model="localGroup.parent_organization.id"
+              ></folder-widget>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label for="parentGroup" class="small">Parent Group</label>
+              <v-select
+                v-if="groups"
+                id="groups"
+                v-model="localGroup.parent_group_id"
+                :options="groups"
+                :reduce="(parent_group) => parent_group.id"
+              ></v-select>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <label for="googleGroup" class="small">Google Group Name</label>
+            <input
+              id="googleGroup"
+              class="form-control"
+              v-model="localGroup.google_group"
+            />
+          </div>
+          <div class="col-sm-3">
+            <div class="form-group">
+              <label for="abbreviation" class="small">Department ID</label>
+              <input
+                id="abbreviation"
+                class="form-control"
+                v-model="localGroup.dept_id"
+              />
+            </div>
+          </div>
         </div>
         <div class="row">
-
-
-            <div class="col-md-12">
-                <button class="btn btn-outline-primary float-right" @click="addMember=true">Add Member <i
-                        class="fas fa-plus"></i></button>
-                <p>Members:</p>
+          <div class="col-md-6">
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                v-model="localGroup.show_unit"
+                id="showunit"
+              />
+              <label class="form-check-label small" for="showunit">
+                Show Unit
+              </label>
             </div>
+          </div>
         </div>
-        <members :groupType="localGroup.group_type.label" :members.sync="localGroup.members" :show_unit="localGroup.show_unit"
-            editing="true" :roles="filteredRoles" viewType="group" :downloadTitle="localGroup.group_title" @update:members="handleUpdateMembers"></members>
-
-
-        <div class="row border border-danger rounded deactivate">
-            <div class="col-sm-12">
-                <strong>If you deactivate this group, all members will be removed and an administrator will be required
-                    to reactivate it.</strong>
-                <button class="btn btn-danger float-right" @click="deactivate">Deactivate Group</button>
-            </div>
+        <div class="row">
+          <div class="col-md-12">
+            <label for="groupNotes" class="small">Group Notes</label>
+            <textarea
+              id="groupNotes"
+              class="form-control"
+              v-model="localGroup.notes"
+            ></textarea>
+          </div>
         </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <div class="row">
+          <div class="col-md-12">
+            <button
+              class="btn btn-outline-primary float-right"
+              @click="addArtifact"
+            >
+              Add Artifact <i class="fas fa-plus"></i>
+            </button>
+            <p>Artifacts:</p>
+          </div>
+        </div>
+        <div
+          class="form-row"
+          v-for="(artifact, key) in localGroup.artifacts"
+          :key="key"
+        >
+          <div class="form-group col-md-5">
+            <input
+              type=""
+              v-model="artifact.label"
+              class="form-control"
+              placeholder="Label"
+            />
+          </div>
+          <div class="form-group col-md-6">
+            <input
+              v-model="artifact.target"
+              class="form-control"
+              placeholder="Target URL"
+            />
+          </div>
+          <div class="form-group col-md-1 d-flex flex-column">
+            <button class="btn btn-danger" @click="removeArtifact(key)">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <button
+          class="btn btn-outline-primary float-right"
+          @click="addMember = true"
+        >
+          Add Member <i class="fas fa-plus"></i>
+        </button>
+        <p>Members:</p>
+      </div>
+    </div>
+    <members
+      :groupType="localGroup.group_type.label"
+      :members.sync="localGroup.members"
+      :show_unit="localGroup.show_unit"
+      editing="true"
+      :roles="filteredRoles"
+      viewType="group"
+      :downloadTitle="localGroup.group_title"
+      @update:members="handleUpdateMembers"
+    ></members>
 
-
-        <modal :show="addMember" @close="addMember = !addMember">
-            <div class="row">
-                <label for="nameLookup" class="col-sm-3 col-form-label">Name:</label>
-                <div class="col-sm-6">
-                    <AutoComplete source="/api/autocompleter/user?searchType=nameAndInternetId&q=" id="nameLookup"
-                        resultsProperty="items" resultsDisplay="full_name" resultsValue="mail"
-                        ref="userAutocompleter" inputClass="form-control" v-model="newUserId" />
-                    <small id="addUserHelpBlock" class="form-text text-muted">
-                        Optional: Enter a name and select the person from the list
-                    </small>
-                </div>
-            </div>
-
-
-            <div class="row">
-                <label for="internetId" class="col-sm-3 col-form-label">Internet ID:</label>
-                <div class="col-sm-6">
-                    <input type="text" ref="addMemberRef" class="form-control" id="internetId"
-                        v-on:keyup="addMemberError = null" @keyup.enter="lookupMember" placeholder="Internet ID"
-                        v-model="newUserId">
-                    <small id="addUserHelpBlock" class="form-text text-muted">
-                        Enter one or more InternetIds or email addresses (comma-separated). You can add a list of users,
-                        even if it's in the format "John Smith &lt;smith@umn.edu&gt;, Jane Doe &lt;jane@umn.edu&gt;".
-                    </small>
-                </div>
-            </div>
-            <div class="row">
-
-                <label for="roles" class="col-sm-3 col-form-label">Role:</label>
-                <div class="col-sm-6">
-                    <v-select v-if="roles" id="roles" taggable v-model="newRole" :options="filteredRoles"></v-select>
-                </div>
-                <div class="col-sm-3">
-                    <button class="btn btn-primary" style="white-space:nowrap;" @click="lookupMember">Add
-                        Member</button>
-                </div>
-
-            </div>
-            <div class="row">
-                <div class="alert alert-danger col-sm-12" role="alert" v-if="addMemberError">
-                    {{ addMemberError }}
-                </div>
-
-            </div>
-
-
-        </modal>
-
+    <div class="row border border-danger rounded deactivate">
+      <div class="col-sm-12">
+        <strong
+          >If you deactivate this group, all members will be removed and an
+          administrator will be required to reactivate it.</strong
+        >
+        <button class="btn btn-danger float-right" @click="deactivate">
+          Deactivate Group
+        </button>
+      </div>
     </div>
 
+    <modal :show="addMember" @close="addMember = !addMember">
+      <div class="row">
+        <label for="nameLookup" class="col-sm-3 col-form-label">Name:</label>
+        <div class="col-sm-6">
+          <AutoComplete
+            source="/api/autocompleter/user?searchType=nameAndInternetId&q="
+            id="nameLookup"
+            resultsProperty="items"
+            resultsDisplay="full_name"
+            resultsValue="mail"
+            ref="userAutocompleter"
+            inputClass="form-control"
+            v-model="newUserId"
+          />
+          <small id="addUserHelpBlock" class="form-text text-muted">
+            Optional: Enter a name and select the person from the list
+          </small>
+        </div>
+      </div>
+
+      <div class="row">
+        <label for="internetId" class="col-sm-3 col-form-label"
+          >Internet ID:</label
+        >
+        <div class="col-sm-6">
+          <input
+            type="text"
+            ref="addMemberRef"
+            class="form-control"
+            id="internetId"
+            v-on:keyup="addMemberError = null"
+            @keyup.enter="lookupMember"
+            placeholder="Internet ID"
+            v-model="newUserId"
+          />
+          <small id="addUserHelpBlock" class="form-text text-muted">
+            Enter one or more InternetIds or email addresses (comma-separated).
+            You can add a list of users, even if it's in the format "John Smith
+            &lt;smith@umn.edu&gt;, Jane Doe &lt;jane@umn.edu&gt;".
+          </small>
+        </div>
+      </div>
+      <div class="row">
+        <label for="roles" class="col-sm-3 col-form-label">Role:</label>
+        <div class="col-sm-6">
+          <v-select
+            v-if="roles"
+            id="roles"
+            taggable
+            v-model="newRole"
+            :options="filteredRoles"
+          ></v-select>
+        </div>
+        <div class="col-sm-3">
+          <button
+            class="btn btn-primary"
+            style="white-space: nowrap"
+            @click="lookupMember"
+          >
+            Add Member
+          </button>
+        </div>
+      </div>
+      <div class="row">
+        <div
+          class="alert alert-danger col-sm-12"
+          role="alert"
+          v-if="addMemberError"
+        >
+          {{ addMemberError }}
+        </div>
+      </div>
+    </modal>
+  </div>
 </template>
 
 <style scoped>
-    .row {
-        margin-top: 10px;
-        margin-bottom: 10px;
-    }
+.row {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
 
-    button {
-        margin-left: 5px;
-        margin-right: 5px;
-    }
+button {
+  margin-left: 5px;
+  margin-right: 5px;
+}
 
-    .deactivate {
-        padding: 10px;
-    }
-
+.deactivate {
+  padding: 10px;
+}
 </style>
 
 <script>
-import VSelect from 'vue-select'
-import Members from './Members.vue'
-import Modal from './Modal.vue'
-import FolderWidget from './FolderWidget.vue'
+import VSelect from "vue-select";
+import Members from "./Members.vue";
+import Modal from "./Modal.vue";
+import FolderWidget from "./FolderWidget.vue";
 import AutoComplete from "vuejs-auto-complete";
 
-    export default {
-        props: ['group'],
-        components: {
-            VSelect,
-            Members,
-            Modal,
-            FolderWidget,
-            AutoComplete
-        },
-        data() {
-            return {
-                // copy of the group object to avoid
-                // mutating the prop directly
-                localGroup: this.group,
-                addMember: false,
-                newUserId: null,
-                newRole: null,
-                addMemberError: null,
-                showError: false,
-                saveError: null,
-                roles: null,
-                groupTypes: null,
-                groups: null,
-            }
-        },
-        mounted() {
-            axios.get("/api/group/roles/")
-                .then(res => {
-                    this.roles = res.data;
-                })
-                .catch(err => {
-                    this.error = err.response.data;
-                });
-            axios.get("/api/group/types")
-                .then(res => {
-                    this.groupTypes = res.data;
-                    if (this.groupTypes.filter(e => e.id == this.localGroup.group_type.id).length == 0) {
-                        this.groupTypes.push(this.localGroup.group_type);
-                    }
-                    this.groupTypes = this.groupTypes.sort((a, b) => {
-                        return a.label.localeCompare(b.label);
-                    });
-
-                })
-                .catch(err => {
-                    console.error(err);
-                });
-
-            axios.get("/api/group")
-                .then(res => {
-                    this.groups = res.data.filter(e => e.active_group).filter(e => e.id != this.localGroup.id).map(e => {
-                        return {
-                            id: e.id,
-                            label: e.group_title
-                        }
-                    }).sort(function (a, b) {
-                        return a.label > b.label;
-                    });
-                })
-                .catch(err => {
-                    console.error(err);
-                });
-        },
-        watch: {
-            addMember: function (newVal) {
-                if (newVal == true) {
-                    this.$nextTick(() => {
-                        this.$refs.addMemberRef.focus();
-                    });
-                }
-            }
-        },
-        computed: {
-            filteredRoles: function () {
-                if (!this.roles) {
-                    return [];
-                }
-                return this.roles;
-            },
-            groupURL: function () {
-                return window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' +
-                    window.location.port : '') + "/group/" + this.localGroup.id + "/" + this.localGroup.secret_hash;
-            }
-        },
-        methods: {
-            handleUpdateMembers: function (members) {
-                this.localGroup.members = members;
-            },
-
-            save: function () {
-                if (!this.checkForm()) {
-                    return;
-                }
-
-                axios.patch("/api/group/" + this.localGroup.id, this.localGroup)
-                    .then(({
-                        data
-                    }) => {
-                        if (data.success) {
-                            this.$emit('update:reload')
-                        }
-                        this.$emit('update:editing', false);
-                    })
-                    .catch(err => {
-                        this.saveError = err.response.data.message;
-                        this.showError = true;
-                    });
-            },
-            checkForm: function () {
-                this.saveError = null;
-
-                for (var member of this.localGroup.members) {
-                    if (!member.role) {
-                        this.saveError = "Every member must have a role assigned";
-                        this.showError = true;
-                        return false;
-                    }
-                }
-
-                if (this.localGroup.group_type == null) {
-                    this.saveError = "You must select a group type";
-                    this.showError = true;
-                    return false;
-                }
-
-                return true;
-
-            },
-            removeArtifact: function (index) {
-                this.localGroup.artifacts.splice(index, 1);
-            },
-            addArtifact: function () {
-                this.localGroup.artifacts.push({
-                    label: "",
-                    target: ""
-                });
-            },
-            deactivate: function () {
-                if (confirm("Are you sure you want to deactivate this group?")) {
-
-                    axios.delete("/api/group/" + this.localGroup.id)
-                        .then(() => {
-                            this.$router.push({
-                                name: 'home'
-                            });
-                        })
-                        .catch(err => {
-                            console.error(err);
-                            alert("Error deleting this group.  Hrm.");
-                        })
-
-                }
-            },
-            lookupMember: function () {
-                axios.post("/api/user/lookup", {
-                        users: this.newUserId
-                    })
-                    .then(res => {
-                        for (var user of res.data.users) {
-                            var newMembershipRecord = {
-                                group_id: this.localGroup.id,
-                                start_date: this.$moment().format("YYYY-MM-DD"),
-                                end_date: null,
-                                user: user,
-                                role: this.newRole
-                            };
-                            this.localGroup.members.push(newMembershipRecord);
-                        }
-
-
-
-                        if (res.data.status == "Partial") {
-                            this.addMemberError = res.data.message;
-                        } else {
-                            this.newUserId = null;
-                            this.$refs.userAutocompleter.display = "";
-                            this.addMember = false;
-                        }
-                    })
-                    .catch(err => {
-                        this.addMemberError = err.response.data.message;
-                    });
-
-            }
-
+export default {
+  props: ["group"],
+  components: {
+    VSelect,
+    Members,
+    Modal,
+    FolderWidget,
+    AutoComplete,
+  },
+  data() {
+    return {
+      // copy of the group object to avoid
+      // mutating the prop directly
+      localGroup: this.group,
+      addMember: false,
+      newUserId: null,
+      newRole: null,
+      addMemberError: null,
+      showError: false,
+      saveError: null,
+      roles: null,
+      groupTypes: null,
+      groups: null,
+    };
+  },
+  mounted() {
+    axios
+      .get("/api/group/roles/")
+      .then((res) => {
+        this.roles = res.data;
+      })
+      .catch((err) => {
+        this.error = err.response.data;
+      });
+    axios
+      .get("/api/group/types")
+      .then((res) => {
+        this.groupTypes = res.data;
+        if (
+          this.groupTypes.filter((e) => e.id == this.localGroup.group_type.id)
+            .length == 0
+        ) {
+          this.groupTypes.push(this.localGroup.group_type);
         }
-    }
+        this.groupTypes = this.groupTypes.sort((a, b) => {
+          return a.label.localeCompare(b.label);
+        });
+      })
+      .catch((err) => {
+        console.error(err);
+      });
 
+    axios
+      .get("/api/group")
+      .then((res) => {
+        this.groups = res.data
+          .filter((e) => e.active_group)
+          .filter((e) => e.id != this.localGroup.id)
+          .map((e) => {
+            return {
+              id: e.id,
+              label: e.group_title,
+            };
+          })
+          .sort(function (a, b) {
+            return a.label > b.label;
+          });
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  },
+  watch: {
+    addMember: function (newVal) {
+      if (newVal == true) {
+        this.$nextTick(() => {
+          this.$refs.addMemberRef.focus();
+        });
+      }
+    },
+  },
+  computed: {
+    filteredRoles: function () {
+      if (!this.roles) {
+        return [];
+      }
+      return this.roles;
+    },
+    groupURL: function () {
+      return (
+        window.location.protocol +
+        "//" +
+        window.location.hostname +
+        (window.location.port ? ":" + window.location.port : "") +
+        "/group/" +
+        this.localGroup.id +
+        "/" +
+        this.localGroup.secret_hash
+      );
+    },
+  },
+  methods: {
+    handleUpdateMembers: function (members) {
+      this.localGroup.members = members;
+    },
+
+    save: function () {
+      if (!this.checkForm()) {
+        return;
+      }
+
+      axios
+        .patch("/api/group/" + this.localGroup.id, this.localGroup)
+        .then(({ data }) => {
+          if (data.success) {
+            this.$emit("update:reload");
+          }
+          this.$emit("update:editing", false);
+        })
+        .catch((err) => {
+          this.saveError = err.response.data.message;
+          this.showError = true;
+        });
+    },
+    checkForm: function () {
+      this.saveError = null;
+
+      for (var member of this.localGroup.members) {
+        if (!member.role) {
+          this.saveError = "Every member must have a role assigned";
+          this.showError = true;
+          return false;
+        }
+      }
+
+      if (this.localGroup.group_type == null) {
+        this.saveError = "You must select a group type";
+        this.showError = true;
+        return false;
+      }
+
+      return true;
+    },
+    removeArtifact: function (index) {
+      this.localGroup.artifacts.splice(index, 1);
+    },
+    addArtifact: function () {
+      this.localGroup.artifacts.push({
+        label: "",
+        target: "",
+      });
+    },
+    deactivate: function () {
+      if (confirm("Are you sure you want to deactivate this group?")) {
+        axios
+          .delete("/api/group/" + this.localGroup.id)
+          .then(() => {
+            this.$router.push({
+              name: "home",
+            });
+          })
+          .catch((err) => {
+            console.error(err);
+            alert("Error deleting this group.  Hrm.");
+          });
+      }
+    },
+    lookupMember: function () {
+      axios
+        .post("/api/user/lookup", {
+          users: this.newUserId,
+        })
+        .then((res) => {
+          for (var user of res.data.users) {
+            var newMembershipRecord = {
+              group_id: this.localGroup.id,
+              start_date: this.$moment().format("YYYY-MM-DD"),
+              end_date: null,
+              user: user,
+              role: this.newRole,
+            };
+            this.localGroup.members.push(newMembershipRecord);
+          }
+
+          if (res.data.status == "Partial") {
+            this.addMemberError = res.data.message;
+          } else {
+            this.newUserId = null;
+            this.$refs.userAutocompleter.display = "";
+            this.addMember = false;
+          }
+        })
+        .catch((err) => {
+          this.addMemberError = err.response.data.message;
+        });
+    },
+  },
+};
 </script>
