@@ -31,6 +31,7 @@ import RolePage from "./pages/RolePage.vue";
 
 // Global CSS
 import "vue-tour/dist/vue-tour.css";
+import "../sass/app.scss";
 
 window.Vue = Vue;
 
