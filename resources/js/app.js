@@ -6,7 +6,7 @@
 
 import "./bootstrap";
 
-import Vue from "vue";
+import { createApp } from "vue";
 import Vuex from "vuex";
 import VueRouter from "vue-router";
 import VTooltip from "v-tooltip";
@@ -32,13 +32,7 @@ import "@umn-latis/cla-vue-template/dist/style.css";
 import "vue-tour/dist/vue-tour.css";
 import "../sass/app.scss";
 
-window.Vue = Vue;
-
-Vue.use(Vuex);
-Vue.use(VueRouter);
-Vue.use(VTooltip);
-Vue.use(VueTour);
-Vue.component("app", App);
+// window.Vue = Vue;
 
 const store = new Vuex.Store({
   state: {
@@ -161,9 +155,9 @@ const router = new VueRouter({
   ],
 });
 
-new Vue({
-  el: "#app",
-  store,
-  router,
-  render: (h) => h(App),
-});
+const app = createApp(App)
+  .use(Vuex)
+  .use(VueRouter)
+  .use(VTooltip)
+  .use(VueTour)
+  .mount("#app");
