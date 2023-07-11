@@ -7,9 +7,10 @@ export default defineConfig({
     laravel(["resources/assets/js/app.js"]),
     vue({
       template: {
-        transformAssetUrls: {
-          base: null,
-          includeAbsolute: false,
+        compilerOptions: {
+          compatConfig: {
+            MODE: 2,
+          },
         },
       },
     }),
@@ -17,6 +18,10 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": "/resources/assets/js",
+
+      // temporarily use vue 2 compat build to support vue 3
+      vue: "@vue/compat",
+
       // use vue's runtime compiler to support vue components
       // directly within blade templates
       // vue: "vue/dist/vue.esm-bundler.js",
