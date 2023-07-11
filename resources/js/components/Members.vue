@@ -242,6 +242,7 @@
                         userRow["group title"] = member.group.group_title;
                         userRow["group abbr"] = member.group.abbreviation;
                         userRow["link"] = `${window.location.origin}/groups/${member.group.id}`;
+                        userRow["dept_id"] = member.group.dept_id;
                     }
                     userRow = {
                         ...userRow,
@@ -256,7 +257,7 @@
                             : "",
                         "unit": member.user.ou,
                         "start_date": member.start_date,
-                        "end_date": member.end_date,
+                        "end_date": member.end_date
                     };
                     return userRow;
                 });

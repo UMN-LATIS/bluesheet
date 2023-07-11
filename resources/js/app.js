@@ -76,21 +76,29 @@ Vue.component('roleList', GroupList);
 import ReportList from './components/ReportList.vue';
 Vue.component('reportList', ReportList);
 
-import MissingOfficial from './components/MissingOfficial.vue';
+import MissingOfficial from './components/reports/MissingOfficial.vue';
 Vue.component('missingOfficial', MissingOfficial);
 
-import LastModified from './components/LastModified.vue';
+import LastModified from './components/reports/LastModified.vue';
 Vue.component('lastModified', LastModified);
 
-import CeddLike from './components/ceddLike.vue';
+import CeddLike from './components/reports/ceddLike.vue';
 Vue.component('ceddLike', CeddLike);
 
-import orgp from './components/orgp.vue';
+import orgp from './components/reports/orgp.vue';
 Vue.component('orgp', orgp);
 
+<<<<<<< HEAD
 import schedulingReport from './components/schedulingReport.vue';
 Vue.component('schedulingReport', schedulingReport);
 
+=======
+import fiscal from './components/reports/fiscal.vue';
+Vue.component('fiscal', fiscal);
+
+import committeeService from './components/reports/CommitteeService.vue';
+Vue.component('committeeService', committeeService);
+>>>>>>> develop
 
 Vue.component('home', require('./components/Home.vue').default);
 Vue.component('viewuser', require('./components/ViewUser.vue').default);
@@ -194,6 +202,8 @@ const router = new VueRouter({
     { name: 'ceddLike', path: "/reports/ceddLike", component: CeddLike, props:true },
     { name: 'orgp', path: "/reports/orgp", component: orgp, props:true },
     { name: 'schedulingReport', path: "/reports/schedulingReport/:groupId", component: schedulingReport, props:true },
+    { name: 'fiscal', path: "/reports/fiscal", component: fiscal, props:true },
+    { name: 'committeeService', path: "/reports/committeeService", component: committeeService, props:true },
   ]
 })
 

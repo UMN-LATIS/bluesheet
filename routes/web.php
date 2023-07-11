@@ -46,6 +46,7 @@ Route::group(['prefix'=>'/api/', 'middleware' => 'auth'], function () {
     
     Route::get('group/roles', 'GroupController@roles');
     
+    
     Route::get('group/types', 'GroupController@types');
     Route::get('group/parents', 'GroupController@parents');
     Route::get('folder/{parentOrganization?}', 'GroupController@getGroupsByFolder');
@@ -59,6 +60,8 @@ Route::group(['prefix'=>'/api/', 'middleware' => 'auth'], function () {
     Route::delete("user/favorite/groups/{group}", "UserController@destroyFavoriteGroup");
     Route::delete("user/favorite/roles/{role}", "UserController@destroyFavoriteRole");
 
+    Route::get('lookup/department/{deptId?}', 'LookupController@departmentInfo');
+
 });
 
 // routes with hash to allow unauthenticated loads
@@ -68,6 +71,7 @@ Route::get('/api/group/{group}/members/{hash}', 'GroupController@members');
 
 // Route::resource('users', 'Admin\\UsersController');
 Route::group(['prefix'=>'admin', 'middleware' => ['auth', 'permission:edit users']], function () {
+    Route::resource('/', 'Admin\\AdminController');
     Route::resource('users', 'Admin\\UsersController');
     Route::resource('group-type', 'Admin\\GroupTypeController');
     Route::resource('role', 'Admin\\RoleController');

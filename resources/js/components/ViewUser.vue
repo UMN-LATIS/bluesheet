@@ -7,6 +7,7 @@
             <li v-if="user.office"><strong>Office: <br /></strong> <span v-html="formattedOffice"></span></li>
             <li v-if="user.email"><strong>Email: </strong><a v-bind:href=" `mailto:${user.email}` ">{{user.email}}</a></li>
             <li><a :href="'http://myaccount.umn.edu/lookup?UID=' + usernameOnly" target="_blank">Directory Entry</a></li>
+            <li><a :href="'https://cla.umn.edu/about/directory/profile/' + usernameOnly" target="_blank">CLA Profile</a></li>
             <li v-if="$can('edit users')"><a :href="'/admin/users/' + user.id + '/edit'">Edit user</a></li>
         </ul>
     </div>

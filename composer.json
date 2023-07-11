@@ -17,6 +17,7 @@
     "require": {
         "php": "^8.0",
         "doctrine/dbal": "^2.9",
+        "guzzlehttp/guzzle": "^7.5",
         "lab404/laravel-impersonate": "^1.7.3",
         "laracasts/cypress": "^2.2",
         "laravel/framework": "^9.0",
@@ -31,7 +32,7 @@
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.3",
         "beyondcode/laravel-dump-server": "^1.0",
-        "deployer/dist": "^7.0",
+        "deployer/deployer": "^7.1",
         "filp/whoops": "^2.0",
         "fzaninotto/faker": "^1.9",
         "laravel/dusk": "^6.0",

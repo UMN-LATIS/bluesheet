@@ -49,7 +49,7 @@
 </template>
 
 <style>
-.vs__selected-options {
+table .vs__selected-options {
 
     overflow: hidden;
     text-overflow: ellipsis;
@@ -57,7 +57,7 @@
     max-width: 120px;
 }
 
-.vs__dropdown-menu {
+table  .vs__dropdown-menu {
     width: 300px;
 }
 </style>
