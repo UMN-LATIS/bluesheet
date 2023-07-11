@@ -9,7 +9,7 @@
                     </span>
                 </th>
             </tr>
-            <gantt-row :show_unit="show_unit" :key="member.id" v-for="member in members" :member="member" :mindate="mindate" :maxdate="maxdate" :filterList="filterList"></gantt-row>
+            <gantt-row :show_unit="show_unit" :key="member.id" v-for="member in members" :member="member" :mindate="mindate" :maxdate="maxdate" :filterList="filterList" @update:member="(updatedMember) => $emit('update:member', updatedMember)"/>
 
             <tr>
                 <th width=5% v-if="filterList"></th>
@@ -27,11 +27,12 @@
 <script>
 export default {
     props: ['members', 'mindate','maxdate', 'show_unit', 'filterList'],
+    emits: ['update:member'],
     data() {
         return {
         }
     },
-  
+
 }
 </script>
 

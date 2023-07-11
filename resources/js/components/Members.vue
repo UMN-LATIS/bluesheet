@@ -98,7 +98,7 @@
                 :includePreviousMembers="includePreviousMembers"  :viewType="viewType">
             </member-list>
             <gantt v-if="showGantt" :members="filteredList" :filterList="filterList" :mindate="lowestValue"
-                :maxdate="highestValue" :show_unit="show_unit"></gantt>
+                :maxdate="highestValue" :show_unit="show_unit" @update:member="handleUpdateMember"></gantt>
         </table>
         <div class="card mt-3 mb-3 col-sm-6" v-if="officialRoles.length > 0 && unfilledRoles.length > 0 && editing">
             <div class="card-body">
@@ -130,6 +130,7 @@
 <script>
     export default {
         props: ['members', 'editing', 'roles', 'show_unit', 'groupType', 'viewType', "downloadTitle"],
+        emits: ['update:members'],
         data() {
             return {
                 includePreviousMembers: false,
@@ -264,6 +265,15 @@
             }
         },
         methods: {
+            handleUpdateMember(updatedMember) {
+                this.$emit("update:members", this.members.map(member => {
+                    if (member.id == updatedMember.id) {
+                        return updatedMember;
+                    }
+                    return member;
+                }));
+            },
+
             rolesForOfficialCategory: function(category) {
                 return this.unfilledRoles.filter(r => r.official_role_category.category == category);
             },

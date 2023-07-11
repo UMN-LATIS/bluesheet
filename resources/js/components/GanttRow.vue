@@ -1,7 +1,14 @@
 <template>
     <tr>
         <td v-if="filterList">
-            <input type="checkbox" v-model="member.filtered">
+            <input
+                type="checkbox"
+                :value="member.filtered"
+                @input="$emit(
+                    'update:member',
+                    {...member, filtered: $event.target.value }
+                )"
+            >
         </td>
         <td>{{ member.user.displayName }}</td>
         <td colspan="6"><div class="ganttBubble" v-bind:style="{ width: width + '%', 'margin-left': startPercent  + '%'}" v-tooltip.top-center="toolTipText">
@@ -24,6 +31,7 @@ export default {
         return {
         }
     },
+    emits: ['update:member'],
     computed: {
         toolTipText: function() {
 

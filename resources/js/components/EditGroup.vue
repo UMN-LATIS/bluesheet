@@ -145,7 +145,7 @@
             </div>
         </div>
         <members :groupType="localGroup.group_type.label" :members.sync="localGroup.members" :show_unit="localGroup.show_unit"
-            editing="true" :roles="filteredRoles" viewType="group" :downloadTitle="localGroup.group_title"></members>
+            editing="true" :roles="filteredRoles" viewType="group" :downloadTitle="localGroup.group_title" @update:members="handleUpdateMembers"></members>
 
 
         <div class="row border border-danger rounded deactivate">
@@ -307,6 +307,9 @@
             }
         },
         methods: {
+            handleUpdateMembers: function (members) {
+                this.localGroup.members = members;
+            },
 
             save: function () {
                 if (!this.checkForm()) {
