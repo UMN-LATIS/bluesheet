@@ -8,3 +8,4 @@ dist
 /cypress/**/examples
 /cypress/**/routes.json
 /resources/js/cla-vue-template
+.git-blame-ignore-revs
