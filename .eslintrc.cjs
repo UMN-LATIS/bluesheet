@@ -10,21 +10,9 @@ module.exports = {
   extends: [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
-    "plugin:vue/vue3-strongly-recommended", // Use this if you are using Vue.js 3.x.
-    // "plugin:vue/essential", // Use this if you are using Vue.js 2.x.
+    "plugin:vue/vue3-recommended",
     "prettier",
   ],
-  // overrides: [
-  //   {
-  //     env: {
-  //       node: true,
-  //     },
-  //     files: [".eslintrc.{js,cjs}"],
-  //     parserOptions: {
-  //       sourceType: "script",
-  //     },
-  //   },
-  // ],
   parserOptions: {
     ecmaVersion: "latest",
     parser: "@typescript-eslint/parser",
@@ -45,13 +33,13 @@ module.exports = {
         ignorePatterns: ["router-link", "router-view", "v-tour"],
       },
     ],
-    // "vue/component-name-in-template-casing": [
-    //   "warn",
-    //   "PascalCase",
-    //   {
-    //     registeredComponentsOnly: false,
-    //     ignores: ["component", "router-link", "router-view"],
-    //   },
-    // ],
+    "vue/component-name-in-template-casing": [
+      "warn",
+      "PascalCase",
+      {
+        registeredComponentsOnly: false,
+        ignores: ["component", "router-link", "router-view"],
+      },
+    ],
   },
 };
