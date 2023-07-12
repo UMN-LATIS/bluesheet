@@ -129,12 +129,11 @@ export default {
     if (this.groupId) {
       axios.get("/api/group/" + this.groupId).then((res) => {
         this.group = res.data;
-        Vue.set(this.group, "members", []);
         this.group.members = [];
         axios
           .get("/api/group/" + this.groupId + "/members")
           .then((res) => {
-            Vue.set(this.group, "members", res.data);
+            this.group.members = res.data;
             var users = this.group.members
               .filter(
                 (e) =>

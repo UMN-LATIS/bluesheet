@@ -44,7 +44,6 @@ export default {
         .get("/api/group/" + this.groupId + (this.hash ? "/" + this.hash : ""))
         .then((res) => {
           this.group = res.data;
-          Vue.set(this.group, "members", []);
           this.group.members = [];
           axios
             .get(
@@ -54,7 +53,7 @@ export default {
                 (this.hash ? "/" + this.hash : ""),
             )
             .then((res) => {
-              Vue.set(this.group, "members", res.data);
+              this.group.members = res.data;
             })
             .catch((err) => {
               this.error = err.response.data;
