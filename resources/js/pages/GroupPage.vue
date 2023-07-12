@@ -18,7 +18,6 @@
 </template>
 
 <script>
-import Vue from "vue";
 import ViewGroup from "../components/ViewGroup.vue";
 import EditGroup from "../components/EditGroup.vue";
 
