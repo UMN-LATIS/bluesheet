@@ -8,8 +8,9 @@
         class="btn btn-info"
         :data="csvlist"
         :name="downloadTitle + '.csv'"
-        >Download List</DownloadCSV
       >
+        Download List
+      </DownloadCSV>
       <button
         class="btn btn-primary"
         :class="{ active: filterList }"
@@ -266,7 +267,7 @@
 
 <script>
 import SortableLink from "./SortableLink.vue";
-import DownloadCSV from "vue-json-csv";
+import DownloadCSV from "./DownloadCSV.vue";
 import MemberList from "./MemberList.vue";
 import Gantt from "./Gantt.vue";
 import Modal from "./Modal.vue";
@@ -375,8 +376,8 @@ export default {
           let modifier = 1;
           if (this.currentSortDir === "desc") modifier = -1;
 
-          const aCurrentSort = window._.get(a, this.currentSort) || " ";
-          const bCurrentSort = window._.get(b, this.currentSort) || " ";
+          const aCurrentSort = a?.[this.currentSort] || " ";
+          const bCurrentSort = b?.[this.currentSort] || " ";
 
           if (aCurrentSort < bCurrentSort) return -1 * modifier;
           if (aCurrentSort > bCurrentSort) return 1 * modifier;

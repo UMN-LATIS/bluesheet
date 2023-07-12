@@ -1,14 +1,9 @@
-import get from "lodash/get";
-import debounce from "lodash/debounce";
 import Popper from "popper.js";
 import jquery from "jquery";
 import axios from "axios";
 
 import "bootstrap";
 
-window._ = {};
-window._.get = get;
-window._.debounce = debounce;
 window.Popper = Popper;
 window.$ = window.jQuery = jquery;
 

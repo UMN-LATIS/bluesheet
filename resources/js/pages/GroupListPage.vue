@@ -101,6 +101,7 @@
 
 <script>
 import GroupTitle from "../components/GroupTitle.vue";
+import { debounce } from "lodash-es";
 
 export default {
   components: {
@@ -174,7 +175,7 @@ export default {
   },
   methods: {
     filterListBySearchTerm: function () {
-      let debounced = window._.debounce(() => {
+      let debounced = debounce(() => {
         axios
           .post("/api/group/search", { searchTerm: this.searchTerm })
           .then((res) => {

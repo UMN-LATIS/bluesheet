@@ -75,8 +75,8 @@ export default {
           let modifier = 1;
           if (this.currentSortDir === "desc") modifier = -1;
 
-          const aCurrentSort = window._.get(a, this.currentSort) || " ";
-          const bCurrentSort = window._.get(b, this.currentSort) || " ";
+          const aCurrentSort = a?.[this.currentSort] || " ";
+          const bCurrentSort = b?.[this.currentSort] || " ";
 
           if (aCurrentSort < bCurrentSort) return -1 * modifier;
           if (aCurrentSort > bCurrentSort) return 1 * modifier;
