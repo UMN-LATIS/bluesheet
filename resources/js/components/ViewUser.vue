@@ -25,6 +25,7 @@
 </template>
 
 <script>
+import { $can } from "../lib";
 export default {
   props: ["user"],
   computed: {
@@ -34,6 +35,9 @@ export default {
     formattedOffice: function () {
       return this.user.office.replace(/ \$ /g, "<br />");
     },
+  },
+  methods: {
+    $can,
   },
 };
 </script>

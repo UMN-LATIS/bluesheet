@@ -42,4 +42,6 @@
   </div>
 </template>
 
-<script></script>
+<script setup>
+import { $can } from "../lib";
+</script>
