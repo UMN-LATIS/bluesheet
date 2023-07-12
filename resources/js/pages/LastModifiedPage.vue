@@ -56,7 +56,7 @@
 </template>
 
 <script>
-import TreeSelect from "@riophae/vue-treeselect";
+import TreeSelect from "@bosquig/vue3-treeselect";
 import SortableLink from "../components/SortableLink.vue";
 import GroupTitle from "../components/GroupTitle.vue";
 import { dayjs } from "../lib";

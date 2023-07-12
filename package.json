@@ -14,7 +14,7 @@
     "test:e2e": "npm run cypress:headless"
   },
   "dependencies": {
-    "@riophae/vue-treeselect": "https://github.com/cmcfadden/vue-treeselect.git",
+    "@bosquig/vue3-treeselect": "https://github.com/bosquig/vue3-treeselect.git",
     "@umn-latis/cla-vue-template": "^1.0.4",
     "@vitejs/plugin-vue": "^4.2.3",
     "axios": "^0.18.1",

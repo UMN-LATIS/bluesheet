@@ -13,7 +13,7 @@
 </template>
 
 <script>
-import TreeSelect from "@riophae/vue-treeselect";
+import TreeSelect from "@bosquig/vue3-treeselect";
 export default {
   components: {
     TreeSelect,

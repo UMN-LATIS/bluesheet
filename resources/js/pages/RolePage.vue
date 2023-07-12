@@ -45,7 +45,7 @@
 </template>
 
 <script>
-import TreeSelect from "@riophae/vue-treeselect";
+import TreeSelect from "@bosquig/vue3-treeselect";
 import Members from "../components/Members.vue";
 export default {
   components: {
