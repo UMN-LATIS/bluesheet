@@ -27,7 +27,7 @@
     "vue": "^3.1.0",
     "vue-json-csv": "^1.2.10",
     "vue-router": "4",
-    "vue-select": "^3.9.5",
+    "vue-select": "^4.0.0-beta.6",
     "vue3-tour": "^0.3.4",
     "vuejs-auto-complete": "^0.9.0",
     "vuex": "^4.0.2"

@@ -4,7 +4,7 @@ import vue from "@vitejs/plugin-vue";
 
 export default defineConfig({
   plugins: [
-    laravel(["resources/assets/js/app.js"]),
+    laravel(["resources/js/app.js"]),
     vue({
       template: {
           transformAssetUrls: {
@@ -26,7 +26,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@": "/resources/assets/js",
+      "@": "/resources/js",
 
       // use vue's runtime compiler to support vue components
       // directly within blade templates
