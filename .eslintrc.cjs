@@ -38,7 +38,7 @@ module.exports = {
       "PascalCase",
       {
         registeredComponentsOnly: false,
-        ignores: ["component", "router-link", "router-view"],
+        ignores: ["component", "router-link", "router-view", "v-tour"],
       },
     ],
   },

@@ -64,7 +64,7 @@
       :show="createGroup"
       @close="createGroup = false"
     />
-    <VTour name="intro_tour" :steps="steps"></VTour>
+    <v-tour name="intro_tour" :steps="steps"></v-tour>
   </div>
 </template>
 
