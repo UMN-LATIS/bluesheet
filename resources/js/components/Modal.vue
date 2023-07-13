@@ -11,6 +11,7 @@
 <script>
 export default {
   props: ["show"],
+  emits: ["close"],
   mounted: function () {
     document.addEventListener("keydown", (e) => {
       if (this.show && e.keyCode == 27) {

@@ -7,12 +7,16 @@ import UserListPage from "./pages/UserListPage.vue";
 import GroupPage from "./pages/GroupPage.vue";
 import GroupListPage from "./pages/GroupListPage.vue";
 import ReportListPage from "./pages/ReportListPage.vue";
-import MissingOfficialPage from "./pages/MissingOfficialPage.vue";
-import LastModifiedPage from "./pages/LastModifiedPage.vue";
-import CeddLikePage from "./pages/CeddLikePage.vue";
-import OrgpPage from "./pages/OrgpPage.vue";
 import RoleListPage from "./pages/RoleListPage.vue";
 import RolePage from "./pages/RolePage.vue";
+
+// reports
+import CeddLikeReportPage from "./pages/reports/CeddLikeReportPage.vue";
+import CommitteeServiceReportPage from "./pages/reports/CommitteeServiceReportPage.vue";
+import FiscalReportPage from "./pages/reports/FiscalReportPage.vue";
+import LastModifiedReportPage from "./pages/reports/LastModifiedReportPage.vue";
+import MissingOfficialReportPage from "./pages/reports/MissingOfficialReportPage.vue";
+import OrgpReportPage from "./pages/reports/OrgpReportPage.vue";
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -56,21 +60,38 @@ export const router = createRouter({
     {
       name: "missingOfficial",
       path: "/reports/missingOfficialRoles",
-      component: MissingOfficialPage,
+      component: MissingOfficialReportPage,
       props: true,
     },
     {
       name: "lastModified",
       path: "/reports/lastModified",
-      component: LastModifiedPage,
+      component: LastModifiedReportPage,
       props: true,
     },
     {
       name: "ceddLike",
       path: "/reports/ceddLike",
-      component: CeddLikePage,
+      component: CeddLikeReportPage,
       props: true,
     },
-    { name: "orgp", path: "/reports/orgp", component: OrgpPage, props: true },
+    {
+      name: "orgp",
+      path: "/reports/orgp",
+      component: OrgpReportPage,
+      props: true,
+    },
+    {
+      name: "fiscal",
+      path: "/reports/fiscal",
+      component: FiscalReportPage,
+      props: true,
+    },
+    {
+      name: "committeeService",
+      path: "/reports/committeeService",
+      component: CommitteeServiceReportPage,
+      props: true,
+    },
   ],
 });

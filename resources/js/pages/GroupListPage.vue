@@ -100,7 +100,7 @@
 </template>
 
 <script>
-import GroupTitle from "../components/GroupTitle.vue";
+import GroupTitle from "@/components/GroupTitle.vue";
 import { debounce } from "lodash-es";
 
 export default {

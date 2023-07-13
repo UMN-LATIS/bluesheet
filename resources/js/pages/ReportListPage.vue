@@ -43,5 +43,5 @@
 </template>
 
 <script setup>
-import { $can } from "../lib";
+import { $can } from "@/lib";
 </script>

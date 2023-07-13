@@ -57,10 +57,9 @@
 
 <script>
 import TreeSelect from "@bosquig/vue3-treeselect";
-import SortableLink from "../components/SortableLink.vue";
-import GroupTitle from "../components/GroupTitle.vue";
-import { dayjs } from "../lib";
-import _ from "lodash";
+import SortableLink from "@/components/SortableLink.vue";
+import GroupTitle from "@/components/GroupTitle.vue";
+import { dayjs } from "@/lib";
 
 export default {
   components: {

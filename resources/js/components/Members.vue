@@ -271,7 +271,7 @@ import DownloadCSV from "./DownloadCSV.vue";
 import MemberList from "./MemberList.vue";
 import Gantt from "./Gantt.vue";
 import Modal from "./Modal.vue";
-import { $can } from "../lib";
+import { dayjs } from "../lib";
 
 export default {
   components: {
@@ -328,7 +328,7 @@ export default {
     lowestValue: function () {
       if (this.filteredList.length > 0) {
         return this.filteredList
-          .map((m) => this.$moment(m.start_date).unix())
+          .map((m) => dayjs(m.start_date).unix())
           .reduce((a, b) => Math.min(a, b));
       }
       return 0;
@@ -337,9 +337,7 @@ export default {
       var maxDate = null;
       if (this.filteredList.length > 0) {
         maxDate = this.filteredList
-          .map((m) =>
-            this.$moment(m.end_date ? m.end_date : this.$moment()).unix(),
-          )
+          .map((m) => dayjs(m.end_date ? m.end_date : dayjs()).unix())
           .reduce((a, b) => Math.max(a, b));
       }
       return maxDate;
@@ -350,7 +348,7 @@ export default {
           if (
             this.includePreviousMembers ||
             membership.end_date == null ||
-            this.$moment(membership.end_date).isAfter(this.$moment())
+            dayjs(membership.end_date).isAfter(dayjs())
           ) {
             var searchTerm = null;
             if (this.searchValue) {
@@ -395,8 +393,7 @@ export default {
       // return a list of email addresses of users that are currently active, de-duplicated and with null values removed
       return targetList
         .map((elem) =>
-          elem.end_date == null ||
-          this.$moment(elem.end_date).isAfter(this.$moment())
+          elem.end_date == null || dayjs(elem.end_date).isAfter(dayjs())
             ? elem.user.email
             : null,
         )
@@ -475,7 +472,7 @@ export default {
             );
           }
         } else {
-          removeMember.end_date = this.$moment().format("YYYY-MM-DD hh:mm:ss");
+          removeMember.end_date = dayjs().format("YYYY-MM-DD hh:mm:ss");
         }
       }
     },

@@ -70,7 +70,7 @@
 </template>
 
 <script>
-import Members from "../Members.vue";
+import Members from "@/components/Members.vue";
 
 export default {
   components: {

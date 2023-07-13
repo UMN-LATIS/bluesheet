@@ -37,8 +37,8 @@
 </template>
 
 <script>
-import ViewUser from "../components/ViewUser.vue";
-import Roles from "../components/Roles.vue";
+import ViewUser from "@/components/ViewUser.vue";
+import Roles from "@/components/Roles.vue";
 export default {
   components: {
     ViewUser,

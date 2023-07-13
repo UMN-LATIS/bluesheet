@@ -46,7 +46,7 @@
 
 <script>
 import TreeSelect from "@bosquig/vue3-treeselect";
-import Members from "../components/Members.vue";
+import Members from "@/components/Members.vue";
 export default {
   components: {
     TreeSelect,

@@ -53,7 +53,7 @@
 </template>
 
 <script>
-import Favorites from "../components/Favorites.vue";
+import Favorites from "@/components/Favorites.vue";
 
 export default {
   components: {

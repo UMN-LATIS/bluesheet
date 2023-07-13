@@ -49,7 +49,7 @@
               user.memberships.filter(
                 (elem) =>
                   (elem.end_date == null ||
-                    $moment(elem.end_date).isAfter($moment())) &&
+                    dayjs(elem.end_date).isAfter(dayjs())) &&
                   elem.group.group_type_id == 1,
               ).length
             }}</span>
@@ -57,7 +57,7 @@
               user.memberships.filter(
                 (elem) =>
                   (elem.end_date == null ||
-                    $moment(elem.end_date).isAfter($moment())) &&
+                    dayjs(elem.end_date).isAfter(dayjs())) &&
                   elem.group.group_type_id == 3,
               ).length
             }}</span>
@@ -65,7 +65,7 @@
               user.memberships.filter(
                 (elem) =>
                   (elem.end_date == null ||
-                    $moment(elem.end_date).isAfter($moment())) &&
+                    dayjs(elem.end_date).isAfter(dayjs())) &&
                   elem.group.group_type_id == 2,
               ).length
             }}</span>
@@ -73,7 +73,7 @@
               user.memberships.filter(
                 (elem) =>
                   (elem.end_date == null ||
-                    $moment(elem.end_date).isAfter($moment())) &&
+                    dayjs(elem.end_date).isAfter(dayjs())) &&
                   elem.group.group_type_id == 4,
               ).length
             }}</span>
@@ -111,6 +111,8 @@
 </template>
 
 <script>
+import { dayjs } from "@/lib";
+
 export default {
   props: ["users", "groupId"],
   data() {
@@ -136,9 +138,7 @@ export default {
             this.group.members = res.data;
             var users = this.group.members
               .filter(
-                (e) =>
-                  e.end_date == null ||
-                  this.$moment(e.end_date).isAfter(this.$moment()),
+                (e) => e.end_date == null || dayjs(e.end_date).isAfter(dayjs()),
               )
               .map((elem) => elem.user.id);
             this.loadUsers(users);
@@ -150,6 +150,7 @@ export default {
     }
   },
   methods: {
+    dayjs,
     loadUsers(userList) {
       axios
         .post("/api/user/lookup", {

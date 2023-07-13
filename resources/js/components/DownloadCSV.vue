@@ -6,10 +6,10 @@
 
 <script lang="ts">
 // see: https://raw.githubusercontent.com/Belphemur/vue-json-csv/develop/src/JsonCSV.vue
-import {defineComponent} from 'vue'
-import { mapKeys, pickBy, pick }from "lodash-es";
-import {saveAs} from "file-saver";
-import {unparse} from "papaparse";
+import { defineComponent } from "vue";
+import { mapKeys, pickBy, pick } from "lodash-es";
+import { saveAs } from "file-saver";
+import { unparse } from "papaparse";
 
 export const isType = (value: unknown, type: string) => typeof value === type;
 
@@ -21,7 +21,7 @@ export default defineComponent({
      */
     data: {
       type: Array,
-      required: true
+      required: true,
     },
     /**
      * fields inside the Json Object that you want to export
@@ -30,14 +30,14 @@ export default defineComponent({
      */
     fields: {
       type: [Array, Function],
-      required: false
+      required: false,
     },
     /**
      * filename to export, default: data.csv
      */
     name: {
       type: String,
-      default: "data.csv"
+      default: "data.csv",
     },
     /**
      * Delimiter for the CSV file
@@ -45,7 +45,7 @@ export default defineComponent({
     delimiter: {
       type: String,
       default: ",",
-      required: false
+      required: false,
     },
     /**
      * Should the module add SEP={delimiter}
@@ -54,21 +54,21 @@ export default defineComponent({
      */
     separatorExcel: {
       type: Boolean,
-      default: false
+      default: false,
     },
     /**
      * What will be the encoding of the file
      */
     encoding: {
       type: String,
-      default: "utf-8"
+      default: "utf-8",
     },
     /**
      * Advanced options for Papaparse that is used to export to CSV
      */
     advancedOptions: {
       type: Object,
-      default: () => ({})
+      default: () => ({}),
     },
     /**
      * Labels for columns
@@ -77,16 +77,17 @@ export default defineComponent({
      */
     labels: {
       type: [Object, Function],
-      required: false
+      required: false,
     },
     /**
      * Used only for testing purposes
      */
     testing: {
       required: false,
-      default: false
-    }
+      default: false,
+    },
   },
+  emits: ["export-started", "export-finished"],
   computed: {
     // unique identifier
     idName() {
@@ -100,16 +101,15 @@ export default defineComponent({
       }
 
       return filteredData;
-    }
+    },
   },
   methods: {
-
     labelsFunctionGenerator(): (item: any) => any {
       let labels: any = this.labels;
       if (
-          !isType(labels, "undefined") &&
-          !isType(labels, "function") &&
-          !isType(labels, "object")
+        !isType(labels, "undefined") &&
+        !isType(labels, "function") &&
+        !isType(labels, "object")
       ) {
         throw new Error("Labels needs to be a function(value,key) or object.");
       }
@@ -122,48 +122,48 @@ export default defineComponent({
       }
 
       if (isType(labels, "object")) {
-        return item => {
+        return (item) => {
           return mapKeys(item, (item, key) => {
             return labels[key] || key;
           });
         };
       }
 
-      return item => item;
+      return (item) => item;
     },
 
     fieldsFunctionGenerator(): (item: any) => any {
       let fields: any = this.fields;
       if (
-          !isType(fields, "undefined") &&
-          !isType(fields, "function") &&
-          !isType(fields, "object") &&
-          !Array.isArray(fields)
+        !isType(fields, "undefined") &&
+        !isType(fields, "function") &&
+        !isType(fields, "object") &&
+        !Array.isArray(fields)
       ) {
         throw new Error("Fields needs to be a function(value,key) or array.");
       }
 
       if (
-          isType(fields, "function") ||
-          (isType(fields, "object") && !Array.isArray(fields))
+        isType(fields, "function") ||
+        (isType(fields, "object") && !Array.isArray(fields))
       ) {
-        return item => {
+        return (item) => {
           return pickBy(item, fields);
         };
       }
 
       if (Array.isArray(fields)) {
-        return item => {
+        return (item) => {
           return pick(item, fields);
         };
       }
-      return item => item;
+      return (item) => item;
     },
 
     cleaningData() {
       if (
-          isType(this.fields, "undefined") &&
-          isType(this.labels, "undefined")
+        isType(this.fields, "undefined") &&
+        isType(this.labels, "undefined")
       ) {
         return this.data;
       }
@@ -171,7 +171,7 @@ export default defineComponent({
       const labels = this.labelsFunctionGenerator();
       const fields = this.fieldsFunctionGenerator();
 
-      return this.data.map(item => labels(fields(item)));
+      return this.data.map((item) => labels(fields(item)));
     },
 
     generate() {
@@ -184,14 +184,14 @@ export default defineComponent({
       }
 
       let csv = unparse(
-          dataExport,
-          Object.assign(
-              {
-                delimiter: this.delimiter,
-                encoding: this.encoding
-              },
-              this.advancedOptions
-          )
+        dataExport,
+        Object.assign(
+          {
+            delimiter: this.delimiter,
+            encoding: this.encoding,
+          },
+          this.advancedOptions,
+        ),
       );
       if (this.separatorExcel) {
         csv = "SEP=" + this.delimiter + "\r\n" + csv;
@@ -203,12 +203,12 @@ export default defineComponent({
       this.$emit("export-finished");
       if (!this.testing) {
         let blob = new Blob([csv], {
-          type: "text/csv;charset=" + this.encoding
+          type: "text/csv;charset=" + this.encoding,
         });
         saveAs(blob, this.name);
       }
-    }
-  }
+    },
+  },
 });
 </script>
 

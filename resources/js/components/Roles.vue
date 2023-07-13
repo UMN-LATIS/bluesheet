@@ -34,7 +34,13 @@
           </td>
           <td>{{ membership.role.label }}</td>
           <td>{{ dayjs(membership.start_date).format("YYYY, MMM Do") }}</td>
-          <td>{{ dayjs(membership.end_date).format("YYYY, MMM Do") }}</td>
+          <td>
+            {{
+              membership.end_date
+                ? dayjs(membership.end_date).format("YYYY, MMM Do")
+                : ""
+            }}
+          </td>
         </tr>
       </tbody>
     </table>
