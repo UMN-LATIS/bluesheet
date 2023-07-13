@@ -271,7 +271,7 @@ import DownloadCSV from "./DownloadCSV.vue";
 import MemberList from "./MemberList.vue";
 import Gantt from "./Gantt.vue";
 import Modal from "./Modal.vue";
-import { dayjs } from "../lib";
+import { dayjs, $can } from "../lib";
 
 export default {
   components: {
@@ -438,6 +438,7 @@ export default {
     },
   },
   methods: {
+    $can,
     rolesForOfficialCategory: function (category) {
       return this.unfilledRoles.filter(
         (r) => r.official_role_category.category == category,
