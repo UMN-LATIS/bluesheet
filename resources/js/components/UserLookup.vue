@@ -3,7 +3,7 @@
     <div class="row">
       <label for="nameLookup" class="col-sm-3 col-form-label">Name:</label>
       <div class="col-sm-6">
-        <PersonSearch @selected="handleUserSelected" />
+        <PersonSearch v-model="userLookupText" @selected="handleUserSelected" />
         <small id="addUserHelpBlock" class="form-text text-muted">
           Optional: Enter a name and select the person from the list. For common
           names, we recommend using internet ID (below) to be sure you get the
@@ -65,6 +65,7 @@ export default {
     return {
       findUserError: null,
       userLookupId: null,
+      userLookupText: "",
     };
   },
   watch: {

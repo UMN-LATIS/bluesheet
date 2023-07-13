@@ -208,15 +208,9 @@
       <div class="row">
         <label for="nameLookup" class="col-sm-3 col-form-label">Name:</label>
         <div class="col-sm-6">
-          <AutoComplete
-            id="nameLookup"
-            ref="userAutocompleter"
-            v-model="newUserId"
-            source="/api/autocompleter/user?searchType=nameAndInternetId&q="
-            resultsProperty="items"
-            resultsDisplay="full_name"
-            resultsValue="mail"
-            inputClass="form-control"
+          <PersonSearch
+            v-model="userLookupText"
+            @selected="handleUserSelected"
           />
           <small id="addUserHelpBlock" class="form-text text-muted">
             Optional: Enter a name and select the person from the list
@@ -285,7 +279,7 @@ import VSelect from "vue-select";
 import Members from "./Members.vue";
 import Modal from "./Modal.vue";
 import FolderWidget from "./FolderWidget.vue";
-import AutoComplete from "vuejs-auto-complete";
+import PersonSearch from "./PersonSearch.vue";
 import dayjs from "../lib/dayjs";
 
 export default {
@@ -294,7 +288,7 @@ export default {
     Members,
     Modal,
     FolderWidget,
-    AutoComplete,
+    PersonSearch,
   },
   props: ["group"],
   emits: ["update:editing", "update:reload"],
@@ -305,6 +299,7 @@ export default {
       localGroup: this.group,
       addMember: false,
       newUserId: null,
+      userLookupText: "",
       newRole: null,
       addMemberError: null,
       showError: false,
@@ -391,6 +386,14 @@ export default {
       });
   },
   methods: {
+    handleUserSelected(user) {
+      this.newUserId = user.mail;
+
+      this.$nextTick(() => {
+        this.$refs.addMemberRef.focus();
+      });
+    },
+
     handleUpdateMembers: function (members) {
       this.localGroup.members = members;
     },
@@ -477,7 +480,7 @@ export default {
             this.addMemberError = res.data.message;
           } else {
             this.newUserId = null;
-            this.$refs.userAutocompleter.display = "";
+            this.newUserLookupText = "";
             this.addMember = false;
           }
         })

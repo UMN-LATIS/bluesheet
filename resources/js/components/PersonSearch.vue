@@ -1,7 +1,8 @@
 <template>
   <div class="person-search">
     <input
-      v-model="query"
+      v-bind="$attrs"
+      :value="modelValue"
       :class="inputClass"
       class="person-search__input form-control"
       @input="handleInput"
@@ -10,7 +11,9 @@
     <div class="person-search__results">
       <div v-if="!users.length" class="person-search__no-items">
         <span v-if="isFetching">Searching...</span>
-        <span v-else-if="query.length < 3"> Enter at least 3 characters </span>
+        <span v-else-if="modelValue.length < 3">
+          Enter at least 3 characters
+        </span>
         <span v-else>No results found</span>
       </div>
 
@@ -18,6 +21,7 @@
         v-for="user in users"
         :key="user.umndid"
         class="person-search__item"
+        type="button"
         @click="$emit('selected', user)"
       >
         <span class="person-search__name">{{ user.full_name }}</span>
@@ -27,36 +31,43 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { UserLookupItem, CSSClass } from "@/types";
 import pDebounce from "p-debounce";
 import { lookupUsers } from "@/api";
 
-defineProps<{
+const props = defineProps<{
+  modelValue: string;
   inputClass?: CSSClass;
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
+  (eventName: "update:modelValue", value: string);
   (eventName: "selected", user: UserLookupItem);
 }>();
 
-const query = ref("");
 const users = ref<UserLookupItem[]>([]);
 const isFetching = ref(false);
 
 const debouncedLookupUsers = pDebounce(lookupUsers, 500);
 
-async function handleInput(event: Event) {
-  query.value = (event.target as HTMLInputElement).value;
+watch(
+  () => props.modelValue,
+  async (query) => {
+    if (query.length < 3) {
+      users.value = [];
+      return;
+    }
 
-  if (query.value.length < 3) {
-    users.value = [];
-    return;
-  }
+    isFetching.value = true;
+    users.value = await debouncedLookupUsers(query);
+    isFetching.value = false;
+  },
+);
 
-  isFetching.value = true;
-  users.value = await debouncedLookupUsers(query.value);
-  isFetching.value = false;
+function handleInput(event: Event) {
+  const query = (event.target as HTMLInputElement).value;
+  emit("update:modelValue", query);
 }
 </script>
 <style scoped>
