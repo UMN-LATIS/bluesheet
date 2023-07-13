@@ -3,16 +3,7 @@
     <div class="row">
       <label for="nameLookup" class="col-sm-3 col-form-label">Name:</label>
       <div class="col-sm-6">
-        <AutoComplete
-          id="nameLookup"
-          ref="userAutocompleter"
-          v-model="userLookupId"
-          source="/api/autocompleter/user?searchType=nameAndInternetId&q="
-          resultsProperty="items"
-          resultsDisplay="full_name"
-          resultsValue="mail"
-          inputClass="form-control"
-        />
+        <PersonSearch @selected="handleUserSelected" />
         <small id="addUserHelpBlock" class="form-text text-muted">
           Optional: Enter a name and select the person from the list. For common
           names, we recommend using internet ID (below) to be sure you get the
@@ -61,12 +52,12 @@
 
 <script>
 import Modal from "./Modal.vue";
-import AutoComplete from "vuejs-auto-complete";
+import PersonSearch from "./PersonSearch.vue";
 
 export default {
   components: {
     Modal,
-    AutoComplete,
+    PersonSearch,
   },
   props: ["show"],
   emits: ["close"],
@@ -89,6 +80,13 @@ export default {
     close: function () {
       this.userLookupId = null;
       this.$emit("close");
+    },
+    handleUserSelected(user) {
+      this.userLookupId = user.mail;
+
+      this.$nextTick(() => {
+        this.$refs.addMemberRef.focus();
+      });
     },
     lookupUser: function () {
       axios
