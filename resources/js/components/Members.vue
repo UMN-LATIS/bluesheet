@@ -440,34 +440,7 @@ export default {
       });
     },
   },
-  watch: {
-    showSearch: function (newVal) {
-      if (newVal == true) {
-        setTimeout(
-          function () {
-            this.$refs.searchbox.focus();
-          }.bind(this),
-          250,
-        );
-      } else {
-        this.searchValue = null;
-      }
-    },
-  },
   methods: {
-    $can,
-    handleUpdateMember(updatedMember) {
-      this.$emit(
-        "update:members",
-        this.members.map((member) => {
-          if (member.id == updatedMember.id) {
-            return updatedMember;
-          }
-          return member;
-        }),
-      );
-    },
-
     rolesForOfficialCategory: function (category) {
       return this.unfilledRoles.filter(
         (r) => r.official_role_category.category == category,
@@ -482,7 +455,7 @@ export default {
       }
       this.currentSort = s;
     },
-    removeMember: function (removeMember) {
+    removeMember: function (removeMember, index) {
       if (!removeMember.id) {
         // this was an accidental record, just split it
         this.$emit(

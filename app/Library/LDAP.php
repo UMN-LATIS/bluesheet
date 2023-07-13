@@ -6,8 +6,11 @@ namespace App\Library;
 class LDAP
 {
 
-	public static function lookupUser($lookupValue, $lookupType="cn", $existingUser =null) {
+	public static function lookupUser($lookupValue, $lookupType="uid", $existingUser =null) {
 		$connect = LDAP::getConnection();
+        if(!$connect) {
+            return null;
+        }
         $base_dn = array("o=University of Minnesota, c=US",);
         $filter = "(" . $lookupType . "=" . $lookupValue . ")";
         $search = ldap_search([$connect], $base_dn, $filter);
@@ -45,8 +48,11 @@ class LDAP
         return $foundUser;
 	}
 
-    public static function userSearch($lookupValue, $lookupType="cn") {
+    public static function userSearch($lookupValue, $lookupType="uid") {
         $connect = LDAP::getConnection();
+        if(!$connect) {
+            return [];
+        }
         $base_dn = array("o=University of Minnesota, c=US",);
         $filter = "(" . $lookupType . "=" . $lookupValue . ")";
         $search = ldap_search([$connect], $base_dn, $filter, [], 0, 10)
@@ -79,7 +85,9 @@ class LDAP
         $connect = ldap_connect( 'ldaps://ldapauth.umn.edu', 636);
         ldap_set_option($connect, LDAP_OPT_PROTOCOL_VERSION, 3);
         ldap_set_option($connect, LDAP_OPT_REFERRALS, 0);
-
+        if(!config("ldap.username") || !config("ldap.password")) {
+            return null;
+        }
         $r=ldap_bind($connect, 'cn=' . config("ldap.username") . ',ou=Organizations,o=University of Minnesota,c=US', config("ldap.password"));
         return $connect;
     }

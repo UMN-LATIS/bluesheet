@@ -72,7 +72,7 @@ You can set both start and end dates. End dates can be in the future as well - B
 
 ## Editing Membership
 
-Membership can be edited at any time. To remove a member from a group, click the trash icon. This will remove their current membership, but you'll always be able to see historical membership data with the "include previous members" checkbox. You can also edit the member's participation dates - for example, if you'd like to add historical data, you can backdate membership.
+Membership can be edited at any time. To remove a member from a group, click the red icon of the person with the minus sign. This will remove their current membership, but you'll always be able to see historical membership data with the "include previous members" checkbox. You can also edit the member's participation dates - for example, if you'd like to add historical data, you can backdate membership.
 
 The notes field can be used to capture any extra data - for example, a reminder of which cohort someone is a member of.
 
