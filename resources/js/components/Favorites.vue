@@ -37,6 +37,7 @@
 
 <script>
 import SortableLink from "./SortableLink.vue";
+import { dayjs } from "@/lib";
 
 export default {
   components: {
@@ -86,6 +87,7 @@ export default {
     },
   },
   methods: {
+    dayjs,
     routeLink: function (favorite) {
       if (this.type == "group") {
         return { name: "group", params: { groupId: favorite.id } };

@@ -25,7 +25,7 @@ describe("Groups UI", () => {
 
     it("creates a group", () => {
       cy.visit("/");
-      cy.get(".app-nav").contains("Create Group").click();
+      cy.get(".app-header").contains("Create Group").click();
       cy.get("#groupName").type("Test Group");
       cy.get(".vs__search").type("Committee{enter}");
       cy.get(".vue-treeselect__input").type("CLA{enter}");
@@ -35,7 +35,7 @@ describe("Groups UI", () => {
 
     it("loads a group", () => {
       cy.visit("/");
-      cy.get(".app-nav").contains("Browse Groups").click();
+      cy.get(".app-header").contains("Browse Groups").click();
       cy.get(".table").contains("CLA").click();
       cy.get(".table").contains("Test Group").click();
       cy.contains("Committee");

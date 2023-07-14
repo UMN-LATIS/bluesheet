@@ -1,6 +1,6 @@
 <template>
   <div>
-    <AppHeader>
+    <AppHeader class="app-header">
       <template #app-link>
         <router-link :to="{ name: 'home' }">BlueSheet</router-link>
       </template>

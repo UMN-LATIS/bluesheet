@@ -352,6 +352,74 @@
       "DELETE"
     ]
   },
+  "index": {
+    "name": "index",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\Admin\\AdminController@index",
+    "uri": "admin",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "create": {
+    "name": "create",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\Admin\\AdminController@create",
+    "uri": "admin/create",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "store": {
+    "name": "store",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\Admin\\AdminController@store",
+    "uri": "admin",
+    "method": [
+      "POST"
+    ]
+  },
+  "show": {
+    "name": "show",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\Admin\\AdminController@show",
+    "uri": "admin/{}",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "edit": {
+    "name": "edit",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\Admin\\AdminController@edit",
+    "uri": "admin/{}/edit",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "update": {
+    "name": "update",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\Admin\\AdminController@update",
+    "uri": "admin/{}",
+    "method": [
+      "PUT",
+      "PATCH"
+    ]
+  },
+  "destroy": {
+    "name": "destroy",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\Admin\\AdminController@destroy",
+    "uri": "admin/{}",
+    "method": [
+      "DELETE"
+    ]
+  },
   "users.index": {
     "name": "users.index",
     "domain": null,
