@@ -15,7 +15,6 @@ import App from "./App.vue";
 
 // Global CSS
 import "@umn-latis/cla-vue-template/dist/style.css";
-import "@bosquig/vue3-treeselect/dist/vue3-treeselect.css";
 import "vue3-tour/dist/vue3-tour.css";
 import "../sass/app.scss";
 
