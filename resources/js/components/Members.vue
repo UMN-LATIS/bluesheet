@@ -1,6 +1,6 @@
 <template>
   <div>
-    <template v-if="$can('view groups') && !editing">
+    <div v-if="$can('view groups') && !editing" class="tw-flex tw-gap-1">
       <button class="btn btn-success" @click="showEmailList = !showEmailList">
         Show Email List
       </button>
@@ -19,7 +19,7 @@
       >
         Filter List
       </button>
-    </template>
+    </div>
     <Modal :show="showEmailList" @close="showEmailList = !showEmailList">
       <div class="row">
         <div class="col-md-12">
