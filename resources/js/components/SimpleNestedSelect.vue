@@ -71,7 +71,7 @@ const flattenedOptions = computed(() => flattenOptions(props.options));
 <style scoped>
 select {
   width: 100%;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0.75rem;
   appearance: none; /* This will remove the default select style */
   /* replace with a chevron icon */
   background-image: url("data:image/svg+xml, %3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='%23111' %3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5' /%3E%3C/svg%3E");
@@ -79,7 +79,7 @@ select {
   background-repeat: no-repeat;
   background-size: 1rem;
   padding-right: 2.5rem;
-  border-color: #e5e5e5;
+  border-color: #ced4da;
   border-radius: 0.25rem;
 }
 

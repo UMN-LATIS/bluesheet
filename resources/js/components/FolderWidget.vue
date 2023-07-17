@@ -1,8 +1,9 @@
 <template>
   <SimpleNestedSelect
     v-if="parentOrganizations"
-    v-model="parentOrganization"
+    :modelValue="modelValue"
     :options="parentOrganizations"
+    @update:modelValue="(val) => $emit('update:modelValue', val)"
   />
 </template>
 
@@ -12,22 +13,12 @@ export default {
   components: {
     SimpleNestedSelect,
   },
-  props: ["value"],
-  emits: ["input"],
+  props: ["modelValue"],
+  emits: ["update:modelValue"],
   data() {
     return {
       parentOrganizations: [],
     };
-  },
-  computed: {
-    parentOrganizationValue: {
-      get() {
-        return this.value;
-      },
-      set(val) {
-        this.$emit("input", val);
-      },
-    },
   },
   mounted: function () {
     axios
