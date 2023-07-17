@@ -1,0 +1,82 @@
+<template>
+  <select
+    class="nested-select"
+    :value="modelValue"
+    @change="
+      $emit('update:modelValue', ($event.target as HTMLSelectElement).value)
+    "
+  >
+    <slot />
+    <option
+      v-for="option in flattenedOptions"
+      :key="option.id"
+      :value="option.id"
+    >
+      {{ option.label }}
+    </option>
+  </select>
+</template>
+<script setup lang="ts">
+import { computed } from "vue";
+
+export interface OptionNode {
+  id: number | string;
+  parent_id: number | string | null;
+  label: string;
+  children: OptionNode[];
+}
+
+const props = defineProps<{
+  options: OptionNode[];
+  modelValue: number | string | null; // id of selected option
+}>();
+
+defineEmits<{
+  (event: "update:modelValue", optionId: number | string | null): void;
+}>();
+
+// flattening the options
+const flattenOptions = (
+  options: OptionNode[],
+  depth = 0,
+  parentFullPath = "",
+) => {
+  return options.reduce((acc: OptionNode[], option) => {
+    const fullPath = parentFullPath
+      ? `${parentFullPath} > ${option.label}`
+      : option.label;
+    const hyphenPrefix = "-".repeat(depth);
+    const newOption = {
+      ...option,
+      fullPath,
+      label: `${hyphenPrefix} ${option.label}`,
+    };
+    const children = option.children
+      ? flattenOptions(option.children, depth + 1, fullPath)
+      : [];
+
+    return [...acc, newOption, ...children];
+  }, []);
+};
+
+const flattenedOptions = computed(() => flattenOptions(props.options));
+</script>
+<style scoped>
+select {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  appearance: none; /* This will remove the default select style */
+  /* replace with a chevron icon */
+  background-image: url("data:image/svg+xml, %3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='%23111' %3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5' /%3E%3C/svg%3E");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1rem;
+  padding-right: 2.5rem;
+  border-color: #e5e5e5;
+  border-radius: 0.25rem;
+}
+
+option:disabled {
+  color: #999;
+}
+</style>
