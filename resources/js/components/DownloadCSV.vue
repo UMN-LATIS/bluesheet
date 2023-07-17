@@ -1,7 +1,7 @@
 <template>
-  <div :id="idName" @click="generate">
+  <button :id="idName" @click="generate">
     <slot>Download {{ name }}</slot>
-  </div>
+  </button>
 </template>
 
 <script lang="ts">
