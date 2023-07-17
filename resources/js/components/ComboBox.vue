@@ -5,6 +5,10 @@
     :class="{
       'combobox--is-open': isComboboxOpen,
     }"
+    tabindex="0"
+    @keydown.enter.prevent="handleEnterKey"
+    @keydown.down.prevent="handleArrowKeyNav"
+    @keydown.up.prevent="handleArrowKeyNav"
   >
     <div class="combobox__input-group">
       <input
@@ -41,6 +45,7 @@
         <button
           v-for="option in filteredOptions"
           :key="option.id"
+          ref="optionRefs"
           class="combobox__item"
           type="button"
           @click="$emit('update:modelValue', option)"
@@ -74,16 +79,25 @@ const props = defineProps<{
   inputClass?: CSSClass;
 }>();
 
-console.log({ props });
-
 const emit = defineEmits<{
   (eventName: "update:modelValue", value: Option | null);
 }>();
 
 const comboboxContainerRef = ref<HTMLDivElement>();
 const inputRef = ref<HTMLInputElement>();
+
+// for tracking option elements for focus management
+// with up/down arrow keys
+const optionRefs = ref<HTMLElement[]>([]);
+
 const filterText = ref("");
 const isComboboxOpen = ref(false);
+
+const filteredOptions = computed(() => {
+  if (!filterText.value) return props.options;
+
+  return fuzzySearch(props.options, filterText.value);
+});
 
 function fuzzySearch(options: Option[], query: string) {
   const fuse = new Fuse(options, {
@@ -93,12 +107,6 @@ function fuzzySearch(options: Option[], query: string) {
 
   return fuse.search(query).map((result) => result.item);
 }
-
-const filteredOptions = computed(() => {
-  if (!filterText.value) return props.options;
-
-  return fuzzySearch(props.options, filterText.value);
-});
 
 function handleInput(event: Event) {
   filterText.value = (event.target as HTMLInputElement).value;
@@ -122,12 +130,43 @@ watch(
       return;
     }
 
-    const selectedOption = props.options.find(
-      (opt) => opt.id === props.modelValue?.id,
-    );
+    const selectedOption = getOption(props.modelValue.id);
     filterText.value = selectedOption?.label ?? "";
   },
 );
+
+function getOption(optionId: string | number): Option | null {
+  return props.options.find((opt) => opt.id === optionId) ?? null;
+}
+
+function handleArrowKeyNav(event: KeyboardEvent) {
+  event.preventDefault();
+  const direction = event.key === "ArrowDown" ? 1 : -1; // Determine the direction
+  const activeElementIndex = optionRefs.value.indexOf(
+    document.activeElement as HTMLElement,
+  ); // Get current active element
+  const nextElementIndex = activeElementIndex + direction;
+  console.log({ event, activeElementIndex, nextElementIndex });
+
+  // if the next element is out of bounds, focus the input
+  if (nextElementIndex >= optionRefs.value.length || nextElementIndex < 0) {
+    inputRef.value?.focus();
+    return;
+  }
+
+  // Focus the next element
+  optionRefs.value[nextElementIndex]?.focus();
+}
+
+function handleEnterKey(event: KeyboardEvent) {
+  event.preventDefault();
+  const activeElementIndex = optionRefs.value.indexOf(
+    document.activeElement as HTMLElement,
+  );
+  const activeOption = filteredOptions.value[activeElementIndex];
+  emit("update:modelValue", activeOption ?? null);
+  isComboboxOpen.value = false;
+}
 </script>
 <style scoped>
 .combobox {
