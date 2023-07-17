@@ -20,6 +20,13 @@
     <div class="form-group row">
       <label for="groupType" class="col-sm-3 col-form-label">Group Type</label>
       <div class="col-sm-6">
+        <ComboBox
+          v-if="groupTypes"
+          id="groupTypes"
+          v-model="groupType"
+          :options="groupTypes"
+          placeholder="Select..."
+        />
         <VSelect
           v-if="groupTypes"
           id="groupTypes"
@@ -61,12 +68,14 @@
 import VSelect from "vue-select";
 import Modal from "./Modal.vue";
 import FolderWidget from "./FolderWidget.vue";
+import ComboBox from "./ComboBox.vue";
 
 export default {
   components: {
     VSelect,
     Modal,
     FolderWidget,
+    ComboBox,
   },
   props: ["show"],
   emits: ["close"],

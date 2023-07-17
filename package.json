@@ -16,10 +16,12 @@
   "dependencies": {
     "@umn-latis/cla-vue-template": "^1.0.4",
     "@vitejs/plugin-vue": "^4.2.3",
+    "@vueuse/core": "^10.2.1",
     "axios": "^0.18.1",
     "bootstrap": "^4.4.1",
     "dayjs": "^1.11.9",
     "file-saver": "^2.0.5",
+    "fuse.js": "^6.6.2",
     "jquery": "^3.4.1",
     "lodash-es": "^4.17.21",
     "p-debounce": "^4.0.0",
