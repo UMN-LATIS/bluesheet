@@ -43,7 +43,7 @@
           :key="option.id"
           class="combobox__item"
           type="button"
-          @click="$emit('update:modelValue', option.id)"
+          @click="$emit('update:modelValue', option)"
         >
           <span class="combobox__name">{{ option.label }}</span>
           <span v-if="option.secondaryLabel" class="combobox__id">
@@ -69,13 +69,15 @@ interface Option {
 }
 
 const props = defineProps<{
-  modelValue: string | number | null;
+  modelValue: Option | null;
   options: Option[];
   inputClass?: CSSClass;
 }>();
 
+console.log({ props });
+
 const emit = defineEmits<{
-  (eventName: "update:modelValue", value: string | null);
+  (eventName: "update:modelValue", value: Option | null);
 }>();
 
 const comboboxContainerRef = ref<HTMLDivElement>();
@@ -121,7 +123,7 @@ watch(
     }
 
     const selectedOption = props.options.find(
-      (opt) => String(opt.id) === String(props.modelValue),
+      (opt) => opt.id === props.modelValue?.id,
     );
     filterText.value = selectedOption?.label ?? "";
   },
