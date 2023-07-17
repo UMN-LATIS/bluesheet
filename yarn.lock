@@ -19,10 +19,6 @@
   dependencies:
     regenerator-runtime "^0.13.4"
 
-"@bosquig/vue3-treeselect@https://github.com/bosquig/vue3-treeselect.git":
-  version "0.1.5"
-  resolved "https://github.com/bosquig/vue3-treeselect.git#642967efe4324682349cc7d20b48d171f9acce36"
-
 "@cypress/request@^2.88.10":
   version "2.88.11"
   resolved "https://registry.yarnpkg.com/@cypress/request/-/request-2.88.11.tgz#5a4c7399bc2d7e7ed56e92ce5acb620c8b187047"

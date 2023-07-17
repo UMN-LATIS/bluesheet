@@ -6,7 +6,8 @@
       $emit('update:modelValue', ($event.target as HTMLSelectElement).value)
     "
   >
-    <slot />
+    <option v-if="isNullable" value="">&ndash;</option>
+    <option v-else value="" disabled>Select...</option>
     <option
       v-for="option in flattenedOptions"
       :key="option.id"
@@ -29,6 +30,7 @@ export interface OptionNode {
 const props = defineProps<{
   options: OptionNode[];
   modelValue: number | string | null; // id of selected option
+  isNullable: boolean;
 }>();
 
 defineEmits<{

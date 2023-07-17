@@ -5,15 +5,10 @@
         >Filter by Folder</label
       >
       <div class="col-sm-6">
-        <TreeSelect
+        <SimpleNestedSelect
           v-model="parentOrganization"
-          :multiple="false"
           :options="parentOrganizations"
-          :clearable="false"
-          :searchable="true"
-          :openOnClick="true"
-          :closeOnSelect="true"
-          label="parent_folder"
+          :isNullable="true"
         />
       </div>
     </div>
@@ -56,16 +51,16 @@
 </template>
 
 <script>
-import TreeSelect from "@bosquig/vue3-treeselect";
 import SortableLink from "@/components/SortableLink.vue";
 import GroupTitle from "@/components/GroupTitle.vue";
+import SimpleNestedSelect from "@/components/SimpleNestedSelect.vue";
 import { dayjs } from "@/lib";
 
 export default {
   components: {
-    TreeSelect,
     SortableLink,
     GroupTitle,
+    SimpleNestedSelect,
   },
   data() {
     return {

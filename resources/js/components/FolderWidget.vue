@@ -1,22 +1,16 @@
 <template>
-  <TreeSelect
+  <SimpleNestedSelect
     v-if="parentOrganizations"
-    v-model="parentOrganizationValue"
-    :multiple="false"
+    v-model="parentOrganization"
     :options="parentOrganizations"
-    :clearable="false"
-    :searchable="true"
-    :openOnClick="true"
-    :closeOnSelect="true"
-    label="group_title"
   />
 </template>
 
 <script>
-import TreeSelect from "@bosquig/vue3-treeselect";
+import SimpleNestedSelect from "./SimpleNestedSelect.vue";
 export default {
   components: {
-    TreeSelect,
+    SimpleNestedSelect,
   },
   props: ["value"],
   emits: ["input"],

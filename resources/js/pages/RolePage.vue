@@ -19,15 +19,10 @@
         >Filter by Folder</label
       >
       <div class="col-sm-6">
-        <TreeSelect
+        <SimpleNestedSelect
           v-model="parentOrganization"
-          :multiple="false"
           :options="parentOrganizations"
-          :clearable="true"
-          :searchable="true"
-          :openOnClick="true"
-          :closeOnSelect="true"
-          label="group_title"
+          :isNullable="true"
         />
       </div>
     </div>
@@ -45,12 +40,12 @@
 </template>
 
 <script>
-import TreeSelect from "@bosquig/vue3-treeselect";
 import Members from "@/components/Members.vue";
+import SimpleNestedSelect from "@/components/SimpleNestedSelect.vue";
 export default {
   components: {
-    TreeSelect,
     Members,
+    SimpleNestedSelect,
   },
   props: ["roleId"],
   data() {
