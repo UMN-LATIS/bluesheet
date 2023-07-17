@@ -75,10 +75,10 @@ select {
   appearance: none; /* This will remove the default select style */
   /* replace with a chevron icon */
   background-image: url("data:image/svg+xml, %3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='%23111' %3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5' /%3E%3C/svg%3E");
-  background-position: right 0.75rem center;
+  background-position: right 0.33rem center;
   background-repeat: no-repeat;
   background-size: 1rem;
-  padding-right: 2.5rem;
+  padding-right: 1.5rem;
   border-color: #ced4da;
   border-radius: 0.25rem;
 }
