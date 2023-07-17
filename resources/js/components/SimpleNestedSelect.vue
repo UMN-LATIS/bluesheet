@@ -27,11 +27,16 @@ export interface OptionNode {
   children: OptionNode[];
 }
 
-const props = defineProps<{
-  options: OptionNode[];
-  modelValue: number | string | null; // id of selected option
-  isNullable: boolean;
-}>();
+const props = withDefaults(
+  defineProps<{
+    options: OptionNode[];
+    modelValue: number | string | null; // id of selected option
+    isNullable?: boolean;
+  }>(),
+  {
+    isNullable: false,
+  },
+);
 
 defineEmits<{
   (event: "update:modelValue", optionId: number | string | null): void;
