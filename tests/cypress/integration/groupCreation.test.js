@@ -27,8 +27,9 @@ describe("Groups UI", () => {
       cy.visit("/");
       cy.get(".app-header").contains("Create Group").click();
       cy.get("#groupName").type("Test Group");
-      cy.get(".vs__search").type("Committee{enter}");
-      cy.get(".vue-treeselect__input").type("CLA{enter}");
+      cy.get("#groupTypes .combobox__toggle-button").click();
+      cy.get(".other-option-group input").type("Committee{enter}");
+      cy.get("#parentOrganization").select("CLA");
       cy.get(".btn").contains("Create Group").click();
       cy.contains("Test Group");
     });
@@ -44,7 +45,10 @@ describe("Groups UI", () => {
     it("edits a group", () => {
       cy.visit("/group/1");
       cy.contains("Edit Group").click().wait(1000);
-      cy.get("[data-cy=groupType] input").type("List{enter}");
+      cy.get("#groupTypes .combobox__toggle-button")
+        .click()
+        .get(".other-option-group input")
+        .type("List{enter}");
       cy.get("#groupNotes").type("Test Notes");
       cy.contains("Save").click();
       cy.contains("Test Notes");
@@ -56,7 +60,7 @@ describe("Groups UI", () => {
       cy.contains("Edit Group").click();
       cy.contains("Add Member").click();
       cy.get("#internetId").type("admin");
-      cy.get(".modal-container .vs__search").type("Member{enter}");
+      cy.get(".combobox__input-group > #roles").type("Member{enter}");
       cy.get(".modal-container").contains("Add Member").click();
       cy.contains("McAdmin");
       cy.contains("Save").click();

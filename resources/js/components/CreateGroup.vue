@@ -35,7 +35,7 @@
         >Folder</label
       >
       <div class="col-sm-6">
-        <FolderWidget v-model="parentOrganization"></FolderWidget>
+        <FolderWidget id="parentOrganization" v-model="parentOrganization" />
       </div>
     </div>
     <div class="form-group row">
@@ -61,14 +61,12 @@
 import Modal from "./Modal.vue";
 import FolderWidget from "./FolderWidget.vue";
 import ComboBox from "./ComboBox.vue";
-import CheckIcon from "@/icons/CheckIcon.vue";
 
 export default {
   components: {
     Modal,
     FolderWidget,
     ComboBox,
-    CheckIcon,
   },
   props: ["show"],
   emits: ["close"],

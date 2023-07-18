@@ -1,6 +1,7 @@
 <template>
   <SimpleNestedSelect
     v-if="parentOrganizations"
+    :id="id"
     :modelValue="modelValue"
     :options="parentOrganizations"
     @update:modelValue="(val) => $emit('update:modelValue', val)"
@@ -13,7 +14,7 @@ export default {
   components: {
     SimpleNestedSelect,
   },
-  props: ["modelValue"],
+  props: ["modelValue", "id"],
   emits: ["update:modelValue"],
   data() {
     return {

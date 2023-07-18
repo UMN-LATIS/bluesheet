@@ -1,5 +1,6 @@
 <template>
   <select
+    :id="id"
     class="nested-select"
     :value="modelValue"
     @change="
@@ -29,6 +30,7 @@ export interface OptionNode {
 
 const props = withDefaults(
   defineProps<{
+    id: string;
     options: OptionNode[];
     modelValue: number | string | null; // id of selected option
     isNullable?: boolean;
