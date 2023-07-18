@@ -130,19 +130,10 @@ export default {
       }
       this.groupNameError = null;
 
-      // if the id of the groupType is a string and equivalent to the label,
-      // then it is a new group type
-      // added by the user, so we should not include the id in the post request
-      const isNewGroupType =
-        typeof this.groupType.id === "string" &&
-        this.groupType.id === this.groupType.label;
-
       axios
         .post("/api/group", {
           groupName: this.groupName,
-          groupType: isNewGroupType
-            ? { label: this.groupType.label }
-            : this.groupType,
+          groupType: this.groupType,
           parentOrganization: this.parentOrganization,
         })
         .then((res) => {

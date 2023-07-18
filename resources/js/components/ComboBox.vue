@@ -52,7 +52,7 @@
         <slot name="prepend" />
         <button
           v-for="option in filteredOptions"
-          :key="option.id"
+          :key="option.id ?? option.label"
           ref="optionRefs"
           class="combobox__item"
           :class="{
@@ -77,12 +77,12 @@
             v-model="newGroupType"
             type="text"
             placeholder="Other"
-            @keydown.enter.stop="handleAddNewGroupType"
+            @keydown.enter.stop="handleAddNewOption"
           />
           <button
             type="button"
             :disabled="!newGroupType"
-            @click="handleAddNewGroupType"
+            @click="handleAddNewOption"
           >
             <CheckIcon />
             <span class="sr-only">Add Option</span>
@@ -102,7 +102,7 @@ import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
 import CheckIcon from "@/icons/CheckIcon.vue";
 
 interface Option {
-  id: string | number;
+  id?: string | number; // new options might have an undefined id
   label: string;
   secondaryLabel?: string;
 }
@@ -140,9 +140,8 @@ const filterText = ref(props.modelValue?.label ?? "");
 const isComboboxOpen = ref(false);
 const newGroupType = ref("");
 
-function handleAddNewGroupType() {
+function handleAddNewOption() {
   const newOption = {
-    id: newGroupType.value,
     label: newGroupType.value,
   };
   emit("update:options", [...props.options, newOption]);
@@ -206,13 +205,16 @@ watch(
       return;
     }
 
-    const selectedOption = getOption(props.modelValue.id);
+    const selectedOption = getOption(props.modelValue);
     filterText.value = selectedOption?.label ?? "";
   },
 );
 
-function getOption(optionId: string | number): Option | null {
-  return props.options.find((opt) => opt.id === optionId) ?? null;
+function getOption(option: Partial<Option>): Option | null {
+  if (option.id) {
+    return props.options.find((opt) => opt.id === option.id) ?? null;
+  }
+  return props.options.find((opt) => opt.label === option.label) ?? null;
 }
 
 function handleArrowKeyNav(event: KeyboardEvent) {

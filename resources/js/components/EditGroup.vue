@@ -249,6 +249,8 @@
             id="roles"
             v-model="newRole"
             :options="filteredRoles"
+            :canAddOther="true"
+            @update:options="(updatedRoles) => (roles = updatedRoles)"
           />
         </div>
         <div class="col-sm-3">
@@ -412,15 +414,6 @@ export default {
     save: function () {
       if (!this.checkForm()) {
         return;
-      }
-
-      // If the group type was added as a new option, it has a temporary
-      // id equal to its label. We need to remove the id so that the backend
-      // will create a new one.
-      if (this.localGroup.group_type.id === this.localGroup.group_type.label) {
-        this.localGroup.group_type = {
-          label: this.localGroup.group_type.label,
-        };
       }
 
       axios
