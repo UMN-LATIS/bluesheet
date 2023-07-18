@@ -24,8 +24,8 @@
           <ComboBox
             v-if="roles"
             v-model="member.role"
-            taggable
-            :options="roles"
+            v-model:options="localRoles"
+            :canAddNewOption="true"
           />
         </td>
       </template>
@@ -125,7 +125,9 @@ export default {
   ],
   emits: ["remove"],
   data() {
-    return {};
+    return {
+      localRoles: this.roles,
+    };
   },
   methods: {
     dayjs,
