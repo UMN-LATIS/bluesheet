@@ -19,6 +19,7 @@
         :class="inputClass"
         class="combobox__input"
         :aria-controls="comboboxResultsId"
+        autocomplete="off"
         @input="handleInput"
         @focus="isComboboxOpen = true"
       />

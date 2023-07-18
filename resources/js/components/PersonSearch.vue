@@ -5,6 +5,7 @@
       :value="modelValue"
       :class="inputClass"
       class="person-search__input form-control"
+      autocomplete="off"
       @input="handleInput"
     />
 
