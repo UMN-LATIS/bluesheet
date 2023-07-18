@@ -2908,11 +2908,6 @@ vue-router@4:
   dependencies:
     "@vue/devtools-api" "^6.5.0"
 
-vue-select@^4.0.0-beta.6:
-  version "4.0.0-beta.6"
-  resolved "https://registry.yarnpkg.com/vue-select/-/vue-select-4.0.0-beta.6.tgz#7c250cb7c01280b54a311cb446629801b3c8df98"
-  integrity sha512-K+zrNBSpwMPhAxYLTCl56gaMrWZGgayoWCLqe5rWwkB8aUbAUh7u6sXjIR7v4ckp2WKC7zEEUY27g6h1MRsIHw==
-
 vue3-tour@^0.3.4:
   version "0.3.4"
   resolved "https://registry.yarnpkg.com/vue3-tour/-/vue3-tour-0.3.4.tgz#af20b92318eaeda3dabfe9f60d951b47916c54ac"
