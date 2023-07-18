@@ -71,13 +71,14 @@
           <div class="col-sm-4">
             <div class="form-group">
               <label for="parentGroup" class="small">Parent Group</label>
-              <VSelect
+              <ComboBox
                 v-if="groups"
                 id="groups"
-                v-model="localGroup.parent_group_id"
+                :modelValue="parentGroup"
                 :options="groups"
-                :reduce="(parent_group) => parent_group.id"
-              ></VSelect>
+                placeholder="Select..."
+                @update:modelValue="handleUpdateParentGroup"
+              />
             </div>
           </div>
         </div>
@@ -276,11 +277,12 @@
 
 <script>
 import VSelect from "vue-select";
+import ComboBox from "./ComboBox.vue";
 import Members from "./Members.vue";
 import Modal from "./Modal.vue";
 import FolderWidget from "./FolderWidget.vue";
 import PersonSearch from "./PersonSearch.vue";
-import dayjs from "../lib/dayjs";
+import { dayjs, axios } from "@/lib";
 
 export default {
   components: {
@@ -289,6 +291,7 @@ export default {
     Modal,
     FolderWidget,
     PersonSearch,
+    ComboBox,
   },
   props: ["group"],
   emits: ["update:editing", "update:reload"],
@@ -310,6 +313,14 @@ export default {
     };
   },
   computed: {
+    parentGroup() {
+      if (!this.groups?.length || !this.localGroup) return null;
+      return (
+        this.groups.find(
+          (group) => group.id == this.localGroup.parent_group_id,
+        ) ?? null
+      );
+    },
     filteredRoles: function () {
       if (!this.roles) {
         return [];
@@ -386,6 +397,9 @@ export default {
       });
   },
   methods: {
+    handleUpdateParentGroup(group) {
+      this.localGroup.parent_group_id = group?.id ?? null;
+    },
     handleUserSelected(user) {
       this.newUserId = user.mail;
 
