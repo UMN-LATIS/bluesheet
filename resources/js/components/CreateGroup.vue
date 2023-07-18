@@ -80,7 +80,6 @@
 </template>
 
 <script>
-import VSelect from "vue-select";
 import Modal from "./Modal.vue";
 import FolderWidget from "./FolderWidget.vue";
 import ComboBox from "./ComboBox.vue";
@@ -88,7 +87,6 @@ import CheckIcon from "@/icons/CheckIcon.vue";
 
 export default {
   components: {
-    VSelect,
     Modal,
     FolderWidget,
     ComboBox,
