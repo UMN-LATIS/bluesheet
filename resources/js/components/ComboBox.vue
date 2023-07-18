@@ -6,7 +6,8 @@
       'combobox--is-open': isComboboxOpen,
     }"
     tabindex="0"
-    @keydown.enter.prevent="handleEnterKey"
+    role="combobox"
+    @keydown.enter="handleEnterKey"
     @keydown.down.prevent="handleArrowKeyNav"
     @keydown.up.prevent="handleArrowKeyNav"
   >
@@ -17,6 +18,7 @@
         :value="filterText"
         :class="inputClass"
         class="combobox__input"
+        :aria-controls="comboboxResultsId"
         @input="handleInput"
         @focus="isComboboxOpen = true"
       />
@@ -37,11 +39,16 @@
     </div>
 
     <Transition name="fade-slide">
-      <div v-if="isComboboxOpen" class="combobox__results">
-        <div v-if="!options.length" class="combobox__no-items">
+      <div
+        v-if="isComboboxOpen"
+        :id="comboboxResultsId"
+        class="combobox__results"
+      >
+        <div v-if="!filteredOptions.length" class="combobox__no-items">
           No results found
         </div>
 
+        <slot name="prepend" />
         <button
           v-for="option in filteredOptions"
           :key="option.id"
@@ -55,6 +62,8 @@
             ({{ option.secondaryLabel }})
           </span>
         </button>
+
+        <slot :close="close" name="append" />
       </div>
     </Transition>
   </div>
@@ -73,15 +82,22 @@ interface Option {
   secondaryLabel?: string;
 }
 
-const props = defineProps<{
-  modelValue: Option | null;
-  options: Option[];
-  inputClass?: CSSClass;
-}>();
+const props = withDefaults(
+  defineProps<{
+    modelValue: Option | null;
+    options: Option[];
+    inputClass?: CSSClass;
+  }>(),
+  {
+    inputClass: "",
+  },
+);
 
 const emit = defineEmits<{
   (eventName: "update:modelValue", value: Option | null);
 }>();
+
+const comboboxResultsId = `comboboxDropdownList-${Date.now()}`;
 
 const comboboxContainerRef = ref<HTMLDivElement>();
 const inputRef = ref<HTMLInputElement>();
@@ -94,9 +110,15 @@ const filterText = ref("");
 const isComboboxOpen = ref(false);
 
 const filteredOptions = computed(() => {
-  if (!filterText.value) return props.options;
+  const sortedOptions = [...props.options].sort((a, b) =>
+    a.label.localeCompare(b.label),
+  );
 
-  return fuzzySearch(props.options, filterText.value);
+  if (!filterText.value) {
+    return sortedOptions;
+  }
+
+  return fuzzySearch(sortedOptions, filterText.value);
 });
 
 function fuzzySearch(options: Option[], query: string) {
@@ -137,6 +159,10 @@ watch(
 
 function getOption(optionId: string | number): Option | null {
   return props.options.find((opt) => opt.id === optionId) ?? null;
+}
+
+function close() {
+  isComboboxOpen.value = false;
 }
 
 function handleArrowKeyNav(event: KeyboardEvent) {

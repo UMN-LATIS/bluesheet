@@ -26,15 +26,30 @@
           v-model="groupType"
           :options="groupTypes"
           placeholder="Select..."
-        />
-        <VSelect
-          v-if="groupTypes"
-          id="groupTypes"
-          v-model="groupType"
-          taggable
-          :options="groupTypes"
-          placeholder="Select..."
-        ></VSelect>
+        >
+          <template #append="{ close: closeCombobox }">
+            <form
+              class="other-option-group"
+              @submit.prevent="addNewGroupType"
+              @keydown.enter.stop="addNewGroupType"
+            >
+              <input v-model="newGroupType" type="text" placeholder="Other" />
+              <button
+                type="submit"
+                :disabled="!newGroupType"
+                @click="
+                  () => {
+                    handleAddNewGroupType();
+                    closeCombobox();
+                  }
+                "
+              >
+                <CheckIcon />
+                <span class="sr-only">Add Option</span>
+              </button>
+            </form>
+          </template>
+        </ComboBox>
       </div>
     </div>
     <div class="form-group row">
@@ -69,6 +84,7 @@ import VSelect from "vue-select";
 import Modal from "./Modal.vue";
 import FolderWidget from "./FolderWidget.vue";
 import ComboBox from "./ComboBox.vue";
+import CheckIcon from "@/icons/CheckIcon.vue";
 
 export default {
   components: {
@@ -76,6 +92,7 @@ export default {
     Modal,
     FolderWidget,
     ComboBox,
+    CheckIcon,
   },
   props: ["show"],
   emits: ["close"],
@@ -86,6 +103,7 @@ export default {
       groupType: null,
       groupTypes: [],
       parentOrganization: null,
+      newGroupType: "",
     };
   },
   watch: {
@@ -110,6 +128,15 @@ export default {
       });
   },
   methods: {
+    handleAddNewGroupType() {
+      const newOption = {
+        id: this.newGroupType,
+        label: this.newGroupType,
+      };
+      this.groupTypes.push(newOption);
+      this.groupType = newOption;
+      this.newGroupType = "";
+    },
     close: function () {
       this.groupName = null;
       this.$emit("close");
@@ -128,10 +155,20 @@ export default {
         return;
       }
       this.groupNameError = null;
+
+      // if the id of the groupType is a string and equivalent to the label,
+      // then it is a new group type
+      // added by the user, so we should not include the id in the post request
+      const isNewGroupType =
+        typeof this.groupType.id === "string" &&
+        this.groupType.id === this.groupType.label;
+
       axios
         .post("/api/group", {
           groupName: this.groupName,
-          groupType: this.groupType,
+          groupType: isNewGroupType
+            ? { label: this.groupType.label }
+            : this.groupType,
           parentOrganization: this.parentOrganization,
         })
         .then((res) => {
@@ -152,5 +189,40 @@ export default {
 <style scoped>
 .vue-treeselect__control {
   border: 1px solid rgba(60, 60, 60, 0.26);
+}
+
+.other-option-group {
+  display: flex;
+  margin: 0.5rem;
+  padding-top: 0;
+  border: 1px solid #ddd;
+  border-radius: 0.25rem;
+}
+
+.other-option-group input {
+  flex: 1;
+  background: #f3f3f3;
+  border: 0;
+  padding: 0.5rem 0.75rem;
+  border-top-left-radius: 0.25rem;
+  border-bottom-left-radius: 0.25rem;
+}
+
+.other-option-group button {
+  background: trasparent;
+  border: none;
+  border-top-right-radius: 0.25rem;
+  border-bottom-right-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ddd;
+}
+.other-option-group button:not(:disabled):hover {
+  background: #111;
+}
+
+.other-option-group button:not(:disabled) {
+  background: #333;
 }
 </style>
