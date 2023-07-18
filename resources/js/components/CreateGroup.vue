@@ -26,7 +26,7 @@
           v-model="groupType"
           v-model:options="groupTypes"
           placeholder="Select..."
-          :canAddOther="true"
+          :canAddNewOption="true"
         />
       </div>
     </div>

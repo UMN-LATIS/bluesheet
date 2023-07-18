@@ -55,7 +55,7 @@
                 v-model="localGroup.group_type"
                 v-model:options="groupTypes"
                 placeholder="Select..."
-                :canAddOther="true"
+                :canAddNewOption="true"
               />
             </div>
           </div>
@@ -249,7 +249,7 @@
             id="roles"
             v-model="newRole"
             :options="filteredRoles"
-            :canAddOther="true"
+            :canAddNewOption="true"
             @update:options="(updatedRoles) => (roles = updatedRoles)"
           />
         </div>

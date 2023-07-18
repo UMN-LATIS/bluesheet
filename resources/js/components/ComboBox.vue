@@ -24,7 +24,7 @@
         @focus="isComboboxOpen = true"
       />
       <button
-        v-if="showClearButton && filterText.length"
+        v-if="showClearButton && filterText.length && isComboboxOpen"
         class="combobox__clear-button"
         @click="handleClear"
       >
@@ -46,7 +46,18 @@
         class="combobox__results"
       >
         <div v-if="!filteredOptions.length" class="combobox__no-items">
-          No results found
+          <span>No results found</span>
+        </div>
+        <div class="p-1">
+          <button
+            v-if="shouldShowAddNewOptionButton"
+            class="add-new-option-button"
+            type="button"
+            :disabled="!filterText.length"
+            @click="handleAddNewOption"
+          >
+            Add New Option
+          </button>
         </div>
 
         <slot name="prepend" />
@@ -56,14 +67,14 @@
           ref="optionRefs"
           class="combobox__item"
           :class="{
-            'combobox__item--is-selected': option.id === props.modelValue?.id,
+            'combobox__item--is-selected': isOptionSelected(option),
           }"
           type="button"
           @click="handleSelectOption(option)"
         >
           <span class="sr-only">Selected</span>
           <CheckIcon
-            v-if="option.id === props.modelValue?.id"
+            v-if="isOptionSelected(option)"
             class="combobox__check-icon"
           />
           <span class="combobox__name">{{ option.label }}</span>
@@ -72,22 +83,7 @@
           </span>
         </button>
 
-        <div v-if="canAddOther" class="other-option-group">
-          <input
-            v-model="newGroupType"
-            type="text"
-            placeholder="Other"
-            @keydown.enter.stop="handleAddNewOption"
-          />
-          <button
-            type="button"
-            :disabled="!newGroupType"
-            @click="handleAddNewOption"
-          >
-            <CheckIcon />
-            <span class="sr-only">Add Option</span>
-          </button>
-        </div>
+        <slot name="append" />
       </div>
     </Transition>
   </div>
@@ -113,12 +109,12 @@ const props = withDefaults(
     options: Option[];
     inputClass?: CSSClass;
     showClearButton?: boolean;
-    canAddOther?: boolean;
+    canAddNewOption?: boolean;
   }>(),
   {
     showClearButton: false,
     inputClass: "",
-    canAddOther: false,
+    canAddNewOption: false,
   },
 );
 
@@ -138,16 +134,40 @@ const optionRefs = ref<HTMLElement[]>([]);
 
 const filterText = ref(props.modelValue?.label ?? "");
 const isComboboxOpen = ref(false);
-const newGroupType = ref("");
 
 function handleAddNewOption() {
+  if (!props.canAddNewOption) {
+    return;
+  }
+
+  // check that the option is not already in the list
+  // if it is, then select it
+  const existingOption = props.options.find(
+    (option) => option.label === filterText.value,
+  );
+
+  if (existingOption) {
+    return handleSelectOption(existingOption);
+  }
+
+  // otherwise add it to the list
   const newOption = {
-    label: newGroupType.value,
+    label: filterText.value,
   };
   emit("update:options", [...props.options, newOption]);
-  emit("update:modelValue", newOption);
-  newGroupType.value = "";
-  isComboboxOpen.value = false;
+  handleSelectOption(newOption);
+}
+
+function isOptionSelected(option: Option) {
+  if (!props.modelValue) {
+    return false;
+  }
+
+  if (props.modelValue.id) {
+    return props.modelValue.id === option.id;
+  }
+
+  return props.modelValue.label === option.label;
 }
 
 const filteredOptions = computed(() => {
@@ -169,6 +189,15 @@ const filteredOptions = computed(() => {
   return fuzzySearch(sortedOptions, filterText.value);
 });
 
+const shouldShowAddNewOptionButton = computed(() => {
+  return (
+    props.canAddNewOption && // can add new options
+    filterText.value.length && // there is text in the input
+    // and there are no exact matching labels
+    !props.options.map((o) => o.label).includes(filterText.value)
+  );
+});
+
 function fuzzySearch(options: Option[], query: string) {
   const fuse = new Fuse(options, {
     keys: ["label", "secondaryLabel"],
@@ -185,6 +214,7 @@ function handleInput(event: Event) {
 function handleSelectOption(option: Option) {
   emit("update:modelValue", option);
   isComboboxOpen.value = false;
+  inputRef.value?.blur();
 }
 
 function handleClear() {
@@ -237,12 +267,28 @@ function handleArrowKeyNav(event: KeyboardEvent) {
 
 function handleEnterKey(event: KeyboardEvent) {
   event.preventDefault();
+
   const activeElementIndex = optionRefs.value.indexOf(
     document.activeElement as HTMLElement,
   );
   const activeOption = filteredOptions.value[activeElementIndex];
-  emit("update:modelValue", activeOption ?? null);
-  isComboboxOpen.value = false;
+
+  // if there's an active option, select it
+  if (activeOption) {
+    return handleSelectOption(activeOption);
+  }
+
+  // if there's no active option and the filter is empty
+  // clear the selected option
+  if (!filterText.value) {
+    return handleClear();
+  }
+
+  // if there's no active option and we can add new options
+  // then add the filter text as a new option
+  if (props.canAddNewOption) {
+    return handleAddNewOption();
+  }
 }
 </script>
 <style scoped>
@@ -377,21 +423,15 @@ function handleEnterKey(event: KeyboardEvent) {
   border-bottom-left-radius: 0.25rem;
 }
 
-.other-option-group button {
-  background: trasparent;
+.add-new-option-button {
+  background: #111;
   border: none;
-  border-top-right-radius: 0.25rem;
-  border-bottom-right-radius: 0.25rem;
+  border-radius: 0.25rem;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #ddd;
-}
-.other-option-group button:not(:disabled):hover {
-  background: #111;
-}
-
-.other-option-group button:not(:disabled) {
-  background: #333;
+  width: 100%;
+  padding: 0.25rem 0.5rem;
 }
 </style>
