@@ -23,7 +23,7 @@
         @focus="isComboboxOpen = true"
       />
       <button
-        v-if="filterText.length"
+        v-if="showClearButton && filterText.length"
         class="combobox__clear-button"
         @click="handleClear"
       >
@@ -96,8 +96,10 @@ const props = withDefaults(
     modelValue: Option | null;
     options: Option[];
     inputClass?: CSSClass;
+    showClearButton?: boolean;
   }>(),
   {
+    showClearButton: false,
     inputClass: "",
   },
 );
@@ -115,7 +117,7 @@ const inputRef = ref<HTMLInputElement>();
 // with up/down arrow keys
 const optionRefs = ref<HTMLElement[]>([]);
 
-const filterText = ref("");
+const filterText = ref(props.modelValue?.label ?? "");
 const isComboboxOpen = ref(false);
 
 const filteredOptions = computed(() => {
@@ -251,6 +253,7 @@ function handleEnterKey(event: KeyboardEvent) {
   border: none;
   flex: 1;
   padding: 0.5rem 0.75rem;
+  padding-right: 0;
 }
 .combobox__input:focus {
   outline: none;
