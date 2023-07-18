@@ -163,3 +163,32 @@ export default {
   margin-bottom: 2rem;
 }
 </style>
+<style lang="scss">
+/**
+* these are some fixes for the app header navbar-links slot until
+* cla-vue-templates is updated
+**/
+.app-header {
+  // the navbar should take up all available space
+  // the second ul is for the right navbar links slot
+  // which is empty
+  ul:first-child {
+    flex: 1;
+  }
+
+  // first and last should only take up the space they need
+  // so that they appear left and right aligned
+  .navbar-item:is(:first-child, :last-child) {
+    flex: 0;
+  }
+
+  // center the text within the flex container
+  // this is for the middle navbar items where the container
+  // is larger than the text
+  .navbar-item a {
+    justify-content: center;
+  }
+}
+
+</style>
+
