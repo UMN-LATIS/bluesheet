@@ -30,12 +30,13 @@ export interface OptionNode {
 
 const props = withDefaults(
   defineProps<{
-    id: string;
+    id?: string;
     options: OptionNode[];
     modelValue: number | string | null; // id of selected option
     isNullable?: boolean;
   }>(),
   {
+    id: `nested-select-${new Date().getTime().toString()}`,
     isNullable: false,
   },
 );
