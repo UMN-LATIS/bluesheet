@@ -49,14 +49,14 @@
           <div class="col-sm-4">
             <div class="form-group">
               <label for="groupType" class="small">Group Type</label>
-              <VSelect
+              <ComboBox
                 v-if="groupTypes"
-                id="roles"
+                id="groupTypes"
                 v-model="localGroup.group_type"
-                taggable
-                :options="groupTypes"
-                data-cy="groupType"
-              ></VSelect>
+                v-model:options="groupTypes"
+                placeholder="Select..."
+                :canAddOther="true"
+              />
             </div>
           </div>
 
@@ -278,6 +278,7 @@
 <script>
 import VSelect from "vue-select";
 import ComboBox from "./ComboBox.vue";
+import ComboBoxWithOther from "./ComboBoxWithOther.vue";
 import Members from "./Members.vue";
 import Modal from "./Modal.vue";
 import FolderWidget from "./FolderWidget.vue";
@@ -292,6 +293,7 @@ export default {
     FolderWidget,
     PersonSearch,
     ComboBox,
+    ComboBoxWithOther,
   },
   props: ["group"],
   emits: ["update:editing", "update:reload"],

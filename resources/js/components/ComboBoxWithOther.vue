@@ -57,7 +57,6 @@ function handleAddNewGroupType() {
     id: newGroupType.value,
     label: newGroupType.value,
   };
-  console.log({ newOption });
   emit("update:options", [...props.options, newOption]);
   emit("update:modelValue", newOption);
   newGroupType.value = "";

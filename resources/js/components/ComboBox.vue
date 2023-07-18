@@ -71,7 +71,22 @@
           </span>
         </button>
 
-        <slot :close="close" name="append" />
+        <div v-if="canAddOther" class="other-option-group">
+          <input
+            v-model="newGroupType"
+            type="text"
+            placeholder="Other"
+            @keydown.enter.stop="handleAddNewGroupType"
+          />
+          <button
+            type="button"
+            :disabled="!newGroupType"
+            @click="handleAddNewGroupType"
+          >
+            <CheckIcon />
+            <span class="sr-only">Add Option</span>
+          </button>
+        </div>
       </div>
     </Transition>
   </div>
@@ -97,15 +112,18 @@ const props = withDefaults(
     options: Option[];
     inputClass?: CSSClass;
     showClearButton?: boolean;
+    canAddOther?: boolean;
   }>(),
   {
     showClearButton: false,
     inputClass: "",
+    canAddOther: false,
   },
 );
 
 const emit = defineEmits<{
   (eventName: "update:modelValue", value: Option | null);
+  (eventName: "update:options", value: Option[]): void;
 }>();
 
 const comboboxResultsId = `comboboxDropdownList-${Date.now()}`;
@@ -119,6 +137,18 @@ const optionRefs = ref<HTMLElement[]>([]);
 
 const filterText = ref(props.modelValue?.label ?? "");
 const isComboboxOpen = ref(false);
+const newGroupType = ref("");
+
+function handleAddNewGroupType() {
+  const newOption = {
+    id: newGroupType.value,
+    label: newGroupType.value,
+  };
+  emit("update:options", [...props.options, newOption]);
+  emit("update:modelValue", newOption);
+  newGroupType.value = "";
+  isComboboxOpen.value = false;
+}
 
 const filteredOptions = computed(() => {
   const sortedOptions = [...props.options].sort((a, b) =>
@@ -182,10 +212,6 @@ watch(
 
 function getOption(optionId: string | number): Option | null {
   return props.options.find((opt) => opt.id === optionId) ?? null;
-}
-
-function close() {
-  isComboboxOpen.value = false;
 }
 
 function handleArrowKeyNav(event: KeyboardEvent) {
@@ -329,5 +355,40 @@ function handleEnterKey(event: KeyboardEvent) {
 
 .combobox--is-open .combobox__toggle-button {
   transform: rotate(180deg);
+}
+
+.other-option-group {
+  display: flex;
+  margin: 0.5rem;
+  padding-top: 0;
+  border: 1px solid #ddd;
+  border-radius: 0.25rem;
+}
+
+.other-option-group input {
+  flex: 1;
+  background: #f3f3f3;
+  border: 0;
+  padding: 0.5rem 0.75rem;
+  border-top-left-radius: 0.25rem;
+  border-bottom-left-radius: 0.25rem;
+}
+
+.other-option-group button {
+  background: trasparent;
+  border: none;
+  border-top-right-radius: 0.25rem;
+  border-bottom-right-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ddd;
+}
+.other-option-group button:not(:disabled):hover {
+  background: #111;
+}
+
+.other-option-group button:not(:disabled) {
+  background: #333;
 }
 </style>
