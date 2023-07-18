@@ -43,7 +43,7 @@
               <GroupTitle :group="group" />
             </router-link>
           </td>
-          <td>{{ dayjs(group.lastModified).format("YYYY, MMM Do") }}</td>
+          <td>{{ group.lastModified ? dayjs(group.lastModified).format("YYYY, MMM Do") : '' }}</td>
         </tr>
       </tbody>
     </table>

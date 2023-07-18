@@ -48,7 +48,7 @@
       </td>
 
       <td v-if="!editing">
-        {{ dayjs(member.start_date).format("YYYY, MMM Do") }}
+        {{ member.start_date ? dayjs(member.start_date).format("YYYY, MMM Do") : '' }}
       </td>
       <td v-if="editing">
         <input

@@ -4,9 +4,9 @@
       <th v-if="filterList" width="5%"></th>
       <th width="20%"></th>
       <th colspan="6" width="80%">
-        <span>{{ dayjs(mindate).format("YYYY-MM-DD") }}</span>
+        <span>{{ mindate ? dayjs(mindate).format("YYYY-MM-DD") : '' }}</span>
         <span class="float-right">
-          {{ dayjs(maxdate).format("YYYY-MM-DD") }}
+          {{ maxdate ? dayjs(maxdate).format("YYYY-MM-DD") : '' }}
         </span>
       </th>
     </tr>
@@ -25,9 +25,9 @@
       <th v-if="filterList" width="5%"></th>
       <th width="20%"></th>
       <th colspan="6" width="80%">
-        <span>{{ dayjs(mindate).format("YYYY-MM-DD") }}</span>
+        <span>{{ mindate ? dayjs(mindate).format("YYYY-MM-DD") : '' }}</span>
         <span class="float-right">
-          {{ dayjs(maxdate).format("YYYY-MM-DD") }}
+          {{ maxdate ? dayjs(maxdate).format("YYYY-MM-DD") : '' }}
         </span>
       </th>
     </tr>

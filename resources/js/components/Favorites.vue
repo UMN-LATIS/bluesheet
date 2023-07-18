@@ -29,7 +29,7 @@
             >{{ favorite[titleItem] }}
           </router-link>
         </td>
-        <td>{{ dayjs(favorite.updated_at).format("YYYY, MMM Do") }}</td>
+        <td>{{ favorite.updated_at ? dayjs(favorite.updated_at).format("YYYY, MMM Do") : '' }}</td>
       </tr>
     </tbody>
   </table>
