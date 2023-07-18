@@ -160,5 +160,6 @@ export default {
 .post-it {
   position: relative;
   z-index: 1;
+  margin-bottom: 2rem;
 }
 </style>
