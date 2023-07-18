@@ -193,7 +193,6 @@ function handleArrowKeyNav(event: KeyboardEvent) {
     document.activeElement as HTMLElement,
   ); // Get current active element
   const nextElementIndex = activeElementIndex + direction;
-  console.log({ event, activeElementIndex, nextElementIndex });
 
   // if the next element is out of bounds, focus the input
   if (nextElementIndex >= optionRefs.value.length || nextElementIndex < 0) {
