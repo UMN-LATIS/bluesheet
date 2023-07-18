@@ -4,9 +4,9 @@
       <th v-if="filterList" width="5%"></th>
       <th width="20%"></th>
       <th colspan="6" width="80%">
-        <span>{{ mindate ? dayjs(mindate).format("YYYY-MM-DD") : '' }}</span>
+        <span>{{ minDatePretty }}</span>
         <span class="float-right">
-          {{ maxdate ? dayjs(maxdate).format("YYYY-MM-DD") : '' }}
+          {{ maxDatePretty }}
         </span>
       </th>
     </tr>
@@ -36,7 +36,8 @@
 
 <script lang="ts">
 import GanttRow from "./GanttRow.vue";
-import dayjs from "../lib/dayjs";
+import { dayjs } from "@/lib";
+import { max, min } from "lodash";
 
 export default {
   components: {
@@ -47,9 +48,17 @@ export default {
   data() {
     return {};
   },
+  computed: {
+    minDatePretty() {
+      return dayjs.unix(this.mindate).format("YYYY-MM-DD");
+    },
+    maxDatePretty() {
+      return dayjs.unix(this.maxdate).format("YYYY-MM-DD");
+    },
+  },
   methods: {
     dayjs,
-  },
+  }
 };
 </script>
 
