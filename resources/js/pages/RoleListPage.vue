@@ -61,7 +61,6 @@ export default {
   },
   computed: {
     officialGroupTypes: function () {
-      console.log(this.roleList.map((r) => r.official_group_type).flat());
       let allLabels = this.roleList
         .map((r) => r.official_group_type)
         .flat()
