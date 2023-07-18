@@ -21,12 +21,12 @@
       <template v-if="viewType == 'group'">
         <td v-if="!editing">{{ member.role.label }}</td>
         <td v-if="editing">
-          <VSelect
+          <ComboBox
             v-if="roles"
             v-model="member.role"
             taggable
             :options="roles"
-          ></VSelect>
+          />
         </td>
       </template>
 
@@ -99,14 +99,14 @@
 </template>
 
 <script lang="ts">
-import VSelect from "vue-select";
 import GroupTitle from "./GroupTitle.vue";
 import { dayjs, $can } from "../lib";
+import ComboBox from "./ComboBox.vue";
 
 export default {
   components: {
-    VSelect,
     GroupTitle,
+    ComboBox,
   },
   props: [
     "editing",

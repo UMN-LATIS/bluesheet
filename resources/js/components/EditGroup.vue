@@ -244,13 +244,12 @@
       <div class="row">
         <label for="roles" class="col-sm-3 col-form-label">Role:</label>
         <div class="col-sm-6">
-          <VSelect
+          <ComboBox
             v-if="roles"
             id="roles"
             v-model="newRole"
-            taggable
             :options="filteredRoles"
-          ></VSelect>
+          />
         </div>
         <div class="col-sm-3">
           <button
@@ -276,7 +275,6 @@
 </template>
 
 <script>
-import VSelect from "vue-select";
 import ComboBox from "./ComboBox.vue";
 import Members from "./Members.vue";
 import Modal from "./Modal.vue";
@@ -286,7 +284,6 @@ import { dayjs, axios } from "@/lib";
 
 export default {
   components: {
-    VSelect,
     Members,
     Modal,
     FolderWidget,

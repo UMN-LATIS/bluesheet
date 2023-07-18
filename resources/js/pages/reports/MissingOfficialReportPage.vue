@@ -5,13 +5,13 @@
         >Filter by Official Role</label
       >
       <div class="col-sm-6">
-        <VSelect
+        <ComboBox
           v-if="officialRoles"
           id="groupTypes"
           v-model="officialRoleFilter"
           :options="officialRoles"
           placeholder="Select..."
-        ></VSelect>
+        />
       </div>
     </div>
     <table class="table">
@@ -53,15 +53,15 @@
 </template>
 
 <script>
-import VSelect from "vue-select";
 import SortableLink from "@/components/SortableLink.vue";
 import GroupTitle from "@/components/GroupTitle.vue";
+import ComboBox from "@/components/ComboBox.vue";
 
 export default {
   components: {
-    VSelect,
     SortableLink,
     GroupTitle,
+    ComboBox,
   },
   data() {
     return {
