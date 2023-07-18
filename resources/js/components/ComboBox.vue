@@ -54,9 +54,17 @@
           :key="option.id"
           ref="optionRefs"
           class="combobox__item"
+          :class="{
+            'combobox__item--is-selected': option.id === props.modelValue?.id,
+          }"
           type="button"
-          @click="$emit('update:modelValue', option)"
+          @click="handleSelectOption(option)"
         >
+          <span class="sr-only">Selected</span>
+          <CheckIcon
+            v-if="option.id === props.modelValue?.id"
+            class="combobox__check-icon"
+          />
           <span class="combobox__name">{{ option.label }}</span>
           <span v-if="option.secondaryLabel" class="combobox__id">
             ({{ option.secondaryLabel }})
@@ -75,6 +83,7 @@ import { CSSClass } from "@/types";
 import Fuse from "fuse.js";
 import CircleXIcon from "@/icons/CircleXIcon.vue";
 import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
+import CheckIcon from "@/icons/CheckIcon.vue";
 
 interface Option {
   id: string | number;
@@ -114,7 +123,14 @@ const filteredOptions = computed(() => {
     a.label.localeCompare(b.label),
   );
 
-  if (!filterText.value) {
+  // if the selected option matches the filter text
+  // then we want to show all the options
+  const filterTextMatchesSelectedOption = props.modelValue
+    ? props.modelValue.label
+        .toLowerCase()
+        .includes(filterText.value.toLowerCase())
+    : false;
+  if (!filterText.value || filterTextMatchesSelectedOption) {
     return sortedOptions;
   }
 
@@ -132,6 +148,11 @@ function fuzzySearch(options: Option[], query: string) {
 
 function handleInput(event: Event) {
   filterText.value = (event.target as HTMLInputElement).value;
+}
+
+function handleSelectOption(option: Option) {
+  emit("update:modelValue", option);
+  isComboboxOpen.value = false;
 }
 
 function handleClear() {
@@ -274,6 +295,15 @@ function handleEnterKey(event: KeyboardEvent) {
   display: flex;
   text-align: left;
   justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding-left: 2rem;
+}
+
+.combobox__item.combobox__item--is-selected,
+.combobox__item.combobox__item--is-selected:is(:hover, :focus) {
+  background: #d5ecff;
+  padding-left: 0.5rem;
 }
 
 .combobox__item:is(:hover, :focus) {
