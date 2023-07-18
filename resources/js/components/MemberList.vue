@@ -48,7 +48,11 @@
       </td>
 
       <td v-if="!editing">
-        {{ member.start_date ? dayjs(member.start_date).format("YYYY, MMM Do") : '' }}
+        {{
+          member.start_date
+            ? dayjs(member.start_date).format("YYYY, MMM Do")
+            : ""
+        }}
       </td>
       <td v-if="editing">
         <input
@@ -76,7 +80,9 @@
       <td v-if="!editing">
         <i
           v-if="
-            viewType == 'group' && member.role.official_group_type.length > 0
+            viewType == 'group' &&
+            member.role.official_group_type &&
+            member.role.official_group_type.length > 0
           "
           class="fa fa-check"
         ></i>
