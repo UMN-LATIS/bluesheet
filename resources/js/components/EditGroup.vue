@@ -278,7 +278,6 @@
 <script>
 import VSelect from "vue-select";
 import ComboBox from "./ComboBox.vue";
-import ComboBoxWithOther from "./ComboBoxWithOther.vue";
 import Members from "./Members.vue";
 import Modal from "./Modal.vue";
 import FolderWidget from "./FolderWidget.vue";
@@ -293,7 +292,6 @@ export default {
     FolderWidget,
     PersonSearch,
     ComboBox,
-    ComboBoxWithOther,
   },
   props: ["group"],
   emits: ["update:editing", "update:reload"],
@@ -417,6 +415,15 @@ export default {
     save: function () {
       if (!this.checkForm()) {
         return;
+      }
+
+      // If the group type was added as a new option, it has a temporary
+      // id equal to its label. We need to remove the id so that the backend
+      // will create a new one.
+      if (this.localGroup.group_type.id === this.localGroup.group_type.label) {
+        this.localGroup.group_type = {
+          label: this.localGroup.group_type.label,
+        };
       }
 
       axios

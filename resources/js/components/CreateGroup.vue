@@ -24,32 +24,10 @@
           v-if="groupTypes"
           id="groupTypes"
           v-model="groupType"
-          :options="groupTypes"
+          v-model:options="groupTypes"
           placeholder="Select..."
-        >
-          <template #append="{ close: closeCombobox }">
-            <form
-              class="other-option-group"
-              @submit.prevent="addNewGroupType"
-              @keydown.enter.stop="addNewGroupType"
-            >
-              <input v-model="newGroupType" type="text" placeholder="Other" />
-              <button
-                type="submit"
-                :disabled="!newGroupType"
-                @click="
-                  () => {
-                    handleAddNewGroupType();
-                    closeCombobox();
-                  }
-                "
-              >
-                <CheckIcon />
-                <span class="sr-only">Add Option</span>
-              </button>
-            </form>
-          </template>
-        </ComboBox>
+          :canAddOther="true"
+        />
       </div>
     </div>
     <div class="form-group row">
