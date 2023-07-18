@@ -204,7 +204,7 @@
         :mindate="lowestValue"
         :maxdate="highestValue"
         :show_unit="show_unit"
-        @update:member="handleUpdateMember"
+        @update:member="val => $emit('update:members', val)"
       ></Gantt>
     </table>
     <div
