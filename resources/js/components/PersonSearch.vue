@@ -91,7 +91,6 @@ function handleInput(event: Event) {
   position: absolute;
   top: 100%;
   width: 100%;
-  max-height: 10rem;
   overflow-y: auto;
   z-index: 10;
   background: white;
