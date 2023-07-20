@@ -10,9 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          submodules: recursive
+        uses: actions/checkout@v3
 
       - run: cp .env.example .env
 
@@ -42,7 +40,7 @@ jobs:
       - run: docker-compose exec -T app chmod -R 777 storage
 
       - name: Run E2E tests with Cypress
-        uses: cypress-io/github-action@v2
+        uses: cypress-io/github-action@v5
         with:
           wait-on: "http://localhost"
           browser: chrome
