@@ -205,6 +205,7 @@
       :roles="filteredRoles"
       viewType="group"
       :downloadTitle="localGroup.group_title"
+      :group="group"
       @update:members="handleUpdateMembers"
     ></Members>
 
