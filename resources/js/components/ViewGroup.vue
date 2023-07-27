@@ -98,6 +98,7 @@
     <Members
       :groupType="group.group_type.label"
       :members="group.members"
+      :group="group"
       :editing="false"
       :show_unit="group.show_unit"
       :roles="filteredRoles"

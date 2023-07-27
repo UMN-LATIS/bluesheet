@@ -44,20 +44,21 @@ export default {
         .get("/api/group/" + this.groupId + (this.hash ? "/" + this.hash : ""))
         .then((res) => {
           this.group = res.data;
-          this.group.members = [];
-          axios
-            .get(
-              "/api/group/" +
-                this.groupId +
-                "/members" +
-                (this.hash ? "/" + this.hash : ""),
-            )
-            .then((res) => {
-              this.group.members = res.data;
-            })
-            .catch((err) => {
-              this.error = err.response.data;
-            });
+          // commenting this out, because it seems like we're returning the full membership as part of the group already
+          // this.group.members = [];
+          // axios
+          //   .get(
+          //     "/api/group/" +
+          //       this.groupId +
+          //       "/members" +
+          //       (this.hash ? "/" + this.hash : ""),
+          //   )
+          //   .then((res) => {
+          //     this.group.members = res.data;
+          //   })
+          //   .catch((err) => {
+          //     this.error = err.response.data;
+          //   });
         })
         .catch((err) => {
           this.error = err.response.data;

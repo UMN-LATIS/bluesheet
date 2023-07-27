@@ -283,6 +283,7 @@ export default {
   },
   props: [
     "members",
+    "group",
     "editing",
     "roles",
     "show_unit",
@@ -368,8 +369,14 @@ export default {
         }.bind(this),
       );
     },
+    compositeList: function() {
+      if(this.group.include_child_groups) {
+        return this.members.concat(this.group.child_groups.flatMap((child) => child.members.map(m=> { m.child_group_title = child.group_title; return m})));
+      }
+      return this.members;
+    }, 
     sortedList: function () {
-      return [...this.members].sort(
+      return [...this.compositeList].sort(
         function (a, b) {
           let modifier = 1;
           if (this.currentSortDir === "desc") modifier = -1;

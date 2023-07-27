@@ -19,7 +19,7 @@
       <td v-if="show_unit && viewType == 'group'">{{ member.user.ou }}</td>
 
       <template v-if="viewType == 'group'">
-        <td v-if="!editing">{{ member.role.label }}</td>
+        <td v-if="!editing">{{ member.role.label }} <span v-if="member.child_group_title">({{ member.child_group_title }})</span></td>
         <td v-if="editing">
           <ComboBox
             v-if="roles"
