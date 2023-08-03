@@ -1,11 +1,11 @@
-const STATUS_CONFIRMED = 'confirm'
-const STATUS_PENDING = 'pending'
-const STATUS_CANCELLED = 'cancelled'
-const TYPE_SABITICAL = 'sabitical'
-    
+const STATUS_CONFIRMED = "confirm";
+const STATUS_PENDING = "pending";
+const STATUS_CANCELLED = "cancelled";
+const TYPE_SABITICAL = "sabitical";
+
 export default {
   STATUS_CONFIRMED: STATUS_CONFIRMED,
   STATUS_PENDING: STATUS_PENDING,
   STATUS_CANCELLED: STATUS_CANCELLED,
-  TYPE_SABITICAL: TYPE_SABITICAL
-}
+  TYPE_SABITICAL: TYPE_SABITICAL,
+};

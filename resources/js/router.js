@@ -17,6 +17,7 @@ import FiscalReportPage from "./pages/reports/FiscalReportPage.vue";
 import LastModifiedReportPage from "./pages/reports/LastModifiedReportPage.vue";
 import MissingOfficialReportPage from "./pages/reports/MissingOfficialReportPage.vue";
 import OrgpReportPage from "./pages/reports/OrgpReportPage.vue";
+import SchedulingReportPage from "./pages/reports/SchedulingReportPage.vue";
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -91,6 +92,12 @@ export const router = createRouter({
       name: "committeeService",
       path: "/reports/committeeService",
       component: CommitteeServiceReportPage,
+      props: true,
+    },
+    {
+      name: "schedulingReport",
+      path: "/reports/schedulingReport/:groupId",
+      component: SchedulingReportPage,
       props: true,
     },
   ],
