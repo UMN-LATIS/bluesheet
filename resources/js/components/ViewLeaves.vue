@@ -22,7 +22,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="leave in filteredLeaves">
+        <tr v-for="leave in filteredLeaves" :key="leave.id">
           <td>{{ leave.description }}</td>
           <td>{{ leave.type }}</td>
           <td>{{ leave.status }}</td>
