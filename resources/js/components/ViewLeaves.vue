@@ -35,6 +35,7 @@
 </template>
 <script>
 import LeaveConstants from "../constants.js";
+import { dayjs } from "@/lib";
 
 export default {
   props: ["leaves"],
@@ -47,12 +48,12 @@ export default {
     filteredLeaves: function () {
       // if includePastLeaves is not checked, only return leaves whose end_date is in the future
       return this.leaves.filter(
-        (l) =>
-          this.includePastLeaves ||
-          this.$moment(l.end_date).isAfter(this.$moment()),
+        (l) => this.includePastLeaves || dayjs(l.end_date).isAfter(dayjs()),
       );
     },
   },
-  methods: {},
+  methods: {
+    dayjs,
+  },
 };
 </script>
