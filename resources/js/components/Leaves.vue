@@ -1,24 +1,36 @@
 <template>
-    <div>
-        <h3>Leaves</h3>
-        <div class="btn btn-primary" v-if="$can('edit leaves')" @click="edit = !edit">Edit</div>
-        <view-leaves v-if="!edit" :leaves="leaves"></view-leaves>
-        <edit-leaves v-if="edit" :leaves="leaves"></edit-leaves>
+  <div>
+    <h3>Leaves</h3>
+    <div
+      v-if="$can('edit leaves')"
+      class="btn btn-primary"
+      @click="edit = !edit"
+    >
+      Edit
     </div>
+    <ViewLeaves v-if="!edit" :leaves="leaves"></ViewLeaves>
+    <EditLeaves v-if="edit" :leaves="leaves"></EditLeaves>
+  </div>
 </template>
 
-<script>
-    export default {
-        props: ['leaves'],
-        data() {
-            return {
-                'edit': false
-            }
-        },
-        mounted() {
-        },
-        methods: {
-            
-        }
-    }
+<script lang="ts">
+import ViewLeaves from "@/components/ViewLeaves.vue";
+import EditLeaves from "@/components/EditLeaves.vue";
+import { $can } from "@/lib";
+
+export default {
+  components: {
+    ViewLeaves,
+    EditLeaves,
+  },
+  props: ["leaves"],
+  data() {
+    return {
+      edit: false,
+    };
+  },
+  methods: {
+    $can,
+  },
+};
 </script>

@@ -1,0 +1,9 @@
+# This file includes the hashes of commits to be ignored by git blame
+# Github will use this file by default, but to set it up locally, run:
+# `git config blame.ignoreRevsFile .git-blame-ignore-revs`
+
+# first big prettier formatting commit
+45d08da35bf89fee6a3f74f6558e13314d80c960
+
+# Sort package.json - alphabetizing
+29ac044fa3cf7a04584379e6e49c2a652f5fbd02

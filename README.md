@@ -2,8 +2,8 @@
 
 > Track membership and roles within various groups, committees, taskforces, and departments at UMN.
 
--   aka: groups.cla.umn.edu
--   aka: caligari
+- aka: groups.cla.umn.edu
+- aka: caligari
 
 ## Set Up
 
@@ -11,10 +11,10 @@ Blue Sheeet uses Laravel's docker environment, [Laravel Sail](https://laravel.co
 
 Prereqs:
 
--   Docker
--   PHP v7.4
--   Composer
--   Node LTS
+- Docker
+- PHP v7.4
+- Composer
+- Node LTS
 
 To get started:
 
@@ -35,10 +35,10 @@ sail exec laravel.test ./bin/ci.sh
 sail artisan migrate:fresh --seed
 
 # Install node modules
-npm ci
+yarn install
 
-# Start Laravel Mix to compile Vue
-npm run watch
+# Start Vite
+yarn dev
 
 ```
 
@@ -48,15 +48,15 @@ The application will be running on <http://localhost>.
 
 ```sh
 sail up
-npm run watch
+yarn dev
 ```
 
 Load <http://localhost> in your browser.
 
 Login with:
 
--   username: `admin`
--   password: `admin`
+- username: `admin`
+- password: `admin`
 
 Additional users can be configured in `config/shibboleth.php`.
 

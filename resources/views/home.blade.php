@@ -1,12 +1,11 @@
 @extends('base')
 
 @section('content')
-
-	<home></home>
+  <div id="app"></div>
 @endsection
 
 @section('header')
-	<script>
-		window.showTour = {!! json_encode($showTour) !!};
-	</script>
+  <script>
+    window.showTour = {!! json_encode($showTour) !!};
+  </script>
 @endsection

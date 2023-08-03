@@ -1,14 +1,11 @@
-@import "../js/cla-vue-template/src/index.css";
-@import 'variables';
-@import '~bootstrap/scss/bootstrap';
+@import "variables";
+@import "bootstrap/scss/bootstrap";
 @import "footer";
-@import '~@riophae/vue-treeselect/dist/vue-treeselect.css';
-@import '~vue-select/dist/vue-select.css';
 
 p {
-    font-size: 1rem;
-    font-weight: 400;
-    color: var(--black);
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--black);
 }
 
 .navbar-laravel {
@@ -17,132 +14,161 @@ p {
 }
 
 .fa-star.fas {
-    color: yellow;
-    -webkit-text-stroke-width: 1px;
-    -webkit-text-stroke-color: orange;
+  color: yellow;
+  -webkit-text-stroke-width: 1px;
+  -webkit-text-stroke-color: orange;
 }
-
 
 .v-select {
-    background-color: white;
+  background-color: white;
 }
 .v-select.dropdown .dropdown-toggle::after {
-    content: normal;
+  content: normal;
 }
 .vs__selected-options {
-    height: 2.1em;
+  height: 2.1em;
+  max-width: none;
 }
 
 .tooltip {
-    display: block !important;
-    z-index: 10000;
+  display: block !important;
+  z-index: 10000;
 
-    .tooltip-inner {
-        background: black;
-        color: white;
-        border-radius: 16px;
-        padding: 5px 10px 4px;
-    }
+  .tooltip-inner {
+    background: black;
+    color: white;
+    border-radius: 16px;
+    padding: 5px 10px 4px;
+  }
+
+  .tooltip-arrow {
+    width: 0;
+    height: 0;
+    border-style: solid;
+    position: absolute;
+    margin: 5px;
+    border-color: black;
+    z-index: 1;
+  }
+
+  &[x-placement^="top"] {
+    margin-bottom: 5px;
 
     .tooltip-arrow {
-        width: 0;
-        height: 0;
-        border-style: solid;
-        position: absolute;
-        margin: 5px;
-        border-color: black;
-        z-index: 1;
+      border-width: 5px 5px 0 5px;
+      border-left-color: transparent !important;
+      border-right-color: transparent !important;
+      border-bottom-color: transparent !important;
+      bottom: -5px;
+      left: calc(50% - 5px);
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+  }
+
+  &[x-placement^="bottom"] {
+    margin-top: 5px;
+
+    .tooltip-arrow {
+      border-width: 0 5px 5px 5px;
+      border-left-color: transparent !important;
+      border-right-color: transparent !important;
+      border-top-color: transparent !important;
+      top: -5px;
+      left: calc(50% - 5px);
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+  }
+
+  &[x-placement^="right"] {
+    margin-left: 5px;
+
+    .tooltip-arrow {
+      border-width: 5px 5px 5px 0;
+      border-left-color: transparent !important;
+      border-top-color: transparent !important;
+      border-bottom-color: transparent !important;
+      left: -5px;
+      top: calc(50% - 5px);
+      margin-left: 0;
+      margin-right: 0;
+    }
+  }
+
+  &[x-placement^="left"] {
+    margin-right: 5px;
+
+    .tooltip-arrow {
+      border-width: 5px 0 5px 5px;
+      border-top-color: transparent !important;
+      border-right-color: transparent !important;
+      border-bottom-color: transparent !important;
+      right: -5px;
+      top: calc(50% - 5px);
+      margin-left: 0;
+      margin-right: 0;
+    }
+  }
+
+  &.popover {
+    $color: #f9f9f9;
+
+    .popover-inner {
+      background: $color;
+      color: black;
+      padding: 24px;
+      border-radius: 5px;
+      box-shadow: 0 5px 30px rgba(black, 0.1);
     }
 
-    &[x-placement^="top"] {
-        margin-bottom: 5px;
-
-        .tooltip-arrow {
-            border-width: 5px 5px 0 5px;
-            border-left-color: transparent !important;
-            border-right-color: transparent !important;
-            border-bottom-color: transparent !important;
-            bottom: -5px;
-            left: calc(50% - 5px);
-            margin-top: 0;
-            margin-bottom: 0;
-        }
+    .popover-arrow {
+      border-color: $color;
     }
+  }
 
-    &[x-placement^="bottom"] {
-        margin-top: 5px;
+  &[aria-hidden="true"] {
+    visibility: hidden;
+    opacity: 0;
+    transition:
+      opacity 0.15s,
+      visibility 0.15s;
+  }
 
-        .tooltip-arrow {
-            border-width: 0 5px 5px 5px;
-            border-left-color: transparent !important;
-            border-right-color: transparent !important;
-            border-top-color: transparent !important;
-            top: -5px;
-            left: calc(50% - 5px);
-            margin-top: 0;
-            margin-bottom: 0;
-        }
-    }
-
-    &[x-placement^="right"] {
-        margin-left: 5px;
-
-        .tooltip-arrow {
-            border-width: 5px 5px 5px 0;
-            border-left-color: transparent !important;
-            border-top-color: transparent !important;
-            border-bottom-color: transparent !important;
-            left: -5px;
-            top: calc(50% - 5px);
-            margin-left: 0;
-            margin-right: 0;
-        }
-    }
-
-    &[x-placement^="left"] {
-        margin-right: 5px;
-
-        .tooltip-arrow {
-            border-width: 5px 0 5px 5px;
-            border-top-color: transparent !important;
-            border-right-color: transparent !important;
-            border-bottom-color: transparent !important;
-            right: -5px;
-            top: calc(50% - 5px);
-            margin-left: 0;
-            margin-right: 0;
-        }
-    }
-
-    &.popover {
-        $color: #f9f9f9;
-
-        .popover-inner {
-            background: $color;
-            color: black;
-            padding: 24px;
-            border-radius: 5px;
-            box-shadow: 0 5px 30px rgba(black, .1);
-        }
-
-        .popover-arrow {
-            border-color: $color;
-        }
-    }
-
-    &[aria-hidden='true'] {
-        visibility: hidden;
-        opacity: 0;
-        transition: opacity .15s, visibility .15s;
-    }
-
-    &[aria-hidden='false'] {
-        visibility: visible;
-        opacity: 1;
-        transition: opacity .15s;
-    }
+  &[aria-hidden="false"] {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 0.15s;
+  }
 }
 
 .vue-treeselect__placeholder {
-    color: #707070;
+  color: #707070;
+}
+
+.tw-flex {
+  display: flex;
+}
+
+.tw-gap-1 {
+  gap: 0.25rem;
+}
+
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-0.5rem);
+}
+
+.fade-slide-enter-to,
+.fade-slide-leave-from {
+  opacity: 1;
+  transform: translateY(0);
 }
