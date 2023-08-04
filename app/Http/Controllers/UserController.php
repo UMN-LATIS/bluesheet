@@ -53,8 +53,9 @@ class UserController extends Controller
             return Response()->json($returnData, 500);
         }
         else {
-            $user->load(['memberships', 'memberships.group', 'memberships.role', 'favoriteGroups', 'favoriteRoles']);
-        
+
+            // some of these might not actually be returned - the resource will gate based on perms
+            $user->load(['memberships', 'memberships.group', 'memberships.role', 'favoriteGroups', 'favoriteRoles', 'leaves']);
             return new UserResource($user);    
         }
         

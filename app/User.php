@@ -65,4 +65,8 @@ class User extends Authenticatable implements Auditable
         }
         return $permissions;
     }
+
+    public function leaves() {
+        return $this->hasMany('App\Leave');
+    }
 }

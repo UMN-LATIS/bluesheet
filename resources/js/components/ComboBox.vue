@@ -5,7 +5,6 @@
     :class="{
       'combobox--is-open': isComboboxOpen,
     }"
-    tabindex="0"
     role="combobox"
     @keydown.enter="handleEnterKey"
     @keydown.down.prevent="handleArrowKeyNav"

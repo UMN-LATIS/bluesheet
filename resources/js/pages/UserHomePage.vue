@@ -33,16 +33,20 @@
       </div>
     </div>
     <Roles id="v-step-4" :memberships="memberships"></Roles>
+
+    <Leaves v-if="user && user.leaves" :leaves="user.leaves"></Leaves>
   </div>
 </template>
 
 <script>
 import ViewUser from "@/components/ViewUser.vue";
 import Roles from "@/components/Roles.vue";
+import Leaves from "@/components/Leaves.vue";
 export default {
   components: {
     ViewUser,
     Roles,
+    Leaves,
   },
   props: ["userId"],
   data() {
