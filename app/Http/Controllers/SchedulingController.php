@@ -9,11 +9,17 @@ use App\Library\LDAP as LDAP;
 class SchedulingController extends Controller
 {
 
+    public function getTerms() {
+        $bandaid = new Bandaid();
+        $terms = $bandaid->getTerms();
+        return response()->json($terms);
+    }
+
     // This method will be slow when fetching all terms for a department
     // if it becomes too slow, here's some ideas:
     // 1. Cache the results so that a refresh won't be as slow
     // 2. Break the fetches up client side and do progressive population
-    public function schedulingReport(\App\Group $group)
+    public function getSchedulingReport(\App\Group $group, $startTerm = null $endTerm = null)
     {
 
         if(!$group->dept_id) {
