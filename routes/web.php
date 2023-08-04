@@ -62,6 +62,8 @@ Route::group(['prefix'=>'/api/', 'middleware' => 'auth'], function () {
 
     Route::get('lookup/department/{deptId?}', 'LookupController@departmentInfo');
 
+    Route::get('group/schedulingReport/{group}/{term?}', 'SchedulingController@schedulingReport');
+
 });
 
 // routes with hash to allow unauthenticated loads
