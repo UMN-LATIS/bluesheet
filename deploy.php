@@ -47,7 +47,7 @@ host('prod')
 
 task('assets:generate', function() {
   cd('{{release_path}}');
-  run('yarn run production');
+  run('yarn build');
 })->desc('Assets generation');
 
 
