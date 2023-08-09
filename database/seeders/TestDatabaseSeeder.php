@@ -1,19 +1,18 @@
 <?php
 
 namespace Database\Seeders;
-use Illuminate\Database\Seeder;
 
-class TestDatabaseSeeder extends Seeder
-{
+use Illuminate\Database\Seeder;
+use App\User;
+
+class TestDatabaseSeeder extends Seeder {
     /**
      * Seed the application's database.
      *
      * @return void
      */
-    public function run()
-    {
-        // $this->call(UsersTableSeeder::class);
-        $this->call(TestGroupsUsersTableSeeder::class);
+    public function run() {
+        $this->call(TestUsersSeeder::class);
         $this->call(TestGroupsModelHasRolesTableSeeder::class);
         $this->call(TestGroupsGroupTypesTableSeeder::class);
         $this->call(TestGroupsOfficialRoleCategoriesTableSeeder::class);
@@ -21,7 +20,6 @@ class TestDatabaseSeeder extends Seeder
         $this->call(TestGroupsGroupTypeRoleTableSeeder::class);
         $this->call(ParentOrganizationsTableSeeder::class);
 
-        $user = \App\User::find(1);
-        $user->assignRole('super admin');
+        User::where('umndid', 'admin')->first()->assignRole('super admin');
     }
 }
