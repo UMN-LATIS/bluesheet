@@ -12,13 +12,16 @@ class TestDatabaseSeeder extends Seeder {
      * @return void
      */
     public function run() {
-        $this->call(TestUsersSeeder::class);
-        $this->call(TestGroupsModelHasRolesTableSeeder::class);
-        $this->call(TestGroupsGroupTypesTableSeeder::class);
-        $this->call(TestGroupsOfficialRoleCategoriesTableSeeder::class);
-        $this->call(TestGroupsRolesTableSeeder::class);
-        $this->call(TestGroupsGroupTypeRoleTableSeeder::class);
-        $this->call(ParentOrganizationsTableSeeder::class);
+        $this->call([
+            TestUsersSeeder::class,
+            TestGroupsModelHasRolesTableSeeder::class,
+            TestGroupsGroupTypesTableSeeder::class,
+            TestGroupsOfficialRoleCategoriesTableSeeder::class,
+            TestGroupsRolesTableSeeder::class,
+            TestGroupsGroupTypeRoleTableSeeder::class,
+            ParentOrganizationsTableSeeder::class,
+            TestLeavesSeeder::class,
+        ]);
 
         User::where('umndid', 'admin')->first()->assignRole('super admin');
     }
