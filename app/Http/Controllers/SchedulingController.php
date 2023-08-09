@@ -19,7 +19,7 @@ class SchedulingController extends Controller
     // if it becomes too slow, here's some ideas:
     // 1. Cache the results so that a refresh won't be as slow
     // 2. Break the fetches up client side and do progressive population
-    public function getSchedulingReport(\App\Group $group, $startTerm = null $endTerm = null)
+    public function getSchedulingReport(\App\Group $group, $startTerm = null, $endTerm = null)
     {
 
         if(!$group->dept_id) {
@@ -44,11 +44,11 @@ class SchedulingController extends Controller
                             $user->save();
                         }
                     }
-                    
+
                     if($user) {
                         $course->instructor = $user;
                     }
-                    
+
                 }
             }
         }
@@ -57,6 +57,6 @@ class SchedulingController extends Controller
             "terms"=>$terms,
             "courses"=>$courses
         ]);
-        
+
     }
 }
