@@ -352,6 +352,74 @@
       "DELETE"
     ]
   },
+  "leaves.index": {
+    "name": "leaves.index",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\LeaveController@index",
+    "uri": "api/leaves",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "leaves.create": {
+    "name": "leaves.create",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\LeaveController@create",
+    "uri": "api/leaves/create",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "leaves.store": {
+    "name": "leaves.store",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\LeaveController@store",
+    "uri": "api/leaves",
+    "method": [
+      "POST"
+    ]
+  },
+  "leaves.show": {
+    "name": "leaves.show",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\LeaveController@show",
+    "uri": "api/leaves/{leaf}",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "leaves.edit": {
+    "name": "leaves.edit",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\LeaveController@edit",
+    "uri": "api/leaves/{leaf}/edit",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "leaves.update": {
+    "name": "leaves.update",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\LeaveController@update",
+    "uri": "api/leaves/{leaf}",
+    "method": [
+      "PUT",
+      "PATCH"
+    ]
+  },
+  "leaves.destroy": {
+    "name": "leaves.destroy",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\LeaveController@destroy",
+    "uri": "api/leaves/{leaf}",
+    "method": [
+      "DELETE"
+    ]
+  },
   "index": {
     "name": "index",
     "domain": null,
