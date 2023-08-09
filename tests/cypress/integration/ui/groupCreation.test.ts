@@ -6,8 +6,6 @@
 // https://on.cypress.io/writing-first-test
 
 describe("Groups UI", () => {
-  let groupURL;
-
   before(() => {
     cy.refreshDatabase();
     cy.seed("TestDatabaseSeeder");

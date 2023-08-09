@@ -9,7 +9,7 @@ declare namespace Cypress {
      * cy.login()
      * cy.login({ id: 1 })
      */
-    login(attributes?: object): Chainable<any>;
+    login(umndid: string): Chainable<any>;
 
     /**
      * Log out the current user.

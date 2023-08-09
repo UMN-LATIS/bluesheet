@@ -13,7 +13,7 @@ export default defineConfig({
   viewportHeight: 1080,
   e2e: {
     baseUrl: "http://localhost",
-    specPattern: "tests/cypress/integration/**/*.{test,spec}.js",
-    supportFile: "tests/cypress/support/index.js",
+    specPattern: "tests/cypress/integration/**/*.{test,spec}.[jt]s",
+    supportFile: "tests/cypress/support/index.ts",
   },
 });

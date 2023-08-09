@@ -19,6 +19,23 @@ import "./laravel-commands";
 import "./laravel-routes";
 import "./assertions";
 
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace Cypress {
+    interface Chainable {
+      /**
+       * Custom command to type a few random words into input elements
+       * @param count=3
+       * @example cy.get('input').typeRandomWords()
+       */
+      typeRandomWords(
+        count?: number,
+        options?: Partial<TypeOptions>,
+      ): Chainable<JQuery<HTMLElement>>;
+    }
+  }
+}
+
 before(() => {
   cy.artisan("config:clear", {}, { log: false });
 
