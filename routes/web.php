@@ -64,7 +64,7 @@ Route::group(['prefix'=>'/api/', 'middleware' => 'auth'], function () {
 
     Route::get('group/schedulingReport/{group}/{term?}', 'SchedulingController@getSchedulingReport');
     Route::get('terms', 'SchedulingController@getTerms');
-
+    Route::resource('leaves', LeaveController::class);
 });
 
 // routes with hash to allow unauthenticated loads
