@@ -29,9 +29,10 @@ class Leave extends Model {
 
     protected $hidden = [
         'deleted_at',
+        'synchronized_leave',
     ];
 
-    const STATUS_CONFIRMED = 'confirm';
+    const STATUS_CONFIRMED = 'confirmed';
     const STATUS_PENDING = 'pending';
     const STATUS_CANCELLED = 'cancelled';
     const STATUSES = [
