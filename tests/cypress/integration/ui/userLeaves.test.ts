@@ -20,4 +20,12 @@ describe("User leaves", () => {
       cy.contains("Save").click();
     });
   });
+
+  context("as a user that can't create new leaves", () => {
+    it('should not see the "Add Leave" button', () => {
+      cy.login("basic_user");
+      cy.visit("/user");
+      cy.contains("Add Leave").should("not.exist");
+    });
+  });
 });

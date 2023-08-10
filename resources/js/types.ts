@@ -24,7 +24,8 @@ export const UserPermissions = {
   VIEW_LEAVES: "view leaves",
 } as const;
 
-type UserPermission = (typeof UserPermissions)[keyof typeof UserPermissions];
+export type UserPermission =
+  (typeof UserPermissions)[keyof typeof UserPermissions];
 
 export interface User {
   id: number;

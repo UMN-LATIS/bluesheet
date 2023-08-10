@@ -6,6 +6,7 @@
         <button
           class="btn btn-outline-primary"
           @click="isAddingNewLeave = true"
+          v-if="$can(UserPermissions.EDIT_LEAVES)"
         >
           Add Leave
         </button>
@@ -118,7 +119,7 @@
 <script setup lang="ts">
 import { computed, ref, reactive } from "vue";
 import { dayjs, $can } from "@/lib";
-import { Leave } from "@/types";
+import { Leave, UserPermissions } from "@/types";
 import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
 import Modal from "./Modal.vue";
 import InputGroup from "./InputGroup.vue";
