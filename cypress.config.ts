@@ -2,7 +2,6 @@ import { defineConfig } from "cypress";
 
 export default defineConfig({
   chromeWebSecurity: false,
-  retries: 2,
   defaultCommandTimeout: 5000,
   watchForFileChanges: true,
   videosFolder: "tests/cypress/videos",
