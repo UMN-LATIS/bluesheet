@@ -1,5 +1,21 @@
 import { apiRequest } from "../../support/apiRequest";
 
+function hasExpectedLeaveShape(leave) {
+  return expect(leave).to.have.keys([
+    "id",
+    "user_id",
+    "description",
+    "start_date",
+    "end_date",
+    "type",
+    "status",
+    "user",
+    "synchronized_leave",
+    "created_at",
+    "updated_at",
+  ]);
+}
+
 describe("Leaves API", () => {
   beforeEach(() => {
     cy.refreshDatabase();
@@ -7,41 +23,34 @@ describe("Leaves API", () => {
   });
 
   context("as an unauthenticated user", () => {
-    describe("GET /leaves", () => {
-      it("returns a 401", () => {
-        apiRequest("GET", "/api/leaves", { failOnStatusCode: false })
-          .its("status")
-          .should("eq", 401);
-      });
+    it("/api/leaves returns a 401", () => {
+      apiRequest("GET", "/api/leaves", { failOnStatusCode: false })
+        .its("status")
+        .should("eq", 401);
     });
   });
 
-  context("when authenticated as admin", () => {
+  context("as admin user", () => {
     beforeEach(() => {
       cy.login("admin");
     });
 
-    describe("GET /leaves", () => {
-      it("returns a list of leaves", () => {
-        apiRequest("GET", "/api/leaves").then((response) => {
-          expect(response.status).to.eq(200);
+    it("/api/leaves returns a list of leaves", () => {
+      apiRequest("GET", "/api/leaves").then((response) => {
+        expect(response.status).to.eq(200);
 
-          const leaves = response.body.data;
-          expect(leaves).to.have.length.greaterThan(0);
-          expect(leaves[0]).to.have.keys([
-            "id",
-            "user_id",
-            "description",
-            "start_date",
-            "end_date",
-            "type",
-            "status",
-            "user",
-            "synchronized_leave",
-            "created_at",
-            "updated_at",
-          ]);
-        });
+        const leaves = response.body.data;
+        expect(leaves).to.have.length.greaterThan(0);
+        hasExpectedLeaveShape(leaves[0]);
+      });
+    });
+
+    it("/api/leaves/:id returns a single leave", () => {
+      apiRequest("GET", "/api/leaves/1").then((response) => {
+        expect(response.status).to.eq(200);
+
+        const leave = response.body.data;
+        hasExpectedLeaveShape(leave);
       });
     });
   });
