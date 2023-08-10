@@ -1,31 +1,56 @@
 <template>
-  <Transition name="modal">
-    <div v-show="show" class="modal-mask" @mousedown="close">
-      <div class="modal-container" @mousedown.stop>
-        <slot></slot>
+  <Teleport to="body">
+    <Transition name="modal">
+      <div v-show="show" class="modal-mask" @mousedown="$emit('close')">
+        <div class="modal-container" @mousedown.stop>
+          <div v-if="title" class="modal-header">
+            <h5 class="modal-title">{{ title }}</h5>
+            <button
+              type="button"
+              class="close"
+              aria-label="Close"
+              @click="$emit('close')"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <slot></slot>
+          </div>
+          <div v-if="$slots.footer" class="modal-footer">
+            <slot name="footer" />
+          </div>
+        </div>
       </div>
-    </div>
-  </Transition>
+    </Transition>
+  </Teleport>
 </template>
 
-<script>
-export default {
-  props: ["show"],
-  emits: ["close"],
-  mounted: function () {
-    document.addEventListener("keydown", (e) => {
-      if (this.show && e.keyCode == 27) {
-        this.close();
-      }
-    });
-  },
-  methods: {
-    close: function () {
-      this.$emit("close");
-    },
-  },
-  template: "#modal-template",
-};
+<script setup lang="ts">
+import { onMounted, onUnmounted } from "vue";
+
+const props = defineProps<{
+  title?: string;
+  show: boolean;
+}>();
+
+const emit = defineEmits<{
+  (eventName: "close");
+}>();
+
+function closeModalOnEsc(event: KeyboardEvent) {
+  if (props.show && event.key === "Escape") {
+    emit("close");
+  }
+}
+
+onMounted(() => {
+  document.addEventListener("keydown", closeModalOnEsc);
+});
+
+onUnmounted(() => {
+  document.removeEventListener("keydown", closeModalOnEsc);
+});
 </script>
 
 <style>
@@ -58,20 +83,11 @@ export default {
   width: 80%;
   max-width: 600px;
   margin: 40px auto 0;
-  padding: 20px 30px;
+  padding: 1rem;
   background-color: #fff;
   border-radius: 2px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
   transition: all 0.3s ease;
   font-family: Helvetica, Arial, sans-serif;
-}
-
-.modal-header h3 {
-  margin-top: 0;
-  color: #42b983;
-}
-
-.modal-body {
-  margin: 20px 0;
 }
 </style>
