@@ -24,36 +24,56 @@ describe("POST /api/leaves", () => {
     });
   });
 
-  context("as a basic user", () => {
-    beforeEach(() => {
-      cy.login("basic_user");
+  const cannotEditLeaves = ["basic_user", "view_user"];
+
+  cannotEditLeaves.forEach((role) => {
+    context(`as a user with '${role}' role`, () => {
+      beforeEach(() => {
+        cy.login(role);
+      });
+
+      it(`does not permit a "${role}" to create a leave`, () => {
+        api
+          .post("/api/leaves", validLeave, { failOnStatusCode: false })
+          .then((response) => {
+            expect(response.status).to.eq(403);
+          });
+      });
     });
   });
 
-  context("as admin user", () => {
-    beforeEach(() => {
-      cy.login("admin");
-    });
+  const canEditLeaves = ["group_admin", "site_admin", "admin"];
+  canEditLeaves.forEach((role) => {
+    context(`as a user with '${role}' role`, () => {
+      beforeEach(() => {
+        cy.login(role);
+      });
 
-    it("creates a new leave", () => {
-      api.post("/api/leaves", validLeave).then((response) => {
-        expect(response.status).to.eq(201);
-        const leave = response.body;
-        expect(leave).to.have.keys([
-          "id",
-          "user_id",
-          "description",
-          "start_date",
-          "end_date",
-          "type",
-          "status",
-          "user",
-          "created_at",
-          "updated_at",
-        ]);
+      it(`lets a "${role}" create a leave`, () => {
+        api.post("/api/leaves", validLeave).then((response) => {
+          expect(response.status).to.eq(201);
+          const leave = response.body;
+          expect(leave).to.have.keys([
+            "id",
+            "user_id",
+            "description",
+            "start_date",
+            "end_date",
+            "type",
+            "status",
+            "user",
+            "created_at",
+            "updated_at",
+          ]);
+        });
       });
     });
+  });
 
+  context("as leave editor", () => {
+    beforeEach(() => {
+      cy.login("group_admin");
+    });
     it("fails if any required field is missing", () => {
       const fields = Object.keys(validLeave);
 
