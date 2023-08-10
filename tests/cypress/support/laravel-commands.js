@@ -229,7 +229,7 @@ Cypress.Commands.add("refreshDatabase", (options = {}) => {
  * @example cy.seed();
  *          cy.seed('PlansTableSeeder');
  */
-Cypress.Commands.add("seed", (seederClass) => {
+Cypress.Commands.add("seed", (seederClass = "TestDatabaseSeeder") => {
   return cy.artisan("db:seed", {
     "--class": seederClass,
   });
