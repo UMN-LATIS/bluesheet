@@ -33,7 +33,7 @@ class LeaveController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function show(Leave $leave) {
-        return $leave;
+        return $leave->load('user');
     }
 
     /**

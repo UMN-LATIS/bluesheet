@@ -49,7 +49,7 @@ describe("Leaves API", () => {
       apiRequest("GET", "/api/leaves/1").then((response) => {
         expect(response.status).to.eq(200);
 
-        const leave = response.body.data;
+        const leave = response.body;
         hasExpectedLeaveShape(leave);
       });
     });
