@@ -7,6 +7,7 @@ use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\Response;
+use Auth;
 
 class LeaveController extends Controller {
     /**
@@ -14,7 +15,9 @@ class LeaveController extends Controller {
      *
      * @return \Illuminate\Http\Response
      */
-    public function index() {
+    public function index(Request $request) {
+        abort_if($request->user()->cannot('view leaves'), 403);
+
         $leaves = Leave::with('user')->paginate(50);
         return $leaves;
     }
@@ -26,6 +29,8 @@ class LeaveController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request) {
+        abort_if($request->user()->cannot('edit leaves'), 403);
+
         $validated = $request->validate([
             'user_id' => 'required|integer|exists:users,id',
             'description' => 'required|string|max:255',
@@ -46,6 +51,8 @@ class LeaveController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function show(Leave $leave) {
+        abort_if(Auth::user()->cannot('view', $leave), 403);
+
         return $leave->load('user');
     }
 

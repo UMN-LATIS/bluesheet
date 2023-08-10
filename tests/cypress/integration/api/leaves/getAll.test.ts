@@ -7,7 +7,7 @@ describe("GET /api/leaves", () => {
   });
 
   context("as an unauthenticated user", () => {
-    it("returns a 401", () => {
+    it("does not permit viewing all leaves", () => {
       api
         .get("/api/leaves", { failOnStatusCode: false })
         .its("status")
@@ -18,6 +18,13 @@ describe("GET /api/leaves", () => {
   context("as a basic user", () => {
     beforeEach(() => {
       cy.login("basic_user");
+    });
+
+    it("does not permit viewing all leaves", () => {
+      api
+        .get("/api/leaves", { failOnStatusCode: false })
+        .its("status")
+        .should("eq", 403);
     });
   });
 
