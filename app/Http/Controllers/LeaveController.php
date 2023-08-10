@@ -12,7 +12,8 @@ class LeaveController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function index() {
-        return Leave::with('user')->get();
+        $leaves = Leave::with('user')->paginate(50);
+        return $leaves;
     }
 
     /**
@@ -32,7 +33,7 @@ class LeaveController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function show(Leave $leave) {
-        //
+        return $leave;
     }
 
     /**

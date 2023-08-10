@@ -5,10 +5,8 @@ namespace App;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use OwenIt\Auditing\Auditable;
 
 class Leave extends Model {
-    use Auditable;
     use SoftDeletes;
     use HasFactory;
 
@@ -26,7 +24,11 @@ class Leave extends Model {
     protected $dates = [
         'start_date',
         'end_date',
-        // 'deleted_at',
+        'deleted_at',
+    ];
+
+    protected $hidden = [
+        'deleted_at',
     ];
 
     const STATUS_CONFIRMED = 'confirm';
