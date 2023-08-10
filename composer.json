@@ -30,6 +30,7 @@
   },
   "require-dev": {
     "barryvdh/laravel-debugbar": "^3.3",
+    "barryvdh/laravel-ide-helper": "^2.13",
     "beyondcode/laravel-dump-server": "^1.0",
     "deployer/deployer": "^7.1",
     "filp/whoops": "^2.0",
