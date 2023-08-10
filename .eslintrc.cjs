@@ -42,4 +42,16 @@ module.exports = {
       },
     ],
   },
+  overrides: [
+    // cypress should only be linted in cypress/
+    {
+      files: ["**/cypress/**/*.js"],
+      extends: ["plugin:cypress/recommended"],
+    },
+    // this keeps jest from linting cypress files
+    {
+      files: ["**/resources/assets/js/**/*.js"],
+      extends: ["plugin:jest/recommended", "plugin:jest/style"],
+    },
+  ],
 };
