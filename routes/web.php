@@ -70,6 +70,7 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
     Route::get('leaves/{leave}', 'LeaveController@show');
     Route::put('leaves/{leave}', 'LeaveController@update');
     Route::delete('leaves/{leave}', 'LeaveController@destroy');
+    Route::get('users/{user}/leaves', 'UserLeaveController@index');
 });
 
 // routes with hash to allow unauthenticated loads
