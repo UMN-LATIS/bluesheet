@@ -18,7 +18,7 @@ describe("POST /api/leaves", () => {
   context("as an unauthenticated user", () => {
     it("returns a 401", () => {
       api
-        .get("/api/leaves", { failOnStatusCode: false })
+        .post("/api/leaves", validLeave, { failOnStatusCode: false })
         .its("status")
         .should("eq", 401);
     });

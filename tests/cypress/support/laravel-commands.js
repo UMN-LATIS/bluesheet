@@ -301,3 +301,7 @@ Cypress.Commands.add("php", (command) => {
     })
     .its("body.result", { log: false });
 });
+
+Cypress.Commands.add("getUserByUsername", (umndid) => {
+  return cy.php(`App\\User::where('umndid', '${umndid}')->firstOrFail()`);
+});

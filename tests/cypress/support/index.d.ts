@@ -92,5 +92,10 @@ declare namespace Cypress {
      * cy.php('App\\User::count()')
      */
     php(command: string): Chainable<any>;
+
+    /**
+     * Get a user by their username (umndid).
+     */
+    getUserByUsername(umndid: string): Chainable<any>;
   }
 }

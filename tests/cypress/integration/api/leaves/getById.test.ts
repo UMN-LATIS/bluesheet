@@ -23,7 +23,7 @@ describe("GET /api/leaves/:id", () => {
       });
     });
 
-    it.only('lets a "basic_user" view their own leave', () => {
+    it('lets a "basic_user" view their own leave', () => {
       let leaveId: number | null = null;
       let basicUserId: number | null = null;
 

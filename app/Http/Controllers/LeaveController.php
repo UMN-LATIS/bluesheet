@@ -64,6 +64,8 @@ class LeaveController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, Leave $leave) {
+        abort_if($request->user()->cannot('edit leaves'), 403);
+
         $validated = $request->validate([
             'user_id' => 'required|integer|exists:users,id',
             'description' => 'required|string|max:255',
