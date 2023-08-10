@@ -32,6 +32,12 @@ describe("Leaves API", () => {
     });
   });
 
+  context("as a basic user", () => {
+    beforeEach(() => {
+      cy.login("basic_user");
+    });
+  });
+
   context("as admin user", () => {
     beforeEach(() => {
       cy.login("admin");

@@ -14,63 +14,60 @@ class TestGroupsGroupTypesTableSeeder extends Seeder
      */
     public function run()
     {
-        
 
-        \DB::table('group_types')->delete();
-        
         \DB::table('group_types')->insert(array (
-            0 => 
+            0 =>
             array (
                 'id' => 1,
                 'label' => 'Committee',
             ),
-            1 => 
+            1 =>
             array (
                 'id' => 2,
                 'label' => 'List',
             ),
-            2 => 
+            2 =>
             array (
                 'id' => 3,
                 'label' => 'Academic Department',
             ),
-            3 => 
+            3 =>
             array (
                 'id' => 4,
                 'label' => 'Fun Time',
             ),
-            4 => 
+            4 =>
             array (
                 'id' => 5,
                 'label' => 'Center',
             ),
-            5 => 
+            5 =>
             array (
                 'id' => 6,
                 'label' => 'Initiative',
             ),
-            6 => 
+            6 =>
             array (
                 'id' => 7,
                 'label' => 'Consortium',
             ),
-            7 => 
+            7 =>
             array (
                 'id' => 8,
                 'label' => 'Program',
             ),
-            8 => 
+            8 =>
             array (
                 'id' => 9,
                 'label' => 'Administrative Unit',
             ),
-            9 => 
+            9 =>
             array (
                 'id' => 10,
                 'label' => 'Department',
             ),
         ));
-        
-        
+
+
     }
 }

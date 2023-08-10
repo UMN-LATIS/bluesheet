@@ -22,7 +22,5 @@ class TestDatabaseSeeder extends Seeder {
             ParentOrganizationsTableSeeder::class,
             TestLeavesSeeder::class,
         ]);
-
-        User::where('umndid', 'admin')->first()->assignRole('super admin');
     }
 }

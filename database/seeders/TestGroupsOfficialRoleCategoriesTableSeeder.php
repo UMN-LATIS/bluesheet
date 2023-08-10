@@ -14,28 +14,24 @@ class TestGroupsOfficialRoleCategoriesTableSeeder extends Seeder
      */
     public function run()
     {
-        
-
-        \DB::table('official_role_categories')->delete();
-        
         \DB::table('official_role_categories')->insert(array (
-            0 => 
+            0 =>
             array (
                 'id' => 1,
                 'category' => 'Unit',
             ),
-            1 => 
+            1 =>
             array (
                 'id' => 2,
                 'category' => 'College',
             ),
-            2 => 
+            2 =>
             array (
                 'id' => 3,
                 'category' => 'Operations',
             ),
         ));
-        
-        
+
+
     }
 }
