@@ -14,5 +14,6 @@ export default defineConfig({
     baseUrl: "http://localhost",
     specPattern: "tests/cypress/integration/**/*.{test,spec}.[jt]s",
     supportFile: "tests/cypress/support/index.ts",
+    experimentalRunAllSpecs: true,
   },
 });
