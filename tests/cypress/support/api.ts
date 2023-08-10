@@ -36,3 +36,19 @@ export const post = (
     });
   });
 };
+
+export const put = (url: string, body: object, options: RequestOptions = {}) =>
+  cy.csrfToken().then((token) =>
+    cy.request({
+      method: "PUT",
+      url,
+      body,
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "X-CSRF-Token": token,
+        ...options.headers,
+      },
+      ...options,
+    }),
+  );
