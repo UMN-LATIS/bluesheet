@@ -42,32 +42,37 @@ class LeaveFactory extends Factory {
     }
 
     public function pastLeave() {
-        $startDate = $this->faker->dateTimeBetween('-36 months', 'now');
-        $endDate = Carbon::instance($startDate)->addDays($this->faker->numberBetween(30, 365));
-
-        return [
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-        ];
+        return $this->state(function (array $attributes) {
+            $startDate = $this->faker->dateTimeBetween('-36 months', '-13 months');
+            $endDate = Carbon::instance($startDate)->addDays($this->faker->numberBetween(30, 365));
+            return [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ];
+        });
     }
 
     public function futureLeave() {
-        $startDate = $this->faker->dateTimeBetween('now', '+24 months');
-        $endDate = Carbon::instance($startDate)->addDays($this->faker->numberBetween(30, 365));
+        return $this->state(function (array $attributes) {
+            $startDate = $this->faker->dateTimeBetween('+1 day', '+24 months');
+            $endDate = Carbon::instance($startDate)->addDays($this->faker->numberBetween(30, 365));
 
-        return [
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-        ];
+            return [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ];
+        });
     }
 
     public function currentLeave() {
-        $startDate = $this->faker->dateTimeBetween('-6 months', 'now');
-        $endDate = Carbon::instance($startDate)->addMonths($this->faker->numberBetween(7, 12));
+        return $this->state(function (array $attributes) {
+            $startDate = $this->faker->dateTimeBetween('-6 months', 'now');
+            $endDate = Carbon::instance($startDate)->addMonths($this->faker->numberBetween(7, 12));
 
-        return [
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-        ];
+            return [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ];
+        });
     }
 }

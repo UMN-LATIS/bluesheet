@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div data-cy="leavesSection">
     <div class="tw-flex tw-justify-between tw-items-center my-">
       <h3 class="tw-my-4 tw-text-xl">Leaves</h3>
       <div class="tw-flex tw-gap-2 tw-items-baseline">
@@ -12,7 +12,7 @@
         </button>
       </div>
     </div>
-    <table class="table">
+    <table class="table" data-cy="leavesTable">
       <thead>
         <tr>
           <th>Description</th>
@@ -28,11 +28,11 @@
           <td>{{ leave.description }}</td>
           <td>{{ leave.type }}</td>
           <td>{{ leave.status }}</td>
-          <td>{{ leave.start_date }}</td>
-          <td>{{ leave.end_date }}</td>
+          <td>{{ dayjs(leave.start_date).format("YYYY-MM-DD") }}</td>
+          <td>{{ dayjs(leave.end_date).format("YYYY-MM-DD") }}</td>
           <td>
-            <button class="btn btn-outline-primary">Edit</button>
-            <button class="btn btn-outline-danger">Delete</button>
+            <button class="btn btn-link-primary">Edit</button>
+            <button class="btn btn-link-danger">Delete</button>
           </td>
         </tr>
       </tbody>
@@ -147,8 +147,8 @@ const newLeave = reactive({
   user_id: props.userId,
 });
 
-const isCurrentLeave = (leave: Leave) =>
-  dayjs(leave.end_date).isBefore(dayjs());
+const isCurrentOrFutureLeave = (leave: Leave) =>
+  dayjs(leave.end_date).isAfter(dayjs());
 
 const capitalizeEachWord = (str: string) =>
   str
@@ -173,13 +173,21 @@ const leaveStatusOptions = computed(() => {
 });
 
 const hasPastLeaves = computed(() => {
-  return props.leaves.some((leave) => !isCurrentLeave(leave));
+  return props.leaves.some((leave) => !isCurrentOrFutureLeave(leave));
 });
 
+const sortByStartDateDescending = (a, b) => {
+  if (dayjs(a.start_date).isBefore(dayjs(b.start_date))) return 1;
+  if (dayjs(a.start_date).isAfter(dayjs(b.start_date))) return -1;
+  return 0;
+};
+
 const filteredLeaves = computed(() => {
-  return showPastLeaves.value
+  const leaves = showPastLeaves.value
     ? props.leaves
-    : props.leaves.filter(isCurrentLeave);
+    : props.leaves.filter(isCurrentOrFutureLeave);
+
+  return [...leaves].sort(sortByStartDateDescending);
 });
 
 const isDescriptionValid = computed(() => !!newLeave.description.length);
@@ -214,6 +222,6 @@ async function handleAddNewLeave() {
   isAddingNewLeave.value = false;
   const leave = await api.createLeave(newLeave as Leave);
   resetForm();
-  emit("updateLeaves", [...props.leaves, leave]);
+  emit("update", [...props.leaves, leave]);
 }
 </script>

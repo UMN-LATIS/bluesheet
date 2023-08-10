@@ -19,8 +19,13 @@ class TestLeavesSeeder extends Seeder {
             ->count(10)
             ->create()
             ->each(function ($user) {
-                $leaves = Leave::factory()->count(rand(1, 5))->create();
+                $leaves = Leave::factory()->count(rand(1, 3))->create();
                 $user->leaves()->saveMany($leaves);
             });
+
+        // create a few leaves for basic_user
+        $basicUser = User::where('umndid', 'basic_user')->first();
+        Leave::factory()->pastLeave()->count(3)->for($basicUser)->create();
+        Leave::factory()->futureLeave()->count(2)->for($basicUser)->create();
     }
 }

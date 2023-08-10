@@ -55,6 +55,13 @@ declare namespace Cypress {
     create(model: string): Chainable<any>;
     create(model: string, count: number): Chainable<any>;
     create(model: string, count: number, props: object): Chainable<any>;
+    create(options: {
+      model: string;
+      state?: string[];
+      load?: string[];
+      count?: number;
+      attributes?: object;
+    });
 
     /**
      * Refresh the database state using Laravel's migrate:fresh command.
