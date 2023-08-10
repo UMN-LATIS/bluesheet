@@ -10,6 +10,22 @@ export interface UserLookupItem {
 export type ISODateTime = string; // "2023-08-04T19:52:04.000000Z"
 export type ISODate = string; // "2023-08-04"
 
+export const UserPermissions = {
+  CREATE_GROUPS: "create groups",
+  EDIT_GROUPS: "edit groups",
+  EDIT_USERS: "edit users",
+  EDIT_LEAVES: "edit leaves",
+  SCHEDULE_DEPTS: "schedule departments",
+  VIEW_OWN_GROUPS: "view own groups",
+  VIEW_GROUPS: "view groups",
+  VIEW_PRIVATE_GROUPS: "view private groups",
+  VIEW_USERS: "view users",
+  VIEW_REPORTS: "view reports",
+  VIEW_LEAVES: "view leaves",
+} as const;
+
+type UserPermission = (typeof UserPermissions)[keyof typeof UserPermissions];
+
 export interface User {
   id: number;
   givenname: string;
@@ -28,6 +44,7 @@ export interface User {
   seen_tour?: 1 | 0;
   send_email_reminders: 1 | 0;
   notify_of_favorite_changes: 1 | 0;
+  permissions: UserPermission[];
   leaves?: Leave[];
   created_at: ISODateTime;
   updated_at: ISODateTime;
@@ -122,7 +139,7 @@ export interface Artifact {
   updated_at: Date;
 }
 
-export const leaveTypes = {
+export const LeaveTypes = {
   SABBATICAL: "sabbatical",
   DEVELOPMENT: "development",
   SINGLE_SEMESTER: "single_semester",
@@ -131,23 +148,36 @@ export const leaveTypes = {
   OTHER: "other",
 } as const;
 
-export const leaveStatuses = {
-  CONFIRMED: "confirm",
+export type LeaveType = (typeof LeaveTypes)[keyof typeof LeaveTypes];
+
+export const LeaveStatuses = {
+  CONFIRMED: "confirmed",
   PENDING: "pending",
   CANCELLED: "cancelled",
 } as const;
+
+export type LeaveStatus = (typeof LeaveStatuses)[keyof typeof LeaveStatuses];
 
 export interface Leave {
   id: number;
   user_id: number;
   description: string;
-  type: keyof typeof leaveTypes;
-  status: keyof typeof leaveStatuses;
+  type: LeaveType;
+  status: LeaveStatus;
   start_date: ISODate;
   end_date: ISODate;
   created_at: ISODateTime;
   updated_at: ISODateTime;
-  deleted_at: ISODateTime | null;
+  deleted_at?: ISODateTime | null;
+}
+
+export interface ApiCreateLeaveRequest {
+  user_id: number;
+  description: string;
+  type: LeaveType;
+  status: LeaveStatus;
+  start_date: ISODate;
+  end_date: ISODate;
 }
 
 // api response types
