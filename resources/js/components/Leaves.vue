@@ -50,65 +50,69 @@
       />
     </button>
   </div>
-  <form @submit.prevent="handleAddNewLeave">
-    <Modal
-      :show="isAddingNewLeave"
-      title="Add New Leave"
-      @close="isAddingNewLeave = false"
-    >
-      <InputGroup
-        v-model="newLeave.description"
-        label="Description"
-        required
-        :isValid="isDescriptionValid"
-        errorText="Describe your leave"
-      />
-      <SelectGroup
-        v-model="newLeave.type"
-        label="Type"
-        required
-        :isValid="isTypeValid"
-        errorText="Select a type"
-        :options="leaveTypeOptions"
-      />
-      <SelectGroup
-        v-model="newLeave.status"
-        label="Status"
-        required
-        :isValid="isStatusValid"
-        errorText="Select a status"
-        :options="leaveStatusOptions"
-      />
-      <InputGroup
-        v-model="newLeave.start_date"
-        label="Start Date"
-        type="date"
-        required
-        :isValid="isStartDateValid"
-      />
-      <InputGroup
-        v-model="newLeave.end_date"
-        label="End Date"
-        type="date"
-        required
-        :isValid="isEndDateValid"
-      />
-      <template #footer>
-        <div>
-          <button
-            class="btn btn-primary"
-            type="submit"
-            :disabled="!isFormValid"
-          >
-            Save
-          </button>
-          <button class="btn btn-link" @click="isAddingNewLeave = false">
-            Cancel
-          </button>
-        </div>
-      </template>
-    </Modal>
-  </form>
+  <Modal
+    :show="isAddingNewLeave"
+    title="Add New Leave"
+    @close="isAddingNewLeave = false"
+  >
+    <InputGroup
+      data-cy="leaveDescription"
+      v-model="newLeave.description"
+      label="Description"
+      required
+      :isValid="isDescriptionValid"
+      errorText="Describe your leave"
+    />
+    <SelectGroup
+      data-cy="leaveType"
+      v-model="newLeave.type"
+      label="Type"
+      required
+      :isValid="isTypeValid"
+      errorText="Select a type"
+      :options="leaveTypeOptions"
+    />
+    <SelectGroup
+      data-cy="leaveStatus"
+      v-model="newLeave.status"
+      label="Status"
+      required
+      :isValid="isStatusValid"
+      errorText="Select a status"
+      :options="leaveStatusOptions"
+    />
+    <InputGroup
+      data-cy="leaveStartDate"
+      v-model="newLeave.start_date"
+      label="Start Date"
+      type="date"
+      required
+      :isValid="isStartDateValid"
+    />
+    <InputGroup
+      data-cy="leaveEndDate"
+      v-model="newLeave.end_date"
+      label="End Date"
+      type="date"
+      required
+      :isValid="isEndDateValid"
+    />
+    <template #footer>
+      <div>
+        <button
+          data-cy="saveLeave"
+          class="btn btn-primary"
+          @click="handleAddNewLeave"
+          :disabled="!isFormValid"
+        >
+          Save
+        </button>
+        <button class="btn btn-link" @click="isAddingNewLeave = false">
+          Cancel
+        </button>
+      </div>
+    </template>
+  </Modal>
 </template>
 
 <script setup lang="ts">
@@ -118,22 +122,28 @@ import { Leave } from "@/types";
 import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
 import Modal from "./Modal.vue";
 import InputGroup from "./InputGroup.vue";
-import { leaveTypes, leaveStatuses } from "@/types";
+import { LeaveTypes, LeaveStatuses, LeaveType, LeaveStatus } from "@/types";
 import SelectGroup from "./SelectGroup.vue";
+import * as api from "@/api";
 
 const props = defineProps<{
   leaves: Leave[];
   userId: number;
 }>();
 
+const emit = defineEmits<{
+  (eventName: "update", leaves: Leave[]);
+}>();
+
 const showPastLeaves = ref(false);
 const isAddingNewLeave = ref(false);
 const newLeave = reactive({
   description: "",
-  type: "" as "" | keyof typeof leaveTypes,
-  status: "" as "" | keyof typeof leaveStatuses,
+  type: "" as "" | LeaveType,
+  status: "" as "" | LeaveStatus,
   start_date: "",
   end_date: "",
+  user_id: props.userId,
 });
 
 const isCurrentLeave = (leave: Leave) =>
@@ -148,14 +158,14 @@ const capitalizeEachWord = (str: string) =>
     .join(" ");
 
 const leaveTypeOptions = computed(() => {
-  return Object.entries(leaveTypes).map(([text, value]) => ({
+  return Object.entries(LeaveTypes).map(([text, value]) => ({
     value,
     text: capitalizeEachWord(text),
   }));
 });
 
 const leaveStatusOptions = computed(() => {
-  return Object.entries(leaveStatuses).map(([value, text]) => ({
+  return Object.entries(LeaveStatuses).map(([text, value]) => ({
     value,
     text: capitalizeEachWord(text.replace("_", " ").toLowerCase()),
   }));
@@ -191,7 +201,18 @@ const isFormValid = computed(
     isEndDateValid.value,
 );
 
-function handleAddNewLeave() {
-  console.log(newLeave);
+function resetForm() {
+  newLeave.description = "";
+  newLeave.type = "";
+  newLeave.status = "";
+  newLeave.start_date = "";
+  newLeave.end_date = "";
+}
+
+async function handleAddNewLeave() {
+  isAddingNewLeave.value = false;
+  const leave = await api.createLeave(newLeave as Leave);
+  resetForm();
+  emit("updateLeaves", [...props.leaves, leave]);
 }
 </script>

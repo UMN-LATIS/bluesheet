@@ -34,7 +34,12 @@
     </div>
     <Roles id="v-step-4" :memberships="memberships"></Roles>
 
-    <Leaves v-if="user && user.leaves" :leaves="user.leaves"></Leaves>
+    <Leaves
+      v-if="user && user.leaves"
+      :leaves="user.leaves"
+      :userId="user.id"
+      @update="handleUpdateLeaves"
+    ></Leaves>
   </div>
 </template>
 
@@ -89,6 +94,10 @@ export default {
         .catch((err) => {
           this.error = err.response.data;
         });
+    },
+    handleUpdateLeaves(leaves) {
+      console.log("leaves updated", leaves);
+      this.user.leaves = leaves;
     },
   },
 };
