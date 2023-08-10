@@ -13,7 +13,7 @@
 
 Route::impersonate();
 
-if (config('shibboleth.emulate_idp') ) {
+if (config('shibboleth.emulate_idp')) {
 
     Route::name('login')->get("login", '\StudentAffairsUwm\Shibboleth\Controllers\ShibbolethController@emulateLogin');
     # comment out for production shib
@@ -24,29 +24,27 @@ if (config('shibboleth.emulate_idp') ) {
         Route::get('emulated/logout', '\StudentAffairsUwm\Shibboleth\Controllers\ShibbolethController@emulateLogout');
         Route::get('/shibboleth-logout', '\StudentAffairsUwm\Shibboleth\Controllers\ShibbolethController@emulateLogout');
     });
-}
-else {
+} else {
     Route::name('login')->get("login", '\StudentAffairsUwm\Shibboleth\Controllers\ShibbolethController@login');
     Route::group(['middleware' => 'web'], function () {
         Route::name('shibboleth-login')->get('/shibboleth-login', '\StudentAffairsUwm\Shibboleth\Controllers\ShibbolethController@login');
         Route::name('shibboleth-authenticate')->get('/shibboleth-authenticate', '\StudentAffairsUwm\Shibboleth\Controllers\ShibbolethController@idpAuthenticate');
         Route::name('shibboleth-logout')->get('/shibboleth-logout', '\StudentAffairsUwm\Shibboleth\Controllers\ShibbolethController@destroy');
     });
-
 }
 
 
-Route::group(['prefix'=>'/api/', 'middleware' => 'auth'], function () {
+Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
 
     Route::get('autocompleter/user', 'AutocompleteController@userAutocompleter');
 
     Route::post('user/lookup', 'UserController@userLookup');
     Route::resource('user', 'UserController');
     Route::get('role/{role}', 'GroupController@role');
-    
+
     Route::get('group/roles', 'GroupController@roles');
-    
-    
+
+
     Route::get('group/types', 'GroupController@types');
     Route::get('group/parents', 'GroupController@parents');
     Route::get('folder/{parentOrganization?}', 'GroupController@getGroupsByFolder');
@@ -54,7 +52,7 @@ Route::group(['prefix'=>'/api/', 'middleware' => 'auth'], function () {
 
     Route::resource('group', 'GroupController');
     Route::get('group/{group}/members', 'GroupController@members');
-    
+
     Route::post("user/favorite/groups/{group}", "UserController@addFavoriteGroup");
     Route::post("user/favorite/roles/{role}", "UserController@addFavoriteRole");
     Route::delete("user/favorite/groups/{group}", "UserController@destroyFavoriteGroup");
@@ -71,6 +69,7 @@ Route::group(['prefix'=>'/api/', 'middleware' => 'auth'], function () {
     Route::post('leaves', 'LeaveController@store');
     Route::get('leaves/{leave}', 'LeaveController@show');
     Route::put('leaves/{leave}', 'LeaveController@update');
+    Route::delete('leaves/{leave}', 'LeaveController@destroy');
 });
 
 // routes with hash to allow unauthenticated loads
@@ -79,7 +78,7 @@ Route::get('/api/group/{group}/members/{hash}', 'GroupController@members');
 
 
 // Route::resource('users', 'Admin\\UsersController');
-Route::group(['prefix'=>'admin', 'middleware' => ['auth', 'permission:edit users']], function () {
+Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'permission:edit users']], function () {
     Route::resource('/', 'Admin\\AdminController');
     Route::resource('users', 'Admin\\UsersController');
     Route::resource('group-type', 'Admin\\GroupTypeController');
@@ -89,5 +88,5 @@ Route::group(['prefix'=>'admin', 'middleware' => ['auth', 'permission:edit users
 Route::get('/group/{group}/{hash}', 'HomeController@index');
 Route::group(['middleware' => 'auth'], function () {
     Route::get('/', 'HomeController@index');
-    Route::any('{all}','HomeController@index')->where(['all' => '.*']);
+    Route::any('{all}', 'HomeController@index')->where(['all' => '.*']);
 });

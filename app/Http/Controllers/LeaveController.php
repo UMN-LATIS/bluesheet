@@ -6,6 +6,7 @@ use App\Leave;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Http\Response;
 
 class LeaveController extends Controller {
     /**
@@ -76,6 +77,7 @@ class LeaveController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function destroy(Leave $leave) {
-        //
+        $leave->delete();
+        return response()->json(null, Response::HTTP_NO_CONTENT);
     }
 }

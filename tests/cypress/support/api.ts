@@ -52,3 +52,24 @@ export const put = (url: string, body: object, options: RequestOptions = {}) =>
       ...options,
     }),
   );
+
+export const deleteById = (url: string, options: RequestOptions = {}) =>
+  cy.csrfToken().then((token) =>
+    cy.request({
+      method: "DELETE",
+      url,
+      headers: {
+        Accept: "application/json",
+        "X-CSRF-Token": token,
+        ...options.headers,
+      },
+      ...options,
+    }),
+  );
+
+export default {
+  get,
+  post,
+  put,
+  delete: deleteById,
+};
