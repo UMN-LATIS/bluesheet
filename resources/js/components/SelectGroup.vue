@@ -1,17 +1,30 @@
 <template>
   <div class="form-group">
-    <label v-if="label" :for="selectId">
-      {{ label }}<span v-if="required" class="tw-text-red-600">*</span>
+    <label
+      :for="selectId"
+      class="tw-uppercase tw-text-neutral-500 tw-font-bold tw-text-xs tw-tracking-wider tw-mb-1 tw-block"
+      :class="[
+        {
+          'sr-only': !showLabel,
+        },
+        labelClass,
+      ]"
+    >
+      {{ label }}
+      <span v-if="required" class="tw-text-red-600">*</span>
     </label>
     <select
       :id="selectId"
       :value="modelValue"
       :required="required"
       class="form-control"
-      :class="{
-        'is-invalid': !isValid && isTouched,
-        'is-valid': isValid && isTouched,
-      }"
+      :class="[
+        {
+          'is-invalid': !isValid && isTouched,
+          'is-valid': isValid && isTouched,
+        },
+        selectClass,
+      ]"
       @change="updateValue"
     >
       <option v-if="required" value="" disabled>
@@ -31,6 +44,7 @@
 
 <script lang="ts" setup>
 import { ref } from "vue";
+import { CSSClass } from "@/types";
 
 interface OptionType {
   value: string;
@@ -47,6 +61,9 @@ withDefaults(
     errorText?: string;
     required?: boolean;
     placeholder?: string;
+    showLabel?: boolean;
+    selectClass?: CSSClass;
+    labelClass?: CSSClass;
   }>(),
   {
     helpText: "",
@@ -54,6 +71,7 @@ withDefaults(
     options: () => [],
     required: false,
     placeholder: "",
+    showLabel: true,
   },
 );
 

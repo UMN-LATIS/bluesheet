@@ -1,6 +1,6 @@
 <template>
   <div data-cy="leavesSection">
-    <div class="tw-flex tw-justify-between tw-items-center my-">
+    <div class="tw-flex tw-justify-between tw-items-center">
       <h3 class="tw-my-4 tw-text-xl">Leaves</h3>
       <div class="tw-flex tw-gap-2 tw-items-baseline">
         <button
@@ -12,44 +12,41 @@
         </button>
       </div>
     </div>
-    <table class="table" data-cy="leavesTable">
-      <thead>
-        <tr>
-          <th>Description</th>
-          <th>Type</th>
-          <th>Status</th>
-          <th>Start Date</th>
-          <th>End Date</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="leave in filteredLeaves" :key="leave.id">
-          <td>{{ leave.description }}</td>
-          <td>{{ leave.type }}</td>
-          <td>{{ leave.status }}</td>
-          <td>{{ dayjs(leave.start_date).format("YYYY-MM-DD") }}</td>
-          <td>{{ dayjs(leave.end_date).format("YYYY-MM-DD") }}</td>
-          <td>
-            <button class="btn btn-link-primary">Edit</button>
-            <button class="btn btn-link-danger">Delete</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    <button
-      v-if="hasPastLeaves"
-      class="btn btn-link"
-      @click="showPastLeaves = !showPastLeaves"
-    >
-      {{ showPastLeaves ? "Hide Past" : "Show Past" }}
-      <ChevronDownIcon
-        class="tw-w-4 tw-h-4"
-        :class="{
-          'tw-rotate-180': showPastLeaves,
-        }"
-      />
-    </button>
+    <div class="tw-overflow-auto">
+      <table class="table" data-cy="leavesTable">
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <LeavesTableRow
+            :leave="leave"
+            v-for="leave in filteredLeaves"
+            :key="leave.id"
+          />
+        </tbody>
+      </table>
+
+      <button
+        v-if="hasPastLeaves"
+        class="btn btn-link"
+        @click="showPastLeaves = !showPastLeaves"
+      >
+        {{ showPastLeaves ? "Hide Past" : "Show Past" }}
+        <ChevronDownIcon
+          class="tw-w-4 tw-h-4"
+          :class="{
+            'tw-rotate-180': showPastLeaves,
+          }"
+        />
+      </button>
+    </div>
   </div>
   <Modal
     :show="isAddingNewLeave"
@@ -125,7 +122,9 @@ import Modal from "./Modal.vue";
 import InputGroup from "./InputGroup.vue";
 import { LeaveTypes, LeaveStatuses, LeaveType, LeaveStatus } from "@/types";
 import SelectGroup from "./SelectGroup.vue";
+import Button from "./Button.vue";
 import * as api from "@/api";
+import LeavesTableRow from "./LeavesTableRow.vue";
 
 const props = defineProps<{
   leaves: Leave[];
@@ -225,3 +224,4 @@ async function handleAddNewLeave() {
   emit("update", [...props.leaves, leave]);
 }
 </script>
+<style scoped></style>

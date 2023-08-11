@@ -1,7 +1,17 @@
 <template>
   <div class="form-group">
-    <label v-if="label" :for="inputId">
-      {{ label }}<span v-if="required" class="tw-text-red-600">*</span>
+    <label
+      :for="inputId"
+      class="tw-uppercase tw-text-neutral-500 tw-font-bold tw-text-xs tw-tracking-wider tw-mb-1 tw-block"
+      :class="[
+        {
+          'sr-only': !showLabel,
+        },
+        labelClass,
+      ]"
+    >
+      {{ label }}
+      <span v-if="required" class="tw-text-red-600">*</span>
     </label>
     <input
       :id="inputId"
@@ -9,10 +19,13 @@
       :value="modelValue"
       :placeholder="placeholder"
       class="form-control"
-      :class="{
-        'is-invalid': !isValid && isTouched,
-        'is-valid': isValid && isTouched,
-      }"
+      :class="[
+        {
+          'is-invalid': !isValid && isTouched,
+          'is-valid': isValid && isTouched,
+        },
+        inputClass,
+      ]"
       :required="required"
       @input="updateValue"
     />
@@ -25,6 +38,7 @@
 
 <script lang="ts" setup>
 import { ref } from "vue";
+import { CSSClass } from "@/types";
 
 withDefaults(
   defineProps<{
@@ -36,6 +50,9 @@ withDefaults(
     placeholder?: string;
     errorText?: string;
     required?: boolean;
+    showLabel?: boolean;
+    labelClass?: CSSClass;
+    inputClass?: CSSClass;
   }>(),
   {
     helpText: "",
@@ -43,6 +60,7 @@ withDefaults(
     type: "text",
     placeholder: "",
     required: false,
+    showLabel: true,
   },
 );
 
