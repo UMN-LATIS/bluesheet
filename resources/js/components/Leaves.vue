@@ -1,41 +1,218 @@
 <template>
-  <div data-cy="leavesSection">
-    <div class="tw-flex tw-justify-between tw-items-center">
-      <h3 class="tw-my-4 tw-text-xl">Leaves</h3>
-      <div class="tw-flex tw-gap-2 tw-items-baseline">
-        <button
-          class="btn btn-outline-primary"
-          @click="isAddingNewLeave = true"
-          v-if="$can(UserPermissions.EDIT_LEAVES)"
-        >
-          Add Leave
-        </button>
+  <div
+    data-cy="leavesSection"
+    class="tw-bg-neutral-50 tw-p-4 tw-border tw-border-neutral-200 tw-rounded-md"
+  >
+    <div class="tw-flex tw-justify-between tw-items-center tw-mb-4">
+      <h3 class="tw-m-0 tw-text-xl tw-font-bold">Leaves</h3>
+      <div class="tw-flex tw-items-center tw-gap-1">
+        <template v-if="!isEditing">
+          <Button
+            variant="secondary"
+            v-if="$can('edit leaves')"
+            @click="handleEditToggle"
+            >Edit</Button
+          >
+        </template>
+        <template v-else>
+          <Button variant="tertiary" @click="handleEditToggle">Cancel</Button>
+          <Button variant="secondary" @click="handleSaveLeaves">Save</Button>
+        </template>
       </div>
     </div>
     <div class="tw-overflow-auto">
-      <table class="table" data-cy="leavesTable">
+      <table
+        class="tw-min-w-full tw-divide-y tw-divide-neutral-500"
+        data-cy="leavesTable"
+      >
         <thead>
           <tr>
-            <th>Description</th>
-            <th>Type</th>
-            <th>Status</th>
-            <th>Start Date</th>
-            <th>End Date</th>
-            <th></th>
+            <th
+              v-if="isEditing"
+              scope="col"
+              class="tw-py-3.5 tw-pl-4 tw-pr-3 tw-text-left tw-text-sm tw-font-semibold tw-text-neutral-900 sm:tw-pl-0"
+            >
+              <button
+                v-if="isEditing"
+                variant="tertiary"
+                class="tw-bg-transparent tw-border-0 tw-text-green-600"
+                @click="addNewLocalLeave"
+              >
+                <CirclePlusIcon class="tw-h-6 tw-w-6" />
+                <span class="sr-only">Add Leave</span>
+              </button>
+            </th>
+            <th
+              scope="col"
+              class="tw-py-3.5 tw-pl-4 tw-pr-3 tw-text-left tw-text-sm tw-font-semibold tw-text-neutral-900 sm:tw-pl-0"
+            >
+              Description
+            </th>
+            <th
+              scope="col"
+              class="tw-py-3.5 tw-pl-4 tw-pr-3 tw-text-left tw-text-sm tw-font-semibold tw-text-neutral-900 sm:tw-pl-0"
+            >
+              Type
+            </th>
+            <th
+              scope="col"
+              class="tw-py-3.5 tw-pl-4 tw-pr-3 tw-text-left tw-text-sm tw-font-semibold tw-text-neutral-900 sm:tw-pl-0"
+            >
+              Status
+            </th>
+            <th
+              scope="col"
+              class="tw-py-3.5 tw-pl-4 tw-pr-3 tw-text-left tw-text-sm tw-font-semibold tw-text-neutral-900 sm:tw-pl-0"
+            >
+              Start Date
+            </th>
+            <th
+              scope="col"
+              class="tw-py-3.5 tw-pl-4 tw-pr-3 tw-text-left tw-text-sm tw-font-semibold tw-text-neutral-900 sm:tw-pl-0"
+            >
+              End Date
+            </th>
+            <th
+              scope="col"
+              class="tw-py-3.5 tw-pl-4 tw-pr-3 tw-text-left tw-text-sm tw-font-semibold tw-text-neutral-900 sm:tw-pl-0"
+            >
+              Current/Past
+            </th>
           </tr>
         </thead>
-        <tbody>
-          <LeavesTableRow
+        <tbody class="tw-divide-y tw-divide-neutral-200">
+          <tr v-if="!leavesToShow.length">
+            <td
+              colspan="5"
+              class="tw-whitespace-nowrap tw-py-4 tw-pl-4 tw-pr-3 tw-text-sm tw-font-medium tw-text-neutral-900 sm:tw-pl-0"
+            >
+              No leaves to show
+            </td>
+          </tr>
+          <tr
+            class="leaves-table-row"
+            v-for="(leave, index) in leavesToShow"
             :leave="leave"
-            v-for="leave in filteredLeaves"
             :key="leave.id"
-          />
+            :class="{
+              'tw-bg-red-50': !isLeaveValid(leave),
+            }"
+          >
+            <td
+              v-if="isEditing"
+              class="tw-whitespace-nowrap tw-py-4 tw-pl-4 tw-pr-3 tw-text-sm tw-font-medium tw-text-neutral-900 sm:tw-pl-0"
+            >
+              <button
+                class="tw-bg-transparent tw-border-0 tw-text-red-600 tw-mt-1.5"
+                @click="handleRemoveLeaveClick(index)"
+              >
+                <CircleMinusIcon class="tw-w-6 tw-h-6" />
+                <span class="sr-only">Delete Leave</span>
+              </button>
+            </td>
+            <td
+              class="tw-whitespace-nowrap tw-py-4 tw-pl-4 tw-pr-3 tw-text-sm tw-font-medium tw-text-neutral-900 sm:tw-pl-0"
+            >
+              <InputGroup
+                v-if="isEditing"
+                v-model="leave.description"
+                label="description"
+                :showLabel="false"
+                class="tw-mb-0"
+                inputClass="tw-border-neutral-200"
+                :isValid="isDescriptionValid(leave.description)"
+              />
+              <span v-else>{{ leave.description }}</span>
+            </td>
+            <td
+              class="tw-whitespace-nowrap tw-py-4 tw-pl-4 tw-pr-3 tw-text-sm tw-font-medium tw-text-neutral-900 sm:tw-pl-0"
+            >
+              <SelectGroup
+                v-if="isEditing"
+                v-model="localLeaves[index].type"
+                :options="leaveTypeOptions"
+                :showLabel="false"
+                class="tw-mb-0"
+                inputClass="tw-border-neutral-200"
+                :isValid="isTypeValid(leave.type)"
+                label="type"
+              />
+              <span v-else>{{ leave.type }}</span>
+            </td>
+            <td>
+              <SelectGroup
+                v-if="isEditing"
+                v-model="localLeaves[index].status"
+                :options="leaveStatusOptions"
+                :showLabel="false"
+                class="tw-mb-0"
+                inputClass="tw-border-neutral-200"
+                :isValid="isStatusValid(leave.status)"
+                label="status"
+              />
+              <span v-else>{{ leave.status }}</span>
+            </td>
+            <td
+              class="tw-whitespace-nowrap tw-py-4 tw-pl-4 tw-pr-3 tw-text-sm tw-font-medium tw-text-neutral-900 sm:tw-pl-0"
+            >
+              <InputGroup
+                v-if="isEditing"
+                v-model="localLeaves[index].start_date"
+                label="start date"
+                :showLabel="false"
+                class="tw-mb-0"
+                inputClass="tw-border-neutral-200"
+                type="date"
+                :isValid="isStartDateValid(leave.start_date)"
+              />
+              <span v-else>{{
+                dayjs(leave.start_date).format("YYYY-MM-DD")
+              }}</span>
+            </td>
+            <td
+              class="tw-whitespace-nowrap tw-py-4 tw-pl-4 tw-pr-3 tw-text-sm tw-font-medium tw-text-neutral-900 sm:tw-pl-0"
+            >
+              <InputGroup
+                v-if="isEditing"
+                v-model="localLeaves[index].end_date"
+                label="start date"
+                :showLabel="false"
+                class="tw-mb-0"
+                inputClass="tw-border-neutral-200"
+                type="date"
+                :isValid="
+                  isEndDateValid({
+                    startDate: leave.start_date,
+                    endDate: leave.end_date,
+                  })
+                "
+              />
+              <span v-else>{{
+                dayjs(leave.start_date).format("YYYY-MM-DD")
+              }}</span>
+            </td>
+            <td
+              class="tw-whitespace-nowrap tw-py-4 tw-pl-4 tw-pr-3 tw-text-sm tw-font-medium tw-text-neutral-900 sm:tw-pl-0"
+            >
+              <span
+                class="tw-border tw-text-xs tw-py-1 tw-px-2 tw-rounded-full tw-uppercase"
+                :class="{
+                  'tw-border-green-600 tw-text-green-600':
+                    isCurrentOrFutureLeave(leave),
+                  'tw-border-neutral-400 tw-text-neutral-400':
+                    !isCurrentOrFutureLeave(leave),
+                }"
+              >
+                {{ isCurrentOrFutureLeave(leave) ? "Current" : "Past" }}
+              </span>
+            </td>
+          </tr>
         </tbody>
       </table>
 
       <button
         v-if="hasPastLeaves"
-        class="btn btn-link"
+        class="btn btn-link tw-p-0"
         @click="showPastLeaves = !showPastLeaves"
       >
         {{ showPastLeaves ? "Hide Past" : "Show Past" }}
@@ -48,83 +225,30 @@
       </button>
     </div>
   </div>
-  <Modal
-    :show="isAddingNewLeave"
-    title="Add New Leave"
-    @close="isAddingNewLeave = false"
-  >
-    <InputGroup
-      data-cy="leaveDescription"
-      v-model="newLeave.description"
-      label="Description"
-      required
-      :isValid="isDescriptionValid"
-      errorText="Describe your leave"
-    />
-    <SelectGroup
-      data-cy="leaveType"
-      v-model="newLeave.type"
-      label="Type"
-      required
-      :isValid="isTypeValid"
-      errorText="Select a type"
-      :options="leaveTypeOptions"
-    />
-    <SelectGroup
-      data-cy="leaveStatus"
-      v-model="newLeave.status"
-      label="Status"
-      required
-      :isValid="isStatusValid"
-      errorText="Select a status"
-      :options="leaveStatusOptions"
-    />
-    <InputGroup
-      data-cy="leaveStartDate"
-      v-model="newLeave.start_date"
-      label="Start Date"
-      type="date"
-      required
-      :isValid="isStartDateValid"
-    />
-    <InputGroup
-      data-cy="leaveEndDate"
-      v-model="newLeave.end_date"
-      label="End Date"
-      type="date"
-      required
-      :isValid="isEndDateValid"
-    />
-    <template #footer>
-      <div>
-        <button
-          data-cy="saveLeave"
-          class="btn btn-primary"
-          @click="handleAddNewLeave"
-          :disabled="!isFormValid"
-        >
-          Save
-        </button>
-        <button class="btn btn-link" @click="isAddingNewLeave = false">
-          Cancel
-        </button>
-      </div>
-    </template>
-  </Modal>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, reactive } from "vue";
+import { computed, ref, reactive, watch } from "vue";
 import { dayjs, $can } from "@/lib";
-import { Leave, UserPermissions } from "@/types";
+import {
+  Leave,
+  LeaveType,
+  LeaveStatus,
+  UserPermissions,
+  leaveStatuses,
+  leaveTypes,
+  NewLeave,
+  ISODate,
+} from "@/types";
 import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
-import Modal from "./Modal.vue";
-import InputGroup from "./InputGroup.vue";
-import { LeaveTypes, LeaveStatuses, LeaveType, LeaveStatus } from "@/types";
-import SelectGroup from "./SelectGroup.vue";
 import Button from "./Button.vue";
+import InputGroup from "./InputGroup.vue";
+import AddLeaveModal from "./AddLeaveModal.vue";
 import * as api from "@/api";
-import LeavesTableRow from "./LeavesTableRow.vue";
+import { cloneDeep, partition } from "lodash";
+import SelectGroup from "./SelectGroup.vue";
+import { CircleMinusIcon, CirclePlusIcon } from "@/icons";
+import { Table, Th, Td } from "@/components/Table";
 
 const props = defineProps<{
   leaves: Leave[];
@@ -132,22 +256,12 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (eventName: "update", leaves: Leave[]);
+  (eventName: "update", leaves: (Leave | NewLeave)[]);
 }>();
 
 const showPastLeaves = ref(false);
-const isAddingNewLeave = ref(false);
-const newLeave = reactive({
-  description: "",
-  type: "" as "" | LeaveType,
-  status: "" as "" | LeaveStatus,
-  start_date: "",
-  end_date: "",
-  user_id: props.userId,
-});
-
-const isCurrentOrFutureLeave = (leave: Leave) =>
-  dayjs(leave.end_date).isAfter(dayjs());
+const isEditing = ref(false);
+const localLeaves = ref<(Leave | NewLeave)[]>([]);
 
 const capitalizeEachWord = (str: string) =>
   str
@@ -158,18 +272,35 @@ const capitalizeEachWord = (str: string) =>
     .join(" ");
 
 const leaveTypeOptions = computed(() => {
-  return Object.entries(LeaveTypes).map(([text, value]) => ({
+  return Object.entries(leaveTypes).map(([text, value]) => ({
     value,
     text: capitalizeEachWord(text),
   }));
 });
 
 const leaveStatusOptions = computed(() => {
-  return Object.entries(LeaveStatuses).map(([text, value]) => ({
+  return Object.entries(leaveStatuses).map(([text, value]) => ({
     value,
     text: capitalizeEachWord(text.replace("_", " ").toLowerCase()),
   }));
 });
+
+function addNewLocalLeave() {
+  const randomId = Math.floor(Math.random() * 100000);
+  const newLeave: NewLeave = {
+    id: `TEMPID-${randomId}`,
+    description: "New Leave",
+    type: leaveTypes.SABBATICAL,
+    status: leaveStatuses.PENDING,
+    start_date: dayjs().format("YYYY-MM-DD"),
+    end_date: dayjs().add(1, "year").format("YYYY-MM-DD"),
+    user_id: props.userId,
+  };
+  localLeaves.value = [newLeave, ...localLeaves.value];
+}
+
+const isCurrentOrFutureLeave = (leave: Leave | NewLeave) =>
+  dayjs(leave.end_date).isAfter(dayjs());
 
 const hasPastLeaves = computed(() => {
   return props.leaves.some((leave) => !isCurrentOrFutureLeave(leave));
@@ -181,47 +312,123 @@ const sortByStartDateDescending = (a, b) => {
   return 0;
 };
 
-const filteredLeaves = computed(() => {
-  const leaves = showPastLeaves.value
-    ? props.leaves
-    : props.leaves.filter(isCurrentOrFutureLeave);
+function hasTempId(leave: Leave | NewLeave) {
+  return typeof leave.id === "string" && leave.id.includes("TEMPID");
+}
 
-  return [...leaves].sort(sortByStartDateDescending);
+const leavesToShow = computed(() => {
+  const [newLeaves, existingLeaves] = partition(localLeaves.value, hasTempId);
+
+  // sort existing leaves and if we're not sowing past leaves,
+  // only show current leaves
+  const sortedAndFilteredExistingLeaves = existingLeaves
+    .sort(sortByStartDateDescending)
+    .filter((l) => (showPastLeaves.value ? l : isCurrentOrFutureLeave(l)));
+
+  // newLeaves should always be first
+  return [...newLeaves, ...sortedAndFilteredExistingLeaves];
 });
 
-const isDescriptionValid = computed(() => !!newLeave.description.length);
-const isStatusValid = computed(() => !!newLeave.status);
-const isTypeValid = computed(() => !!newLeave.type);
-const isStartDateValid = computed(() => dayjs(newLeave.start_date).isValid());
-const isEndDateValid = computed(
-  () =>
-    dayjs(newLeave.end_date).isValid() &&
-    isStartDateValid.value &&
-    dayjs(newLeave.end_date).isAfter(dayjs(newLeave.start_date)),
-);
-
-const isFormValid = computed(
-  () =>
-    isDescriptionValid.value &&
-    isStatusValid.value &&
-    isTypeValid.value &&
-    isStartDateValid.value &&
-    isEndDateValid.value,
-);
-
-function resetForm() {
-  newLeave.description = "";
-  newLeave.type = "";
-  newLeave.status = "";
-  newLeave.start_date = "";
-  newLeave.end_date = "";
+function handleEditToggle() {
+  localLeaves.value = cloneDeep(props.leaves)
+    .sort(sortByStartDateDescending)
+    .map((leave) => ({
+      ...leave,
+      start_date: dayjs(leave.start_date).format("YYYY-MM-DD"),
+      end_date: dayjs(leave.end_date).format("YYYY-MM-DD"),
+    }));
+  isEditing.value = !isEditing.value;
 }
 
-async function handleAddNewLeave() {
-  isAddingNewLeave.value = false;
-  const leave = await api.createLeave(newLeave as Leave);
-  resetForm();
-  emit("update", [...props.leaves, leave]);
+function isDescriptionValid(description: string) {
+  return description.length > 0;
 }
+
+function isTypeValid(type: LeaveType) {
+  return type.length > 0;
+}
+
+function isStatusValid(status: LeaveStatus) {
+  return status.length > 0;
+}
+
+function isStartDateValid(startDate: ISODate) {
+  return dayjs(startDate).isValid();
+}
+
+function isEndDateValid({
+  endDate,
+  startDate,
+}: {
+  endDate: ISODate;
+  startDate: ISODate;
+}) {
+  return dayjs(endDate).isValid() && dayjs(endDate).isAfter(dayjs(startDate));
+}
+
+function isLeaveValid(leave) {
+  return (
+    isDescriptionValid(leave.description) &&
+    isTypeValid(leave.type) &&
+    isStatusValid(leave.status) &&
+    isStartDateValid(leave.start_date) &&
+    isEndDateValid({ endDate: leave.end_date, startDate: leave.start_date })
+  );
+}
+
+async function handleSaveLeaves() {
+  // strip ids from new leaves
+  const leavesToSave = localLeaves.value.map((leave) => {
+    const isNewLeave =
+      "id" in leave &&
+      typeof leave.id === "string" &&
+      leave.id.startsWith("TEMPID-");
+
+    if (isNewLeave) {
+      const { id, ...rest } = leave;
+      return rest;
+    }
+    return leave;
+  });
+
+  emit("update", leavesToSave);
+  isEditing.value = false;
+}
+
+function handleRemoveLeaveClick(leaveIndex: number) {
+  localLeaves.value.splice(leaveIndex, 1);
+}
+
+// if leaves update, then update our list of
+// local leaves as well
+watch(
+  () => props.leaves,
+  () => (localLeaves.value = cloneDeep(props.leaves)),
+  { immediate: true },
+);
 </script>
-<style scoped></style>
+<style scoped>
+.table td {
+  padding: 0;
+}
+
+/* .table {
+  & th {
+    vertical-align: middle;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: #333;
+    padding: 0.5rem 0;
+    border: 0;
+    border-bottom: 1px solid #ccc;
+  }
+
+  td {
+    padding: 0.5rem 1rem;
+    padding-left: 0;
+    border: 0;
+    border-bottom: 1px solid #ccc;
+  }
+} */
+</style>

@@ -3,11 +3,11 @@
     :is="componentType"
     class="tw-inline-flex tw-items-center tw-gap-1 tw-no-underline hover:tw-no-underline tw-rounded tw-justify-center tw-leading-none tw-transition-colors tw-ease-in-out tw-group tw-cursor-pointer"
     :class="{
-      'tw-border tw-border-blue-600 tw-bg-blue-600 hover:tw-border-700 hover:tw-bg-blue-700 tw-text-blue-50 tw-px-4 tw-py-3':
+      'tw-border tw-bg-bs-blue hover:tw-border-700 hover:tw-bg-bs-blue tw-text-blue-50 !tw-px-4 !tw-py-3':
         variant === 'primary',
-      'tw-border tw-border-blue-600 tw-text-blue-600 px-4 py-3':
+      'tw-border tw-border-bs-blue tw-text-bs-blue tw-px-4 tw-py-3 tw-bg-transparent':
         variant === 'secondary',
-      'tw-text-blue-600 hover:tw-bg-blue-100 tw-text-xs tw-uppercase tw-font-semibold tw-p-2 tw-bg-transparent tw-border-none':
+      'tw-text-bs-blue hover:tw-bg-blue-100 tw-text-xs tw-uppercase tw-font-semibold tw-p-2 tw-bg-transparent tw-border-none':
         variant === 'tertiary',
     }"
     v-bind="$attrs"

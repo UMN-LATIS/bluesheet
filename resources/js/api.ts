@@ -5,7 +5,7 @@ import {
   UserLookupItem,
   User,
   Leave,
-  ApiCreateLeaveRequest,
+  NewLeave,
 } from "@/types";
 
 export async function lookupUsers(query: string): Promise<UserLookupItem[]> {
@@ -20,7 +20,12 @@ export async function getUser(userId: number): Promise<User> {
   return res.data;
 }
 
-export async function createLeave(leave: ApiCreateLeaveRequest) {
+export async function createLeave(leave: NewLeave) {
   const res = await axios.post<Leave>(`/api/leaves`, leave);
+  return res.data;
+}
+
+export async function updateLeave(leave: Leave) {
+  const res = await axios.put<Leave>(`/api/leaves/${leave.id}`, leave);
   return res.data;
 }

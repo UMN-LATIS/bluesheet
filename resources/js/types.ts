@@ -140,7 +140,7 @@ export interface Artifact {
   updated_at: Date;
 }
 
-export const LeaveTypes = {
+export const leaveTypes = {
   SABBATICAL: "sabbatical",
   DEVELOPMENT: "development",
   SINGLE_SEMESTER: "single_semester",
@@ -149,15 +149,15 @@ export const LeaveTypes = {
   OTHER: "other",
 } as const;
 
-export type LeaveType = (typeof LeaveTypes)[keyof typeof LeaveTypes];
+export type LeaveType = (typeof leaveTypes)[keyof typeof leaveTypes];
 
-export const LeaveStatuses = {
+export const leaveStatuses = {
   CONFIRMED: "confirmed",
   PENDING: "pending",
   CANCELLED: "cancelled",
 } as const;
 
-export type LeaveStatus = (typeof LeaveStatuses)[keyof typeof LeaveStatuses];
+export type LeaveStatus = (typeof leaveStatuses)[keyof typeof leaveStatuses];
 
 export interface Leave {
   id: number;
@@ -172,7 +172,8 @@ export interface Leave {
   deleted_at?: ISODateTime | null;
 }
 
-export interface ApiCreateLeaveRequest {
+export interface NewLeave {
+  id?: string | number;
   user_id: number;
   description: string;
   type: LeaveType;
