@@ -32,7 +32,7 @@
         </label>
       </div>
     </div>
-    <Roles id="v-step-4" :memberships="memberships"></Roles>
+    <Roles id="v-step-4" :memberships="memberships" class="tw-mt-12"></Roles>
 
     <Leaves
       v-if="user && user.leaves"

@@ -52,7 +52,7 @@ export interface User {
   deleted_at: ISODateTime | null;
 }
 
-export interface MembershipWithGroups {
+export interface Membership {
   id: number;
   filtered: false; // what does this do? Is it a front-end state thing? Does it need to be sticky?
   user: User;
@@ -184,7 +184,7 @@ export interface NewLeave {
 
 // api response types
 export type ApiUserResponse = User;
-export type ApiGroupMembersReponse = MembershipWithGroups[];
+export type ApiGroupMembersReponse = Membership[];
 export type ApiGroupRolesResponse = MemberRole[];
 export type ApiGroupResponse = Group;
 export interface ApiUserLookupResponse {

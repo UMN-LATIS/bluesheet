@@ -21,7 +21,7 @@
           class="tw-inline-block tw-min-w-full tw-py-2 tw-align-middle sm:tw-px-6 lg:tw-px-8"
         >
           <div
-            class="tw-overflow-hidden tw-shadow tw-ring-1 tw-ring-black tw-ring-opacity-5 sm:tw-rounded-lg"
+            class="tw-overflow-hidden tw-shadow-sm tw-ring-1 tw-ring-black tw-ring-opacity-5 sm:tw-rounded-lg"
           >
             <table
               class="better-table tw-min-w-full tw-divide-y tw-divide-gray-300"

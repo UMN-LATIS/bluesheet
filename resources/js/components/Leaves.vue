@@ -54,7 +54,7 @@
           :colspan="isEditing ? 7 : 6"
           class="tw-text-center !tw-p-6 tw-italic tw-text-neutral-500"
         >
-          No leaves to show
+          No Leaves
         </Td>
       </tr>
       <tr
@@ -151,10 +151,10 @@
         </Td>
       </tr>
 
-      <tr v-if="!isEditing">
-        <Td :colspan="5" class="tw-text-center">
-          <button
-            v-if="hasPastLeaves"
+      <tr v-if="!isEditing && hasPastLeaves">
+        <Td :colspan="5" class="tw-text-center !tw-p-2">
+          <Button
+            variant="tertiary"
             class="btn btn-link tw-p-0"
             @click="showPastLeaves = !showPastLeaves"
           >
@@ -165,7 +165,7 @@
                 'tw-rotate-180': showPastLeaves,
               }"
             />
-          </button>
+          </Button>
         </Td>
       </tr>
     </Table>
