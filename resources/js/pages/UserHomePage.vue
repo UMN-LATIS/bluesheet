@@ -3,44 +3,45 @@
     <div v-if="error" class="alert alert-danger" role="alert">
       {{ error }}
     </div>
-    <ViewUser v-if="user" :user="user" />
-    <div v-if="user && !userId" class="col-md-6">
-      <div class="form-check">
-        <input
-          id="send_email_reminders"
-          v-model="user.send_email_reminders"
-          class="form-check-input"
-          type="checkbox"
-          @change="api.updateUser(user)"
-        />
-        <label class="form-check-label small" for="send_email_reminders">
-          Send me occasional reminders to update my groups
-        </label>
+    <template v-if="user">
+      <div class="tw-flex tw-justify-between tw-flex-wrap tw-gap-4">
+        <ViewUser :user="user" />
+        <aside
+          v-if="user && isCurrentUser"
+          class="tw-p-4 tw-border tw-border-neutral-200 tw-rounded md:tw-rounded-lg tw-max-w-sm"
+        >
+          <h2
+            class="tw-inline-block tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-mb-4"
+          >
+            Notifications
+          </h2>
+          <CheckboxGroup
+            id="notify_of_favorite_changes"
+            v-model="user.notify_of_favorite_changes"
+            label="Changes"
+            description="Notify me when my favorite groups and roles change."
+            @update:modelValue="api.updateUser(user)"
+          />
+          <CheckboxGroup
+            id="send_email_reminders"
+            v-model="user.send_email_reminders"
+            label="Reminders"
+            description="Send me occasional reminders to update my groups."
+            @update:modelValue="api.updateUser(user)"
+          />
+        </aside>
       </div>
-    </div>
-    <div v-if="user && !userId" class="col-md-6">
-      <div class="form-check">
-        <input
-          id="notify_of_favorite_changes"
-          v-model="user.notify_of_favorite_changes"
-          class="form-check-input"
-          type="checkbox"
-          @change="api.updateUser(user)"
-        />
-        <label class="form-check-label small" for="notify_of_favorite_changes">
-          Notify me when my favorite groups and roles change
-        </label>
-      </div>
-    </div>
-    <Roles id="v-step-4" :memberships="memberships" class="tw-mt-12"></Roles>
 
-    <Leaves
-      v-if="user && user.leaves"
-      :leaves="user.leaves"
-      :userId="user.id"
-      @update="handleUpdateLeaves"
-      class="tw-mt-12"
-    ></Leaves>
+      <Roles id="v-step-4" :memberships="memberships" class="tw-mt-12"></Roles>
+
+      <Leaves
+        v-if="user && user.leaves"
+        :leaves="user.leaves"
+        :userId="user.id"
+        @update="handleUpdateLeaves"
+        class="tw-mt-12"
+      ></Leaves>
+    </template>
   </div>
 </template>
 
@@ -53,6 +54,7 @@ import * as api from "@/api";
 import { User } from "@/types";
 import { useStore } from "vuex";
 import { AxiosError } from "axios";
+import CheckboxGroup from "@/components/CheckboxGroup.vue";
 
 const props = defineProps<{
   userId: number | null;
@@ -60,6 +62,9 @@ const props = defineProps<{
 
 const user = ref<User | null>(null);
 const error = ref<string | null>(null);
+const isCurrentUser = computed(() => {
+  return user.value?.id === store.state.user?.id;
+});
 
 const memberships = computed(() => {
   return user.value?.memberships ?? [];

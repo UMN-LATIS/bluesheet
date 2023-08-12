@@ -42,9 +42,9 @@ export interface User {
   memberships: [];
   favoriteGroups: [];
   favoriteRoles: [];
-  seen_tour?: 1 | 0;
-  send_email_reminders: 1 | 0;
-  notify_of_favorite_changes: 1 | 0;
+  seen_tour?: boolean;
+  send_email_reminders: boolean;
+  notify_of_favorite_changes: boolean;
   permissions: UserPermission[];
   leaves?: Leave[];
   created_at: ISODateTime;
