@@ -62,9 +62,7 @@ class UserLeaveController extends Controller {
             ->whereNotIn('id', $leaveIdsToKeep)
             ->delete();
 
-        return response()->json([
-            'message' => 'Leaves updated successfully.',
-            'leaves' => Leave::where('user_id', $user->id)->get(),
-        ], 200);
+        $updatedLeaves = Leave::where('user_id', $user->id)->get();
+        return response()->json($updatedLeaves, 200);
     }
 }
