@@ -71,6 +71,12 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
     Route::put('leaves/{leave}', 'LeaveController@update');
     Route::delete('leaves/{leave}', 'LeaveController@destroy');
     Route::get('users/{user}/leaves', 'UserLeaveController@index');
+    Route::put('users/{user}/leaves', 'UserLeaveController@update');
+
+    // Catchall 404 JSON route
+    Route::any('{any}', function () {
+        return response()->json(['message' => 'Not Found'], 404);
+    })->where('any', '.*');
 });
 
 // routes with hash to allow unauthenticated loads
