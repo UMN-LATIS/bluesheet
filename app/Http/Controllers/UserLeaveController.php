@@ -18,7 +18,7 @@ class UserLeaveController extends Controller {
         $currentUser = Auth::user();
         abort_if($currentUser->cannot('view leaves') && $currentUser->id !== $user->id, 403);
 
-        return Leave::where('user_id', $user->id)->paginate(50);
+        return Leave::where('user_id', $user->id)->get();
     }
 
     public function update(User $user) {
