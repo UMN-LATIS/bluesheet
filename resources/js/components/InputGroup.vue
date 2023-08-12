@@ -1,5 +1,5 @@
 <template>
-  <div class="form-group">
+  <div class="form-group tw-mb-0">
     <label
       :for="inputId"
       class="tw-uppercase tw-text-neutral-500 tw-font-bold tw-text-xs tw-tracking-wider tw-mb-1 tw-block"
@@ -18,7 +18,7 @@
       :type="type"
       :value="modelValue"
       :placeholder="placeholder"
-      class="form-control"
+      class="form-control tw-text-sm"
       :class="[
         {
           'is-invalid': !isValid && isTouched,
@@ -30,8 +30,8 @@
       @input="updateValue"
     />
     <small v-if="helpText" class="form-text text-muted">{{ helpText }}</small>
-    <div v-if="!isValid && isTouched" class="invalid-feedback">
-      {{ errorText || `Invalid ${label}` }}
+    <div v-if="!isValid && isTouched && errorText" class="invalid-feedback">
+      {{ errorText }}
     </div>
   </div>
 </template>

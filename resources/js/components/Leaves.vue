@@ -1,229 +1,169 @@
 <template>
   <div
     data-cy="leavesSection"
-    class="tw-bg-neutral-50 tw-p-4 tw-border tw-border-neutral-200 tw-rounded-md"
+    class="leaves-section"
+    :class="{
+      'leaves-section--is-editing': isEditing,
+    }"
   >
-    <div class="tw-flex tw-justify-between tw-items-center tw-mb-4">
-      <h3 class="tw-m-0 tw-text-xl tw-font-bold">Leaves</h3>
-      <div class="tw-flex tw-items-center tw-gap-1">
-        <template v-if="!isEditing">
-          <Button
-            variant="secondary"
-            v-if="$can('edit leaves')"
-            @click="handleEditToggle"
-            >Edit</Button
-          >
-        </template>
-        <template v-else>
-          <Button variant="tertiary" @click="handleEditToggle">Cancel</Button>
-          <Button variant="secondary" @click="handleSaveLeaves">Save</Button>
-        </template>
-      </div>
-    </div>
-    <div class="tw-overflow-auto">
-      <table
-        class="tw-min-w-full tw-divide-y tw-divide-neutral-500"
-        data-cy="leavesTable"
-      >
-        <thead>
-          <tr>
-            <th
+    <Table name="Leaves">
+      <template #actions>
+        <div class="tw-flex tw-items-center tw-gap-1">
+          <template v-if="!isEditing">
+            <Button
+              variant="primary"
+              v-if="$can('edit leaves')"
+              @click="handleEditToggle"
+              >Edit</Button
+            >
+          </template>
+          <template v-else>
+            <Button variant="tertiary" @click="handleEditToggle">Cancel</Button>
+            <Button variant="primary" @click="handleSaveLeaves">Save</Button>
+          </template>
+        </div>
+      </template>
+
+      <template #thead>
+        <tr>
+          <Th v-if="isEditing">
+            <button
               v-if="isEditing"
-              scope="col"
-              class="tw-py-3.5 tw-pl-4 tw-pr-3 tw-text-left tw-text-sm tw-font-semibold tw-text-neutral-900 sm:tw-pl-0"
+              variant="tertiary"
+              class="tw-bg-transparent tw-border-0 tw-text-green-600"
+              @click="addNewLocalLeave"
             >
-              <button
-                v-if="isEditing"
-                variant="tertiary"
-                class="tw-bg-transparent tw-border-0 tw-text-green-600"
-                @click="addNewLocalLeave"
-              >
-                <CirclePlusIcon class="tw-h-6 tw-w-6" />
-                <span class="sr-only">Add Leave</span>
-              </button>
-            </th>
-            <th
-              scope="col"
-              class="tw-py-3.5 tw-pl-4 tw-pr-3 tw-text-left tw-text-sm tw-font-semibold tw-text-neutral-900 sm:tw-pl-0"
-            >
-              Description
-            </th>
-            <th
-              scope="col"
-              class="tw-py-3.5 tw-pl-4 tw-pr-3 tw-text-left tw-text-sm tw-font-semibold tw-text-neutral-900 sm:tw-pl-0"
-            >
-              Type
-            </th>
-            <th
-              scope="col"
-              class="tw-py-3.5 tw-pl-4 tw-pr-3 tw-text-left tw-text-sm tw-font-semibold tw-text-neutral-900 sm:tw-pl-0"
-            >
-              Status
-            </th>
-            <th
-              scope="col"
-              class="tw-py-3.5 tw-pl-4 tw-pr-3 tw-text-left tw-text-sm tw-font-semibold tw-text-neutral-900 sm:tw-pl-0"
-            >
-              Start Date
-            </th>
-            <th
-              scope="col"
-              class="tw-py-3.5 tw-pl-4 tw-pr-3 tw-text-left tw-text-sm tw-font-semibold tw-text-neutral-900 sm:tw-pl-0"
-            >
-              End Date
-            </th>
-            <th
-              scope="col"
-              class="tw-py-3.5 tw-pl-4 tw-pr-3 tw-text-left tw-text-sm tw-font-semibold tw-text-neutral-900 sm:tw-pl-0"
-            >
-              Current/Past
-            </th>
-          </tr>
-        </thead>
-        <tbody class="tw-divide-y tw-divide-neutral-200">
-          <tr v-if="!leavesToShow.length">
-            <td
-              colspan="5"
-              class="tw-whitespace-nowrap tw-py-4 tw-pl-4 tw-pr-3 tw-text-sm tw-font-medium tw-text-neutral-900 sm:tw-pl-0"
-            >
-              No leaves to show
-            </td>
-          </tr>
-          <tr
-            class="leaves-table-row"
-            v-for="(leave, index) in leavesToShow"
-            :leave="leave"
-            :key="leave.id"
+              <CirclePlusIcon class="tw-h-6 tw-w-6" />
+              <span class="sr-only">Add Leave</span>
+            </button>
+          </Th>
+          <Th>Description</Th>
+          <Th>Type</Th>
+          <Th>Status</Th>
+          <Th>Start Date</Th>
+          <Th>End Date</Th>
+          <Th>Current/Past</Th>
+        </tr>
+      </template>
+
+      <tr v-if="!leavesToShow.length">
+        <Td colspan="5"> No leaves to show </Td>
+      </tr>
+      <tr
+        v-for="(leave, index) in leavesToShow"
+        :key="leave.id"
+        :class="{
+          'tw-bg-red-50': !isLeaveValid(leave),
+          'tw-bg-yellow-100':
+            isEditing && hasTempId(leave) && isLeaveValid(leave),
+        }"
+      >
+        <Td v-if="isEditing">
+          <button
+            class="tw-bg-transparent tw-border-0 tw-text-red-600 tw-mt-1.5"
+            @click="handleRemoveLeaveClick(index)"
+          >
+            <CircleMinusIcon class="tw-w-6 tw-h-6" />
+            <span class="sr-only">Delete Leave</span>
+          </button>
+        </Td>
+        <Td>
+          <InputGroup
+            v-if="isEditing"
+            v-model="leave.description"
+            label="description"
+            :showLabel="false"
+            class="tw-mb-0"
+            :isValid="isDescriptionValid(leave.description)"
+          />
+          <span v-else>{{ leave.description }}</span>
+        </Td>
+        <Td>
+          <SelectGroup
+            v-if="isEditing"
+            v-model="localLeaves[index].type"
+            :options="leaveTypeOptions"
+            :showLabel="false"
+            class="tw-mb-0"
+            :isValid="isTypeValid(leave.type)"
+            label="type"
+          />
+          <span v-else>{{ leave.type }}</span>
+        </Td>
+        <Td>
+          <SelectGroup
+            v-if="isEditing"
+            v-model="localLeaves[index].status"
+            :options="leaveStatusOptions"
+            :showLabel="false"
+            class="tw-mb-0"
+            :isValid="isStatusValid(leave.status)"
+            label="status"
+          />
+          <span v-else>{{ leave.status }}</span>
+        </Td>
+        <Td>
+          <InputGroup
+            v-if="isEditing"
+            v-model="localLeaves[index].start_date"
+            label="start date"
+            :showLabel="false"
+            class="tw-mb-0"
+            type="date"
+            :isValid="isStartDateValid(leave.start_date)"
+          />
+          <span v-else>{{ dayjs(leave.start_date).format("YYYY-MM-DD") }}</span>
+        </Td>
+        <Td>
+          <InputGroup
+            v-if="isEditing"
+            v-model="localLeaves[index].end_date"
+            label="start date"
+            :showLabel="false"
+            class="tw-mb-0"
+            type="date"
+            :isValid="
+              isEndDateValid({
+                startDate: leave.start_date,
+                endDate: leave.end_date,
+              })
+            "
+          />
+          <span v-else>{{ dayjs(leave.start_date).format("YYYY-MM-DD") }}</span>
+        </Td>
+        <Td>
+          <span
+            class="tw-border tw-text-xs tw-py-1 tw-px-2 tw-rounded-full tw-uppercase"
             :class="{
-              'tw-bg-red-50': !isLeaveValid(leave),
+              'tw-border-green-600 tw-text-green-600':
+                isCurrentOrFutureLeave(leave),
+              'tw-border-neutral-400 tw-text-neutral-400':
+                !isCurrentOrFutureLeave(leave),
             }"
           >
-            <td
-              v-if="isEditing"
-              class="tw-whitespace-nowrap tw-py-4 tw-pl-4 tw-pr-3 tw-text-sm tw-font-medium tw-text-neutral-900 sm:tw-pl-0"
-            >
-              <button
-                class="tw-bg-transparent tw-border-0 tw-text-red-600 tw-mt-1.5"
-                @click="handleRemoveLeaveClick(index)"
-              >
-                <CircleMinusIcon class="tw-w-6 tw-h-6" />
-                <span class="sr-only">Delete Leave</span>
-              </button>
-            </td>
-            <td
-              class="tw-whitespace-nowrap tw-py-4 tw-pl-4 tw-pr-3 tw-text-sm tw-font-medium tw-text-neutral-900 sm:tw-pl-0"
-            >
-              <InputGroup
-                v-if="isEditing"
-                v-model="leave.description"
-                label="description"
-                :showLabel="false"
-                class="tw-mb-0"
-                inputClass="tw-border-neutral-200"
-                :isValid="isDescriptionValid(leave.description)"
-              />
-              <span v-else>{{ leave.description }}</span>
-            </td>
-            <td
-              class="tw-whitespace-nowrap tw-py-4 tw-pl-4 tw-pr-3 tw-text-sm tw-font-medium tw-text-neutral-900 sm:tw-pl-0"
-            >
-              <SelectGroup
-                v-if="isEditing"
-                v-model="localLeaves[index].type"
-                :options="leaveTypeOptions"
-                :showLabel="false"
-                class="tw-mb-0"
-                inputClass="tw-border-neutral-200"
-                :isValid="isTypeValid(leave.type)"
-                label="type"
-              />
-              <span v-else>{{ leave.type }}</span>
-            </td>
-            <td>
-              <SelectGroup
-                v-if="isEditing"
-                v-model="localLeaves[index].status"
-                :options="leaveStatusOptions"
-                :showLabel="false"
-                class="tw-mb-0"
-                inputClass="tw-border-neutral-200"
-                :isValid="isStatusValid(leave.status)"
-                label="status"
-              />
-              <span v-else>{{ leave.status }}</span>
-            </td>
-            <td
-              class="tw-whitespace-nowrap tw-py-4 tw-pl-4 tw-pr-3 tw-text-sm tw-font-medium tw-text-neutral-900 sm:tw-pl-0"
-            >
-              <InputGroup
-                v-if="isEditing"
-                v-model="localLeaves[index].start_date"
-                label="start date"
-                :showLabel="false"
-                class="tw-mb-0"
-                inputClass="tw-border-neutral-200"
-                type="date"
-                :isValid="isStartDateValid(leave.start_date)"
-              />
-              <span v-else>{{
-                dayjs(leave.start_date).format("YYYY-MM-DD")
-              }}</span>
-            </td>
-            <td
-              class="tw-whitespace-nowrap tw-py-4 tw-pl-4 tw-pr-3 tw-text-sm tw-font-medium tw-text-neutral-900 sm:tw-pl-0"
-            >
-              <InputGroup
-                v-if="isEditing"
-                v-model="localLeaves[index].end_date"
-                label="start date"
-                :showLabel="false"
-                class="tw-mb-0"
-                inputClass="tw-border-neutral-200"
-                type="date"
-                :isValid="
-                  isEndDateValid({
-                    startDate: leave.start_date,
-                    endDate: leave.end_date,
-                  })
-                "
-              />
-              <span v-else>{{
-                dayjs(leave.start_date).format("YYYY-MM-DD")
-              }}</span>
-            </td>
-            <td
-              class="tw-whitespace-nowrap tw-py-4 tw-pl-4 tw-pr-3 tw-text-sm tw-font-medium tw-text-neutral-900 sm:tw-pl-0"
-            >
-              <span
-                class="tw-border tw-text-xs tw-py-1 tw-px-2 tw-rounded-full tw-uppercase"
-                :class="{
-                  'tw-border-green-600 tw-text-green-600':
-                    isCurrentOrFutureLeave(leave),
-                  'tw-border-neutral-400 tw-text-neutral-400':
-                    !isCurrentOrFutureLeave(leave),
-                }"
-              >
-                {{ isCurrentOrFutureLeave(leave) ? "Current" : "Past" }}
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            {{ isCurrentOrFutureLeave(leave) ? "Current" : "Past" }}
+          </span>
+        </Td>
+      </tr>
 
-      <button
-        v-if="hasPastLeaves"
-        class="btn btn-link tw-p-0"
-        @click="showPastLeaves = !showPastLeaves"
-      >
-        {{ showPastLeaves ? "Hide Past" : "Show Past" }}
-        <ChevronDownIcon
-          class="tw-w-4 tw-h-4"
-          :class="{
-            'tw-rotate-180': showPastLeaves,
-          }"
-        />
-      </button>
-    </div>
+      <tr>
+        <Td :colspan="isEditing ? 7 : 6" class="tw-text-center">
+          <button
+            v-if="hasPastLeaves"
+            class="btn btn-link tw-p-0"
+            @click="showPastLeaves = !showPastLeaves"
+          >
+            {{ showPastLeaves ? "Hide Past" : "Show Past" }}
+            <ChevronDownIcon
+              class="tw-w-4 tw-h-4"
+              :class="{
+                'tw-rotate-180': showPastLeaves,
+              }"
+            />
+          </button>
+        </Td>
+      </tr>
+    </Table>
   </div>
 </template>
 
@@ -407,28 +347,18 @@ watch(
   { immediate: true },
 );
 </script>
-<style scoped>
-.table td {
-  padding: 0;
+<style>
+.leaves-section.leaves-section--is-editing {
+  & tr {
+    border-top: 0;
+  }
+  & td {
+    padding: 0.25rem 0.5rem;
+  }
+  & td:first-child,
+  & th:first-child {
+    padding: 0.25rem;
+    text-align: center;
+  }
 }
-
-/* .table {
-  & th {
-    vertical-align: middle;
-    font-size: 0.875rem;
-    text-transform: uppercase;
-    font-weight: 600;
-    color: #333;
-    padding: 0.5rem 0;
-    border: 0;
-    border-bottom: 1px solid #ccc;
-  }
-
-  td {
-    padding: 0.5rem 1rem;
-    padding-left: 0;
-    border: 0;
-    border-bottom: 1px solid #ccc;
-  }
-} */
 </style>

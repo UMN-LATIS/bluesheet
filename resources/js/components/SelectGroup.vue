@@ -17,7 +17,7 @@
       :id="selectId"
       :value="modelValue"
       :required="required"
-      class="form-control"
+      class="form-control tw-text-sm"
       :class="[
         {
           'is-invalid': !isValid && isTouched,

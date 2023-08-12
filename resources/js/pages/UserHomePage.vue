@@ -39,6 +39,7 @@
       :leaves="user.leaves"
       :userId="user.id"
       @update="handleUpdateLeaves"
+      class="tw-mt-12"
     ></Leaves>
   </div>
 </template>
