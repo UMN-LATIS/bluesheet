@@ -8,17 +8,27 @@
   >
     <Table name="Leaves">
       <template #actions>
-        <div class="tw-flex tw-items-center tw-gap-1">
+        <div
+          class="tw-flex tw-items-center tw-gap-2"
+          v-if="$can('edit leaves')"
+        >
           <template v-if="!isEditing">
-            <Button
-              variant="primary"
-              v-if="$can('edit leaves')"
-              @click="handleEditToggle"
-              >Edit</Button
-            >
+            <Button variant="secondary" @click="addNewLocalLeave">
+              Add Leave
+            </Button>
+            <Button variant="primary" @click="handleEditToggle"> Edit </Button>
           </template>
           <template v-else>
-            <Button variant="tertiary" @click="handleEditToggle">Cancel</Button>
+            <Button
+              variant="tertiary"
+              v-if="isEditing"
+              @click="handleEditToggle"
+            >
+              Cancel
+            </Button>
+            <Button variant="secondary" @click="addNewLocalLeave">
+              Add Leave
+            </Button>
             <Button variant="primary" @click="handleSaveLeaves">Save</Button>
           </template>
         </div>
@@ -26,47 +36,35 @@
 
       <template #thead>
         <tr>
-          <Th v-if="isEditing">
-            <button
-              v-if="isEditing"
-              variant="tertiary"
-              class="tw-bg-transparent tw-border-0 tw-text-green-600"
-              @click="addNewLocalLeave"
-            >
-              <CirclePlusIcon class="tw-h-6 tw-w-6" />
-              <span class="sr-only">Add Leave</span>
-            </button>
-          </Th>
           <Th>Description</Th>
           <Th>Type</Th>
           <Th>Status</Th>
           <Th>Start Date</Th>
           <Th>End Date</Th>
-          <Th>Current/Past</Th>
+          <Th v-if="isEditing"></Th>
         </tr>
       </template>
-
       <tr v-if="!leavesToShow.length">
-        <Td colspan="5"> No leaves to show </Td>
+        <Td
+          :colspan="isEditing ? 7 : 6"
+          class="tw-text-center !tw-p-6 tw-italic tw-text-neutral-500"
+        >
+          No leaves to show
+        </Td>
       </tr>
       <tr
         v-for="(leave, index) in leavesToShow"
         :key="leave.id"
         :class="{
-          'tw-bg-red-50': !isLeaveValid(leave),
-          'tw-bg-yellow-100':
-            isEditing && hasTempId(leave) && isLeaveValid(leave),
+          'is-invalid-leave tw-bg-red-50': !isLeaveValid(leave),
+          'is-new-leave tw-bg-yellow-50':
+            isEditing && isNewLeave(leave) && isLeaveValid(leave),
+          'is-past-leave tw-bg-neutral-100 tw-opacity-40':
+            !isNewLeave(leave) && !isCurrentOrFutureLeave(leave) && !isEditing,
+          'is-past-leave--editing tw-bg-neutral-100':
+            !isNewLeave(leave) && !isCurrentOrFutureLeave(leave) && isEditing,
         }"
       >
-        <Td v-if="isEditing">
-          <button
-            class="tw-bg-transparent tw-border-0 tw-text-red-600 tw-mt-1.5"
-            @click="handleRemoveLeaveClick(index)"
-          >
-            <CircleMinusIcon class="tw-w-6 tw-h-6" />
-            <span class="sr-only">Delete Leave</span>
-          </button>
-        </Td>
         <Td>
           <InputGroup
             v-if="isEditing"
@@ -88,7 +86,9 @@
             :isValid="isTypeValid(leave.type)"
             label="type"
           />
-          <span v-else>{{ leave.type }}</span>
+          <span v-else>{{
+            capitalizeEachWord(leave.type.replace("_", " "))
+          }}</span>
         </Td>
         <Td>
           <SelectGroup
@@ -100,7 +100,9 @@
             :isValid="isStatusValid(leave.status)"
             label="status"
           />
-          <span v-else>{{ leave.status }}</span>
+          <Chip v-else :color="getStatusColor(leave.status)">{{
+            leave.status
+          }}</Chip>
         </Td>
         <Td>
           <InputGroup
@@ -112,7 +114,9 @@
             type="date"
             :isValid="isStartDateValid(leave.start_date)"
           />
-          <span v-else>{{ dayjs(leave.start_date).format("YYYY-MM-DD") }}</span>
+          <span v-else>{{
+            dayjs(leave.start_date).format("MMM D, YYYY")
+          }}</span>
         </Td>
         <Td>
           <InputGroup
@@ -129,25 +133,21 @@
               })
             "
           />
-          <span v-else>{{ dayjs(leave.start_date).format("YYYY-MM-DD") }}</span>
+          <span v-else>{{ dayjs(leave.end_date).format("MMM D, YYYY") }}</span>
         </Td>
-        <Td>
-          <span
-            class="tw-border tw-text-xs tw-py-1 tw-px-2 tw-rounded-full tw-uppercase"
-            :class="{
-              'tw-border-green-600 tw-text-green-600':
-                isCurrentOrFutureLeave(leave),
-              'tw-border-neutral-400 tw-text-neutral-400':
-                !isCurrentOrFutureLeave(leave),
-            }"
+        <Td v-if="isEditing">
+          <Button
+            variant="tertiary"
+            @click="handleRemoveLeaveClick(index)"
+            class="tw-text-red-300 hover:tw-text-red-600 hover:tw-bg-red-100"
           >
-            {{ isCurrentOrFutureLeave(leave) ? "Current" : "Past" }}
-          </span>
+            Delete
+          </Button>
         </Td>
       </tr>
 
-      <tr>
-        <Td :colspan="isEditing ? 7 : 6" class="tw-text-center">
+      <tr v-if="!isEditing">
+        <Td :colspan="5" class="tw-text-center">
           <button
             v-if="hasPastLeaves"
             class="btn btn-link tw-p-0"
@@ -187,8 +187,9 @@ import AddLeaveModal from "./AddLeaveModal.vue";
 import * as api from "@/api";
 import { cloneDeep, partition } from "lodash";
 import SelectGroup from "./SelectGroup.vue";
-import { CircleMinusIcon, CirclePlusIcon } from "@/icons";
+import { CheckIcon, CircleMinusIcon, CirclePlusIcon } from "@/icons";
 import { Table, Th, Td } from "@/components/Table";
+import Chip from "./Chip.vue";
 
 const props = defineProps<{
   leaves: Leave[];
@@ -226,6 +227,7 @@ const leaveStatusOptions = computed(() => {
 });
 
 function addNewLocalLeave() {
+  isEditing.value = true;
   const randomId = Math.floor(Math.random() * 100000);
   const newLeave: NewLeave = {
     id: `TEMPID-${randomId}`,
@@ -242,6 +244,10 @@ function addNewLocalLeave() {
 const isCurrentOrFutureLeave = (leave: Leave | NewLeave) =>
   dayjs(leave.end_date).isAfter(dayjs());
 
+const isCurrentLeave = (leave: Leave | NewLeave) =>
+  dayjs(leave.start_date).isBefore(dayjs()) &&
+  dayjs(leave.end_date).isAfter(dayjs());
+
 const hasPastLeaves = computed(() => {
   return props.leaves.some((leave) => !isCurrentOrFutureLeave(leave));
 });
@@ -252,31 +258,35 @@ const sortByStartDateDescending = (a, b) => {
   return 0;
 };
 
-function hasTempId(leave: Leave | NewLeave) {
+function getStatusColor(status: LeaveStatus) {
+  switch (status) {
+    case leaveStatuses.PENDING:
+      return "orange-600";
+    case leaveStatuses.CONFIRMED:
+      return "green-600";
+    case leaveStatuses.CANCELLED:
+      return "neutral-300";
+    default:
+      return "neutral-300";
+  }
+}
+
+function isNewLeave(leave: Leave | NewLeave) {
   return typeof leave.id === "string" && leave.id.includes("TEMPID");
 }
 
 const leavesToShow = computed(() => {
-  const [newLeaves, existingLeaves] = partition(localLeaves.value, hasTempId);
+  // if we're editing, show all the leaves
+  // we do this so that the leaves don't jump into past leaves
+  // while a user is editing the date
+  if (isEditing.value) return localLeaves.value;
 
-  // sort existing leaves and if we're not sowing past leaves,
-  // only show current leaves
-  const sortedAndFilteredExistingLeaves = existingLeaves
-    .sort(sortByStartDateDescending)
-    .filter((l) => (showPastLeaves.value ? l : isCurrentOrFutureLeave(l)));
-
-  // newLeaves should always be first
-  return [...newLeaves, ...sortedAndFilteredExistingLeaves];
+  return showPastLeaves.value
+    ? localLeaves.value
+    : localLeaves.value.filter(isCurrentOrFutureLeave);
 });
 
 function handleEditToggle() {
-  localLeaves.value = cloneDeep(props.leaves)
-    .sort(sortByStartDateDescending)
-    .map((leave) => ({
-      ...leave,
-      start_date: dayjs(leave.start_date).format("YYYY-MM-DD"),
-      end_date: dayjs(leave.end_date).format("YYYY-MM-DD"),
-    }));
   isEditing.value = !isEditing.value;
 }
 
@@ -343,8 +353,16 @@ function handleRemoveLeaveClick(leaveIndex: number) {
 // local leaves as well
 watch(
   () => props.leaves,
-  () => (localLeaves.value = cloneDeep(props.leaves)),
-  { immediate: true },
+  () => {
+    localLeaves.value = cloneDeep(props.leaves)
+      .sort(sortByStartDateDescending)
+      .map((leave) => ({
+        ...leave,
+        start_date: dayjs(leave.start_date).format("YYYY-MM-DD"),
+        end_date: dayjs(leave.end_date).format("YYYY-MM-DD"),
+      }));
+  },
+  { immediate: true, deep: true },
 );
 </script>
 <style>
@@ -355,8 +373,8 @@ watch(
   & td {
     padding: 0.25rem 0.5rem;
   }
-  & td:first-child,
-  & th:first-child {
+  & td:last-child,
+  & th:last-child {
     padding: 0.25rem;
     text-align: center;
   }

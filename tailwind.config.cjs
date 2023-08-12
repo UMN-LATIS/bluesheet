@@ -22,4 +22,10 @@ module.exports = {
   corePlugins: {
     preflight: false,
   },
+  safelist: [
+    {
+      pattern:
+        /tw-(text|bg|border)-(blue|green|indigo|pink|orange|rose|neutral)-(300|600)/,
+    },
+  ],
 };
