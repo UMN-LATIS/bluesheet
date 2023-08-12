@@ -11,7 +11,7 @@
           v-model="user.send_email_reminders"
           class="form-check-input"
           type="checkbox"
-          @change="updateUser"
+          @change="api.updateUser(user)"
         />
         <label class="form-check-label small" for="send_email_reminders">
           Send me occasional reminders to update my groups
@@ -25,7 +25,7 @@
           v-model="user.notify_of_favorite_changes"
           class="form-check-input"
           type="checkbox"
-          @change="updateUser"
+          @change="api.updateUser(user)"
         />
         <label class="form-check-label small" for="notify_of_favorite_changes">
           Notify me when my favorite groups and roles change
@@ -44,62 +44,65 @@
   </div>
 </template>
 
-<script>
+<script lang="ts" setup>
+import { ref, computed, watch, onMounted } from "vue";
 import ViewUser from "@/components/ViewUser.vue";
 import Roles from "@/components/Roles.vue";
 import Leaves from "@/components/Leaves.vue";
-export default {
-  components: {
-    ViewUser,
-    Roles,
-    Leaves,
+import * as api from "@/api";
+import { User } from "@/types";
+import { useStore } from "vuex";
+import { AxiosError } from "axios";
+
+const props = defineProps<{
+  userId: number | null;
+}>();
+
+const user = ref<User | null>(null);
+const error = ref<string | null>(null);
+
+const memberships = computed(() => {
+  return user.value?.memberships ?? [];
+});
+
+const store = useStore();
+
+watch(
+  () => [props.userId, store.state.user],
+  () => {
+    if (!props.userId && !store.state.user?.id) {
+      return;
+    }
+
+    loadUser(props.userId ?? store.state.user.id);
   },
-  props: ["userId"],
-  data() {
-    return {
-      error: null,
-      user: null,
-    };
-  },
-  computed: {
-    memberships: function () {
-      if (this.user) {
-        return this.user.memberships;
-      }
-      return [];
-    },
-  },
-  watch: {
-    userId: function () {
-      this.loadUser();
-    },
-  },
-  mounted() {
-    this.loadUser();
-  },
-  methods: {
-    updateUser() {
-      axios.put("/api/user/" + this.user.id, this.user);
-    },
-    loadUser() {
-      this.error = null;
-      var targetUser = "local";
-      if (this.userId) {
-        targetUser = this.userId;
-      }
-      axios
-        .get("/api/user/" + targetUser)
-        .then((res) => {
-          this.user = res.data;
-        })
-        .catch((err) => {
-          this.error = err.response.data;
-        });
-    },
-    handleUpdateLeaves(leaves) {
-      console.log("leaves updated", leaves);
-      this.user.leaves = leaves;
-    },
-  },
-};
+  { immediate: true },
+);
+
+async function loadUser(userId: number) {
+  error.value = null;
+  try {
+    user.value = await api.getUser(userId);
+  } catch (err) {
+    console.error(err);
+    error.value =
+      (err as AxiosError).response?.data ??
+      "Sorry. There was a problem loading the user.";
+  }
+}
+
+async function handleUpdateLeaves(leaves) {
+  if (!user.value?.leaves) {
+    // this would only happen if someone had 'edit leaves' privileges
+    // but not 'view leaves' privileges
+    throw new Error("Cannot update leaves on user without leaves");
+  }
+
+  try {
+    user.value.leaves = await api.updateUserLeaves(user.value.id, leaves);
+  } catch (err) {
+    console.error(err);
+    error.value = "Sorry. There was a problem updating the leaves.";
+  }
+}
 </script>

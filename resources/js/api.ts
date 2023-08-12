@@ -20,6 +20,11 @@ export async function getUser(userId: number): Promise<User> {
   return res.data;
 }
 
+export async function updateUser(user: User) {
+  const res = await axios.put<User>(`/api/user/${user.id}`, user);
+  return res.data;
+}
+
 export async function createLeave(leave: NewLeave) {
   const res = await axios.post<Leave>(`/api/leaves`, leave);
   return res.data;
@@ -27,5 +32,12 @@ export async function createLeave(leave: NewLeave) {
 
 export async function updateLeave(leave: Leave) {
   const res = await axios.put<Leave>(`/api/leaves/${leave.id}`, leave);
+  return res.data;
+}
+
+export async function updateUserLeaves(userId: number, leaves: Leave[]) {
+  const res = await axios.put<Leave[]>(`/api/users/${userId}/leaves`, {
+    leaves,
+  });
   return res.data;
 }
