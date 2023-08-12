@@ -1,7 +1,7 @@
 <template>
   <component
     :is="componentType"
-    class="tw-inline-flex tw-items-center tw-gap-1 tw-no-underline hover:tw-no-underline tw-rounded tw-justify-center tw-leading-none tw-transition-colors tw-ease-in-out tw-group tw-cursor-pointer"
+    class="tw-inline-flex tw-items-center tw-gap-1 tw-no-underline hover:tw-no-underline tw-rounded tw-justify-center tw-leading-none tw-transition-colors tw-ease-in-out tw-group tw-cursor-pointer disabled:tw-opacity-50 disabled:tw-cursor-not-allowed"
     :class="{
       'tw-border tw-border-bs-blue tw-bg-bs-blue hover:tw-border-700 hover:tw-bg-bs-blue tw-text-blue-50 !tw-px-3 !tw-py-2':
         variant === 'primary',

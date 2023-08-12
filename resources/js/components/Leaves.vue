@@ -29,7 +29,12 @@
             <Button variant="secondary" @click="addNewLocalLeave">
               Add Leave
             </Button>
-            <Button variant="primary" @click="handleSaveLeaves">Save</Button>
+            <Button
+              variant="primary"
+              @click="handleSaveLeaves"
+              :disabled="!areAllLeavesValid"
+              >Save</Button
+            >
           </template>
         </div>
       </template>
@@ -325,6 +330,10 @@ function isLeaveValid(leave) {
     isEndDateValid({ endDate: leave.end_date, startDate: leave.start_date })
   );
 }
+
+const areAllLeavesValid = computed(() => {
+  return localLeaves.value.every(isLeaveValid);
+});
 
 async function handleSaveLeaves() {
   // strip ids from new leaves
