@@ -102,45 +102,4 @@ const filteredList = computed((): Membership[] => {
 const hasPastRoles = computed((): boolean => {
   return sortedList.value.some((role) => !isCurrentOrFutureRole(role));
 });
-
-// export default {
-//   components: {
-//     GroupTitle,
-//     Table,
-//     Td,
-//     Th,
-//   },
-//   props: ["memberships"],
-//   data() {
-//     return {
-//       includePastRoles: false,
-//     };
-//   },
-//   computed: {
-//     filteredList: function () {
-//       return this.sortedList.filter(
-//         function (role) {
-//           if (
-//             this.includePastRoles ||
-//             role.end_date == null ||
-//             dayjs(role.end_date).isAfter(dayjs())
-//           ) {
-//             return role;
-//           }
-//         }.bind(this),
-//       );
-//     },
-//     sortedList: function () {
-//       return [...this.memberships].sort((a, b) => {
-//         const dateA = dayjs(a.start_date);
-//         const dateB = dayjs(b.start_date);
-
-//         return dateA.isBefore(dateB) ? -1 : dateA.isAfter(dateB) ? 1 : 0;
-//       });
-//     },
-//   },
-//   methods: {
-//     dayjs,
-//   },
-// };
 </script>
