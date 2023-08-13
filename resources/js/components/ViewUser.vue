@@ -55,7 +55,7 @@ const props = defineProps<{
 }>();
 
 const usernameOnly = computed(() => {
-  return props.user.email.split("@").shift();
+  return props.user.email?.split("@").shift() ?? '';
 });
 
 const formattedOffice = computed(() => {

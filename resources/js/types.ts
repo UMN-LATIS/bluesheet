@@ -32,7 +32,7 @@ export interface User {
   givenname: string;
   surname: string;
   displayName: string;
-  email: string;
+  email?: string;
   umndid?: string;
   emplid?: number;
   office: string | null;
