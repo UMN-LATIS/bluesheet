@@ -4,11 +4,11 @@
       {{ error }}
     </div>
     <template v-if="user">
-      <div class="tw-flex tw-justify-between tw-flex-wrap tw-gap-4">
+      <div class="tw-flex tw-justify-between tw-flex-wrap tw-gap-4 tw-items-baseline">
         <ViewUser :user="user" />
         <aside
           v-if="user && isCurrentUser"
-          class="tw-p-4 tw-border tw-border-neutral-200 tw-rounded md:tw-rounded-lg tw-max-w-sm"
+          class="tw-max-w-xs"
         >
           <h2
             class="tw-inline-block tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-mb-4"
