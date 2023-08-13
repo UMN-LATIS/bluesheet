@@ -30,6 +30,10 @@ class User extends Authenticatable implements Auditable {
      * @var array
      */
     protected $dates = ['deleted_at'];
+    protected $casts = [
+        'send_email_reminders' => 'boolean',
+        'notify_of_favorite_changes' => 'boolean',
+    ];
 
     /**
      * The attributes that are mass assignable.
