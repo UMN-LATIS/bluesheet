@@ -173,13 +173,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, reactive, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { dayjs, $can } from "@/lib";
 import {
   Leave,
   LeaveType,
   LeaveStatus,
-  UserPermissions,
   leaveStatuses,
   leaveTypes,
   NewLeave,
@@ -188,11 +187,8 @@ import {
 import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
 import Button from "./Button.vue";
 import InputGroup from "./InputGroup.vue";
-import AddLeaveModal from "./AddLeaveModal.vue";
-import * as api from "@/api";
-import { cloneDeep, partition } from "lodash";
+import { cloneDeep } from "lodash";
 import SelectGroup from "./SelectGroup.vue";
-import { CheckIcon, CircleMinusIcon, CirclePlusIcon } from "@/icons";
 import { Table, Th, Td } from "@/components/Table";
 import Chip from "./Chip.vue";
 
@@ -249,10 +245,6 @@ function addNewLocalLeave() {
 const isCurrentOrFutureLeave = (leave: Leave | NewLeave) =>
   dayjs(leave.end_date).isAfter(dayjs());
 
-const isCurrentLeave = (leave: Leave | NewLeave) =>
-  dayjs(leave.start_date).isBefore(dayjs()) &&
-  dayjs(leave.end_date).isAfter(dayjs());
-
 const hasPastLeaves = computed(() => {
   return props.leaves.some((leave) => !isCurrentOrFutureLeave(leave));
 });
@@ -287,12 +279,13 @@ const leavesToShow = computed(() => {
   if (isEditing.value) return localLeaves.value;
 
   return showPastLeaves.value
-    ? localLeaves.value
+    ? props.leaves.sort(sortByStartDateDescending)
     : localLeaves.value.filter(isCurrentOrFutureLeave);
 });
 
 function handleEditToggle() {
   isEditing.value = !isEditing.value;
+  resetLocalLeaves();
 }
 
 function isDescriptionValid(description: string) {
@@ -358,19 +351,21 @@ function handleRemoveLeaveClick(leaveIndex: number) {
   localLeaves.value.splice(leaveIndex, 1);
 }
 
+function resetLocalLeaves() {
+  localLeaves.value = cloneDeep(props.leaves)
+    .sort(sortByStartDateDescending)
+    .map((leave) => ({
+      ...leave,
+      start_date: dayjs(leave.start_date).format("YYYY-MM-DD"),
+      end_date: dayjs(leave.end_date).format("YYYY-MM-DD"),
+    }));
+}
+
 // if leaves update, then update our list of
 // local leaves as well
 watch(
   () => props.leaves,
-  () => {
-    localLeaves.value = cloneDeep(props.leaves)
-      .sort(sortByStartDateDescending)
-      .map((leave) => ({
-        ...leave,
-        start_date: dayjs(leave.start_date).format("YYYY-MM-DD"),
-        end_date: dayjs(leave.end_date).format("YYYY-MM-DD"),
-      }));
-  },
+  () => resetLocalLeaves(),
   { immediate: true, deep: true },
 );
 </script>
