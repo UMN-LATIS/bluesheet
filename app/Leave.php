@@ -89,4 +89,13 @@ class Leave extends Model {
 
         $this->attributes['type'] = $value;
     }
+
+    // return only the date, no time to avoid timezone parsing issues
+    public function getStartDateAttribute($value) {
+        return \Carbon\Carbon::parse($value)->format('Y-m-d');
+    }
+
+    public function getEndDateAttribute($value) {
+        return \Carbon\Carbon::parse($value)->format('Y-m-d');
+    }
 }

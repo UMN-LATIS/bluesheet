@@ -352,13 +352,7 @@ function handleRemoveLeaveClick(leaveIndex: number) {
 }
 
 function resetLocalLeaves() {
-  localLeaves.value = cloneDeep(props.leaves)
-    .sort(sortByStartDateDescending)
-    .map((leave) => ({
-      ...leave,
-      start_date: dayjs(leave.start_date).format("YYYY-MM-DD"),
-      end_date: dayjs(leave.end_date).format("YYYY-MM-DD"),
-    }));
+  localLeaves.value = cloneDeep(props.leaves).sort(sortByStartDateDescending);
 }
 
 // if leaves update, then update our list of
