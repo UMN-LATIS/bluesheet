@@ -34,8 +34,8 @@ describe("Groups UI", () => {
     it("loads a group", () => {
       cy.visit("/");
       cy.get(".app-header").contains("Browse Groups").click();
-      cy.get(".table").contains("CLA").click();
-      cy.get(".table").contains("Test Group").click();
+      cy.get("table").contains("CLA").click();
+      cy.get("table").contains("Test Group").click();
       cy.contains("Committee");
     });
 

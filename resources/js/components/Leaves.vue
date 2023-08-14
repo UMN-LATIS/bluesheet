@@ -60,6 +60,7 @@
       <tr
         v-for="(leave, index) in leavesToShow"
         :key="leave.id"
+        data-cy="leaveRow"
         :class="{
           'is-invalid-leave tw-bg-red-50': !isLeaveValid(leave),
           'is-new-leave tw-bg-yellow-50':
@@ -70,7 +71,7 @@
             !isNewLeave(leave) && !isCurrentOrFutureLeave(leave) && isEditing,
         }"
       >
-        <Td>
+        <Td data-cy="leaveDescription">
           <InputGroup
             v-if="isEditing"
             v-model="leave.description"
@@ -81,7 +82,7 @@
           />
           <span v-else>{{ leave.description }}</span>
         </Td>
-        <Td>
+        <Td data-cy="leaveType">
           <SelectGroup
             v-if="isEditing"
             v-model="localLeaves[index].type"
@@ -95,7 +96,7 @@
             capitalizeEachWord(leave.type.replace("_", " "))
           }}</span>
         </Td>
-        <Td>
+        <Td data-cy="leaveStatus">
           <SelectGroup
             v-if="isEditing"
             v-model="localLeaves[index].status"
@@ -109,7 +110,7 @@
             leave.status
           }}</Chip>
         </Td>
-        <Td>
+        <Td data-cy="leaveStartDate">
           <InputGroup
             v-if="isEditing"
             v-model="localLeaves[index].start_date"
@@ -123,7 +124,7 @@
             dayjs(leave.start_date).format("MMM D, YYYY")
           }}</span>
         </Td>
-        <Td>
+        <Td data-cy="leaveEndDate">
           <InputGroup
             v-if="isEditing"
             v-model="localLeaves[index].end_date"

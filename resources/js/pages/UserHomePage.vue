@@ -4,12 +4,11 @@
       {{ error }}
     </div>
     <template v-if="user">
-      <div class="tw-flex tw-justify-between tw-flex-wrap tw-gap-4 tw-items-baseline">
+      <div
+        class="tw-flex tw-justify-between tw-flex-wrap tw-gap-4 tw-items-baseline"
+      >
         <ViewUser :user="user" />
-        <aside
-          v-if="user && isCurrentUser"
-          class="tw-max-w-xs"
-        >
+        <aside v-if="user && isCurrentUser" class="tw-max-w-xs">
           <h2
             class="tw-inline-block tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-mb-4"
           >
@@ -71,15 +70,29 @@ const memberships = computed(() => {
 });
 
 const store = useStore();
+const isLoadingUser = ref(false);
 
 watch(
-  () => [props.userId, store.state.user],
-  () => {
-    if (!props.userId && !store.state.user?.id) {
+  [() => props.userId, () => store.state.user],
+  async () => {
+    if (isLoadingUser.value) return;
+
+    // if we're using current user, and it's not loaded, wait
+    if (props.userId === null) {
+      user.value = store.state.user;
       return;
     }
 
-    loadUser(props.userId ?? store.state.user.id);
+    // if the userId matches the current user, use the current user
+    if (props.userId === store.state.user?.id) {
+      user.value = store.state.user;
+      return;
+    }
+
+    // otherwise, load the user
+    isLoadingUser.value = true;
+    await loadUser(props.userId);
+    isLoadingUser.value = false;
   },
   { immediate: true },
 );
