@@ -12,17 +12,26 @@
           class="tw-flex tw-items-center tw-gap-2"
           v-if="$can('edit leaves')"
         >
+          <CheckboxGroup
+            v-if="!isEditing"
+            id="show-past-leaves-checkbox"
+            v-model="showPastLeaves"
+            label="Show Past Leaves"
+            class="tw-pr-2"
+          />
           <template v-if="!isEditing">
             <Button variant="secondary" @click="addNewLocalLeave">
               Add Leave
             </Button>
-            <Button variant="primary" @click="handleEditToggle"> Edit </Button>
+            <Button variant="primary" @click="handleEditAllLeavesToggle">
+              Edit
+            </Button>
           </template>
           <template v-else>
             <Button
               variant="tertiary"
               v-if="isEditing"
-              @click="handleEditToggle"
+              @click="handleEditAllLeavesToggle"
             >
               Cancel
             </Button>
@@ -31,9 +40,11 @@
             </Button>
             <Button
               variant="primary"
-              @click="handleSaveLeaves"
-              :disabled="!areAllLeavesValid"
-              >Save</Button
+              @click="handleSaveAllLeaves"
+              :disabled="
+                !areAllLeavesValid || !localLeaves.some(hasLeaveChanged)
+              "
+              >Save All</Button
             >
           </template>
         </div>
@@ -63,8 +74,8 @@
         data-cy="leaveRow"
         :class="{
           'is-invalid-leave tw-bg-red-50': !isLeaveValid(leave),
-          'is-new-leave tw-bg-yellow-50':
-            isEditing && isNewLeave(leave) && isLeaveValid(leave),
+          'is-new-leave tw-bg-blue-50':
+            isEditing && hasLeaveChanged(leave) && isLeaveValid(leave),
           'is-past-leave tw-bg-neutral-100 tw-opacity-40':
             !isNewLeave(leave) && !isCurrentOrFutureLeave(leave) && !isEditing,
           'is-past-leave--editing tw-bg-neutral-100':
@@ -144,28 +155,27 @@
         <Td v-if="isEditing">
           <Button
             variant="tertiary"
-            @click="handleRemoveLeaveClick(index)"
-            class="tw-text-red-300 hover:tw-text-red-600 hover:tw-bg-red-100"
+            @click="handleCancelEditLeave(leave)"
+            :disabled="!hasLeaveChanged(leave) || !isLeaveValid(leave)"
+            class="disabled:hover:tw-bg-transparent disabled:tw-text-neutral-400 disabled:tw-cursor-not-allowed tw-mr-2"
           >
-            Delete
+            Cancel
           </Button>
-        </Td>
-      </tr>
 
-      <tr v-if="!isEditing && hasPastLeaves">
-        <Td :colspan="5" class="tw-text-center !tw-p-2">
           <Button
             variant="tertiary"
-            class="btn btn-link tw-p-0"
-            @click="showPastLeaves = !showPastLeaves"
+            @click="handleSaveLeave(leave)"
+            :disabled="!hasLeaveChanged(leave) || !isLeaveValid(leave)"
+            class="disabled:hover:tw-bg-transparent disabled:tw-text-neutral-400 disabled:tw-cursor-not-allowed tw-mr-2"
           >
-            {{ showPastLeaves ? "Hide Past" : "Show Past" }}
-            <ChevronDownIcon
-              class="tw-w-4 tw-h-4"
-              :class="{
-                'tw-rotate-180': showPastLeaves,
-              }"
-            />
+            Save
+          </Button>
+          <Button
+            variant="tertiary"
+            @click="handleRemoveLeaveClick(index)"
+            class="tw-text-red-500 hover:tw-text-red-600 hover:tw-bg-red-100"
+          >
+            Delete
           </Button>
         </Td>
       </tr>
@@ -188,10 +198,11 @@ import {
 import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
 import Button from "./Button.vue";
 import InputGroup from "./InputGroup.vue";
-import { cloneDeep } from "lodash";
+import { cloneDeep, has } from "lodash";
 import SelectGroup from "./SelectGroup.vue";
 import { Table, Th, Td } from "@/components/Table";
 import Chip from "./Chip.vue";
+import CheckboxGroup from "./CheckboxGroup.vue";
 
 const props = defineProps<{
   leaves: Leave[];
@@ -243,6 +254,15 @@ function addNewLocalLeave() {
   localLeaves.value = [newLeave, ...localLeaves.value];
 }
 
+function hasLeaveChanged(leave: Leave | NewLeave): boolean {
+  const savedLeave = props.leaves.find((l) => l.id === leave.id);
+  // if we can't find the saved leave, then it must be new
+  if (!savedLeave) return true;
+
+  // otherwise, check if props have changed
+  return JSON.stringify(leave) !== JSON.stringify(savedLeave);
+}
+
 const isCurrentOrFutureLeave = (leave: Leave | NewLeave) =>
   dayjs(leave.end_date).isAfter(dayjs());
 
@@ -284,7 +304,7 @@ const leavesToShow = computed(() => {
     : localLeaves.value.filter(isCurrentOrFutureLeave);
 });
 
-function handleEditToggle() {
+function handleEditAllLeavesToggle() {
   isEditing.value = !isEditing.value;
   resetLocalLeaves();
 }
@@ -329,7 +349,23 @@ const areAllLeavesValid = computed(() => {
   return localLeaves.value.every(isLeaveValid);
 });
 
-async function handleSaveLeaves() {
+async function handleCancelEditLeave(leave: Leave | NewLeave) {
+  if (isNewLeave(leave)) {
+    handleRemoveLeaveClick(localLeaves.value.indexOf(leave));
+    return;
+  }
+  const savedLeave = props.leaves.find((l) => l.id === leave.id);
+  const indexOfEditedLocalLeave = localLeaves.value.indexOf(leave);
+  if (savedLeave) {
+    localLeaves.value[indexOfEditedLocalLeave] = savedLeave;
+  }
+}
+
+async function handleSaveLeave(leave: Leave | NewLeave) {
+  console.log(leave);
+}
+
+async function handleSaveAllLeaves() {
   // strip ids from new leaves
   const leavesToSave = localLeaves.value.map((leave) => {
     const isNewLeave =
