@@ -18,11 +18,10 @@
       :type="type"
       :value="modelValue"
       :placeholder="placeholder"
-      class="form-control tw-text-sm"
+      class="form-control tw-text-sm tw-bg-transparent tw-border"
       :class="[
         {
           'is-invalid': !isValid && isTouched,
-          'is-valid': isValid && isTouched,
         },
         inputClass,
       ]"

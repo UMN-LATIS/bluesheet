@@ -17,11 +17,10 @@
       :id="selectId"
       :value="modelValue"
       :required="required"
-      class="form-control tw-text-sm"
+      class="form-control tw-text-sm tw-bg-transparent"
       :class="[
         {
           'is-invalid': !isValid && isTouched,
-          'is-valid': isValid && isTouched,
         },
         selectClass,
       ]"
