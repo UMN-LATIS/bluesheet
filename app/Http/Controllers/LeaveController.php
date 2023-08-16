@@ -11,18 +11,6 @@ use Auth;
 
 class LeaveController extends Controller {
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index(Request $request) {
-        abort_if($request->user()->cannot('view leaves'), 403);
-
-        $leaves = Leave::with('user')->paginate(50);
-        return $leaves;
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
