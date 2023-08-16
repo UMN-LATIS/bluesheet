@@ -3,93 +3,124 @@
     <div v-if="error" class="alert alert-danger" role="alert">
       {{ error }}
     </div>
-    <ViewUser v-if="user" :user="user" />
-    <div v-if="user && !userId" class="col-md-6">
-      <div class="form-check">
-        <input
-          id="send_email_reminders"
-          v-model="user.send_email_reminders"
-          class="form-check-input"
-          type="checkbox"
-          @change="updateUser"
-        />
-        <label class="form-check-label small" for="send_email_reminders">
-          Send me occasional reminders to update my groups
-        </label>
+    <template v-if="user">
+      <div
+        class="tw-flex tw-justify-between tw-flex-wrap tw-gap-4 tw-items-baseline"
+      >
+        <ViewUser :user="user" />
+        <aside v-if="user && isCurrentUser" class="tw-max-w-xs">
+          <h2
+            class="tw-inline-block tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-mb-4"
+          >
+            Notifications
+          </h2>
+          <CheckboxGroup
+            id="notify_of_favorite_changes"
+            v-model="user.notify_of_favorite_changes"
+            label="Changes"
+            description="Notify me when my favorite groups and roles change."
+            @update:modelValue="api.updateUser(user)"
+          />
+          <CheckboxGroup
+            id="send_email_reminders"
+            v-model="user.send_email_reminders"
+            label="Reminders"
+            description="Send me occasional reminders to update my groups."
+            @update:modelValue="api.updateUser(user)"
+          />
+        </aside>
       </div>
-    </div>
-    <div v-if="user && !userId" class="col-md-6">
-      <div class="form-check">
-        <input
-          id="notify_of_favorite_changes"
-          v-model="user.notify_of_favorite_changes"
-          class="form-check-input"
-          type="checkbox"
-          @change="updateUser"
-        />
-        <label class="form-check-label small" for="notify_of_favorite_changes">
-          Notify me when my favorite groups and roles change
-        </label>
-      </div>
-    </div>
-    <Roles id="v-step-4" :memberships="memberships"></Roles>
 
-    <Leaves v-if="user && user.leaves" :leaves="user.leaves"></Leaves>
+      <Roles id="v-step-4" :memberships="memberships" class="tw-mt-12"></Roles>
+
+      <Leaves
+        v-if="user && user.leaves"
+        :leaves="user.leaves"
+        :userId="user.id"
+        @update="handleUpdateLeaves"
+        class="tw-mt-12"
+      ></Leaves>
+    </template>
   </div>
 </template>
 
-<script>
+<script lang="ts" setup>
+import { ref, computed, watch, onMounted } from "vue";
 import ViewUser from "@/components/ViewUser.vue";
 import Roles from "@/components/Roles.vue";
 import Leaves from "@/components/Leaves.vue";
-export default {
-  components: {
-    ViewUser,
-    Roles,
-    Leaves,
+import * as api from "@/api";
+import { User } from "@/types";
+import { useStore } from "vuex";
+import { AxiosError } from "axios";
+import CheckboxGroup from "@/components/CheckboxGroup.vue";
+
+const props = defineProps<{
+  userId: number | null;
+}>();
+
+const user = ref<User | null>(null);
+const error = ref<string | null>(null);
+const isCurrentUser = computed(() => {
+  return user.value?.id === store.state.user?.id;
+});
+
+const memberships = computed(() => {
+  return user.value?.memberships ?? [];
+});
+
+const store = useStore();
+const isLoadingUser = ref(false);
+
+watch(
+  [() => props.userId, () => store.state.user],
+  async () => {
+    if (isLoadingUser.value) return;
+
+    // if we're using current user, and it's not loaded, wait
+    if (props.userId === null) {
+      user.value = store.state.user;
+      return;
+    }
+
+    // if the userId matches the current user, use the current user
+    if (props.userId === store.state.user?.id) {
+      user.value = store.state.user;
+      return;
+    }
+
+    // otherwise, load the user
+    isLoadingUser.value = true;
+    await loadUser(props.userId);
+    isLoadingUser.value = false;
   },
-  props: ["userId"],
-  data() {
-    return {
-      error: null,
-      user: null,
-    };
-  },
-  computed: {
-    memberships: function () {
-      if (this.user) {
-        return this.user.memberships;
-      }
-      return [];
-    },
-  },
-  watch: {
-    userId: function () {
-      this.loadUser();
-    },
-  },
-  mounted() {
-    this.loadUser();
-  },
-  methods: {
-    updateUser() {
-      axios.put("/api/user/" + this.user.id, this.user);
-    },
-    loadUser() {
-      this.error = null;
-      var targetUser = "local";
-      if (this.userId) {
-        targetUser = this.userId;
-      }
-      axios
-        .get("/api/user/" + targetUser)
-        .then((res) => {
-          this.user = res.data;
-        })
-        .catch((err) => {
-          this.error = err.response.data;
-        });
-    },
-  },
-};
+  { immediate: true },
+);
+
+async function loadUser(userId: number) {
+  error.value = null;
+  try {
+    user.value = await api.getUser(userId);
+  } catch (err) {
+    console.error(err);
+    error.value =
+      (err as AxiosError).response?.data ??
+      "Sorry. There was a problem loading the user.";
+  }
+}
+
+async function handleUpdateLeaves(leaves) {
+  if (!user.value?.leaves) {
+    // this would only happen if someone had 'edit leaves' privileges
+    // but not 'view leaves' privileges
+    throw new Error("Cannot update leaves on user without leaves");
+  }
+
+  try {
+    user.value.leaves = await api.updateUserLeaves(user.value.id, leaves);
+  } catch (err) {
+    console.error(err);
+    error.value = "Sorry. There was a problem updating the leaves.";
+  }
+}
 </script>

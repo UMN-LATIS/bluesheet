@@ -146,14 +146,6 @@ p {
   color: #707070;
 }
 
-.tw-flex {
-  display: flex;
-}
-
-.tw-gap-1 {
-  gap: 0.25rem;
-}
-
 .fade-slide-enter-active,
 .fade-slide-leave-active {
   transition:
@@ -171,4 +163,14 @@ p {
 .fade-slide-leave-from {
   opacity: 1;
   transform: translateY(0);
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }

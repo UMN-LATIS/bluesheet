@@ -2,7 +2,6 @@ import { defineConfig } from "cypress";
 
 export default defineConfig({
   chromeWebSecurity: false,
-  retries: 2,
   defaultCommandTimeout: 5000,
   watchForFileChanges: true,
   videosFolder: "tests/cypress/videos",
@@ -13,7 +12,8 @@ export default defineConfig({
   viewportHeight: 1080,
   e2e: {
     baseUrl: "http://localhost",
-    specPattern: "tests/cypress/integration/**/*.{test,spec}.js",
-    supportFile: "tests/cypress/support/index.js",
+    specPattern: "tests/cypress/integration/**/*.{test,spec}.[jt]s",
+    supportFile: "tests/cypress/support/index.ts",
+    experimentalRunAllSpecs: true,
   },
 });

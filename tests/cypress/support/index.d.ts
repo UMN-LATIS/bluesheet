@@ -9,7 +9,7 @@ declare namespace Cypress {
      * cy.login()
      * cy.login({ id: 1 })
      */
-    login(attributes?: object): Chainable<any>;
+    login(umndid: string): Chainable<any>;
 
     /**
      * Log out the current user.
@@ -52,7 +52,16 @@ declare namespace Cypress {
      * cy.create('App\\User', 2, { active: false });
      * cy.create({ model: 'App\\User', state: ['guest'], relations: ['profile'], count: 2 }
      */
-    create(): Chainable<any>;
+    create(model: string): Chainable<any>;
+    create(model: string, count: number): Chainable<any>;
+    create(model: string, count: number, props: object): Chainable<any>;
+    create(options: {
+      model: string;
+      state?: string[];
+      load?: string[];
+      count?: number;
+      attributes?: object;
+    });
 
     /**
      * Refresh the database state using Laravel's migrate:fresh command.
@@ -92,5 +101,10 @@ declare namespace Cypress {
      * cy.php('App\\User::count()')
      */
     php(command: string): Chainable<any>;
+
+    /**
+     * Get a user by their username (umndid).
+     */
+    getUserByUsername(umndid: string): Chainable<any>;
   }
 }

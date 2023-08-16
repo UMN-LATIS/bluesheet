@@ -44,11 +44,11 @@ class SchedulingController extends Controller
                             $user->save();
                         }
                     }
-                    
+
                     if($user) {
                         $course->instructor = $user;
                     }
-                    
+
                 }
             }
         }
@@ -57,6 +57,6 @@ class SchedulingController extends Controller
             "terms"=>$terms,
             "courses"=>$courses
         ]);
-        
+
     }
 }

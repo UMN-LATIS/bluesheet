@@ -14,93 +14,90 @@ class TestGroupsGroupTypeRoleTableSeeder extends Seeder
      */
     public function run()
     {
-        
 
-        \DB::table('group_type_role')->delete();
-        
         \DB::table('group_type_role')->insert(array (
-            0 => 
+            0 =>
             array (
                 'group_type_id' => 3,
                 'role_id' => 11,
             ),
-            1 => 
+            1 =>
             array (
                 'group_type_id' => 3,
                 'role_id' => 12,
             ),
-            2 => 
+            2 =>
             array (
                 'group_type_id' => 3,
                 'role_id' => 13,
             ),
-            3 => 
+            3 =>
             array (
                 'group_type_id' => 3,
                 'role_id' => 14,
             ),
-            4 => 
+            4 =>
             array (
                 'group_type_id' => 3,
                 'role_id' => 15,
             ),
-            5 => 
+            5 =>
             array (
                 'group_type_id' => 3,
                 'role_id' => 16,
             ),
-            6 => 
+            6 =>
             array (
                 'group_type_id' => 3,
                 'role_id' => 17,
             ),
-            7 => 
+            7 =>
             array (
                 'group_type_id' => 3,
                 'role_id' => 18,
             ),
-            8 => 
+            8 =>
             array (
                 'group_type_id' => 3,
                 'role_id' => 19,
             ),
-            9 => 
+            9 =>
             array (
                 'group_type_id' => 3,
                 'role_id' => 21,
             ),
-            10 => 
+            10 =>
             array (
                 'group_type_id' => 3,
                 'role_id' => 22,
             ),
-            11 => 
+            11 =>
             array (
                 'group_type_id' => 3,
                 'role_id' => 23,
             ),
-            12 => 
+            12 =>
             array (
                 'group_type_id' => 3,
                 'role_id' => 24,
             ),
-            13 => 
+            13 =>
             array (
                 'group_type_id' => 3,
                 'role_id' => 30,
             ),
-            14 => 
+            14 =>
             array (
                 'group_type_id' => 3,
                 'role_id' => 39,
             ),
-            15 => 
+            15 =>
             array (
                 'group_type_id' => 3,
                 'role_id' => 51,
             ),
         ));
-        
-        
+
+
     }
 }

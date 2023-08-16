@@ -19,6 +19,17 @@ import MissingOfficialReportPage from "./pages/reports/MissingOfficialReportPage
 import OrgpReportPage from "./pages/reports/OrgpReportPage.vue";
 import SchedulingReportPage from "./pages/reports/SchedulingReportPage.vue";
 
+function parseIntFromParam(
+  param: string | string[] | undefined,
+): number | null {
+  if (typeof param !== "string") {
+    return null;
+  }
+
+  const n = Number.parseInt(param);
+  return Number.isNaN(n) ? null : n;
+}
+
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -27,7 +38,9 @@ export const router = createRouter({
       name: "user",
       path: "/user/:userId?",
       component: UserHomePage,
-      props: true,
+      props: (route) => ({
+        userId: parseIntFromParam(route.params.userId),
+      }),
     },
     {
       name: "userList",
