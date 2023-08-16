@@ -39,7 +39,8 @@ class LeaveController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function show(Leave $leave) {
-        abort_if(Auth::user()->cannot('view', $leave), 403);
+        $currentUser = Auth::user();
+        abort_if($currentUser->cannot('view leave') && $leave->user_id !== $currentUser->id, 403);
 
         return $leave->load('user');
     }
