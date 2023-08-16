@@ -2,9 +2,8 @@
   <tr
     data-cy="leaveRow"
     :class="{
+      'is-new-leave': isNewLeave,
       'is-invalid-leave tw-bg-red-50': !isLeaveValid,
-      'is-new-leave tw-bg-blue-50':
-        isEditing && (hasLeaveChanged || isNewLeave) && isLeaveValid,
       'is-past-leave tw-bg-neutral-100':
         !isNewLeave && !isCurrentOrFutureLeave && !isEditing,
       'is-past-leave--editing tw-bg-neutral-100':
