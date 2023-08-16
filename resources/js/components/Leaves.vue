@@ -8,10 +8,7 @@
   >
     <Table name="Leaves">
       <template #actions>
-        <div
-          class="tw-flex tw-items-center tw-gap-2"
-          v-if="$can('edit leaves')"
-        >
+        <div class="tw-flex tw-items-center tw-gap-2">
           <CheckboxGroup
             id="show-past-leaves-checkbox"
             v-model="showPastLeaves"
