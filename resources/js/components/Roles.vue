@@ -1,5 +1,15 @@
 <template>
   <Table name="Roles">
+    <template #actions>
+      <div class="tw-flex tw-items-center tw-gap-4">
+        <CheckboxGroup
+          id="show-past-roles-checkbox"
+          v-model="showPastRoles"
+          label="Show Past Roles"
+        />
+      </div>
+    </template>
+
     <template #thead>
       <tr>
         <Th>Group</Th>
@@ -43,23 +53,6 @@
         }}
       </Td>
     </tr>
-    <tr v-if="hasPastRoles">
-      <Td :colspan="5" class="tw-text-center">
-        <Button
-          variant="tertiary"
-          class="btn btn-link tw-p-0"
-          @click="showPastRoles = !showPastRoles"
-        >
-          {{ showPastRoles ? "Hide Past" : "Show Past" }}
-          <ChevronDownIcon
-            class="tw-w-4 tw-h-4"
-            :class="{
-              'tw-rotate-180': showPastRoles,
-            }"
-          />
-        </Button>
-      </Td>
-    </tr>
   </Table>
 </template>
 
@@ -69,8 +62,7 @@ import GroupTitle from "../components/GroupTitle.vue";
 import { dayjs } from "../lib";
 import { Table, Td, Th } from "@/components/Table";
 import { Membership } from "@/types";
-import Button from "./Button.vue";
-import { ChevronDownIcon } from "@/icons";
+import CheckboxGroup from "./CheckboxGroup.vue";
 
 const props = defineProps<{
   memberships: Membership[];
