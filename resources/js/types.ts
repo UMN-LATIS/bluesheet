@@ -39,9 +39,9 @@ export interface User {
   phone?: string | null;
   title: string | null;
   ou: string | null;
-  memberships: [];
-  favoriteGroups: [];
-  favoriteRoles: [];
+  memberships: Membership[];
+  favoriteGroups: Group[];
+  favoriteRoles: MemberRole[];
   seen_tour?: boolean;
   send_email_reminders: boolean;
   notify_of_favorite_changes: boolean;
@@ -61,6 +61,7 @@ export interface Membership {
   end_date: ISODate | null;
   admin: 1 | 0;
   notes: null;
+  group: Group;
 }
 
 export interface GroupType {
