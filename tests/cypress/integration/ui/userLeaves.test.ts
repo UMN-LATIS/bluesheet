@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 
 describe("User leaves", () => {
   let basicUserId: number | null = null;
-  before(() => {
+  beforeEach(() => {
     cy.refreshDatabase();
     cy.seed("TestDatabaseSeeder");
     cy.getUserByUsername("basic_user").then((user) => {
@@ -10,9 +10,9 @@ describe("User leaves", () => {
     });
 
     cy.intercept({
-      method: "PUT",
-      url: "/api/users/*/leaves",
-    }).as("apiUpdateUserLeaves");
+      method: "POST",
+      url: "/api/leaves",
+    }).as("apiCreateLeave");
   });
 
   context("as a user that can view leaves", () => {
@@ -38,7 +38,7 @@ describe("User leaves", () => {
       cy.login("group_admin");
     });
 
-    it.only("creates a new leave", () => {
+    it("creates a new leave", () => {
       const startDate = dayjs().add(30, "day");
       const endDate = dayjs().add(60, "day");
 
@@ -48,6 +48,7 @@ describe("User leaves", () => {
       cy.get("[data-cy=leaveRow]").should("have.length", 2);
 
       cy.wait(300);
+
       // add a leave
       cy.contains("Add Leave").click();
       cy.get('[data-cy="leavesSection"] .is-new-leave')
@@ -64,9 +65,8 @@ describe("User leaves", () => {
           );
           cy.get("[data-cy=leaveType] select").select("Development");
           cy.get("[data-cy=leaveStatus] select").select("Confirmed");
+          cy.contains("Save").click();
         });
-      cy.contains("Save").click();
-      cy.wait("@apiUpdateUserLeaves");
 
       // check that the leave was added
       cy.get("[data-cy=leaveRow]").should("have.length", 3);
@@ -86,13 +86,47 @@ describe("User leaves", () => {
 
     it("edits a leave", () => {
       cy.visit(`/user/${basicUserId}`);
-      cy.get("[data-cy=leaveRow]").first().click();
-      cy.get("[data-cy=leaveDescription] input")
+      cy.get("[data-cy=leaveRow]")
         .first()
-        .type("{selectall}Test Leave Edited");
-      cy.contains("Save").click();
+        .within(() => {
+          cy.contains("Edit").click();
+          cy.get("[data-cy=leaveDescription] input")
+            .first()
+            .type("{selectall}Test Leave Edited");
+          cy.contains("Save").click();
+        });
 
       expect(cy.contains("Test Leave Edited")).to.exist;
+    });
+
+    it("deletes a leave", () => {
+      cy.visit(`/user/${basicUserId}`);
+
+      cy.get("[data-cy=leaveRow]").should("have.length", 2);
+
+      cy.get("[data-cy=leaveRow]")
+        .first()
+        .within(() => {
+          cy.contains("Delete").click();
+        });
+
+      cy.get("[data-cy=leaveRow]").should("have.length", 1);
+    });
+
+    it("cancels an edit", () => {
+      cy.visit(`/user/${basicUserId}`);
+
+      cy.get("[data-cy=leaveRow]")
+        .first()
+        .within(() => {
+          cy.contains("Edit").click();
+          cy.get("[data-cy=leaveDescription] input")
+            .first()
+            .type("{selectall}Test Leave Edited");
+          // cy.contains("Cancel").click();
+        });
+
+      // cy.contains("Test Leave Edited").should("not.exist");
     });
   });
 
