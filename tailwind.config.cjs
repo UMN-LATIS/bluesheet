@@ -25,7 +25,7 @@ module.exports = {
   safelist: [
     {
       pattern:
-        /tw-(text|bg|border)-(blue|green|indigo|pink|orange|rose|neutral)-(300|600)/,
+        /tw-(text|bg|border)-(blue|green|indigo|pink|orange|rose|neutral)-(400|600)/,
     },
   ],
 };

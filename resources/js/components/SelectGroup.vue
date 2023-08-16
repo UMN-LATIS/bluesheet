@@ -1,5 +1,5 @@
 <template>
-  <div class="form-group">
+  <div class="form-group tw-mb-0">
     <label
       :for="selectId"
       class="tw-uppercase tw-text-neutral-500 tw-font-bold tw-text-xs tw-tracking-wider tw-mb-1 tw-block"

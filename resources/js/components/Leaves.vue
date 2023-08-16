@@ -8,10 +8,7 @@
   >
     <Table name="Leaves">
       <template #actions>
-        <div
-          class="tw-flex tw-items-center tw-gap-2"
-          v-if="$can('edit leaves')"
-        >
+        <div class="tw-flex tw-items-center tw-gap-2">
           <CheckboxGroup
             v-if="!isEditing"
             id="show-past-leaves-checkbox"
@@ -19,33 +16,10 @@
             label="Show Past Leaves"
             class="tw-pr-2"
           />
-          <template v-if="!isEditing">
+          <template v-if="$can('edit leaves')">
             <Button variant="secondary" @click="addNewLocalLeave">
               Add Leave
             </Button>
-            <Button variant="primary" @click="handleEditAllLeavesToggle">
-              Edit
-            </Button>
-          </template>
-          <template v-else>
-            <Button
-              variant="tertiary"
-              v-if="isEditing"
-              @click="handleEditAllLeavesToggle"
-            >
-              Cancel
-            </Button>
-            <Button variant="secondary" @click="addNewLocalLeave">
-              Add Leave
-            </Button>
-            <Button
-              variant="primary"
-              @click="handleSaveAllLeaves"
-              :disabled="
-                !areAllLeavesValid || !localLeaves.some(hasLeaveChanged)
-              "
-              >Save All</Button
-            >
           </template>
         </div>
       </template>
@@ -57,12 +31,12 @@
           <Th>Status</Th>
           <Th>Start Date</Th>
           <Th>End Date</Th>
-          <Th v-if="isEditing"></Th>
+          <Th v-if="$can('edit leaves')"></Th>
         </tr>
       </template>
       <tr v-if="!leavesToShow.length">
         <Td
-          :colspan="isEditing ? 7 : 6"
+          :colspan="$can('edit leaves') ? 6 : 5"
           class="tw-text-center !tw-p-6 tw-italic tw-text-neutral-500"
         >
           No Leaves
@@ -75,31 +49,44 @@
         :class="{
           'is-invalid-leave tw-bg-red-50': !isLeaveValid(leave),
           'is-new-leave tw-bg-blue-50':
-            isEditing && hasLeaveChanged(leave) && isLeaveValid(leave),
+            leave.isEditing && hasLeaveChanged(leave) && isLeaveValid(leave),
           'is-past-leave tw-bg-neutral-100 tw-opacity-40':
-            !isNewLeave(leave) && !isCurrentOrFutureLeave(leave) && !isEditing,
+            !isNewLeave(leave) &&
+            !isCurrentOrFutureLeave(leave) &&
+            !leave.isEditing,
           'is-past-leave--editing tw-bg-neutral-100':
-            !isNewLeave(leave) && !isCurrentOrFutureLeave(leave) && isEditing,
+            !isNewLeave(leave) &&
+            !isCurrentOrFutureLeave(leave) &&
+            leave.isEditing,
         }"
       >
-        <Td data-cy="leaveDescription">
+        <Td
+          data-cy="leaveDescription"
+          class="!tw-whitespace-normal"
+          :class="{
+            '!tw-p-2': leave.isEditing,
+          }"
+        >
           <InputGroup
-            v-if="isEditing"
+            v-if="leave.isEditing"
             v-model="leave.description"
             label="description"
             :showLabel="false"
-            class="tw-mb-0"
             :isValid="isDescriptionValid(leave.description)"
           />
           <span v-else>{{ leave.description }}</span>
         </Td>
-        <Td data-cy="leaveType">
+        <Td
+          data-cy="leaveType"
+          :class="{
+            '!tw-px-2 !tw-py-1': leave.isEditing,
+          }"
+        >
           <SelectGroup
-            v-if="isEditing"
-            v-model="localLeaves[index].type"
+            v-if="leave.isEditing"
+            v-model="leave.type"
             :options="leaveTypeOptions"
             :showLabel="false"
-            class="tw-mb-0"
             :isValid="isTypeValid(leave.type)"
             label="type"
           />
@@ -107,13 +94,17 @@
             capitalizeEachWord(leave.type.replace("_", " "))
           }}</span>
         </Td>
-        <Td data-cy="leaveStatus">
+        <Td
+          data-cy="leaveStatus"
+          :class="{
+            '!tw-px-2 !tw-py-1': leave.isEditing,
+          }"
+        >
           <SelectGroup
-            v-if="isEditing"
-            v-model="localLeaves[index].status"
+            v-if="leave.isEditing"
+            v-model="leave.status"
             :options="leaveStatusOptions"
             :showLabel="false"
-            class="tw-mb-0"
             :isValid="isStatusValid(leave.status)"
             label="status"
           />
@@ -121,13 +112,17 @@
             leave.status
           }}</Chip>
         </Td>
-        <Td data-cy="leaveStartDate">
+        <Td
+          data-cy="leaveStartDate"
+          :class="{
+            '!tw-px-2 !tw-py-1': leave.isEditing,
+          }"
+        >
           <InputGroup
-            v-if="isEditing"
-            v-model="localLeaves[index].start_date"
+            v-if="leave.isEditing"
+            v-model="leave.start_date"
             label="start date"
             :showLabel="false"
-            class="tw-mb-0"
             type="date"
             :isValid="isStartDateValid(leave.start_date)"
           />
@@ -135,13 +130,17 @@
             dayjs(leave.start_date).format("MMM D, YYYY")
           }}</span>
         </Td>
-        <Td data-cy="leaveEndDate">
+        <Td
+          data-cy="leaveEndDate"
+          :class="{
+            '!tw-px-2 !tw-py-1': leave.isEditing,
+          }"
+        >
           <InputGroup
-            v-if="isEditing"
-            v-model="localLeaves[index].end_date"
+            v-if="leave.isEditing"
+            v-model="leave.end_date"
             label="start date"
             :showLabel="false"
-            class="tw-mb-0"
             type="date"
             :isValid="
               isEndDateValid({
@@ -152,31 +151,43 @@
           />
           <span v-else>{{ dayjs(leave.end_date).format("MMM D, YYYY") }}</span>
         </Td>
-        <Td v-if="isEditing">
-          <Button
-            variant="tertiary"
-            @click="handleCancelEditLeave(leave)"
-            :disabled="!hasLeaveChanged(leave) || !isLeaveValid(leave)"
-            class="disabled:hover:tw-bg-transparent disabled:tw-text-neutral-400 disabled:tw-cursor-not-allowed tw-mr-2"
-          >
-            Cancel
-          </Button>
+        <Td
+          v-if="$can('edit leaves')"
+          :class="{
+            '!tw-px-2 !tw-py-1': leave.isEditing,
+          }"
+        >
+          <template v-if="leave.isEditing">
+            <Button
+              variant="tertiary"
+              @click="handleCancelEditLeave(leave)"
+              class="disabled:hover:tw-bg-transparent disabled:tw-text-neutral-400 disabled:tw-cursor-not-allowed tw-mr-2"
+            >
+              Cancel
+            </Button>
 
-          <Button
-            variant="tertiary"
-            @click="handleSaveLeave(leave)"
-            :disabled="!hasLeaveChanged(leave) || !isLeaveValid(leave)"
-            class="disabled:hover:tw-bg-transparent disabled:tw-text-neutral-400 disabled:tw-cursor-not-allowed tw-mr-2"
-          >
-            Save
-          </Button>
-          <Button
-            variant="tertiary"
-            @click="handleRemoveLeaveClick(index)"
-            class="tw-text-red-500 hover:tw-text-red-600 hover:tw-bg-red-100"
-          >
-            Delete
-          </Button>
+            <Button
+              variant="tertiary"
+              @click="handleSaveLeave(leave)"
+              :disabled="!hasLeaveChanged(leave) || !isLeaveValid(leave)"
+              class="!tw-bg-bs-blue tw-text-white disabled:tw-opacity-25"
+            >
+              Save
+            </Button>
+          </template>
+          <template v-else>
+            <Button variant="tertiary" @click="leave.isEditing = true">
+              Edit
+            </Button>
+
+            <Button
+              variant="tertiary"
+              @click="handleRemoveLeaveClick(leave)"
+              class="tw-text-red-500 hover:tw-text-red-600 hover:tw-bg-red-100"
+            >
+              Delete
+            </Button>
+          </template>
         </Td>
       </tr>
     </Table>
@@ -184,7 +195,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, onMounted, ref, watch, reactive } from "vue";
 import { dayjs, $can } from "@/lib";
 import {
   Leave,
@@ -198,24 +209,26 @@ import {
 import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
 import Button from "./Button.vue";
 import InputGroup from "./InputGroup.vue";
-import { cloneDeep, has } from "lodash";
+import { cloneDeep, partition } from "lodash";
 import SelectGroup from "./SelectGroup.vue";
 import { Table, Th, Td } from "@/components/Table";
 import Chip from "./Chip.vue";
 import CheckboxGroup from "./CheckboxGroup.vue";
+import * as api from "@/api";
 
 const props = defineProps<{
-  leaves: Leave[];
   userId: number;
-}>();
-
-const emit = defineEmits<{
-  (eventName: "update", leaves: (Leave | NewLeave)[]);
+  leaves: Leave[];
 }>();
 
 const showPastLeaves = ref(false);
 const isEditing = ref(false);
-const localLeaves = ref<(Leave | NewLeave)[]>([]);
+
+type LeaveWithEditState =
+  | (Leave & { isEditing: boolean })
+  | (NewLeave & { isEditing: boolean });
+
+const localLeaves = reactive([] as LeaveWithEditState[]);
 
 const capitalizeEachWord = (str: string) =>
   str
@@ -240,9 +253,8 @@ const leaveStatusOptions = computed(() => {
 });
 
 function addNewLocalLeave() {
-  isEditing.value = true;
   const randomId = Math.floor(Math.random() * 100000);
-  const newLeave: NewLeave = {
+  const newLeave: LeaveWithEditState = {
     id: `TEMPID-${randomId}`,
     description: "New Leave",
     type: leaveTypes.SABBATICAL,
@@ -250,13 +262,17 @@ function addNewLocalLeave() {
     start_date: dayjs().format("YYYY-MM-DD"),
     end_date: dayjs().add(1, "year").format("YYYY-MM-DD"),
     user_id: props.userId,
+    isEditing: true,
   };
-  localLeaves.value = [newLeave, ...localLeaves.value];
+  localLeaves.unshift(newLeave);
 }
 
-function hasLeaveChanged(leave: Leave | NewLeave): boolean {
+function hasLeaveChanged(leaveWithEditState: LeaveWithEditState): boolean {
+  const leave = getLeaveWithoutEditState(leaveWithEditState);
+
   const savedLeave = props.leaves.find((l) => l.id === leave.id);
   // if we can't find the saved leave, then it must be new
+
   if (!savedLeave) return true;
 
   // otherwise, check if props have changed
@@ -283,31 +299,25 @@ function getStatusColor(status: LeaveStatus) {
     case leaveStatuses.CONFIRMED:
       return "green-600";
     case leaveStatuses.CANCELLED:
-      return "neutral-300";
+      return "neutral-400";
     default:
-      return "neutral-300";
+      return "neutral-400";
   }
 }
 
 function isNewLeave(leave: Leave | NewLeave) {
-  return typeof leave.id === "string" && leave.id.includes("TEMPID");
+  return (
+    !leave.id || (typeof leave.id === "string" && leave.id.includes("TEMPID"))
+  );
 }
 
 const leavesToShow = computed(() => {
-  // if we're editing, show all the leaves
-  // we do this so that the leaves don't jump into past leaves
-  // while a user is editing the date
-  if (isEditing.value) return localLeaves.value;
-
-  return showPastLeaves.value
-    ? props.leaves.sort(sortByStartDateDescending)
-    : localLeaves.value.filter(isCurrentOrFutureLeave);
+  return localLeaves.filter((leave) => {
+    if (leave.isEditing) return true;
+    if (showPastLeaves.value) return true;
+    return isCurrentOrFutureLeave(leave);
+  });
 });
-
-function handleEditAllLeavesToggle() {
-  isEditing.value = !isEditing.value;
-  resetLocalLeaves();
-}
 
 function isDescriptionValid(description: string) {
   return description.length > 0;
@@ -335,7 +345,7 @@ function isEndDateValid({
   return dayjs(endDate).isValid() && dayjs(endDate).isAfter(dayjs(startDate));
 }
 
-function isLeaveValid(leave) {
+function isLeaveValid(leave: LeaveWithEditState) {
   return (
     isDescriptionValid(leave.description) &&
     isTypeValid(leave.type) &&
@@ -345,63 +355,99 @@ function isLeaveValid(leave) {
   );
 }
 
-const areAllLeavesValid = computed(() => {
-  return localLeaves.value.every(isLeaveValid);
-});
+function getLeaveWithoutEditState(leave: LeaveWithEditState): Leave | NewLeave {
+  const { isEditing, ...leaveToSave } = leave;
+  return leaveToSave;
+}
 
-async function handleCancelEditLeave(leave: Leave | NewLeave) {
-  if (isNewLeave(leave)) {
-    handleRemoveLeaveClick(localLeaves.value.indexOf(leave));
+function removeFromLocalLeaves(leaveId: string | number) {
+  const index = localLeaves.findIndex((l) => l.id === leaveId);
+  if (index === -1) {
+    throw new Error("Leave not found in localLeaves");
+  }
+  localLeaves.splice(index, 1);
+}
+
+async function handleCancelEditLeave(leaveWithEditState: LeaveWithEditState) {
+  const leave = getLeaveWithoutEditState(leaveWithEditState);
+
+  if (!leave.id) {
+    throw new Error("Leave does not have an id");
+  }
+
+  const savedLeave = props.leaves.find((l) => l.id === leave.id);
+
+  // if we can't find the saved leave, then it must be new
+  // so just remove it from the localLeaves
+  if (!savedLeave) {
+    removeFromLocalLeaves(leave.id);
     return;
   }
-  const savedLeave = props.leaves.find((l) => l.id === leave.id);
-  const indexOfEditedLocalLeave = localLeaves.value.indexOf(leave);
-  if (savedLeave) {
-    localLeaves.value[indexOfEditedLocalLeave] = savedLeave;
+
+  // otherwsie get the initial leave and replace the localLeave
+  const index = localLeaves.findIndex((l) => l.id === leave.id);
+  if (index === -1) {
+    throw new Error("Leave not found in localLeaves");
   }
+
+  localLeaves[index] = { ...savedLeave, isEditing: false };
+  resortLocalLeaves();
 }
 
-async function handleSaveLeave(leave: Leave | NewLeave) {
-  console.log(leave);
+async function handleSaveLeave(leaveWithEditState: LeaveWithEditState) {
+  if (!isLeaveValid(leaveWithEditState)) {
+    throw new Error("Leave is not valid");
+  }
+
+  const leave = getLeaveWithoutEditState(leaveWithEditState);
+
+  const index = localLeaves.findIndex((l) => l.id === leave.id);
+  if (isNewLeave(leave)) {
+    const newLeave = await api.createLeave(leave);
+    localLeaves[index] = { ...newLeave, isEditing: false };
+  } else {
+    // update existing leave
+    const updatedLeave = await api.updateLeave(leave as Leave);
+    localLeaves[index] = { ...updatedLeave, isEditing: false };
+  }
+
+  resortLocalLeaves();
 }
 
-async function handleSaveAllLeaves() {
-  // strip ids from new leaves
-  const leavesToSave = localLeaves.value.map((leave) => {
-    const isNewLeave =
-      "id" in leave &&
-      typeof leave.id === "string" &&
-      leave.id.startsWith("TEMPID-");
-
-    if (isNewLeave) {
-      const { id, ...rest } = leave;
-      return rest;
-    }
-    return leave;
-  });
-
-  emit("update", leavesToSave);
-  isEditing.value = false;
+async function handleRemoveLeaveClick(leaveWithEditState: LeaveWithEditState) {
+  const leave = getLeaveWithoutEditState(leaveWithEditState);
+  if (typeof leave.id !== "number") {
+    throw new Error("Leave does not have an id");
+  }
+  removeFromLocalLeaves(leave.id);
+  await api.deleteLeave(leave.id);
+  resortLocalLeaves();
 }
 
-function handleRemoveLeaveClick(leaveIndex: number) {
-  localLeaves.value.splice(leaveIndex, 1);
+function resortLocalLeaves() {
+  localLeaves.sort(sortByStartDateDescending);
 }
 
-function resetLocalLeaves() {
-  localLeaves.value = cloneDeep(props.leaves).sort(sortByStartDateDescending);
+function initLocalLeaves() {
+  const initialLeaves = cloneDeep(props.leaves)
+    .sort(sortByStartDateDescending)
+    .map((l) => ({
+      ...l,
+      isEditing: false,
+    }));
+  localLeaves.splice(0, localLeaves.length, ...initialLeaves);
 }
 
 // if leaves update, then update our list of
 // local leaves as well
 watch(
   () => props.leaves,
-  () => resetLocalLeaves(),
+  () => initLocalLeaves(),
   { immediate: true, deep: true },
 );
 </script>
 <style>
-.leaves-section.leaves-section--is-editing {
+/* .leaves-section.leaves-section--is-editing {
   & tr {
     border-top: 0;
   }
@@ -413,5 +459,5 @@ watch(
     padding: 0.25rem;
     text-align: center;
   }
-}
+} */
 </style>

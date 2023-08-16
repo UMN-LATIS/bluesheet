@@ -35,6 +35,11 @@ export async function updateLeave(leave: Leave) {
   return res.data;
 }
 
+export async function deleteLeave(leaveId: number) {
+  const res = await axios.delete(`/api/leaves/${leaveId}`);
+  return res.data;
+}
+
 export async function getUserLeaves(userId: number): Promise<Leave[]> {
   const res = await axios.get<Leave[]>(`/api/users/${userId}/leaves`);
   return res.data;
