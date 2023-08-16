@@ -8,12 +8,11 @@
   >
     <Table name="Leaves">
       <template #actions>
-        <div class="tw-flex tw-items-center tw-gap-2">
+        <div class="tw-flex tw-items-center tw-gap-4">
           <CheckboxGroup
             id="show-past-leaves-checkbox"
             v-model="showPastLeaves"
             label="Show Past Leaves"
-            class="tw-pr-2"
           />
           <template v-if="$can('edit leaves')">
             <Button variant="secondary" @click="addNewLocalLeave">
