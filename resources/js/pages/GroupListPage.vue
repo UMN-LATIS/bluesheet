@@ -47,11 +47,15 @@
       </thead>
       <tbody>
         <tr v-for="(group, key) in mergedSortedList" :key="key">
-          <td v-if="group.active_group && !group.parent_group_id" class="tw-flex tw-gap-2">
-            <i class="fas fa-users"></i>
-            <router-link :to="{ name: 'group', params: { groupId: group.id } }">
-              <GroupTitle :group="group" />
-            </router-link>
+          <td v-if="group.active_group && !group.parent_group_id">
+            <div class="tw-flex tw-gap-2">
+              <i class="fas fa-users"></i>
+              <router-link
+                :to="{ name: 'group', params: { groupId: group.id } }"
+              >
+                <GroupTitle :group="group" />
+              </router-link>
+            </div>
             <ul v-if="includeSubgroups && group.child_groups.length > 0">
               <li v-for="subgroup in group.child_groups" :key="subgroup.id">
                 <router-link
@@ -61,7 +65,10 @@
               </li>
             </ul>
           </td>
-          <td v-if="!group.active_group && !group.created_at" class="tw-flex tw-gap-2">
+          <td
+            v-if="!group.active_group && !group.created_at"
+            class="tw-flex tw-gap-2"
+          >
             <i class="fas fa-folder"></i>
             <router-link :to="{ path: '/groups/' + group.id }">{{
               group.group_title
