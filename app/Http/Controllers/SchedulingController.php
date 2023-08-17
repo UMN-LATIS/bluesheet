@@ -21,6 +21,7 @@ class SchedulingController extends Controller
     // 2. Break the fetches up client side and do progressive population
     public function getSchedulingReport(\App\Group $group, $startTerm = null, $endTerm = null)
     {
+        set_time_limit(0);
 
         if(!$group->dept_id) {
             return response()->json(['error' => 'Group does not have a department.'], 400);
