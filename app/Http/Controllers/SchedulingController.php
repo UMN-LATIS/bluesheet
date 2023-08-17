@@ -22,6 +22,7 @@ class SchedulingController extends Controller
     public function getSchedulingReport(\App\Group $group, $startTerm = null, $endTerm = null)
     {
         set_time_limit(0);
+        ini_set('memory_limit', '256M');
 
         if(!$group->dept_id) {
             return response()->json(['error' => 'Group does not have a department.'], 400);
