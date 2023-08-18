@@ -71,7 +71,7 @@ class Bandaid {
     }
 
     public function getDeptCoursesByTermName(int $deptId, string $termName): Collection {
-        $terms = $this->getCLATerms()->filter(fn ($term) => strtoupper($term->TERM_DESCRIPTION) === strtoupper($termName));
+        $terms = $this->getCLATerms()->filter(fn ($term) => strtoupper($term->TERM_DESCRIPTION) === strtoupper($termName))->unique('TERM');
 
         return collect($terms)->map(function ($term) use ($deptId) {
             return $this->getDepartmentScheduleForTerm($deptId, $term->TERM);
