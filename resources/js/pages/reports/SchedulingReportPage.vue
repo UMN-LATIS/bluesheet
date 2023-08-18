@@ -6,26 +6,22 @@
       <h2>{{ group.group_title }}</h2>
     </div>
 
-    // create a table of instructors and the courses they teach by term
-    <table>
+    <table v-if="terms && courses" class="table">
       <thead>
         <tr>
           <th>Instructor</th>
-          <th v-for="term in terms" :key="term.TERM">
-            {{ term.TERM_DESCRIPTION }}
-          </th>
+          <th>Fall 2023</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="instructor in instructors" :key="instructor.id">
-          <td>{{ instructor.givenName }} {{ instructor.surName }}</td>
-          <td v-for="term in terms" :key="term.TERM">
-            <ul>
-              <li v-for="course in courses" :key="course.id">
-                <div>{{ course.subject }} {{ course.catalogNumber }}</div>
-                <div>{{ course.title }}</div>
-              </li>
-            </ul>
+          <td>{{ instructor.surName }}, {{ instructor.givenName }}</td>
+          <td>
+            <table>
+              <tr v-for="course in instructorTermMap.get(instructor.id)">
+                <td>{{ course.title }}</td>
+              </tr>
+            </table>
           </td>
         </tr>
       </tbody>
@@ -60,6 +56,19 @@ function sortByName(
 const instructors = computed(() => {
   const allInstructors = courses.value.map((course) => course.instructor);
   return uniqBy(allInstructors, "id").sort(sortByName);
+});
+
+// returns  map of instructor id to a list of courses taught in
+// a given term
+const instructorTermMap = computed(() => {
+  const map = new Map<number, Course[]>();
+  for (const instructor of instructors.value) {
+    const coursesTaught = courses.value.filter(
+      (course) => course.instructor.id === instructor.id,
+    );
+    map.set(instructor.id, coursesTaught);
+  }
+  return map;
 });
 
 function getCurrentTermCode() {
