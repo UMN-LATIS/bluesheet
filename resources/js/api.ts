@@ -71,12 +71,12 @@ export async function getGroupCoursesByTerm({
   year: number;
 }) {
   const res = await axios.get<Course[]>(
-    `/api/terms/${year}/${termCode}groups/${groupId}/courses?filters=excludeNullInstructors`,
+    `/api/terms/${year}/${termCode}/groups/${groupId}/courses?filters=excludeNullInstructors`,
   );
   return res.data;
 }
 
 export async function getGroup(groupId: number) {
-  const res = await axios.get<Group>(`/api/groups/${groupId}`);
+  const res = await axios.get<Group>(`/api/group/${groupId}`);
   return res.data;
 }
