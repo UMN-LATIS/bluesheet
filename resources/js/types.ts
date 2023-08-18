@@ -183,6 +183,40 @@ export interface NewLeave {
   end_date: ISODate;
 }
 
+export interface Term {
+  id: number;
+  TERM: number;
+  TERM_BEGIN_DT: ISODate;
+  TERM_END_DT: ISODate;
+  TERM_DESCRIPTION: string;
+  INSTITUTION: string;
+  ACADEMIC_CAREER: string;
+}
+
+export interface Instructor {
+  id: number;
+  givenName: string;
+  surName: string;
+  displayName: string;
+  email: string;
+  leaves?: Leave[];
+}
+
+export type TermCode = "FA" | "SP" | "SU";
+
+export interface Course {
+  id: number;
+  term: number;
+  subject: string; // HIST
+  catalogNumber: number; // 1001
+  classNumber: number; // uniq id of course
+  title: string; // course name
+  enrollmentCap: number;
+  enrollmentTotal: number;
+  cancelled: boolean;
+  instructor: Instructor;
+}
+
 // api response types
 export type ApiUserResponse = User;
 export type ApiGroupMembersReponse = Membership[];

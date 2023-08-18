@@ -39,7 +39,7 @@ class SchedulingController extends Controller {
         $filters = explode(',', request()->query('filters', ''));
 
         // if filters set, exclude courses with no instructor
-        if (in_array('excludeNullInstructor', $filters)) {
+        if (in_array('excludeNullInstructors', $filters)) {
             $courses = $courses->filter(function ($course) {
                 return $course->INSTRUCTOR_EMPLID;
             });
