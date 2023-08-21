@@ -6,7 +6,12 @@
       <h2>{{ group.group_title }}</h2>
     </div>
 
-    <Table v-if="termsMap && instructorTermCoursesMap" name="Scheduling Report">
+    <Table
+      v-if="termsMap && instructorTermCoursesMap"
+      name="Scheduling Report"
+      :sticky-first-column="true"
+      :sticky-header="true"
+    >
       <template #thead>
         <tr>
           <Th class="instructor-column">Instructor</Th>
