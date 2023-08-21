@@ -1,13 +1,11 @@
 <template>
   <div>
-    <h1>{{ groupId }}</h1>
-
-    <div v-if="group">
+    <div v-if="group" class="tw-mt-8 tw-mb-16">
       <h2>{{ group.group_title }}</h2>
     </div>
 
     <Table
-      v-if="termsMap && instructorTermCoursesMap"
+      v-if="instructorTermCoursesMap"
       name="Scheduling Report"
       :sticky-first-column="true"
       :sticky-header="true"
@@ -31,7 +29,11 @@
             {{ leave.description }} ({{ leave.type }})
           </div>
           <div v-for="course in selectInstructorTermCourses(instructor, term)">
-            <div>{{ course.subject }} {{ course.catalogNumber }}</div>
+            <div>
+              {{ course.subject }} {{ course.catalogNumber }}
+              {{ course.classSection }}
+              ({{ course.instructorRole }})
+            </div>
           </div>
         </Td>
       </tr>
@@ -144,25 +146,6 @@ const termsSortedByDate = computed((): Term[] => {
   });
 });
 
-// function getInstructorLeavesWithinTerm(
-//   instructor: Instructor,
-//   term: Term,
-// ): Leave[] {
-//   const leaves = instructor.leaves?.filter((leave) => {
-//     const leaveStart = dayjs(leave.start_date);
-//     const leaveEnd = dayjs(leave.end_date);
-//     const termStart = dayjs(term.TERM_BEGIN_DT);
-//     const termEnd = dayjs(term.TERM_END_DT);
-
-//     return (
-//       (leaveStart.isBefore(termEnd) && leaveEnd.isAfter(termStart)) ||
-//       (leaveStart.isSame(termStart) && leaveEnd.isSame(termEnd))
-//     );
-//   });
-
-//   return leaves ?? [];
-// }
-
 watch(
   () => props.groupId,
   async () => {
@@ -176,7 +159,6 @@ watch(
 
     // for each term, get the group courses and update the instructorTermCoursesMap
     termsResponse.forEach(async (term) => {
-      console.log({ term });
       const courses = await api.getGroupCoursesByTerm({
         termId: term.TERM,
         groupId: props.groupId,

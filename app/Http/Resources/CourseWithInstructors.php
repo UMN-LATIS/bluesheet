@@ -20,8 +20,10 @@ class CourseWithInstructors extends JsonResource {
             'subject' => $this->SUBJECT,
             'catalogNumber' => $this->CATALOG_NUMBER,
             'classNumber' => $this->CLASS_NUMBER,
+            'classSection' => $this->CLASS_SECTION,
             "enrollmentCap" => $this->ENROLLMENT_CAP,
             "enrollmentTotal" => $this->ENROLLMENT_TOTAL,
+            "instructorRole" => $this->INSTRUCTOR_ROLE,
             "cancelled" => (bool) $this->CANCELLED,
             "instructor" => $this->instructor ? [
                 'id' => $this->instructor->id,

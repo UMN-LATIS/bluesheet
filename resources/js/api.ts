@@ -69,7 +69,7 @@ export async function getGroupCoursesByTerm({
   termId: number;
 }) {
   const res = await axios.get<Course[]>(
-    `/api/terms/${termId}/groups/${groupId}/courses?filters=excludeNullInstructors`,
+    `/api/terms/${termId}/groups/${groupId}/courses?includeRoles=PI`,
   );
   return res.data;
 }

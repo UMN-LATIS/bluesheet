@@ -210,6 +210,8 @@ export interface Course {
   subject: string; // HIST
   catalogNumber: number; // 1001
   classNumber: number; // uniq id of course
+  classSection: string; // "001"
+  instructorRole: string; // 'PI' === Primary Instructor
   title: string; // course name
   enrollmentCap: number;
   enrollmentTotal: number;
