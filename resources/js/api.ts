@@ -63,15 +63,13 @@ export async function getTerms() {
 
 export async function getGroupCoursesByTerm({
   groupId,
-  termCode,
-  year,
+  termId,
 }: {
   groupId: number;
-  termCode: TermCode;
-  year: number;
+  termId: number;
 }) {
   const res = await axios.get<Course[]>(
-    `/api/terms/${year}/${termCode}/groups/${groupId}/courses?filters=excludeNullInstructors`,
+    `/api/terms/${termId}/groups/${groupId}/courses?filters=excludeNullInstructors`,
   );
   return res.data;
 }

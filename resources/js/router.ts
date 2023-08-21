@@ -111,7 +111,9 @@ export const router = createRouter({
       name: "schedulingReport",
       path: "/reports/schedulingReport/:groupId",
       component: SchedulingReportPage,
-      props: true,
+      props: (route) => ({
+        groupId: parseIntFromParam(route.params.groupId),
+      }),
     },
   ],
 });

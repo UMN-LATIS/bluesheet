@@ -12,12 +12,6 @@ class SchedulingController extends Controller {
     protected $bandaid;
     protected $userService;
 
-    const TERM_CODES = [
-        'FA' => 'Fall',
-        'SP' => 'Spring',
-        'SU' => 'Summer',
-    ];
-
     public function __construct(Bandaid $bandaid, UserService $userService) {
         $this->bandaid = $bandaid;
         $this->userService = $userService;
@@ -27,25 +21,26 @@ class SchedulingController extends Controller {
         return $this->bandaid->getCLATerms();
     }
 
-    public function getDeptCoursesForTerm($year, $termCode, Group $group) {
+    public function getDeptCoursesForTerm(int $termId, Group $group) {
+        if (!$termId) {
+            return response()->json(['error' => 'No term id provided.'], 400);
+        }
+
         if (!$group->dept_id) {
             return response()->json(['error' => 'Group does not have a numeric department id.'], 400);
         }
 
-        $termName = self::TERM_CODES[strtoupper($termCode)] . ' ' . $year;
+        $courses = collect(
+            $this->bandaid->getDeptScheduleForTerm($group->dept_id, $termId)
+        );
 
-        $courses = $this->bandaid->getDeptCoursesByTermName($group->dept_id, $termName);
-
-        $filters = explode(',', request()->query('filters', ''));
-
-        // if filters set, exclude courses with no instructor
-        if (in_array('excludeNullInstructors', $filters)) {
-            $courses = $courses->filter(function ($course) {
-                return $course->INSTRUCTOR_EMPLID;
-            });
-        }
-
-        $courseWithInstructors = $this->userService->attachInstructorsToCourses($courses)->values();
+        $courseWithInstructors = $this->userService
+            ->attachInstructorsToCourses($courses)
+            // exclude courses without instructors
+            ->filter(function ($course) {
+                return isset($course->instructor);
+            })
+            ->values();
 
         return CourseWithInstructors::collection($courseWithInstructors);
     }

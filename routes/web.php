@@ -61,7 +61,7 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
     Route::get('lookup/department/{deptId?}', 'LookupController@departmentInfo');
 
     Route::get('terms', 'SchedulingController@getTerms');
-    Route::get('terms/{year}/{termCode}/groups/{group}/courses', 'SchedulingController@getDeptCoursesForTerm');
+    Route::get('terms/{termId}/groups/{group}/courses', 'SchedulingController@getDeptCoursesForTerm');
 
 
     // Laravel thinks the singular of `leaves` is `leaf`

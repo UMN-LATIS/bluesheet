@@ -7,6 +7,8 @@ use Exception;
 use RuntimeException;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Collection;
+use Carbon\Carbon;
+
 
 class Bandaid {
     private $client;
@@ -51,15 +53,20 @@ class Bandaid {
      */
     public function getCLATerms(): Collection {
         $allTerms = $this->getTerms();
+        $sixMonthsFromNow = Carbon::now()->addMonths(6);
 
         // only return CLA terms
         return collect($allTerms)
-            ->filter(function ($term) {
-                return in_array($term->ACADEMIC_CAREER, ['UGRD', 'GRAD']) && $term->INSTITUTION === 'UMNTC';
+            ->filter(function ($term) use ($sixMonthsFromNow) {
+                return
+                    //grad and ugrad have same terms
+                    $term->ACADEMIC_CAREER === 'UGRD'
+                    && $term->INSTITUTION === 'UMNTC'
+                    && Carbon::parse($term->TERM_BEGIN_DT)->isBefore($sixMonthsFromNow);
             })->values();
     }
 
-    public function getDepartmentScheduleForTerm(int $deptId, int $term): array {
+    public function getDeptScheduleForTerm(int $deptId, int $term): array {
         try {
             $result = $this->client->get('classes/list/' . $deptId . "/" . $term);
             return json_decode($result->getBody());
@@ -68,13 +75,5 @@ class Bandaid {
             $errorMessage = 'getDepartmentSchedule Error: ' . $msg;
             throw new RuntimeException($errorMessage);
         }
-    }
-
-    public function getDeptCoursesByTermName(int $deptId, string $termName): Collection {
-        $terms = $this->getCLATerms()->filter(fn ($term) => strtoupper($term->TERM_DESCRIPTION) === strtoupper($termName))->unique('TERM');
-
-        return collect($terms)->map(function ($term) use ($deptId) {
-            return $this->getDepartmentScheduleForTerm($deptId, $term->TERM);
-        })->flatten(1)->values();
     }
 }
