@@ -195,6 +195,7 @@
         :includePreviousMembers="includePreviousMembers"
         :viewType="viewType"
         @remove="removeMember"
+        @update:roles="(val) => $emit('update:roles', val)"
       >
       </MemberList>
       <Gantt
