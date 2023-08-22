@@ -24,7 +24,8 @@
           <ComboBox
             v-if="roles"
             v-model="member.role"
-            v-model:options="localRoles"
+            :options="roles"
+            @update:options="$emit('update:roles', $event)"
             :canAddNewOption="true"
           />
         </td>
@@ -123,12 +124,7 @@ export default {
     "show_unit",
     "viewType",
   ],
-  emits: ["remove"],
-  data() {
-    return {
-      localRoles: this.roles,
-    };
-  },
+  emits: ["remove", "update:roles"],
   methods: {
     dayjs,
     $can,
