@@ -14,7 +14,11 @@
       <template #thead>
         <tr>
           <Th class="instructor-column">Instructor</Th>
-          <Th v-for="term in termsSortedByDate" :id="term.id">
+          <Th
+            v-for="term in termsSortedByDate"
+            :id="term.id"
+            class="tw-whitespace-nowrap"
+          >
             {{ term.name }}
           </Th>
         </tr>
@@ -36,7 +40,12 @@
             </LeaveChip>
           </div>
           <div v-for="course in selectInstructorTermCourses(instructor, term)">
-            <div class="tw-my-1 tw-px-1">
+            <div
+              class="tw-my-1 tw-px-1"
+              :class="{
+                'tw-opacity-50 tw-line-through': course.cancelled,
+              }"
+            >
               {{ course.subject }} {{ course.catalogNumber }}
               {{ course.classSection }}
             </div>
@@ -134,7 +143,14 @@ function selectInstructorTermCourses(
 ): Course[] {
   const key: InstructorTermKey = `${instructor.id}-${term.id}`;
   const instructorTerm = deptTeachingHistory.value.get(key);
-  return instructorTerm?.courses ?? [];
+  const courses = instructorTerm?.courses ?? [];
+  return [...courses].sort((a, b) => {
+    return (
+      a.subject.localeCompare(b.subject) ||
+      String(a.catalogNumber).localeCompare(String(b.catalogNumber)) ||
+      a.classSection.localeCompare(b.classSection)
+    );
+  });
 }
 
 function selectInstructorTermLeaves(
