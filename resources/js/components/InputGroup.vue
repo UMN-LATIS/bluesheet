@@ -21,7 +21,7 @@
       class="form-control tw-text-sm tw-bg-transparent tw-border"
       :class="[
         {
-          'is-invalid': !isValid && isTouched,
+          'is-invalid': isValid !== undefined && !isValid && isTouched,
         },
         inputClass,
       ]"
@@ -60,6 +60,7 @@ withDefaults(
     placeholder: "",
     required: false,
     showLabel: true,
+    isValid: undefined,
   },
 );
 
