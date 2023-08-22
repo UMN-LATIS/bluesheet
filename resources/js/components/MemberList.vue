@@ -1,6 +1,6 @@
 <template>
   <tbody>
-    <tr v-for="(member, key) in filteredList" :key="key">
+    <tr v-for="member in filteredList" :key="member.id">
       <td v-if="filterList">
         <input v-model="member.filtered" type="checkbox" />
       </td>
@@ -97,7 +97,7 @@
         />
       </td>
       <td v-if="editing">
-        <button class="btn btn-danger" @click="$emit('remove', member, key)">
+        <button class="btn btn-danger" @click="$emit('remove', member)">
           <i class="fas fa-user-minus"></i>
         </button>
       </td>
