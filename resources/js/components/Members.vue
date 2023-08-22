@@ -474,7 +474,15 @@ export default {
             );
           }
         } else {
-          removeMember.end_date = dayjs().format("YYYY-MM-DD hh:mm:ss");
+          this.$emit(
+            "update:members",
+            this.members.map((member) => {
+              if (member.id === removeMember.id) {
+                member.end_date = dayjs().format("YYYY-MM-DD");
+              }
+              return member;
+            }),
+          );
         }
       }
     },
