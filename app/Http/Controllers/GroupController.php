@@ -122,7 +122,7 @@ class GroupController extends Controller
             return Response()->json($returnData, 500);
         }
         else {
-            return new GroupResource($group->load('members', 'members.user', 'members.role'));
+            return new GroupResource($group->load('members', 'members.user', 'members.role', 'activeMembers', 'activeMembers.user'));
         }
     }
 

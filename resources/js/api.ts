@@ -6,6 +6,10 @@ import {
   User,
   Leave,
   NewLeave,
+  TermCode,
+  Course,
+  Term,
+  Group,
 } from "@/types";
 
 export async function lookupUsers(query: string): Promise<UserLookupItem[]> {
@@ -49,5 +53,49 @@ export async function updateUserLeaves(userId: number, leaves: Leave[]) {
   const res = await axios.put<Leave[]>(`/api/users/${userId}/leaves`, {
     leaves,
   });
+  return res.data;
+}
+
+let getTermsCache = [] as Term[];
+export async function getTerms() {
+  if (getTermsCache.length) {
+    return getTermsCache;
+  }
+  const res = await axios.get<Term[]>(`/api/terms`);
+  getTermsCache = res.data;
+  return res.data;
+}
+
+type GroupId = number;
+type TermId = number;
+type GetGroupByTermCacheKey = `${GroupId}-${TermId}`;
+const getGroupByTermCache: Map<GetGroupByTermCacheKey, Course[]> = new Map();
+export async function getGroupCoursesByTerm({
+  groupId,
+  termId,
+}: {
+  groupId: number;
+  termId: number;
+}) {
+  const cacheKey: GetGroupByTermCacheKey = `${groupId}-${termId}`;
+  if (getGroupByTermCache.has(cacheKey)) {
+    return getGroupByTermCache.get(cacheKey)!;
+  }
+
+  const res = await axios.get<Course[]>(
+    `/api/terms/${termId}/groups/${groupId}/courses?includeRoles=PI`,
+  );
+  getGroupByTermCache.set(cacheKey, res.data);
+  return res.data;
+}
+
+const getGroupCache: Map<GroupId, Group> = new Map();
+export async function getGroup(groupId: number) {
+  if (getGroupCache.has(groupId)) {
+    return getGroupCache.get(groupId)!;
+  }
+
+  const res = await axios.get<Group>(`/api/group/${groupId}`);
+  getGroupCache.set(groupId, res.data);
   return res.data;
 }

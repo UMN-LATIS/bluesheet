@@ -2,63 +2,63 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use \App\Library\Bandaid;
-use App\Library\LDAP as LDAP;
+use App\Group;
+use App\Http\Resources\CourseWithInstructors;
+use App\Http\Resources\TermResource;
+use App\Library\UserService;
+use Illuminate\Http\Request;
 
-class SchedulingController extends Controller
-{
+class SchedulingController extends Controller {
 
-    public function getTerms() {
-        $bandaid = new Bandaid();
-        $terms = $bandaid->getTerms();
-        return response()->json($terms);
+    protected $bandaid;
+    protected $userService;
+
+    public function __construct(Bandaid $bandaid, UserService $userService) {
+        $this->bandaid = $bandaid;
+        $this->userService = $userService;
     }
 
-    // This method will be slow when fetching all terms for a department
-    // if it becomes too slow, here's some ideas:
-    // 1. Cache the results so that a refresh won't be as slow
-    // 2. Break the fetches up client side and do progressive population
-    public function getSchedulingReport(\App\Group $group, $startTerm = null, $endTerm = null)
-    {
-        set_time_limit(0);
-        ini_set('memory_limit', '256M');
+    public function getTerms() {
+        $terms = $this->bandaid->getCLATerms();
+        return TermResource::collection($terms);
+    }
 
-        if(!$group->dept_id) {
-            return response()->json(['error' => 'Group does not have a department.'], 400);
+    public function getDeptCoursesForTerm(int $termId, Group $group, Request $request) {
+        abort_if($request->user()->cannot('view leaves'), 403);
+
+        if (!$termId) {
+            return response()->json(['error' => 'No term id provided.'], 400);
         }
 
-        // get all the terms
-        $bandaid = new Bandaid();
-        $terms = $bandaid->getTerms();
-        foreach($terms as $term) {
-            $courses[$term->TERM] = $bandaid->getDepartmentScheduleForTerm($group->dept_id, $term->TERM);
+        if (!$group->dept_id) {
+            return response()->json(['error' => 'Group does not have a numeric department id.'], 400);
         }
 
-        foreach($courses as $term => $coursesForTerm) {
-            foreach($coursesForTerm as $course) {
-                if($course->INSTRUCTOR_EMPLID) {
-                    $user = \App\User::where('emplid', $course->INSTRUCTOR_EMPLID)->with('leaves')->first();
-                    if(!$user) {
-                        $foundUser = LDAP::lookupUser($course->INSTRUCTOR_EMPLID, 'umnemplid');
-                        if($foundUser) {
-                            $user = $foundUser;
-                            $user->save();
-                        }
-                    }
-
-                    if($user) {
-                        $course->instructor = $user;
-                    }
-
-                }
-            }
-        }
-
-        return response()->json([
-            "terms"=>$terms,
-            "courses"=>$courses
+        $validated = $request->validate([
+            'includeRoles' => 'string'
         ]);
 
+
+        $courses = collect(
+            $this->bandaid->getDeptScheduleForTerm($group->dept_id, $termId)
+        );
+
+        $courseWithInstructors = $this->userService
+            ->attachInstructorsToCourses($courses)
+            ->filter(function ($course) {
+                // exclude courses without instructors
+                return isset($course->instructor);
+            })
+            ->values();
+
+        if (isset($validated['includeRoles'])) {
+            $roles = explode(',', $validated['includeRoles']);
+            $courseWithInstructors = $courseWithInstructors->filter(function ($course) use ($roles) {
+                return in_array($course->INSTRUCTOR_ROLE, $roles);
+            });
+        }
+
+        return CourseWithInstructors::collection($courseWithInstructors);
     }
 }
