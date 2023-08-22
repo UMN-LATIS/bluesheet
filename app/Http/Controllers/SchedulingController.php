@@ -25,6 +25,8 @@ class SchedulingController extends Controller {
     }
 
     public function getDeptCoursesForTerm(int $termId, Group $group, Request $request) {
+        abort_if($request->user()->cannot('view leaves'), 403);
+
         if (!$termId) {
             return response()->json(['error' => 'No term id provided.'], 400);
         }
