@@ -5,6 +5,13 @@
     </div>
 
     <div class="tw-relative">
+      <div
+        class="tw-absolute tw-inset-0 tw-m-auto tw-z-10 tw-flex tw-justify-center tw-bg-white/50 tw-gap-4"
+        v-if="isTableLoading"
+      >
+        <Spinner class="tw-text-neutral-900 tw-w-6 tw-h-6" />
+        Building Report...
+      </div>
       <Table
         class="scheduling-report"
         name="Scheduling Report"
@@ -27,6 +34,16 @@
               />
             </Th>
           </tr>
+        </template>
+        <template #actions>
+          <InputGroup
+            v-model="searchTerm"
+            placeholder="Search"
+            label="Search"
+            class="tw-w-64"
+            type="search"
+            :showLabel="false"
+          />
         </template>
         <tr v-for="instructor in instructorsSortByName" :key="instructor.id">
           <Td class="instructor-column">
@@ -72,6 +89,7 @@ import dayjs from "dayjs";
 import { Table, Td, Th } from "@/components/Table";
 import LeaveChip from "@/components/LeaveChip.vue";
 import Spinner from "@/components/Spinner.vue";
+import InputGroup from "@/components/InputGroup.vue";
 
 const props = defineProps<{
   groupId: number;
@@ -84,6 +102,7 @@ type TermId = number;
 const group = ref<Group>();
 const termsMap = ref<Map<TermId, Term>>(new Map());
 const coursesByTermMap = ref<Map<TermId, Course[]>>(new Map());
+const searchTerm = ref<string>("");
 
 const instructorsMap = computed((): Map<InstructorId, Instructor> => {
   const allInstructors = new Map<InstructorId, Instructor>();
@@ -106,6 +125,12 @@ function sortByName(
 
 const instructorsSortByName = computed(() => {
   return Array.from(instructorsMap.value.values()).sort(sortByName);
+});
+
+const isTableLoading = computed(() => {
+  return Array.from(termsMap.value.values()).some((term) => {
+    return !coursesByTermMap.value.has(term.id);
+  });
 });
 
 // interface InstructorTerm {
