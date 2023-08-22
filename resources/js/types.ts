@@ -185,12 +185,9 @@ export interface NewLeave {
 
 export interface Term {
   id: number;
-  TERM: number;
-  TERM_BEGIN_DT: ISODate;
-  TERM_END_DT: ISODate;
-  TERM_DESCRIPTION: string;
-  INSTITUTION: string;
-  ACADEMIC_CAREER: string;
+  name: string;
+  startDate: ISODate;
+  endDate: ISODate;
 }
 
 export interface Instructor {

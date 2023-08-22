@@ -5,6 +5,7 @@
     </div>
 
     <Table
+      class="scheduling-report"
       v-if="instructorTermCoursesMap"
       name="Scheduling Report"
       :sticky-first-column="true"
@@ -13,8 +14,8 @@
       <template #thead>
         <tr>
           <Th class="instructor-column">Instructor</Th>
-          <Th v-for="term in termsSortedByDate" :id="term.TERM">
-            {{ term.TERM_DESCRIPTION }}
+          <Th v-for="term in termsSortedByDate" :id="term.id">
+            {{ term.name }}
           </Th>
         </tr>
       </template>
@@ -24,15 +25,20 @@
             >{{ instructor.surName }}, {{ instructor.givenName }}
           </RouterLink>
         </Td>
-        <Td v-for="term in termsSortedByDate">
-          <div v-for="leave in selectInstructorTermLeaves(instructor, term)">
-            {{ leave.description }} ({{ leave.type }})
+        <Td v-for="(term, termIndex) in termsSortedByDate">
+          <div class="leaves tw-flex tw-flex-col tw-gap-1 tw-mb-2">
+            <LeaveChip
+              v-for="leave in selectInstructorTermLeaves(instructor, term)"
+              :key="leave.id"
+              :leave="leave"
+            >
+              {{ leave.description }} ({{ leave.type }})
+            </LeaveChip>
           </div>
           <div v-for="course in selectInstructorTermCourses(instructor, term)">
-            <div>
+            <div class="tw-my-1 tw-px-1">
               {{ course.subject }} {{ course.catalogNumber }}
               {{ course.classSection }}
-              ({{ course.instructorRole }})
             </div>
           </div>
         </Td>
@@ -45,9 +51,9 @@
 import { watch, ref, computed } from "vue";
 import * as api from "@/api";
 import { Course, Term, Group, Instructor, Leave } from "@/types";
-import { uniqBy } from "lodash";
 import dayjs from "dayjs";
 import { Table, Td, Th } from "@/components/Table";
+import LeaveChip from "@/components/LeaveChip.vue";
 
 const props = defineProps<{
   groupId: number;
@@ -103,8 +109,8 @@ const deptTeachingHistory = computed((): InstructorTermMap => {
         instructor.leaves?.filter((leave) => {
           const leaveStart = dayjs(leave.start_date);
           const leaveEnd = dayjs(leave.end_date);
-          const termStart = dayjs(term.TERM_BEGIN_DT);
-          const termEnd = dayjs(term.TERM_END_DT);
+          const termStart = dayjs(term.startDate);
+          const termEnd = dayjs(term.endDate);
 
           return (
             (leaveStart.isBefore(termEnd) && leaveEnd.isAfter(termStart)) ||
@@ -142,7 +148,7 @@ function selectInstructorTermLeaves(
 
 const termsSortedByDate = computed((): Term[] => {
   return [...termsMap.value.values()].sort((a, b) => {
-    return dayjs(a.TERM_BEGIN_DT).isBefore(dayjs(b.TERM_BEGIN_DT)) ? -1 : 1;
+    return dayjs(a.startDate).isBefore(dayjs(b.startDate)) ? -1 : 1;
   });
 });
 
@@ -154,13 +160,26 @@ watch(
       api.getGroup(props.groupId),
     ]);
 
-    termsMap.value = new Map(termsResponse.map((term) => [term.id, term]));
     group.value = groupResponse;
 
     // for each term, get the group courses and update the instructorTermCoursesMap
     termsResponse.forEach(async (term) => {
+      // only get terms that between 3 years ago and 2 years from now
+      const termStart = dayjs(term.startDate);
+      const termEnd = dayjs(term.endDate);
+      const threeYearsAgo = dayjs().subtract(3, "year");
+      const twoYearsFromNow = dayjs().add(2, "year");
+      if (
+        termStart.isBefore(threeYearsAgo) ||
+        termEnd.isAfter(twoYearsFromNow)
+      ) {
+        return;
+      }
+
+      termsMap.value.set(term.id, term);
+
       const courses = await api.getGroupCoursesByTerm({
-        termId: term.TERM,
+        termId: term.id,
         groupId: props.groupId,
       });
       courses.forEach((course) => {
@@ -173,15 +192,4 @@ watch(
   { immediate: true },
 );
 </script>
-<style scoped lang="scss">
-.scheduling-report {
-  position: relative;
-
-  .instructor-column {
-    position: sticky;
-    left: 0;
-    background-color: white;
-    z-index: 1;
-  }
-}
-</style>
+<style scoped lang="scss"></style>

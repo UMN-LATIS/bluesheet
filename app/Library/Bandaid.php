@@ -53,16 +53,14 @@ class Bandaid {
      */
     public function getCLATerms(): Collection {
         $allTerms = $this->getTerms();
-        $sixMonthsFromNow = Carbon::now()->addMonths(6);
 
         // only return CLA terms
         return collect($allTerms)
-            ->filter(function ($term) use ($sixMonthsFromNow) {
+            ->filter(function ($term) {
                 return
-                    //grad and ugrad have same terms
+                    //grad and ugrad have same terms, so just get UGRD
                     $term->ACADEMIC_CAREER === 'UGRD'
-                    && $term->INSTITUTION === 'UMNTC'
-                    && Carbon::parse($term->TERM_BEGIN_DT)->isBefore($sixMonthsFromNow);
+                    && $term->INSTITUTION === 'UMNTC';
             })->values();
     }
 
