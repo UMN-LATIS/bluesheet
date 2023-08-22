@@ -37,7 +37,8 @@
         </template>
         <template #actions>
           <InputGroup
-            v-model="searchTerm"
+            :modelValue="searchTerm"
+            @update:modelValue="debouncedSearch"
             placeholder="Search"
             label="Search"
             class="tw-w-64"
@@ -45,9 +46,18 @@
             :showLabel="false"
           />
         </template>
-        <tr v-for="instructor in instructorsSortByName" :key="instructor.id">
+        <tr
+          v-for="instructor in filteredInstructorsSortedByName"
+          :key="instructor.id"
+        >
           <Td class="instructor-column">
-            <RouterLink :to="`/user/${instructor.id}`"
+            <RouterLink
+              :to="`/user/${instructor.id}`"
+              :class="{
+                'tw-bg-yellow-100 tw-text-blue-600 ':
+                  searchTerm.length &&
+                  doesInstructorNameMatchSearchTerm(instructor, searchTerm),
+              }"
               >{{ instructor.surName }}, {{ instructor.givenName }}
             </RouterLink>
           </Td>
@@ -68,6 +78,9 @@
                 class="tw-my-1 tw-px-1"
                 :class="{
                   'tw-opacity-50 tw-line-through': course.cancelled,
+                  'tw-bg-yellow-100':
+                    searchTerm.length &&
+                    doesCourseMatchSearchTerm(course, searchTerm),
                 }"
               >
                 {{ course.subject }} {{ course.catalogNumber }}
@@ -85,6 +98,7 @@
 import { watch, ref, computed } from "vue";
 import * as api from "@/api";
 import { Course, Term, Group, Instructor, Leave } from "@/types";
+import debounce from "lodash-es/debounce";
 import dayjs from "dayjs";
 import { Table, Td, Th } from "@/components/Table";
 import LeaveChip from "@/components/LeaveChip.vue";
@@ -123,8 +137,51 @@ function sortByName(
   );
 }
 
-const instructorsSortByName = computed(() => {
-  return Array.from(instructorsMap.value.values()).sort(sortByName);
+const debouncedSearch = debounce((value) => {
+  searchTerm.value = value;
+}, 300);
+
+function doesCourseMatchSearchTerm(course: Course, searchTerm: string) {
+  const courseTitle =
+    `${course.subject} ${course.catalogNumber} ${course.classSection}`.toLowerCase();
+
+  return courseTitle.includes(searchTerm.toLowerCase());
+}
+
+function hasInstructorTaughtCourseMatchingSearchTerm(
+  instructor: Instructor,
+  searchTerm: string,
+) {
+  return termsSortedByDate.value.some((term) => {
+    const courses = selectInstructorTermCourses(instructor, term);
+    return courses.some((course) =>
+      doesCourseMatchSearchTerm(course, searchTerm),
+    );
+  });
+}
+
+function doesInstructorNameMatchSearchTerm(
+  instructor: Instructor,
+  searchTerm: string,
+) {
+  return (
+    instructor.surName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    instructor.givenName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+}
+
+const filteredInstructorsSortedByName = computed(() => {
+  return Array.from(instructorsMap.value.values())
+    .filter((instructor) => {
+      return (
+        doesInstructorNameMatchSearchTerm(instructor, searchTerm.value) ||
+        hasInstructorTaughtCourseMatchingSearchTerm(
+          instructor,
+          searchTerm.value,
+        )
+      );
+    })
+    .sort(sortByName);
 });
 
 const isTableLoading = computed(() => {
@@ -132,43 +189,6 @@ const isTableLoading = computed(() => {
     return !coursesByTermMap.value.has(term.id);
   });
 });
-
-// interface InstructorTerm {
-//   courses: Course[];
-//   leaves: Leave[];
-// }
-// type InstructorTermKey = `${InstructorId}-${TermId}`;
-// type InstructorTermMap = Map<InstructorTermKey, InstructorTerm>;
-// const deptTeachingHistory = computed((): InstructorTermMap => {
-//   const map: InstructorTermMap = new Map();
-
-//   // loop over terms, adding courses and leaves for each instructor
-//   termsMap.value.forEach((term) => {
-//     instructorsMap.value.forEach((instructor) => {
-//       const key: InstructorTermKey = `${instructor.id}-${term.id}`;
-//       const courses = instructorTermCoursesMap.value.get(key) ?? [];
-//       const leaves =
-//         instructor.leaves?.filter((leave) => {
-//           const leaveStart = dayjs(leave.start_date);
-//           const leaveEnd = dayjs(leave.end_date);
-//           const termStart = dayjs(term.startDate);
-//           const termEnd = dayjs(term.endDate);
-
-//           return (
-//             (leaveStart.isBefore(termEnd) && leaveEnd.isAfter(termStart)) ||
-//             (leaveStart.isSame(termStart) && leaveEnd.isSame(termEnd))
-//           );
-//         }) ?? [];
-
-//       map.set(key, {
-//         courses,
-//         leaves,
-//       });
-//     });
-//   });
-
-//   return map;
-// });
 
 function sortCoursesByCourseNumber(a: Course, b: Course) {
   return (
