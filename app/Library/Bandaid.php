@@ -35,6 +35,29 @@ class Bandaid {
             $errorMessage = 'getUserName Error: ' . $msg;
             throw new RuntimeException($errorMessage);
         }
+    }    
+    
+    
+    public function getEmployeesForDepartment($deptId): array {
+        try {
+            $result = $this->client->get('department/' . $deptId . '/employees');
+            return json_decode($result->getBody());
+        } catch (RequestException $e) {
+            $msg = $e->getMessage();
+            $errorMessage = 'getEmployees Error: ' . $msg;
+            throw new RuntimeException($errorMessage);
+        }
+    }
+
+    public function getLeavesForEmployee($emplId): array {
+        try {
+            $result = $this->client->get('employment/leaves/' . $emplId);
+            return json_decode($result->getBody());
+        } catch (RequestException $e) {
+            $msg = $e->getMessage();
+            $errorMessage = 'getLeaves Error: ' . $msg;
+            throw new RuntimeException($errorMessage);
+        }
     }
 
     public function getTerms(): array {

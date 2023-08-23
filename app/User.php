@@ -73,4 +73,8 @@ class User extends Authenticatable implements Auditable {
     public function leaves() {
         return $this->hasMany(Leave::class);
     }
+
+    public function leavesIncludingTrashed() {
+        return $this->hasMany(Leave::class)->withTrashed();
+    }
 }
