@@ -18,6 +18,7 @@ import LastModifiedReportPage from "./pages/reports/LastModifiedReportPage.vue";
 import MissingOfficialReportPage from "./pages/reports/MissingOfficialReportPage.vue";
 import OrgpReportPage from "./pages/reports/OrgpReportPage.vue";
 import SchedulingReportPage from "./pages/reports/SchedulingReportPage.vue";
+import GroupAdminsReportPage from "./pages/reports/GroupAdmins.vue";
 
 function parseIntFromParam(
   param: string | string[] | undefined,
@@ -105,6 +106,12 @@ export const router = createRouter({
       name: "committeeService",
       path: "/reports/committeeService",
       component: CommitteeServiceReportPage,
+      props: true,
+    },
+    {
+      name: "groupadmins",
+      path: "/reports/groupAdmins",
+      component: GroupAdminsReportPage,
       props: true,
     },
     {
