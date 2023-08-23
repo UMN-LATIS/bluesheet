@@ -8,8 +8,8 @@ use RuntimeException;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Collection;
 use Carbon\Carbon;
-
-
+use Illuminate\Support\Facades\Cache;
+use Log;
 class Bandaid {
     private $client;
     public function __construct() {
@@ -26,21 +26,56 @@ class Bandaid {
         ]);
     }
 
+    public function performRequest($url) {
+        if($value = Cache::get($url)) {
+            return $value;
+        }
+        else {
+            $result = $this->client->get($url);
+            $value = json_decode($result->getBody());
+            Cache::put($url, $value, 600);
+            return $value;
+        }
+    }
+    
     public function getDepartments(array $deptIds): array {
         try {
-            $result = $this->client->get('department/?' . urldecode(http_build_query(["deptId" => $deptIds])));
-            return json_decode($result->getBody());
+            $result = $this->performRequest('department/?' . urldecode(http_build_query(["deptId" => $deptIds])));
+            return $result;
         } catch (RequestException $e) {
             $msg = $e->getMessage();
             $errorMessage = 'getUserName Error: ' . $msg;
+            throw new RuntimeException($errorMessage);
+        }
+    }    
+    
+    
+    public function getEmployeesForDepartment($deptId): array {
+        try {
+            $result = $this->performRequest('department/' . $deptId . '/employees');
+            return $result;
+        } catch (RequestException $e) {
+            $msg = $e->getMessage();
+            $errorMessage = 'getEmployees Error: ' . $msg;
+            throw new RuntimeException($errorMessage);
+        }
+    }
+
+    public function getLeavesForEmployee($emplId): array {
+        try {
+            $result = $this->performRequest('employment/leaves/' . $emplId);
+            return $result;
+        } catch (RequestException $e) {
+            $msg = $e->getMessage();
+            $errorMessage = 'getLeaves Error: ' . $msg;
             throw new RuntimeException($errorMessage);
         }
     }
 
     public function getTerms(): array {
         try {
-            $result = $this->client->get('classes/terms/');
-            return json_decode($result->getBody());
+            $result = $this->performRequest('classes/terms/');
+            return $result;
         } catch (RequestException $e) {
             $msg = $e->getMessage();
             $errorMessage = 'getTerms Error: ' . $msg;
@@ -66,8 +101,8 @@ class Bandaid {
 
     public function getDeptScheduleForTerm(int $deptId, int $term): array {
         try {
-            $result = $this->client->get('classes/list/' . $deptId . "/" . $term);
-            return json_decode($result->getBody());
+            $result = $this->performRequest('classes/list/' . $deptId . "/" . $term);
+            return $result;
         } catch (RequestException $e) {
             $msg = $e->getMessage();
             $errorMessage = 'getDepartmentSchedule Error: ' . $msg;
