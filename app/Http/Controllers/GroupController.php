@@ -378,4 +378,18 @@ class GroupController extends Controller
 
         return response()->json($groupTypes);
     }
+
+    // get all of the groups including anyone who is flagged an active admin
+    public function getGroupsWithAdmins() {
+        $groups = \App\Group::where("active_group",1)->get()->load("groupType", "parentGroup", "childGroups", "parentOrganization", "artifacts", "activeMembers");
+        $groups->load("activeMembers.user", "activeMembers.role");
+        // only return members who are marked as admins
+        $groups->transform(function($group) {
+            $group->activeMembers = $group->activeMembers->filter(function($member) {
+                return $member->admin;
+            });
+            return $group;
+        });
+        return response()->json($groups);
+    }
 }
