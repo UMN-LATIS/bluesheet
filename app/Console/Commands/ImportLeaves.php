@@ -67,7 +67,6 @@ class ImportLeaves extends Command
                     $leave->status = $leave::STATUS_CONFIRMED;
                     $leave->type = $leave::TYPE_OTHER;
                     $leave->description = "Imported Leave";
-                    // $leave->save();
                     $user->leaves()->save($leave);
                     echo "Created leave for " . $user->emplid . " from " . $leave->start_date . " to " . $leave->end_date . "action" . $importLeave->ACTION . "\n";
                 }
