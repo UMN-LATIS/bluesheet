@@ -93,37 +93,7 @@ export default {
     },
     groupsWithoutAdmins: function() {
         return this.groupData.filter(group => group.activeMembers.length === 0);
-    },
-
-    sortedListByDepartment: function () {
-    //   return [...this.listByDepartment].sort((a, b) => {
-    //     let modifier = 1;
-    //     if (this.currentSortDir === "desc") modifier = -1;
-
-    //     a = a?.[this.currentSort] || " ";
-    //     b = b?.[this.currentSort] || " ";
-
-    //     if (typeof a === "string") {
-    //       a = a.toLowerCase();
-    //     } else {
-    //       if (a[0] && a[0].user && a[0].user.displayName) {
-    //         a = a[0].user.displayName.toLowerCase();
-    //       }
-    //     }
-
-    //     if (typeof b === "string") {
-    //       b = b.toLowerCase();
-    //     } else {
-    //       if (b[0] && b[0].user && b[0].user.displayName) {
-    //         b = b[0].user.displayName.toLowerCase();
-    //       }
-    //     }
-
-    //     if (a < b) return -1 * modifier;
-    //     if (a > b) return 1 * modifier;
-    //     return 0;
-    //   });
-    },
+    }
   },
   async mounted() {
     var groupData = await axios.get("/api/group/admins");
