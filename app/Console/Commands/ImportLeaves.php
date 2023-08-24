@@ -69,6 +69,7 @@ class ImportLeaves extends Command
                     $leave->description = "Imported Leave";
                     $user->leaves()->save($leave);
                     echo "Created leave for " . $user->emplid . " from " . $leave->start_date . " to " . $leave->end_date . "action" . $importLeave->ACTION . "\n";
+                    $user->refresh();
                 }
 
             }
