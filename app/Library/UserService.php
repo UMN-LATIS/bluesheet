@@ -26,6 +26,15 @@ class UserService {
     }
 
     public function attachInstructorsToCourses(Collection $courses): Collection {
+        
+        // prefetch any instructors that we know about and stuff them in our user cache so we avoid n+1 queries
+        $allInstructorsFromCourses = $courses->pluck('INSTRUCTOR_EMPLID')->unique()->filter();
+        $loadedUsers = User::whereIn('emplid', $allInstructorsFromCourses)->with('leaves')->get();
+        $loadedUsers->each(function ($user) {
+            $this->userCache[$user->emplid] = $user;
+        });
+        
+    
         return $courses->each(function ($course) {
             if (!$course->INSTRUCTOR_EMPLID) return;
 
