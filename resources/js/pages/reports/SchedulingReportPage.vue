@@ -39,14 +39,14 @@
           <CheckboxGroup
             id="filter-courses-checkbox"
             v-model="filterINDCourses"
-            label="Filter IND courses"
+            label="Hide IND courses"
           />
           <InputGroup
             :modelValue="searchTerm"
             @update:modelValue="debouncedSearch"
             placeholder="Search"
             label="Search"
-            class="tw-w-64"
+            class="tw-w-64 tw-flex tw-items-end"
             type="search"
             :showLabel="false"
           />
@@ -215,7 +215,7 @@ function selectInstructorTermCourses(
     allDeptCoursesInTerm?.filter((course) => {
       return course.instructor.id === instructor.id;
     }).filter((course) => {
-      return !filterINDCourses.value || course.compomentType !== "IND";
+      return !filterINDCourses.value || course.componentType !== "IND";
     }) ?? [];
   return [...courses].sort(sortCoursesByCourseNumber);
 }
