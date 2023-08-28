@@ -36,21 +36,22 @@
           </tr>
         </template>
         <template #actions>
-          <CheckboxGroup
-            id="filter-courses-checkbox"
-            v-model="filterINDCourses"
-            label="Hide IND courses"
-          />
-          <InputGroup
-            :modelValue="searchTerm"
-            @update:modelValue="debouncedSearch"
-            placeholder="Search"
-            label="Search"
-            class="tw-w-64 tw-flex tw-items-end"
-            type="search"
-            :showLabel="false"
-          />
-         
+          <div class="tw-flex tw-items-center tw-gap-4">
+            <CheckboxGroup
+              id="filter-courses-checkbox"
+              v-model="filterINDCourses"
+              label="Hide IND courses"
+            />
+            <InputGroup
+              :modelValue="searchTerm"
+              @update:modelValue="debouncedSearch"
+              placeholder="Search"
+              label="Search"
+              class="tw-w-64 tw-flex tw-items-end"
+              type="search"
+              :showLabel="false"
+            />
+          </div>
         </template>
 
         <tr
