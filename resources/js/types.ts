@@ -213,6 +213,7 @@ export interface Course {
   enrollmentCap: number;
   enrollmentTotal: number;
   cancelled: boolean;
+  component: string; // "LEC"
   instructor: Instructor;
 }
 

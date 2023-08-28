@@ -36,6 +36,11 @@
           </tr>
         </template>
         <template #actions>
+          <CheckboxGroup
+            id="filter-courses-checkbox"
+            v-model="filterINDCourses"
+            label="Filter IND courses"
+          />
           <InputGroup
             :modelValue="searchTerm"
             @update:modelValue="debouncedSearch"
@@ -45,7 +50,9 @@
             type="search"
             :showLabel="false"
           />
+         
         </template>
+
         <tr
           v-for="instructor in filteredInstructorsSortedByName"
           :key="instructor.id"
@@ -104,6 +111,7 @@ import { Table, Td, Th } from "@/components/Table";
 import LeaveChip from "@/components/LeaveChip.vue";
 import Spinner from "@/components/Spinner.vue";
 import InputGroup from "@/components/InputGroup.vue";
+import CheckboxGroup from "@/components/CheckboxGroup.vue";
 
 const props = defineProps<{
   groupId: number;
@@ -117,7 +125,7 @@ const group = ref<Group>();
 const termsMap = ref<Map<TermId, Term>>(new Map());
 const coursesByTermMap = ref<Map<TermId, Course[]>>(new Map());
 const searchTerm = ref<string>("");
-
+const filterINDCourses = ref<boolean>(true);
 const instructorsMap = computed((): Map<InstructorId, Instructor> => {
   const allInstructors = new Map<InstructorId, Instructor>();
   coursesByTermMap.value.forEach((courses: Course[]) => {
@@ -206,6 +214,8 @@ function selectInstructorTermCourses(
   const courses =
     allDeptCoursesInTerm?.filter((course) => {
       return course.instructor.id === instructor.id;
+    }).filter((course) => {
+      return !filterINDCourses.value || course.compomentType !== "IND";
     }) ?? [];
   return [...courses].sort(sortCoursesByCourseNumber);
 }
