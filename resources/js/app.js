@@ -17,5 +17,6 @@ import App from "./App.vue";
 import "@umn-latis/cla-vue-template/dist/style.css";
 import "vue3-tour/dist/vue3-tour.css";
 import "../sass/app.scss";
+import "../sass/utils.css";
 
 createApp(App).use(store).use(router).use(VTooltip).use(VueTour).mount("#app");

@@ -1,4 +1,6 @@
 import { createStore } from "vuex";
+import { axios } from "@/lib";
+import { User } from "@/types";
 
 export const store = createStore({
   state: {
@@ -6,7 +8,7 @@ export const store = createStore({
       groups: [],
       roles: [],
     },
-    user: null,
+    user: null as User | null,
   },
   actions: {
     toggleFavorite({ commit, state }, payload) {

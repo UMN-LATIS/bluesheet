@@ -29,7 +29,8 @@
     "spatie/laravel-permission": "^5.0"
   },
   "require-dev": {
-    "barryvdh/laravel-debugbar": "^3.3",
+    "barryvdh/laravel-debugbar": "^3.9",
+    "barryvdh/laravel-ide-helper": "^2.13",
     "beyondcode/laravel-dump-server": "^1.0",
     "deployer/deployer": "^7.1",
     "filp/whoops": "^2.0",

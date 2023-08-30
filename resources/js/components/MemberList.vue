@@ -1,6 +1,6 @@
 <template>
   <tbody>
-    <tr v-for="(member, key) in filteredList" :key="key">
+    <tr v-for="member in filteredList" :key="member.id">
       <td v-if="filterList">
         <input v-model="member.filtered" type="checkbox" />
       </td>
@@ -24,7 +24,8 @@
           <ComboBox
             v-if="roles"
             v-model="member.role"
-            v-model:options="localRoles"
+            :options="roles"
+            @update:options="$emit('update:roles', $event)"
             :canAddNewOption="true"
           />
         </td>
@@ -96,7 +97,7 @@
         />
       </td>
       <td v-if="editing">
-        <button class="btn btn-danger" @click="$emit('remove', member, key)">
+        <button class="btn btn-danger" @click="$emit('remove', member)">
           <i class="fas fa-user-minus"></i>
         </button>
       </td>
@@ -123,12 +124,7 @@ export default {
     "show_unit",
     "viewType",
   ],
-  emits: ["remove"],
-  data() {
-    return {
-      localRoles: this.roles,
-    };
-  },
+  emits: ["remove", "update:roles"],
   methods: {
     dayjs,
     $can,

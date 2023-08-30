@@ -41,7 +41,7 @@
         <NavbarItem>
           <a
             class="nav-link"
-            href="https://umn-latis.github.io/Caligari/"
+            href="https://umn-latis.github.io/bluesheet/"
             target="_blank"
             >Help <i class="fas fa-question-circle"></i
           ></a>
@@ -52,7 +52,7 @@
       </template>
     </AppHeader>
 
-    <PostIt class="container post-it">
+    <PostIt class="container-fluid post-it">
       <router-view :key="$route.fullPath" :userperms="userperms"></router-view>
     </PostIt>
 
@@ -189,6 +189,4 @@ export default {
     justify-content: center;
   }
 }
-
 </style>
-

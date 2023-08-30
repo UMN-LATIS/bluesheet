@@ -11,9 +11,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Permission\Traits\HasRoles;
 use Spatie\Permission\Models\Permission;
 use Laravel\Sanctum\HasApiTokens;
+use App\Leave;
 
-class User extends Authenticatable implements Auditable
-{
+class User extends Authenticatable implements Auditable {
     use HasFactory;
     use \OwenIt\Auditing\Auditable;
     use Notifiable;
@@ -30,6 +30,10 @@ class User extends Authenticatable implements Auditable
      * @var array
      */
     protected $dates = ['deleted_at'];
+    protected $casts = [
+        'send_email_reminders' => 'boolean',
+        'notify_of_favorite_changes' => 'boolean',
+    ];
 
     /**
      * The attributes that are mass assignable.
@@ -37,7 +41,7 @@ class User extends Authenticatable implements Auditable
      * @var array
      */
     protected $fillable = [
-        'givenname', 'surname', 'displayname','email','umndid', 'ou', 'send_email_reminders', 'notify_of_favorite_changes'
+        'givenname', 'surname', 'displayname', 'email', 'umndid', 'ou', 'send_email_reminders', 'notify_of_favorite_changes'
     ];
 
     public function memberships() {
@@ -56,7 +60,7 @@ class User extends Authenticatable implements Auditable
         return $this->belongsToMany('App\Role', 'favorite_roles');
     }
 
-     public function getAllPermissionsAttribute() {
+    public function getAllPermissionsAttribute() {
         $permissions = [];
         foreach (Permission::all() as $permission) {
             if ($this->can($permission->name)) {
@@ -64,5 +68,13 @@ class User extends Authenticatable implements Auditable
             }
         }
         return $permissions;
+    }
+
+    public function leaves() {
+        return $this->hasMany(Leave::class);
+    }
+
+    public function leavesIncludingTrashed() {
+        return $this->hasMany(Leave::class)->withTrashed();
     }
 }

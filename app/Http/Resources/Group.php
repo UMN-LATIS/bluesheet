@@ -28,7 +28,7 @@ class Group extends JsonResource
             "parent_group"=>$this->parentGroup,
             "child_groups"=>$this->childGroups,
             "google_group"=>$this->google_group,
-            "show_unit"=>$this->show_unit?true:false,
+            "show_unit"=> $this->show_unit,
             "secret_hash"=> $this->hash,
             "parent_organization"=>$this->parentOrganization,
             "parent_organization_id"=>$this->parent_organization_id,

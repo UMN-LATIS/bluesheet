@@ -207,6 +207,7 @@
       :downloadTitle="localGroup.group_title"
       :group="group"
       @update:members="handleUpdateMembers"
+      @update:roles="(updatedRoles) => (roles = updatedRoles)"
     ></Members>
 
     <div class="row border border-danger rounded deactivate">

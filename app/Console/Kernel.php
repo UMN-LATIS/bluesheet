@@ -25,8 +25,10 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('sync:users')
-                 ->daily();
+                ->daily();
         
+        $schedule->command('import:leaves')
+                ->dailyAt('01:00');
         
         
         if (App::environment('production')) {

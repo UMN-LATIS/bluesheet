@@ -40,6 +40,6 @@ class GroupsOfficialRolesControl extends Migration
      */
     public function down()
     {
-        //
+        Schema::drop('group_type_role');
     }
 }

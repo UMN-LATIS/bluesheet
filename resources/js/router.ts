@@ -17,6 +17,19 @@ import FiscalReportPage from "./pages/reports/FiscalReportPage.vue";
 import LastModifiedReportPage from "./pages/reports/LastModifiedReportPage.vue";
 import MissingOfficialReportPage from "./pages/reports/MissingOfficialReportPage.vue";
 import OrgpReportPage from "./pages/reports/OrgpReportPage.vue";
+import SchedulingReportPage from "./pages/reports/SchedulingReportPage.vue";
+import GroupAdminsReportPage from "./pages/reports/GroupAdmins.vue";
+
+function parseIntFromParam(
+  param: string | string[] | undefined,
+): number | null {
+  if (typeof param !== "string") {
+    return null;
+  }
+
+  const n = Number.parseInt(param);
+  return Number.isNaN(n) ? null : n;
+}
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -26,7 +39,9 @@ export const router = createRouter({
       name: "user",
       path: "/user/:userId?",
       component: UserHomePage,
-      props: true,
+      props: (route) => ({
+        userId: parseIntFromParam(route.params.userId),
+      }),
     },
     {
       name: "userList",
@@ -92,6 +107,20 @@ export const router = createRouter({
       path: "/reports/committeeService",
       component: CommitteeServiceReportPage,
       props: true,
+    },
+    {
+      name: "groupadmins",
+      path: "/reports/groupAdmins",
+      component: GroupAdminsReportPage,
+      props: true,
+    },
+    {
+      name: "schedulingReport",
+      path: "/reports/schedulingReport/:groupId",
+      component: SchedulingReportPage,
+      props: (route) => ({
+        groupId: parseIntFromParam(route.params.groupId),
+      }),
     },
   ],
 });
