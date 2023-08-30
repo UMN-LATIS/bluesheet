@@ -45,6 +45,7 @@ export default {
         .then((res) => {
           this.group = res.data;
           // commenting this out, because it seems like we're returning the full membership as part of the group already
+          // not totally convinced i'm not missing something though.
           // this.group.members = [];
           // axios
           //   .get(

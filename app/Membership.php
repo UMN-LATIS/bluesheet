@@ -13,6 +13,10 @@ class Membership extends Model implements Auditable
     use SoftDeletes;
     public $timestamps = true;
     protected $touches = ['group'];
+    
+    protected $casts = [
+        'admin' => 'boolean',
+     ];
     /**
      * The attributes that should be mutated to dates.
      *
