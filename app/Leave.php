@@ -5,10 +5,12 @@ namespace App;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use OwenIt\Auditing\Contracts\Auditable;
 
-class Leave extends Model {
+class Leave extends Model implements Auditable {
     use SoftDeletes;
     use HasFactory;
+    use \OwenIt\Auditing\Auditable;
 
     public $timestamps = true;
     public $fillable = [
