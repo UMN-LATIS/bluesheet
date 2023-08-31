@@ -113,7 +113,6 @@ class GroupController extends Controller
      */
     public function show($group, $hash=null)
     {
-
         if(!$this->authorize('view', $group) && ($hash != $group->hash)) {
             $returnData = array(
                 'status' => 'error',
@@ -122,7 +121,13 @@ class GroupController extends Controller
             return Response()->json($returnData, 500);
         }
         else {
-            return new GroupResource($group->load('members', 'members.user', 'members.role', 'activeMembers', 'activeMembers.user'));
+            if($group->include_child_groups) {
+                return new GroupResource($group->load('members', 'members.user', 'members.role', 'childGroups', 'childGroups.members', 'childGroups.members.user', 'childGroups.members.role', 'activeMembers', 'activeMembers.user'));
+            }
+            else {
+                return new GroupResource($group->load('members', 'members.user', 'members.role', 'activeMembers', 'activeMembers.user'));
+            }
+            
         }
     }
 

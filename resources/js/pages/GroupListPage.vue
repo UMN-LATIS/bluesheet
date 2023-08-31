@@ -143,7 +143,6 @@ export default {
 
         breadCrumbArray.push({ title: item.label, path: "/groups/" + item.id });
       }
-      console.log(breadCrumbArray);
       return breadCrumbArray;
     },
     mergedSortedList: function () {

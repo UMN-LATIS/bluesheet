@@ -28,13 +28,16 @@ class Group extends JsonResource
             "parent_group"=>$this->parentGroup,
             "child_groups"=>$this->childGroups,
             "google_group"=>$this->google_group,
-            "show_unit"=> (bool) $this->show_unit,
+            "show_unit"=> $this->show_unit,
             "secret_hash"=> $this->hash,
             "parent_organization"=>$this->parentOrganization,
             "parent_organization_id"=>$this->parent_organization_id,
             "active"=>$this->active_group,
             "artifacts"=>$this->artifacts,
-            "notes"=>$this->notes
+            "notes"=>$this->notes,
+            "include_child_groups"=>$this->include_child_groups,
+            "members"=>$this->relationLoaded('members')?($this->members->map(function($membership) {
+                return new MembershipResource($membership);})):[]
         ];
     }
 }

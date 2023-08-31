@@ -119,6 +119,21 @@
           </div>
         </div>
         <div class="row">
+          <div class="col-md-6">
+            <div class="form-check">
+              <input
+                id="includechildgroups"
+                v-model="localGroup.include_child_groups"
+                class="form-check-input"
+                type="checkbox"
+              />
+              <label class="form-check-label small" for="includechildgroups">
+                Include Child Groups in Member List
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="row">
           <div class="col-md-12">
             <label for="groupNotes" class="small">Group Notes</label>
             <textarea
@@ -190,6 +205,7 @@
       :roles="filteredRoles"
       viewType="group"
       :downloadTitle="localGroup.group_title"
+      :group="group"
       @update:members="handleUpdateMembers"
       @update:roles="(updatedRoles) => (roles = updatedRoles)"
     ></Members>
