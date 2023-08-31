@@ -5,4 +5,5 @@ export { default as CircleXIcon } from "./CircleXIcon.vue";
 export { default as ExternalLinkIcon } from "./ExternalLinkIcon.vue";
 export { default as NoIcon } from "./NoIcon.vue";
 export { default as QuestionIcon } from "./QuestionIcon.vue";
+export { default as StarIcon } from "./StarIcon.vue";
 export { default as VDotsIcon } from "./VDotsIcon.vue";

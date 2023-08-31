@@ -36,11 +36,13 @@ class Leave extends Model implements Auditable {
 
     const STATUS_CONFIRMED = 'confirmed';
     const STATUS_PENDING = 'pending';
+    const STATUS_ELIGIBLE = 'eligible';
     const STATUS_CANCELLED = 'cancelled';
     const STATUSES = [
         self::STATUS_CONFIRMED,
         self::STATUS_PENDING,
         self::STATUS_CANCELLED,
+        self::STATUS_ELIGIBLE
     ];
 
     const TYPE_SABBATICAL = 'sabbatical';
@@ -67,6 +69,7 @@ class Leave extends Model implements Auditable {
             self::STATUS_CONFIRMED,
             self::STATUS_PENDING,
             self::STATUS_CANCELLED,
+            self::STATUS_ELIGIBLE,
         ];
         if (!in_array($value, $allowed)) {
             throw new \Exception("Invalid leave status");

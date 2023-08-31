@@ -236,6 +236,8 @@ const isCurrentOrFutureLeave = computed(() =>
 
 const statusColor = computed(() => {
   switch (props.modelValue.status) {
+    case leaveStatuses.ELIGIBLE:
+      return "blue-600";
     case leaveStatuses.PENDING:
       return "orange-600";
     case leaveStatuses.CONFIRMED:

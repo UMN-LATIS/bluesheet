@@ -15,6 +15,8 @@
     >
       <CircleCheckIcon v-if="leave.status === 'confirmed'" title="confirmed" />
       <QuestionIcon v-if="leave.status === 'pending'" title="pending" />
+      <StarIcon v-if="leave.status === 'eligible'" title="eligible" />
+      
       <NoIcon v-if="leave.status === 'cancelled'" title="cancelled" />
       <span
         :class="{
@@ -24,7 +26,6 @@
         {{ leave.type }} Leave
       </span>
     </header>
-
     <div
       v-if="isOpen"
       class="leave-details tw-flex tw-flex-col tw-gap-2 tw-items-center tw-text-xs"
@@ -45,7 +46,7 @@ import { ISODate, Leave, Term, leaveStatuses } from "@/types";
 import { computed, ref } from "vue";
 import dayjs from "dayjs";
 import Chip from "./Chip.vue";
-import { CircleCheckIcon, QuestionIcon, NoIcon } from "@/icons";
+import { CircleCheckIcon, QuestionIcon, NoIcon, StarIcon } from "@/icons";
 
 const props = defineProps<{
   leave: Leave;
@@ -55,6 +56,8 @@ const isOpen = ref(false);
 
 const statusColor = computed(() => {
   switch (props.leave.status) {
+    case leaveStatuses.ELIGIBLE:
+      return "blue-600";
     case leaveStatuses.PENDING:
       return "orange-600";
     case leaveStatuses.CONFIRMED:
