@@ -21,7 +21,7 @@
           'tw-line-through': leave.status === 'cancelled',
         }"
       >
-        {{ leave.type }} Leave
+        {{ prettyLeaveType }} Leave
       </span>
     </header>
 
@@ -52,6 +52,8 @@ const props = defineProps<{
 }>();
 
 const isOpen = ref(false);
+
+const prettyLeaveType = computed(() => props.leave.type.replace(/_/g, " "));
 
 const statusColor = computed(() => {
   switch (props.leave.status) {
