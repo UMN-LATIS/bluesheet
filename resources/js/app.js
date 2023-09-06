@@ -8,15 +8,13 @@ import "./bootstrap";
 
 import { createApp } from "vue";
 import VTooltip from "v-tooltip";
-import VueTour from "vue3-tour";
 import { store } from "./store";
 import { router } from "./router";
 import App from "./App.vue";
 
 // Global CSS
 import "@umn-latis/cla-vue-template/dist/style.css";
-import "vue3-tour/dist/vue3-tour.css";
 import "../sass/app.scss";
 import "../sass/utils.css";
 
-createApp(App).use(store).use(router).use(VTooltip).use(VueTour).mount("#app");
+createApp(App).use(store).use(router).use(VTooltip).mount("#app");
