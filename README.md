@@ -29,7 +29,7 @@ composer install
 sail up
 
 # create app key, link storage, etc
-sail exec laravel.test ./bin/ci.sh
+sail exec app ./bin/ci.sh
 
 # migrate the database
 sail artisan migrate:fresh --seed
