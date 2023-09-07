@@ -31,7 +31,6 @@
     "v-tooltip": "^2.0.3",
     "vue": "^3.1.0",
     "vue-router": "4",
-    "vue3-tour": "^0.3.4",
     "vuex": "^4.0.2"
   },
   "devDependencies": {
