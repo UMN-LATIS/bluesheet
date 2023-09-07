@@ -8,10 +8,15 @@
         type="checkbox"
         class="tw-h-4 tw-w-4 tw-rounded tw-border-neutral-300 tw-text-indigo-600 focus:tw-ring-indigo-600"
         :checked="modelValue"
-        @change="$emit('update:modelValue', ($event.target as HTMLInputElement).checked)"
+        @change="
+          $emit(
+            'update:modelValue',
+            ($event.target as HTMLInputElement).checked,
+          )
+        "
       />
     </div>
-    <div class="tw-ml-3 tw-text-sm tw-leading-6">
+    <div class="tw-ml-2 tw-text-sm tw-leading-6">
       <label :for="id" class="tw-font-semibold tw-text-neutral-900 tw-m-0">
         {{ label }}
       </label>
