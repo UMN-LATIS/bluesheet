@@ -1,6 +1,11 @@
 <template>
-  <Table name="Roles">
-    <template #actions>
+  <div>
+    <div class="tw-flex tw-justify-between tw-items-center tw-mb-4">
+      <h2
+        class="tw-text-lg tw-font-semibold tw-leading-6 tw-text-gray-900 tw-mb-0"
+      >
+        Roles
+      </h2>
       <div class="tw-flex tw-items-center tw-gap-4">
         <CheckboxGroup
           id="show-past-roles-checkbox"
@@ -8,52 +13,53 @@
           label="Show Past Roles"
         />
       </div>
-    </template>
-
-    <template #thead>
-      <tr>
-        <Th>Group</Th>
-        <Th>Role</Th>
-        <Th>From</Th>
-        <Th>Until</Th>
+    </div>
+    <Table name="Roles">
+      <template #thead>
+        <tr>
+          <Th>Group</Th>
+          <Th>Role</Th>
+          <Th>From</Th>
+          <Th>Until</Th>
+        </tr>
+      </template>
+      <tr v-if="!filteredList.length">
+        <Td
+          class="tw-text-center !tw-p-6 tw-italic tw-text-neutral-500"
+          colspan="4"
+        >
+          No Roles
+        </Td>
       </tr>
-    </template>
-    <tr v-if="!filteredList.length">
-      <Td
-        class="tw-text-center !tw-p-6 tw-italic tw-text-neutral-500"
-        colspan="4"
-      >
-        No Roles
-      </Td>
-    </tr>
-    <tr v-for="(membership, index) in filteredList" :key="index">
-      <Td>
-        <router-link
-          v-if="membership.group.id"
-          :to="{ name: 'group', params: { groupId: membership.group.id } }"
-          ><GroupTitle :group="membership.group"
-        /></router-link>
-        <span v-if="!membership.group.id"
-          ><GroupTitle :group="membership.group"
-        /></span>
-      </Td>
-      <Td>{{ membership.role.label }}</Td>
-      <Td>
-        {{
-          membership.start_date
-            ? dayjs(membership.start_date).format("MMM D, YYYY")
-            : ""
-        }}
-      </Td>
-      <Td>
-        {{
-          membership.end_date
-            ? dayjs(membership.end_date).format("MMM D, YYYY")
-            : ""
-        }}
-      </Td>
-    </tr>
-  </Table>
+      <tr v-for="(membership, index) in filteredList" :key="index">
+        <Td>
+          <router-link
+            v-if="membership.group.id"
+            :to="{ name: 'group', params: { groupId: membership.group.id } }"
+            ><GroupTitle :group="membership.group"
+          /></router-link>
+          <span v-if="!membership.group.id"
+            ><GroupTitle :group="membership.group"
+          /></span>
+        </Td>
+        <Td>{{ membership.role.label }}</Td>
+        <Td>
+          {{
+            membership.start_date
+              ? dayjs(membership.start_date).format("MMM D, YYYY")
+              : ""
+          }}
+        </Td>
+        <Td>
+          {{
+            membership.end_date
+              ? dayjs(membership.end_date).format("MMM D, YYYY")
+              : ""
+          }}
+        </Td>
+      </tr>
+    </Table>
+  </div>
 </template>
 
 <script lang="ts" setup>
