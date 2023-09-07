@@ -4,7 +4,7 @@
       {{ group?.group_title }} <br />
       <span class="tw-text-3xl">Scheduling Report</span>
     </h1>
-    <section class="tw-flex tw-flex-col tw-gap-4 tw-mb-4 tw-max-w-xs">
+    <section class="tw-flex tw-flex-col tw-gap-4 tw-mb-4 tw-max-w-md">
       <h2 class="sr-only">Report Filters</h2>
 
       <fieldset>
@@ -13,15 +13,15 @@
         >
           Terms
         </legend>
-        <div class="tw-grid tw-grid-cols-2 tw-gap-2">
+        <div class="tw-flex tw-gap-2">
           <SelectGroup
             v-model="filters.startTermId"
             label="Start Term"
             :showLabel="false"
             :options="
-              termsSortedByDate.map((term) => ({
+              allTermsSortedByDate.map((term) => ({
                 text: term.name,
-                value: term.id,
+                value: String(term.id),
               }))
             "
           />
@@ -30,12 +30,19 @@
             label="End Term"
             :showLabel="false"
             :options="
-              termsSortedByDate.map((term) => ({
+              allTermsSortedByDate.map((term) => ({
                 text: term.name,
-                value: term.id,
+                value: String(term.id),
               }))
             "
           />
+          <Button
+            variant="primary"
+            @click="runReport"
+            class="tw-whitespace-nowrap"
+          >
+            Run Report
+          </Button>
         </div>
       </fieldset>
 
@@ -95,13 +102,15 @@
         class="scheduling-report"
         :sticky-first-column="true"
         :sticky-header="true"
-        v-if="instructorsMap.size > 0 && termsMap.size > 0"
+        v-if="
+          instructorsMap.size > 0 && sortedTermsBetweenStartAndEndFilters.length
+        "
       >
         <template #thead>
           <tr>
             <Th class="instructor-column">Instructor</Th>
             <Th
-              v-for="term in termsSortedByDate"
+              v-for="term in sortedTermsBetweenStartAndEndFilters"
               :id="term.id"
               class="tw-whitespace-nowrap"
             >
@@ -128,7 +137,7 @@
               >{{ instructor.surName }}, {{ instructor.givenName }}
             </RouterLink>
           </Td>
-          <Td v-for="term in termsSortedByDate">
+          <Td v-for="term in sortedTermsBetweenStartAndEndFilters">
             <div class="leaves tw-flex tw-flex-col tw-gap-1 tw-mb-2">
               <LeaveChip
                 v-for="leave in selectInstructorTermLeaves(instructor, term)"
@@ -164,9 +173,9 @@
 </template>
 
 <script setup lang="ts">
-import { watch, ref, reactive, computed } from "vue";
+import { onMounted, ref, reactive, computed } from "vue";
 import * as api from "@/api";
-import { Course, Term, Group, Instructor, Leave } from "@/types";
+import { Course, Term, Group, Instructor, Leave, ISODate } from "@/types";
 import debounce from "lodash-es/debounce";
 import dayjs from "dayjs";
 import { Table, Td, Th } from "@/components/Table";
@@ -175,6 +184,8 @@ import Spinner from "@/components/Spinner.vue";
 import InputGroup from "@/components/InputGroup.vue";
 import CheckboxGroup from "@/components/CheckboxGroup.vue";
 import SelectGroup from "@/components/SelectGroup.vue";
+import pMap from "p-map";
+import Button from "@/components/Button.vue";
 
 const props = defineProps<{
   groupId: number;
@@ -191,29 +202,39 @@ const filters = reactive({
   showINDCourses: true,
   showGradCourses: true,
   showUndergradCourses: true,
-  startTermId: "" as string | number,
-  endTermId: "" as string | number,
-  instructorTypes: {
-    faculty: true, // full-time faculty
-    teachingSpecialist: true,
-    TA: true,
-  },
+  startTermId: "",
+  endTermId: "",
   search: "",
 });
 
-const firstTerm = computed((): Term | null => {
-  const totalTerms = termsSortedByDate.value.length;
-  if (!totalTerms) {
+const startTerm = computed((): Term | null => {
+  const termIdInt = Number(filters.startTermId);
+  if (Number.isNaN(termIdInt)) {
     return null;
   }
-  return termsSortedByDate.value[0];
+  return termsMap.value.get(termIdInt) ?? null;
 });
-const lastTerm = computed((): Term | null => {
-  const totalTerms = termsSortedByDate.value.length;
-  if (!totalTerms) {
+const endTerm = computed((): Term | null => {
+  const termIdInt = Number(filters.endTermId);
+  if (Number.isNaN(termIdInt)) {
     return null;
   }
-  return termsSortedByDate.value[totalTerms - 1];
+  return termsMap.value.get(termIdInt) ?? null;
+});
+
+const sortedTermsBetweenStartAndEndFilters = computed(() => {
+  if (!startTerm.value || !endTerm.value) {
+    return [];
+  }
+  const termsInRange = selectTermsWithinRangeInclusive(
+    startTerm.value.startDate,
+    endTerm.value.endDate,
+    [...termsMap.value.values()],
+  );
+
+  return termsInRange.sort((a, b) => {
+    return dayjs(a.startDate).isBefore(dayjs(b.startDate)) ? -1 : 1;
+  });
 });
 
 const instructorsMap = computed((): Map<InstructorId, Instructor> => {
@@ -224,6 +245,17 @@ const instructorsMap = computed((): Map<InstructorId, Instructor> => {
     });
   });
   return allInstructors;
+});
+
+const instructorsTeachingTermsWithinRange = computed(() => {
+  const allInstructors = Array.from(instructorsMap.value.values());
+
+  return allInstructors.filter((instructor) => {
+    return sortedTermsBetweenStartAndEndFilters.value.some((term) => {
+      const courses = selectInstructorTermCourses(instructor, term);
+      return courses.length > 0;
+    });
+  });
 });
 
 function sortByName(
@@ -250,7 +282,7 @@ function hasInstructorTaughtCourseMatchingSearchTerm(
   instructor: Instructor,
   searchTerm: string,
 ) {
-  return termsSortedByDate.value.some((term) => {
+  return sortedTermsBetweenStartAndEndFilters.value.some((term) => {
     const courses = selectInstructorTermCourses(instructor, term);
     return courses.some((course) =>
       doesCourseMatchSearchTerm(course, searchTerm),
@@ -269,7 +301,7 @@ function doesInstructorNameMatchSearchTerm(
 }
 
 const filteredInstructorsSortedByName = computed(() => {
-  return Array.from(instructorsMap.value.values())
+  return instructorsTeachingTermsWithinRange.value
     .filter((instructor) => {
       return (
         doesInstructorNameMatchSearchTerm(instructor, filters.search) ||
@@ -280,7 +312,7 @@ const filteredInstructorsSortedByName = computed(() => {
 });
 
 const isTableLoading = computed(() => {
-  return Array.from(termsMap.value.values()).some((term) => {
+  return sortedTermsBetweenStartAndEndFilters.value.some((term) => {
     return !coursesByTermMap.value.has(term.id);
   });
 });
@@ -328,62 +360,86 @@ function selectInstructorTermLeaves(
   );
 }
 
-const termsSortedByDate = computed((): Term[] => {
+const allTermsSortedByDate = computed((): Term[] => {
   return [...termsMap.value.values()].sort((a, b) => {
     return dayjs(a.startDate).isBefore(dayjs(b.startDate)) ? -1 : 1;
   });
 });
 
-function selectTermsWithinRange(terms: Term[]) {
-  const threeYearsAgo = dayjs().subtract(3, "year");
-  const twoYearsFromNow = dayjs().add(2, "year");
+function selectTermsWithinRangeInclusive(
+  startDate: ISODate,
+  endDate: ISODate,
+  terms: Term[],
+) {
   return terms.filter((term) => {
     const termStart = dayjs(term.startDate);
     const termEnd = dayjs(term.endDate);
     return (
-      termStart.isAfter(threeYearsAgo) && termEnd.isBefore(twoYearsFromNow)
+      termStart.isSameOrAfter(startDate) && termEnd.isSameOrBefore(endDate)
     );
   });
 }
 
-watch(
-  termsSortedByDate,
-  () => {
-    filters.startTermId = firstTerm.value?.id ?? "";
-    filters.endTermId = lastTerm.value?.id ?? "";
-  },
-  { immediate: true },
-);
+const DEFAULT_START_DATE = dayjs().subtract(1.5, "year").format("YYYY-MM-DD");
+const DEFAULT_END_DATE = dayjs().add(1.5, "year").format("YYYY-MM-DD");
+const MAX_TERM_DATE = dayjs().add(3, "year").format("YYYY-MM-DD");
 
-watch(
-  () => props.groupId,
-  async () => {
-    // reset the maps
-    coursesByTermMap.value.clear();
+async function loadTerms() {
+  // reset the maps
+  termsMap.value.clear();
 
-    const [allTerms, groupResponse] = await Promise.all([
-      api.getTerms(),
-      api.getGroup(props.groupId),
-    ]);
+  // get terms and group info
+  const allTerms = await api.getTerms();
 
-    group.value = groupResponse;
-
-    const termsWithinRange = selectTermsWithinRange(allTerms);
-
-    // for each term, get the group courses and update the instructorTermCoursesMap
-    termsWithinRange.forEach(async (term) => {
+  // init the termsMap with all terms
+  allTerms
+    .filter((t) => {
+      return dayjs(t.endDate).isSameOrBefore(MAX_TERM_DATE);
+    })
+    .forEach((term) => {
       termsMap.value.set(term.id, term);
-
-      const courses = await api.getGroupCoursesByTerm({
-        termId: term.id,
-        groupId: props.groupId,
-      });
-
-      coursesByTermMap.value.set(term.id, courses);
     });
-  },
-  { immediate: true },
-);
+}
+
+async function loadGroup() {
+  group.value = await api.getGroup(props.groupId);
+}
+
+async function runReport() {
+  const termsToGet = sortedTermsBetweenStartAndEndFilters.value;
+
+  const loadCourseDataForTerm = async (term: Term) => {
+    const courses = await api.getGroupCoursesByTerm({
+      termId: term.id,
+      groupId: props.groupId,
+    });
+
+    coursesByTermMap.value.set(term.id, courses);
+  };
+
+  pMap(termsToGet, loadCourseDataForTerm, { concurrency: 5 });
+}
+
+onMounted(async () => {
+  // reset data
+  coursesByTermMap.value.clear();
+  termsMap.value.clear();
+  group.value = undefined;
+
+  // load data
+  await Promise.all([loadGroup(), loadTerms()]);
+
+  // set the default start and end terms
+  const defaultTerms = selectTermsWithinRangeInclusive(
+    DEFAULT_START_DATE,
+    DEFAULT_END_DATE,
+    [...termsMap.value.values()],
+  );
+  filters.startTermId = String(defaultTerms[0].id);
+  filters.endTermId = String(defaultTerms[defaultTerms.length - 1].id);
+
+  runReport();
+});
 </script>
 <style scoped lang="scss">
 .details-list {

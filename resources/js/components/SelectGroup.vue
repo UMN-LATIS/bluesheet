@@ -20,7 +20,7 @@
       class="form-control tw-text-sm tw-bg-transparent"
       :class="[
         {
-          'is-invalid': !isValid && isTouched,
+          'is-invalid': isValid === false && isTouched,
         },
         selectClass,
       ]"
@@ -35,7 +35,7 @@
       </option>
     </select>
     <small v-if="helpText" class="form-text text-muted">{{ helpText }}</small>
-    <div v-if="!isValid && isTouched" class="invalid-feedback">
+    <div v-if="isValid === false && isTouched" class="invalid-feedback">
       {{ errorText || `Invalid ${label}` }}
     </div>
   </div>
@@ -46,7 +46,7 @@ import { ref } from "vue";
 import { CSSClass } from "@/types";
 
 interface OptionType {
-  value: string | number;
+  value: string;
   text: string;
 }
 
@@ -71,6 +71,7 @@ withDefaults(
     required: false,
     placeholder: "",
     showLabel: true,
+    isValid: undefined,
   },
 );
 

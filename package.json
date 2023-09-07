@@ -26,6 +26,7 @@
     "jquery": "^3.4.1",
     "lodash-es": "^4.17.21",
     "p-debounce": "^4.0.0",
+    "p-map": "^6.0.0",
     "papaparse": "^5.4.1",
     "popper.js": "^1.16.1",
     "v-tooltip": "^2.0.3",

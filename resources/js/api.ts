@@ -77,15 +77,21 @@ export async function getGroupCoursesByTerm({
   groupId: number;
   termId: number;
 }) {
-  // const cacheKey: GetGroupByTermCacheKey = `${groupId}-${termId}`;
-  // if (getGroupByTermCache.has(cacheKey)) {
-  //   return getGroupByTermCache.get(cacheKey)!;
-  // }
+  // cache if we're in dev mode (so we don't have to wait for the API)
+  const cacheKey: GetGroupByTermCacheKey = `${groupId}-${termId}`;
+  if (import.meta.env.DEV) {
+    if (getGroupByTermCache.has(cacheKey)) {
+      return getGroupByTermCache.get(cacheKey)!;
+    }
+  }
 
   const res = await axios.get<Course[]>(
     `/api/terms/${termId}/groups/${groupId}/courses?includeRoles=PI`,
   );
-  // getGroupByTermCache.set(cacheKey, res.data);
+
+  if (import.meta.env.DEV) {
+    getGroupByTermCache.set(cacheKey, res.data);
+  }
   return res.data;
 }
 
