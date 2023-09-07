@@ -92,7 +92,9 @@
                 }"
               >
                 {{ course.subject }} {{ course.catalogNumber }}
-                {{ course.classSection }}
+                <span class="tw-text-xs tw-text-neutral-400">
+                  {{ course.enrollmentTotal }}/{{ course.enrollmentCap }}
+                </span>
               </div>
             </div>
           </Td>
@@ -213,11 +215,13 @@ function selectInstructorTermCourses(
 ): Course[] {
   const allDeptCoursesInTerm = coursesByTermMap.value.get(term.id);
   const courses =
-    allDeptCoursesInTerm?.filter((course) => {
-      return course.instructor.id === instructor.id;
-    }).filter((course) => {
-      return !filterINDCourses.value || course.componentType !== "IND";
-    }) ?? [];
+    allDeptCoursesInTerm
+      ?.filter((course) => {
+        return course.instructor.id === instructor.id;
+      })
+      .filter((course) => {
+        return !filterINDCourses.value || course.componentType !== "IND";
+      }) ?? [];
   return [...courses].sort(sortCoursesByCourseNumber);
 }
 
