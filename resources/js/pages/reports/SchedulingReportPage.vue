@@ -1,8 +1,86 @@
 <template>
   <div>
-    <div v-if="group" class="tw-mt-8 tw-mb-16">
-      <h2>{{ group.group_title }}</h2>
-    </div>
+    <h1 class="tw-mb-4">
+      {{ group?.group_title }} <br />
+      <span class="tw-text-3xl">Scheduling Report</span>
+    </h1>
+    <section class="tw-flex tw-flex-col tw-gap-4 tw-mb-4 tw-max-w-xs">
+      <h2 class="sr-only">Report Filters</h2>
+
+      <fieldset>
+        <legend
+          class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide"
+        >
+          Terms
+        </legend>
+        <div class="tw-grid tw-grid-cols-2 tw-gap-2">
+          <SelectGroup
+            v-model="filters.startTermId"
+            label="Start Term"
+            :showLabel="false"
+            :options="
+              termsSortedByDate.map((term) => ({
+                text: term.name,
+                value: term.id,
+              }))
+            "
+          />
+          <SelectGroup
+            v-model="filters.endTermId"
+            label="End Term"
+            :showLabel="false"
+            :options="
+              termsSortedByDate.map((term) => ({
+                text: term.name,
+                value: term.id,
+              }))
+            "
+          />
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend
+          class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide"
+        >
+          Course Types
+        </legend>
+        <CheckboxGroup
+          v-model="filters.showGradCourses"
+          label="Grad Courses"
+          id="hide-ind-courses"
+        />
+        <CheckboxGroup
+          v-model="filters.showUndergradCourses"
+          label="Undergrad Courses"
+          id="hide-ind-courses"
+        />
+        <CheckboxGroup
+          v-model="filters.showINDCourses"
+          label="IND Courses"
+          id="hide-ind-courses"
+        />
+      </fieldset>
+
+      <fieldset>
+        <legend
+          class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide"
+        >
+          Appointment Type
+        </legend>
+        faculty, teaching specialist, etc. This will be filtering on jobcode by
+        employee, which I definitely need to add to the API
+      </fieldset>
+    </section>
+
+    <InputGroup
+      :modelValue="filters.search"
+      @update:modelValue="debouncedSearch"
+      placeholder="Search"
+      label="Search"
+      type="search"
+      :showLabel="false"
+    />
 
     <div class="tw-relative">
       <div
@@ -12,9 +90,9 @@
         <Spinner class="tw-text-neutral-900 tw-w-6 tw-h-6" />
         Building Report...
       </div>
+
       <Table
         class="scheduling-report"
-        name="Scheduling Report"
         :sticky-first-column="true"
         :sticky-header="true"
         v-if="instructorsMap.size > 0 && termsMap.size > 0"
@@ -35,25 +113,6 @@
             </Th>
           </tr>
         </template>
-        <template #actions>
-          <div class="tw-flex tw-items-center tw-gap-4">
-            <CheckboxGroup
-              id="filter-courses-checkbox"
-              v-model="filterINDCourses"
-              label="Hide IND courses"
-            />
-            <InputGroup
-              :modelValue="searchTerm"
-              @update:modelValue="debouncedSearch"
-              placeholder="Search"
-              label="Search"
-              class="tw-w-64 tw-flex tw-items-end"
-              type="search"
-              :showLabel="false"
-            />
-          </div>
-        </template>
-
         <tr
           v-for="instructor in filteredInstructorsSortedByName"
           :key="instructor.id"
@@ -63,8 +122,8 @@
               :to="`/user/${instructor.id}`"
               :class="{
                 'tw-bg-yellow-100 tw-text-blue-600 ':
-                  searchTerm.length &&
-                  doesInstructorNameMatchSearchTerm(instructor, searchTerm),
+                  filters.search.length &&
+                  doesInstructorNameMatchSearchTerm(instructor, filters.search),
               }"
               >{{ instructor.surName }}, {{ instructor.givenName }}
             </RouterLink>
@@ -87,8 +146,8 @@
                 :class="{
                   'tw-opacity-50 tw-line-through': course.cancelled,
                   'tw-bg-yellow-100':
-                    searchTerm.length &&
-                    doesCourseMatchSearchTerm(course, searchTerm),
+                    filters.search.length &&
+                    doesCourseMatchSearchTerm(course, filters.search),
                 }"
               >
                 {{ course.subject }} {{ course.catalogNumber }}
@@ -105,7 +164,7 @@
 </template>
 
 <script setup lang="ts">
-import { watch, ref, computed } from "vue";
+import { watch, ref, reactive, computed } from "vue";
 import * as api from "@/api";
 import { Course, Term, Group, Instructor, Leave } from "@/types";
 import debounce from "lodash-es/debounce";
@@ -115,20 +174,48 @@ import LeaveChip from "@/components/LeaveChip.vue";
 import Spinner from "@/components/Spinner.vue";
 import InputGroup from "@/components/InputGroup.vue";
 import CheckboxGroup from "@/components/CheckboxGroup.vue";
+import SelectGroup from "@/components/SelectGroup.vue";
 
 const props = defineProps<{
   groupId: number;
 }>();
 
-// key: `term-id`
 type InstructorId = number;
 type TermId = number;
 
 const group = ref<Group>();
 const termsMap = ref<Map<TermId, Term>>(new Map());
 const coursesByTermMap = ref<Map<TermId, Course[]>>(new Map());
-const searchTerm = ref<string>("");
-const filterINDCourses = ref<boolean>(true);
+
+const filters = reactive({
+  showINDCourses: true,
+  showGradCourses: true,
+  showUndergradCourses: true,
+  startTermId: "" as string | number,
+  endTermId: "" as string | number,
+  instructorTypes: {
+    faculty: true, // full-time faculty
+    teachingSpecialist: true,
+    TA: true,
+  },
+  search: "",
+});
+
+const firstTerm = computed((): Term | null => {
+  const totalTerms = termsSortedByDate.value.length;
+  if (!totalTerms) {
+    return null;
+  }
+  return termsSortedByDate.value[0];
+});
+const lastTerm = computed((): Term | null => {
+  const totalTerms = termsSortedByDate.value.length;
+  if (!totalTerms) {
+    return null;
+  }
+  return termsSortedByDate.value[totalTerms - 1];
+});
+
 const instructorsMap = computed((): Map<InstructorId, Instructor> => {
   const allInstructors = new Map<InstructorId, Instructor>();
   coursesByTermMap.value.forEach((courses: Course[]) => {
@@ -149,7 +236,7 @@ function sortByName(
 }
 
 const debouncedSearch = debounce((value) => {
-  searchTerm.value = value;
+  filters.search = value;
 }, 300);
 
 function doesCourseMatchSearchTerm(course: Course, searchTerm: string) {
@@ -185,11 +272,8 @@ const filteredInstructorsSortedByName = computed(() => {
   return Array.from(instructorsMap.value.values())
     .filter((instructor) => {
       return (
-        doesInstructorNameMatchSearchTerm(instructor, searchTerm.value) ||
-        hasInstructorTaughtCourseMatchingSearchTerm(
-          instructor,
-          searchTerm.value,
-        )
+        doesInstructorNameMatchSearchTerm(instructor, filters.search) ||
+        hasInstructorTaughtCourseMatchingSearchTerm(instructor, filters.search)
       );
     })
     .sort(sortByName);
@@ -220,7 +304,7 @@ function selectInstructorTermCourses(
         return course.instructor.id === instructor.id;
       })
       .filter((course) => {
-        return !filterINDCourses.value || course.componentType !== "IND";
+        return filters.showINDCourses || course.componentType !== "IND";
       }) ?? [];
   return [...courses].sort(sortCoursesByCourseNumber);
 }
@@ -263,6 +347,15 @@ function selectTermsWithinRange(terms: Term[]) {
 }
 
 watch(
+  termsSortedByDate,
+  () => {
+    filters.startTermId = firstTerm.value?.id ?? "";
+    filters.endTermId = lastTerm.value?.id ?? "";
+  },
+  { immediate: true },
+);
+
+watch(
   () => props.groupId,
   async () => {
     // reset the maps
@@ -292,4 +385,22 @@ watch(
   { immediate: true },
 );
 </script>
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.details-list {
+  max-width: 480px;
+  display: grid;
+  grid-template-columns: min-content 1fr;
+  gap: 0 1rem;
+  align-items: baseline;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+
+  & dt {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    color: #999;
+    white-space: nowrap;
+  }
+}
+</style>
