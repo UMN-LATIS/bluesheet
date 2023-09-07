@@ -46,17 +46,17 @@ import { ref } from "vue";
 import { CSSClass } from "@/types";
 
 interface OptionType {
-  value: string;
+  value: string | number;
   text: string;
 }
 
 withDefaults(
   defineProps<{
-    modelValue: string;
+    modelValue: string | number;
     label: string;
+    options: OptionType[];
     helpText?: string;
     isValid?: boolean;
-    options: OptionType[];
     errorText?: string;
     required?: boolean;
     placeholder?: string;
