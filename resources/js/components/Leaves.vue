@@ -79,7 +79,7 @@ function addNewLocalLeave() {
   const randomId = Math.floor(Math.random() * 100000);
   const newLeave: NewLeave = {
     id: `TEMPID-${randomId}`,
-    description: "New Leave",
+    description: "",
     type: leaveTypes.SABBATICAL,
     status: leaveStatuses.PENDING,
     start_date: dayjs().format("YYYY-MM-DD"),

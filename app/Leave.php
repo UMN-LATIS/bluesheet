@@ -5,10 +5,12 @@ namespace App;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use OwenIt\Auditing\Contracts\Auditable;
 
-class Leave extends Model {
+class Leave extends Model implements Auditable {
     use SoftDeletes;
     use HasFactory;
+    use \OwenIt\Auditing\Auditable;
 
     public $timestamps = true;
     public $fillable = [
@@ -34,11 +36,13 @@ class Leave extends Model {
 
     const STATUS_CONFIRMED = 'confirmed';
     const STATUS_PENDING = 'pending';
+    const STATUS_ELIGIBLE = 'eligible';
     const STATUS_CANCELLED = 'cancelled';
     const STATUSES = [
         self::STATUS_CONFIRMED,
         self::STATUS_PENDING,
         self::STATUS_CANCELLED,
+        self::STATUS_ELIGIBLE
     ];
 
     const TYPE_SABBATICAL = 'sabbatical';
@@ -65,6 +69,7 @@ class Leave extends Model {
             self::STATUS_CONFIRMED,
             self::STATUS_PENDING,
             self::STATUS_CANCELLED,
+            self::STATUS_ELIGIBLE,
         ];
         if (!in_array($value, $allowed)) {
             throw new \Exception("Invalid leave status");
