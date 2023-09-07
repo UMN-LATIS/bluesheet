@@ -44,8 +44,12 @@ class SchedulingController extends Controller {
             $this->bandaid->getDeptScheduleForTerm($group->dept_id, $termId)
         );
 
+        $employeeList = collect(
+            $this->bandaid->getEmployeesForDepartment($group->dept_id)
+        );
+
         $courseWithInstructors = $this->userService
-            ->attachInstructorsToCourses($courses)
+            ->attachInstructorsToCourses($courses, $employeeList)
             ->filter(function ($course) {
                 // exclude courses without instructors
                 return isset($course->instructor);
