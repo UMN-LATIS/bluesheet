@@ -30,7 +30,7 @@ module.exports = {
     "vue/no-undef-components": [
       "error",
       {
-        ignorePatterns: ["router-link", "router-view", "v-tour"],
+        ignorePatterns: ["router-link", "router-view"],
       },
     ],
     "vue/component-name-in-template-casing": [
@@ -38,7 +38,7 @@ module.exports = {
       "PascalCase",
       {
         registeredComponentsOnly: false,
-        ignores: ["component", "router-link", "router-view", "v-tour"],
+        ignores: ["component", "router-link", "router-view"],
       },
     ],
   },
