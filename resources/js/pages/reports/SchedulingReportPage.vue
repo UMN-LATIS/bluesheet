@@ -9,9 +9,9 @@
 
       <fieldset>
         <legend
-          class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide"
+          class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"
         >
-          Terms
+          Date Range
         </legend>
         <div class="tw-flex tw-gap-2">
           <SelectGroup
@@ -28,44 +28,95 @@
             :showLabel="false"
             :options="allTermOptions"
           />
-          <Button
-            variant="primary"
-            @click="runReport"
-            class="tw-whitespace-nowrap"
-          >
-            Run Report
-          </Button>
         </div>
       </fieldset>
 
       <fieldset>
         <legend
-          class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide"
+          class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"
+        >
+          Course Levels
+        </legend>
+        <label
+          v-for="[courseLevel, count] in courseLevelsMap.entries()"
+          :key="courseLevel"
+          class="tw-flex tw-items-center tw-text-sm gap-1"
+        >
+          <input
+            type="checkbox"
+            :checked="!excludedCourseLevels.has(courseLevel)"
+            class="tw-form-checkbox tw-mr-2 tw-border tw-border-neutral-500 tw-rounded"
+            @change="
+              excludedCourseLevels.has(courseLevel)
+                ? excludedCourseLevels.delete(courseLevel)
+                : excludedCourseLevels.add(courseLevel)
+            "
+          />
+
+          {{ courseLevel }}
+          <span class="tw-text-neutral-400 tw-text-xs ml-1">({{ count }})</span>
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend
+          class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"
+        >
+          Instructor Appointment
+        </legend>
+        <label
+          v-for="[category, count] in instructorCategoriesMap.entries()"
+          :key="category"
+          class="tw-flex tw-items-center tw-text-sm gap-1"
+        >
+          <input
+            type="checkbox"
+            :checked="!excludedInstAppointements.has(category)"
+            class="tw-form-checkbox tw-mr-2 tw-border tw-border-neutral-500 tw-rounded"
+            @change="
+              excludedInstAppointements.has(category)
+                ? excludedInstAppointements.delete(category)
+                : excludedInstAppointements.add(category)
+            "
+          />
+
+          {{ category }}
+          <span class="tw-text-neutral-400 tw-text-xs ml-1">({{ count }})</span>
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend
+          class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"
         >
           Course Types
         </legend>
-        <CheckboxGroup
-          v-model="filters.showGradCourses"
-          label="Grad Courses"
-          id="hide-ind-courses"
-        />
-        <CheckboxGroup
-          v-model="filters.showUndergradCourses"
-          label="Undergrad Courses"
-          id="hide-ind-courses"
-        />
-        <CheckboxGroup
-          v-model="filters.showINDCourses"
-          label="IND Courses"
-          id="hide-ind-courses"
-        />
+        <label
+          v-for="[courseType, count] in courseTypesMap.entries()"
+          :key="courseType"
+          class="tw-flex tw-items-center tw-text-sm gap-1"
+        >
+          <input
+            type="checkbox"
+            :checked="!excludedCourseTypes.has(courseType)"
+            class="tw-form-checkbox tw-mr-2 tw-border tw-border-neutral-500 tw-rounded"
+            @change="
+              excludedCourseTypes.has(courseType)
+                ? excludedCourseTypes.delete(courseType)
+                : excludedCourseTypes.add(courseType)
+            "
+          />
+
+          {{ courseType }}
+          <span class="tw-text-neutral-400 tw-text-xs ml-1">({{ count }})</span>
+        </label>
       </fieldset>
 
       <fieldset>
         <legend
           class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide"
         >
-          Appointment Type
+          Appointment
         </legend>
         faculty, teaching specialist, etc. This will be filtering on jobcode by
         employee, which I definitely need to add to the API
@@ -76,9 +127,10 @@
       :modelValue="filters.search"
       @update:modelValue="debouncedSearch"
       placeholder="Search"
-      label="Search"
+      label="Filter by instructor name or course number"
       type="search"
       :showLabel="false"
+      class="tw-mb-2"
     />
 
     <div class="tw-relative tw-border">
@@ -191,15 +243,19 @@ const group = ref<Group>();
 const termsMap = ref<Map<TermId, Term>>(new Map());
 const coursesByTermMap = ref<Map<TermId, Course[]>>(new Map());
 const isRunningReport = ref(false);
+const courseLevelsMap = ref<Map<string, number>>(new Map()); // "UGRD", "GRAD"
+const courseTypesMap = ref<Map<string, number>>(new Map()); // "LEC"
+const instructorCategoriesMap = ref<Map<string, number>>(new Map()); // "Faculty"
 
 const filters = reactive({
-  showINDCourses: true,
-  showGradCourses: true,
-  showUndergradCourses: true,
   startTermId: "",
   endTermId: "",
   search: "",
 });
+
+const excludedCourseLevels = ref<Set<string>>(new Set());
+const excludedCourseTypes = ref<Set<string>>(new Set());
+const excludedInstAppointements = ref<Set<string>>(new Set());
 
 const allTermOptions = computed(() => {
   return [...termsMap.value.values()].map((term) => ({
@@ -224,6 +280,42 @@ const filteredInstructors = computed(() => {
     );
   });
 });
+
+function getAllCourseLevelsMap() {
+  const allCourses: Course[] = [...coursesByTermMap.value.values()].flat();
+  const courseLevels = new Map<string, number>();
+  allCourses.forEach((course) => {
+    const currentCount =
+      courseLevels.get(course.academicCareer ?? "Unknown") ?? 0;
+    courseLevels.set(course.academicCareer ?? "Unknown", currentCount + 1);
+  });
+  return courseLevels;
+}
+
+function getAllCourseTypesMap() {
+  const allCourses: Course[] = [...coursesByTermMap.value.values()].flat();
+  const courseTypes = new Map<string, number>();
+  allCourses.forEach((course) => {
+    const currentCount =
+      courseTypes.get(course.componentType ?? "Unknown") ?? 0;
+    courseTypes.set(course.componentType ?? "Unknown", currentCount + 1);
+  });
+  return courseTypes;
+}
+
+function getAllInstructorCategoriesMap() {
+  const allInstructors = [...getInstructorsMap().values()];
+  const instructorCategories = new Map<string, number>();
+  allInstructors.forEach((instructor) => {
+    const currentCount =
+      instructorCategories.get(instructor.jobCategory ?? "Unknown") ?? 0;
+    instructorCategories.set(
+      instructor.jobCategory ?? "Unknown",
+      currentCount + 1,
+    );
+  });
+  return instructorCategories;
+}
 
 function hasInstructorTaughtCourseMatchingSearchTerm(
   instructor: Instructor,
@@ -302,19 +394,6 @@ function sortByName(
   );
 }
 
-// function hasInstructorTaughtCourseMatchingSearchTerm(
-//   instructor: Instructor,
-//   searchTerm: string,
-//   terms: Term[],
-// ) {
-//   return terms.some((term) => {
-//     const courses = getInstructorTermCourses(instructor, term);
-//     return courses.some((course) =>
-//       doesCourseMatchSearchTerm(course, searchTerm),
-//     );
-//   });
-// }
-
 function doesInstructorNameMatchSearchTerm(
   instructor: Instructor,
   searchTerm: string,
@@ -350,13 +429,9 @@ function getInstructorTermCourses(
 ): Course[] {
   const allDeptCoursesInTerm = coursesByTermMap.value.get(term.id);
   const courses =
-    allDeptCoursesInTerm
-      ?.filter((course) => {
-        return course.instructor.id === instructor.id;
-      })
-      .filter((course) => {
-        return filters.showINDCourses || course.componentType !== "IND";
-      }) ?? [];
+    allDeptCoursesInTerm?.filter((course) => {
+      return course.instructor.id === instructor.id;
+    }) ?? [];
   return [...courses].sort(sortCoursesByCourseNumber);
 }
 
@@ -441,6 +516,12 @@ async function runReport() {
 
   termsForReport.value = filteredTerms;
   instructorsForReport.value = getInstructorsTeachingWithinReportTerms();
+
+  // update course levels and types
+  courseLevelsMap.value = getAllCourseLevelsMap();
+  courseTypesMap.value = getAllCourseTypesMap();
+  instructorCategoriesMap.value = getAllInstructorCategoriesMap();
+
   isRunningReport.value = false;
   console.timeEnd("runReport");
 }
