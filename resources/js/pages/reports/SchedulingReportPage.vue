@@ -31,7 +31,7 @@
         </div>
       </fieldset>
 
-      <fieldset>
+      <fieldset v-show="courseLevelsMap.size">
         <legend
           class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"
         >
@@ -58,11 +58,14 @@
         </label>
       </fieldset>
 
-      <fieldset>
+      <fieldset v-show="instructorCategoriesMap.size">
         <legend
           class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"
         >
           Instructor Appointment
+          <Button variant="tertiary" @click="toggleAllInstructorAppointments"
+            >Select All</Button
+          >
         </legend>
         <label
           v-for="[category, count] in instructorCategoriesMap.entries()"
@@ -71,12 +74,12 @@
         >
           <input
             type="checkbox"
-            :checked="!excludedInstAppointements.has(category)"
+            :checked="!excludedInstAppointments.has(category)"
             class="tw-form-checkbox tw-mr-2 tw-border tw-border-neutral-500 tw-rounded"
             @change="
-              excludedInstAppointements.has(category)
-                ? excludedInstAppointements.delete(category)
-                : excludedInstAppointements.add(category)
+              excludedInstAppointments.has(category)
+                ? excludedInstAppointments.delete(category)
+                : excludedInstAppointments.add(category)
             "
           />
 
@@ -85,11 +88,14 @@
         </label>
       </fieldset>
 
-      <fieldset>
+      <fieldset v-show="courseTypesMap.size">
         <legend
           class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"
         >
           Course Types
+          <Button variant="tertiary" @click="toggleAllCourseTypes"
+            >Select All</Button
+          >
         </legend>
         <label
           v-for="[courseType, count] in courseTypesMap.entries()"
@@ -154,26 +160,31 @@
               </Th>
             </tr>
           </template>
-          <tr v-for="instructor in filteredInstructors" :key="instructor.id">
+          <tr
+            v-for="instructor in instructorsWithinReportedTerms"
+            :key="instructor.id"
+            v-show="isShowingInstructor(instructor)"
+          >
             <Td class="instructor-column">
-              <RouterLink
-                :to="`/user/${instructor.id}`"
-                :class="{
-                  'tw-bg-yellow-100 tw-text-blue-600 ':
-                    filters.search.length &&
-                    doesInstructorNameMatchSearchTerm(
-                      instructor,
-                      filters.search,
-                    ),
-                }"
-              >
-                <div>{{ instructor.surName }}, {{ instructor.givenName }}</div>
+              <RouterLink :to="`/user/${instructor.id}`">
+                <div
+                  :class="{
+                    'tw-bg-yellow-100 tw-text-blue-600 ':
+                      filters.search.length &&
+                      doesInstructorNameMatchSearchTerm(
+                        instructor,
+                        filters.search,
+                      ),
+                  }"
+                >
+                  {{ instructor.surName }}, {{ instructor.givenName }}
+                </div>
                 <div class="tw-text-xs tw-text-neutral-400">
                   {{ instructor.jobCategory ?? "Unknown" }}
                 </div>
               </RouterLink>
             </Td>
-            <Td v-for="term in termsForReport">
+            <Td v-for="term in termsForReport" :key="term.id">
               <div class="leaves tw-flex tw-flex-col tw-gap-1 tw-mb-2">
                 <LeaveChip
                   v-for="leave in selectInstructorTermLeaves(instructor, term)"
@@ -183,7 +194,11 @@
                   {{ leave.description }} ({{ leave.type }})
                 </LeaveChip>
               </div>
-              <div v-for="course in getInstructorTermCourses(instructor, term)">
+              <div
+                v-for="course in getInstructorTermCourses(instructor, term)"
+                :key="course.id"
+                v-show="isShowingCourse(course)"
+              >
                 <div
                   class="tw-my-1 tw-px-1"
                   :class="{
@@ -219,7 +234,7 @@ import Spinner from "@/components/Spinner.vue";
 import InputGroup from "@/components/InputGroup.vue";
 import SelectGroup from "@/components/SelectGroup.vue";
 import pMap from "p-map";
-import { has } from "lodash";
+import Button from "@/components/Button.vue";
 
 const props = defineProps<{
   groupId: number;
@@ -248,7 +263,7 @@ const filters = reactive({
 
 const excludedCourseLevels = ref<Set<string>>(new Set());
 const excludedCourseTypes = ref<Set<string>>(new Set());
-const excludedInstAppointements = ref<Set<string>>(new Set());
+const excludedInstAppointments = ref<Set<string>>(new Set());
 
 const allTermOptions = computed(() => {
   return [...termsMap.value.values()].map((term) => ({
@@ -261,21 +276,51 @@ const allTermOptions = computed(() => {
 const termsForReport = ref<Term[]>([]);
 const instructorsForReport = ref<Instructor[]>([]);
 
-const filteredInstructors = computed(() => {
-  const allInstructors = getInstructorsTeachingWithinReportTerms();
+function isShowingInstructor(instructor: Instructor) {
+  return (
+    isIncludedInstructorAppointment(instructor) &&
+    hasTaughtCourseMatchingFilters(instructor) &&
+    (filters.search === "" ||
+      doesInstructorNameMatchSearchTerm(instructor, filters.search) ||
+      hasInstructorTaughtCourseMatchingSearchTerm(instructor, filters.search))
+  );
+}
 
-  return allInstructors.filter((instructor) => {
-    return (
-      isIncludedInstructorAppointment(instructor) &&
-      (filters.search === "" ||
-        doesInstructorNameMatchSearchTerm(instructor, filters.search) ||
-        hasInstructorTaughtCourseMatchingSearchTerm(instructor, filters.search))
-    );
+function hasTaughtCourseMatchingFilters(instructor: Instructor) {
+  const allTerms = [...termsMap.value.values()];
+  return allTerms.some((term) => {
+    const courses = getInstructorTermCourses(instructor, term);
+    return courses.some((course) => isShowingCourse(course));
   });
+}
+
+const instructorsWithinReportedTerms = computed(() => {
+  const instructorsMap = getInstructorsMap();
+  const reportTerms = getReportTerms();
+  const allInstructors = [...instructorsMap.values()];
+
+  const reportInstructors: Instructor[] = [];
+
+  // loop through all instuctors and check if they have taught at least
+  // once course in the filtered terms
+  for (const instructor of allInstructors) {
+    for (const term of reportTerms) {
+      const coursesTaught = getInstructorTermCourses(instructor, term).length;
+      if (coursesTaught) {
+        reportInstructors.push(instructor);
+        break;
+      }
+    }
+  }
+
+  const sortedInstructors = reportInstructors.sort(sortByName);
+  console.timeEnd("getInstructorsTeachingWithinFilteredTerms");
+
+  return sortedInstructors;
 });
 
 function isIncludedInstructorAppointment(instructor: Instructor) {
-  return !excludedInstAppointements.value.has(
+  return !excludedInstAppointments.value.has(
     instructor.jobCategory ?? "Unknown",
   );
 }
@@ -422,6 +467,13 @@ function sortCoursesByCourseNumber(a: Course, b: Course) {
   );
 }
 
+function isShowingCourse(course: Course) {
+  return (
+    !excludedCourseTypes.value.has(course.componentType ?? "Unknown") &&
+    !excludedCourseLevels.value.has(course.academicCareer ?? "Unknown")
+  );
+}
+
 function getInstructorTermCourses(
   instructor: Instructor,
   term: Term,
@@ -429,11 +481,7 @@ function getInstructorTermCourses(
   const allDeptCoursesInTerm = coursesByTermMap.value.get(term.id);
   const courses =
     allDeptCoursesInTerm?.filter((course) => {
-      return (
-        course.instructor.id === instructor.id &&
-        !excludedCourseTypes.value.has(course.componentType ?? "Unknown") &&
-        !excludedCourseLevels.value.has(course.academicCareer ?? "Unknown")
-      );
+      return course.instructor.id === instructor.id;
     }) ?? [];
   return [...courses].sort(sortCoursesByCourseNumber);
 }
@@ -473,6 +521,31 @@ function selectTermsWithinRangeInclusive(
       termStart.isSameOrAfter(startDate) && termEnd.isSameOrBefore(endDate)
     );
   });
+}
+function toggleAllCourseTypes() {
+  // if all are selected, deselect all
+  if (excludedCourseTypes.value.size === courseTypesMap.value.size) {
+    excludedCourseTypes.value.clear();
+    return;
+  }
+
+  // otherwise select all
+  excludedCourseTypes.value = new Set(courseTypesMap.value.keys());
+}
+
+function toggleAllInstructorAppointments() {
+  // if all are selected, deselect all
+  if (
+    excludedInstAppointments.value.size === instructorCategoriesMap.value.size
+  ) {
+    excludedInstAppointments.value.clear();
+    return;
+  }
+
+  // otherwise select all
+  excludedInstAppointments.value = new Set(
+    instructorCategoriesMap.value.keys(),
+  );
 }
 
 async function loadTerms() {
