@@ -123,7 +123,7 @@
       class="tw-mb-2"
     />
 
-    <div class="tw-relative tw-border">
+    <div class="tw-relative">
       <Transition name="fade" mode="out-in">
         <div
           class="tw-flex tw-justify-center tw-items-center tw-bg-black/5 tw-gap-4 tw-h-[20vh]"
