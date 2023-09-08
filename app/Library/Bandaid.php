@@ -39,13 +39,16 @@ class Bandaid {
     }
     
     public function performPostRequest($url, $body) {
-        if($value = Cache::get($url)) {
+        if($value = Cache::get(json_encode($body))) {
             return $value;
         }
         else {
             $result = $this->client->post($url,['form_params' => $body]);
             $value = json_decode($result->getBody());
-            Cache::put($url, $value, 600);
+            if(!$value) {
+                return [];
+            }
+            Cache::put(json_encode($body), $value, 600);
             return $value;
         }
     }
