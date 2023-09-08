@@ -34,18 +34,20 @@ class UserService {
             $this->userCache[$user->emplid] = $user;
         });
 
-        $keyedEmployeeList = $employeeList->keyBy('EMPLID');
-
-        return $courses->each(function ($course) use ($keyedEmployeeList) {
+        return $courses->each(function ($course) use ($employeeList) {
             if (!$course->INSTRUCTOR_EMPLID) return;
 
-            $course->instructor = $this->findOrCreateByEmplid($course->INSTRUCTOR_EMPLID) ?? null;
+            $user = $this->findOrCreateByEmplid($course->INSTRUCTOR_EMPLID);
+            if (isset($user)) {
+                $employeeInfo = $employeeList->where('EMPLID', $user->emplid)->first();
 
-            if (!$course->instructor) return;
+                if (isset($employeeInfo->CATEGORY)) {
 
-            // add academic appointment info to instructor
-            $employeeInfo = $keyedEmployeeList->get($course->INSTRUCTOR_EMPLID);
-            $course->instructor->jobCategory = $employeeInfo?->CATEGORY ?? null;
+                    $user->jobCategory = $employeeInfo->CATEGORY;
+                }
+            }
+
+            $course->instructor = $user ?? null;
         });
     }
 }
