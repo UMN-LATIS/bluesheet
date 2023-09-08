@@ -11,10 +11,11 @@
         >
           {{ instructor.surName }}, {{ instructor.givenName }}
         </div>
-        <div class="tw-text-xs tw-text-neutral-400">
-          {{ instructor.jobCategory ?? "Unknown" }}
-        </div>
       </RouterLink>
+      <div class="tw-text-xs tw-text-neutral-400">
+        {{ instructor.emplid }} •
+        {{ instructor.jobCategory ?? "Unknown" }}
+      </div>
     </Td>
     <Td v-for="(termCourses, index) in listOfTermCourses" :key="index">
       <div class="leaves tw-flex tw-flex-col tw-gap-1 tw-mb-2">

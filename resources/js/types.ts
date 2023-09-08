@@ -193,6 +193,7 @@ export interface Term {
 
 export interface Instructor {
   id: number;
+  emplid: number;
   givenName: string;
   surName: string;
   displayName: string;
