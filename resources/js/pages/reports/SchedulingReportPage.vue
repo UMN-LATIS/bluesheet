@@ -16,25 +16,17 @@
         <div class="tw-flex tw-gap-2">
           <SelectGroup
             v-model="filters.startTermId"
+            @update:model-value="runReport"
             label="Start Term"
             :showLabel="false"
-            :options="
-              allTermsSortedByDate.map((term) => ({
-                text: term.name,
-                value: String(term.id),
-              }))
-            "
+            :options="allTermOptions"
           />
           <SelectGroup
             v-model="filters.endTermId"
+            @update:model-value="runReport"
             label="End Term"
             :showLabel="false"
-            :options="
-              allTermsSortedByDate.map((term) => ({
-                text: term.name,
-                value: String(term.id),
-              }))
-            "
+            :options="allTermOptions"
           />
           <Button
             variant="primary"
@@ -89,85 +81,82 @@
       :showLabel="false"
     />
 
-    <div class="tw-relative">
-      <div
-        class="tw-absolute tw-inset-0 tw-m-auto tw-z-10 tw-flex tw-justify-center tw-bg-white/50 tw-gap-4"
-        v-if="isTableLoading"
-      >
-        <Spinner class="tw-text-neutral-900 tw-w-6 tw-h-6" />
-        Building Report...
-      </div>
-
-      <Table
-        class="scheduling-report"
-        :sticky-first-column="true"
-        :sticky-header="true"
-        v-if="
-          instructorsMap.size > 0 && sortedTermsBetweenStartAndEndFilters.length
-        "
-      >
-        <template #thead>
-          <tr>
-            <Th class="instructor-column">Instructor</Th>
-            <Th
-              v-for="term in sortedTermsBetweenStartAndEndFilters"
-              :id="term.id"
-              class="tw-whitespace-nowrap"
-            >
-              {{ term.name }}
-              <Spinner
-                class="tw-text-neutral-300 tw-h-4 tw-w-4"
-                v-if="!coursesByTermMap.has(term.id)"
-              />
-            </Th>
-          </tr>
-        </template>
-        <tr
-          v-for="instructor in filteredInstructorsSortedByName"
-          :key="instructor.id"
+    <div class="tw-relative tw-border">
+      <Transition name="fade" mode="out-in">
+        <div
+          class="tw-flex tw-justify-center tw-items-center tw-bg-black/5 tw-gap-4 tw-h-[20vh]"
+          v-if="isRunningReport"
         >
-          <Td class="instructor-column">
-            <RouterLink
-              :to="`/user/${instructor.id}`"
-              :class="{
-                'tw-bg-yellow-100 tw-text-blue-600 ':
-                  filters.search.length &&
-                  doesInstructorNameMatchSearchTerm(instructor, filters.search),
-              }"
-              >{{ instructor.surName }}, {{ instructor.givenName }}
-            </RouterLink>
-          </Td>
-          <Td v-for="term in sortedTermsBetweenStartAndEndFilters">
-            <div class="leaves tw-flex tw-flex-col tw-gap-1 tw-mb-2">
-              <LeaveChip
-                v-for="leave in selectInstructorTermLeaves(instructor, term)"
-                :key="leave.id"
-                :leave="leave"
+          <Spinner class="tw-text-neutral-900 tw-w-6 tw-h-6" />
+          Building Report...
+        </div>
+        <Table
+          class="scheduling-report"
+          :sticky-first-column="true"
+          :sticky-header="true"
+          v-else
+        >
+          <template #thead>
+            <tr>
+              <Th class="instructor-column">Instructor</Th>
+              <Th
+                v-for="term in termsForReport"
+                :id="term.id"
+                class="tw-whitespace-nowrap"
               >
-                {{ leave.description }} ({{ leave.type }})
-              </LeaveChip>
-            </div>
-            <div
-              v-for="course in selectInstructorTermCourses(instructor, term)"
-            >
-              <div
-                class="tw-my-1 tw-px-1"
+                {{ term.name }}
+                <Spinner
+                  class="tw-text-neutral-300 tw-h-4 tw-w-4"
+                  v-if="!coursesByTermMap.has(term.id)"
+                />
+              </Th>
+            </tr>
+          </template>
+          <tr v-for="instructor in filteredInstructors" :key="instructor.id">
+            <Td class="instructor-column">
+              <RouterLink
+                :to="`/user/${instructor.id}`"
                 :class="{
-                  'tw-opacity-50 tw-line-through': course.cancelled,
-                  'tw-bg-yellow-100':
+                  'tw-bg-yellow-100 tw-text-blue-600 ':
                     filters.search.length &&
-                    doesCourseMatchSearchTerm(course, filters.search),
+                    doesInstructorNameMatchSearchTerm(
+                      instructor,
+                      filters.search,
+                    ),
                 }"
-              >
-                {{ course.subject }} {{ course.catalogNumber }}
-                <span class="tw-text-xs tw-text-neutral-400">
-                  {{ course.enrollmentTotal }}/{{ course.enrollmentCap }}
-                </span>
+                >{{ instructor.surName }}, {{ instructor.givenName }}
+              </RouterLink>
+            </Td>
+            <Td v-for="term in termsForReport">
+              <div class="leaves tw-flex tw-flex-col tw-gap-1 tw-mb-2">
+                <LeaveChip
+                  v-for="leave in selectInstructorTermLeaves(instructor, term)"
+                  :key="leave.id"
+                  :leave="leave"
+                >
+                  {{ leave.description }} ({{ leave.type }})
+                </LeaveChip>
               </div>
-            </div>
-          </Td>
-        </tr>
-      </Table>
+              <div v-for="course in getInstructorTermCourses(instructor, term)">
+                <div
+                  class="tw-my-1 tw-px-1"
+                  :class="{
+                    'tw-opacity-50 tw-line-through': course.cancelled,
+                    'tw-bg-yellow-100':
+                      filters.search.length &&
+                      doesCourseMatchSearchTerm(course, filters.search),
+                  }"
+                >
+                  {{ course.subject }} {{ course.catalogNumber }}
+                  <span class="tw-text-xs tw-text-neutral-400">
+                    {{ course.enrollmentTotal }}/{{ course.enrollmentCap }}
+                  </span>
+                </div>
+              </div>
+            </Td>
+          </tr>
+        </Table>
+      </Transition>
     </div>
   </div>
 </template>
@@ -194,9 +183,14 @@ const props = defineProps<{
 type InstructorId = number;
 type TermId = number;
 
+const DEFAULT_START_DATE = dayjs().subtract(1.5, "year").format("YYYY-MM-DD");
+const DEFAULT_END_DATE = dayjs().add(1.5, "year").format("YYYY-MM-DD");
+const MAX_TERM_DATE = dayjs().add(3, "year").format("YYYY-MM-DD");
+
 const group = ref<Group>();
 const termsMap = ref<Map<TermId, Term>>(new Map());
 const coursesByTermMap = ref<Map<TermId, Course[]>>(new Map());
+const isRunningReport = ref(false);
 
 const filters = reactive({
   showINDCourses: true,
@@ -207,37 +201,44 @@ const filters = reactive({
   search: "",
 });
 
-const startTerm = computed((): Term | null => {
-  const termIdInt = Number(filters.startTermId);
-  if (Number.isNaN(termIdInt)) {
-    return null;
-  }
-  return termsMap.value.get(termIdInt) ?? null;
-});
-const endTerm = computed((): Term | null => {
-  const termIdInt = Number(filters.endTermId);
-  if (Number.isNaN(termIdInt)) {
-    return null;
-  }
-  return termsMap.value.get(termIdInt) ?? null;
+const allTermOptions = computed(() => {
+  return [...termsMap.value.values()].map((term) => ({
+    text: term.name,
+    value: String(term.id),
+  }));
 });
 
-const sortedTermsBetweenStartAndEndFilters = computed(() => {
-  if (!startTerm.value || !endTerm.value) {
-    return [];
-  }
-  const termsInRange = selectTermsWithinRangeInclusive(
-    startTerm.value.startDate,
-    endTerm.value.endDate,
-    [...termsMap.value.values()],
-  );
+// not making these computed to avoid reactivity lag
+const termsForReport = ref<Term[]>([]);
+const instructorsForReport = ref<Instructor[]>([]);
 
-  return termsInRange.sort((a, b) => {
-    return dayjs(a.startDate).isBefore(dayjs(b.startDate)) ? -1 : 1;
+const filteredInstructors = computed(() => {
+  const allInstructors = getInstructorsTeachingWithinReportTerms();
+  if (!filters.search) {
+    return allInstructors;
+  }
+  return allInstructors.filter((instructor) => {
+    return (
+      doesInstructorNameMatchSearchTerm(instructor, filters.search) ||
+      hasInstructorTaughtCourseMatchingSearchTerm(instructor, filters.search)
+    );
   });
 });
 
-const instructorsMap = computed((): Map<InstructorId, Instructor> => {
+function hasInstructorTaughtCourseMatchingSearchTerm(
+  instructor: Instructor,
+  searchTerm: string,
+) {
+  const allTerms = [...termsMap.value.values()];
+  return allTerms.some((term) => {
+    const courses = getInstructorTermCourses(instructor, term);
+    return courses.some((course) =>
+      doesCourseMatchSearchTerm(course, searchTerm),
+    );
+  });
+}
+
+function getInstructorsMap(): Map<InstructorId, Instructor> {
   const allInstructors = new Map<InstructorId, Instructor>();
   coursesByTermMap.value.forEach((courses: Course[]) => {
     courses.forEach((course) => {
@@ -245,18 +246,52 @@ const instructorsMap = computed((): Map<InstructorId, Instructor> => {
     });
   });
   return allInstructors;
-});
+}
 
-const instructorsTeachingTermsWithinRange = computed(() => {
-  const allInstructors = Array.from(instructorsMap.value.values());
+function getReportTerms() {
+  if (!filters.startTermId || !filters.endTermId) {
+    return [];
+  }
+  const startTerm = termsMap.value.get(Number(filters.startTermId));
+  const endTerm = termsMap.value.get(Number(filters.endTermId));
+  const allTerms = [...termsMap.value.values()];
 
-  return allInstructors.filter((instructor) => {
-    return sortedTermsBetweenStartAndEndFilters.value.some((term) => {
-      const courses = selectInstructorTermCourses(instructor, term);
-      return courses.length > 0;
-    });
-  });
-});
+  if (!startTerm || !endTerm || !allTerms.length) {
+    return [];
+  }
+
+  return selectTermsWithinRangeInclusive(
+    startTerm.startDate,
+    endTerm.endDate,
+    allTerms,
+  ).sort(sortByTermDateAsc);
+}
+
+function getInstructorsTeachingWithinReportTerms() {
+  console.time("getInstructorsTeachingWithinFilteredTerms");
+  const instructorsMap = getInstructorsMap();
+  const reportTerms = getReportTerms();
+  const allInstructors = [...instructorsMap.values()];
+
+  const reportInstructors: Instructor[] = [];
+
+  // loop through all instuctors and check if they have taught at least
+  // once course in the filtered terms
+  for (const instructor of allInstructors) {
+    for (const term of reportTerms) {
+      const coursesTaught = getInstructorTermCourses(instructor, term).length;
+      if (coursesTaught) {
+        reportInstructors.push(instructor);
+        break;
+      }
+    }
+  }
+
+  const sortedInstructors = reportInstructors.sort(sortByName);
+  console.timeEnd("getInstructorsTeachingWithinFilteredTerms");
+
+  return sortedInstructors;
+}
 
 function sortByName(
   a: { surName: string; givenName: string },
@@ -264,6 +299,29 @@ function sortByName(
 ) {
   return (
     a.surName.localeCompare(b.surName) || a.givenName.localeCompare(b.givenName)
+  );
+}
+
+// function hasInstructorTaughtCourseMatchingSearchTerm(
+//   instructor: Instructor,
+//   searchTerm: string,
+//   terms: Term[],
+// ) {
+//   return terms.some((term) => {
+//     const courses = getInstructorTermCourses(instructor, term);
+//     return courses.some((course) =>
+//       doesCourseMatchSearchTerm(course, searchTerm),
+//     );
+//   });
+// }
+
+function doesInstructorNameMatchSearchTerm(
+  instructor: Instructor,
+  searchTerm: string,
+) {
+  return (
+    instructor.surName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    instructor.givenName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 }
 
@@ -278,45 +336,6 @@ function doesCourseMatchSearchTerm(course: Course, searchTerm: string) {
   return courseTitle.includes(searchTerm.toLowerCase());
 }
 
-function hasInstructorTaughtCourseMatchingSearchTerm(
-  instructor: Instructor,
-  searchTerm: string,
-) {
-  return sortedTermsBetweenStartAndEndFilters.value.some((term) => {
-    const courses = selectInstructorTermCourses(instructor, term);
-    return courses.some((course) =>
-      doesCourseMatchSearchTerm(course, searchTerm),
-    );
-  });
-}
-
-function doesInstructorNameMatchSearchTerm(
-  instructor: Instructor,
-  searchTerm: string,
-) {
-  return (
-    instructor.surName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    instructor.givenName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-}
-
-const filteredInstructorsSortedByName = computed(() => {
-  return instructorsTeachingTermsWithinRange.value
-    .filter((instructor) => {
-      return (
-        doesInstructorNameMatchSearchTerm(instructor, filters.search) ||
-        hasInstructorTaughtCourseMatchingSearchTerm(instructor, filters.search)
-      );
-    })
-    .sort(sortByName);
-});
-
-const isTableLoading = computed(() => {
-  return sortedTermsBetweenStartAndEndFilters.value.some((term) => {
-    return !coursesByTermMap.value.has(term.id);
-  });
-});
-
 function sortCoursesByCourseNumber(a: Course, b: Course) {
   return (
     a.subject.localeCompare(b.subject) ||
@@ -325,7 +344,7 @@ function sortCoursesByCourseNumber(a: Course, b: Course) {
   );
 }
 
-function selectInstructorTermCourses(
+function getInstructorTermCourses(
   instructor: Instructor,
   term: Term,
 ): Course[] {
@@ -360,11 +379,9 @@ function selectInstructorTermLeaves(
   );
 }
 
-const allTermsSortedByDate = computed((): Term[] => {
-  return [...termsMap.value.values()].sort((a, b) => {
-    return dayjs(a.startDate).isBefore(dayjs(b.startDate)) ? -1 : 1;
-  });
-});
+function sortByTermDateAsc(a: Term, b: Term) {
+  return dayjs(a.startDate).isBefore(dayjs(b.startDate)) ? -1 : 1;
+}
 
 function selectTermsWithinRangeInclusive(
   startDate: ISODate,
@@ -379,10 +396,6 @@ function selectTermsWithinRangeInclusive(
     );
   });
 }
-
-const DEFAULT_START_DATE = dayjs().subtract(1.5, "year").format("YYYY-MM-DD");
-const DEFAULT_END_DATE = dayjs().add(1.5, "year").format("YYYY-MM-DD");
-const MAX_TERM_DATE = dayjs().add(3, "year").format("YYYY-MM-DD");
 
 async function loadTerms() {
   // reset the maps
@@ -405,19 +418,31 @@ async function loadGroup() {
   group.value = await api.getGroup(props.groupId);
 }
 
+async function loadCourseDataForTerm(term: Term) {
+  const courses = await api.getGroupCoursesByTerm({
+    termId: term.id,
+    groupId: props.groupId,
+  });
+
+  coursesByTermMap.value.set(term.id, courses);
+}
+
 async function runReport() {
-  const termsToGet = sortedTermsBetweenStartAndEndFilters.value;
+  console.time("runReport");
+  isRunningReport.value = true;
+  const filteredTerms = getReportTerms();
+  const termsNeedingData = filteredTerms.filter(
+    (term) => !coursesByTermMap.value.has(term.id),
+  );
 
-  const loadCourseDataForTerm = async (term: Term) => {
-    const courses = await api.getGroupCoursesByTerm({
-      termId: term.id,
-      groupId: props.groupId,
-    });
+  await pMap(termsNeedingData, loadCourseDataForTerm, {
+    concurrency: 5,
+  });
 
-    coursesByTermMap.value.set(term.id, courses);
-  };
-
-  pMap(termsToGet, loadCourseDataForTerm, { concurrency: 5 });
+  termsForReport.value = filteredTerms;
+  instructorsForReport.value = getInstructorsTeachingWithinReportTerms();
+  isRunningReport.value = false;
+  console.timeEnd("runReport");
 }
 
 onMounted(async () => {
