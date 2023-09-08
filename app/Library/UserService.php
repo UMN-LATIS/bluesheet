@@ -39,12 +39,15 @@ class UserService {
             if (!$course->INSTRUCTOR_EMPLID) return;
 
             $user = $this->findOrCreateByEmplid($course->INSTRUCTOR_EMPLID);
-            $employeeInfo = $employeeList->where('EMPLID', $user->emplid)->first();
+            if(isset($user)) {
+                $employeeInfo = $employeeList->where('EMPLID', $user->emplid)->first();
 
-            if(isset($employeeInfo->CATEGORY)) {
-                
-                $user->jobCategory = $employeeInfo->CATEGORY;
+                if(isset($employeeInfo->CATEGORY)) {
+                    
+                    $user->jobCategory = $employeeInfo->CATEGORY;
+                }
             }
+            
             
             $course->instructor = $user ?? null;
         });
