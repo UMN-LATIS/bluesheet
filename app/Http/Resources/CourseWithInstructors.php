@@ -33,7 +33,7 @@ class CourseWithInstructors extends JsonResource {
                 'displayName' => $this->instructor->displayName,
                 'email' => $this->instructor->email,
                 'leaves' => $this->when($this->instructor->leaves->isNotEmpty(), $this->instructor->leaves),
-                'jobCategory' => $this->instructor->CATEGORY,
+                'jobCategory' => $this->instructor->jobCategory,
             ] : null,
         ];
     }
