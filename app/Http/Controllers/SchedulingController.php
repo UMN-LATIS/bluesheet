@@ -7,6 +7,7 @@ use App\Group;
 use App\Http\Resources\CourseWithInstructors;
 use App\Http\Resources\TermResource;
 use App\Library\UserService;
+use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Http\Request;
 
 class SchedulingController extends Controller {
@@ -44,21 +45,29 @@ class SchedulingController extends Controller {
             $this->bandaid->getDeptScheduleForTerm($group->dept_id, $termId)
         );
 
-        $courseWithInstructors = $this->userService
+        $deptEmployeesLookup = collect($this->bandaid->getEmployeesForDepartment($group->dept_id))->keyBy('EMPLID');
+
+        $coursesWithInstructors = $this->userService
             ->attachInstructorsToCourses($courses)
             ->filter(function ($course) {
                 // exclude courses without instructors
                 return isset($course->instructor);
             })
+            ->map(function ($course) use ($deptEmployeesLookup) {
+                $employee = $deptEmployeesLookup->get($course->INSTRUCTOR_EMPLID);
+                $course->instructor['JOBCODE'] = $employee ? $employee->JOBCODE : null;
+                $course->instructor['CATEGORY'] = $employee ? $employee->CATEGORY : null;
+                return $course;
+            })
             ->values();
 
         if (isset($validated['includeRoles'])) {
             $roles = explode(',', $validated['includeRoles']);
-            $courseWithInstructors = $courseWithInstructors->filter(function ($course) use ($roles) {
+            $coursesWithInstructors = $coursesWithInstructors->filter(function ($course) use ($roles) {
                 return in_array($course->INSTRUCTOR_ROLE, $roles);
             });
         }
 
-        return CourseWithInstructors::collection($courseWithInstructors);
+        return CourseWithInstructors::collection($coursesWithInstructors);
     }
 }

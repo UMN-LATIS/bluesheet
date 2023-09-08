@@ -26,13 +26,16 @@ class CourseWithInstructors extends JsonResource {
             "instructorRole" => $this->INSTRUCTOR_ROLE,
             "cancelled" => (bool) $this->CANCELLED,
             "componentType" => $this->COMPONENT_CLASS,
+            "academicCareer" => $this->ACADEMIC_CAREER,
             "instructor" => $this->instructor ? [
                 'id' => $this->instructor->id,
                 'givenName' => $this->instructor->givenname,
                 'surName' => $this->instructor->surname,
                 'displayName' => $this->instructor->displayName,
                 'email' => $this->instructor->email,
-                'leaves' => $this->when($this->instructor->leaves->isNotEmpty(), $this->instructor->leaves)
+                'leaves' => $this->when($this->instructor->leaves->isNotEmpty(), $this->instructor->leaves),
+                'jobCode' => $this->instructor->JOBCODE,
+                'jobCategory' => $this->instructor->CATEGORY,
             ] : null,
         ];
     }

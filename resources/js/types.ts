@@ -198,6 +198,8 @@ export interface Instructor {
   displayName: string;
   email: string;
   leaves?: Leave[];
+  jobCode: string; // "9403"
+  jobCategory: string; // "Faculty"
 }
 
 export type TermCode = "FA" | "SP" | "SU";
@@ -215,6 +217,7 @@ export interface Course {
   enrollmentTotal: number;
   cancelled: boolean;
   componentType: string; // "LEC"
+  academicCareer: string; //"UGRD" | "GRAD";
   instructor: Instructor;
 }
 
