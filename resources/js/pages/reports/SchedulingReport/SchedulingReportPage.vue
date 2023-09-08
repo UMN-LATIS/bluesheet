@@ -16,17 +16,17 @@
         <div class="tw-flex tw-gap-2">
           <SelectGroup
             v-model="filters.startTermId"
-            @update:model-value="runReport"
             label="Start Term"
             :showLabel="false"
             :options="allTermOptions"
+            @update:modelValue="runReport"
           />
           <SelectGroup
             v-model="filters.endTermId"
-            @update:model-value="runReport"
             label="End Term"
             :showLabel="false"
             :options="allTermOptions"
+            @update:modelValue="runReport"
           />
         </div>
       </fieldset>
@@ -121,28 +121,28 @@
 
     <InputGroup
       :modelValue="filters.search"
-      @update:modelValue="debouncedSearch"
       placeholder="Search"
       label="Filter by instructor name or course number"
       type="search"
       :showLabel="false"
       class="tw-mb-2"
+      @update:modelValue="debouncedSearch"
     />
 
     <div class="tw-relative">
       <Transition name="fade" mode="out-in">
         <div
-          class="tw-flex tw-justify-center tw-items-center tw-bg-black/5 tw-gap-4 tw-h-[20vh]"
           v-if="isRunningReport"
+          class="tw-flex tw-justify-center tw-items-center tw-bg-black/5 tw-gap-4 tw-h-[20vh]"
         >
           <Spinner class="tw-text-neutral-900 tw-w-6 tw-h-6" />
           Building Report...
         </div>
         <Table
-          class="scheduling-report"
-          :sticky-first-column="true"
-          :sticky-header="true"
           v-else
+          class="scheduling-report"
+          :stickyFirstColumn="true"
+          :stickyHeader="true"
         >
           <template #thead>
             <tr>
@@ -150,20 +150,21 @@
               <Th
                 v-for="term in termsForReport"
                 :id="term.id"
+                :key="term.id"
                 class="tw-whitespace-nowrap"
               >
                 {{ term.name }}
                 <Spinner
-                  class="tw-text-neutral-300 tw-h-4 tw-w-4"
                   v-if="!coursesByTermMap.has(term.id)"
+                  class="tw-text-neutral-300 tw-h-4 tw-w-4"
                 />
               </Th>
             </tr>
           </template>
           <tr
             v-for="instructor in instructorsWithinReportedTerms"
-            :key="instructor.id"
             v-show="isShowingInstructor(instructor)"
+            :key="instructor.id"
           >
             <Td class="instructor-column">
               <RouterLink :to="`/user/${instructor.id}`">
@@ -196,8 +197,8 @@
               </div>
               <div
                 v-for="course in getInstructorTermCourses(instructor, term)"
-                :key="course.id"
                 v-show="isShowingCourse(course)"
+                :key="course.id"
               >
                 <div
                   class="tw-my-1 tw-px-1"
