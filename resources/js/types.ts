@@ -198,7 +198,6 @@ export interface Instructor {
   displayName: string;
   email: string;
   leaves?: Leave[];
-  jobCode: string; // "9403"
   jobCategory: string; // "Faculty"
 }
 

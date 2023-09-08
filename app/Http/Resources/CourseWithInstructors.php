@@ -3,7 +3,6 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Http\Resources\User;
 
 class CourseWithInstructors extends JsonResource {
     /**
@@ -34,7 +33,6 @@ class CourseWithInstructors extends JsonResource {
                 'displayName' => $this->instructor->displayName,
                 'email' => $this->instructor->email,
                 'leaves' => $this->when($this->instructor->leaves->isNotEmpty(), $this->instructor->leaves),
-                'jobCode' => $this->instructor->JOBCODE,
                 'jobCategory' => $this->instructor->CATEGORY,
             ] : null,
         ];

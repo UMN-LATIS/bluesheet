@@ -45,19 +45,15 @@ class SchedulingController extends Controller {
             $this->bandaid->getDeptScheduleForTerm($group->dept_id, $termId)
         );
 
-        $deptEmployeesLookup = collect($this->bandaid->getEmployeesForDepartment($group->dept_id))->keyBy('EMPLID');
+        $employeeList = collect(
+            $this->bandaid->getEmployeesForDepartment($group->dept_id)
+        );
 
         $coursesWithInstructors = $this->userService
-            ->attachInstructorsToCourses($courses)
+            ->attachInstructorsToCourses($courses, $employeeList)
             ->filter(function ($course) {
                 // exclude courses without instructors
                 return isset($course->instructor);
-            })
-            ->map(function ($course) use ($deptEmployeesLookup) {
-                $employee = $deptEmployeesLookup->get($course->INSTRUCTOR_EMPLID);
-                $course->instructor['JOBCODE'] = $employee ? $employee->JOBCODE : null;
-                $course->instructor['CATEGORY'] = $employee ? $employee->CATEGORY : null;
-                return $course;
             })
             ->values();
 
