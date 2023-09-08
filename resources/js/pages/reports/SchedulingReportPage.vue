@@ -111,16 +111,6 @@
           <span class="tw-text-neutral-400 tw-text-xs ml-1">({{ count }})</span>
         </label>
       </fieldset>
-
-      <fieldset>
-        <legend
-          class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide"
-        >
-          Appointment
-        </legend>
-        faculty, teaching specialist, etc. This will be filtering on jobcode by
-        employee, which I definitely need to add to the API
-      </fieldset>
     </section>
 
     <InputGroup
@@ -176,7 +166,11 @@
                       filters.search,
                     ),
                 }"
-                >{{ instructor.surName }}, {{ instructor.givenName }}
+              >
+                <div>{{ instructor.surName }}, {{ instructor.givenName }}</div>
+                <div class="tw-text-xs tw-text-neutral-400">
+                  {{ instructor.jobCategory ?? "Unknown" }}
+                </div>
               </RouterLink>
             </Td>
             <Td v-for="term in termsForReport">
@@ -223,10 +217,9 @@ import { Table, Td, Th } from "@/components/Table";
 import LeaveChip from "@/components/LeaveChip.vue";
 import Spinner from "@/components/Spinner.vue";
 import InputGroup from "@/components/InputGroup.vue";
-import CheckboxGroup from "@/components/CheckboxGroup.vue";
 import SelectGroup from "@/components/SelectGroup.vue";
 import pMap from "p-map";
-import Button from "@/components/Button.vue";
+import { has } from "lodash";
 
 const props = defineProps<{
   groupId: number;
@@ -270,16 +263,22 @@ const instructorsForReport = ref<Instructor[]>([]);
 
 const filteredInstructors = computed(() => {
   const allInstructors = getInstructorsTeachingWithinReportTerms();
-  if (!filters.search) {
-    return allInstructors;
-  }
+
   return allInstructors.filter((instructor) => {
     return (
-      doesInstructorNameMatchSearchTerm(instructor, filters.search) ||
-      hasInstructorTaughtCourseMatchingSearchTerm(instructor, filters.search)
+      isIncludedInstructorAppointment(instructor) &&
+      (filters.search === "" ||
+        doesInstructorNameMatchSearchTerm(instructor, filters.search) ||
+        hasInstructorTaughtCourseMatchingSearchTerm(instructor, filters.search))
     );
   });
 });
+
+function isIncludedInstructorAppointment(instructor: Instructor) {
+  return !excludedInstAppointements.value.has(
+    instructor.jobCategory ?? "Unknown",
+  );
+}
 
 function getAllCourseLevelsMap() {
   const allCourses: Course[] = [...coursesByTermMap.value.values()].flat();
@@ -430,7 +429,11 @@ function getInstructorTermCourses(
   const allDeptCoursesInTerm = coursesByTermMap.value.get(term.id);
   const courses =
     allDeptCoursesInTerm?.filter((course) => {
-      return course.instructor.id === instructor.id;
+      return (
+        course.instructor.id === instructor.id &&
+        !excludedCourseTypes.value.has(course.componentType ?? "Unknown") &&
+        !excludedCourseLevels.value.has(course.academicCareer ?? "Unknown")
+      );
     }) ?? [];
   return [...courses].sort(sortCoursesByCourseNumber);
 }
@@ -505,8 +508,8 @@ async function loadCourseDataForTerm(term: Term) {
 async function runReport() {
   console.time("runReport");
   isRunningReport.value = true;
-  const filteredTerms = getReportTerms();
-  const termsNeedingData = filteredTerms.filter(
+  const reportTerms = getReportTerms();
+  const termsNeedingData = reportTerms.filter(
     (term) => !coursesByTermMap.value.has(term.id),
   );
 
@@ -514,7 +517,7 @@ async function runReport() {
     concurrency: 5,
   });
 
-  termsForReport.value = filteredTerms;
+  termsForReport.value = reportTerms;
   instructorsForReport.value = getInstructorsTeachingWithinReportTerms();
 
   // update course levels and types
