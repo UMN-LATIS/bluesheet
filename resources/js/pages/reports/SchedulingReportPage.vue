@@ -228,8 +228,8 @@ const props = defineProps<{
 type InstructorId = number;
 type TermId = number;
 
-const DEFAULT_START_DATE = dayjs().subtract(1.5, "year").format("YYYY-MM-DD");
-const DEFAULT_END_DATE = dayjs().add(1.5, "year").format("YYYY-MM-DD");
+const DEFAULT_START_DATE = dayjs().subtract(3, "year").format("YYYY-MM-DD");
+const DEFAULT_END_DATE = dayjs().add(2, "year").format("YYYY-MM-DD");
 const MAX_TERM_DATE = dayjs().add(3, "year").format("YYYY-MM-DD");
 
 const group = ref<Group>();
