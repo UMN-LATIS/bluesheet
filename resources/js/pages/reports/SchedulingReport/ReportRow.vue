@@ -28,8 +28,8 @@
       </div>
       <div
         v-for="course in termCourses"
-        :key="course.id"
         v-show="isShowingCourse(course)"
+        :key="course.id"
       >
         <div
           class="tw-my-1 tw-px-1"
@@ -49,7 +49,6 @@
   </tr>
 </template>
 <script setup lang="ts">
-import { dayjs } from "@/lib";
 import { Td } from "@/components/Table";
 import LeaveChip from "@/components/LeaveChip.vue";
 import { Instructor, Term, Leave, Course } from "@/types";

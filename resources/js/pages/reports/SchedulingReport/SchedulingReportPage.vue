@@ -161,62 +161,25 @@
               </Th>
             </tr>
           </template>
-          <tr
+          <ReportRow
             v-for="instructor in instructorsWithinReportedTerms"
             v-show="isShowingInstructor(instructor)"
             :key="instructor.id"
-          >
-            <Td class="instructor-column">
-              <RouterLink :to="`/user/${instructor.id}`">
-                <div
-                  :class="{
-                    'tw-bg-yellow-100 tw-text-blue-600 ':
-                      filters.search.length &&
-                      doesInstructorNameMatchSearchTerm(
-                        instructor,
-                        filters.search,
-                      ),
-                  }"
-                >
-                  {{ instructor.surName }}, {{ instructor.givenName }}
-                </div>
-                <div class="tw-text-xs tw-text-neutral-400">
-                  {{ instructor.jobCategory ?? "Unknown" }}
-                </div>
-              </RouterLink>
-            </Td>
-            <Td v-for="term in termsForReport" :key="term.id">
-              <div class="leaves tw-flex tw-flex-col tw-gap-1 tw-mb-2">
-                <LeaveChip
-                  v-for="leave in selectInstructorTermLeaves(instructor, term)"
-                  :key="leave.id"
-                  :leave="leave"
-                >
-                  {{ leave.description }} ({{ leave.type }})
-                </LeaveChip>
-              </div>
-              <div
-                v-for="course in getInstructorTermCourses(instructor, term)"
-                v-show="isShowingCourse(course)"
-                :key="course.id"
-              >
-                <div
-                  class="tw-my-1 tw-px-1"
-                  :class="{
-                    'tw-opacity-50 tw-line-through': course.cancelled,
-                    'tw-bg-yellow-100':
-                      filters.search.length &&
-                      doesCourseMatchSearchTerm(course, filters.search),
-                  }"
-                >
-                  {{ course.subject }} {{ course.catalogNumber }}
-                  <span class="tw-text-xs tw-text-neutral-400">
-                    {{ course.enrollmentTotal }}/{{ course.enrollmentCap }}
-                  </span>
-                </div>
-              </div>
-            </Td>
-          </tr>
+            :instructor="instructor"
+            :search="filters.search"
+            :terms="termsForReport"
+            :listOfTermCourses="
+              termsForReport.map((term) =>
+                getInstructorTermCourses(instructor, term),
+              )
+            "
+            :listOfTermLeaves="
+              termsForReport.map((term) =>
+                selectInstructorTermLeaves(instructor, term),
+              )
+            "
+            :isShowingCourse="isShowingCourse"
+          />
         </Table>
       </Transition>
     </div>
@@ -229,13 +192,13 @@ import * as api from "@/api";
 import { Course, Term, Group, Instructor, Leave, ISODate } from "@/types";
 import debounce from "lodash-es/debounce";
 import dayjs from "dayjs";
-import { Table, Td, Th } from "@/components/Table";
-import LeaveChip from "@/components/LeaveChip.vue";
+import { Table, Th } from "@/components/Table";
 import Spinner from "@/components/Spinner.vue";
 import InputGroup from "@/components/InputGroup.vue";
 import SelectGroup from "@/components/SelectGroup.vue";
 import pMap from "p-map";
 import Button from "@/components/Button.vue";
+import ReportRow from "./ReportRow.vue";
 
 const props = defineProps<{
   groupId: number;
