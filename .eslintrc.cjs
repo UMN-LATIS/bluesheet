@@ -49,9 +49,9 @@ module.exports = {
       extends: ["plugin:cypress/recommended"],
     },
     // this keeps jest from linting cypress files
-    {
-      files: ["**/resources/assets/js/**/*.js"],
-      extends: ["plugin:jest/recommended", "plugin:jest/style"],
-    },
+    // {
+    //   files: ["**/resources/assets/js/**/*.js"],
+    //   extends: ["plugin:jest/recommended", "plugin:jest/style"],
+    // },
   ],
 };
