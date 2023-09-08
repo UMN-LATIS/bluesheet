@@ -25,7 +25,7 @@ class UserService {
         return $user;
     }
 
-    public function attachInstructorsToCourses(Collection $courses): Collection {
+    public function attachInstructorsToCourses(Collection $courses, Collection $employeeList): Collection {
         
         // prefetch any instructors that we know about and stuff them in our user cache so we avoid n+1 queries
         $allInstructorsFromCourses = $courses->pluck('INSTRUCTOR_EMPLID')->unique()->filter();
@@ -35,11 +35,20 @@ class UserService {
         });
         
     
-        return $courses->each(function ($course) {
+        return $courses->each(function ($course) use ($employeeList){
             if (!$course->INSTRUCTOR_EMPLID) return;
 
             $user = $this->findOrCreateByEmplid($course->INSTRUCTOR_EMPLID);
+            if(isset($user)) {
+                $employeeInfo = $employeeList->where('EMPLID', $user->emplid)->first();
 
+                if(isset($employeeInfo->CATEGORY)) {
+                    
+                    $user->jobCategory = $employeeInfo->CATEGORY;
+                }
+            }
+            
+            
             $course->instructor = $user ?? null;
         });
     }
