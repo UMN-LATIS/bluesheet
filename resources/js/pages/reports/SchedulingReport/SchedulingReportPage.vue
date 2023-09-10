@@ -1,10 +1,12 @@
 <template>
-  <div>
+  <div
+    class="tw-max-w-[90em] tw-w-full tw-mx-auto tw-bg-white tw-border tw-border-umn-neutral-200 tw-my-12 tw-p-8"
+  >
     <h1 class="tw-mb-4">
       {{ group?.group_title }} <br />
       <span class="tw-text-3xl">Scheduling Report</span>
     </h1>
-    <section class="tw-flex tw-flex-col tw-gap-4 tw-mb-4 tw-max-w-md">
+    <section class="tw-flex tw-flex-col tw-gap-4 tw-mb-4">
       <h2 class="sr-only">Report Filters</h2>
 
       <fieldset>
@@ -30,104 +32,124 @@
           />
         </div>
       </fieldset>
-
-      <fieldset v-show="courseLevelsMap.size">
-        <legend
-          class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"
-        >
-          Course Levels
-        </legend>
-        <label
-          v-for="[courseLevel, count] in courseLevelsMap.entries()"
-          :key="courseLevel"
-          class="tw-flex tw-items-center tw-text-sm gap-1"
-        >
-          <input
-            type="checkbox"
-            :checked="!excludedCourseLevels.has(courseLevel)"
-            class="tw-form-checkbox tw-mr-2 tw-border tw-border-neutral-500 tw-rounded"
-            @change="
-              excludedCourseLevels.has(courseLevel)
-                ? excludedCourseLevels.delete(courseLevel)
-                : excludedCourseLevels.add(courseLevel)
-            "
-          />
-
-          {{ courseLevel }}
-          <span class="tw-text-neutral-400 tw-text-xs ml-1">({{ count }})</span>
-        </label>
-      </fieldset>
-
-      <fieldset v-show="instructorCategoriesMap.size">
-        <legend
-          class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"
-        >
-          Instructor Appointment
-          <Button variant="tertiary" @click="toggleAllInstructorAppointments"
-            >Select All</Button
+      <div class="tw-flex tw-gap-8 tw-mb-4 tw-flex-wrap">
+        <fieldset v-show="instructorCategoriesMap.size">
+          <div class="tw-flex tw-items-baseline tw-mb-1">
+            <legend
+              class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"
+            >
+              Instructor Appointment
+            </legend>
+            <Button variant="tertiary" @click="toggleAllInstructorAppointments">
+              Select All
+            </Button>
+          </div>
+          <label
+            v-for="[category, count] in instructorCategoriesMap.entries()"
+            :key="category"
+            class="tw-flex tw-items-center tw-text-sm gap-1"
           >
-        </legend>
-        <label
-          v-for="[category, count] in instructorCategoriesMap.entries()"
-          :key="category"
-          class="tw-flex tw-items-center tw-text-sm gap-1"
-        >
-          <input
-            type="checkbox"
-            :checked="!excludedInstAppointments.has(category)"
-            class="tw-form-checkbox tw-mr-2 tw-border tw-border-neutral-500 tw-rounded"
-            @change="
-              excludedInstAppointments.has(category)
-                ? excludedInstAppointments.delete(category)
-                : excludedInstAppointments.add(category)
-            "
-          />
+            <input
+              type="checkbox"
+              :checked="!excludedInstAppointments.has(category)"
+              class="tw-form-checkbox tw-mr-2 tw-border tw-border-neutral-500 tw-rounded"
+              @change="
+                excludedInstAppointments.has(category)
+                  ? excludedInstAppointments.delete(category)
+                  : excludedInstAppointments.add(category)
+              "
+            />
 
-          {{ category }}
-          <span class="tw-text-neutral-400 tw-text-xs ml-1">({{ count }})</span>
-        </label>
-      </fieldset>
+            {{ category }}
+            <span class="tw-text-neutral-400 tw-text-xs ml-1"
+              >({{ count }})</span
+            >
+          </label>
+        </fieldset>
 
-      <fieldset v-show="courseTypesMap.size">
-        <legend
-          class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"
-        >
-          Course Types
-          <Button variant="tertiary" @click="toggleAllCourseTypes"
-            >Select All</Button
+        <fieldset v-show="courseTypesMap.size">
+          <div class="tw-flex tw-items-baseline tw-mb-1">
+            <legend
+              class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"
+            >
+              Course Types
+            </legend>
+            <Button variant="tertiary" @click="toggleAllCourseTypes"
+              >Select All</Button
+            >
+          </div>
+          <label
+            v-for="[courseType, count] in courseTypesMap.entries()"
+            :key="courseType"
+            class="tw-flex tw-items-center tw-text-sm gap-1"
           >
-        </legend>
-        <label
-          v-for="[courseType, count] in courseTypesMap.entries()"
-          :key="courseType"
-          class="tw-flex tw-items-center tw-text-sm gap-1"
-        >
-          <input
-            type="checkbox"
-            :checked="!excludedCourseTypes.has(courseType)"
-            class="tw-form-checkbox tw-mr-2 tw-border tw-border-neutral-500 tw-rounded"
-            @change="
-              excludedCourseTypes.has(courseType)
-                ? excludedCourseTypes.delete(courseType)
-                : excludedCourseTypes.add(courseType)
-            "
-          />
+            <input
+              type="checkbox"
+              :checked="!excludedCourseTypes.has(courseType)"
+              class="tw-form-checkbox tw-mr-2 tw-border tw-border-neutral-500 tw-rounded"
+              @change="
+                excludedCourseTypes.has(courseType)
+                  ? excludedCourseTypes.delete(courseType)
+                  : excludedCourseTypes.add(courseType)
+              "
+            />
 
-          {{ courseType }}
-          <span class="tw-text-neutral-400 tw-text-xs ml-1">({{ count }})</span>
-        </label>
-      </fieldset>
+            {{ courseType }}
+            <span class="tw-text-neutral-400 tw-text-xs ml-1"
+              >({{ count }})</span
+            >
+          </label>
+        </fieldset>
+        <fieldset v-show="courseLevelsMap.size">
+          <div class="tw-flex tw-items-baseline tw-mb-1">
+            <legend
+              class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"
+            >
+              Course Levels
+            </legend>
+            <Button variant="tertiary" @click="toggleAllICourseLevels"
+              >Select All</Button
+            >
+          </div>
+          <label
+            v-for="[courseLevel, count] in courseLevelsMap.entries()"
+            :key="courseLevel"
+            class="tw-flex tw-items-center tw-text-sm gap-1"
+          >
+            <input
+              type="checkbox"
+              :checked="!excludedCourseLevels.has(courseLevel)"
+              class="tw-form-checkbox tw-mr-2 tw-border tw-border-neutral-500 tw-rounded"
+              @change="
+                excludedCourseLevels.has(courseLevel)
+                  ? excludedCourseLevels.delete(courseLevel)
+                  : excludedCourseLevels.add(courseLevel)
+              "
+            />
+
+            {{ courseLevel }}
+            <span class="tw-text-neutral-400 tw-text-xs ml-1"
+              >({{ count }})</span
+            >
+          </label>
+        </fieldset>
+      </div>
     </section>
 
-    <InputGroup
-      :modelValue="filters.search"
-      placeholder="Search"
-      label="Filter by instructor name or course number"
-      type="search"
-      :showLabel="false"
-      class="tw-mb-2"
-      @update:modelValue="debouncedSearch"
-    />
+    <div class="tw-flex tw-justify-end">
+      <label
+        class="tw-border tw-border-umn-neutral-200 tw-max-w-xs tw-w-full tw-rounded-md !tw-block"
+      >
+        <span class="sr-only">Filter by instructor name or course number</span>
+        <input
+          :modelValue="filters.search"
+          placeholder="Search table"
+          :showLabel="false"
+          class="tw-w-full tw-border-none tw-rounded-none tw-px-4 tw-py-2 tw-bg-transparent tw-text-sm"
+          @update:modelValue="debouncedSearch"
+        />
+      </label>
+    </div>
 
     <div class="tw-relative">
       <Transition name="fade" mode="out-in">
@@ -527,6 +549,17 @@ function toggleAllInstructorAppointments() {
   excludedInstAppointments.value = new Set(
     instructorCategoriesMap.value.keys(),
   );
+}
+
+function toggleAllICourseLevels() {
+  // if all are selected, deselect all
+  if (excludedCourseLevels.value.size === courseLevelsMap.value.size) {
+    excludedCourseLevels.value.clear();
+    return;
+  }
+
+  // otherwise select all
+  excludedCourseLevels.value = new Set(courseLevelsMap.value.keys());
 }
 
 async function loadTerms() {
