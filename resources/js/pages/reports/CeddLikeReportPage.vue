@@ -1,6 +1,5 @@
 <template>
   <DefaultLayout>
-  <div>
     <p>
       This list combines the following data. Clicking the "show email list"
       button will give you a de-duplicated set of email addresses.
@@ -70,8 +69,8 @@ import DefaultLayout from "@/layouts/DefaultLayout.vue";
 export default {
   components: {
     Members,
-    DefaultLayout
-},
+    DefaultLayout,
+  },
   data() {
     return {
       groupList: [],
