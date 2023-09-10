@@ -160,55 +160,53 @@
           Building Report...
         </div>
       </Transition>
-      <Transition name="fade">
-        <Table
-          ref="tableRef"
-          class="scheduling-report"
-          :stickyFirstColumn="true"
-          :stickyHeader="true"
-        >
-          <template #thead>
-            <tr>
-              <Th class="instructor-column">Instructor</Th>
-              <Th
-                v-for="term in termsForReport"
-                :id="`term-${term.id}`"
-                :key="term.id"
-                class="tw-whitespace-nowrap"
-                :class="{
-                  '!tw-bg-umn-gold-light': term.id === currentTerm?.id,
-                }"
-              >
-                {{ term.name }}
-                <Spinner
-                  v-if="!coursesByTermMap.has(term.id)"
-                  class="tw-text-neutral-300 tw-h-4 tw-w-4"
-                />
-              </Th>
-            </tr>
-          </template>
-          <ReportRow
-            v-for="instructor in instructorsWithinReportedTerms"
-            v-show="isShowingInstructor(instructor)"
-            :key="instructor.id"
-            :instructor="instructor"
-            :search="filters.search"
-            :terms="termsForReport"
-            :listOfTermCourses="
-              termsForReport.map((term) =>
-                getInstructorTermCourses(instructor, term),
-              )
-            "
-            :listOfTermLeaves="
-              termsForReport.map((term) =>
-                selectInstructorTermLeaves(instructor, term),
-              )
-            "
-            :currentTerm="currentTerm"
-            :isShowingCourse="isShowingCourse"
-          />
-        </Table>
-      </Transition>
+      <Table
+        ref="tableRef"
+        class="scheduling-report"
+        :stickyFirstColumn="true"
+        :stickyHeader="true"
+      >
+        <template #thead>
+          <tr>
+            <Th class="instructor-column">Instructor</Th>
+            <Th
+              v-for="term in termsForReport"
+              :id="`term-${term.id}`"
+              :key="term.id"
+              class="tw-whitespace-nowrap"
+              :class="{
+                '!tw-bg-amber-100': term.id === currentTerm?.id,
+              }"
+            >
+              {{ term.name }}
+              <Spinner
+                v-if="!coursesByTermMap.has(term.id)"
+                class="tw-text-neutral-300 tw-h-4 tw-w-4"
+              />
+            </Th>
+          </tr>
+        </template>
+        <ReportRow
+          v-for="instructor in instructorsWithinReportedTerms"
+          v-show="isShowingInstructor(instructor)"
+          :key="instructor.id"
+          :instructor="instructor"
+          :search="filters.search"
+          :terms="termsForReport"
+          :listOfTermCourses="
+            termsForReport.map((term) =>
+              getInstructorTermCourses(instructor, term),
+            )
+          "
+          :listOfTermLeaves="
+            termsForReport.map((term) =>
+              selectInstructorTermLeaves(instructor, term),
+            )
+          "
+          :currentTerm="currentTerm"
+          :isShowingCourse="isShowingCourse"
+        />
+      </Table>
     </div>
   </div>
 </template>
