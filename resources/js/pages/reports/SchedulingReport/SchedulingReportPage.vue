@@ -151,16 +151,17 @@
     </div>
 
     <div class="tw-relative">
-      <Transition name="fade" mode="out-in">
+      <Transition name="fade">
         <div
           v-if="isRunningReport"
-          class="tw-flex tw-justify-center tw-items-center tw-bg-black/5 tw-gap-4 tw-h-[20vh]"
+          class="tw-flex tw-justify-center tw-items-start tw-bg-white/5 tw-gap-4 tw-absolute tw-inset-0 tw-z-10 tw-backdrop-blur-sm tw-p-16"
         >
           <Spinner class="tw-text-neutral-900 tw-w-6 tw-h-6" />
           Building Report...
         </div>
+      </Transition>
+      <Transition name="fade">
         <Table
-          v-else
           ref="tableRef"
           class="scheduling-report"
           :stickyFirstColumn="true"
@@ -590,8 +591,8 @@ async function loadCourseDataForTerm(term: Term) {
 
 async function runReport() {
   isRunningReport.value = true;
-  const reportTerms = getReportTerms();
-  const termsNeedingData = reportTerms.filter(
+  termsForReport.value = getReportTerms();
+  const termsNeedingData = termsForReport.value.filter(
     (term) => !coursesByTermMap.value.has(term.id),
   );
 
@@ -599,7 +600,6 @@ async function runReport() {
     concurrency: 5,
   });
 
-  termsForReport.value = reportTerms;
   instructorsForReport.value = getInstructorsTeachingWithinReportTerms();
 
   // update course levels and types
