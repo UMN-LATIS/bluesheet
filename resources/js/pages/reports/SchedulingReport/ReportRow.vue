@@ -17,7 +17,13 @@
         {{ instructor.jobCategory ?? "Unknown" }}
       </div>
     </Td>
-    <Td v-for="(termCourses, index) in listOfTermCourses" :key="index">
+    <Td
+      v-for="(termCourses, index) in listOfTermCourses"
+      :key="index"
+      :class="{
+        'tw-bg-amber-50': currentTerm?.id === terms[index].id,
+      }"
+    >
       <div class="leaves tw-flex tw-flex-col tw-gap-1 tw-mb-2">
         <LeaveChip
           v-for="leave in listOfTermLeaves[index]"
@@ -61,6 +67,7 @@ defineProps<{
   listOfTermCourses: Course[][];
   listOfTermLeaves: Leave[][];
   isShowingCourse: (course: Course) => boolean;
+  currentTerm: Term | null;
 }>();
 
 function doesInstructorNameMatchSearchTerm(

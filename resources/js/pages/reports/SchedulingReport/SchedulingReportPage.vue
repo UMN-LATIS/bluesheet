@@ -140,6 +140,7 @@
         </div>
         <Table
           v-else
+          ref="tableRef"
           class="scheduling-report"
           :stickyFirstColumn="true"
           :stickyHeader="true"
@@ -149,9 +150,12 @@
               <Th class="instructor-column">Instructor</Th>
               <Th
                 v-for="term in termsForReport"
-                :id="term.id"
+                :id="`term-${term.id}`"
                 :key="term.id"
                 class="tw-whitespace-nowrap"
+                :class="{
+                  '!tw-bg-umn-gold-light': term.id === currentTerm?.id,
+                }"
               >
                 {{ term.name }}
                 <Spinner
@@ -178,6 +182,7 @@
                 selectInstructorTermLeaves(instructor, term),
               )
             "
+            :currentTerm="currentTerm"
             :isShowingCourse="isShowingCourse"
           />
         </Table>
@@ -187,7 +192,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, reactive, computed } from "vue";
+import { onMounted, ref, reactive, computed, watch } from "vue";
 import * as api from "@/api";
 import { Course, Term, Group, Instructor, Leave, ISODate } from "@/types";
 import debounce from "lodash-es/debounce";
@@ -211,6 +216,7 @@ const DEFAULT_START_DATE = dayjs().subtract(3, "year").format("YYYY-MM-DD");
 const DEFAULT_END_DATE = dayjs().add(2, "year").format("YYYY-MM-DD");
 const MAX_TERM_DATE = dayjs().add(3, "year").format("YYYY-MM-DD");
 
+const tableRef = ref<HTMLElement>();
 const group = ref<Group>();
 const termsMap = ref<Map<TermId, Term>>(new Map());
 const coursesByTermMap = ref<Map<TermId, Course[]>>(new Map());
@@ -234,6 +240,17 @@ const allTermOptions = computed(() => {
     text: term.name,
     value: String(term.id),
   }));
+});
+
+const currentTerm = computed((): Term | null => {
+  const currentTerm = [...termsMap.value.values()].find((term) => {
+    const termStart = dayjs(term.startDate);
+    const termEnd = dayjs(term.endDate);
+    const today = dayjs();
+    return today.isBetween(termStart, termEnd, "day", "[]");
+  });
+
+  return currentTerm ?? null;
 });
 
 // not making these computed to avoid reactivity lag
@@ -563,8 +580,24 @@ async function runReport() {
   instructorCategoriesMap.value = getAllInstructorCategoriesMap();
 
   isRunningReport.value = false;
-  console.timeEnd("runReport");
+
+  scrollToCurrentTerm();
 }
+
+function scrollToCurrentTerm() {
+  if (!currentTerm.value) return;
+  const currentTermEl = document.getElementById(`term-${currentTerm.value.id}`);
+  if (!currentTermEl) return;
+  currentTermEl.scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+    inline: "center",
+  });
+}
+
+watch(tableRef, () => {
+  scrollToCurrentTerm();
+});
 
 onMounted(async () => {
   // reset data
