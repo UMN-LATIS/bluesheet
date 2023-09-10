@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <DefaultLayout>
     <div class="form-group row">
       <label for="officialRole" class="col-sm-2 col-form-label"
         >Filter by Official Role</label
@@ -49,19 +49,21 @@
         </tr>
       </tbody>
     </table>
-  </div>
+  </DefaultLayout>
 </template>
 
 <script>
 import SortableLink from "@/components/SortableLink.vue";
 import GroupTitle from "@/components/GroupTitle.vue";
 import ComboBox from "@/components/ComboBox.vue";
+import DefaultLayout from "@/layouts/DefaultLayout.vue";
 
 export default {
   components: {
     SortableLink,
     GroupTitle,
     ComboBox,
+    DefaultLayout,
   },
   data() {
     return {

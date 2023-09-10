@@ -1,11 +1,9 @@
 <template>
-  <div>
+  <DefaultLayout>
     <p>
-      This report gives you information about BlueSheet group admins (those who can manage a given group) and groups without admins.
+      This report gives you information about BlueSheet group admins (those who
+      can manage a given group) and groups without admins.
     </p>
-    <pre>
-
-</pre>
 
     <table class="table">
       <thead>
@@ -19,23 +17,23 @@
               @sort="sort"
             />
           </th>
-          <th>
-            Admins
-              
-          </th>
-         
+          <th>Admins</th>
         </tr>
       </thead>
       <tbody>
-        <tr
-          v-for="department in groupsWithAdmins"
-          :key="department.dept_id"
-        >
+        <tr v-for="department in groupsWithAdmins" :key="department.dept_id">
           <td>
-            <router-link :to="{ name: 'group', params: { groupId: department.id } }">
-            {{ department.group_title }}</router-link></td>
-          <td>{{ department.activeMembers.map(m => m.user.displayName).join(", ") }}</td>
-        
+            <router-link
+              :to="{ name: 'group', params: { groupId: department.id } }"
+            >
+              {{ department.group_title }}</router-link
+            >
+          </td>
+          <td>
+            {{
+              department.activeMembers.map((m) => m.user.displayName).join(", ")
+            }}
+          </td>
         </tr>
       </tbody>
     </table>
@@ -52,48 +50,46 @@
               @sort="sort"
             />
           </th>
-
-         
         </tr>
       </thead>
       <tbody>
-        <tr
-          v-for="department in groupsWithoutAdmins"
-          :key="department.dept_id"
-        >
-          <td><router-link :to="{ name: 'group', params: { groupId: department.id } }">{{ department.group_title }}</router-link></td>
-         
-        
+        <tr v-for="department in groupsWithoutAdmins" :key="department.dept_id">
+          <td>
+            <router-link
+              :to="{ name: 'group', params: { groupId: department.id } }"
+              >{{ department.group_title }}</router-link
+            >
+          </td>
         </tr>
       </tbody>
     </table>
-  </div>
+  </DefaultLayout>
 </template>
 
 <script>
-import UserWithLink from "@/components/UserWithLink.vue";
 import SortableLink from "@/components/SortableLink.vue";
 import { dayjs } from "@/lib";
+import DefaultLayout from "@/layouts/DefaultLayout.vue";
 
 export default {
   components: {
-    UserWithLink,
     SortableLink,
+    DefaultLayout,
   },
   data() {
     return {
       currentSort: "dept_id",
       currentSortDir: "asc",
-      groupData: []
+      groupData: [],
     };
   },
   computed: {
-    groupsWithAdmins: function() {
-        return this.groupData.filter(group => group.activeMembers.length > 0);
+    groupsWithAdmins: function () {
+      return this.groupData.filter((group) => group.activeMembers.length > 0);
     },
-    groupsWithoutAdmins: function() {
-        return this.groupData.filter(group => group.activeMembers.length === 0);
-    }
+    groupsWithoutAdmins: function () {
+      return this.groupData.filter((group) => group.activeMembers.length === 0);
+    },
   },
   async mounted() {
     var groupData = await axios.get("/api/group/admins");

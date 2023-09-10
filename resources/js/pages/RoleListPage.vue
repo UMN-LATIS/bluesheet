@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <DefaultLayout>
     <table
       v-for="officialGroupType in officialGroupTypes"
       :key="officialGroupType"
@@ -48,11 +48,14 @@
         </tr>
       </tbody>
     </table>
-  </div>
+  </DefaultLayout>
 </template>
 
 <script>
+import DefaultLayout from "@/layouts/DefaultLayout.vue";
+
 export default {
+  components: { DefaultLayout },
   data() {
     return {
       roleList: [],

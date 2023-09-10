@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <DefaultLayout>
     <p>
       This list combines the following data. Clicking the "show email list"
       button will give you a de-duplicated set of email addresses.
@@ -109,18 +109,20 @@
         </tr>
       </tbody>
     </table>
-  </div>
+  </DefaultLayout>
 </template>
 
 <script>
 import UserWithLink from "@/components/UserWithLink.vue";
 import SortableLink from "@/components/SortableLink.vue";
 import { dayjs } from "@/lib";
+import DefaultLayout from "@/layouts/DefaultLayout.vue";
 
 export default {
   components: {
     UserWithLink,
     SortableLink,
+    DefaultLayout,
   },
   data() {
     return {

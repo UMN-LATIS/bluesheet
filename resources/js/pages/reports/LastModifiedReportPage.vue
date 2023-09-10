@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <DefaultLayout>
     <div v-if="parentOrganizations" class="form-group row">
       <label for="parentOrganization" class="col-sm-2 col-form-label"
         >Filter by Folder</label
@@ -43,11 +43,17 @@
               <GroupTitle :group="group" />
             </router-link>
           </td>
-          <td>{{ group.lastModified ? dayjs(group.lastModified).format("YYYY, MMM Do") : '' }}</td>
+          <td>
+            {{
+              group.lastModified
+                ? dayjs(group.lastModified).format("YYYY, MMM Do")
+                : ""
+            }}
+          </td>
         </tr>
       </tbody>
     </table>
-  </div>
+  </DefaultLayout>
 </template>
 
 <script>
@@ -55,12 +61,14 @@ import SortableLink from "@/components/SortableLink.vue";
 import GroupTitle from "@/components/GroupTitle.vue";
 import SimpleNestedSelect from "@/components/SimpleNestedSelect.vue";
 import { dayjs } from "@/lib";
+import DefaultLayout from "@/layouts/DefaultLayout.vue";
 
 export default {
   components: {
     SortableLink,
     GroupTitle,
     SimpleNestedSelect,
+    DefaultLayout,
   },
   data() {
     return {
