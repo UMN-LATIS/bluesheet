@@ -142,11 +142,10 @@
       >
         <span class="sr-only">Filter by instructor name or course number</span>
         <input
-          :modelValue="filters.search"
+          v-model="searchInputRaw"
           placeholder="Search table"
           :showLabel="false"
           class="tw-w-full tw-border-none tw-rounded-none tw-px-4 tw-py-2 tw-bg-transparent tw-text-sm"
-          @update:modelValue="debouncedSearch"
         />
       </label>
     </div>
@@ -221,7 +220,6 @@ import debounce from "lodash-es/debounce";
 import dayjs from "dayjs";
 import { Table, Th } from "@/components/Table";
 import Spinner from "@/components/Spinner.vue";
-import InputGroup from "@/components/InputGroup.vue";
 import SelectGroup from "@/components/SelectGroup.vue";
 import pMap from "p-map";
 import Button from "@/components/Button.vue";
@@ -252,6 +250,12 @@ const filters = reactive({
   endTermId: "",
   search: "",
 });
+
+const searchInputRaw = ref("");
+const debouncedSearch = debounce(() => {
+  filters.search = searchInputRaw.value;
+}, 500);
+watch(searchInputRaw, debouncedSearch);
 
 const excludedCourseLevels = ref<Set<string>>(new Set());
 const excludedCourseTypes = ref<Set<string>>(new Set());
@@ -317,7 +321,6 @@ const instructorsWithinReportedTerms = computed(() => {
   }
 
   const sortedInstructors = reportInstructors.sort(sortByName);
-  console.timeEnd("getInstructorsTeachingWithinFilteredTerms");
 
   return sortedInstructors;
 });
@@ -407,7 +410,6 @@ function getReportTerms() {
 }
 
 function getInstructorsTeachingWithinReportTerms() {
-  console.time("getInstructorsTeachingWithinFilteredTerms");
   const instructorsMap = getInstructorsMap();
   const reportTerms = getReportTerms();
   const allInstructors = [...instructorsMap.values()];
@@ -427,8 +429,6 @@ function getInstructorsTeachingWithinReportTerms() {
   }
 
   const sortedInstructors = reportInstructors.sort(sortByName);
-  console.timeEnd("getInstructorsTeachingWithinFilteredTerms");
-
   return sortedInstructors;
 }
 
@@ -450,10 +450,6 @@ function doesInstructorNameMatchSearchTerm(
     instructor.givenName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 }
-
-const debouncedSearch = debounce((value) => {
-  filters.search = value;
-}, 300);
 
 function doesCourseMatchSearchTerm(course: Course, searchTerm: string) {
   const courseTitle =
@@ -593,7 +589,6 @@ async function loadCourseDataForTerm(term: Term) {
 }
 
 async function runReport() {
-  console.time("runReport");
   isRunningReport.value = true;
   const reportTerms = getReportTerms();
   const termsNeedingData = reportTerms.filter(
