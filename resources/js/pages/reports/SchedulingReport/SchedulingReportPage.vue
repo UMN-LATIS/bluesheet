@@ -43,7 +43,7 @@
             </Button>
           </div>
           <label
-            v-for="[category, count] in instructorCategoriesMap.entries()"
+            v-for="[category, count] in sortedAppointmentTypeFilters"
             :key="category"
             class="tw-flex tw-items-center tw-text-sm gap-1"
           >
@@ -77,7 +77,7 @@
             >
           </div>
           <label
-            v-for="[courseType, count] in courseTypesMap.entries()"
+            v-for="[courseType, count] in sortedCourseTypes"
             :key="courseType"
             class="tw-flex tw-items-center tw-text-sm gap-1"
           >
@@ -221,7 +221,6 @@ import SelectGroup from "@/components/SelectGroup.vue";
 import pMap from "p-map";
 import Button from "@/components/Button.vue";
 import ReportRow from "./ReportRow.vue";
-import { PostIt } from "@umn-latis/cla-vue-template";
 import WideLayout from "@/layouts/WideLayout.vue";
 
 const props = defineProps<{
@@ -276,6 +275,18 @@ const currentTerm = computed((): Term | null => {
   });
 
   return currentTerm ?? null;
+});
+
+function sortEntriesByKey(a, b) {
+  return a[0].localeCompare(b[0]);
+}
+
+const sortedAppointmentTypeFilters = computed(() => {
+  return [...instructorCategoriesMap.value.entries()].sort(sortEntriesByKey);
+});
+
+const sortedCourseTypes = computed(() => {
+  return [...courseTypesMap.value.entries()].sort(sortEntriesByKey);
 });
 
 // not making these computed to avoid reactivity lag
