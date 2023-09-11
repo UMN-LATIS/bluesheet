@@ -43,7 +43,7 @@
             </Button>
           </div>
           <label
-            v-for="[category, count] in instructorCategoriesMap.entries()"
+            v-for="[category, count] in sortedAppointmentTypeFilters"
             :key="category"
             class="tw-flex tw-items-center tw-text-sm gap-1"
           >
@@ -77,7 +77,7 @@
             >
           </div>
           <label
-            v-for="[courseType, count] in courseTypesMap.entries()"
+            v-for="[courseType, count] in sortedCourseTypes"
             :key="courseType"
             class="tw-flex tw-items-center tw-text-sm gap-1"
           >
@@ -196,7 +196,6 @@
               getInstructorTermCourses(instructor, term),
             )
           "
-          :nullValuePlaceholder="NULL_VALUE_PLACEHOLDER"
           :listOfTermLeaves="
             termsForReport.map((term) =>
               selectInstructorTermLeaves(instructor, term),
@@ -222,7 +221,6 @@ import SelectGroup from "@/components/SelectGroup.vue";
 import pMap from "p-map";
 import Button from "@/components/Button.vue";
 import ReportRow from "./ReportRow.vue";
-import { PostIt } from "@umn-latis/cla-vue-template";
 import WideLayout from "@/layouts/WideLayout.vue";
 
 const props = defineProps<{
@@ -235,7 +233,6 @@ type TermId = number;
 const DEFAULT_START_DATE = dayjs().subtract(3, "year").format("YYYY-MM-DD");
 const DEFAULT_END_DATE = dayjs().add(2, "year").format("YYYY-MM-DD");
 const MAX_TERM_DATE = dayjs().add(3, "year").format("YYYY-MM-DD");
-const NULL_VALUE_PLACEHOLDER = "Unspecified";
 
 const tableRef = ref<HTMLElement>();
 const group = ref<Group>();
@@ -278,6 +275,18 @@ const currentTerm = computed((): Term | null => {
   });
 
   return currentTerm ?? null;
+});
+
+function sortEntriesByKey(a, b) {
+  return a[0].localeCompare(b[0]);
+}
+
+const sortedAppointmentTypeFilters = computed(() => {
+  return [...instructorCategoriesMap.value.entries()].sort(sortEntriesByKey);
+});
+
+const sortedCourseTypes = computed(() => {
+  return [...courseTypesMap.value.entries()].sort(sortEntriesByKey);
 });
 
 // not making these computed to avoid reactivity lag
@@ -327,21 +336,15 @@ const instructorsWithinReportedTerms = computed(() => {
 });
 
 function isIncludedInstructorAppointment(instructor: Instructor) {
-  return !excludedInstAppointments.value.has(
-    instructor.jobCategory ?? NULL_VALUE_PLACEHOLDER,
-  );
+  return !excludedInstAppointments.value.has(instructor.academicAppointment);
 }
 
 function getAllCourseLevelsMap() {
   const allCourses: Course[] = [...coursesByTermMap.value.values()].flat();
   const courseLevels = new Map<string, number>();
   allCourses.forEach((course) => {
-    const currentCount =
-      courseLevels.get(course.academicCareer ?? NULL_VALUE_PLACEHOLDER) ?? 0;
-    courseLevels.set(
-      course.academicCareer ?? NULL_VALUE_PLACEHOLDER,
-      currentCount + 1,
-    );
+    const currentCount = courseLevels.get(course.courseLevel) ?? 0;
+    courseLevels.set(course.courseLevel, currentCount + 1);
   });
   return courseLevels;
 }
@@ -350,12 +353,8 @@ function getAllCourseTypesMap() {
   const allCourses: Course[] = [...coursesByTermMap.value.values()].flat();
   const courseTypes = new Map<string, number>();
   allCourses.forEach((course) => {
-    const currentCount =
-      courseTypes.get(course.componentType ?? NULL_VALUE_PLACEHOLDER) ?? 0;
-    courseTypes.set(
-      course.componentType ?? NULL_VALUE_PLACEHOLDER,
-      currentCount + 1,
-    );
+    const currentCount = courseTypes.get(course.courseType) ?? 0;
+    courseTypes.set(course.courseType, currentCount + 1);
   });
   return courseTypes;
 }
@@ -364,10 +363,9 @@ function getAllInstructorCategoriesMap() {
   const allInstructors = [...getInstructorsMap().values()];
   const instructorCategories = new Map<string, number>();
   allInstructors.forEach((instructor) => {
-    const jobCategory =
-      instructor.jobCategory?.trim() || NULL_VALUE_PLACEHOLDER;
-    const currentCount = instructorCategories.get(jobCategory) ?? 0;
-    instructorCategories.set(jobCategory, currentCount + 1);
+    const currentCount =
+      instructorCategories.get(instructor.academicAppointment) ?? 0;
+    instructorCategories.set(instructor.academicAppointment, currentCount + 1);
   });
   return instructorCategories;
 }
@@ -473,12 +471,8 @@ function sortCoursesByCourseNumber(a: Course, b: Course) {
 
 function isShowingCourse(course: Course) {
   return (
-    !excludedCourseTypes.value.has(
-      course.componentType ?? NULL_VALUE_PLACEHOLDER,
-    ) &&
-    !excludedCourseLevels.value.has(
-      course.academicCareer ?? NULL_VALUE_PLACEHOLDER,
-    )
+    !excludedCourseTypes.value.has(course.courseType) &&
+    !excludedCourseLevels.value.has(course.courseLevel)
   );
 }
 

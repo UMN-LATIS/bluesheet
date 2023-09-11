@@ -4,6 +4,12 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
+function trimWithFallback($string, $default = 'Unspecified') {
+    if (!is_string($string)) return $default;
+    $trimmedString = trim($string);
+    return $trimmedString ? $trimmedString : $default;
+}
+
 class CourseWithInstructors extends JsonResource {
     /**
      * Transform the resource into an array.
@@ -24,8 +30,8 @@ class CourseWithInstructors extends JsonResource {
             "enrollmentTotal" => $this->ENROLLMENT_TOTAL,
             "instructorRole" => $this->INSTRUCTOR_ROLE,
             "cancelled" => (bool) $this->CANCELLED,
-            "componentType" => $this->COMPONENT_CLASS,
-            "academicCareer" => $this->ACADEMIC_CAREER,
+            "courseType" => trimWithFallback($this->COMPONENT_CLASS),
+            "courseLevel" => trimWithFallback($this->ACADEMIC_CAREER),
             "instructor" => $this->instructor ? [
                 'id' => $this->instructor->id,
                 'givenName' => $this->instructor->givenname,
@@ -33,7 +39,7 @@ class CourseWithInstructors extends JsonResource {
                 'displayName' => $this->instructor->displayName,
                 'email' => $this->instructor->email,
                 'leaves' => $this->when($this->instructor->leaves->isNotEmpty(), $this->instructor->leaves),
-                'jobCategory' => $this->instructor->jobCategory,
+                'academicAppointment' => trimWithFallback($this->instructor->jobCategory),
                 'emplid' => $this->instructor->emplid,
             ] : null,
         ];
