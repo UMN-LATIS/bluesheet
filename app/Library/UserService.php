@@ -17,7 +17,7 @@ class UserService {
             return $user;
         }
 
-        $user = LDAP::lookupUser($emplid, 'umnemplid');
+        $user = LDAP::lookupUser(str_pad($emplid, 7, 0, STR_PAD_LEFT), 'umnemplid');
         if (!$user) return null;
 
         $user->save();
