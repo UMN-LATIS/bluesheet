@@ -356,12 +356,9 @@ function getAllInstructorCategoriesMap() {
   const allInstructors = [...getInstructorsMap().values()];
   const instructorCategories = new Map<string, number>();
   allInstructors.forEach((instructor) => {
-    const currentCount =
-      instructorCategories.get(instructor.jobCategory ?? "Unknown") ?? 0;
-    instructorCategories.set(
-      instructor.jobCategory ?? "Unknown",
-      currentCount + 1,
-    );
+    const jobCategory = instructor.jobCategory.trim() ?? "Unknown";
+    const currentCount = instructorCategories.get(jobCategory) ?? 0;
+    instructorCategories.set(jobCategory, currentCount + 1);
   });
   return instructorCategories;
 }
