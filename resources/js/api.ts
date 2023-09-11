@@ -65,20 +65,6 @@ export async function getTerms() {
   return res.data;
 }
 
-const NULL_PLACEHOLDER = "Unspecified";
-function normalizeCourse(course: Course) {
-  return {
-    ...course,
-    academicCareer: course.courseLevel?.trim() || NULL_PLACEHOLDER,
-    componentType: course.courseType?.trim() || NULL_PLACEHOLDER,
-    instructor: {
-      ...course.instructor,
-      jobCategory:
-        course.instructor.academicAppointment?.trim() || NULL_PLACEHOLDER,
-    },
-  };
-}
-
 export async function getGroupCoursesByTerm({
   groupId,
   termId,
@@ -90,7 +76,7 @@ export async function getGroupCoursesByTerm({
     `/api/terms/${termId}/groups/${groupId}/courses?includeRoles=PI`,
   );
 
-  return res.data.map(normalizeCourse);
+  return res.data;
 }
 
 export async function getGroup(groupId: number) {
