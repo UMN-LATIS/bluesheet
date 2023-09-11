@@ -371,7 +371,7 @@ export default {
       );
     },
     compositeList: function() {
-      if(this.group.include_child_groups && this.group.child_groups) {
+      if(this.group && this.group.include_child_groups && this.group.child_groups) {
         return this.members.concat(this.group.child_groups.flatMap((child) => child.members?child.members.map(m=> { m.child_group_title = child.group_title; return m}):false));
       }
       return this.members;
