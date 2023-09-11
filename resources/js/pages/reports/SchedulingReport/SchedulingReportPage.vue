@@ -105,7 +105,7 @@
             >
               Course Levels
             </legend>
-            <Button variant="tertiary" @click="toggleAllICourseLevels"
+            <Button variant="tertiary" @click="toggleAllCourseLevels"
               >Select All</Button
             >
           </div>
@@ -525,40 +525,41 @@ function selectTermsWithinRangeInclusive(
   });
 }
 function toggleAllCourseTypes() {
-  // if all are selected, deselect all
-  if (excludedCourseTypes.value.size === courseTypesMap.value.size) {
-    excludedCourseTypes.value.clear();
+  const areAllSelected = excludedCourseTypes.value.size === 0;
+  if (areAllSelected) {
+    // deselect all (i.e. add all keys to the excluded set)
+    excludedCourseTypes.value = new Set(courseTypesMap.value.keys());
     return;
   }
 
-  // otherwise select all
-  excludedCourseTypes.value = new Set(courseTypesMap.value.keys());
+  // otherwise select all (i.e. clear the set)
+  excludedCourseTypes.value.clear();
 }
 
 function toggleAllInstructorAppointments() {
-  // if all are selected, deselect all
-  if (
-    excludedInstAppointments.value.size === instructorCategoriesMap.value.size
-  ) {
-    excludedInstAppointments.value.clear();
+  const areAllSelected = excludedInstAppointments.value.size === 0;
+  if (areAllSelected) {
+    // deselect all (i.e. add all keys to the excluded set)
+    excludedInstAppointments.value = new Set(
+      instructorCategoriesMap.value.keys(),
+    );
     return;
   }
 
-  // otherwise select all
-  excludedInstAppointments.value = new Set(
-    instructorCategoriesMap.value.keys(),
-  );
+  // otherwise select all (i.e. clear the set)
+  excludedInstAppointments.value.clear();
 }
 
-function toggleAllICourseLevels() {
-  // if all are selected, deselect all
-  if (excludedCourseLevels.value.size === courseLevelsMap.value.size) {
-    excludedCourseLevels.value.clear();
+function toggleAllCourseLevels() {
+  const areAllSelected = excludedCourseLevels.value.size === 0;
+  if (areAllSelected) {
+    // deselect all (i.e. add all keys to the excluded set)
+    excludedCourseLevels.value = new Set(courseLevelsMap.value.keys());
     return;
   }
 
-  // otherwise select all
-  excludedCourseLevels.value = new Set(courseLevelsMap.value.keys());
+  // otherwise select all (i.e. clear the set)
+  excludedCourseLevels.value.clear();
 }
 
 async function loadTerms() {
