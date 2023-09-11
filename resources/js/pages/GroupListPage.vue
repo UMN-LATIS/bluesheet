@@ -1,66 +1,80 @@
 <template>
   <DefaultLayout>
     <div>
-      <div class="row">
-        <div class="col-10">
-          <nav class="breadcrumb">
-            <router-link
-              v-for="breadcrumb in breadCrumbs"
-              :key="breadcrumb.title"
-              class="breadcrumb-item"
-              :to="{ path: breadcrumb.path }"
-              activeClass="active"
-              exactActiveClass=""
-              exact
-              >{{ breadcrumb.title }}</router-link
-            >
-          </nav>
+      <div
+        class="tw-flex tw-items-baseline tw-justify-end tw-gap-4 tw-flex-wrap tw-text-sm"
+      >
+        <div class="tw-flex tw-items-baseline tw-gap-4">
+          <label v-if="!parent">
+            <input v-model="showAllGroups" type="checkbox" />
+            Show All
+          </label>
+          <label>
+            <input v-model="includeSubgroups" type="checkbox" />
+            Include Subgroups
+          </label>
         </div>
-        <div class="col-2 p-1">
+        <label>
+          <span class="tw-sr-only">Search</span>
           <input
             v-model="searchTerm"
             type="text"
-            class="form-control"
+            class="tw-form-input tw-bg-transparent tw-rounded tw-border tw-border-neutral-300 tw-w-[15rem] tw-text-sm tw-block"
             placeholder="Search"
           />
-        </div>
+        </label>
       </div>
-
-      <!-- <table class="table" v-if="currentOrganizations.length > 0">
-            <thead>
-                <tr>
-                    <th scope="col">Groups</th>
-              </tr>
-          </thead>
-          <tbody>
-                <tr v-for="currentOrg in currentOrganizations" :key="currentOrg.id" >
-                <td><router-link :to='{ path: "/groups/" + currentOrg.id }'>{{ currentOrg.label }}</router-link>
-                </td>
-            </tr>
-          </tbody>
-         </table> -->
-
+      <nav class="tw-mb-4">
+        <router-link
+          v-for="(breadcrumb, index) in breadCrumbs"
+          :key="breadcrumb.title"
+          :to="{ path: breadcrumb.path }"
+          activeClass="active"
+          exactActiveClass=""
+          exact
+          class="tw-text-neutral-900 tw-font-semibold tw-border-b-2 tw-border-transparent tw-hover:text-neutral-700 tw-hover:border-neutral-300"
+        >
+          <svg
+            v-show="index > 0"
+            class="tw-h-5 tw-w-5 tw-flex-shrink-0 tw-text-neutral-400"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+            aria-hidden="true"
+          >
+            <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
+          </svg>
+          {{ breadcrumb.title }}
+        </router-link>
+      </nav>
       <table v-if="groupList" class="table">
         <thead>
           <tr>
-            <th scope="col">Groups</th>
+            <th scope="col" class="!tw-border-t-0 tw-sr-only">
+              <span class="tw-sr-only">Group Name</span>
+            </th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="(group, key) in mergedSortedList" :key="key">
             <td v-if="group.active_group && !group.parent_group_id">
               <div class="tw-flex tw-gap-2">
-                <i class="fas fa-users"></i>
                 <router-link
                   :to="{ name: 'group', params: { groupId: group.id } }"
+                  class="hover:tw-no-underline tw-flex tw-gap-2"
                 >
+                  <i class="fas fa-users"></i>
+
                   <GroupTitle :group="group" />
                 </router-link>
               </div>
-              <ul v-if="includeSubgroups && group.child_groups.length > 0">
+              <ul
+                v-if="includeSubgroups && group.child_groups.length > 0"
+                class="tw-pl-12"
+              >
                 <li v-for="subgroup in group.child_groups" :key="subgroup.id">
                   <router-link
                     :to="{ name: 'group', params: { groupId: subgroup.id } }"
+                    class="hover:tw-no-underline tw-flex tw-gap-2"
                     ><GroupTitle :group="subgroup"
                   /></router-link>
                 </li>
@@ -70,40 +84,17 @@
               v-if="!group.active_group && !group.created_at"
               class="tw-flex tw-gap-2"
             >
-              <i class="fas fa-folder"></i>
-              <router-link :to="{ path: '/groups/' + group.id }">{{
-                group.group_title
-              }}</router-link>
+              <router-link
+                :to="{ path: '/groups/' + group.id }"
+                class="hover:tw-no-underline tw-flex tw-gap-2"
+              >
+                <i class="fas fa-folder"></i>
+                {{ group.group_title }}</router-link
+              >
             </td>
           </tr>
         </tbody>
       </table>
-      <div class="form-group col-md-6">
-        <div class="form-check">
-          <input
-            id="subgroups"
-            v-model="includeSubgroups"
-            class="form-check-input"
-            type="checkbox"
-          />
-          <label class="form-check-label" for="subgroups">
-            Include Sub-groups
-          </label>
-        </div>
-      </div>
-      <div v-if="!parent" class="form-group col-md-6">
-        <div class="form-check">
-          <input
-            id="allGroups"
-            v-model="showAllGroups"
-            class="form-check-input"
-            type="checkbox"
-          />
-          <label class="form-check-label" for="allGroups">
-            Show All Groups
-          </label>
-        </div>
-      </div>
     </div>
   </DefaultLayout>
 </template>
