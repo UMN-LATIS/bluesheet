@@ -53,6 +53,8 @@ class ImportLeaves extends Command
             foreach($user->leavesIncludingTrashed as $existingLeave) {
                 if($existingLeave->start_date == $importLeave->BEGIN_DATE && $existingLeave->end_date == $importLeave->END_DATE) {
                     $foundLeave = true;
+                    $existingLeave->status = $existingLeave::STATUS_CONFIRMED;
+                    $existingLeave->save();
                     break;
                 }
             }
