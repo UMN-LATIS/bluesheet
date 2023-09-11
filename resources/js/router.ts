@@ -17,7 +17,7 @@ import FiscalReportPage from "./pages/reports/FiscalReportPage.vue";
 import LastModifiedReportPage from "./pages/reports/LastModifiedReportPage.vue";
 import MissingOfficialReportPage from "./pages/reports/MissingOfficialReportPage.vue";
 import OrgpReportPage from "./pages/reports/OrgpReportPage.vue";
-import SchedulingReportPage from "./pages/reports/SchedulingReportPage.vue";
+import SchedulingReportPage from "./pages/reports/SchedulingReport/SchedulingReportPage.vue";
 import GroupAdminsReportPage from "./pages/reports/GroupAdmins.vue";
 
 function parseIntFromParam(

@@ -193,11 +193,13 @@ export interface Term {
 
 export interface Instructor {
   id: number;
+  emplid: number;
   givenName: string;
   surName: string;
   displayName: string;
   email: string;
   leaves?: Leave[];
+  jobCategory: string | null; // "Faculty"
 }
 
 export type TermCode = "FA" | "SP" | "SU";
@@ -215,6 +217,7 @@ export interface Course {
   enrollmentTotal: number;
   cancelled: boolean;
   componentType: string; // "LEC"
+  academicCareer: string; //"UGRD" | "GRAD";
   instructor: Instructor;
 }
 

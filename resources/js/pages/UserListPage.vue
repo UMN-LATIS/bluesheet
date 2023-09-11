@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <DefaultLayout>
     <div class="toggles">
       <span
         class="committee groupBadge"
@@ -107,13 +107,15 @@
         >Group</span
       >
     </div>
-  </div>
+  </DefaultLayout>
 </template>
 
 <script>
+import DefaultLayout from "@/layouts/DefaultLayout.vue";
 import { dayjs } from "@/lib";
 
 export default {
+  components: { DefaultLayout },
   props: ["users", "groupId"],
   data() {
     return {

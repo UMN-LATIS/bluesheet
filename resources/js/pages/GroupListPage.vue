@@ -1,31 +1,32 @@
 <template>
-  <div>
-    <div class="row">
-      <div class="col-10">
-        <nav class="breadcrumb">
-          <router-link
-            v-for="breadcrumb in breadCrumbs"
-            :key="breadcrumb.title"
-            class="breadcrumb-item"
-            :to="{ path: breadcrumb.path }"
-            activeClass="active"
-            exactActiveClass=""
-            exact
-            >{{ breadcrumb.title }}</router-link
-          >
-        </nav>
+  <DefaultLayout>
+    <div>
+      <div class="row">
+        <div class="col-10">
+          <nav class="breadcrumb">
+            <router-link
+              v-for="breadcrumb in breadCrumbs"
+              :key="breadcrumb.title"
+              class="breadcrumb-item"
+              :to="{ path: breadcrumb.path }"
+              activeClass="active"
+              exactActiveClass=""
+              exact
+              >{{ breadcrumb.title }}</router-link
+            >
+          </nav>
+        </div>
+        <div class="col-2 p-1">
+          <input
+            v-model="searchTerm"
+            type="text"
+            class="form-control"
+            placeholder="Search"
+          />
+        </div>
       </div>
-      <div class="col-2 p-1">
-        <input
-          v-model="searchTerm"
-          type="text"
-          class="form-control"
-          placeholder="Search"
-        />
-      </div>
-    </div>
 
-    <!-- <table class="table" v-if="currentOrganizations.length > 0">
+      <!-- <table class="table" v-if="currentOrganizations.length > 0">
             <thead>
                 <tr>
                     <th scope="col">Groups</th>
@@ -39,80 +40,83 @@
           </tbody>
          </table> -->
 
-    <table v-if="groupList" class="table">
-      <thead>
-        <tr>
-          <th scope="col">Groups</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(group, key) in mergedSortedList" :key="key">
-          <td v-if="group.active_group && !group.parent_group_id">
-            <div class="tw-flex tw-gap-2">
-              <i class="fas fa-users"></i>
-              <router-link
-                :to="{ name: 'group', params: { groupId: group.id } }"
-              >
-                <GroupTitle :group="group" />
-              </router-link>
-            </div>
-            <ul v-if="includeSubgroups && group.child_groups.length > 0">
-              <li v-for="subgroup in group.child_groups" :key="subgroup.id">
+      <table v-if="groupList" class="table">
+        <thead>
+          <tr>
+            <th scope="col">Groups</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(group, key) in mergedSortedList" :key="key">
+            <td v-if="group.active_group && !group.parent_group_id">
+              <div class="tw-flex tw-gap-2">
+                <i class="fas fa-users"></i>
                 <router-link
-                  :to="{ name: 'group', params: { groupId: subgroup.id } }"
-                  ><GroupTitle :group="subgroup"
-                /></router-link>
-              </li>
-            </ul>
-          </td>
-          <td
-            v-if="!group.active_group && !group.created_at"
-            class="tw-flex tw-gap-2"
-          >
-            <i class="fas fa-folder"></i>
-            <router-link :to="{ path: '/groups/' + group.id }">{{
-              group.group_title
-            }}</router-link>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    <div class="form-group col-md-6">
-      <div class="form-check">
-        <input
-          id="subgroups"
-          v-model="includeSubgroups"
-          class="form-check-input"
-          type="checkbox"
-        />
-        <label class="form-check-label" for="subgroups">
-          Include Sub-groups
-        </label>
+                  :to="{ name: 'group', params: { groupId: group.id } }"
+                >
+                  <GroupTitle :group="group" />
+                </router-link>
+              </div>
+              <ul v-if="includeSubgroups && group.child_groups.length > 0">
+                <li v-for="subgroup in group.child_groups" :key="subgroup.id">
+                  <router-link
+                    :to="{ name: 'group', params: { groupId: subgroup.id } }"
+                    ><GroupTitle :group="subgroup"
+                  /></router-link>
+                </li>
+              </ul>
+            </td>
+            <td
+              v-if="!group.active_group && !group.created_at"
+              class="tw-flex tw-gap-2"
+            >
+              <i class="fas fa-folder"></i>
+              <router-link :to="{ path: '/groups/' + group.id }">{{
+                group.group_title
+              }}</router-link>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="form-group col-md-6">
+        <div class="form-check">
+          <input
+            id="subgroups"
+            v-model="includeSubgroups"
+            class="form-check-input"
+            type="checkbox"
+          />
+          <label class="form-check-label" for="subgroups">
+            Include Sub-groups
+          </label>
+        </div>
+      </div>
+      <div v-if="!parent" class="form-group col-md-6">
+        <div class="form-check">
+          <input
+            id="allGroups"
+            v-model="showAllGroups"
+            class="form-check-input"
+            type="checkbox"
+          />
+          <label class="form-check-label" for="allGroups">
+            Show All Groups
+          </label>
+        </div>
       </div>
     </div>
-    <div v-if="!parent" class="form-group col-md-6">
-      <div class="form-check">
-        <input
-          id="allGroups"
-          v-model="showAllGroups"
-          class="form-check-input"
-          type="checkbox"
-        />
-        <label class="form-check-label" for="allGroups">
-          Show All Groups
-        </label>
-      </div>
-    </div>
-  </div>
+  </DefaultLayout>
 </template>
 
 <script>
+import DefaultLayout from "@/layouts/DefaultLayout.vue";
 import GroupTitle from "@/components/GroupTitle.vue";
 import { debounce } from "lodash-es";
 
 export default {
   components: {
     GroupTitle,
+    DefaultLayout,
   },
   props: ["parent"],
   data() {

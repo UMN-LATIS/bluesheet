@@ -52,9 +52,7 @@
       </template>
     </AppHeader>
 
-    <PostIt class="container-fluid post-it">
-      <router-view :key="$route.fullPath" :userperms="userperms"></router-view>
-    </PostIt>
+    <router-view :key="$route.fullPath" :userperms="userperms" />
 
     <AppFooter />
 

@@ -13,7 +13,8 @@
     "allowSyntheticDefaultImports": true,
     "paths": {
       "@/*": ["./resources/js/*"]
-    }
+    },
+    "types": ["vite/client"]
   },
   "include": ["resources"],
   "exclude": ["vendor", "node_modules", "./public/build"]

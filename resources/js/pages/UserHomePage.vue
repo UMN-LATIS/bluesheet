@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <DefaultLayout>
     <div v-if="error" class="alert alert-danger" role="alert">
       {{ error }}
     </div>
@@ -37,15 +37,15 @@
         v-if="user && user.leaves"
         :leaves="user.leaves"
         :userId="user.id"
-        @update="handleUpdateLeaves"
         class="tw-mt-12"
+        @update="handleUpdateLeaves"
       ></Leaves>
     </template>
-  </div>
+  </DefaultLayout>
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch } from "vue";
 import ViewUser from "@/components/ViewUser.vue";
 import Roles from "@/components/Roles.vue";
 import Leaves from "@/components/Leaves.vue";
@@ -54,6 +54,7 @@ import { User } from "@/types";
 import { useStore } from "vuex";
 import { AxiosError } from "axios";
 import CheckboxGroup from "@/components/CheckboxGroup.vue";
+import DefaultLayout from "@/layouts/DefaultLayout.vue";
 
 const props = defineProps<{
   userId: number | null;

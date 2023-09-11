@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <DefaultLayout>
     <p>
       This list combines the following data. Clicking the "show email list"
       button will give you a de-duplicated set of email addresses.
@@ -59,15 +59,17 @@
       viewType="role"
       downloadTitle="CEDD Like"
     />
-  </div>
+  </DefaultLayout>
 </template>
 
 <script>
 import Members from "@/components/Members.vue";
+import DefaultLayout from "@/layouts/DefaultLayout.vue";
 
 export default {
   components: {
     Members,
+    DefaultLayout,
   },
   data() {
     return {

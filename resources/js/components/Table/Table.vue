@@ -1,48 +1,29 @@
 <template>
-  <div>
-    <div class="sm:tw-flex sm:tw-items-baseline mb-4">
-      <div class="sm:tw-flex-auto">
-        <h1
-          class="tw-text-lg tw-font-semibold tw-leading-6 tw-text-gray-900 tw-mb-0"
-        >
-          {{ name }}
-        </h1>
-        <p class="tw-mt-2 tw-text-sm tw-text-gray-700" v-if="description">
-          {{ description }}
-        </p>
-      </div>
-      <div class="tw-mt-4 sm:tw-ml-16 sm:tw-mt-0 sm:tw-flex-none">
-        <slot name="actions" />
-      </div>
-    </div>
-    <div
-      class="tw-shadow-sm tw-ring-1 tw-ring-black tw-ring-opacity-5 sm:tw-rounded-lg tw-overflow-auto tw-max-h-[90vh]"
+  <div
+    class="tw-shadow-sm tw-ring-1 tw-ring-black tw-ring-opacity-5 sm:tw-rounded-lg tw-overflow-auto tw-max-h-[90vh]"
+  >
+    <table
+      class="better-table tw-min-w-full tw-divide-y tw-divide-gray-300"
+      :class="{
+        'better-table--sticky-header': stickyHeader,
+        'better-table--sticky-first-col': stickyFirstColumn,
+      }"
     >
-      <table
-        class="better-table tw-min-w-full tw-divide-y tw-divide-gray-300"
-        :class="{
-          'better-table--sticky-header': stickyHeader,
-          'better-table--sticky-first-col': stickyFirstColumn,
-        }"
-      >
-        <thead class="tw-bg-gray-50">
-          <slot name="thead" />
-        </thead>
-        <tbody class="tw-divide-y tw-divide-gray-200 tw-bg-white">
-          <slot />
-        </tbody>
-        <tfoot>
-          <slot name="tfoot" />
-        </tfoot>
-      </table>
-    </div>
+      <thead class="tw-bg-gray-50">
+        <slot name="thead" />
+      </thead>
+      <tbody class="tw-divide-y tw-divide-gray-200 tw-bg-white">
+        <slot />
+      </tbody>
+      <tfoot>
+        <slot name="tfoot" />
+      </tfoot>
+    </table>
   </div>
 </template>
 <script setup lang="ts">
 withDefaults(
   defineProps<{
-    name: string;
-    description?: string;
     stickyHeader?: boolean;
     stickyFirstColumn?: boolean;
   }>(),

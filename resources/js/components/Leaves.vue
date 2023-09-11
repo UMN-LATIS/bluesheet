@@ -6,22 +6,27 @@
       'leaves-section--is-editing': isEditing,
     }"
   >
-    <Table name="Leaves">
-      <template #actions>
-        <div class="tw-flex tw-items-center tw-gap-4">
-          <CheckboxGroup
-            id="show-past-leaves-checkbox"
-            v-model="showPastLeaves"
-            label="Show Past Leaves"
-          />
-          <template v-if="$can('edit leaves')">
-            <Button variant="secondary" @click="addNewLocalLeave">
-              Add Leave
-            </Button>
-          </template>
-        </div>
-      </template>
+    <div class="tw-flex tw-justify-between tw-items-center tw-mb-4">
+      <h2
+        class="tw-text-lg tw-font-semibold tw-leading-6 tw-text-gray-900 tw-mb-0"
+      >
+        Leaves
+      </h2>
+      <div class="tw-flex tw-items-center tw-gap-4">
+        <CheckboxGroup
+          id="show-past-leaves-checkbox"
+          v-model="showPastLeaves"
+          label="Show Past Leaves"
+        />
+        <template v-if="$can('edit leaves')">
+          <Button variant="secondary" @click="addNewLocalLeave">
+            Add Leave
+          </Button>
+        </template>
+      </div>
+    </div>
 
+    <Table>
       <template #thead>
         <tr>
           <Th>Description</Th>
@@ -56,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, reactive } from "vue";
+import { computed, ref, watch, reactive } from "vue";
 import { dayjs, $can } from "@/lib";
 import { Leave, leaveStatuses, leaveTypes, NewLeave } from "@/types";
 import Button from "./Button.vue";

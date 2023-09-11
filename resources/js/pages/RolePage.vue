@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <DefaultLayout>
     <div v-if="error" class="alert alert-danger" role="alert">
       {{ error }}
     </div>
@@ -35,17 +35,19 @@
       groupType="department"
       viewType="role"
       :downloadTitle="role.label"
-    ></Members>
-  </div>
+    />
+  </DefaultLayout>
 </template>
 
 <script>
 import Members from "@/components/Members.vue";
 import SimpleNestedSelect from "@/components/SimpleNestedSelect.vue";
+import DefaultLayout from "@/layouts/DefaultLayout.vue";
 export default {
   components: {
     Members,
     SimpleNestedSelect,
+    DefaultLayout,
   },
   props: ["roleId"],
   data() {

@@ -38,6 +38,21 @@ class Bandaid {
         }
     }
     
+    public function performPostRequest($url, $body) {
+        if($value = Cache::get(json_encode($body))) {
+            return $value;
+        }
+        else {
+            $result = $this->client->post($url,['form_params' => $body]);
+            $value = json_decode($result->getBody());
+            if(!$value) {
+                return [];
+            }
+            Cache::put(json_encode($body), $value, 600);
+            return $value;
+        }
+    }
+
     public function getDepartments(array $deptIds): array {
         try {
             $result = $this->performRequest('department/?' . urldecode(http_build_query(["deptId" => $deptIds])));
@@ -49,6 +64,16 @@ class Bandaid {
         }
     }    
     
+    public function getEmployees(array $emplIds): array {
+        try {
+            $result = $this->performPostRequest('employment/employees', $emplIds);
+            return $result;
+        } catch (RequestException $e) {
+            $msg = $e->getMessage();
+            $errorMessage = 'getEmployees Error: ' . $msg;
+            throw new RuntimeException($errorMessage);
+        }
+    }
     
     public function getEmployeesForDepartment($deptId): array {
         try {
