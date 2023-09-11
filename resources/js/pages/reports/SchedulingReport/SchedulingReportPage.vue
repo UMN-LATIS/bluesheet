@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="tw-max-w-[90em] tw-w-full tw-mx-auto tw-bg-white tw-border tw-border-umn-neutral-200 tw-my-12 tw-p-8"
-  >
+  <WideLayout>
     <h1 class="tw-mb-4">
       {{ group?.group_title }} <br />
       <span class="tw-text-3xl">Scheduling Report</span>
@@ -150,7 +148,7 @@
       </label>
     </div>
 
-    <div class="tw-relative">
+    <div class="tw-relative tw-min-h-[8em]">
       <Transition name="fade">
         <div
           v-if="isRunningReport"
@@ -209,7 +207,7 @@
         />
       </Table>
     </div>
-  </div>
+  </WideLayout>
 </template>
 
 <script setup lang="ts">
@@ -224,6 +222,8 @@ import SelectGroup from "@/components/SelectGroup.vue";
 import pMap from "p-map";
 import Button from "@/components/Button.vue";
 import ReportRow from "./ReportRow.vue";
+import { PostIt } from "@umn-latis/cla-vue-template";
+import WideLayout from "@/layouts/WideLayout.vue";
 
 const props = defineProps<{
   groupId: number;
@@ -673,5 +673,16 @@ onMounted(async () => {
     color: #999;
     white-space: nowrap;
   }
+}
+</style>
+<style lang="scss">
+.scheduling-report-page__post-it {
+  max-width: 90em;
+  padding: 1rem;
+  width: 100%;
+  margin: auto;
+}
+.scheduling-report-page__post-it .outer-container {
+  max-width: 100% !important;
 }
 </style>
