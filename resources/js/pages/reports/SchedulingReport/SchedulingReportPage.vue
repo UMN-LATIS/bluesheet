@@ -198,6 +198,7 @@
               getInstructorTermCourses(instructor, term),
             )
           "
+          :nullValuePlaceholder="NULL_VALUE_PLACEHOLDER"
           :listOfTermLeaves="
             termsForReport.map((term) =>
               selectInstructorTermLeaves(instructor, term),
@@ -234,6 +235,7 @@ type TermId = number;
 const DEFAULT_START_DATE = dayjs().subtract(3, "year").format("YYYY-MM-DD");
 const DEFAULT_END_DATE = dayjs().add(2, "year").format("YYYY-MM-DD");
 const MAX_TERM_DATE = dayjs().add(3, "year").format("YYYY-MM-DD");
+const NULL_VALUE_PLACEHOLDER = "Unspecified";
 
 const tableRef = ref<HTMLElement>();
 const group = ref<Group>();
@@ -326,7 +328,7 @@ const instructorsWithinReportedTerms = computed(() => {
 
 function isIncludedInstructorAppointment(instructor: Instructor) {
   return !excludedInstAppointments.value.has(
-    instructor.jobCategory ?? "Unknown",
+    instructor.jobCategory ?? NULL_VALUE_PLACEHOLDER,
   );
 }
 
@@ -335,8 +337,11 @@ function getAllCourseLevelsMap() {
   const courseLevels = new Map<string, number>();
   allCourses.forEach((course) => {
     const currentCount =
-      courseLevels.get(course.academicCareer ?? "Unknown") ?? 0;
-    courseLevels.set(course.academicCareer ?? "Unknown", currentCount + 1);
+      courseLevels.get(course.academicCareer ?? NULL_VALUE_PLACEHOLDER) ?? 0;
+    courseLevels.set(
+      course.academicCareer ?? NULL_VALUE_PLACEHOLDER,
+      currentCount + 1,
+    );
   });
   return courseLevels;
 }
@@ -346,8 +351,11 @@ function getAllCourseTypesMap() {
   const courseTypes = new Map<string, number>();
   allCourses.forEach((course) => {
     const currentCount =
-      courseTypes.get(course.componentType ?? "Unknown") ?? 0;
-    courseTypes.set(course.componentType ?? "Unknown", currentCount + 1);
+      courseTypes.get(course.componentType ?? NULL_VALUE_PLACEHOLDER) ?? 0;
+    courseTypes.set(
+      course.componentType ?? NULL_VALUE_PLACEHOLDER,
+      currentCount + 1,
+    );
   });
   return courseTypes;
 }
@@ -356,7 +364,8 @@ function getAllInstructorCategoriesMap() {
   const allInstructors = [...getInstructorsMap().values()];
   const instructorCategories = new Map<string, number>();
   allInstructors.forEach((instructor) => {
-    const jobCategory = instructor.jobCategory?.trim() || "Unspecified";
+    const jobCategory =
+      instructor.jobCategory?.trim() || NULL_VALUE_PLACEHOLDER;
     const currentCount = instructorCategories.get(jobCategory) ?? 0;
     instructorCategories.set(jobCategory, currentCount + 1);
   });
@@ -464,8 +473,12 @@ function sortCoursesByCourseNumber(a: Course, b: Course) {
 
 function isShowingCourse(course: Course) {
   return (
-    !excludedCourseTypes.value.has(course.componentType ?? "Unknown") &&
-    !excludedCourseLevels.value.has(course.academicCareer ?? "Unknown")
+    !excludedCourseTypes.value.has(
+      course.componentType ?? NULL_VALUE_PLACEHOLDER,
+    ) &&
+    !excludedCourseLevels.value.has(
+      course.academicCareer ?? NULL_VALUE_PLACEHOLDER,
+    )
   );
 }
 

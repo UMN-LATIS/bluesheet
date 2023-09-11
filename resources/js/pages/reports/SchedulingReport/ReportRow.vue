@@ -14,7 +14,7 @@
       </RouterLink>
       <div class="tw-text-xs tw-text-neutral-400">
         {{ instructor.emplid }} •
-        {{ instructor.jobCategory ?? "Unknown" }}
+        {{ instructor.jobCategory?.trim() || nullValuePlaceholder }}
       </div>
     </Td>
     <Td
@@ -68,6 +68,7 @@ defineProps<{
   listOfTermLeaves: Leave[][];
   isShowingCourse: (course: Course) => boolean;
   currentTerm: Term | null;
+  nullValuePlaceholder?: string;
 }>();
 
 function doesInstructorNameMatchSearchTerm(
