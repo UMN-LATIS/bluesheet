@@ -199,7 +199,7 @@ export interface Instructor {
   displayName: string;
   email: string;
   leaves?: Leave[];
-  jobCategory: string; // "Faculty"
+  jobCategory: string | null; // "Faculty"
 }
 
 export type TermCode = "FA" | "SP" | "SU";
