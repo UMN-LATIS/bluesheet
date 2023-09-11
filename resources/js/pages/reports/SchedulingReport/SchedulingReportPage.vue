@@ -259,7 +259,7 @@ const debouncedSearch = debounce(() => {
 watch(searchInputRaw, debouncedSearch);
 
 const excludedCourseLevels = ref<Set<string>>(new Set());
-const excludedCourseTypes = ref<Set<string>>(new Set());
+const excludedCourseTypes = ref<Set<string>>(new Set(["IND", "FWK"]));
 const excludedInstAppointments = ref<Set<string>>(new Set());
 
 const allTermOptions = computed(() => {
