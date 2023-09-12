@@ -36,12 +36,26 @@ class ImportSabbaticalEligibilty extends Command
         $fp = fopen($csvFile, 'r');
         // get the first row
         $header = fgetcsv($fp);
+        $headings = [];
+        foreach($header as $heading){
+
+            // Remove any invalid or hidden characters
+            $heading = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $heading);
+
+            array_push($headings, $heading);
+       }
         $this->userService = new \App\Library\UserService();
         $bandaid = new \App\Library\Bandaid();
         $terms = $bandaid->getTerms();
+        while ($row = fgetcsv($fp)) {
+            $all_rows[] = array_combine($headings, $row);
+        }
 
-        while($row = fgetcsv($fp)) {
-            $emplId = $row[0];
+        while($all_rows) {
+            $emplId = $row['EMPLID'];
+            if(!is_numeric($emplId)) {
+                continue;
+            }
             $user = $this->userService->findOrCreateByEmplid($emplId);
             if(!$user) {
                 echo "Could not find user with emplid: " . $emplId . "\n";
@@ -49,10 +63,10 @@ class ImportSabbaticalEligibilty extends Command
             }
             $startTerm = null;
             $endTerm = null;
-            if(trim($row[1]) != "") {
+            if(trim($row['PROJECTED_SABBATICAL_ELIGIBILITY_TERM']) != "") {
                 // find the dates for the semester in the terms list
-                $termYear = substr($row[1], 1, 2);
-                $termSemester = substr($row[1], -1);
+                $termYear = substr($row['PROJECTED_SABBATICAL_ELIGIBILITY_TERM'], 1, 2);
+                $termSemester = substr($row['PROJECTED_SABBATICAL_ELIGIBILITY_TERM'], -1);
                 if($termSemester == 9) {
                     $nextTerm = 3;
                     $termYear = intval($termYear) + 1;
@@ -63,7 +77,7 @@ class ImportSabbaticalEligibilty extends Command
                 $targetEndTerm = 1 . $termYear . $nextTerm;
                 echo $targetEndTerm . "\n";
                 foreach($terms as $term) {
-                    if($term->TERM == $row[1] && $term->INSTITUTION == "UMNTC" && $term->ACADEMIC_CAREER == "UGRD") {
+                    if($term->TERM == $row['PROJECTED_SABBATICAL_ELIGIBILITY_TERM'] && $term->INSTITUTION == "UMNTC" && $term->ACADEMIC_CAREER == "UGRD") {
                         $startTerm = $term;
                     }
                     if($term->TERM == $targetEndTerm && $term->INSTITUTION == "UMNTC" && $term->ACADEMIC_CAREER == "UGRD") {

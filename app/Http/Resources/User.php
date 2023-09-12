@@ -30,6 +30,9 @@ class User extends JsonResource
             'favoriteRoles' => $this->favoriteRoles,
             'send_email_reminders' => $this->send_email_reminders,
             'notify_of_favorite_changes' => $this->notify_of_favorite_changes,
+            'ssl_eligible' => $this->ssl_eligible,
+            'midcareer_eligible' => $this->midcareer_eligible,
+            'ssl_apply_eligible' => $this->ssl_apply_eligible,
             'leaves'=>$this->when(($request->user()->hasPermissionTo('view leaves') || $request->user()->id == $this->id), $this->leaves)
         ];
     }
