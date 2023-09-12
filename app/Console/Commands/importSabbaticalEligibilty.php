@@ -51,7 +51,7 @@ class ImportSabbaticalEligibilty extends Command
             $all_rows[] = array_combine($headings, $row);
         }
 
-        while($all_rows) {
+        while($row = array_shift($all_rows)) {
             $emplId = $row['EMPLID'];
             if(!is_numeric($emplId)) {
                 continue;
