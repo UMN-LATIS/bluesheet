@@ -1,49 +1,34 @@
 <template>
   <DefaultLayout>
     <div>
-      <div class="row">
-        <div class="col-10">
-          <nav class="breadcrumb">
-            <router-link
-              v-for="breadcrumb in breadCrumbs"
-              :key="breadcrumb.title"
-              class="breadcrumb-item"
-              :to="{ path: breadcrumb.path }"
-              activeClass="active"
-              exactActiveClass=""
-              exact
-              >{{ breadcrumb.title }}</router-link
-            >
-          </nav>
-        </div>
-        <div class="col-2 p-1">
+      <div class="tw-flex tw-flex-wrap tw-justify-between tw-items-baseline">
+        <nav class="breadcrumb tw-bg-transparent tw-font-semibold tw-m-0">
+          <router-link
+            v-for="breadcrumb in breadCrumbs"
+            :key="breadcrumb.title"
+            class="breadcrumb-item tw-text-neutral-500 hover:tw-text-bs-blue tw-text-sm"
+            :to="{ path: breadcrumb.path }"
+            activeClass="active"
+            exactActiveClass=""
+            exact
+            >{{ breadcrumb.title }}</router-link
+          >
+        </nav>
+        <label>
+          <span class="sr-only">Search</span>
           <input
             v-model="searchTerm"
             type="text"
-            class="form-control"
+            class="tw-form-input tw-border tw-border-neutral-300 tw-rounded tw-text-sm"
             placeholder="Search"
           />
-        </div>
+        </label>
       </div>
-
-      <!-- <table class="table" v-if="currentOrganizations.length > 0">
-            <thead>
-                <tr>
-                    <th scope="col">Groups</th>
-              </tr>
-          </thead>
-          <tbody>
-                <tr v-for="currentOrg in currentOrganizations" :key="currentOrg.id" >
-                <td><router-link :to='{ path: "/groups/" + currentOrg.id }'>{{ currentOrg.label }}</router-link>
-                </td>
-            </tr>
-          </tbody>
-         </table> -->
 
       <table v-if="groupList" class="table">
         <thead>
           <tr>
-            <th scope="col">Groups</th>
+            <th scope="col" class="sr-only">Groups</th>
           </tr>
         </thead>
         <tbody>
