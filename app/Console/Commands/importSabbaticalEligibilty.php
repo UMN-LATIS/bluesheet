@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use App\Library\UserService;
 use Illuminate\Console\Command;
 
-class importSabbaticalEligibilty extends Command
+class ImportSabbaticalEligibilty extends Command
 {
     /**
      * The name and signature of the console command.
