@@ -19,6 +19,7 @@ import MissingOfficialReportPage from "./pages/reports/MissingOfficialReportPage
 import OrgpReportPage from "./pages/reports/OrgpReportPage.vue";
 import SchedulingReportPage from "./pages/reports/SchedulingReport/SchedulingReportPage.vue";
 import GroupAdminsReportPage from "./pages/reports/GroupAdmins.vue";
+import EligibilityReportPage from "./pages/reports/EligibilityReport.vue";
 
 function parseIntFromParam(
   param: string | string[] | undefined,
@@ -121,6 +122,11 @@ export const router = createRouter({
       props: (route) => ({
         groupId: parseIntFromParam(route.params.groupId),
       }),
+    },
+    {
+      name: "eligibilityReport",
+      path: "/reports/eligibilityReport",
+      component: EligibilityReportPage
     },
   ],
 });

@@ -62,7 +62,7 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
 
     Route::get('terms', 'SchedulingController@getTerms');
     Route::get('terms/{termId}/groups/{group}/courses', 'SchedulingController@getDeptCoursesForTerm');
-
+    Route::get('eligibility/{type}', 'UserController@eligibility');
 
     // Laravel thinks the singular of `leaves` is `leaf`
     // so instead of using a resource, just define the routes

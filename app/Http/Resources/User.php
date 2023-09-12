@@ -33,6 +33,8 @@ class User extends JsonResource
             'ssl_eligible' => $this->ssl_eligible,
             'midcareer_eligible' => $this->midcareer_eligible,
             'ssl_apply_eligible' => $this->ssl_apply_eligible,
+            'deptid' => $this->deptid??null,
+            'dept_name' => $this->dept_name??null,
             'leaves'=>$this->when(($request->user()->hasPermissionTo('view leaves') || $request->user()->id == $this->id), $this->leaves)
         ];
     }
