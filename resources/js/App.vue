@@ -1,6 +1,6 @@
 <template>
   <div>
-    <AppHeader class="app-header">
+    <AppHeader class="app-header" menuBreakpoint="xl">
       <template #app-link>
         <router-link :to="{ name: 'home' }">BlueSheet</router-link>
       </template>
@@ -66,12 +66,7 @@
 </template>
 
 <script>
-import {
-  AppHeader,
-  NavbarItem,
-  AppFooter,
-  PostIt,
-} from "@umn-latis/cla-vue-template";
+import { AppHeader, NavbarItem, AppFooter } from "@umn-latis/cla-vue-template";
 import UserLookup from "./components/UserLookup.vue";
 import CreateGroup from "./components/CreateGroup.vue";
 import { $can } from "./lib";
@@ -83,7 +78,6 @@ export default {
     UserLookup,
     CreateGroup,
     NavbarItem,
-    PostIt,
   },
   props: ["userperms"],
   data() {
@@ -124,28 +118,12 @@ export default {
 }
 </style>
 <style lang="scss">
-/**
-* these are some fixes for the app header navbar-links slot until
-* cla-vue-templates is updated
-**/
-.app-header {
-  // the navbar should take up all available space
-  // the second ul is for the right navbar links slot
-  // which is empty
-  ul:first-child {
+.umn-app-header .navbar-links-container {
+  justify-content: space-between;
+  width: 100%;
+  & .navbar-item:not(:first-child, :last-child) {
     flex: 1;
-  }
-
-  // first and last should only take up the space they need
-  // so that they appear left and right aligned
-  .navbar-item:is(:first-child, :last-child) {
-    flex: 0;
-  }
-
-  // center the text within the flex container
-  // this is for the middle navbar items where the container
-  // is larger than the text
-  .navbar-item a {
+    display: inline-flex;
     justify-content: center;
   }
 }
