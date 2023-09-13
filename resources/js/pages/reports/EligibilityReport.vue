@@ -20,7 +20,7 @@
       </label>
     </div>
     <DownloadCSV
-        class="btn btn-info"
+        class="btn btn-info mt-2 mb-2"
         :data="userList"
         :name="eligibility_setting + '.csv'"
       >
@@ -32,7 +32,7 @@
           <th>
             <SortableLink
               sortLabel="Name"
-              sortElement="name"
+              sortElement="displayName"
               :currentSort="currentSort"
               :currentSortDir="currentSortDir"
               @sort="sort"
@@ -41,7 +41,7 @@
           <th>
             <SortableLink
               sortLabel="Department"
-              sortElement="department"
+              sortElement="dept_name"
               :currentSort="currentSort"
               :currentSortDir="currentSortDir"
               @sort="sort"
@@ -69,7 +69,7 @@
 import SortableLink from "@/components/SortableLink.vue";
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
 import { axios } from "@/lib";
-import DownloadCSV from "@/components/DownloadList.vue";
+import DownloadCSV from "@/components/DownloadCSV.vue";
 
 export default {
   components: {
