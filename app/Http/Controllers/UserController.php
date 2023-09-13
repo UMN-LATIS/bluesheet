@@ -209,6 +209,9 @@ class UserController extends Controller
     }
 
     public function eligibility(string $eligibilityType) {
+        if(!Auth::user()->can("view reports") && !Auth::user()->hasRole('super admin')) { 
+            return Response()->json(['message' => 'Forbidden'], 403);
+        }
         $validEligibilityTypes = ['ssl_eligible', 'ssl_apply_eligible', 'midcareer_eligible'];
         if (!in_array($eligibilityType, $validEligibilityTypes)) {
             $returnData = array(

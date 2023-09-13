@@ -202,6 +202,9 @@ export interface Instructor {
   displayName: string;
   email: string;
   leaves?: Leave[];
+  midcareerEligible: boolean;
+  sslEligible: boolean;
+  sslApplyEligible: boolean;
   academicAppointment: string; // "Faculty"
 }
 

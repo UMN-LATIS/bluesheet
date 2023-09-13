@@ -16,6 +16,11 @@
         {{ instructor.emplid }} •
         {{ instructor.academicAppointment }}
       </div>
+      <div class="tw-text-xs tw-text-neutral-400">
+        <div>{{ instructor.sslEligible?"SSL Eligible":null }} </div>
+        <div>{{ instructor.sslApplyEligible?"SSL Apply Eligible":null }}</div>
+        <div>{{ instructor.midcareerEligible?"Midcareer Eligible":null }}</div>
+      </div>
     </Td>
     <Td
       v-for="(termCourses, index) in listOfTermCourses"

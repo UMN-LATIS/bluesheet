@@ -41,6 +41,9 @@ class CourseWithInstructors extends JsonResource {
                 'leaves' => $this->when($this->instructor->leaves->isNotEmpty(), $this->instructor->leaves),
                 'academicAppointment' => trimWithFallback($this->instructor->jobCategory),
                 'emplid' => $this->instructor->emplid,
+                'sslEligible' => $this->instructor->ssl_eligible,
+                'midcareerEligible' => $this->instructor->midcareer_eligible,
+                'sslApplyEligible' => $this->instructor->ssl_apply_eligible
             ] : null,
         ];
     }
