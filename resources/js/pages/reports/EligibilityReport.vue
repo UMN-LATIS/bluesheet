@@ -1,5 +1,5 @@
 <template>
-  <DefaultLayout>
+  <DefaultLayout  v-if="$can('view eligibility')">
     <div class="form-check">
       <input class="form-check-input" type="radio" name="eligiblity" v-model="eligibility_setting" id="SSLEligible" value="ssl_eligible">
       <label class="form-check-label" for="SSLEligible">
@@ -70,6 +70,7 @@ import SortableLink from "@/components/SortableLink.vue";
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
 import { axios } from "@/lib";
 import DownloadCSV from "@/components/DownloadCSV.vue";
+import { $can } from "@/lib";
 
 export default {
   components: {
@@ -123,6 +124,7 @@ export default {
     this.loadUsers();
   },
   methods: {
+    $can,
     loadUsers: function() {
         axios.get('/api/eligibility/' + this.eligibility_setting)
         .then((res) => {
