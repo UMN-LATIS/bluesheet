@@ -113,7 +113,6 @@ class GroupController extends Controller
      */
     public function show($group, $hash=null)
     {
-
         if(!$this->authorize('view', $group) && ($hash != $group->hash)) {
             $returnData = array(
                 'status' => 'error',
@@ -122,7 +121,13 @@ class GroupController extends Controller
             return Response()->json($returnData, 500);
         }
         else {
-            return new GroupResource($group->load('members', 'members.user', 'members.role'));
+            if($group->include_child_groups) {
+                return new GroupResource($group->load('members', 'members.user', 'members.role', 'childGroups', 'childGroups.members', 'childGroups.members.user', 'childGroups.members.role', 'activeMembers', 'activeMembers.user'));
+            }
+            else {
+                return new GroupResource($group->load('members', 'members.user', 'members.role', 'activeMembers', 'activeMembers.user'));
+            }
+            
         }
     }
 
@@ -377,5 +382,19 @@ class GroupController extends Controller
         $groupTypes = \App\ParentOrganization::orderBy('group_title')->with("childOrganizationsRecursive")->whereNull("parent_organization_id")->get();
 
         return response()->json($groupTypes);
+    }
+
+    // get all of the groups including anyone who is flagged an active admin
+    public function getGroupsWithAdmins() {
+        $groups = \App\Group::where("active_group",1)->get()->load("groupType", "parentGroup", "childGroups", "parentOrganization", "artifacts", "activeMembers");
+        $groups->load("activeMembers.user", "activeMembers.role");
+        // only return members who are marked as admins
+        $groups->transform(function($group) {
+            $group->activeMembers = $group->activeMembers->filter(function($member) {
+                return $member->admin;
+            });
+            return $group;
+        });
+        return response()->json($groups);
     }
 }

@@ -60,6 +60,44 @@ return array(
             'mail'        => 'user@umn.edu',
             'umnDID'      => 'user',
         ),
+
+        // users for testing roles
+        'basic_user' => [
+            'uid' => 'basic_user',
+            'displayName' => 'Basic User',
+            'givenName' => 'Basic',
+            'surname' => 'User',
+            'sn' => 'User',
+            'mail' => 'basic_user@umn.edu',
+            'umnDID' => 'basic_user',
+        ],
+        'view_user' => [
+            'uid' => 'view_user',
+            'displayName' => 'View User',
+            'givenName' => 'View',
+            'surname' => 'User',
+            'sn' => 'User',
+            'mail' => 'view_user@umn.edu',
+            'umnDID' => 'view_user',
+        ],
+        'group_admin' => [
+            'uid' => 'group_admin',
+            'displayName' => 'Group Admin',
+            'givenName' => 'Group',
+            'surname' => 'Admin',
+            'sn' => 'Admin',
+            'mail' => 'group_admin@umn.edu',
+            'umnDID' => 'group_admin',
+        ],
+        'site_admin' => [
+            'uid' => 'site_admin',
+            'displayName' => 'Site Admin',
+            'givenName' => 'Site',
+            'surname' => 'Admin',
+            'sn' => 'Admin',
+            'mail' => 'site_admin@umn.edu',
+            'umnDID' => 'site_admin',
+        ]
     ),
 
     /*

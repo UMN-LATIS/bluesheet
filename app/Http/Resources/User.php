@@ -29,7 +29,13 @@ class User extends JsonResource
             'favoriteGroups' => $this->favoriteGroups,
             'favoriteRoles' => $this->favoriteRoles,
             'send_email_reminders' => $this->send_email_reminders,
-            'notify_of_favorite_changes' => $this->notify_of_favorite_changes
+            'notify_of_favorite_changes' => $this->notify_of_favorite_changes,
+            'ssl_eligible' => $this->ssl_eligible,
+            'midcareer_eligible' => $this->midcareer_eligible,
+            'ssl_apply_eligible' => $this->ssl_apply_eligible,
+            'deptid' => $this->deptid??null,
+            'dept_name' => $this->dept_name??null,
+            'leaves'=>$this->when(($request->user()->hasPermissionTo('view leaves') || $request->user()->id == $this->id), $this->leaves)
         ];
     }
 }

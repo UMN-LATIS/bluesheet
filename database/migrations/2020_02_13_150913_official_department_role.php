@@ -26,7 +26,7 @@ class OfficialDepartmentRole extends Migration
     public function down()
     {
         Schema::table("roles", function(Blueprint $table) {
-            $table->dropColumn("official_department_role");
+            // $table->dropColumn("official_department_role");
         });
     }
 }

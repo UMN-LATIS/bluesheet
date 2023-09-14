@@ -7,7 +7,7 @@ use Auth;
 use DB;
 use App\Http\Resources\User as UserResource;
 use App\Library\LDAP as LDAP;
-
+use \App\Library\Bandaid;
 class UserController extends Controller
 {
     /**
@@ -53,8 +53,9 @@ class UserController extends Controller
             return Response()->json($returnData, 500);
         }
         else {
-            $user->load(['memberships', 'memberships.group', 'memberships.role', 'favoriteGroups', 'favoriteRoles']);
-        
+
+            // some of these might not actually be returned - the resource will gate based on perms
+            $user->load(['memberships', 'memberships.group', 'memberships.role', 'favoriteGroups', 'favoriteRoles', 'leaves']);
             return new UserResource($user);    
         }
         
@@ -207,4 +208,50 @@ class UserController extends Controller
         return Response()->json($returnData, $code);
     }
 
+    public function eligibility(string $eligibilityType) {
+        if(!Auth::user()->can("view reports") && !Auth::user()->hasRole('super admin')) { 
+            return Response()->json(['message' => 'Forbidden'], 403);
+        }
+        $validEligibilityTypes = ['ssl_eligible', 'ssl_apply_eligible', 'midcareer_eligible'];
+        if (!in_array($eligibilityType, $validEligibilityTypes)) {
+            $returnData = array(
+                'status' => 'error',
+                'message' => "Invalid eligibility type"
+            );
+            return Response()->json($returnData, 500);
+        }
+
+        $users = \App\User::where($eligibilityType, true)->get();
+        $userEmplids = $users->pluck('emplid')->filter()->toArray();
+        $bandaid = new Bandaid();
+        $userRecords = $bandaid->getEmployees($userEmplids);
+        
+        $userRecords = collect($userRecords)->where("JOB_INDICATOR", "P");
+        
+        $userRecords = $userRecords->keyBy('EMPLID');
+
+        foreach($users as $user) {
+            if(!isset($user->emplid)) {
+                continue;
+            }
+            if(isset($userRecords[$user->emplid])) {
+                $user->deptid = $userRecords[$user->emplid]->DEPTID;
+                
+            }
+        }
+
+        $departmentRecords = collect($bandaid->getDepartments($users->pluck("deptid")->toArray()))->keyBy("DEPT_ID");
+        foreach($users as $user) {
+            if(!isset($user->deptid)) {
+                continue;
+            }
+            if($departmentRecords[$user->deptid]) {
+                $user->dept_name = $departmentRecords[$user->deptid]->DESCRIPTION;
+            }
+        }
+        
+
+
+        return Response()->json($users);
+    }
 }

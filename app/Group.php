@@ -13,8 +13,13 @@ class Group extends Model implements Auditable
     use SoftDeletes;
     public $timestamps = true;
 
+    protected $casts = [
+        'include_child_groups' => 'boolean',
+        'show_unit' => 'boolean'
+     ];
+
     protected $fillable = [
-        'group_title', 'private_group', 'notes', 'google_group', 'show_unit', 'parent_group_id', 'abbreviation', 'dept_id'
+        'group_title', 'private_group', 'notes', 'google_group', 'show_unit', 'parent_group_id', 'abbreviation', 'dept_id', 'include_child_groups'
     ];
 
     /**

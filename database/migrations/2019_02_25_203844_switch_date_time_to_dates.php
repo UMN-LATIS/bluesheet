@@ -26,7 +26,7 @@ class SwitchDateTimeToDates extends Migration
      */
     public function down()
     {
-        Schema::table('dates', function (Blueprint $table) {
+        Schema::table('memberships', function (Blueprint $table) {
             $table->dateTime('start_date')->change();
             $table->dateTime('end_date')->change();
         });
