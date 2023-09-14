@@ -21,7 +21,7 @@
     </div>
     <DownloadCSV
         class="btn btn-info mt-2 mb-2"
-        :data="userList"
+        :data="filteredUserList"
         :name="eligibility_setting + '.csv'"
       >
         Download List
@@ -79,13 +79,23 @@ export default {
   },
   data() {
     return {
-      currentSortDir: "desc",
-      currentSort: "lastModified",
+      currentSortDir: "asc",
+      currentSort: "displayName",
       userList: [],
       eligibility_setting: 'ssl_eligible'
     };
   },
   computed: {
+    filteredUserList: function() {
+        return this.userList.map((user) => {
+            return {
+                displayName: user.displayName,
+                email: user.email,
+                department: user.dept_name,
+                deptid: user.deptid
+            }
+        });
+    },
     sortedList: function () {
       return [...this.userList]
         .sort((a, b) => {
