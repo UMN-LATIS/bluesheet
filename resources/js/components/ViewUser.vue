@@ -3,9 +3,9 @@
     <div class="tw-flex tw-flex-wrap tw-gap-4 tw-items-baseline tw-mb-6">
       <h1 class="tw-m-0">{{ user.displayName }}</h1>
       <Button
+        v-if="$can('edit users')"
         variant="tertiary"
         :href="`/admin/users/${user.id}/edit`"
-        v-if="$can('edit users')"
         class="tw-text-bs-blue tw--ml-2 tw-bg-blue-50"
       >
         Edit User
@@ -39,12 +39,20 @@
           />
         </a>
       </dd>
-      <dt v-if="$can('view leaves')">Eligiblity</dt>
-      <dd v-if="$can('view leaves')">
-        <div v-if="user.ssl_eligible" class="chiclet">Single Semester Leave Eligible (SSL)</div>
-        <div v-if="user.ssl_apply_eligible" class="chiclet">Eligible to apply for SSL</div>
-        <div v-if="user.midcareer_eligible" class="chiclet">Mid-career Eligible</div>
-      </dd>
+      <template v-if="$can('view leaves') && hasLeaveEligibility">
+        <dt>Eligiblity</dt>
+        <dd>
+          <div v-if="user.ssl_eligible" class="chiclet">
+            Single Semester Leave Eligible (SSL)
+          </div>
+          <div v-if="user.ssl_apply_eligible" class="chiclet">
+            Eligible to apply for SSL
+          </div>
+          <div v-if="user.midcareer_eligible" class="chiclet">
+            Mid-career Eligible
+          </div>
+        </dd>
+      </template>
     </dl>
   </div>
 </template>
@@ -61,12 +69,20 @@ const props = defineProps<{
 }>();
 
 const usernameOnly = computed(() => {
-  return props.user.email?.split("@").shift() ?? '';
+  return props.user.email?.split("@").shift() ?? "";
 });
 
 const formattedOffice = computed(() => {
   if (!props.user.office) return "";
   return props.user.office.replace(/ \$ /g, "<br />");
+});
+
+const hasLeaveEligibility = computed(() => {
+  return (
+    props.user.ssl_eligible ||
+    props.user.ssl_apply_eligible ||
+    props.user.midcareer_eligible
+  );
 });
 </script>
 
