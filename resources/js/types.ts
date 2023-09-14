@@ -47,6 +47,9 @@ export interface User {
   notify_of_favorite_changes: boolean;
   permissions: UserPermission[];
   leaves?: Leave[];
+  ssl_eligible: boolean;
+  midcareer_eligible: boolean;
+  ssl_apply_eligible: boolean;
   created_at: ISODateTime;
   updated_at: ISODateTime;
   deleted_at: ISODateTime | null;
@@ -199,6 +202,9 @@ export interface Instructor {
   displayName: string;
   email: string;
   leaves?: Leave[];
+  midcareerEligible: boolean;
+  sslEligible: boolean;
+  sslApplyEligible: boolean;
   academicAppointment: string; // "Faculty"
 }
 

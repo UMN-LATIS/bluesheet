@@ -66,7 +66,7 @@ class Bandaid {
     
     public function getEmployees(array $emplIds): array {
         try {
-            $result = $this->performPostRequest('employment/employees', $emplIds);
+            $result = $this->performPostRequest('employment/employees', ["emplids"=>$emplIds]);
             return $result;
         } catch (RequestException $e) {
             $msg = $e->getMessage();

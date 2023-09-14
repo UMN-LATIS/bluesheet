@@ -39,6 +39,12 @@
           />
         </a>
       </dd>
+      <dt v-if="$can('view leaves')">Eligiblity</dt>
+      <dd v-if="$can('view leaves')">
+        <div v-if="user.ssl_eligible" class="chiclet">Single Semester Leave Eligible (SSL)</div>
+        <div v-if="user.ssl_apply_eligible" class="chiclet">Eligible to apply for SSL</div>
+        <div v-if="user.midcareer_eligible" class="chiclet">Mid-career Eligible</div>
+      </dd>
     </dl>
   </div>
 </template>

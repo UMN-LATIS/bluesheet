@@ -46,7 +46,7 @@ class SchedulingController extends Controller {
         );
 
         $allEmplids = $courses->pluck('INSTRUCTOR_EMPLID')->unique()->filter()->toArray();
-        $employeeList = collect($this->bandaid->getEmployees(["emplids" => $allEmplids]));
+        $employeeList = collect($this->bandaid->getEmployees($allEmplids));
         $coursesWithInstructors = $this->userService
             ->attachInstructorsToCourses($courses, $employeeList)
             ->filter(function ($course) {

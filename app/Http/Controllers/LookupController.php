@@ -22,4 +22,5 @@ class LookupController extends Controller
         return Response()->json($result);
 
     }
+
 }

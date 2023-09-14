@@ -59,6 +59,14 @@
             >Group Admins
           </router-link>
         </li>
+        <li class="list-group-item">
+          <router-link
+            v-if="$can('view reports')"
+            :to="{ name: 'eligibilityReport' }"
+            class="nav-link"
+            >Eligibility Report
+          </router-link>
+        </li>
       </ul>
       <p>
         Got an idea for a report?
