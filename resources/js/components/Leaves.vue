@@ -46,9 +46,9 @@
         </Td>
       </tr>
       <LeaveTableRow
-        v-for="(leave, index) in leavesToShow"
+        v-for="leave in leavesToShow"
         :key="leave.id"
-        :model-value="leave"
+        :modelValue="leave"
         :isEditing="isEditing(leave)"
         data-cy="leaveRow"
         @save="handleSaveLeave"
@@ -172,6 +172,11 @@ async function handleSaveLeave(leave: Leave | NewLeave) {
 
 async function handleRemoveLeaveClick(leave: Leave | NewLeave) {
   if (!leave.id) throw new Error("Leave does not have an id");
+  const isConfirmed = confirm(
+    `Remove ${leave.type} leave '${leave.description}'?`,
+  );
+  if (!isConfirmed) return;
+
   removeFromLocalLeaves(leave.id);
 
   if (!isNewLeave(leave) && typeof leave.id === "number") {
