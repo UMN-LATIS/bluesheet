@@ -103,6 +103,6 @@ class ImportSabbaticalEligibilty extends Command
                 }
             }
         }
-
+        $this->info('Remember to notify ORGP!');
     }
 }
