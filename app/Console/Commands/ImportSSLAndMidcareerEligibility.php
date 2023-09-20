@@ -74,6 +74,6 @@ class ImportSSLAndMidcareerEligibility extends Command
             $user->save();
             echo "Updated user with emplid: " . $emplId . "\n";
         }
-
+        $this->info('Remember to notify ORGP!');
     }
 }
