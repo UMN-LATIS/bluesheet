@@ -31,6 +31,11 @@ class ImportSabbaticalEligibilty extends Command
      */
     public function handle()
     {
+
+        $prompt = $this->confirm('You must clear any existing eligibility values before running this import. Have you done that?');
+        if(!$prompt) {
+            return;
+        }
         $csvFile = $this->argument('csvFile');
         // open the csv 
         $fp = fopen($csvFile, 'r');
