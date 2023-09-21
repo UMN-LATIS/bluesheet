@@ -20,7 +20,17 @@ class UserService {
         $user = LDAP::lookupUser(str_pad($emplid, 7, 0, STR_PAD_LEFT), 'umnemplid');
         if (!$user) return null;
 
-        $user->save();
+        try {
+            $user->save();
+        }
+        catch (\Exception $e) {
+            // user already exists, reload
+            $user = User::where('emplid', $emplid)->first();
+            if(!$user) {
+                return null;
+            }
+        }
+        
         $this->userCache[$emplid] = $user;
         return $user;
     }
