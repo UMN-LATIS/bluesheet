@@ -1,9 +1,13 @@
 <template>
   <Modal :show="show" @close="close">
     <div class="row">
-      <label for="nameLookup" class="col-sm-3 col-form-label">Name:</label>
+      <label for="lookup" class="col-sm-3 col-form-label">Name:</label>
       <div class="col-sm-6">
-        <PersonSearch v-model="userLookupText" @selected="handleUserSelected" />
+        <PersonSearch
+          id="lookup"
+          v-model="userLookupText"
+          @selected="handleUserSelected"
+        />
         <small id="addUserHelpBlock" class="form-text text-muted">
           Optional: Enter a name and select the person from the list. For common
           names, we recommend using internet ID (below) to be sure you get the

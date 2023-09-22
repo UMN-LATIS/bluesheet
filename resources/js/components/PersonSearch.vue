@@ -1,10 +1,12 @@
 <template>
   <div ref="personSearchContainer" class="person-search">
     <input
+      name="safari-autofill-fix"
       v-bind="$attrs"
       :value="modelValue"
       :class="inputClass"
       class="person-search__input form-control"
+      autocorrect="off"
       autocomplete="off"
       @input="handleInput"
       @focus="isMenuOpen = true"
