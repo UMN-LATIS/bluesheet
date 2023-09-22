@@ -1,20 +1,22 @@
 <template>
   <Modal :show="show" @close="close">
-    <div class="row">
-      <label for="lookup" class="col-sm-3 col-form-label">Name:</label>
-      <div class="col-sm-6">
-        <PersonSearch
-          id="lookup"
-          v-model="userLookupText"
-          @selected="handleUserSelected"
-        />
-        <small id="addUserHelpBlock" class="form-text text-muted">
-          Optional: Enter a name and select the person from the list. For common
-          names, we recommend using internet ID (below) to be sure you get the
-          right person.
-        </small>
+    <form autocomplete="off">
+      <div class="row">
+        <label for="lookup" class="col-sm-3 col-form-label">Name:</label>
+        <div class="col-sm-6">
+          <PersonSearch
+            id="lookup"
+            v-model="userLookupText"
+            @selected="handleUserSelected"
+          />
+          <small id="addUserHelpBlock" class="form-text text-muted">
+            Optional: Enter a name and select the person from the list. For
+            common names, we recommend using internet ID (below) to be sure you
+            get the right person.
+          </small>
+        </div>
       </div>
-    </div>
+    </form>
 
     <div class="row">
       <label for="internetId" class="col-sm-3 col-form-label"
