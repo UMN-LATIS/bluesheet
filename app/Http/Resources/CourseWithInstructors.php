@@ -3,12 +3,7 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-
-function trimWithFallback($string, $default = 'Unspecified') {
-    if (!is_string($string)) return $default;
-    $trimmedString = trim($string);
-    return $trimmedString ? $trimmedString : $default;
-}
+use App\Library\Utilities;
 
 class CourseWithInstructors extends JsonResource {
     /**
@@ -30,21 +25,9 @@ class CourseWithInstructors extends JsonResource {
             "enrollmentTotal" => $this->ENROLLMENT_TOTAL,
             "instructorRole" => $this->INSTRUCTOR_ROLE,
             "cancelled" => (bool) $this->CANCELLED,
-            "courseType" => trimWithFallback($this->COMPONENT_CLASS),
-            "courseLevel" => trimWithFallback($this->ACADEMIC_CAREER),
-            "instructor" => $this->instructor ? [
-                'id' => $this->instructor->id,
-                'givenName' => $this->instructor->givenname,
-                'surName' => $this->instructor->surname,
-                'displayName' => $this->instructor->displayName,
-                'email' => $this->instructor->email,
-                'leaves' => $this->when($this->instructor->leaves->isNotEmpty(), $this->instructor->leaves),
-                'academicAppointment' => trimWithFallback($this->instructor->jobCategory),
-                'emplid' => $this->instructor->emplid,
-                'sslEligible' => $this->instructor->ssl_eligible,
-                'midcareerEligible' => $this->instructor->midcareer_eligible,
-                'sslApplyEligible' => $this->instructor->ssl_apply_eligible
-            ] : null,
+            "courseType" => Utilities::trimWithFallback($this->COMPONENT_CLASS),
+            "courseLevel" => Utilities::trimWithFallback($this->ACADEMIC_CAREER),
+            "instructor" => $this->when($this->instructor, new InstructorResource($this->instructor), null),
         ];
     }
 }
