@@ -76,7 +76,9 @@ const isOpen = ref(false);
 const prettyLeaveType = computed(() => props.leave.type.replace(/_/g, " "));
 const isOnlyPartiallyEligible = computed(() => {
   const ASST_PROF_JOB_CODE = "9403";
-  // assistant professors are only eligible for sabbatical leaves
+
+  // asst profs are only partially eligible for sabbatical leaves
+  // as they (likely?) lack tenure
   return (
     props.leave.type === leaveTypes.SABBATICAL &&
     props.leave.status === leaveStatuses.ELIGIBLE &&
