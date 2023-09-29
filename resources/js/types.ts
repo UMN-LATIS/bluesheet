@@ -22,6 +22,7 @@ export const UserPermissions = {
   VIEW_USERS: "view users",
   VIEW_REPORTS: "view reports",
   VIEW_LEAVES: "view leaves",
+  VIEW_ELIGIBILITY: "view eligibility",
 } as const;
 
 export type UserPermission =
@@ -197,6 +198,8 @@ export interface Term {
 export interface Instructor {
   id: number;
   emplid: number;
+  title: string;
+  jobCode: string;
   givenName: string;
   surName: string;
   displayName: string;

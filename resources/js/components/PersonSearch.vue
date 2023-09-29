@@ -1,15 +1,21 @@
 <template>
-  <div class="person-search">
+  <div ref="personSearchContainer" class="person-search">
     <input
+      name="safari-autofill-fix"
       v-bind="$attrs"
       :value="modelValue"
       :class="inputClass"
       class="person-search__input form-control"
+      autocorrect="off"
       autocomplete="off"
       @input="handleInput"
+      @focus="isMenuOpen = true"
     />
 
-    <div class="person-search__results">
+    <div
+      class="person-search__results"
+      :class="{ 'person-search__results--is-open': isMenuOpen }"
+    >
       <div v-if="!users.length" class="person-search__no-items">
         <span v-if="isFetching">Searching...</span>
         <span v-else-if="modelValue.length < 3">
@@ -23,7 +29,7 @@
         :key="user.umndid"
         class="person-search__item"
         type="button"
-        @click="$emit('selected', user)"
+        @click="handleSelect(user)"
       >
         <span class="person-search__name">{{ user.full_name }}</span>
         <span class="person-search__id">({{ user.uid }})</span>
@@ -36,6 +42,7 @@ import { ref, watch } from "vue";
 import { UserLookupItem, CSSClass } from "@/types";
 import pDebounce from "p-debounce";
 import { lookupUsers } from "@/api";
+import { onClickOutside } from "@vueuse/core";
 
 const props = defineProps<{
   modelValue: string;
@@ -49,6 +56,12 @@ const emit = defineEmits<{
 
 const users = ref<UserLookupItem[]>([]);
 const isFetching = ref(false);
+const isMenuOpen = ref(false);
+const personSearchContainer = ref<HTMLElement | null>(null);
+
+onClickOutside(personSearchContainer, () => {
+  isMenuOpen.value = false;
+});
 
 const debouncedLookupUsers = pDebounce(lookupUsers, 500);
 
@@ -69,6 +82,12 @@ watch(
 function handleInput(event: Event) {
   const query = (event.target as HTMLInputElement).value;
   emit("update:modelValue", query);
+}
+
+function handleSelect(user: UserLookupItem) {
+  isMenuOpen.value = false;
+  emit("update:modelValue", user.full_name);
+  emit("selected", user);
 }
 </script>
 <style scoped>
@@ -100,11 +119,13 @@ function handleInput(event: Event) {
     0 1px 3px 0 rgb(0 0 0 / 0.1),
     0 1px 2px -1px rgb(0 0 0 / 0.1);
   flex-direction: column;
-  display: flex;
 }
 
-.person-search:not(:focus-within) .person-search__results {
+.person-search__results {
   display: none;
+}
+.person-search__results.person-search__results--is-open {
+  display: flex;
 }
 
 .person-search__list {

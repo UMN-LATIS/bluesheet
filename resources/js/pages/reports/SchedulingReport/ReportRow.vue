@@ -12,21 +12,24 @@
           {{ instructor.surName }}, {{ instructor.givenName }}
         </div>
       </RouterLink>
-      <div class="tw-text-xs tw-text-neutral-400">
-        {{ instructor.emplid }} •
-        {{ instructor.academicAppointment }}
-      </div>
-      <div class="tw-text-xs tw-text-neutral-400">
-        <div>{{ instructor.sslEligible?"SSL Eligible":null }} </div>
-        <div>{{ instructor.sslApplyEligible?"SSL Apply Eligible":null }}</div>
-        <div>{{ instructor.midcareerEligible?"Midcareer Eligible":null }}</div>
+      <div class="tw-text-xs tw-text-neutral-400 tw-flex tw-flex-col">
+        <span>
+          {{ instructor.title }}
+          {{ instructor.jobCode ? `(${instructor.jobCode})` : "" }}
+        </span>
+        <span>{{ instructor.emplid }}</span>
+        <span v-if="instructor.sslApplyEligible">✦ SSL Apply Eligible </span>
+        <span v-if="instructor.sslEligible">✦ SSL Eligible</span>
+        <span v-if="instructor.midcareerEligible">✦ Midcareer Eligible</span>
       </div>
     </Td>
     <Td
       v-for="(termCourses, index) in listOfTermCourses"
       :key="index"
+      class="term-data-column"
       :class="{
-        'tw-bg-amber-50': currentTerm?.id === terms[index].id,
+        'term-data-column--current': currentTerm?.id === terms[index].id,
+        'term-data-column--fall': isFallTerm(terms[index]),
       }"
     >
       <div class="leaves tw-flex tw-flex-col tw-gap-1 tw-mb-2">
@@ -34,6 +37,7 @@
           v-for="leave in listOfTermLeaves[index]"
           :key="leave.id"
           :leave="leave"
+          :instructor="instructor"
         >
           {{ leave.description }} ({{ leave.type }})
         </LeaveChip>
@@ -91,5 +95,22 @@ function doesCourseMatchSearchTerm(course: Course, searchTerm: string) {
 
   return courseTitle.includes(searchTerm.toLowerCase());
 }
+
+function isFallTerm(term: Term) {
+  return term.name.includes("Fall");
+}
 </script>
-<style scoped></style>
+<style scoped>
+.term-data-column.term-data-column--current {
+  background: #fffcf0;
+  border-top: 1px solid #fde68a;
+}
+
+.term-data-column.term-data-column--current.term-data-column--fall {
+  border-left: 2px solid #fde68a;
+}
+
+.term-data-column.term-data-column--fall {
+  border-left: 2px solid #f3f3f3;
+}
+</style>

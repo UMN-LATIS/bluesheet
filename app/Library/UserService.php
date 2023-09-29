@@ -22,21 +22,17 @@ class UserService {
 
         try {
             $user->save();
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             // user already exists, reload
             $user = User::where('emplid', $emplid)->first();
-            if(!$user) {
-                return null;
-            }
+            if (!$user) return null;
         }
-        
+
         $this->userCache[$emplid] = $user;
         return $user;
     }
 
     public function attachInstructorsToCourses(Collection $courses, Collection $employeeList): Collection {
-
         // prefetch any instructors that we know about and stuff them in our user cache so we avoid n+1 queries
         $allInstructorsFromCourses = $courses->pluck('INSTRUCTOR_EMPLID')->unique()->filter();
         $loadedUsers = User::whereIn('emplid', $allInstructorsFromCourses)->with('leaves')->get();
@@ -48,16 +44,18 @@ class UserService {
             if (!$course->INSTRUCTOR_EMPLID) return;
 
             $user = $this->findOrCreateByEmplid($course->INSTRUCTOR_EMPLID);
-            if (isset($user)) {
-                $employeeInfo = $employeeList->where('EMPLID', $user->emplid)->first();
 
-                if (isset($employeeInfo->CATEGORY)) {
-
-                    $user->jobCategory = $employeeInfo->CATEGORY;
-                }
+            if (!$user) {
+                $course->instructor = null;
+                return;
             }
 
-            $course->instructor = $user ?? null;
+            $employeeInfo = $employeeList->where('EMPLID', $user->emplid)->first();
+
+            $user->jobCategory = $employeeInfo?->CATEGORY;
+            $user->jobCode = $employeeInfo?->JOBCODE;
+
+            $course->instructor = $user;
         });
     }
 }

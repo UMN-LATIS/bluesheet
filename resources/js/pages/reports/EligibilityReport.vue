@@ -1,5 +1,5 @@
 <template>
-  <DefaultLayout>
+  <DefaultLayout  v-if="$can('view eligibility')">
     <div class="form-check">
       <input class="form-check-input" type="radio" name="eligiblity" v-model="eligibility_setting" id="SSLEligible" value="ssl_eligible">
       <label class="form-check-label" for="SSLEligible">
@@ -21,7 +21,7 @@
     </div>
     <DownloadCSV
         class="btn btn-info mt-2 mb-2"
-        :data="userList"
+        :data="filteredUserList"
         :name="eligibility_setting + '.csv'"
       >
         Download List
@@ -70,6 +70,7 @@ import SortableLink from "@/components/SortableLink.vue";
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
 import { axios } from "@/lib";
 import DownloadCSV from "@/components/DownloadCSV.vue";
+import { $can } from "@/lib";
 
 export default {
   components: {
@@ -79,13 +80,23 @@ export default {
   },
   data() {
     return {
-      currentSortDir: "desc",
-      currentSort: "lastModified",
+      currentSortDir: "asc",
+      currentSort: "displayName",
       userList: [],
       eligibility_setting: 'ssl_eligible'
     };
   },
   computed: {
+    filteredUserList: function() {
+        return this.userList.map((user) => {
+            return {
+                displayName: user.displayName,
+                email: user.email,
+                department: user.dept_name,
+                deptid: user.deptid
+            }
+        });
+    },
     sortedList: function () {
       return [...this.userList]
         .sort((a, b) => {
@@ -113,6 +124,7 @@ export default {
     this.loadUsers();
   },
   methods: {
+    $can,
     loadUsers: function() {
         axios.get('/api/eligibility/' + this.eligibility_setting)
         .then((res) => {

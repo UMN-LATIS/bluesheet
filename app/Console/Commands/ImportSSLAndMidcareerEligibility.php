@@ -27,6 +27,10 @@ class ImportSSLAndMidcareerEligibility extends Command
      */
     public function handle()
     {
+        $prompt = $this->confirm('You must clear any existing sabbatical and midcareer values before running this import. Have you done that?');
+        if(!$prompt) {
+            return;
+        }
         $csvFile = $this->argument('csvFile');
         // open the csv 
         $fp = fopen($csvFile, 'r');
@@ -70,6 +74,6 @@ class ImportSSLAndMidcareerEligibility extends Command
             $user->save();
             echo "Updated user with emplid: " . $emplId . "\n";
         }
-
+        $this->info('Remember to notify ORGP!');
     }
 }
