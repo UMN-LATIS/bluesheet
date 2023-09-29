@@ -12,14 +12,15 @@
           {{ instructor.surName }}, {{ instructor.givenName }}
         </div>
       </RouterLink>
-      <div class="tw-text-xs tw-text-neutral-400">
-        {{ instructor.emplid }} •
-        {{ instructor.academicAppointment }}
-      </div>
-      <div class="tw-text-xs tw-text-neutral-400">
-        <div>{{ instructor.sslEligible?"SSL Eligible":null }} </div>
-        <div>{{ instructor.sslApplyEligible?"SSL Apply Eligible":null }}</div>
-        <div>{{ instructor.midcareerEligible?"Midcareer Eligible":null }}</div>
+      <div class="tw-text-xs tw-text-neutral-400 tw-flex tw-flex-col">
+        <span>
+          {{ instructor.title }}
+          {{ instructor.jobCode ? `(${instructor.jobCode})` : "" }}
+        </span>
+        <span>{{ instructor.emplid }}</span>
+        <span v-if="instructor.sslApplyEligible">✦ SSL Apply Eligible </span>
+        <span v-if="instructor.sslEligible">✦ SSL Eligible</span>
+        <span v-if="instructor.midcareerEligible">✦ Midcareer Eligible</span>
       </div>
     </Td>
     <Td
@@ -34,6 +35,7 @@
           v-for="leave in listOfTermLeaves[index]"
           :key="leave.id"
           :leave="leave"
+          :instructor="instructor"
         >
           {{ leave.description }} ({{ leave.type }})
         </LeaveChip>
