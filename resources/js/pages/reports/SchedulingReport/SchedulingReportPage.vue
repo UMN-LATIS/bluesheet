@@ -171,9 +171,11 @@
               v-for="term in termsForReport"
               :id="`term-${term.id}`"
               :key="term.id"
-              class="tw-whitespace-nowrap"
+              class="tw-whitespace-nowrap term-header-column"
               :class="{
-                '!tw-bg-amber-100': term.id === currentTerm?.id,
+                '!tw-bg-amber-100 !tw-border-amber-300 term-header-column--is-current-term':
+                  term.id === currentTerm?.id,
+                'term-header-column--is-fall-term': isFallTerm(term),
               }"
             >
               {{ term.name }}
@@ -650,6 +652,10 @@ onMounted(async () => {
 
   runReport();
 });
+
+function isFallTerm(term: Term) {
+  return term.name.includes("Fall");
+}
 </script>
 <style scoped lang="scss">
 .details-list {
@@ -679,5 +685,9 @@ onMounted(async () => {
 }
 .scheduling-report-page__post-it .outer-container {
   max-width: 100% !important;
+}
+
+.term-header-column.term-header-column--is-fall-term {
+  border-left: 2px solid #eee;
 }
 </style>

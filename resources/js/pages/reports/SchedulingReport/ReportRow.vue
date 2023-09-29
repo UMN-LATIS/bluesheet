@@ -26,8 +26,10 @@
     <Td
       v-for="(termCourses, index) in listOfTermCourses"
       :key="index"
+      class="term-data-column"
       :class="{
-        'tw-bg-amber-50': currentTerm?.id === terms[index].id,
+        'term-data-column--current': currentTerm?.id === terms[index].id,
+        'term-data-column--fall': isFallTerm(terms[index]),
       }"
     >
       <div class="leaves tw-flex tw-flex-col tw-gap-1 tw-mb-2">
@@ -93,5 +95,22 @@ function doesCourseMatchSearchTerm(course: Course, searchTerm: string) {
 
   return courseTitle.includes(searchTerm.toLowerCase());
 }
+
+function isFallTerm(term: Term) {
+  return term.name.includes("Fall");
+}
 </script>
-<style scoped></style>
+<style scoped>
+.term-data-column.term-data-column--current {
+  background: #fffcf0;
+  border-top: 1px solid #fde68a;
+}
+
+.term-data-column.term-data-column--current.term-data-column--fall {
+  border-left: 2px solid #fde68a;
+}
+
+.term-data-column.term-data-column--fall {
+  border-left: 2px solid #f3f3f3;
+}
+</style>

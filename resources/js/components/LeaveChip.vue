@@ -2,10 +2,13 @@
   <Chip
     :color="statusColor"
     class="tw-cursor-pointer"
-    :class="{
-      'tw-rounded-xl tw-opacity-80': isOpen,
-      '!tw-border-dashed tw-opacity-50': isOnlyPartiallyEligible,
-    }"
+    :class="[
+      `tw-bg-${statusColor}/5 tw-border-${statusColor}/40`,
+      {
+        'tw-rounded-xl tw-opacity-80': isOpen,
+        '!tw-border-dashed tw-opacity-50': isOnlyPartiallyEligible,
+      },
+    ]"
     @click="isOpen = !isOpen"
   >
     <header
