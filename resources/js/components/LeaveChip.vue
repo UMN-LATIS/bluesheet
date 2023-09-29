@@ -5,7 +5,7 @@
     :class="[
       `tw-bg-${statusColor}/5 tw-border-${statusColor}/40`,
       {
-        'tw-rounded-xl tw-opacity-80': isOpen,
+        'tw-rounded-xl tw-opacity-80 tw-pb-2': isOpen,
         '!tw-border-dashed tw-opacity-50': isOnlyPartiallyEligible,
       },
     ]"
@@ -25,7 +25,7 @@
       />
       <span
         v-if="leave.status === 'eligible' && isOnlyPartiallyEligible"
-        class="tw-text-sm"
+        class="tw-text-base tw-w-5 tw-h-5 tw-inline-flex tw-items-center tw-justify-center"
         >✧</span
       >
       <NoIcon v-if="leave.status === 'cancelled'" title="cancelled" />
