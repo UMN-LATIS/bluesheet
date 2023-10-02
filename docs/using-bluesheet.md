@@ -96,17 +96,17 @@ The "Browse Roles" link allows you to see all of the people who have been tagged
 
 Folders provide a way to "group groups", based on College or other high-level organization. Folders don't have their own memberships, they just hold other groups. To request that a new folder be added, please [send us an email](mailto:latistecharch@umn.edu).
 
-# Leaves
+## Leaves ##
 
 BlueSheet tracks faculty leaves and leave eligibility.  These features are intended to give departmental staff an easy way to keep track of leaves for scheduling purposes, and to provide shared visibility for faculty and departmental staff. The leave features in BlueSheet **do not** automatically enter leaves into Peoplesoft. Normal HR processes should be followed to officially enter leaves. 
 
-## Automatically Imported Leaves ##
+### Automatically Imported Leaves ###
 
 BlueSheet automatically imports historical leave data, including sabbatical information. These leaves will be have the description of "Imported Leave". These leaves can be edited to add additional historical context if desired. 
 
 BlueSheet also automatically imports information about eligibility for sabbatical, single semester leave, and mid-career awards. Eligibility data is only updated once per academic year, usually in September.
 
-## Adding and Editing Leaves ##
+### Adding and Editing Leaves ###
 
 Users with administrative permissions in BlueSheet can add and edit additional leaves within any user record. Begin by finding a user by clicking `User Lookup` in the navigation bar. The "Leaves" section is at the bottom of their profile page. 
 
@@ -116,9 +116,9 @@ To add a leave, click "Add Leave". There are six leave types - **Sabbatical**, *
 
 The description field allows you to add additional context for the leave - for example, keeping track of why a course release was granted. **Do not enter medical information in the description field**. FMLA-type leaves should be entered as "Other" with minimal description. 
 
-![Viewing Leaves](leaves.png)
+![Viewing Leaves](./leaves.png)
 
-# Scheduling Report #
+## Scheduling Report ##
 
 Group administrators can use the "scheduling report" to quickly get a sense of how leaves and other scheduling issues might impact course planning. The "scheduling report" link is attached to any academic department in BlueSheet. If you don't see the scheduling report and believe you should have access, [contact support](mailto:latistecharch@umn.edu).
 
