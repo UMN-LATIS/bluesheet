@@ -238,3 +238,8 @@ export type ApiGroupResponse = Group;
 export interface ApiUserLookupResponse {
   items: UserLookupItem[];
 }
+
+// used for api requests via Bandaid
+export type InstructorRole =
+  | "PI" // primary instuctor
+  | "TA"; // teaching assistant
