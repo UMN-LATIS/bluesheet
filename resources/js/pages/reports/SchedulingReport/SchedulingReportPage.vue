@@ -7,29 +7,41 @@
     <section class="tw-flex tw-flex-col tw-gap-4 tw-mb-4">
       <h2 class="sr-only">Report Filters</h2>
 
-      <fieldset>
-        <legend
-          class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"
-        >
-          Date Range
-        </legend>
-        <div class="tw-flex tw-gap-2">
-          <SelectGroup
-            v-model="filters.startTermId"
-            label="Start Term"
-            :showLabel="false"
-            :options="allTermOptions"
-            @update:modelValue="runReport"
-          />
-          <SelectGroup
-            v-model="filters.endTermId"
-            label="End Term"
-            :showLabel="false"
-            :options="allTermOptions"
-            @update:modelValue="runReport"
-          />
-        </div>
-      </fieldset>
+      <div class="tw-flex tw-gap-4 tw-mb-4">
+        <SelectGroup
+          v-model="instructorRole"
+          label="Instructor Role"
+          :options="[
+            { text: 'Primary Instructor', value: 'PI' },
+            { text: 'Teaching Assistant', value: 'TA' },
+          ]"
+          @update:modelValue="onInstructorRoleChange"
+        />
+
+        <fieldset>
+          <legend
+            class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"
+          >
+            Date Range
+          </legend>
+          <div class="tw-flex tw-gap-2">
+            <SelectGroup
+              v-model="filters.startTermId"
+              label="Start Term"
+              :showLabel="false"
+              :options="allTermOptions"
+              @update:modelValue="runReport"
+            />
+            <SelectGroup
+              v-model="filters.endTermId"
+              label="End Term"
+              :showLabel="false"
+              :options="allTermOptions"
+              @update:modelValue="runReport"
+            />
+          </div>
+        </fieldset>
+      </div>
       <div class="tw-flex tw-gap-8 tw-mb-4 tw-flex-wrap">
         <fieldset v-show="instructorCategoriesMap.size">
           <div class="tw-flex tw-items-baseline tw-mb-1">
@@ -214,7 +226,15 @@
 <script setup lang="ts">
 import { onMounted, ref, reactive, computed, watch } from "vue";
 import * as api from "@/api";
-import { Course, Term, Group, Instructor, Leave, ISODate } from "@/types";
+import {
+  Course,
+  Term,
+  Group,
+  Instructor,
+  Leave,
+  ISODate,
+  InstructorRole,
+} from "@/types";
 import debounce from "lodash-es/debounce";
 import dayjs from "dayjs";
 import { Table, Th } from "@/components/Table";
@@ -244,6 +264,7 @@ const isRunningReport = ref(false);
 const courseLevelsMap = ref<Map<string, number>>(new Map()); // "UGRD", "GRAD"
 const courseTypesMap = ref<Map<string, number>>(new Map()); // "LEC"
 const instructorCategoriesMap = ref<Map<string, number>>(new Map()); // "Faculty"
+const instructorRole = ref<InstructorRole>("PI");
 
 const filters = reactive({
   startTermId: "",
@@ -589,9 +610,19 @@ async function loadCourseDataForTerm(term: Term) {
   const courses = await api.getGroupCoursesByTerm({
     termId: term.id,
     groupId: props.groupId,
+    roles: [instructorRole.value],
   });
 
   coursesByTermMap.value.set(term.id, courses);
+}
+
+async function onInstructorRoleChange() {
+  // clear existing instructor and course data
+  instructorsForReport.value = [];
+  coursesByTermMap.value.clear();
+
+  // rerun the report
+  await runReport();
 }
 
 async function runReport() {

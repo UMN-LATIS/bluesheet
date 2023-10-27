@@ -9,6 +9,7 @@ import {
   Course,
   Term,
   Group,
+  InstructorRole,
 } from "@/types";
 
 export async function lookupUsers(query: string): Promise<UserLookupItem[]> {
@@ -68,12 +69,19 @@ export async function getTerms() {
 export async function getGroupCoursesByTerm({
   groupId,
   termId,
+  roles,
 }: {
   groupId: number;
   termId: number;
+  roles: InstructorRole[];
 }) {
   const res = await axios.get<Course[]>(
-    `/api/terms/${termId}/groups/${groupId}/courses?includeRoles=PI`,
+    `/api/terms/${termId}/groups/${groupId}/courses`,
+    {
+      params: {
+        includeRoles: roles.length ? roles.join(",") : undefined,
+      },
+    },
   );
 
   return res.data;

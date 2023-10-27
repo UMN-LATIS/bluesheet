@@ -2,7 +2,7 @@
   <div class="form-group tw-mb-0">
     <label
       :for="selectId"
-      class="tw-uppercase tw-text-neutral-500 tw-font-bold tw-text-xs tw-tracking-wider tw-mb-1 tw-block"
+      class="tw-uppercase tw-text-neutral-500 tw-font-semibold tw-text-xs tw-tracking-wider tw-mb-2 tw-block"
       :class="[
         {
           'sr-only': !showLabel,
