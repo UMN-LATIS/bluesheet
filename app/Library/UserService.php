@@ -54,6 +54,7 @@ class UserService {
 
             $user->jobCategory = $employeeInfo?->CATEGORY;
             $user->jobCode = $employeeInfo?->JOBCODE;
+            $user->instructorRole = $course->INSTRUCTOR_ROLE;
 
             $course->instructor = $user;
         });
