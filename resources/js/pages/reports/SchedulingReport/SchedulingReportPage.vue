@@ -244,6 +244,9 @@ import pMap from "p-map";
 import Button from "@/components/Button.vue";
 import ReportRow from "./ReportRow.vue";
 import WideLayout from "@/layouts/WideLayout.vue";
+import { sortEntriesByKey } from "./sortEntriesByKey";
+import { sortByName } from "./sortByName";
+import { useTerms } from "@/composables/useTerms";
 
 const props = defineProps<{
   groupId: number;
@@ -258,7 +261,7 @@ const MAX_TERM_DATE = dayjs().add(3, "year").format("YYYY-MM-DD");
 
 const tableRef = ref<HTMLElement>();
 const group = ref<Group>();
-const termsMap = ref<Map<TermId, Term>>(new Map());
+const { termsLookup: termsMap } = useTerms();
 const coursesByTermMap = ref<Map<TermId, Course[]>>(new Map());
 const isRunningReport = ref(false);
 const courseLevelsMap = ref<Map<string, number>>(new Map()); // "UGRD", "GRAD"
@@ -299,10 +302,6 @@ const currentTerm = computed((): Term | null => {
 
   return currentTerm ?? null;
 });
-
-function sortEntriesByKey(a, b) {
-  return a[0].localeCompare(b[0]);
-}
 
 const sortedAppointmentTypeFilters = computed(() => {
   return [...instructorCategoriesMap.value.entries()].sort(sortEntriesByKey);
@@ -456,15 +455,6 @@ function getInstructorsTeachingWithinReportTerms() {
 
   const sortedInstructors = reportInstructors.sort(sortByName);
   return sortedInstructors;
-}
-
-function sortByName(
-  a: { surName: string; givenName: string },
-  b: { surName: string; givenName: string },
-) {
-  return (
-    a.surName.localeCompare(b.surName) || a.givenName.localeCompare(b.givenName)
-  );
 }
 
 function doesInstructorNameMatchSearchTerm(
