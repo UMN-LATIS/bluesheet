@@ -67,15 +67,15 @@
 <script setup lang="ts">
 import { Td } from "@/components/Table";
 import LeaveChip from "@/components/LeaveChip.vue";
-import { Instructor, Term, Leave, Course } from "@/types";
+import { Instructor, Term, Leave, ApiCourseInstructorRecord } from "@/types";
 
 defineProps<{
   instructor: Instructor;
   search: string;
   terms: Term[];
-  listOfTermCourses: Course[][];
+  listOfTermCourses: ApiCourseInstructorRecord[][];
   listOfTermLeaves: Leave[][];
-  isShowingCourse: (course: Course) => boolean;
+  isShowingCourse: (course: ApiCourseInstructorRecord) => boolean;
   currentTerm: Term | null;
 }>();
 
@@ -89,7 +89,10 @@ function doesInstructorNameMatchSearchTerm(
   );
 }
 
-function doesCourseMatchSearchTerm(course: Course, searchTerm: string) {
+function doesCourseMatchSearchTerm(
+  course: ApiCourseInstructorRecord,
+  searchTerm: string,
+) {
   const courseTitle =
     `${course.subject} ${course.catalogNumber} ${course.classSection}`.toLowerCase();
 

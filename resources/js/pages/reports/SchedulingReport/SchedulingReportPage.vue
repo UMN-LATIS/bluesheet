@@ -224,12 +224,11 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, reactive, computed, watch } from "vue";
+import { ref, reactive, computed, watch } from "vue";
 import * as api from "@/api";
 import {
-  Course,
+  ApiCourseInstructorRecord,
   Term,
-  Group,
   Instructor,
   Leave,
   ISODate,
@@ -247,6 +246,7 @@ import WideLayout from "@/layouts/WideLayout.vue";
 import { sortEntriesByKey } from "./sortEntriesByKey";
 import { sortByName } from "./sortByName";
 import { useTerms } from "@/composables/useTerms";
+import { useGroup } from "@/composables/useGroup";
 
 const props = defineProps<{
   groupId: number;
@@ -257,12 +257,13 @@ type TermId = number;
 
 const DEFAULT_START_DATE = dayjs().subtract(3, "year").format("YYYY-MM-DD");
 const DEFAULT_END_DATE = dayjs().add(2, "year").format("YYYY-MM-DD");
-const MAX_TERM_DATE = dayjs().add(3, "year").format("YYYY-MM-DD");
 
 const tableRef = ref<HTMLElement>();
-const group = ref<Group>();
-const { termsLookup: termsMap } = useTerms();
-const coursesByTermMap = ref<Map<TermId, Course[]>>(new Map());
+const group = useGroup(props.groupId);
+const { termsLookup, terms } = useTerms();
+const coursesByTermMap = ref<Map<TermId, ApiCourseInstructorRecord[]>>(
+  new Map(),
+);
 const isRunningReport = ref(false);
 const courseLevelsMap = ref<Map<string, number>>(new Map()); // "UGRD", "GRAD"
 const courseTypesMap = ref<Map<string, number>>(new Map()); // "LEC"
@@ -286,14 +287,14 @@ const excludedCourseTypes = ref<Set<string>>(new Set(["IND", "FWK"]));
 const excludedInstAppointments = ref<Set<string>>(new Set());
 
 const allTermOptions = computed(() => {
-  return [...termsMap.value.values()].map((term) => ({
+  return terms.value.map((term) => ({
     text: term.name,
     value: String(term.id),
   }));
 });
 
 const currentTerm = computed((): Term | null => {
-  const currentTerm = [...termsMap.value.values()].find((term) => {
+  const currentTerm = [...termsLookup.value.values()].find((term) => {
     const termStart = dayjs(term.startDate);
     const termEnd = dayjs(term.endDate);
     const today = dayjs();
@@ -326,7 +327,7 @@ function isShowingInstructor(instructor: Instructor) {
 }
 
 function hasTaughtCourseMatchingFilters(instructor: Instructor) {
-  const allTerms = [...termsMap.value.values()];
+  const allTerms = [...termsLookup.value.values()];
   return allTerms.some((term) => {
     const courses = getInstructorTermCourses(instructor, term);
     return courses.some((course) => isShowingCourse(course));
@@ -362,7 +363,9 @@ function isIncludedInstructorAppointment(instructor: Instructor) {
 }
 
 function getAllCourseLevelsMap() {
-  const allCourses: Course[] = [...coursesByTermMap.value.values()].flat();
+  const allCourses: ApiCourseInstructorRecord[] = [
+    ...coursesByTermMap.value.values(),
+  ].flat();
   const courseLevels = new Map<string, number>();
   allCourses.forEach((course) => {
     const currentCount = courseLevels.get(course.courseLevel) ?? 0;
@@ -372,7 +375,9 @@ function getAllCourseLevelsMap() {
 }
 
 function getAllCourseTypesMap() {
-  const allCourses: Course[] = [...coursesByTermMap.value.values()].flat();
+  const allCourses: ApiCourseInstructorRecord[] = [
+    ...coursesByTermMap.value.values(),
+  ].flat();
   const courseTypes = new Map<string, number>();
   allCourses.forEach((course) => {
     const currentCount = courseTypes.get(course.courseType) ?? 0;
@@ -396,7 +401,7 @@ function hasInstructorTaughtCourseMatchingSearchTerm(
   instructor: Instructor,
   searchTerm: string,
 ) {
-  const allTerms = [...termsMap.value.values()];
+  const allTerms = [...termsLookup.value.values()];
   return allTerms.some((term) => {
     const courses = getInstructorTermCourses(instructor, term);
     return courses.some((course) =>
@@ -407,7 +412,7 @@ function hasInstructorTaughtCourseMatchingSearchTerm(
 
 function getInstructorsMap(): Map<InstructorId, Instructor> {
   const allInstructors = new Map<InstructorId, Instructor>();
-  coursesByTermMap.value.forEach((courses: Course[]) => {
+  coursesByTermMap.value.forEach((courses: ApiCourseInstructorRecord[]) => {
     courses.forEach((course) => {
       allInstructors.set(course.instructor.id, course.instructor);
     });
@@ -419,9 +424,9 @@ function getReportTerms() {
   if (!filters.startTermId || !filters.endTermId) {
     return [];
   }
-  const startTerm = termsMap.value.get(Number(filters.startTermId));
-  const endTerm = termsMap.value.get(Number(filters.endTermId));
-  const allTerms = [...termsMap.value.values()];
+  const startTerm = termsLookup.value.get(Number(filters.startTermId));
+  const endTerm = termsLookup.value.get(Number(filters.endTermId));
+  const allTerms = [...termsLookup.value.values()];
 
   if (!startTerm || !endTerm || !allTerms.length) {
     return [];
@@ -467,14 +472,20 @@ function doesInstructorNameMatchSearchTerm(
   );
 }
 
-function doesCourseMatchSearchTerm(course: Course, searchTerm: string) {
+function doesCourseMatchSearchTerm(
+  course: ApiCourseInstructorRecord,
+  searchTerm: string,
+) {
   const courseTitle =
     `${course.subject} ${course.catalogNumber} ${course.classSection}`.toLowerCase();
 
   return courseTitle.includes(searchTerm.toLowerCase());
 }
 
-function sortCoursesByCourseNumber(a: Course, b: Course) {
+function sortCoursesByCourseNumber(
+  a: ApiCourseInstructorRecord,
+  b: ApiCourseInstructorRecord,
+) {
   return (
     a.subject.localeCompare(b.subject) ||
     String(a.catalogNumber).localeCompare(String(b.catalogNumber)) ||
@@ -482,7 +493,7 @@ function sortCoursesByCourseNumber(a: Course, b: Course) {
   );
 }
 
-function isShowingCourse(course: Course) {
+function isShowingCourse(course: ApiCourseInstructorRecord) {
   return (
     !excludedCourseTypes.value.has(course.courseType) &&
     !excludedCourseLevels.value.has(course.courseLevel)
@@ -492,7 +503,7 @@ function isShowingCourse(course: Course) {
 function getInstructorTermCourses(
   instructor: Instructor,
   term: Term,
-): Course[] {
+): ApiCourseInstructorRecord[] {
   const allDeptCoursesInTerm = coursesByTermMap.value.get(term.id);
   const courses =
     allDeptCoursesInTerm?.filter((course) => {
@@ -575,32 +586,11 @@ function toggleAllCourseLevels() {
   excludedCourseLevels.value.clear();
 }
 
-async function loadTerms() {
-  // reset the maps
-  termsMap.value.clear();
-
-  // get terms and group info
-  const allTerms = await api.getTerms();
-
-  // init the termsMap with all terms
-  allTerms
-    .filter((t) => {
-      return dayjs(t.endDate).isSameOrBefore(MAX_TERM_DATE);
-    })
-    .forEach((term) => {
-      termsMap.value.set(term.id, term);
-    });
-}
-
-async function loadGroup() {
-  group.value = await api.getGroup(props.groupId);
-}
-
 async function loadCourseDataForTerm(term: Term) {
   const courses = await api.getGroupCoursesByTerm({
     termId: term.id,
     groupId: props.groupId,
-    roles: [instructorRole.value],
+    roles: ["PI", "TA"],
   });
 
   coursesByTermMap.value.set(term.id, courses);
@@ -653,26 +643,29 @@ watch(tableRef, () => {
   scrollToCurrentTerm();
 });
 
-onMounted(async () => {
-  // reset data
-  coursesByTermMap.value.clear();
-  termsMap.value.clear();
-  group.value = undefined;
+watch(
+  [termsLookup, group],
+  async () => {
+    // if there aren't any terms loaded, don't do anything
+    if (!termsLookup.value.size || !group.value) {
+      return;
+    }
 
-  // load data
-  await Promise.all([loadGroup(), loadTerms()]);
+    coursesByTermMap.value.clear();
 
-  // set the default start and end terms
-  const defaultTerms = selectTermsWithinRangeInclusive(
-    DEFAULT_START_DATE,
-    DEFAULT_END_DATE,
-    [...termsMap.value.values()],
-  );
-  filters.startTermId = String(defaultTerms[0].id);
-  filters.endTermId = String(defaultTerms[defaultTerms.length - 1].id);
+    // set the default start and end terms
+    const defaultTerms = selectTermsWithinRangeInclusive(
+      DEFAULT_START_DATE,
+      DEFAULT_END_DATE,
+      [...termsLookup.value.values()],
+    );
+    filters.startTermId = String(defaultTerms[0].id);
+    filters.endTermId = String(defaultTerms[defaultTerms.length - 1].id);
 
-  runReport();
-});
+    runReport();
+  },
+  { immediate: true },
+);
 
 function isFallTerm(term: Term) {
   return term.name.includes("Fall");
