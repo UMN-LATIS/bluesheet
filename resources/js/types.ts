@@ -199,6 +199,7 @@ export interface Instructor {
   id: number;
   emplid: number;
   title: string;
+  instructorRole: InstructorRole;
   jobCode: string;
   givenName: string;
   surName: string;
@@ -214,13 +215,28 @@ export interface Instructor {
 export type TermCode = "FA" | "SP" | "SU";
 
 export interface Course {
+  classNumber: number; // classNumber from api - uniq for each course section
+  term: number;
+  subject: string; // HIST
+  catalogNumber: number; // 1001
+  classSection: string; // "001"
+  title: string; // course name
+  enrollmentCap: number;
+  enrollmentTotal: number;
+  cancelled: boolean;
+  courseType: string; // "LEC"
+  courseLevel: string; //"UGRD" | "GRAD";
+  instructors: Instructor[];
+}
+
+export interface ApiCourseInstructorRecord {
   id: number;
   term: number;
   subject: string; // HIST
   catalogNumber: number; // 1001
   classNumber: number; // uniq id of course
   classSection: string; // "001"
-  instructorRole: string; // 'PI' === Primary Instructor
+  instructorRole: InstructorRole;
   title: string; // course name
   enrollmentCap: number;
   enrollmentTotal: number;

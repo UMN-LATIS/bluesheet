@@ -6,10 +6,11 @@ import {
   User,
   Leave,
   NewLeave,
-  Course,
+  ApiCourseInstructorRecord,
   Term,
   Group,
   InstructorRole,
+  Course,
 } from "@/types";
 
 export async function lookupUsers(query: string): Promise<UserLookupItem[]> {
@@ -66,6 +67,21 @@ export async function getTerms() {
   return res.data;
 }
 
+const toCourse = (rawCourse: ApiCourseInstructorRecord): Course => ({
+  classNumber: rawCourse.classNumber,
+  term: rawCourse.term,
+  subject: rawCourse.subject,
+  catalogNumber: rawCourse.catalogNumber,
+  classSection: rawCourse.classSection,
+  title: rawCourse.title,
+  enrollmentCap: rawCourse.enrollmentCap,
+  enrollmentTotal: rawCourse.enrollmentTotal,
+  cancelled: rawCourse.cancelled,
+  courseType: rawCourse.courseType,
+  courseLevel: rawCourse.courseLevel,
+  instructors: [],
+});
+
 export async function getGroupCoursesByTerm({
   groupId,
   termId,
@@ -75,7 +91,7 @@ export async function getGroupCoursesByTerm({
   termId: number;
   roles: InstructorRole[];
 }) {
-  const res = await axios.get<Course[]>(
+  const res = await axios.get<ApiCourseInstructorRecord[]>(
     `/api/terms/${termId}/groups/${groupId}/courses`,
     {
       params: {
@@ -84,7 +100,17 @@ export async function getGroupCoursesByTerm({
     },
   );
 
-  return res.data;
+  const coursesByClassNumber = new Map<Course["classNumber"], Course>();
+
+  res.data.forEach((rawCourse) => {
+    const course =
+      coursesByClassNumber.get(rawCourse.classNumber) ?? toCourse(rawCourse);
+    course.instructors.push(rawCourse.instructor);
+
+    coursesByClassNumber.set(rawCourse.classNumber, course);
+  });
+
+  return [...coursesByClassNumber.values()];
 }
 
 export async function getGroup(groupId: number) {
