@@ -1,94 +1,139 @@
-import { ref, watch } from "vue";
+import { ref, computed, watch } from "vue";
 import { useTerms } from "./useTerms";
 import * as api from "@/api";
-import type { Course, Group, Instructor, Term } from "@/types";
+import type {
+  Course,
+  Group,
+  Instructor,
+  Term,
+  CourseShortCode,
+  // TimelessCourse,
+} from "@/types";
 import pMap from "p-map";
 
-type TeachingAssistant = Instructor;
+type CoursesByInstructorAndTermKey = `${Instructor["id"]}-${Term["id"]}`;
+type InstructorsByCourseAndTermKey = `${CourseShortCode}-${Term["id"]}`;
 
-async function fetchCourseLookupByTerm(
+// function toTimelessCourse(course: Course): TimelessCourse {
+//   return {
+//     shortCode: `${course.subject}-${course.catalogNumber}`,
+//     subject: course.subject,
+//     catalogNumber: course.catalogNumber,
+//     title: course.title,
+//     courseType: course.courseType,
+//     courseLevel: course.courseLevel,
+//   };
+// }
+
+async function fetchCoursesAndInstructorsForTerm(
   groupId: Group["id"],
-  terms: Term[],
-): Promise<Map<Term["id"], Course[]>> {
-  const coursesByTermLookup = new Map<Term["id"], Course[]>();
+  termId: Term["id"],
+) {
+  const instructorsByCourseAndTermMap = new Map<
+    InstructorsByCourseAndTermKey,
+    Instructor[]
+  >();
+  const coursesByInstructorAndTermMap = new Map<
+    CoursesByInstructorAndTermKey,
+    Course[]
+  >();
 
-  // first create a lookup of all courses by term
-  await pMap(
-    terms,
-    async (term) => {
-      const courses = await api.getGroupCoursesByTerm({
-        termId: term.id,
-        groupId,
-        roles: ["PI", "TA"],
-      });
-      coursesByTermLookup.set(term.id, courses);
-    },
-    { concurrency: 5 },
-  );
+  const courses = await api.getGroupCoursesByTerm({
+    groupId,
+    termId,
+    roles: ["PI", "TA"],
+  });
 
-  return coursesByTermLookup;
-}
+  courses.forEach((course) => {
+    const courseAndTermKey: InstructorsByCourseAndTermKey = `${course.shortCode}-${termId}`;
+    const existingInstructors =
+      instructorsByCourseAndTermMap.get(courseAndTermKey) ?? [];
 
-function deriveLookups(coursesByTermLookup: Map<Term["id"], Course[]>) {
-  const courseLookup = new Map<Course["classNumber"], Course>();
-  const instructorLookup = new Map<Instructor["id"], Instructor>();
-  const taLookup = new Map<TeachingAssistant["id"], TeachingAssistant>();
-
-  Array.from(coursesByTermLookup.values())
-    .flat()
-    .forEach((course) => {
-      courseLookup.set(course.classNumber, course);
-      course.instructors.forEach((instructor) => {
-        if (instructor.instructorRole === "TA") {
-          taLookup.set(instructor.id, instructor);
-        }
-        if (instructor.instructorRole === "PI") {
-          instructorLookup.set(instructor.id, instructor);
-        }
-      });
+    instructorsByCourseAndTermMap.set(courseAndTermKey, [
+      ...existingInstructors,
+      ...course.instructors,
+    ]);
+    course.instructors.forEach((instructor) => {
+      const instructorAndTermKey: CoursesByInstructorAndTermKey = `${instructor.id}-${termId}`;
+      const existingCourses =
+        coursesByInstructorAndTermMap.get(instructorAndTermKey) ?? [];
+      coursesByInstructorAndTermMap.set(instructorAndTermKey, [
+        ...existingCourses,
+        course,
+      ]);
     });
+  });
 
-  return {
-    courseLookup,
-    instructorLookup,
-    taLookup,
-  };
+  return { coursesByInstructorAndTermMap, instructorsByCourseAndTermMap };
 }
 
 export function useGroupCourseHistory(groupId: Group["id"]) {
-  const { terms } = useTerms();
+  const { terms, termLookup, currentTerm } = useTerms();
 
-  const coursesByTermLookup = ref<Map<Term["id"], Course[]>>(new Map());
-  const courseLookup = ref<Map<Course["classNumber"], Course>>(new Map());
-  const instructorLookup = ref<Map<Instructor["id"], Instructor>>(new Map());
-  const taLookup = ref<Map<TeachingAssistant["id"], TeachingAssistant>>(
-    new Map(),
+  const instructorsByCourseTerm = ref<
+    Map<InstructorsByCourseAndTermKey, Instructor[]>
+  >(new Map());
+  const coursesByInstructorTerm = ref<
+    Map<CoursesByInstructorAndTermKey, Course[]>
+  >(new Map());
+  const allInstructors = computed(() =>
+    [...instructorsByCourseTerm.value.values()].flat(),
+  );
+  const allCourses = computed(() =>
+    [...coursesByInstructorTerm.value.values()].flat(),
   );
 
   watch(
-    [terms],
-    async () => {
-      if (!terms.value.length) return;
+    terms,
+    () => {
+      if (!terms.value.length) {
+        console.log("useGroupCourseHistory: no terms found");
+        return;
+      }
 
-      // first create a course lookup by term
-      coursesByTermLookup.value = await fetchCourseLookupByTerm(
-        groupId,
+      pMap(
         terms.value,
-      );
+        async (term) => {
+          console.log(
+            "useGroupCourseHistory: fetching courses for term",
+            term.id,
+          );
+          try {
+            const {
+              coursesByInstructorAndTermMap,
+              instructorsByCourseAndTermMap,
+            } = await fetchCoursesAndInstructorsForTerm(groupId, term.id);
 
-      // then derive lookups for courses, instructors, and tas
-      const derivedLookups = deriveLookups(coursesByTermLookup.value);
-      courseLookup.value = derivedLookups.courseLookup;
-      instructorLookup.value = derivedLookups.instructorLookup;
-      taLookup.value = derivedLookups.taLookup;
+            // do this as one batch update to avoid
+            // triggering multiple re-renders
+            coursesByInstructorTerm.value = new Map([
+              ...coursesByInstructorTerm.value,
+              ...coursesByInstructorAndTermMap,
+            ]);
+            instructorsByCourseTerm.value = new Map([
+              ...instructorsByCourseTerm.value,
+              ...instructorsByCourseAndTermMap,
+            ]);
+          } catch (e) {
+            console.error(`Cannot fetch courses for term: ${term.name}`, e);
+          }
+        },
+        { concurrency: 3 },
+      );
     },
-    { immediate: true },
+    {
+      immediate: true,
+      deep: true,
+    },
   );
 
   return {
     terms,
-    courseLookup,
-    instructorLookup,
-    taLookup,
+    termLookup,
+    currentTerm,
+    allInstructors,
+    allCourses,
+    coursesByInstructorTerm,
+    instructorsByCourseTerm,
   };
 }

@@ -3,57 +3,56 @@ import { dayjs } from "@/lib";
 import type { Term } from "@/types";
 import * as api from "@/api";
 
-interface UseTermsState {
-  isFetching: boolean;
-  cache: {
-    termsLookupMap?: Map<number, Term>;
-  };
-}
-
-const state: UseTermsState = {
-  isFetching: false,
-  cache: {},
-};
-
 const MAX_TERM_DATE = dayjs().add(3, "year").format("YYYY-MM-DD");
 
-function fetchTermsLookup(): Promise<Map<number, Term>> {
-  return api
-    .getTerms()
-    .then((allTerms) => {
-      // ignore terms that are super far out
-      return allTerms.filter((t) => {
-        return dayjs(t.endDate).isSameOrBefore(MAX_TERM_DATE);
-      });
-    })
-    .then((filteredTerms) => {
-      // update the termsLookup. Do this with entries so that
-      // we can update the ref once, which avoids triggering
-      // computed with each update
-      const entries: [number, Term][] = filteredTerms.map((term) => [
-        term.id,
-        term,
-      ]);
-      return new Map(entries);
-    });
+let termsCache: Term[] = [];
+
+async function fetchTerms(): Promise<Term[]> {
+  if (termsCache.length > 0) {
+    return termsCache;
+  }
+  const terms = await api.getTerms();
+
+  const filteredTerms = terms.filter((t) => {
+    // ignore terms that are super far out
+    return dayjs(t.endDate).isSameOrBefore(MAX_TERM_DATE);
+  });
+  termsCache = filteredTerms;
+  return filteredTerms;
 }
 
-export function useTerms() {
-  const termsLookup = ref<Map<number, Term>>(new Map());
-  const terms = computed((): Term[] => [...termsLookup.value.values()]);
+function getCurrentTerm(terms: Term[]): Term {
+  const currentTerm = terms.find((term) => {
+    const termStart = dayjs(term.startDate);
+    const termEnd = dayjs(term.endDate);
+    const today = dayjs();
+    return today.isBetween(termStart, termEnd, "day", "[]");
+  });
 
-  // terms shouldn't change, so we can fetch them once and cache them
-  if (!state.isFetching && !state.cache.termsLookupMap) {
-    state.isFetching = true;
-    fetchTermsLookup().then((termsLookupMap) => {
-      state.cache.termsLookupMap = termsLookupMap;
-      termsLookup.value = termsLookupMap;
-      state.isFetching = false;
+  if (!currentTerm) {
+    throw new Error("No current term found");
+  }
+  return currentTerm;
+}
+
+let isFetching = false;
+export function useTerms() {
+  const termLookup = ref<Map<Term["id"], Term>>(new Map());
+  const terms = computed(() => [...termLookup.value.values()]);
+
+  if (!isFetching) {
+    isFetching = true;
+    fetchTerms().then((theTerms) => {
+      for (const term of theTerms) {
+        termLookup.value.set(term.id, term);
+      }
+      isFetching = false;
     });
   }
 
   return {
     terms,
-    termsLookup,
+    termLookup,
+    currentTerm: computed(() => getCurrentTerm(terms.value)),
   };
 }

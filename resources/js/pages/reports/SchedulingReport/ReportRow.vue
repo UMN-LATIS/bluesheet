@@ -67,15 +67,15 @@
 <script setup lang="ts">
 import { Td } from "@/components/Table";
 import LeaveChip from "@/components/LeaveChip.vue";
-import { Instructor, Term, Leave, ApiCourseInstructorRecord } from "@/types";
+import { Instructor, Term, Leave, Course } from "@/types";
 
 defineProps<{
   instructor: Instructor;
   search: string;
   terms: Term[];
-  listOfTermCourses: ApiCourseInstructorRecord[][];
+  listOfTermCourses: Course[][];
   listOfTermLeaves: Leave[][];
-  isShowingCourse: (course: ApiCourseInstructorRecord) => boolean;
+  isShowingCourse: (course: Course) => boolean;
   currentTerm: Term | null;
 }>();
 

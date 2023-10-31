@@ -68,6 +68,7 @@ export async function getTerms() {
 }
 
 const toCourse = (rawCourse: ApiCourseInstructorRecord): Course => ({
+  shortCode: `${rawCourse.subject}-${rawCourse.catalogNumber}`,
   classNumber: rawCourse.classNumber,
   term: rawCourse.term,
   subject: rawCourse.subject,

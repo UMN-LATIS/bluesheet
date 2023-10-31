@@ -214,18 +214,25 @@ export interface Instructor {
 
 export type TermCode = "FA" | "SP" | "SU";
 
-export interface Course {
+export type CourseShortCode =
+  `${TimelessCourse["subject"]}-${TimelessCourse["catalogNumber"]}`;
+
+export interface TimelessCourse {
+  shortCode: CourseShortCode;
+  subject: string; // HIST
+  catalogNumber: string; // "1001W"
+  title: string; // course name
+  courseType: string; // "LEC"
+  courseLevel: string; //"UGRD" | "GRAD";
+}
+
+export interface Course extends TimelessCourse {
   classNumber: number; // classNumber from api - uniq for each course section
   term: number;
-  subject: string; // HIST
-  catalogNumber: number; // 1001
   classSection: string; // "001"
-  title: string; // course name
   enrollmentCap: number;
   enrollmentTotal: number;
   cancelled: boolean;
-  courseType: string; // "LEC"
-  courseLevel: string; //"UGRD" | "GRAD";
   instructors: Instructor[];
 }
 
@@ -233,7 +240,7 @@ export interface ApiCourseInstructorRecord {
   id: number;
   term: number;
   subject: string; // HIST
-  catalogNumber: number; // 1001
+  catalogNumber: string; // "1001W"
   classNumber: number; // uniq id of course
   classSection: string; // "001"
   instructorRole: InstructorRole;
