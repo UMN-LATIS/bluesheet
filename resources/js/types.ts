@@ -114,6 +114,7 @@ export interface Group {
   active: 0 | 1;
   artifacts: Artifact[]; // what's an artifact?
   notes: string | null;
+  members: Membership[];
 }
 
 export interface ChildGroup {

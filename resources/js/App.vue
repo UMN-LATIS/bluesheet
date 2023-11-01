@@ -70,6 +70,8 @@ import { AppHeader, NavbarItem, AppFooter } from "@umn-latis/cla-vue-template";
 import UserLookup from "@/components/UserLookup.vue";
 import CreateGroup from "@/components/CreateGroup.vue";
 import { $can } from "@/utils";
+import { mapStores } from "pinia";
+import { useTermsStore } from "./stores/useTermsStore";
 
 export default {
   components: {
@@ -86,8 +88,12 @@ export default {
       createGroup: false,
     };
   },
+  computed: {
+    ...mapStores(useTermsStore),
+  },
   mounted() {
     this.$store.dispatch("fetchUser");
+    this.termsStore.init();
     console.log("Component mounted.");
   },
   methods: {

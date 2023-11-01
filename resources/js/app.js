@@ -7,6 +7,7 @@
 import "./bootstrap";
 
 import { createApp } from "vue";
+import { createPinia } from "pinia";
 import VTooltip from "v-tooltip";
 import { store } from "./store";
 import { router } from "./router";
@@ -17,4 +18,8 @@ import "@umn-latis/cla-vue-template/dist/style.css";
 import "../sass/app.scss";
 import "../sass/utils.css";
 
-createApp(App).use(store).use(router).use(VTooltip).mount("#app");
+const pinia = createPinia();
+
+const app = createApp(App).use(store).use(pinia).use(router).use(VTooltip);
+
+app.mount("#app");

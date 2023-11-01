@@ -190,38 +190,48 @@
 
 <script setup lang="ts">
 import WideLayout from "@/layouts/WideLayout.vue";
-import { useGroup } from "@/composables/useGroup";
 import InstructorTable from "./InstructorTable.vue";
 import Button from "@/components/Button.vue";
 import { reactive, ref, watch, computed } from "vue";
 import debounce from "lodash-es/debounce";
-import { Course, Instructor } from "@/types";
+import { Course, Group, Instructor } from "@/types";
 import { doesCourseMatchSearchTerm } from "./doesCourseMatchSearchTerm";
 import CourseTable from "./CourseTable.vue";
-import { useGroupInstructors } from "@/composables/useGroupInstructors";
-import { useGroupCourses } from "@/composables/useGroupCourses";
-import { useTerms } from "@/composables/useTerms";
+import { useGroupCourseHistoryStore } from "@/stores/useGroupCourseHistoryStore";
+import { storeToRefs } from "pinia";
+import * as api from "@/api";
 
 const props = defineProps<{
   groupId: number;
 }>();
 
-const group = useGroup(props.groupId);
-const { terms, currentTerm } = useTerms();
-const {
-  isLoadingComplete,
-  getLeavesForInstructorPerTerm,
-  instructorAppointmentTypesMap,
-  allInstructors,
-  getInstructorsForCoursePerTerm,
-} = useGroupInstructors(props.groupId);
+const groupCourseHistoryStore = useGroupCourseHistoryStore(props.groupId);
+const group = ref<null | Group>(null);
+
+watch(
+  () => props.groupId,
+  async (newGroupId) => {
+    group.value = await api.getGroup(newGroupId);
+  },
+  { immediate: true },
+);
 
 const {
+  terms,
+  currentTerm,
+  isLoadingComplete,
+  instructorAppointmentTypesMap,
+  allInstructors,
   allCourses,
   courseLevelsMap,
   courseTypesMap,
+} = storeToRefs(groupCourseHistoryStore);
+
+const {
+  getLeavesForInstructorPerTerm,
+  getInstructorsForCoursePerTerm,
   getCoursesForInstructorPerTerm,
-} = useGroupCourses(props.groupId);
+} = groupCourseHistoryStore;
 
 const filters = reactive({
   // startTermId: "",
