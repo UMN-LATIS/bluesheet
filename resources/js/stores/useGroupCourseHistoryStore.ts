@@ -97,192 +97,190 @@ async function fetchCoursesAndInstructorsForTerm(
   return { coursesByInstructorAndTermMap, instructorsByCourseAndTermMap };
 }
 
-const createState = () => ({
-  groupId: ref<Group["id"] | null>(null),
-  instructorsByCourseTermMap: ref<InstructorsByCourseTermMap>(new Map()),
-  coursesByInstructorTermMap: ref<CoursesByInstructorTermMap>(new Map()),
-  termLoadState: ref<Map<Term["id"], LoadState>>(new Map()),
-});
-
-const getters = (state: ReturnType<typeof createState>) => ({
-  terms: computed(() => {
-    const termsStore = useTermsStore();
-    const { terms } = storeToRefs(termsStore);
-    return terms.value;
-  }),
-
-  currentTerm: computed(() => {
-    const termsStore = useTermsStore();
-    const { currentTerm } = storeToRefs(termsStore);
-    return currentTerm.value;
-  }),
-
-  isLoadingComplete: computed(() => {
-    const termsStore = useTermsStore();
-    const { terms } = storeToRefs(termsStore);
-    return (
-      terms.value.length > 0 &&
-      terms.value.every((term) => {
-        const loadState = state.termLoadState.value.get(term.id);
-        if (!loadState) {
-          return false;
-        }
-        return ["complete", "error"].includes(loadState);
-      })
-    );
-  }),
-  allCourses: computed(() => {
-    const courses: TimelessCourse[] = [
-      ...state.coursesByInstructorTermMap.value.values(),
-    ]
-      .flat()
-      .map(toTimelessCourse);
-    // remove duplicates
-    return uniqBy(courses, "shortCode");
-  }),
-  courseTypesMap: computed(() => {
-    const map = new Map<Course["courseType"], number>();
-    getters(state).allCourses.value.forEach((course) => {
-      const count = map.get(course.courseType) ?? 0;
-      map.set(course.courseType, count + 1);
-    });
-    return map;
-  }),
-
-  courseLevelsMap: computed(() => {
-    const map = new Map<Course["courseLevel"], number>();
-    getters(state).allCourses.value.forEach((course) => {
-      const count = map.get(course.courseLevel) ?? 0;
-      map.set(course.courseLevel, count + 1);
-    });
-    return map;
-  }),
-
-  allInstructors: computed(() => {
-    console.log("allInstructors computed");
-    const instructors = [
-      ...state.instructorsByCourseTermMap.value.values(),
-    ].flat();
-    // remove duplicates
-    return uniqBy(instructors, "id").sort(sortByName);
-  }),
-
-  instructorLookup: computed(() => {
-    const lookup = new Map<Instructor["id"], Instructor>();
-    getters(state).allInstructors.value.forEach((instructor) => {
-      lookup.set(instructor.id, instructor);
-    });
-    return lookup;
-  }),
-
-  instructorAppointmentTypesMap: computed(() => {
-    const map = new Map<Instructor["academicAppointment"], number>();
-    getters(state).allInstructors.value.forEach((instructor) => {
-      const count = map.get(instructor.academicAppointment) ?? 0;
-      map.set(instructor.academicAppointment, count + 1);
-    });
-    return map;
-  }),
-});
-
-const actions = (state: ReturnType<typeof createState>) => ({
-  async init(groupId: Group["id"]) {
-    state.groupId.value = groupId;
-    const termsStore = useTermsStore();
-    const { terms } = storeToRefs(termsStore);
-
-    watch(
-      terms,
-      () => {
-        if (!state.groupId.value) {
-          throw new Error("Cannot initialize without a `groupId`");
-        }
-
-        if (!terms.value.length) return;
-        // initialize the load state
-        terms.value.forEach((term) => {
-          state.termLoadState.value.set(term.id, "idle");
-        });
-
-        pMap(
-          terms.value,
-          async (term) => {
-            if (!state.groupId.value) {
-              throw new Error("Cannot initialize without a `groupId`");
-            }
-            try {
-              state.termLoadState.value.set(term.id, "loading");
-              const {
-                coursesByInstructorAndTermMap,
-                instructorsByCourseAndTermMap,
-              } = await fetchCoursesAndInstructorsForTerm(
-                state.groupId.value,
-                term.id,
-              );
-              // do this as one batch update to avoid
-              // triggering multiple re-renders
-              state.coursesByInstructorTermMap.value = new Map([
-                ...state.coursesByInstructorTermMap.value,
-                ...coursesByInstructorAndTermMap,
-              ]);
-              state.instructorsByCourseTermMap.value = new Map([
-                ...state.instructorsByCourseTermMap.value,
-                ...instructorsByCourseAndTermMap,
-              ]);
-            } catch (e) {
-              state.termLoadState.value.set(term.id, "error");
-            } finally {
-              state.termLoadState.value.set(term.id, "complete");
-            }
-          },
-          { concurrency: 5 },
-        );
-      },
-      { immediate: true },
-    );
-  },
-  getCoursesForInstructorPerTerm(instructorId: Instructor["id"]) {
-    const termsStore = useTermsStore();
-    const { terms } = storeToRefs(termsStore);
-    return terms.value.map((term) => {
-      const key = `${instructorId}-${term.id}` as CoursesByInstructorAndTermKey;
-      return state.coursesByInstructorTermMap.value.get(key) ?? [];
-    });
-  },
-  getInstructorsForCoursePerTerm(courseShortCode: CourseShortCode) {
-    const termsStore = useTermsStore();
-    const { terms } = storeToRefs(termsStore);
-    return terms.value.map((term) => {
-      const key =
-        `${courseShortCode}-${term.id}` as InstructorsByCourseAndTermKey;
-      return state.instructorsByCourseTermMap.value.get(key) ?? [];
-    });
-  },
-
-  getLeavesForInstructorPerTerm(instructorId: Instructor["id"]) {
-    const termsStore = useTermsStore();
-    const { terms } = storeToRefs(termsStore);
-    const instructor = getters(state).instructorLookup.value.get(instructorId);
-    if (!instructor) {
-      throw new Error(`Cannot find instructor with id: ${instructorId}`);
-    }
-
-    return terms.value.map((term) =>
-      selectInstructorTermLeaves(instructor, term),
-    );
-  },
-});
-
 const useStore = defineStore("groupCourseHistory", () => {
   console.log("groupCourseHistory store created");
-  const state = createState();
-  const storeGetters = getters(state);
-  const storeActions = actions(state);
+
+  const state = {
+    groupId: ref<Group["id"] | null>(null),
+    instructorsByCourseTermMap: ref<InstructorsByCourseTermMap>(new Map()),
+    coursesByInstructorTermMap: ref<CoursesByInstructorTermMap>(new Map()),
+    termLoadState: ref<Map<Term["id"], LoadState>>(new Map()),
+  };
+
+  const getters = {
+    terms: computed(() => {
+      const termsStore = useTermsStore();
+      const { terms } = storeToRefs(termsStore);
+      return terms.value;
+    }),
+
+    currentTerm: computed(() => {
+      const termsStore = useTermsStore();
+      const { currentTerm } = storeToRefs(termsStore);
+      return currentTerm.value;
+    }),
+
+    isLoadingComplete: computed(() => {
+      const termsStore = useTermsStore();
+      const { terms } = storeToRefs(termsStore);
+      return (
+        terms.value.length > 0 &&
+        terms.value.every((term) => {
+          const loadState = state.termLoadState.value.get(term.id);
+          if (!loadState) {
+            return false;
+          }
+          return ["complete", "error"].includes(loadState);
+        })
+      );
+    }),
+    allCourses: computed(() => {
+      const courses: TimelessCourse[] = [
+        ...state.coursesByInstructorTermMap.value.values(),
+      ]
+        .flat()
+        .map(toTimelessCourse);
+      // remove duplicates
+      return uniqBy(courses, "shortCode");
+    }),
+    courseTypesMap: computed(() => {
+      const map = new Map<Course["courseType"], number>();
+      getters.allCourses.value.forEach((course) => {
+        const count = map.get(course.courseType) ?? 0;
+        map.set(course.courseType, count + 1);
+      });
+      return map;
+    }),
+
+    courseLevelsMap: computed(() => {
+      const map = new Map<Course["courseLevel"], number>();
+      getters.allCourses.value.forEach((course) => {
+        const count = map.get(course.courseLevel) ?? 0;
+        map.set(course.courseLevel, count + 1);
+      });
+      return map;
+    }),
+
+    allInstructors: computed(() => {
+      console.log("allInstructors computed");
+      const instructors = [
+        ...state.instructorsByCourseTermMap.value.values(),
+      ].flat();
+      // remove duplicates
+      return uniqBy(instructors, "id").sort(sortByName);
+    }),
+
+    instructorLookup: computed(() => {
+      const lookup = new Map<Instructor["id"], Instructor>();
+      getters.allInstructors.value.forEach((instructor) => {
+        lookup.set(instructor.id, instructor);
+      });
+      return lookup;
+    }),
+
+    instructorAppointmentTypesMap: computed(() => {
+      const map = new Map<Instructor["academicAppointment"], number>();
+      getters.allInstructors.value.forEach((instructor) => {
+        const count = map.get(instructor.academicAppointment) ?? 0;
+        map.set(instructor.academicAppointment, count + 1);
+      });
+      return map;
+    }),
+  };
+
+  const actions = {
+    async init(groupId: Group["id"]) {
+      state.groupId.value = groupId;
+      const termsStore = useTermsStore();
+      const { terms } = storeToRefs(termsStore);
+
+      watch(
+        terms,
+        () => {
+          if (!state.groupId.value) {
+            throw new Error("Cannot initialize without a `groupId`");
+          }
+
+          if (!terms.value.length) return;
+          // initialize the load state
+          terms.value.forEach((term) => {
+            state.termLoadState.value.set(term.id, "idle");
+          });
+
+          pMap(
+            terms.value,
+            async (term) => {
+              if (!state.groupId.value) {
+                throw new Error("Cannot initialize without a `groupId`");
+              }
+              try {
+                state.termLoadState.value.set(term.id, "loading");
+                const {
+                  coursesByInstructorAndTermMap,
+                  instructorsByCourseAndTermMap,
+                } = await fetchCoursesAndInstructorsForTerm(
+                  state.groupId.value,
+                  term.id,
+                );
+                // do this as one batch update to avoid
+                // triggering multiple re-renders
+                state.coursesByInstructorTermMap.value = new Map([
+                  ...state.coursesByInstructorTermMap.value,
+                  ...coursesByInstructorAndTermMap,
+                ]);
+                state.instructorsByCourseTermMap.value = new Map([
+                  ...state.instructorsByCourseTermMap.value,
+                  ...instructorsByCourseAndTermMap,
+                ]);
+              } catch (e) {
+                state.termLoadState.value.set(term.id, "error");
+              } finally {
+                state.termLoadState.value.set(term.id, "complete");
+              }
+            },
+            { concurrency: 5 },
+          );
+        },
+        { immediate: true },
+      );
+    },
+    getCoursesForInstructorPerTerm(instructorId: Instructor["id"]) {
+      const termsStore = useTermsStore();
+      const { terms } = storeToRefs(termsStore);
+      return terms.value.map((term) => {
+        const key =
+          `${instructorId}-${term.id}` as CoursesByInstructorAndTermKey;
+        return state.coursesByInstructorTermMap.value.get(key) ?? [];
+      });
+    },
+    getInstructorsForCoursePerTerm(courseShortCode: CourseShortCode) {
+      const termsStore = useTermsStore();
+      const { terms } = storeToRefs(termsStore);
+      return terms.value.map((term) => {
+        const key =
+          `${courseShortCode}-${term.id}` as InstructorsByCourseAndTermKey;
+        return state.instructorsByCourseTermMap.value.get(key) ?? [];
+      });
+    },
+
+    getLeavesForInstructorPerTerm(instructorId: Instructor["id"]) {
+      const termsStore = useTermsStore();
+      const { terms } = storeToRefs(termsStore);
+      const instructor = getters.instructorLookup.value.get(instructorId);
+      if (!instructor) {
+        throw new Error(`Cannot find instructor with id: ${instructorId}`);
+      }
+
+      return terms.value.map((term) =>
+        selectInstructorTermLeaves(instructor, term),
+      );
+    },
+  };
 
   return {
     ...state,
-    ...storeGetters,
-    ...storeActions,
+    ...getters,
+    ...actions,
   };
 });
 
