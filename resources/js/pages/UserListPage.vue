@@ -112,7 +112,7 @@
 
 <script>
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
-import { dayjs } from "@/lib";
+import { dayjs } from "@/utils";
 
 export default {
   components: { DefaultLayout },

@@ -1,5 +1,5 @@
 import { createStore } from "vuex";
-import { axios } from "@/lib";
+import { axios } from "@/utils";
 import { User } from "@/types";
 
 export const store = createStore({
@@ -12,8 +12,8 @@ export const store = createStore({
   },
   actions: {
     toggleFavorite({ commit, state }, payload) {
-      var type = payload.type;
-      var item = payload.item;
+      const type = payload.type;
+      const item = payload.item;
       if (state.favorites[type].filter((f) => f.id == item.id).length > 0) {
         axios.delete("/api/user/favorite/" + type + "/" + item.id).then(() => {
           commit("removeFavorite", payload);

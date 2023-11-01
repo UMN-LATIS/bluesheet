@@ -13,7 +13,7 @@ import type {
 } from "@/types";
 import pMap from "p-map";
 import { uniqBy } from "lodash";
-import { dayjs } from "@/lib";
+import { dayjs } from "@/utils";
 
 type CoursesByInstructorAndTermKey = `${Instructor["id"]}-${Term["id"]}`;
 type InstructorsByCourseAndTermKey = `${CourseShortCode}-${Term["id"]}`;

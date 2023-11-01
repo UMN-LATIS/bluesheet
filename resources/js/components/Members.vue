@@ -205,7 +205,7 @@
         :mindate="lowestValue"
         :maxdate="highestValue"
         :show_unit="show_unit"
-        @update:member="val => $emit('update:members', val)"
+        @update:member="(val) => $emit('update:members', val)"
       ></Gantt>
     </table>
     <div
@@ -272,7 +272,7 @@ import DownloadCSV from "./DownloadCSV.vue";
 import MemberList from "./MemberList.vue";
 import Gantt from "./Gantt.vue";
 import Modal from "./Modal.vue";
-import { dayjs, $can } from "../lib";
+import { dayjs, $can } from "@/utils";
 
 export default {
   components: {
@@ -370,12 +370,25 @@ export default {
         }.bind(this),
       );
     },
-    compositeList: function() {
-      if(this.group && this.group.include_child_groups && this.group.child_groups) {
-        return this.members.concat(this.group.child_groups.flatMap((child) => child.members?child.members.map(m=> { m.child_group_title = child.group_title; return m}):false));
+    compositeList: function () {
+      if (
+        this.group &&
+        this.group.include_child_groups &&
+        this.group.child_groups
+      ) {
+        return this.members.concat(
+          this.group.child_groups.flatMap((child) =>
+            child.members
+              ? child.members.map((m) => {
+                  m.child_group_title = child.group_title;
+                  return m;
+                })
+              : false,
+          ),
+        );
       }
       return this.members;
-    }, 
+    },
     sortedList: function () {
       return [...this.compositeList].sort(
         function (a, b) {

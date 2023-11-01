@@ -60,7 +60,7 @@
 import SortableLink from "@/components/SortableLink.vue";
 import GroupTitle from "@/components/GroupTitle.vue";
 import SimpleNestedSelect from "@/components/SimpleNestedSelect.vue";
-import { dayjs } from "@/lib";
+import { dayjs } from "@/utils";
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
 
 export default {

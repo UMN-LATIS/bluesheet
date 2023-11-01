@@ -59,10 +59,8 @@
             >Group Admins
           </router-link>
         </li>
-        <li class="list-group-item" v-if="$can('view eligibility')">
-          <router-link
-            :to="{ name: 'eligibilityReport' }"
-            class="nav-link"
+        <li v-if="$can('view eligibility')" class="list-group-item">
+          <router-link :to="{ name: 'eligibilityReport' }" class="nav-link"
             >Eligibility Report
           </router-link>
         </li>
@@ -77,5 +75,5 @@
 
 <script setup>
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
-import { $can } from "@/lib";
+import { $can } from "@/utils";
 </script>

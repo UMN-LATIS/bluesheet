@@ -19,14 +19,19 @@
       <td v-if="show_unit && viewType == 'group'">{{ member.user.ou }}</td>
 
       <template v-if="viewType == 'group'">
-        <td v-if="!editing">{{ member.role.label }} <span v-if="member.child_group_title">({{ member.child_group_title }})</span></td>
+        <td v-if="!editing">
+          {{ member.role.label }}
+          <span v-if="member.child_group_title"
+            >({{ member.child_group_title }})</span
+          >
+        </td>
         <td v-if="editing">
           <ComboBox
             v-if="roles"
             v-model="member.role"
             :options="roles"
-            @update:options="$emit('update:roles', $event)"
             :canAddNewOption="true"
+            @update:options="$emit('update:roles', $event)"
           />
         </td>
       </template>
@@ -107,7 +112,7 @@
 
 <script lang="ts">
 import GroupTitle from "./GroupTitle.vue";
-import { dayjs, $can } from "../lib";
+import { dayjs, $can } from "@/utils";
 import ComboBox from "./ComboBox.vue";
 
 export default {

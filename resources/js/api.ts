@@ -1,4 +1,4 @@
-import { axios } from "@/lib";
+import { axios } from "@/utils";
 import {
   ApiUserLookupResponse,
   ApiUserResponse,

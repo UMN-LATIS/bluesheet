@@ -1,5 +1,5 @@
 import { ref, computed } from "vue";
-import { dayjs } from "@/lib";
+import { dayjs } from "@/utils";
 import type { Term } from "@/types";
 import * as api from "@/api";
 

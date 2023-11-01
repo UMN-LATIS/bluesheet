@@ -67,9 +67,9 @@
 
 <script>
 import { AppHeader, NavbarItem, AppFooter } from "@umn-latis/cla-vue-template";
-import UserLookup from "./components/UserLookup.vue";
-import CreateGroup from "./components/CreateGroup.vue";
-import { $can } from "./lib";
+import UserLookup from "@/components/UserLookup.vue";
+import CreateGroup from "@/components/CreateGroup.vue";
+import { $can } from "@/utils";
 
 export default {
   components: {
