@@ -48,7 +48,7 @@
           :class="{
             'tw-opacity-50 tw-line-through': course.cancelled,
             'tw-bg-yellow-100':
-              search.length && doesCourseMatchSearchTerm(course, search),
+              search.length && doesCourseNumberMatchSearchTerm(course, search),
           }"
         >
           {{ course.subject }} {{ course.catalogNumber }}
@@ -64,6 +64,8 @@
 import { Td } from "@/components/Table";
 import LeaveChip from "@/components/LeaveChip.vue";
 import { Instructor, Term, Leave, Course } from "@/types";
+import { doesCourseNumberMatchSearchTerm } from "./doesCourseMatchSearchTerm";
+import { doesInstructorNameMatchSearchTerm } from "./doesInstructorNameMatchSearchTerm";
 
 defineProps<{
   instructor: Instructor;
@@ -73,23 +75,6 @@ defineProps<{
   listOfTermLeaves: Leave[][];
   currentTerm: Term | null;
 }>();
-
-function doesInstructorNameMatchSearchTerm(
-  instructor: Instructor,
-  searchTerm: string,
-) {
-  return (
-    instructor.surName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    instructor.givenName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-}
-
-function doesCourseMatchSearchTerm(course: Course, searchTerm: string) {
-  const courseTitle =
-    `${course.subject} ${course.catalogNumber} ${course.classSection}`.toLowerCase();
-
-  return courseTitle.includes(searchTerm.toLowerCase());
-}
 
 function isFallTerm(term: Term) {
   return term.name.includes("Fall");

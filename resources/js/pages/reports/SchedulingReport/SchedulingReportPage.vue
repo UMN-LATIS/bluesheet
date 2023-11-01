@@ -206,7 +206,7 @@ import Button from "@/components/Button.vue";
 import { reactive, ref, watch, computed } from "vue";
 import debounce from "lodash-es/debounce";
 import { Course, Group, Instructor } from "@/types";
-import { doesCourseMatchSearchTerm } from "./doesCourseMatchSearchTerm";
+import { doesCourseNumberMatchSearchTerm } from "./doesCourseMatchSearchTerm";
 import CourseTable from "./CourseTable.vue";
 import { useGroupCourseHistoryStore } from "@/stores/useGroupCourseHistoryStore";
 import { storeToRefs } from "pinia";
@@ -358,7 +358,7 @@ function hasInstructorTaughtCourseMatchingSearchTerm(instructor: Instructor) {
     getCoursesForInstructorPerTerm(instructor.id)
       .flat()
       // then check if any course matches our search term
-      .some((course) => doesCourseMatchSearchTerm(course, filters.search))
+      .some((course) => doesCourseNumberMatchSearchTerm(course, filters.search))
   );
 }
 
