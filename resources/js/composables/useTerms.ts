@@ -21,7 +21,7 @@ async function fetchTerms(): Promise<Term[]> {
   return filteredTerms;
 }
 
-function getCurrentTerm(terms: Term[]): Term {
+function getCurrentTerm(terms: Term[]): Term | null {
   const currentTerm = terms.find((term) => {
     const termStart = dayjs(term.startDate);
     const termEnd = dayjs(term.endDate);
@@ -29,10 +29,7 @@ function getCurrentTerm(terms: Term[]): Term {
     return today.isBetween(termStart, termEnd, "day", "[]");
   });
 
-  if (!currentTerm) {
-    throw new Error("No current term found");
-  }
-  return currentTerm;
+  return currentTerm ?? null;
 }
 
 let isFetching = false;
@@ -53,6 +50,6 @@ export function useTerms() {
   return {
     terms,
     termLookup,
-    currentTerm: computed(() => getCurrentTerm(terms.value)),
+    currentTerm: computed((): Term | null => getCurrentTerm(terms.value)),
   };
 }
