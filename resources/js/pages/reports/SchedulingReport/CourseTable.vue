@@ -1,12 +1,8 @@
 <template>
-  <Table
-    class="scheduling-report"
-    :stickyFirstColumn="true"
-    :stickyHeader="true"
-  >
+  <Table :stickyHeader="true" :stickyFirstColumn="true">
     <template #thead>
       <tr>
-        <Th class="instructor-column">Instructor</Th>
+        <Th class="course-column">Course</Th>
         <Th
           v-for="term in terms"
           :id="`term-${term.id}`"
@@ -26,13 +22,12 @@
         </Th>
       </tr>
     </template>
-    <InstructorTableRow
-      v-for="instructor in instructors"
-      :key="instructor.id"
-      :instructor="instructor"
+    <CourseTableRow
+      v-for="course in courses"
+      :key="course.shortCode"
+      :course="course"
       :terms="terms"
-      :listOfTermCourses="getCoursesForInstructorPerTerm(instructor.id)"
-      :listOfTermLeaves="getLeavesForInstructorPerTerm(instructor.id)"
+      :listOfTermInstructors="getInstructorsForCoursePerTerm(course.shortCode)"
       :currentTerm="currentTerm"
       :search="search"
     />
@@ -40,17 +35,27 @@
 </template>
 <script setup lang="ts">
 import { Table, Th } from "@/components/Table";
-import InstructorTableRow from "./InstructorTableRow.vue";
-import { Term, Instructor, Leave, Course, LoadState } from "@/types";
+import CourseTableRow from "./CourseTableRow.vue";
+import {
+  Term,
+  Course,
+  Leave,
+  LoadState,
+  Instructor,
+  TimelessCourse,
+  CourseShortCode,
+} from "@/types";
 import Spinner from "@/components/Spinner.vue";
 
 const props = defineProps<{
   terms: Term[];
-  instructors: Instructor[];
+  courses: TimelessCourse[];
   currentTerm: Term | null;
   termLoadState: Map<Term["id"], LoadState>;
   getLeavesForInstructorPerTerm: (instructorId: number) => Leave[][];
-  getCoursesForInstructorPerTerm: (instructorId: number) => Course[][];
+  getInstructorsForCoursePerTerm: (
+    courseShortCode: CourseShortCode,
+  ) => Instructor[][];
   search: string;
 }>();
 

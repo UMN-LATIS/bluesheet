@@ -278,5 +278,13 @@ export function useGroupCourseHistory(groupId: Group["id"]) {
         selectInstructorTermLeaves(instructor, term),
       );
     },
+
+    getInstructorsForCoursePerTerm(courseShortCode: CourseShortCode) {
+      return terms.value.map((term) => {
+        const key =
+          `${courseShortCode}-${term.id}` as InstructorsByCourseAndTermKey;
+        return instructorsByCourseTermMap.value.get(key) ?? [];
+      });
+    },
   };
 }

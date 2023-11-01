@@ -124,6 +124,33 @@
         />
       </label>
     </div>
+
+    <div>
+      <Button
+        class="tab-button"
+        :class="{
+          'tab-button--active': activeTab === 'instructors',
+        }"
+        @click="activeTab = 'instructors'"
+        >Instructors</Button
+      >
+      <Button
+        class="tab-button"
+        :class="{
+          'tab-button--active': activeTab === 'tas',
+        }"
+        @click="activeTab = 'tas'"
+        >Teaching Assistants</Button
+      >
+      <Button
+        class="tab-button"
+        :class="{
+          'tab-button--active': activeTab === 'courses',
+        }"
+        @click="activeTab = 'courses'"
+        >Courses</Button
+      >
+    </div>
     <div class="tw-relative tw-min-h-[8em]">
       <!-- <Transition name="fade">
         <div
@@ -135,12 +162,27 @@
         </div>
       </Transition> -->
       <InstructorTable
+        v-if="['instructors', 'tas'].includes(activeTab)"
         ref="tableRef"
         :terms="terms"
-        :instructors="filteredInstructors"
+        :instructors="
+          activeTab === 'instructors'
+            ? filteredPrimaryInstructors
+            : filteredTeachingAssistants
+        "
         :currentTerm="currentTerm"
         :getLeavesForInstructorPerTerm="getLeavesForInstructorPerTerm"
         :getCoursesForInstructorPerTerm="getFilteredCoursesForInstructorPerTerm"
+        :termLoadState="termLoadState"
+        :search="filters.search"
+      />
+      <CourseTable
+        v-if="activeTab === 'courses'"
+        :terms="terms"
+        :courses="allCourses"
+        :currentTerm="currentTerm"
+        :getLeavesForInstructorPerTerm="getLeavesForInstructorPerTerm"
+        :getInstructorsForCoursePerTerm="getInstructorsForCoursePerTerm"
         :termLoadState="termLoadState"
         :search="filters.search"
       />
@@ -160,6 +202,7 @@ import debounce from "lodash-es/debounce";
 import { Course, Instructor } from "@/types";
 // import Spinner from "@/components/Spinner.vue";
 import { doesCourseMatchSearchTerm } from "./doesCourseMatchSearchTerm";
+import CourseTable from "./CourseTable.vue";
 
 const props = defineProps<{
   groupId: number;
@@ -171,6 +214,8 @@ const {
   currentTerm,
   allInstructors,
   coursesByInstructorTermMap,
+  getInstructorsForCoursePerTerm,
+  allCourses,
   termLoadState,
   courseLevelsMap,
   courseTypesMap,
@@ -189,6 +234,7 @@ const filters = reactive({
   excludedInstAppointments: new Set<string>(),
 });
 
+const activeTab = ref<"instructors" | "tas" | "courses">("instructors");
 const searchInputRaw = ref("");
 const debouncedSearch = debounce(() => {
   filters.search = searchInputRaw.value;
@@ -224,6 +270,18 @@ const filteredInstructors = computed(() =>
       (filters.search === "" ||
         doesInstructorNameMatchSearchTerm(instructor, filters.search) ||
         hasInstructorTaughtCourseMatchingSearchTerm(instructor)),
+  ),
+);
+
+const filteredPrimaryInstructors = computed(() =>
+  filteredInstructors.value.filter(
+    (instructor) => instructor.instructorRole === "PI",
+  ),
+);
+
+const filteredTeachingAssistants = computed(() =>
+  filteredInstructors.value.filter(
+    (instructor) => instructor.instructorRole === "TA",
   ),
 );
 
@@ -364,5 +422,10 @@ function toggleAllCourseLevels() {
 
 .term-header-column.term-header-column--is-fall-term {
   border-left: 2px solid #eee;
+}
+
+.tab-button.tab-button--active {
+  background: #3490dc;
+  color: #fff;
 }
 </style>
