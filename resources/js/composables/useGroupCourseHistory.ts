@@ -37,6 +37,15 @@ function toTimelessCourse(course: Course): TimelessCourse {
   };
 }
 
+function sortByName(
+  a: { surName: string; givenName: string },
+  b: { surName: string; givenName: string },
+): number {
+  return (
+    a.surName.localeCompare(b.surName) || a.givenName.localeCompare(b.givenName)
+  );
+}
+
 /**
  * for a given term, get the list of leaves for the instructor
  */
@@ -107,7 +116,7 @@ export function useGroupCourseHistory(groupId: Group["id"]) {
   const allInstructors = computed(() => {
     const instructors = [...instructorsByCourseTermMap.value.values()].flat();
     // remove duplicates
-    return uniqBy(instructors, "id");
+    return uniqBy(instructors, "id").sort(sortByName);
   });
   const instructorLookup = computed(() => {
     const lookup = new Map<Instructor["id"], Instructor>();
@@ -125,6 +134,33 @@ export function useGroupCourseHistory(groupId: Group["id"]) {
       .map(toTimelessCourse);
     // remove duplicates
     return uniqBy(courses, "shortCode");
+  });
+
+  const instructorAppointmentTypesMap = computed(() => {
+    const map = new Map<Instructor["academicAppointment"], number>();
+    allInstructors.value.forEach((instructor) => {
+      const count = map.get(instructor.academicAppointment) ?? 0;
+      map.set(instructor.academicAppointment, count + 1);
+    });
+    return map;
+  });
+
+  const courseTypesMap = computed(() => {
+    const map = new Map<Course["courseType"], number>();
+    allCourses.value.forEach((course) => {
+      const count = map.get(course.courseType) ?? 0;
+      map.set(course.courseType, count + 1);
+    });
+    return map;
+  });
+
+  const courseLevelsMap = computed(() => {
+    const map = new Map<Course["courseLevel"], number>();
+    allCourses.value.forEach((course) => {
+      const count = map.get(course.courseLevel) ?? 0;
+      map.set(course.courseLevel, count + 1);
+    });
+    return map;
   });
 
   watch(
@@ -172,15 +208,26 @@ export function useGroupCourseHistory(groupId: Group["id"]) {
   );
 
   return {
+    // terms
     terms,
     termLookup,
     currentTerm,
+
+    // instructors
     allInstructors,
     instructorLookup,
-    allCourses,
-    coursesByInstructorTermMap,
     instructorsByCourseTermMap,
 
+    //courses
+    allCourses,
+    coursesByInstructorTermMap,
+
+    // stats for filters
+    courseLevelsMap,
+    courseTypesMap,
+    instructorAppointmentTypesMap,
+
+    // getters
     getCoursesForInstructorPerTerm(instructorId: Instructor["id"]) {
       return terms.value.map((term) => {
         const key =
