@@ -1,7 +1,5 @@
 <template>
   <Table
-    v-if="terms.length > 0 && currentTerm"
-    ref="tableRef"
     class="scheduling-report"
     :stickyFirstColumn="true"
     :stickyHeader="true"
@@ -21,6 +19,10 @@
           }"
         >
           {{ term.name }}
+          <Spinner
+            v-if="isTermLoaded(term.id)"
+            class="tw-text-neutral-300 tw-h-4 tw-w-4"
+          />
         </Th>
       </tr>
     </template>
@@ -32,24 +34,32 @@
       :listOfTermCourses="getCoursesForInstructorPerTerm(instructor.id)"
       :listOfTermLeaves="getLeavesForInstructorPerTerm(instructor.id)"
       :currentTerm="currentTerm"
-      :isShowingCourse="() => true"
-      :search="''"
+      :search="search"
     />
   </Table>
 </template>
 <script setup lang="ts">
 import { Table, Th } from "@/components/Table";
 import ReportRow from "./ReportRow.vue";
-import { Term, Instructor, Leave, Course } from "@/types";
-import { CoursesByInstructorTermMap } from "@/composables/useGroupCourseHistory";
+import { Term, Instructor, Leave, Course, LoadState } from "@/types";
+import Spinner from "@/components/Spinner.vue";
 
-defineProps<{
+const props = defineProps<{
   terms: Term[];
   instructors: Instructor[];
   currentTerm: Term | null;
-  coursesByInstructorTermMap: CoursesByInstructorTermMap;
+  termLoadState: Map<Term["id"], LoadState>;
   getLeavesForInstructorPerTerm: (instructorId: number) => Leave[][];
   getCoursesForInstructorPerTerm: (instructorId: number) => Course[][];
+  search: string;
 }>();
+
+function isTermLoaded(termId: number) {
+  const termLoadState = props.termLoadState.get(termId);
+  if (!termLoadState) {
+    throw new Error(`Term load state not found for term ${termId}`);
+  }
+  return ["idle", "loading"].includes(termLoadState);
+}
 </script>
 <style scoped></style>

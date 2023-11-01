@@ -42,11 +42,7 @@
           {{ leave.description }} ({{ leave.type }})
         </LeaveChip>
       </div>
-      <div
-        v-for="course in termCourses"
-        v-show="isShowingCourse(course)"
-        :key="course.id"
-      >
+      <div v-for="course in termCourses" :key="course.classNumber">
         <div
           class="tw-my-1 tw-px-1"
           :class="{
@@ -75,7 +71,6 @@ defineProps<{
   terms: Term[];
   listOfTermCourses: Course[][];
   listOfTermLeaves: Leave[][];
-  isShowingCourse: (course: Course) => boolean;
   currentTerm: Term | null;
 }>();
 
@@ -89,10 +84,7 @@ function doesInstructorNameMatchSearchTerm(
   );
 }
 
-function doesCourseMatchSearchTerm(
-  course: ApiCourseInstructorRecord,
-  searchTerm: string,
-) {
+function doesCourseMatchSearchTerm(course: Course, searchTerm: string) {
   const courseTitle =
     `${course.subject} ${course.catalogNumber} ${course.classSection}`.toLowerCase();
 

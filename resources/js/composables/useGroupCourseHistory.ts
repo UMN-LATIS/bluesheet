@@ -9,6 +9,7 @@ import type {
   CourseShortCode,
   TimelessCourse,
   Leave,
+  LoadState,
 } from "@/types";
 import pMap from "p-map";
 import { uniqBy } from "lodash";
@@ -110,14 +111,17 @@ export function useGroupCourseHistory(groupId: Group["id"]) {
   const instructorsByCourseTermMap = ref<
     Map<InstructorsByCourseAndTermKey, Instructor[]>
   >(new Map());
+
   const coursesByInstructorTermMap = ref<
     Map<CoursesByInstructorAndTermKey, Course[]>
   >(new Map());
+
   const allInstructors = computed(() => {
     const instructors = [...instructorsByCourseTermMap.value.values()].flat();
     // remove duplicates
     return uniqBy(instructors, "id").sort(sortByName);
   });
+
   const instructorLookup = computed(() => {
     const lookup = new Map<Instructor["id"], Instructor>();
     allInstructors.value.forEach((instructor) => {
@@ -163,6 +167,21 @@ export function useGroupCourseHistory(groupId: Group["id"]) {
     return map;
   });
 
+  const termLoadState = ref<Map<Term["id"], LoadState>>(new Map());
+
+  const isLoadingComplete = computed(() => {
+    return (
+      terms.value.length > 0 &&
+      terms.value.every((term) => {
+        const state = termLoadState.value.get(term.id);
+        if (!state) {
+          return false;
+        }
+        return ["complete", "error"].includes(state);
+      })
+    );
+  });
+
   watch(
     terms,
     () => {
@@ -170,6 +189,11 @@ export function useGroupCourseHistory(groupId: Group["id"]) {
         console.log("useGroupCourseHistory: no terms found");
         return;
       }
+
+      // initialize the load state
+      terms.value.forEach((term) => {
+        termLoadState.value.set(term.id, "idle");
+      });
 
       pMap(
         terms.value,
@@ -179,6 +203,7 @@ export function useGroupCourseHistory(groupId: Group["id"]) {
             term.id,
           );
           try {
+            termLoadState.value.set(term.id, "loading");
             const {
               coursesByInstructorAndTermMap,
               instructorsByCourseAndTermMap,
@@ -196,9 +221,12 @@ export function useGroupCourseHistory(groupId: Group["id"]) {
             ]);
           } catch (e) {
             console.error(`Cannot fetch courses for term: ${term.name}`, e);
+            termLoadState.value.set(term.id, "error");
+          } finally {
+            termLoadState.value.set(term.id, "complete");
           }
         },
-        { concurrency: 3 },
+        { concurrency: 5 },
       );
     },
     {
@@ -226,6 +254,10 @@ export function useGroupCourseHistory(groupId: Group["id"]) {
     courseLevelsMap,
     courseTypesMap,
     instructorAppointmentTypesMap,
+
+    // load state
+    termLoadState,
+    isLoadingComplete,
 
     // getters
     getCoursesForInstructorPerTerm(instructorId: Instructor["id"]) {

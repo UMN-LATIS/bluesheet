@@ -1,9 +1,6 @@
-import { ApiCourseInstructorRecord } from "@/types";
+import { Course } from "@/types";
 
-export function doesCourseMatchSearchTerm(
-  course: ApiCourseInstructorRecord,
-  searchTerm: string,
-) {
+export function doesCourseMatchSearchTerm(course: Course, searchTerm: string) {
   const courseTitle =
     `${course.subject} ${course.catalogNumber} ${course.classSection}`.toLowerCase();
 

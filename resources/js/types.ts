@@ -266,3 +266,5 @@ export interface ApiUserLookupResponse {
 export type InstructorRole =
   | "PI" // primary instuctor
   | "TA"; // teaching assistant
+
+export type LoadState = "idle" | "loading" | "complete" | "error";

@@ -111,14 +111,38 @@
       </div>
     </section>
 
+    <div class="tw-flex tw-justify-end">
+      <label
+        class="tw-border tw-border-umn-neutral-200 tw-max-w-xs tw-w-full tw-rounded-md !tw-block"
+      >
+        <span class="sr-only">Filter by instructor name or course number</span>
+        <input
+          v-model="searchInputRaw"
+          placeholder="Search table"
+          :showLabel="false"
+          class="tw-w-full tw-border-none tw-rounded-none tw-px-4 tw-py-2 tw-bg-transparent tw-text-sm"
+        />
+      </label>
+    </div>
     <div class="tw-relative tw-min-h-[8em]">
+      <!-- <Transition name="fade">
+        <div
+          v-if="!isLoadingComplete"
+          class="tw-flex tw-justify-center tw-items-start tw-bg-white/5 tw-gap-4 tw-absolute tw-inset-0 tw-z-10 tw-backdrop-blur-sm tw-p-16"
+        >
+          <Spinner class="tw-text-neutral-900 tw-w-6 tw-h-6" />
+          Building Report...
+        </div>
+      </Transition> -->
       <InstructorTable
+        ref="tableRef"
         :terms="terms"
         :instructors="filteredInstructors"
         :currentTerm="currentTerm"
-        :coursesByInstructorTermMap="coursesByInstructorTermMap"
         :getLeavesForInstructorPerTerm="getLeavesForInstructorPerTerm"
-        :getCoursesForInstructorPerTerm="getCoursesForInstructorPerTerm"
+        :getCoursesForInstructorPerTerm="getFilteredCoursesForInstructorPerTerm"
+        :termLoadState="termLoadState"
+        :search="filters.search"
       />
     </div>
   </WideLayout>
@@ -133,7 +157,9 @@ import InstructorTable from "./InstructorTable.vue";
 import Button from "@/components/Button.vue";
 import { reactive, ref, watch, computed } from "vue";
 import debounce from "lodash-es/debounce";
-import { Instructor } from "@/types";
+import { Course, Instructor } from "@/types";
+// import Spinner from "@/components/Spinner.vue";
+import { doesCourseMatchSearchTerm } from "./doesCourseMatchSearchTerm";
 
 const props = defineProps<{
   groupId: number;
@@ -145,9 +171,11 @@ const {
   currentTerm,
   allInstructors,
   coursesByInstructorTermMap,
+  termLoadState,
   courseLevelsMap,
   courseTypesMap,
   instructorAppointmentTypesMap,
+  isLoadingComplete,
   getLeavesForInstructorPerTerm,
   getCoursesForInstructorPerTerm,
 } = useGroupCourseHistory(props.groupId);
@@ -167,15 +195,54 @@ const debouncedSearch = debounce(() => {
 }, 500);
 watch(searchInputRaw, debouncedSearch);
 
-const filteredInstructors = computed(() => {
-  return allInstructors.value.filter((instructor) => {
-    return [
-      isIncludedInstructorAppointment,
-      hasTaughtCourseMatchingFilters,
-      isSearchEmptyOrMatchesInstructor,
-    ].every((filter) => filter(instructor));
+const tableRef = ref<HTMLElement>();
+watch(
+  isLoadingComplete,
+  () => {
+    console.log("scrolling to current term", currentTerm.value);
+    scrollToCurrentTerm();
+  },
+  { immediate: true },
+);
+
+function scrollToCurrentTerm() {
+  if (!currentTerm.value) return;
+  const currentTermEl = document.getElementById(`term-${currentTerm.value.id}`);
+  if (!currentTermEl) return;
+  currentTermEl.scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+    inline: "center",
   });
-});
+}
+
+const filteredInstructors = computed(() =>
+  allInstructors.value.filter(
+    (instructor) =>
+      isIncludedInstructorAppointment(instructor) &&
+      hasInstructorTaughtCourseMatchingFilters(instructor) &&
+      (filters.search === "" ||
+        doesInstructorNameMatchSearchTerm(instructor, filters.search) ||
+        hasInstructorTaughtCourseMatchingSearchTerm(instructor)),
+  ),
+);
+
+function doesInstructorNameMatchSearchTerm(
+  instructor: Instructor,
+  searchTerm: string,
+) {
+  return (
+    instructor.surName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    instructor.givenName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+}
+
+function getFilteredCoursesForInstructorPerTerm(instructorId: number) {
+  const courses = getCoursesForInstructorPerTerm(instructorId);
+  return courses.map((termCourses) => {
+    return termCourses.filter(doesCourseMatchFilter);
+  });
+}
 
 function sortEntriesByKey(
   a: [key: string, value: unknown],
@@ -198,27 +265,32 @@ function isIncludedInstructorAppointment(instructor: Instructor) {
   return !filters.excludedInstAppointments.has(instructor.academicAppointment);
 }
 
-function hasTaughtCourseMatchingFilters(instructor: Instructor) {
+function doesCourseMatchFilter(course: Course) {
+  return (
+    // course type is not excluded (i.e. included)
+    !filters.excludedCourseTypes.has(course.courseType) &&
+    // course level is not excluded (i.e. included)
+    !filters.excludedCourseLevels.has(course.courseLevel)
+  );
+}
+
+function hasInstructorTaughtCourseMatchingSearchTerm(instructor: Instructor) {
+  // get a flat list of all the courses this instructor has taught
+  return (
+    getCoursesForInstructorPerTerm(instructor.id)
+      .flat()
+      // then check if any course matches our search term
+      .some((course) => doesCourseMatchSearchTerm(course, filters.search))
+  );
+}
+
+function hasInstructorTaughtCourseMatchingFilters(instructor: Instructor) {
   // get a flat list of all the courses this instructor has taught
   return (
     getCoursesForInstructorPerTerm(instructor.id)
       .flat()
       // then check if any course matches our filters
-      .some((course) => {
-        return (
-          // course type is not excluded (i.e. included)
-          !filters.excludedCourseTypes.has(course.courseType) &&
-          // course level is not excluded (i.e. included)
-          !filters.excludedCourseLevels.has(course.courseLevel)
-        );
-      })
-  );
-}
-
-function isSearchEmptyOrMatchesInstructor(instructor: Instructor) {
-  return (
-    filters.search === "" ||
-    instructor.displayName.toLowerCase().includes(filters.search.toLowerCase())
+      .some(doesCourseMatchFilter)
   );
 }
 
