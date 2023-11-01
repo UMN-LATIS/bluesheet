@@ -15,10 +15,6 @@
           }"
         >
           {{ term.name }}
-          <Spinner
-            v-if="isTermLoaded(term.id)"
-            class="tw-text-neutral-300 tw-h-4 tw-w-4"
-          />
         </Th>
       </tr>
     </template>
@@ -38,7 +34,6 @@ import { Table, Th } from "@/components/Table";
 import CourseTableRow from "./CourseTableRow.vue";
 import {
   Term,
-  Course,
   Leave,
   LoadState,
   Instructor,
@@ -47,24 +42,15 @@ import {
 } from "@/types";
 import Spinner from "@/components/Spinner.vue";
 
-const props = defineProps<{
+defineProps<{
   terms: Term[];
   courses: TimelessCourse[];
   currentTerm: Term | null;
-  termLoadState: Map<Term["id"], LoadState>;
   getLeavesForInstructorPerTerm: (instructorId: number) => Leave[][];
   getInstructorsForCoursePerTerm: (
     courseShortCode: CourseShortCode,
   ) => Instructor[][];
   search: string;
 }>();
-
-function isTermLoaded(termId: number) {
-  const termLoadState = props.termLoadState.get(termId);
-  if (!termLoadState) {
-    throw new Error(`Term load state not found for term ${termId}`);
-  }
-  return ["idle", "loading"].includes(termLoadState);
-}
 </script>
 <style scoped></style>

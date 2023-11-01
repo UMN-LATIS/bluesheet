@@ -7,16 +7,12 @@ import type {
   Instructor,
   Term,
   CourseShortCode,
-  TimelessCourse,
-  Leave,
   LoadState,
 } from "@/types";
 import pMap from "p-map";
-import { uniqBy } from "lodash";
-import { dayjs } from "@/utils";
 
-type CoursesByInstructorAndTermKey = `${Instructor["id"]}-${Term["id"]}`;
-type InstructorsByCourseAndTermKey = `${CourseShortCode}-${Term["id"]}`;
+export type CoursesByInstructorAndTermKey = `${Instructor["id"]}-${Term["id"]}`;
+export type InstructorsByCourseAndTermKey = `${CourseShortCode}-${Term["id"]}`;
 
 export type CoursesByInstructorTermMap = Map<
   CoursesByInstructorAndTermKey,
@@ -26,48 +22,6 @@ export type InstructorsByCourseTermMap = Map<
   InstructorsByCourseAndTermKey,
   Instructor[]
 >;
-
-function toTimelessCourse(course: Course): TimelessCourse {
-  return {
-    shortCode: `${course.subject}-${course.catalogNumber}`,
-    subject: course.subject,
-    catalogNumber: course.catalogNumber,
-    title: course.title,
-    courseType: course.courseType,
-    courseLevel: course.courseLevel,
-  };
-}
-
-function sortByName(
-  a: { surName: string; givenName: string },
-  b: { surName: string; givenName: string },
-): number {
-  return (
-    a.surName.localeCompare(b.surName) || a.givenName.localeCompare(b.givenName)
-  );
-}
-
-/**
- * for a given term, get the list of leaves for the instructor
- */
-function selectInstructorTermLeaves(
-  instructor: Instructor,
-  term: Term,
-): Leave[] {
-  return (
-    instructor.leaves?.filter((leave) => {
-      const leaveStart = dayjs(leave.start_date);
-      const leaveEnd = dayjs(leave.end_date);
-      const termStart = dayjs(term.startDate);
-      const termEnd = dayjs(term.endDate);
-
-      return (
-        termStart.isBetween(leaveStart, leaveEnd, "day", "[]") ||
-        termEnd.isBetween(leaveStart, leaveEnd, "day", "[]")
-      );
-    }) ?? []
-  );
-}
 
 async function fetchCoursesAndInstructorsForTerm(
   groupId: Group["id"],
@@ -106,7 +60,7 @@ async function fetchCoursesAndInstructorsForTerm(
 }
 
 export function useGroupCourseHistory(groupId: Group["id"]) {
-  const { terms, termLookup, currentTerm } = useTerms();
+  const { terms } = useTerms();
 
   const instructorsByCourseTermMap = ref<
     Map<InstructorsByCourseAndTermKey, Instructor[]>
@@ -115,57 +69,6 @@ export function useGroupCourseHistory(groupId: Group["id"]) {
   const coursesByInstructorTermMap = ref<
     Map<CoursesByInstructorAndTermKey, Course[]>
   >(new Map());
-
-  const allInstructors = computed(() => {
-    const instructors = [...instructorsByCourseTermMap.value.values()].flat();
-    // remove duplicates
-    return uniqBy(instructors, "id").sort(sortByName);
-  });
-
-  const instructorLookup = computed(() => {
-    const lookup = new Map<Instructor["id"], Instructor>();
-    allInstructors.value.forEach((instructor) => {
-      lookup.set(instructor.id, instructor);
-    });
-    return lookup;
-  });
-
-  const allCourses = computed(() => {
-    const courses: TimelessCourse[] = [
-      ...coursesByInstructorTermMap.value.values(),
-    ]
-      .flat()
-      .map(toTimelessCourse);
-    // remove duplicates
-    return uniqBy(courses, "shortCode");
-  });
-
-  const instructorAppointmentTypesMap = computed(() => {
-    const map = new Map<Instructor["academicAppointment"], number>();
-    allInstructors.value.forEach((instructor) => {
-      const count = map.get(instructor.academicAppointment) ?? 0;
-      map.set(instructor.academicAppointment, count + 1);
-    });
-    return map;
-  });
-
-  const courseTypesMap = computed(() => {
-    const map = new Map<Course["courseType"], number>();
-    allCourses.value.forEach((course) => {
-      const count = map.get(course.courseType) ?? 0;
-      map.set(course.courseType, count + 1);
-    });
-    return map;
-  });
-
-  const courseLevelsMap = computed(() => {
-    const map = new Map<Course["courseLevel"], number>();
-    allCourses.value.forEach((course) => {
-      const count = map.get(course.courseLevel) ?? 0;
-      map.set(course.courseLevel, count + 1);
-    });
-    return map;
-  });
 
   const termLoadState = ref<Map<Term["id"], LoadState>>(new Map());
 
@@ -183,8 +86,11 @@ export function useGroupCourseHistory(groupId: Group["id"]) {
   });
 
   watch(
-    terms,
     () => {
+      return terms.value.map((term) => term.id).join(",");
+    },
+    () => {
+      console.log("terms changed", terms.value);
       if (!terms.value.length) {
         console.log("useGroupCourseHistory: no terms found");
         return;
@@ -198,10 +104,6 @@ export function useGroupCourseHistory(groupId: Group["id"]) {
       pMap(
         terms.value,
         async (term) => {
-          console.log(
-            "useGroupCourseHistory: fetching courses for term",
-            term.id,
-          );
           try {
             termLoadState.value.set(term.id, "loading");
             const {
@@ -236,55 +138,9 @@ export function useGroupCourseHistory(groupId: Group["id"]) {
   );
 
   return {
-    // terms
-    terms,
-    termLookup,
-    currentTerm,
-
-    // instructors
-    allInstructors,
-    instructorLookup,
     instructorsByCourseTermMap,
-
-    //courses
-    allCourses,
     coursesByInstructorTermMap,
-
-    // stats for filters
-    courseLevelsMap,
-    courseTypesMap,
-    instructorAppointmentTypesMap,
-
-    // load state
     termLoadState,
     isLoadingComplete,
-
-    // getters
-    getCoursesForInstructorPerTerm(instructorId: Instructor["id"]) {
-      return terms.value.map((term) => {
-        const key =
-          `${instructorId}-${term.id}` as CoursesByInstructorAndTermKey;
-        return coursesByInstructorTermMap.value.get(key) ?? [];
-      });
-    },
-
-    getLeavesForInstructorPerTerm(instructorId: Instructor["id"]) {
-      const instructor = instructorLookup.value.get(instructorId);
-      if (!instructor) {
-        throw new Error(`Cannot find instructor with id: ${instructorId}`);
-      }
-
-      return terms.value.map((term) =>
-        selectInstructorTermLeaves(instructor, term),
-      );
-    },
-
-    getInstructorsForCoursePerTerm(courseShortCode: CourseShortCode) {
-      return terms.value.map((term) => {
-        const key =
-          `${courseShortCode}-${term.id}` as InstructorsByCourseAndTermKey;
-        return instructorsByCourseTermMap.value.get(key) ?? [];
-      });
-    },
   };
 }

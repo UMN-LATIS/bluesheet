@@ -8,6 +8,7 @@ const MAX_TERM_DATE = dayjs().add(3, "year").format("YYYY-MM-DD");
 let termsCache: Term[] = [];
 
 async function fetchTerms(): Promise<Term[]> {
+  console.log("fetchTerms");
   if (termsCache.length > 0) {
     return termsCache;
   }
@@ -32,20 +33,18 @@ function getCurrentTerm(terms: Term[]): Term | null {
   return currentTerm ?? null;
 }
 
-let isFetching = false;
 export function useTerms() {
   const termLookup = ref<Map<Term["id"], Term>>(new Map());
-  const terms = computed(() => [...termLookup.value.values()]);
+  const terms = computed(() => {
+    const result = [...termLookup.value.values()];
+    console.log("terms computed", result);
+    return result;
+  });
 
-  if (!isFetching) {
-    isFetching = true;
-    fetchTerms().then((theTerms) => {
-      for (const term of theTerms) {
-        termLookup.value.set(term.id, term);
-      }
-      isFetching = false;
-    });
-  }
+  fetchTerms().then((theTerms) => {
+    const entries = theTerms.map((term) => [term.id, term]) as [number, Term][];
+    termLookup.value = new Map(entries);
+  });
 
   return {
     terms,

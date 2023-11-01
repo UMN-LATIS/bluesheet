@@ -173,7 +173,6 @@
         :currentTerm="currentTerm"
         :getLeavesForInstructorPerTerm="getLeavesForInstructorPerTerm"
         :getCoursesForInstructorPerTerm="getFilteredCoursesForInstructorPerTerm"
-        :termLoadState="termLoadState"
         :search="filters.search"
       />
       <CourseTable
@@ -183,7 +182,6 @@
         :currentTerm="currentTerm"
         :getLeavesForInstructorPerTerm="getLeavesForInstructorPerTerm"
         :getInstructorsForCoursePerTerm="getInstructorsForCoursePerTerm"
-        :termLoadState="termLoadState"
         :search="filters.search"
       />
     </div>
@@ -193,37 +191,37 @@
 <script setup lang="ts">
 import WideLayout from "@/layouts/WideLayout.vue";
 import { useGroup } from "@/composables/useGroup";
-import { useGroupCourseHistory } from "@/composables/useGroupCourseHistory";
 import InstructorTable from "./InstructorTable.vue";
-// import SelectGroup from "@/components/SelectGroup.vue";
 import Button from "@/components/Button.vue";
 import { reactive, ref, watch, computed } from "vue";
 import debounce from "lodash-es/debounce";
 import { Course, Instructor } from "@/types";
-// import Spinner from "@/components/Spinner.vue";
 import { doesCourseMatchSearchTerm } from "./doesCourseMatchSearchTerm";
 import CourseTable from "./CourseTable.vue";
+import { useGroupInstructors } from "@/composables/useGroupInstructors";
+import { useGroupCourses } from "@/composables/useGroupCourses";
+import { useTerms } from "@/composables/useTerms";
 
 const props = defineProps<{
   groupId: number;
 }>();
 
 const group = useGroup(props.groupId);
+const { terms, currentTerm } = useTerms();
 const {
-  terms,
-  currentTerm,
-  allInstructors,
-  coursesByInstructorTermMap,
-  getInstructorsForCoursePerTerm,
-  allCourses,
-  termLoadState,
-  courseLevelsMap,
-  courseTypesMap,
-  instructorAppointmentTypesMap,
   isLoadingComplete,
   getLeavesForInstructorPerTerm,
+  instructorAppointmentTypesMap,
+  allInstructors,
+  getInstructorsForCoursePerTerm,
+} = useGroupInstructors(props.groupId);
+
+const {
+  allCourses,
+  courseLevelsMap,
+  courseTypesMap,
   getCoursesForInstructorPerTerm,
-} = useGroupCourseHistory(props.groupId);
+} = useGroupCourses(props.groupId);
 
 const filters = reactive({
   // startTermId: "",
