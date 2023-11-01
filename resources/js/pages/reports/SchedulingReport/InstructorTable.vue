@@ -5,22 +5,12 @@
     :stickyHeader="true"
   >
     <template #thead>
-      <tr>
-        <Th class="instructor-column">Instructor</Th>
-        <Th
-          v-for="term in terms"
-          :id="`term-${term.id}`"
-          :key="term.id"
-          class="tw-whitespace-nowrap term-header-column"
-          :class="{
-            '!tw-bg-amber-100 !tw-border-amber-300 term-header-column--is-current-term':
-              term.id === currentTerm?.id,
-            'term-header-column--is-fall-term': term.name.includes('Fall'),
-          }"
-        >
-          {{ term.name }}
-        </Th>
-      </tr>
+      <ReportTableHeaderRow
+        :label="label"
+        :terms="terms"
+        :currentTerm="currentTerm"
+        :termLoadStateMap="termLoadStateMap"
+      />
     </template>
     <InstructorTableRow
       v-for="instructor in instructors"
@@ -37,13 +27,15 @@
 <script setup lang="ts">
 import { Table, Th } from "@/components/Table";
 import InstructorTableRow from "./InstructorTableRow.vue";
-import { Term, Instructor, Leave, Course } from "@/types";
-import Spinner from "@/components/Spinner.vue";
+import { Term, Instructor, Leave, Course, LoadState } from "@/types";
+import ReportTableHeaderRow from "./ReportTableHeaderRow.vue";
 
 defineProps<{
+  label: string;
   terms: Term[];
   instructors: Instructor[];
   currentTerm: Term | null;
+  termLoadStateMap: Map<Term["id"], LoadState>;
   getLeavesForInstructorPerTerm: (instructorId: number) => Leave[][];
   getCoursesForInstructorPerTerm: (instructorId: number) => Course[][];
   search: string;

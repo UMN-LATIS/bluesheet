@@ -1,22 +1,12 @@
 <template>
   <Table :stickyHeader="true" :stickyFirstColumn="true">
     <template #thead>
-      <tr>
-        <Th class="course-column">Course</Th>
-        <Th
-          v-for="term in terms"
-          :id="`term-${term.id}`"
-          :key="term.id"
-          class="tw-whitespace-nowrap term-header-column"
-          :class="{
-            '!tw-bg-amber-100 !tw-border-amber-300 term-header-column--is-current-term':
-              term.id === currentTerm?.id,
-            'term-header-column--is-fall-term': term.name.includes('Fall'),
-          }"
-        >
-          {{ term.name }}
-        </Th>
-      </tr>
+      <ReportTableHeaderRow
+        :label="`Courses`"
+        :terms="terms"
+        :currentTerm="currentTerm"
+        :termLoadStateMap="termLoadStateMap"
+      />
     </template>
     <CourseTableRow
       v-for="course in courses"
@@ -30,7 +20,7 @@
   </Table>
 </template>
 <script setup lang="ts">
-import { Table, Th } from "@/components/Table";
+import { Table } from "@/components/Table";
 import CourseTableRow from "./CourseTableRow.vue";
 import {
   Term,
@@ -40,7 +30,7 @@ import {
   TimelessCourse,
   CourseShortCode,
 } from "@/types";
-import Spinner from "@/components/Spinner.vue";
+import ReportTableHeaderRow from "./ReportTableHeaderRow.vue";
 
 defineProps<{
   terms: Term[];
@@ -51,6 +41,7 @@ defineProps<{
     courseShortCode: CourseShortCode,
   ) => Instructor[][];
   search: string;
+  termLoadStateMap: Map<Term["id"], LoadState>;
 }>();
 </script>
 <style scoped></style>

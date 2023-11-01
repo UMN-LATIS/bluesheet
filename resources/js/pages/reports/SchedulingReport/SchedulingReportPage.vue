@@ -162,27 +162,38 @@
         </div>
       </Transition> -->
       <InstructorTable
-        v-if="['instructors', 'tas'].includes(activeTab)"
+        v-show="activeTab === 'instructors'"
         ref="tableRef"
+        :label="`Instructors`"
         :terms="terms"
-        :instructors="
-          activeTab === 'instructors'
-            ? filteredPrimaryInstructors
-            : filteredTeachingAssistants
-        "
+        :instructors="filteredPrimaryInstructors"
         :currentTerm="currentTerm"
         :getLeavesForInstructorPerTerm="getLeavesForInstructorPerTerm"
         :getCoursesForInstructorPerTerm="getFilteredCoursesForInstructorPerTerm"
         :search="filters.search"
+        :termLoadStateMap="termLoadStateMap"
+      />
+      <InstructorTable
+        v-show="activeTab === 'tas'"
+        ref="tableRef"
+        :label="`Teaching Assistants`"
+        :terms="terms"
+        :instructors="filteredTeachingAssistants"
+        :currentTerm="currentTerm"
+        :getLeavesForInstructorPerTerm="getLeavesForInstructorPerTerm"
+        :getCoursesForInstructorPerTerm="getFilteredCoursesForInstructorPerTerm"
+        :search="filters.search"
+        :termLoadStateMap="termLoadStateMap"
       />
       <CourseTable
-        v-if="activeTab === 'courses'"
+        v-show="activeTab === 'courses'"
         :terms="terms"
         :courses="allCourses"
         :currentTerm="currentTerm"
         :getLeavesForInstructorPerTerm="getLeavesForInstructorPerTerm"
         :getInstructorsForCoursePerTerm="getInstructorsForCoursePerTerm"
         :search="filters.search"
+        :termLoadStateMap="termLoadStateMap"
       />
     </div>
   </WideLayout>
@@ -225,6 +236,7 @@ const {
   allCourses,
   courseLevelsMap,
   courseTypesMap,
+  termLoadStateMap,
 } = storeToRefs(groupCourseHistoryStore);
 
 const {

@@ -98,13 +98,11 @@ async function fetchCoursesAndInstructorsForTerm(
 }
 
 const useStore = defineStore("groupCourseHistory", () => {
-  console.log("groupCourseHistory store created");
-
   const state = {
     groupId: ref<Group["id"] | null>(null),
     instructorsByCourseTermMap: ref<InstructorsByCourseTermMap>(new Map()),
     coursesByInstructorTermMap: ref<CoursesByInstructorTermMap>(new Map()),
-    termLoadState: ref<Map<Term["id"], LoadState>>(new Map()),
+    termLoadStateMap: ref<Map<Term["id"], LoadState>>(new Map()),
   };
 
   const getters = {
@@ -126,7 +124,7 @@ const useStore = defineStore("groupCourseHistory", () => {
       return (
         terms.value.length > 0 &&
         terms.value.every((term) => {
-          const loadState = state.termLoadState.value.get(term.id);
+          const loadState = state.termLoadStateMap.value.get(term.id);
           if (!loadState) {
             return false;
           }
@@ -190,6 +188,8 @@ const useStore = defineStore("groupCourseHistory", () => {
 
   const actions = {
     async init(groupId: Group["id"]) {
+      actions.resetState();
+
       state.groupId.value = groupId;
       const termsStore = useTermsStore();
       const { terms } = storeToRefs(termsStore);
@@ -204,7 +204,7 @@ const useStore = defineStore("groupCourseHistory", () => {
           if (!terms.value.length) return;
           // initialize the load state
           terms.value.forEach((term) => {
-            state.termLoadState.value.set(term.id, "idle");
+            state.termLoadStateMap.value.set(term.id, "idle");
           });
 
           pMap(
@@ -214,7 +214,7 @@ const useStore = defineStore("groupCourseHistory", () => {
                 throw new Error("Cannot initialize without a `groupId`");
               }
               try {
-                state.termLoadState.value.set(term.id, "loading");
+                state.termLoadStateMap.value.set(term.id, "loading");
                 const {
                   coursesByInstructorAndTermMap,
                   instructorsByCourseAndTermMap,
@@ -233,9 +233,9 @@ const useStore = defineStore("groupCourseHistory", () => {
                   ...instructorsByCourseAndTermMap,
                 ]);
               } catch (e) {
-                state.termLoadState.value.set(term.id, "error");
+                state.termLoadStateMap.value.set(term.id, "error");
               } finally {
-                state.termLoadState.value.set(term.id, "complete");
+                state.termLoadStateMap.value.set(term.id, "complete");
               }
             },
             { concurrency: 5 },
@@ -274,6 +274,12 @@ const useStore = defineStore("groupCourseHistory", () => {
       return terms.value.map((term) =>
         selectInstructorTermLeaves(instructor, term),
       );
+    },
+    resetState() {
+      state.groupId.value = null;
+      state.instructorsByCourseTermMap.value = new Map();
+      state.coursesByInstructorTermMap.value = new Map();
+      state.termLoadStateMap.value = new Map();
     },
   };
 
