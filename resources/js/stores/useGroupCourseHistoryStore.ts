@@ -310,10 +310,14 @@ const useStore = defineStore("groupCourseHistory", () => {
       const termsStore = useTermsStore();
       const { terms } = storeToRefs(termsStore);
 
-      watch(terms, () => {
-        if (!terms.value.length) return;
-        actions.setDefaultStartAndEndTerms(terms.value);
-      });
+      watch(
+        terms,
+        () => {
+          if (!terms.value.length) return;
+          actions.setDefaultStartAndEndTerms(terms.value);
+        },
+        { immediate: true },
+      );
 
       watch(
         getters.termsInRange,
