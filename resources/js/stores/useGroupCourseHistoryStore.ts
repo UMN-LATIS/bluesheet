@@ -139,7 +139,10 @@ const useStore = defineStore("groupCourseHistory", () => {
         .flat()
         .map(toTimelessCourse);
       // remove duplicates
-      return uniqBy(courses, "shortCode");
+      return uniqBy(courses, "shortCode").sort((a, b) => {
+        // sort by course code
+        return a.shortCode.localeCompare(b.shortCode);
+      });
     }),
     courseTypesMap: computed(() => {
       const map = new Map<Course["courseType"], number>();
@@ -250,7 +253,11 @@ const useStore = defineStore("groupCourseHistory", () => {
       return terms.value.map((term) => {
         const key =
           `${instructorId}-${term.id}` as CoursesByInstructorAndTermKey;
-        return state.coursesByInstructorTermMap.value.get(key) ?? [];
+        return (
+          state.coursesByInstructorTermMap.value
+            .get(key)
+            ?.sort((a, b) => a.shortCode.localeCompare(b.shortCode)) ?? []
+        );
       });
     },
     getInstructorsForCoursePerTerm(courseShortCode: CourseShortCode) {
@@ -259,7 +266,10 @@ const useStore = defineStore("groupCourseHistory", () => {
       return terms.value.map((term) => {
         const key =
           `${courseShortCode}-${term.id}` as InstructorsByCourseAndTermKey;
-        return state.instructorsByCourseTermMap.value.get(key) ?? [];
+        return (
+          state.instructorsByCourseTermMap.value.get(key)?.sort(sortByName) ??
+          []
+        );
       });
     },
 

@@ -14,7 +14,6 @@
       :course="course"
       :terms="terms"
       :listOfTermInstructors="getInstructorsForCoursePerTerm(course.shortCode)"
-      :getLeavesForInstructorPerTerm="getLeavesForInstructorPerTerm"
       :currentTerm="currentTerm"
       :search="search"
     />

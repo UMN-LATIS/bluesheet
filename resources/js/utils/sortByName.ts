@@ -2,7 +2,8 @@ export function sortByName(
   a: { surName: string; givenName: string },
   b: { surName: string; givenName: string },
 ): number {
-  return (
-    a.surName.localeCompare(b.surName) || a.givenName.localeCompare(b.givenName)
-  );
+  if (a.surName === b.surName) {
+    return a.givenName.localeCompare(b.givenName);
+  }
+  return a.surName.localeCompare(b.surName);
 }
