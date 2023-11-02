@@ -12,7 +12,7 @@
       :leavesPerTerm="leavesPerTerm"
       :terms="terms"
       :currentTerm="currentTerm"
-      :sticky="true"
+      :sticky="false"
     />
     <CourseTableCourseRow
       v-for="course in courses"
