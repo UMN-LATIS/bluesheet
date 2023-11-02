@@ -207,7 +207,7 @@
         :termLoadStateMap="termLoadStateMap"
       />
       <CourseTable
-        v-if="activeTab === 'courses'"
+        v-show="activeTab === 'courses'"
         :terms="groupCourseHistoryStore.termsInRange"
         :courses="allCourses"
         :currentTerm="currentTerm"
