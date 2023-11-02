@@ -42,21 +42,12 @@
           {{ leave.description }} ({{ leave.type }})
         </LeaveChip>
       </div>
-      <div v-for="course in termCourses" :key="course.classNumber">
-        <div
-          class="tw-my-1 tw-px-1"
-          :class="{
-            'tw-opacity-50 tw-line-through': course.cancelled,
-            'tw-bg-yellow-100':
-              search.length && doesCourseNumberMatchSearchTerm(course, search),
-          }"
-        >
-          {{ course.subject }} {{ course.catalogNumber }}
-          <span class="tw-text-xs tw-text-neutral-400">
-            {{ course.enrollmentTotal }}/{{ course.enrollmentCap }}
-          </span>
-        </div>
-      </div>
+      <CourseDetails
+        v-for="course in termCourses"
+        :key="course.classNumber"
+        :course="course"
+        :search="search"
+      />
     </Td>
   </tr>
 </template>
@@ -64,8 +55,8 @@
 import { Td } from "@/components/Table";
 import LeaveChip from "@/components/LeaveChip.vue";
 import { Instructor, Term, Leave, Course } from "@/types";
-import { doesCourseNumberMatchSearchTerm } from "./doesCourseMatchSearchTerm";
 import { doesInstructorNameMatchSearchTerm } from "./doesInstructorNameMatchSearchTerm";
+import CourseDetails from "./CourseDetails.vue";
 
 defineProps<{
   instructor: Instructor;
