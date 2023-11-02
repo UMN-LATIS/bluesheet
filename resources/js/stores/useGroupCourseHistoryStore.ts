@@ -198,7 +198,6 @@ const useStore = defineStore("groupCourseHistory", () => {
     }),
 
     allInstructors: computed((): Instructor[] => {
-      console.log("allInstructors computed");
       const instructors = [
         ...state.instructorsByCourseTermMap.value.values(),
       ].flat();
@@ -227,12 +226,6 @@ const useStore = defineStore("groupCourseHistory", () => {
 
     termsInRange: computed((): Term[] => {
       const allTerms = getters.allTerms;
-
-      console.log("termsInRange computed", {
-        allTerms: allTerms.value,
-        startTermId: state.startTermId.value,
-        endTermId: state.endTermId.value,
-      });
 
       if (!allTerms.value.length) {
         return [];
@@ -268,7 +261,6 @@ const useStore = defineStore("groupCourseHistory", () => {
         endTerm.endDate,
         allTerms.value,
       ).sort(sortByTermDateAsc) as Term[];
-      console.log({ termsInRange });
       return termsInRange;
     }),
 

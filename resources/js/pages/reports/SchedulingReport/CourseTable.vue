@@ -29,13 +29,7 @@
 import { Table } from "@/components/Table";
 import CourseTableCourseRow from "./CourseTableCourseRow.vue";
 import CourseTableLeavesRow from "./CourseTableLeavesRow.vue";
-import {
-  Term,
-  Leave,
-  LoadState,
-  TimelessCourse,
-  CourseShortCode,
-} from "@/types";
+import { Term, LoadState, TimelessCourse, CourseShortCode } from "@/types";
 import ReportTableHeaderRow from "./ReportTableHeaderRow.vue";
 import {
   InstructorWithCourse,

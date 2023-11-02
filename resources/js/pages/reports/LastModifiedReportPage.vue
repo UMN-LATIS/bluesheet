@@ -160,7 +160,6 @@ export default {
     flattenBranch: function (branch) {
       var resultArray = [];
       resultArray.push(branch.id);
-      console.log(branch);
       if (branch.children) {
         branch.children.forEach((child) => {
           resultArray.push(this.flattenBranch(child));

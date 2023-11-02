@@ -288,7 +288,6 @@ const tableRef = ref<HTMLElement>();
 watch(
   isLoadingComplete,
   () => {
-    console.log("scrolling to current term", currentTerm.value);
     scrollToCurrentTerm();
   },
   { immediate: true },
