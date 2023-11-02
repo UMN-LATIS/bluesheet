@@ -15,7 +15,7 @@
         'term-data-column--fall': terms[index].name.includes('Fall'),
       }"
     >
-      <div class="tw-flex tw-flex-col tw-gap-1">
+      <div class="leaves-container tw-flex tw-flex-col tw-gap-1">
         <LeaveChip
           v-for="leave in leaves"
           :key="leave.id"
@@ -74,5 +74,10 @@ withDefaults(
   z-index: 1;
   background: #fff;
   border-bottom: 2px solid #eee;
+}
+
+.course-table-leaves-row--sticky .leaves-container {
+  max-height: 9rem;
+  overflow-y: auto;
 }
 </style>
