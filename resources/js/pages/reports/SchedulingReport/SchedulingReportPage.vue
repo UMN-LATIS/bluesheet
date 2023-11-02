@@ -111,7 +111,24 @@
       </div>
     </section>
 
-    <div class="tw-flex tw-justify-end">
+    <div class="tw-flex tw-justify-between tw-flex-wrap tw-items-baseline">
+      <Tabs
+        class="tw-mt-4"
+        :tabs="[
+          {
+            id: 'instructors',
+            name: 'Instructors',
+            current: activeTab === 'instructors',
+          },
+          {
+            id: 'tas',
+            name: 'Teaching Assistants',
+            current: activeTab === 'tas',
+          },
+          { id: 'courses', name: 'Courses', current: activeTab === 'courses' },
+        ]"
+        @change="handleTabChange"
+      />
       <label
         class="tw-border tw-border-umn-neutral-200 tw-max-w-xs tw-w-full tw-rounded-md !tw-block"
       >
@@ -125,32 +142,6 @@
       </label>
     </div>
 
-    <div>
-      <Button
-        class="tab-button"
-        :class="{
-          'tab-button--active': activeTab === 'instructors',
-        }"
-        @click="activeTab = 'instructors'"
-        >Instructors</Button
-      >
-      <Button
-        class="tab-button"
-        :class="{
-          'tab-button--active': activeTab === 'tas',
-        }"
-        @click="activeTab = 'tas'"
-        >Teaching Assistants</Button
-      >
-      <Button
-        class="tab-button"
-        :class="{
-          'tab-button--active': activeTab === 'courses',
-        }"
-        @click="activeTab = 'courses'"
-        >Courses</Button
-      >
-    </div>
     <div class="tw-relative tw-min-h-[8em] tw-overflow-hidden">
       <!-- <Transition name="fade">
         <div
@@ -211,6 +202,7 @@ import CourseTable from "./CourseTable.vue";
 import { useGroupCourseHistoryStore } from "@/stores/useGroupCourseHistoryStore";
 import { storeToRefs } from "pinia";
 import * as api from "@/api";
+import Tabs, { type Tab } from "@/components/Tabs.vue";
 
 const props = defineProps<{
   groupId: number;
@@ -408,6 +400,10 @@ function toggleAllCourseLevels() {
 
   // otherwise select all (i.e. clear the set)
   filters.excludedCourseLevels.clear();
+}
+
+function handleTabChange(tab: Tab) {
+  activeTab.value = tab.id as typeof activeTab.value;
 }
 </script>
 <style scoped lang="scss">
