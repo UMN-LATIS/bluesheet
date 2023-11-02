@@ -294,7 +294,9 @@ const useStore = defineStore("groupCourseHistory", () => {
 // automatically initialize a store for a given group
 export const useGroupCourseHistoryStore = (groupId: Group["id"]) => {
   const store = useStore();
-  store.init(groupId);
+  if (store.groupId !== groupId) {
+    store.init(groupId);
+  }
 
   return store;
 };

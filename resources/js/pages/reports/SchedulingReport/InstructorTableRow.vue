@@ -29,7 +29,7 @@
       class="term-data-column"
       :class="{
         'term-data-column--current': currentTerm?.id === terms[index].id,
-        'term-data-column--fall': isFallTerm(terms[index]),
+        'term-data-column--fall': terms[index].name.includes('Fall'),
       }"
     >
       <div class="leaves tw-flex tw-flex-col tw-gap-1 tw-mb-2">
@@ -75,10 +75,6 @@ defineProps<{
   listOfTermLeaves: Leave[][];
   currentTerm: Term | null;
 }>();
-
-function isFallTerm(term: Term) {
-  return term.name.includes("Fall");
-}
 </script>
 <style scoped>
 .term-data-column.term-data-column--current {

@@ -14,6 +14,7 @@
       :course="course"
       :terms="terms"
       :listOfTermInstructors="getInstructorsForCoursePerTerm(course.shortCode)"
+      :getLeavesForInstructorPerTerm="getLeavesForInstructorPerTerm"
       :currentTerm="currentTerm"
       :search="search"
     />
@@ -44,4 +45,17 @@ defineProps<{
   termLoadStateMap: Map<Term["id"], LoadState>;
 }>();
 </script>
-<style scoped></style>
+<style scoped>
+.term-data-column.term-data-column--current {
+  background: #fffcf0;
+  border-top: 1px solid #fde68a;
+}
+
+.term-data-column.term-data-column--current.term-data-column--fall {
+  border-left: 2px solid #fde68a;
+}
+
+.term-data-column.term-data-column--fall {
+  border-left: 2px solid #f3f3f3;
+}
+</style>

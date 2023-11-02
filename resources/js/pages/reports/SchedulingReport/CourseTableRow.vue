@@ -19,18 +19,18 @@
         'term-data-column--fall': terms[index].name.includes('Fall'),
       }"
     >
-      <div v-for="instructor in termInstructors" :key="instructor.id">
-        {{ instructor.surName }}, {{ instructor.givenName }}
-      </div>
+      <InstructorDetails
+        v-for="instructor in termInstructors"
+        :key="instructor.id"
+        :instructor="instructor"
+      />
     </Td>
   </tr>
 </template>
 <script setup lang="ts">
 import { Td } from "@/components/Table";
-import LeaveChip from "@/components/LeaveChip.vue";
-import { Instructor, Term, Leave, Course, TimelessCourse } from "@/types";
-import { doesCourseNumberMatchSearchTerm } from "./doesCourseMatchSearchTerm";
-import { doesInstructorNameMatchSearchTerm } from "./doesInstructorNameMatchSearchTerm";
+import { Instructor, Term, TimelessCourse } from "@/types";
+import InstructorDetails from "./InstructorDetails.vue";
 
 defineProps<{
   course: TimelessCourse;
@@ -39,10 +39,6 @@ defineProps<{
   listOfTermInstructors: Instructor[][];
   currentTerm: Term | null;
 }>();
-
-function isFallTerm(term: Term) {
-  return term.name.includes("Fall");
-}
 </script>
 <style scoped>
 .term-data-column.term-data-column--current {

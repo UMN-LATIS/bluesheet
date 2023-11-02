@@ -151,7 +151,7 @@
         >Courses</Button
       >
     </div>
-    <div class="tw-relative tw-min-h-[8em]">
+    <div class="tw-relative tw-min-h-[8em] tw-overflow-hidden">
       <!-- <Transition name="fade">
         <div
           v-if="!isLoadingComplete"
@@ -186,7 +186,7 @@
         :termLoadStateMap="termLoadStateMap"
       />
       <CourseTable
-        v-show="activeTab === 'courses'"
+        v-if="activeTab === 'courses'"
         :terms="terms"
         :courses="allCourses"
         :currentTerm="currentTerm"
