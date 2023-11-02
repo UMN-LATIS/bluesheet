@@ -156,16 +156,19 @@ const useStore = defineStore("groupCourseHistory", () => {
     isLoadingComplete: computed(() => {
       const termsStore = useTermsStore();
       const { terms } = storeToRefs(termsStore);
-      return (
-        terms.value.length > 0 &&
-        terms.value.every((term) => {
-          const loadState = state.termLoadStateMap.value.get(term.id);
-          if (!loadState) {
-            return false;
-          }
-          return ["complete", "error"].includes(loadState);
-        })
-      );
+
+      if (!terms.value.length) {
+        return false;
+      }
+
+      // check if all terms in the range have been loaded
+      for (const term of getters.termsInRange.value) {
+        const loadState = state.termLoadStateMap.value.get(term.id);
+        if (!loadState || ["idle", "loading"].includes(loadState)) {
+          return false;
+        }
+      }
+      return true;
     }),
     allCourses: computed(() => {
       const courses: TimelessCourse[] = [
