@@ -111,7 +111,9 @@
       </div>
     </section>
 
-    <div class="tw-flex tw-justify-between tw-flex-wrap tw-items-baseline">
+    <div
+      class="tw-flex tw-justify-between tw-flex-wrap tw-items-baseline gap-2"
+    >
       <Tabs
         class="tw-mt-4"
         :tabs="[

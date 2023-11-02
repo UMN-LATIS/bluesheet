@@ -7,7 +7,7 @@
           :key="tab.name"
           :class="[
             tab.current
-              ? 'tw-bg-blue-100 tw-text-blue-700'
+              ? 'tw-bg-sky-100 tw-text-bs-blue'
               : 'tw-bg-transparent  tw-text-gray-500 hover:tw-text-gray-700',
             'tw-rounded-md tw-px-3 tw-py-2 tw-text-sm tw-font-medium tw-border-none',
           ]"

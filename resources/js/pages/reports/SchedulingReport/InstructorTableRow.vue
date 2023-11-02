@@ -4,7 +4,7 @@
       <RouterLink :to="`/user/${instructor.id}`">
         <div
           :class="{
-            'tw-bg-yellow-100 tw-text-blue-600 ':
+            'tw-bg-yellow-100':
               search.length &&
               doesInstructorNameMatchSearchTerm(instructor, search),
           }"
