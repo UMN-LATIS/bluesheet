@@ -11,7 +11,7 @@
       </div>
     </Td>
     <Td
-      v-for="(termInstructors, index) in listOfTermInstructors"
+      v-for="(termInstructors, index) in instructorsPerTerm"
       :key="index"
       class="term-data-column"
       :class="{
@@ -37,7 +37,7 @@ defineProps<{
   course: TimelessCourse;
   search: string;
   terms: Term[];
-  listOfTermInstructors: InstructorWithCourse[][];
+  instructorsPerTerm: InstructorWithCourse[][];
   currentTerm: Term | null;
 }>();
 </script>

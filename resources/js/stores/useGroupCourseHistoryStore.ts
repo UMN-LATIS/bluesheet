@@ -16,6 +16,7 @@ import { uniqBy } from "lodash-es";
 import { ref, computed, watch } from "vue";
 import { useTermsStore } from "./useTermsStore";
 import { sortByName, dayjs } from "@/utils";
+import { omit } from "lodash";
 
 export type CoursesByInstructorAndTermKey = `${Instructor["id"]}-${Term["id"]}`;
 export type InstructorsByCourseAndTermKey = `${CourseShortCode}-${Term["id"]}`;
@@ -30,6 +31,10 @@ export type InstructorsByCourseTermMap = Map<
 >;
 
 export type InstructorWithCourse = Instructor & { course: Course };
+
+export type LeaveWithInstructor = Leave & {
+  instructor: Omit<Instructor, "leaves">;
+};
 
 function toTimelessCourse(course: Course): TimelessCourse {
   return {
@@ -192,7 +197,7 @@ const useStore = defineStore("groupCourseHistory", () => {
       return map;
     }),
 
-    allInstructors: computed(() => {
+    allInstructors: computed((): Instructor[] => {
       console.log("allInstructors computed");
       const instructors = [
         ...state.instructorsByCourseTermMap.value.values(),
@@ -201,24 +206,26 @@ const useStore = defineStore("groupCourseHistory", () => {
       return uniqBy(instructors, "id").sort(sortByName);
     }),
 
-    instructorLookup: computed(() => {
-      const lookup = new Map<Instructor["id"], Instructor>();
+    instructorLookup: computed((): Map<Instructor["id"], Instructor> => {
+      const lookup = new Map();
       getters.allInstructors.value.forEach((instructor) => {
         lookup.set(instructor.id, instructor);
       });
       return lookup;
     }),
 
-    instructorAppointmentTypesMap: computed(() => {
-      const map = new Map<Instructor["academicAppointment"], number>();
-      getters.allInstructors.value.forEach((instructor) => {
-        const count = map.get(instructor.academicAppointment) ?? 0;
-        map.set(instructor.academicAppointment, count + 1);
-      });
-      return map;
-    }),
+    instructorAppointmentTypesMap: computed(
+      (): Map<Instructor["academicAppointment"], number> => {
+        const map = new Map();
+        getters.allInstructors.value.forEach((instructor) => {
+          const count = map.get(instructor.academicAppointment) ?? 0;
+          map.set(instructor.academicAppointment, count + 1);
+        });
+        return map;
+      },
+    ),
 
-    termsInRange: computed(() => {
+    termsInRange: computed((): Term[] => {
       const allTerms = getters.allTerms;
 
       console.log("termsInRange computed", {
@@ -263,6 +270,35 @@ const useStore = defineStore("groupCourseHistory", () => {
       ).sort(sortByTermDateAsc) as Term[];
       console.log({ termsInRange });
       return termsInRange;
+    }),
+
+    /**
+     * an array of instructor leaves for each term in the range
+     */
+    leavesPerTerm: computed((): LeaveWithInstructor[][] => {
+      const termsInRange = getters.termsInRange.value;
+
+      // for each term
+      return termsInRange.map((term) => {
+        // loop through all instructors and find any relevant leaves
+        // flatten the array since we don't want term-instructor-leaves
+        // and just term-leaves
+        return getters.allInstructors.value.flatMap((instructor) => {
+          const instructorLeavesForThisTerm = selectInstructorTermLeaves(
+            instructor,
+            term,
+          );
+
+          // for each leave, tuck the instructor into the
+          // leave object so that we can use it in the UI
+          return instructorLeavesForThisTerm.map((leave) => {
+            return {
+              ...leave,
+              instructor: omit(instructor, ["leaves"]),
+            };
+          });
+        });
+      });
     }),
   };
 
@@ -348,6 +384,7 @@ const useStore = defineStore("groupCourseHistory", () => {
         { immediate: true },
       );
     },
+
     getCoursesForInstructorPerTerm(instructorId: Instructor["id"]) {
       return getters.termsInRange.value.map((term) => {
         const key =

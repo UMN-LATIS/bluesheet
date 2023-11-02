@@ -211,7 +211,7 @@
         :terms="groupCourseHistoryStore.termsInRange"
         :courses="allCourses"
         :currentTerm="currentTerm"
-        :getLeavesForInstructorPerTerm="getLeavesForInstructorPerTerm"
+        :leavesPerTerm="groupCourseHistoryStore.leavesPerTerm"
         :getInstructorsForCoursePerTerm="getInstructorsForCoursePerTerm"
         :search="filters.search"
         :termLoadStateMap="termLoadStateMap"

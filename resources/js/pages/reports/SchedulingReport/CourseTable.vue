@@ -8,12 +8,18 @@
         :termLoadStateMap="termLoadStateMap"
       />
     </template>
-    <CourseTableRow
+    <CourseTableLeavesRow
+      :leavesPerTerm="leavesPerTerm"
+      :terms="terms"
+      :currentTerm="currentTerm"
+      :sticky="true"
+    />
+    <CourseTableCourseRow
       v-for="course in courses"
       :key="course.shortCode"
       :course="course"
       :terms="terms"
-      :listOfTermInstructors="getInstructorsForCoursePerTerm(course.shortCode)"
+      :instructorsPerTerm="getInstructorsForCoursePerTerm(course.shortCode)"
       :currentTerm="currentTerm"
       :search="search"
     />
@@ -21,7 +27,8 @@
 </template>
 <script setup lang="ts">
 import { Table } from "@/components/Table";
-import CourseTableRow from "./CourseTableRow.vue";
+import CourseTableCourseRow from "./CourseTableCourseRow.vue";
+import CourseTableLeavesRow from "./CourseTableLeavesRow.vue";
 import {
   Term,
   Leave,
@@ -30,13 +37,16 @@ import {
   CourseShortCode,
 } from "@/types";
 import ReportTableHeaderRow from "./ReportTableHeaderRow.vue";
-import { InstructorWithCourse } from "@/stores/useGroupCourseHistoryStore";
+import {
+  InstructorWithCourse,
+  LeaveWithInstructor,
+} from "@/stores/useGroupCourseHistoryStore";
 
 defineProps<{
   terms: Term[];
   courses: TimelessCourse[];
   currentTerm: Term | null;
-  getLeavesForInstructorPerTerm: (instructorId: number) => Leave[][];
+  leavesPerTerm: LeaveWithInstructor[][];
   getInstructorsForCoursePerTerm: (
     courseShortCode: CourseShortCode,
   ) => InstructorWithCourse[][];
