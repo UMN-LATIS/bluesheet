@@ -29,14 +29,15 @@
 </template>
 <script setup lang="ts">
 import { Td } from "@/components/Table";
-import { Instructor, Term, TimelessCourse } from "@/types";
+import { Term, TimelessCourse } from "@/types";
 import InstructorDetails from "./InstructorDetails.vue";
+import { InstructorWithCourse } from "@/stores/useGroupCourseHistoryStore";
 
 defineProps<{
   course: TimelessCourse;
   search: string;
   terms: Term[];
-  listOfTermInstructors: Instructor[][];
+  listOfTermInstructors: InstructorWithCourse[][];
   currentTerm: Term | null;
 }>();
 </script>

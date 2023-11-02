@@ -25,8 +25,10 @@ export type CoursesByInstructorTermMap = Map<
 >;
 export type InstructorsByCourseTermMap = Map<
   InstructorsByCourseAndTermKey,
-  Instructor[]
+  InstructorWithCourse[]
 >;
+
+export type InstructorWithCourse = Instructor & { course: Course };
 
 function toTimelessCourse(course: Course): TimelessCourse {
   return {
@@ -79,9 +81,18 @@ async function fetchCoursesAndInstructorsForTerm(
     const existingInstructors =
       instructorsByCourseAndTermMap.get(courseAndTermKey) ?? [];
 
+    // tuck the course into the instructor object so that we can use
+    // specific course info like enrollment or class number
+    const instructorsWithCourse = course.instructors.map((instructor) => {
+      return {
+        ...instructor,
+        course,
+      };
+    });
+
     instructorsByCourseAndTermMap.set(courseAndTermKey, [
       ...existingInstructors,
-      ...course.instructors,
+      ...instructorsWithCourse,
     ]);
     course.instructors.forEach((instructor) => {
       const instructorAndTermKey: CoursesByInstructorAndTermKey = `${instructor.id}-${termId}`;
@@ -260,7 +271,9 @@ const useStore = defineStore("groupCourseHistory", () => {
         );
       });
     },
-    getInstructorsForCoursePerTerm(courseShortCode: CourseShortCode) {
+    getInstructorsForCoursePerTerm(
+      courseShortCode: CourseShortCode,
+    ): InstructorWithCourse[][] {
       const termsStore = useTermsStore();
       const { terms } = storeToRefs(termsStore);
       return terms.value.map((term) => {

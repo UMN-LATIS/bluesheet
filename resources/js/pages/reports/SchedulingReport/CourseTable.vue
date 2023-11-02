@@ -26,11 +26,11 @@ import {
   Term,
   Leave,
   LoadState,
-  Instructor,
   TimelessCourse,
   CourseShortCode,
 } from "@/types";
 import ReportTableHeaderRow from "./ReportTableHeaderRow.vue";
+import { InstructorWithCourse } from "@/stores/useGroupCourseHistoryStore";
 
 defineProps<{
   terms: Term[];
@@ -39,7 +39,7 @@ defineProps<{
   getLeavesForInstructorPerTerm: (instructorId: number) => Leave[][];
   getInstructorsForCoursePerTerm: (
     courseShortCode: CourseShortCode,
-  ) => Instructor[][];
+  ) => InstructorWithCourse[][];
   search: string;
   termLoadStateMap: Map<Term["id"], LoadState>;
 }>();
