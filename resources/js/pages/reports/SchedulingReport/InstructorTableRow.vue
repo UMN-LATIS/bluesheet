@@ -32,7 +32,7 @@
         'term-data-column--fall': terms[index].name.includes('Fall'),
       }"
     >
-      <div class="leaves tw-flex tw-flex-col tw-gap-1 tw-mb-2">
+      <div class="leaves tw-flex tw-flex-col tw-gap-1">
         <LeaveChip
           v-for="leave in listOfTermLeaves[index]"
           :key="leave.id"
