@@ -9,6 +9,7 @@ import type {
   LoadState,
   TimelessCourse,
   Leave,
+  ISODate,
 } from "@/types";
 import pMap from "p-map";
 import { uniqBy } from "lodash-es";
@@ -108,16 +109,34 @@ async function fetchCoursesAndInstructorsForTerm(
   return { coursesByInstructorAndTermMap, instructorsByCourseAndTermMap };
 }
 
+function selectTermsWithinRangeInclusive(
+  startDate: ISODate,
+  endDate: ISODate,
+  terms: Term[],
+) {
+  return terms.filter((term) => {
+    const termStart = dayjs(term.startDate);
+    const termEnd = dayjs(term.endDate);
+    return (
+      termStart.isSameOrAfter(startDate) && termEnd.isSameOrBefore(endDate)
+    );
+  });
+}
+
+const DEFAULT_START_DATE = dayjs().subtract(3, "year").format("YYYY-MM-DD");
+const DEFAULT_END_DATE = dayjs().add(2, "year").format("YYYY-MM-DD");
 const useStore = defineStore("groupCourseHistory", () => {
   const state = {
     groupId: ref<Group["id"] | null>(null),
     instructorsByCourseTermMap: ref<InstructorsByCourseTermMap>(new Map()),
     coursesByInstructorTermMap: ref<CoursesByInstructorTermMap>(new Map()),
     termLoadStateMap: ref<Map<Term["id"], LoadState>>(new Map()),
+    startTermId: ref<Term["id"] | null>(null),
+    endTermId: ref<Term["id"] | null>(null),
   };
 
   const getters = {
-    terms: computed(() => {
+    allTerms: computed(() => {
       const termsStore = useTermsStore();
       const { terms } = storeToRefs(termsStore);
       return terms.value;
@@ -198,6 +217,53 @@ const useStore = defineStore("groupCourseHistory", () => {
       });
       return map;
     }),
+
+    termsInRange: computed(() => {
+      const allTerms = getters.allTerms;
+
+      console.log("termsInRange computed", {
+        allTerms: allTerms.value,
+        startTermId: state.startTermId.value,
+        endTermId: state.endTermId.value,
+      });
+
+      if (!allTerms.value.length) {
+        return [];
+      }
+
+      if (!state.startTermId.value || !state.endTermId.value) {
+        return [];
+      }
+      const startTerm = allTerms.value.find(
+        (term) => term.id === state.startTermId.value,
+      );
+      const endTerm = allTerms.value.find(
+        (term) => term.id === state.endTermId.value,
+      );
+
+      if (!startTerm || !endTerm) {
+        console.error("Could not find start or end term for termsInRange", {
+          startTerm,
+          endTerm,
+          startTermId: state.startTermId.value,
+          endTermId: state.endTermId.value,
+          allTerms,
+        });
+        return [];
+      }
+
+      function sortByTermDateAsc(a: Term, b: Term) {
+        return dayjs(a.startDate).isBefore(dayjs(b.startDate)) ? -1 : 1;
+      }
+
+      const termsInRange = selectTermsWithinRangeInclusive(
+        startTerm.startDate,
+        endTerm.endDate,
+        allTerms.value,
+      ).sort(sortByTermDateAsc) as Term[];
+      console.log({ termsInRange });
+      return termsInRange;
+    }),
   };
 
   const actions = {
@@ -208,25 +274,49 @@ const useStore = defineStore("groupCourseHistory", () => {
       const termsStore = useTermsStore();
       const { terms } = storeToRefs(termsStore);
 
+      watch(terms, () => {
+        if (!terms.value.length) return;
+        actions.setDefaultStartAndEndTerms(terms.value);
+      });
+
       watch(
-        terms,
+        getters.termsInRange,
         () => {
           if (!state.groupId.value) {
             throw new Error("Cannot initialize without a `groupId`");
           }
 
-          if (!terms.value.length) return;
-          // initialize the load state
-          terms.value.forEach((term) => {
+          const termsInRange = getters.termsInRange.value;
+          if (!termsInRange.length) return;
+
+          termsInRange.forEach((term) => {
+            // initialize the load state for terms that haven't already been initialized
+            if (state.termLoadStateMap.value.has(term.id)) return;
             state.termLoadStateMap.value.set(term.id, "idle");
           });
 
           pMap(
-            terms.value,
+            termsInRange,
             async (term) => {
               if (!state.groupId.value) {
                 throw new Error("Cannot initialize without a `groupId`");
               }
+
+              const currentTermLoadState = state.termLoadStateMap.value.get(
+                term.id,
+              );
+
+              if (!currentTermLoadState) {
+                // this shouldn't happen if we've initialized properly
+                throw new Error(`Cannot find load state for term: ${term.id}`);
+              }
+              // if fetch is already in progress or complete, skip
+              if (["loading", "complete"].includes(currentTermLoadState)) {
+                return;
+              }
+
+              // otherwise, fetch the courses and instructors for the term
+              // and update our Maps
               try {
                 state.termLoadStateMap.value.set(term.id, "loading");
                 const {
@@ -259,9 +349,7 @@ const useStore = defineStore("groupCourseHistory", () => {
       );
     },
     getCoursesForInstructorPerTerm(instructorId: Instructor["id"]) {
-      const termsStore = useTermsStore();
-      const { terms } = storeToRefs(termsStore);
-      return terms.value.map((term) => {
+      return getters.termsInRange.value.map((term) => {
         const key =
           `${instructorId}-${term.id}` as CoursesByInstructorAndTermKey;
         return (
@@ -274,9 +362,7 @@ const useStore = defineStore("groupCourseHistory", () => {
     getInstructorsForCoursePerTerm(
       courseShortCode: CourseShortCode,
     ): InstructorWithCourse[][] {
-      const termsStore = useTermsStore();
-      const { terms } = storeToRefs(termsStore);
-      return terms.value.map((term) => {
+      return getters.termsInRange.value.map((term) => {
         const key =
           `${courseShortCode}-${term.id}` as InstructorsByCourseAndTermKey;
         return (
@@ -287,22 +373,46 @@ const useStore = defineStore("groupCourseHistory", () => {
     },
 
     getLeavesForInstructorPerTerm(instructorId: Instructor["id"]) {
-      const termsStore = useTermsStore();
-      const { terms } = storeToRefs(termsStore);
       const instructor = getters.instructorLookup.value.get(instructorId);
       if (!instructor) {
         throw new Error(`Cannot find instructor with id: ${instructorId}`);
       }
 
-      return terms.value.map((term) =>
+      return getters.termsInRange.value.map((term) =>
         selectInstructorTermLeaves(instructor, term),
       );
+    },
+    setDefaultStartAndEndTerms(allTerms: Term[]) {
+      if (!allTerms.length) {
+        throw new Error("Cannot set default terms without any terms");
+      }
+
+      const defaultTerms = selectTermsWithinRangeInclusive(
+        DEFAULT_START_DATE,
+        DEFAULT_END_DATE,
+        allTerms,
+      );
+
+      if (defaultTerms.length < 2) {
+        throw new Error("Could not find default terms");
+      }
+
+      state.startTermId.value = defaultTerms[0].id;
+      state.endTermId.value = defaultTerms[defaultTerms.length - 1].id;
     },
     resetState() {
       state.groupId.value = null;
       state.instructorsByCourseTermMap.value = new Map();
       state.coursesByInstructorTermMap.value = new Map();
       state.termLoadStateMap.value = new Map();
+      state.startTermId.value = null;
+      state.endTermId.value = null;
+    },
+    setStartTermId(termId: Term["id"]) {
+      state.startTermId.value = termId;
+    },
+    setEndTermId(termId: Term["id"]) {
+      state.endTermId.value = termId;
     },
   };
 

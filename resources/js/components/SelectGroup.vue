@@ -45,8 +45,8 @@
 import { ref } from "vue";
 import { CSSClass } from "@/types";
 
-interface OptionType {
-  value: string;
+export interface OptionType {
+  value: string | number;
   text: string;
 }
 

@@ -7,6 +7,34 @@
     <section class="tw-flex tw-flex-col tw-gap-4 tw-mb-4">
       <h2 class="sr-only">Report Filters</h2>
 
+      <fieldset>
+        <legend
+          class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"
+        >
+          Date Range
+        </legend>
+        <div class="tw-flex tw-gap-2">
+          <SelectGroup
+            :modelValue="groupCourseHistoryStore.startTermId ?? ''"
+            label="Start Term"
+            :showLabel="false"
+            :options="allTermOptions"
+            @update:modelValue="
+              groupCourseHistoryStore.setStartTermId(Number.parseInt($event))
+            "
+          />
+          <SelectGroup
+            :modelValue="groupCourseHistoryStore.endTermId ?? ''"
+            label="End Term"
+            :showLabel="false"
+            :options="allTermOptions"
+            @update:modelValue="
+              groupCourseHistoryStore.setEndTermId(Number.parseInt($event))
+            "
+          />
+        </div>
+      </fieldset>
+
       <div class="tw-flex tw-gap-8 tw-mb-4 tw-flex-wrap">
         <fieldset v-show="instructorAppointmentTypesMap.size">
           <div class="tw-flex tw-items-baseline tw-mb-1">
@@ -158,7 +186,7 @@
         v-show="activeTab === 'instructors'"
         ref="tableRef"
         :label="`Instructors`"
-        :terms="terms"
+        :terms="groupCourseHistoryStore.termsInRange"
         :instructors="filteredPrimaryInstructors"
         :currentTerm="currentTerm"
         :getLeavesForInstructorPerTerm="getLeavesForInstructorPerTerm"
@@ -170,7 +198,7 @@
         v-show="activeTab === 'tas'"
         ref="tableRef"
         :label="`Teaching Assistants`"
-        :terms="terms"
+        :terms="groupCourseHistoryStore.termsInRange"
         :instructors="filteredTeachingAssistants"
         :currentTerm="currentTerm"
         :getLeavesForInstructorPerTerm="getLeavesForInstructorPerTerm"
@@ -180,7 +208,7 @@
       />
       <CourseTable
         v-if="activeTab === 'courses'"
-        :terms="terms"
+        :terms="groupCourseHistoryStore.termsInRange"
         :courses="allCourses"
         :currentTerm="currentTerm"
         :getLeavesForInstructorPerTerm="getLeavesForInstructorPerTerm"
@@ -205,6 +233,7 @@ import { useGroupCourseHistoryStore } from "@/stores/useGroupCourseHistoryStore"
 import { storeToRefs } from "pinia";
 import * as api from "@/api";
 import Tabs, { type Tab } from "@/components/Tabs.vue";
+import SelectGroup from "@/components/SelectGroup.vue";
 
 const props = defineProps<{
   groupId: number;
@@ -222,7 +251,7 @@ watch(
 );
 
 const {
-  terms,
+  allTerms,
   currentTerm,
   isLoadingComplete,
   instructorAppointmentTypesMap,
@@ -240,8 +269,8 @@ const {
 } = groupCourseHistoryStore;
 
 const filters = reactive({
-  // startTermId: "",
-  // endTermId: "",
+  startTermId: "",
+  endTermId: "",
   search: "",
   excludedCourseTypes: new Set<string>(),
   excludedCourseLevels: new Set<string>(),
@@ -407,6 +436,13 @@ function toggleAllCourseLevels() {
 function handleTabChange(tab: Tab) {
   activeTab.value = tab.id as typeof activeTab.value;
 }
+
+const allTermOptions = computed(() => {
+  return allTerms.value.map((term) => ({
+    text: term.name,
+    value: term.id,
+  }));
+});
 </script>
 <style scoped lang="scss">
 .details-list {
