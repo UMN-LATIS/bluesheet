@@ -1,143 +1,30 @@
 import { defineStore, storeToRefs } from "pinia";
-import * as api from "@/api";
-import type {
-  Course,
-  Group,
-  Instructor,
-  Term,
-  CourseShortCode,
-  LoadState,
-  TimelessCourse,
-  Leave,
-  ISODate,
-} from "@/types";
+import type * as Types from "@/types";
 import pMap from "p-map";
 import { uniqBy } from "lodash-es";
 import { ref, computed, watch } from "vue";
-import { useTermsStore } from "./useTermsStore";
+import { useTermsStore } from "@/stores/useTermsStore";
 import { sortByName, dayjs } from "@/utils";
 import { omit } from "lodash";
+import { toTimelessCourse } from "./toTimelessCourse";
+import {
+  selectInstructorTermLeaves,
+  selectTermsWithinRangeInclusive,
+} from "./selectors";
+import { fetchCoursesAndInstructorsForTerm } from "./fetchCourseAndInstructorsForTerm";
 
-export type CoursesByInstructorAndTermKey = `${Instructor["id"]}-${Term["id"]}`;
-export type InstructorsByCourseAndTermKey = `${CourseShortCode}-${Term["id"]}`;
-
-export type CoursesByInstructorTermMap = Map<
-  CoursesByInstructorAndTermKey,
-  Course[]
->;
-export type InstructorsByCourseTermMap = Map<
-  InstructorsByCourseAndTermKey,
-  InstructorWithCourse[]
->;
-
-export type InstructorWithCourse = Instructor & { course: Course };
-
-export type LeaveWithInstructor = Leave & {
-  instructor: Omit<Instructor, "leaves">;
-};
-
-function toTimelessCourse(course: Course): TimelessCourse {
-  return {
-    shortCode: `${course.subject}-${course.catalogNumber}`,
-    subject: course.subject,
-    catalogNumber: course.catalogNumber,
-    title: course.title,
-    courseType: course.courseType,
-    courseLevel: course.courseLevel,
-  };
-}
-
-/**
- * for a given term, get the list of leaves for the instructor
- */
-function selectInstructorTermLeaves(
-  instructor: Instructor,
-  term: Term,
-): Leave[] {
-  return (
-    instructor.leaves?.filter((leave) => {
-      const leaveStart = dayjs(leave.start_date);
-      const leaveEnd = dayjs(leave.end_date);
-      const termStart = dayjs(term.startDate);
-      const termEnd = dayjs(term.endDate);
-
-      return (
-        termStart.isBetween(leaveStart, leaveEnd, "day", "[]") ||
-        termEnd.isBetween(leaveStart, leaveEnd, "day", "[]")
-      );
-    }) ?? []
-  );
-}
-
-async function fetchCoursesAndInstructorsForTerm(
-  groupId: Group["id"],
-  termId: Term["id"],
-) {
-  const instructorsByCourseAndTermMap: InstructorsByCourseTermMap = new Map();
-  const coursesByInstructorAndTermMap: CoursesByInstructorTermMap = new Map();
-
-  const courses = await api.getGroupCoursesByTerm({
-    groupId,
-    termId,
-    roles: ["PI", "TA"],
-  });
-
-  courses.forEach((course) => {
-    const courseAndTermKey: InstructorsByCourseAndTermKey = `${course.shortCode}-${termId}`;
-    const existingInstructors =
-      instructorsByCourseAndTermMap.get(courseAndTermKey) ?? [];
-
-    // tuck the course into the instructor object so that we can use
-    // specific course info like enrollment or class number
-    const instructorsWithCourse = course.instructors.map((instructor) => {
-      return {
-        ...instructor,
-        course,
-      };
-    });
-
-    instructorsByCourseAndTermMap.set(courseAndTermKey, [
-      ...existingInstructors,
-      ...instructorsWithCourse,
-    ]);
-    course.instructors.forEach((instructor) => {
-      const instructorAndTermKey: CoursesByInstructorAndTermKey = `${instructor.id}-${termId}`;
-      const existingCourses =
-        coursesByInstructorAndTermMap.get(instructorAndTermKey) ?? [];
-      coursesByInstructorAndTermMap.set(instructorAndTermKey, [
-        ...existingCourses,
-        course,
-      ]);
-    });
-  });
-
-  return { coursesByInstructorAndTermMap, instructorsByCourseAndTermMap };
-}
-
-function selectTermsWithinRangeInclusive(
-  startDate: ISODate,
-  endDate: ISODate,
-  terms: Term[],
-) {
-  return terms.filter((term) => {
-    const termStart = dayjs(term.startDate);
-    const termEnd = dayjs(term.endDate);
-    return (
-      termStart.isSameOrAfter(startDate) && termEnd.isSameOrBefore(endDate)
-    );
-  });
-}
-
-const DEFAULT_START_DATE = dayjs().subtract(3, "year").format("YYYY-MM-DD");
-const DEFAULT_END_DATE = dayjs().add(2, "year").format("YYYY-MM-DD");
 const useStore = defineStore("groupCourseHistory", () => {
   const state = {
-    groupId: ref<Group["id"] | null>(null),
-    instructorsByCourseTermMap: ref<InstructorsByCourseTermMap>(new Map()),
-    coursesByInstructorTermMap: ref<CoursesByInstructorTermMap>(new Map()),
-    termLoadStateMap: ref<Map<Term["id"], LoadState>>(new Map()),
-    startTermId: ref<Term["id"] | null>(null),
-    endTermId: ref<Term["id"] | null>(null),
+    groupId: ref<Types.Group["id"] | null>(null),
+    instructorsByCourseTermMap: ref<Types.InstructorsByCourseTermMap>(
+      new Map(),
+    ),
+    coursesByInstructorTermMap: ref<Types.CoursesByInstructorTermMap>(
+      new Map(),
+    ),
+    termLoadStateMap: ref<Map<Types.Term["id"], Types.LoadState>>(new Map()),
+    startTermId: ref<Types.Term["id"] | null>(null),
+    endTermId: ref<Types.Term["id"] | null>(null),
   };
 
   const getters = {
@@ -170,8 +57,8 @@ const useStore = defineStore("groupCourseHistory", () => {
       }
       return true;
     }),
-    allCourses: computed((): TimelessCourse[] => {
-      const courses: TimelessCourse[] = [
+    allCourses: computed((): Types.TimelessCourse[] => {
+      const courses: Types.TimelessCourse[] = [
         ...state.coursesByInstructorTermMap.value.values(),
       ]
         .flat()
@@ -183,7 +70,7 @@ const useStore = defineStore("groupCourseHistory", () => {
       });
     }),
     courseTypesMap: computed(() => {
-      const map = new Map<Course["courseType"], number>();
+      const map = new Map<Types.Course["courseType"], number>();
       getters.allCourses.value.forEach((course) => {
         const count = map.get(course.courseType) ?? 0;
         map.set(course.courseType, count + 1);
@@ -192,7 +79,7 @@ const useStore = defineStore("groupCourseHistory", () => {
     }),
 
     courseLevelsMap: computed(() => {
-      const map = new Map<Course["courseLevel"], number>();
+      const map = new Map<Types.Course["courseLevel"], number>();
       getters.allCourses.value.forEach((course) => {
         const count = map.get(course.courseLevel) ?? 0;
         map.set(course.courseLevel, count + 1);
@@ -200,7 +87,7 @@ const useStore = defineStore("groupCourseHistory", () => {
       return map;
     }),
 
-    allInstructors: computed((): Instructor[] => {
+    allInstructors: computed((): Types.Instructor[] => {
       const instructors = [
         ...state.instructorsByCourseTermMap.value.values(),
       ].flat();
@@ -208,16 +95,18 @@ const useStore = defineStore("groupCourseHistory", () => {
       return uniqBy(instructors, "id").sort(sortByName);
     }),
 
-    instructorLookup: computed((): Map<Instructor["id"], Instructor> => {
-      const lookup = new Map();
-      getters.allInstructors.value.forEach((instructor) => {
-        lookup.set(instructor.id, instructor);
-      });
-      return lookup;
-    }),
+    instructorLookup: computed(
+      (): Map<Types.Instructor["id"], Types.Instructor> => {
+        const lookup = new Map();
+        getters.allInstructors.value.forEach((instructor) => {
+          lookup.set(instructor.id, instructor);
+        });
+        return lookup;
+      },
+    ),
 
     instructorAppointmentTypesMap: computed(
-      (): Map<Instructor["academicAppointment"], number> => {
+      (): Map<Types.Instructor["academicAppointment"], number> => {
         const map = new Map();
         getters.allInstructors.value.forEach((instructor) => {
           const count = map.get(instructor.academicAppointment) ?? 0;
@@ -227,7 +116,7 @@ const useStore = defineStore("groupCourseHistory", () => {
       },
     ),
 
-    termsInRange: computed((): Term[] => {
+    termsInRange: computed((): Types.Term[] => {
       const allTerms = getters.allTerms;
 
       if (!allTerms.value.length) {
@@ -255,7 +144,7 @@ const useStore = defineStore("groupCourseHistory", () => {
         return [];
       }
 
-      function sortByTermDateAsc(a: Term, b: Term) {
+      function sortByTermDateAsc(a: Types.Term, b: Types.Term) {
         return dayjs(a.startDate).isBefore(dayjs(b.startDate)) ? -1 : 1;
       }
 
@@ -263,14 +152,14 @@ const useStore = defineStore("groupCourseHistory", () => {
         startTerm.startDate,
         endTerm.endDate,
         allTerms.value,
-      ).sort(sortByTermDateAsc) as Term[];
+      ).sort(sortByTermDateAsc) as Types.Term[];
       return termsInRange;
     }),
 
     /**
      * an array of instructor leaves for each term in the range
      */
-    leavesPerTerm: computed((): LeaveWithInstructor[][] => {
+    leavesPerTerm: computed((): Types.LeaveWithInstructor[][] => {
       const termsInRange = getters.termsInRange.value;
 
       // for each term
@@ -298,7 +187,7 @@ const useStore = defineStore("groupCourseHistory", () => {
   };
 
   const actions = {
-    async init(groupId: Group["id"]) {
+    async init(groupId: Types.Group["id"]) {
       actions.resetState();
 
       state.groupId.value = groupId;
@@ -384,10 +273,10 @@ const useStore = defineStore("groupCourseHistory", () => {
       );
     },
 
-    getCoursesForInstructorPerTerm(instructorId: Instructor["id"]) {
+    getCoursesForInstructorPerTerm(instructorId: Types.Instructor["id"]) {
       return getters.termsInRange.value.map((term) => {
         const key =
-          `${instructorId}-${term.id}` as CoursesByInstructorAndTermKey;
+          `${instructorId}-${term.id}` as Types.CoursesByInstructorAndTermKey;
         return (
           state.coursesByInstructorTermMap.value
             .get(key)
@@ -396,11 +285,11 @@ const useStore = defineStore("groupCourseHistory", () => {
       });
     },
     getInstructorsForCoursePerTerm(
-      courseShortCode: CourseShortCode,
-    ): InstructorWithCourse[][] {
+      courseShortCode: Types.CourseShortCode,
+    ): Types.InstructorWithCourse[][] {
       return getters.termsInRange.value.map((term) => {
         const key =
-          `${courseShortCode}-${term.id}` as InstructorsByCourseAndTermKey;
+          `${courseShortCode}-${term.id}` as Types.InstructorsByCourseAndTermKey;
         return (
           state.instructorsByCourseTermMap.value.get(key)?.sort(sortByName) ??
           []
@@ -408,7 +297,7 @@ const useStore = defineStore("groupCourseHistory", () => {
       });
     },
 
-    getLeavesForInstructorPerTerm(instructorId: Instructor["id"]) {
+    getLeavesForInstructorPerTerm(instructorId: Types.Instructor["id"]) {
       const instructor = getters.instructorLookup.value.get(instructorId);
       if (!instructor) {
         throw new Error(`Cannot find instructor with id: ${instructorId}`);
@@ -418,10 +307,15 @@ const useStore = defineStore("groupCourseHistory", () => {
         selectInstructorTermLeaves(instructor, term),
       );
     },
-    setDefaultStartAndEndTerms(allTerms: Term[]) {
+    setDefaultStartAndEndTerms(allTerms: Types.Term[]) {
       if (!allTerms.length) {
         throw new Error("Cannot set default terms without any terms");
       }
+
+      const DEFAULT_START_DATE = dayjs()
+        .subtract(3, "year")
+        .format("YYYY-MM-DD");
+      const DEFAULT_END_DATE = dayjs().add(2, "year").format("YYYY-MM-DD");
 
       const defaultTerms = selectTermsWithinRangeInclusive(
         DEFAULT_START_DATE,
@@ -444,10 +338,10 @@ const useStore = defineStore("groupCourseHistory", () => {
       state.startTermId.value = null;
       state.endTermId.value = null;
     },
-    setStartTermId(termId: Term["id"]) {
+    setStartTermId(termId: Types.Term["id"]) {
       state.startTermId.value = termId;
     },
-    setEndTermId(termId: Term["id"]) {
+    setEndTermId(termId: Types.Term["id"]) {
       state.endTermId.value = termId;
     },
   };
@@ -461,7 +355,7 @@ const useStore = defineStore("groupCourseHistory", () => {
 
 // this is a convenience function that allows us to
 // automatically initialize a store for a given group
-export const useGroupCourseHistoryStore = (groupId: Group["id"]) => {
+export const useGroupCourseHistoryStore = (groupId: Types.Group["id"]) => {
   const store = useStore();
   if (store.groupId !== groupId) {
     store.init(groupId);

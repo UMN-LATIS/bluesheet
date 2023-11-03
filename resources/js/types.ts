@@ -269,3 +269,21 @@ export type InstructorRole =
   | "TA"; // teaching assistant
 
 export type LoadState = "idle" | "loading" | "complete" | "error";
+
+export type CoursesByInstructorAndTermKey = `${Instructor["id"]}-${Term["id"]}`;
+export type InstructorsByCourseAndTermKey = `${CourseShortCode}-${Term["id"]}`;
+
+export type CoursesByInstructorTermMap = Map<
+  CoursesByInstructorAndTermKey,
+  Course[]
+>;
+export type InstructorsByCourseTermMap = Map<
+  InstructorsByCourseAndTermKey,
+  InstructorWithCourse[]
+>;
+
+export type InstructorWithCourse = Instructor & { course: Course };
+
+export type LeaveWithInstructor = Leave & {
+  instructor: Omit<Instructor, "leaves">;
+};

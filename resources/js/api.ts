@@ -1,42 +1,32 @@
 import { axios } from "@/utils";
-import {
-  ApiUserLookupResponse,
-  ApiUserResponse,
-  UserLookupItem,
-  User,
-  Leave,
-  NewLeave,
-  ApiCourseInstructorRecord,
-  Term,
-  Group,
-  InstructorRole,
-  Course,
-} from "@/types";
+import type * as Types from "@/types";
 
-export async function lookupUsers(query: string): Promise<UserLookupItem[]> {
-  const res = await axios.get<ApiUserLookupResponse>(
+export async function lookupUsers(
+  query: string,
+): Promise<Types.UserLookupItem[]> {
+  const res = await axios.get<Types.ApiUserLookupResponse>(
     `/api/autocompleter/user?searchType=nameAndInternetId&q=${query}`,
   );
   return res.data.items;
 }
 
-export async function getUser(userId: number): Promise<User> {
-  const res = await axios.get<ApiUserResponse>(`/api/user/${userId}`);
+export async function getUser(userId: number): Promise<Types.User> {
+  const res = await axios.get<Types.ApiUserResponse>(`/api/user/${userId}`);
   return res.data;
 }
 
-export async function updateUser(user: User) {
-  const res = await axios.put<User>(`/api/user/${user.id}`, user);
+export async function updateUser(user: Types.User) {
+  const res = await axios.put<Types.User>(`/api/user/${user.id}`, user);
   return res.data;
 }
 
-export async function createLeave(leave: NewLeave) {
-  const res = await axios.post<Leave>(`/api/leaves`, leave);
+export async function createLeave(leave: Types.NewLeave) {
+  const res = await axios.post<Types.Leave>(`/api/leaves`, leave);
   return res.data;
 }
 
-export async function updateLeave(leave: Leave) {
-  const res = await axios.put<Leave>(`/api/leaves/${leave.id}`, leave);
+export async function updateLeave(leave: Types.Leave) {
+  const res = await axios.put<Types.Leave>(`/api/leaves/${leave.id}`, leave);
   return res.data;
 }
 
@@ -45,29 +35,31 @@ export async function deleteLeave(leaveId: number) {
   return res.data;
 }
 
-export async function getUserLeaves(userId: number): Promise<Leave[]> {
-  const res = await axios.get<Leave[]>(`/api/users/${userId}/leaves`);
+export async function getUserLeaves(userId: number): Promise<Types.Leave[]> {
+  const res = await axios.get<Types.Leave[]>(`/api/users/${userId}/leaves`);
   return res.data;
 }
 
-export async function updateUserLeaves(userId: number, leaves: Leave[]) {
-  const res = await axios.put<Leave[]>(`/api/users/${userId}/leaves`, {
+export async function updateUserLeaves(userId: number, leaves: Types.Leave[]) {
+  const res = await axios.put<Types.Leave[]>(`/api/users/${userId}/leaves`, {
     leaves,
   });
   return res.data;
 }
 
-let getTermsCache = [] as Term[];
+let getTermsCache = [] as Types.Term[];
 export async function getTerms() {
   if (getTermsCache.length) {
     return getTermsCache;
   }
-  const res = await axios.get<Term[]>(`/api/terms`);
+  const res = await axios.get<Types.Term[]>(`/api/terms`);
   getTermsCache = res.data;
   return res.data;
 }
 
-const toCourse = (rawCourse: ApiCourseInstructorRecord): Course => ({
+const toCourse = (
+  rawCourse: Types.ApiCourseInstructorRecord,
+): Types.Course => ({
   shortCode: `${rawCourse.subject}-${rawCourse.catalogNumber}`,
   classNumber: rawCourse.classNumber,
   term: rawCourse.term,
@@ -90,9 +82,9 @@ export async function getGroupCoursesByTerm({
 }: {
   groupId: number;
   termId: number;
-  roles: InstructorRole[];
+  roles: Types.InstructorRole[];
 }) {
-  const res = await axios.get<ApiCourseInstructorRecord[]>(
+  const res = await axios.get<Types.ApiCourseInstructorRecord[]>(
     `/api/terms/${termId}/groups/${groupId}/courses`,
     {
       params: {
@@ -101,7 +93,10 @@ export async function getGroupCoursesByTerm({
     },
   );
 
-  const coursesByClassNumber = new Map<Course["classNumber"], Course>();
+  const coursesByClassNumber = new Map<
+    Types.Course["classNumber"],
+    Types.Course
+  >();
 
   res.data.forEach((rawCourse) => {
     const course =
@@ -115,6 +110,6 @@ export async function getGroupCoursesByTerm({
 }
 
 export async function getGroup(groupId: number) {
-  const res = await axios.get<Group>(`/api/group/${groupId}`);
+  const res = await axios.get<Types.Group>(`/api/group/${groupId}`);
   return res.data;
 }
