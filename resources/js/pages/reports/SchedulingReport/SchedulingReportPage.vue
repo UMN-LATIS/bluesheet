@@ -339,11 +339,25 @@ const filteredCourses = computed(() => {
       doesCourseMatchFilter(course) &&
       hasSomeInstructorMatchingFiltersTaughtCourse(course) &&
       (filters.search === "" ||
-        doesCourseNumberMatchSearchTerm(course, filters.search))
+        doesCourseNumberMatchSearchTerm(course, filters.search) ||
+        hasSomeInstructorMatchingSearchTermTaughtCourse(course))
     );
   });
 });
 
+function hasSomeInstructorMatchingSearchTermTaughtCourse(course) {
+  return (
+    getInstructorsForCoursePerTerm(course.shortCode)
+      .flat()
+      // then check if any course matches our search term
+      .some((instructorWithCourse) => {
+        return doesInstructorNameMatchSearchTerm(
+          instructorWithCourse,
+          filters.search,
+        );
+      })
+  );
+}
 function hasSomeInstructorMatchingFiltersTaughtCourse(course) {
   return (
     getInstructorsForCoursePerTerm(course.shortCode)
