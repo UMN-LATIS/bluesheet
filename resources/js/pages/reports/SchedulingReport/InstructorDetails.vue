@@ -1,6 +1,10 @@
 <template>
   <div
     :class="{
+      'tw-opacity-50 tw-line-through': instructor.course.cancelled,
+      'tw-bg-yellow-100':
+        !!search.length &&
+        doesInstructorNameMatchSearchTerm(instructor, search),
       'tw-rounded-2xl tw-bg-black/5 tw-p-2 tw-pr-4 tw-mb-2': isOpen,
       'tw-rounded-full': !isOpen,
     }"
@@ -48,9 +52,11 @@
 import { ref } from "vue";
 import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
 import type { InstructorWithCourse } from "@/stores/useGroupCourseHistoryStore";
+import { doesInstructorNameMatchSearchTerm } from "./doesInstructorNameMatchSearchTerm";
 
 defineProps<{
   instructor: InstructorWithCourse;
+  search: string;
 }>();
 
 const isOpen = ref(false);
