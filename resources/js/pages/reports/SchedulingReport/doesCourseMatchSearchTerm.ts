@@ -1,7 +1,7 @@
-import { Course } from "@/types";
+import { Course, TimelessCourse } from "@/types";
 
 export function doesCourseNumberMatchSearchTerm(
-  course: Course,
+  course: Course | TimelessCourse,
   searchTerm: string,
 ) {
   const courseTitle = `${course.subject} ${course.catalogNumber}`.toLowerCase();
