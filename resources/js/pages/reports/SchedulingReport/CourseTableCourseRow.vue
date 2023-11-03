@@ -1,13 +1,18 @@
 <template>
   <tr>
     <Td class="course-column">
-      <div>{{ course.title }}</div>
-      <div class="tw-text-xs tw-text-neutral-500 tw-flex tw-flex-wrap tw-gap-1">
-        <div>{{ course.subject }} {{ course.catalogNumber }}</div>
-        •
-        <div>{{ course.courseType }}</div>
-        •
-        <div>{{ course.courseLevel }}</div>
+      <div
+        :class="{
+          'tw-bg-yellow-100':
+            search.length && doesCourseNumberMatchSearchTerm(course, search),
+        }"
+      >
+        {{ course.subject }} {{ course.catalogNumber }}
+      </div>
+
+      <div class="tw-text-xs tw-text-neutral-500">
+        <div>{{ course.title }}</div>
+        <div>{{ course.courseType }} • {{ course.courseLevel }}</div>
       </div>
     </Td>
     <Td
@@ -23,6 +28,7 @@
         v-for="instructor in termInstructors"
         :key="instructor.id"
         :instructor="instructor"
+        :search="search"
       />
     </Td>
   </tr>
@@ -32,6 +38,7 @@ import { Td } from "@/components/Table";
 import { Term, TimelessCourse } from "@/types";
 import InstructorDetails from "./InstructorDetails.vue";
 import { InstructorWithCourse } from "@/stores/useGroupCourseHistoryStore";
+import { doesCourseNumberMatchSearchTerm } from "./doesCourseMatchSearchTerm";
 
 defineProps<{
   course: TimelessCourse;
