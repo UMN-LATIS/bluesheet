@@ -22,6 +22,11 @@
           :leave="leave"
           :instructor="leave.instructor"
           variant="instructor"
+          :class="{
+            'tw-bg-yellow-100':
+              search.length &&
+              doesInstructorNameMatchSearchTerm(leave.instructor, search),
+          }"
         />
       </div>
     </Td>
@@ -32,6 +37,7 @@ import LeaveChip from "@/components/LeaveChip.vue";
 import { Td } from "@/components/Table";
 import { LeaveWithInstructor } from "@/stores/useGroupCourseHistoryStore";
 import type { Term } from "@/types";
+import { doesInstructorNameMatchSearchTerm } from "./doesInstructorNameMatchSearchTerm";
 
 withDefaults(
   defineProps<{
@@ -39,6 +45,7 @@ withDefaults(
     terms: Term[];
     currentTerm: Term | null;
     sticky: boolean;
+    search: string;
   }>(),
   {
     sticky: false,

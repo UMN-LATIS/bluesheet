@@ -13,6 +13,7 @@
       :terms="terms"
       :currentTerm="currentTerm"
       :sticky="false"
+      :search="search"
     />
     <CourseTableCourseRow
       v-for="course in courses"
