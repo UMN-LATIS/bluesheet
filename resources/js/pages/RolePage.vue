@@ -95,7 +95,7 @@ export default {
   },
   watch: {
     role() {
-      usePageTitle(this.role?.label || "Role");
+      usePageTitle(this.role?.label || "");
     },
   },
   mounted() {

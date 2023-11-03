@@ -58,6 +58,7 @@
 <script>
 import Favorites from "@/components/Favorites.vue";
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
+import { usePageTitle } from "@/utils/usePageTitle";
 
 export default {
   components: {
@@ -89,6 +90,9 @@ export default {
         },
       ],
     };
+  },
+  mounted() {
+    usePageTitle("Home");
   },
 };
 </script>

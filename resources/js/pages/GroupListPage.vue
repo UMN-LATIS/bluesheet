@@ -97,6 +97,7 @@
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
 import GroupTitle from "@/components/GroupTitle.vue";
 import { debounce } from "lodash-es";
+import { usePageTitle } from "@/utils/usePageTitle";
 
 export default {
   components: {
@@ -166,6 +167,7 @@ export default {
     },
   },
   mounted() {
+    usePageTitle("Groups");
     this.loadGroups();
   },
   methods: {

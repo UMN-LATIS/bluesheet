@@ -52,8 +52,11 @@ export default {
     };
   },
   watch: {
-    group() {
-      usePageTitle(this.group?.group_title || "Group");
+    group: {
+      handler() {
+        usePageTitle(this.group?.group_title || "");
+      },
+      immediate: true,
     },
   },
   mounted() {

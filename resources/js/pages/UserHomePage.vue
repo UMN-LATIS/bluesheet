@@ -55,7 +55,7 @@ import { useStore } from "vuex";
 import { AxiosError } from "axios";
 import CheckboxGroup from "@/components/CheckboxGroup.vue";
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
-import  { usePageTitle } from "@/utils/usePageTitle";
+import { usePageTitle } from "@/utils/usePageTitle";
 
 const props = defineProps<{
   userId: number | null;
@@ -99,8 +99,8 @@ watch(
   { immediate: true },
 );
 
-watch(user, () => {
-  usePageTitle(user.value?.displayName ?? "User");
+watch(user, () => usePageTitle(user.value?.displayName ?? ""), {
+  immediate: true,
 });
 
 async function loadUser(userId: number) {
