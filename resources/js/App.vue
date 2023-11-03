@@ -93,7 +93,6 @@ export default {
   },
   mounted() {
     this.$store.dispatch("fetchUser");
-    this.termsStore.init();
     console.log("Component mounted.");
   },
   methods: {
