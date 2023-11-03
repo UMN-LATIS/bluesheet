@@ -21,6 +21,7 @@ class InstructorResource extends JsonResource {
             'email' => $this->email,
             'title' => $this->title,
             'jobCode' => $this->jobCode,
+            'instructorRole' => $this->instructorRole,
             'leaves' => $this->when($this->leaves->isNotEmpty(), $this->leaves),
             'academicAppointment' => Utilities::trimWithFallback($this->jobCategory),
             'emplid' => $this->emplid,

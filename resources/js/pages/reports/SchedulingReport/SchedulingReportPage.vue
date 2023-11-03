@@ -1,5 +1,5 @@
 <template>
-  <WideLayout>
+  <WideLayout class="scheduling-report-page">
     <h1 class="tw-mb-4">
       {{ group?.group_title }} <br />
       <span class="tw-text-3xl">Scheduling Report</span>
@@ -7,43 +7,36 @@
     <section class="tw-flex tw-flex-col tw-gap-4 tw-mb-4">
       <h2 class="sr-only">Report Filters</h2>
 
-      <div class="tw-flex tw-gap-4 tw-mb-4">
-        <SelectGroup
-          v-model="instructorRole"
-          label="Instructor Role"
-          :options="[
-            { text: 'Primary Instructor', value: 'PI' },
-            { text: 'Teaching Assistant', value: 'TA' },
-          ]"
-          @update:modelValue="onInstructorRoleChange"
-        />
+      <fieldset>
+        <legend
+          class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"
+        >
+          Date Range
+        </legend>
+        <div class="tw-flex tw-gap-2">
+          <SelectGroup
+            :modelValue="groupCourseHistoryStore.startTermId ?? ''"
+            label="Start Term"
+            :showLabel="false"
+            :options="allTermOptions"
+            @update:modelValue="
+              groupCourseHistoryStore.setStartTermId(Number.parseInt($event))
+            "
+          />
+          <SelectGroup
+            :modelValue="groupCourseHistoryStore.endTermId ?? ''"
+            label="End Term"
+            :showLabel="false"
+            :options="allTermOptions"
+            @update:modelValue="
+              groupCourseHistoryStore.setEndTermId(Number.parseInt($event))
+            "
+          />
+        </div>
+      </fieldset>
 
-        <fieldset>
-          <legend
-            class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"
-          >
-            Date Range
-          </legend>
-          <div class="tw-flex tw-gap-2">
-            <SelectGroup
-              v-model="filters.startTermId"
-              label="Start Term"
-              :showLabel="false"
-              :options="allTermOptions"
-              @update:modelValue="runReport"
-            />
-            <SelectGroup
-              v-model="filters.endTermId"
-              label="End Term"
-              :showLabel="false"
-              :options="allTermOptions"
-              @update:modelValue="runReport"
-            />
-          </div>
-        </fieldset>
-      </div>
       <div class="tw-flex tw-gap-8 tw-mb-4 tw-flex-wrap">
-        <fieldset v-show="instructorCategoriesMap.size">
+        <fieldset v-show="instructorAppointmentTypesMap.size">
           <div class="tw-flex tw-items-baseline tw-mb-1">
             <legend
               class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"
@@ -61,12 +54,12 @@
           >
             <input
               type="checkbox"
-              :checked="!excludedInstAppointments.has(category)"
+              :checked="!filters.excludedInstAppointments.has(category)"
               class="tw-form-checkbox tw-mr-2 tw-border tw-border-neutral-500 tw-rounded"
               @change="
-                excludedInstAppointments.has(category)
-                  ? excludedInstAppointments.delete(category)
-                  : excludedInstAppointments.add(category)
+                filters.excludedInstAppointments.has(category)
+                  ? filters.excludedInstAppointments.delete(category)
+                  : filters.excludedInstAppointments.add(category)
               "
             />
 
@@ -95,12 +88,12 @@
           >
             <input
               type="checkbox"
-              :checked="!excludedCourseTypes.has(courseType)"
+              :checked="!filters.excludedCourseTypes.has(courseType)"
               class="tw-form-checkbox tw-mr-2 tw-border tw-border-neutral-500 tw-rounded"
               @change="
-                excludedCourseTypes.has(courseType)
-                  ? excludedCourseTypes.delete(courseType)
-                  : excludedCourseTypes.add(courseType)
+                filters.excludedCourseTypes.has(courseType)
+                  ? filters.excludedCourseTypes.delete(courseType)
+                  : filters.excludedCourseTypes.add(courseType)
               "
             />
 
@@ -128,12 +121,12 @@
           >
             <input
               type="checkbox"
-              :checked="!excludedCourseLevels.has(courseLevel)"
+              :checked="!filters.excludedCourseLevels.has(courseLevel)"
               class="tw-form-checkbox tw-mr-2 tw-border tw-border-neutral-500 tw-rounded"
               @change="
-                excludedCourseLevels.has(courseLevel)
-                  ? excludedCourseLevels.delete(courseLevel)
-                  : excludedCourseLevels.add(courseLevel)
+                filters.excludedCourseLevels.has(courseLevel)
+                  ? filters.excludedCourseLevels.delete(courseLevel)
+                  : filters.excludedCourseLevels.add(courseLevel)
               "
             />
 
@@ -146,7 +139,26 @@
       </div>
     </section>
 
-    <div class="tw-flex tw-justify-end">
+    <div
+      class="tw-flex tw-justify-between tw-flex-wrap tw-items-baseline gap-2"
+    >
+      <Tabs
+        class="tw-mt-4"
+        :tabs="[
+          {
+            id: 'instructors',
+            name: 'Instructors',
+            current: activeTab === 'instructors',
+          },
+          {
+            id: 'tas',
+            name: 'Teaching Assistants',
+            current: activeTab === 'tas',
+          },
+          { id: 'courses', name: 'Courses', current: activeTab === 'courses' },
+        ]"
+        @change="handleTabChange"
+      />
       <label
         class="tw-border tw-border-umn-neutral-200 tw-max-w-xs tw-w-full tw-rounded-md !tw-block"
       >
@@ -160,310 +172,200 @@
       </label>
     </div>
 
-    <div class="tw-relative tw-min-h-[8em]">
-      <Transition name="fade">
+    <div class="tw-relative tw-min-h-[8em] tw-overflow-hidden">
+      <!-- <Transition name="fade">
         <div
-          v-if="isRunningReport"
+          v-if="!isLoadingComplete"
           class="tw-flex tw-justify-center tw-items-start tw-bg-white/5 tw-gap-4 tw-absolute tw-inset-0 tw-z-10 tw-backdrop-blur-sm tw-p-16"
         >
           <Spinner class="tw-text-neutral-900 tw-w-6 tw-h-6" />
           Building Report...
         </div>
-      </Transition>
-      <Table
+      </Transition> -->
+      <InstructorTable
+        v-show="activeTab === 'instructors'"
         ref="tableRef"
-        class="scheduling-report"
-        :stickyFirstColumn="true"
-        :stickyHeader="true"
-      >
-        <template #thead>
-          <tr>
-            <Th class="instructor-column">Instructor</Th>
-            <Th
-              v-for="term in termsForReport"
-              :id="`term-${term.id}`"
-              :key="term.id"
-              class="tw-whitespace-nowrap term-header-column"
-              :class="{
-                '!tw-bg-amber-100 !tw-border-amber-300 term-header-column--is-current-term':
-                  term.id === currentTerm?.id,
-                'term-header-column--is-fall-term': isFallTerm(term),
-              }"
-            >
-              {{ term.name }}
-              <Spinner
-                v-if="!coursesByTermMap.has(term.id)"
-                class="tw-text-neutral-300 tw-h-4 tw-w-4"
-              />
-            </Th>
-          </tr>
-        </template>
-        <ReportRow
-          v-for="instructor in instructorsWithinReportedTerms"
-          v-show="isShowingInstructor(instructor)"
-          :key="instructor.id"
-          :instructor="instructor"
-          :search="filters.search"
-          :terms="termsForReport"
-          :listOfTermCourses="
-            termsForReport.map((term) =>
-              getInstructorTermCourses(instructor, term),
-            )
-          "
-          :listOfTermLeaves="
-            termsForReport.map((term) =>
-              selectInstructorTermLeaves(instructor, term),
-            )
-          "
-          :currentTerm="currentTerm"
-          :isShowingCourse="isShowingCourse"
-        />
-      </Table>
+        :label="`Instructors`"
+        :terms="groupCourseHistoryStore.termsInRange"
+        :instructors="filteredPrimaryInstructors"
+        :currentTerm="currentTerm"
+        :getLeavesForInstructorPerTerm="getLeavesForInstructorPerTerm"
+        :getCoursesForInstructorPerTerm="getFilteredCoursesForInstructorPerTerm"
+        :search="filters.search"
+        :termLoadStateMap="termLoadStateMap"
+      />
+      <InstructorTable
+        v-show="activeTab === 'tas'"
+        ref="tableRef"
+        :label="`Teaching Assistants`"
+        :terms="groupCourseHistoryStore.termsInRange"
+        :instructors="filteredTeachingAssistants"
+        :currentTerm="currentTerm"
+        :getLeavesForInstructorPerTerm="getLeavesForInstructorPerTerm"
+        :getCoursesForInstructorPerTerm="getFilteredCoursesForInstructorPerTerm"
+        :search="filters.search"
+        :termLoadStateMap="termLoadStateMap"
+      />
+      <CourseTable
+        v-show="activeTab === 'courses'"
+        :terms="groupCourseHistoryStore.termsInRange"
+        :courses="filteredCourses"
+        :currentTerm="currentTerm"
+        :leavesPerTerm="groupCourseHistoryStore.leavesPerTerm"
+        :getInstructorsForCoursePerTerm="getFilteredInstructorsForCoursePerTerm"
+        :search="filters.search"
+        :termLoadStateMap="termLoadStateMap"
+      />
     </div>
   </WideLayout>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, reactive, computed, watch } from "vue";
-import * as api from "@/api";
+import WideLayout from "@/layouts/WideLayout.vue";
+import InstructorTable from "./InstructorTable.vue";
+import Button from "@/components/Button.vue";
+import { reactive, ref, watch, computed } from "vue";
+import debounce from "lodash-es/debounce";
 import {
   Course,
-  Term,
+  CourseShortCode,
   Group,
   Instructor,
-  Leave,
-  ISODate,
-  InstructorRole,
+  TimelessCourse,
 } from "@/types";
-import debounce from "lodash-es/debounce";
-import dayjs from "dayjs";
-import { Table, Th } from "@/components/Table";
-import Spinner from "@/components/Spinner.vue";
+import { doesCourseNumberMatchSearchTerm } from "./doesCourseMatchSearchTerm";
+import CourseTable from "./CourseTable.vue";
+import { useGroupCourseHistoryStore } from "@/stores/useGroupCourseHistoryStore";
+import { storeToRefs } from "pinia";
+import * as api from "@/api";
+import Tabs, { type Tab } from "@/components/Tabs.vue";
 import SelectGroup from "@/components/SelectGroup.vue";
-import pMap from "p-map";
-import Button from "@/components/Button.vue";
-import ReportRow from "./ReportRow.vue";
-import WideLayout from "@/layouts/WideLayout.vue";
 
 const props = defineProps<{
   groupId: number;
 }>();
 
-type InstructorId = number;
-type TermId = number;
+const groupCourseHistoryStore = useGroupCourseHistoryStore(props.groupId);
+const group = ref<null | Group>(null);
 
-const DEFAULT_START_DATE = dayjs().subtract(3, "year").format("YYYY-MM-DD");
-const DEFAULT_END_DATE = dayjs().add(2, "year").format("YYYY-MM-DD");
-const MAX_TERM_DATE = dayjs().add(3, "year").format("YYYY-MM-DD");
+watch(
+  () => props.groupId,
+  async (newGroupId) => {
+    group.value = await api.getGroup(newGroupId);
+  },
+  { immediate: true },
+);
 
-const tableRef = ref<HTMLElement>();
-const group = ref<Group>();
-const termsMap = ref<Map<TermId, Term>>(new Map());
-const coursesByTermMap = ref<Map<TermId, Course[]>>(new Map());
-const isRunningReport = ref(false);
-const courseLevelsMap = ref<Map<string, number>>(new Map()); // "UGRD", "GRAD"
-const courseTypesMap = ref<Map<string, number>>(new Map()); // "LEC"
-const instructorCategoriesMap = ref<Map<string, number>>(new Map()); // "Faculty"
-const instructorRole = ref<InstructorRole>("PI");
+const {
+  allTerms,
+  currentTerm,
+  isLoadingComplete,
+  instructorAppointmentTypesMap,
+  allInstructors,
+  allCourses: allTimelessCourses,
+  courseLevelsMap,
+  courseTypesMap,
+  termLoadStateMap,
+} = storeToRefs(groupCourseHistoryStore);
+
+const {
+  getLeavesForInstructorPerTerm,
+  getInstructorsForCoursePerTerm,
+  getCoursesForInstructorPerTerm,
+} = groupCourseHistoryStore;
 
 const filters = reactive({
   startTermId: "",
   endTermId: "",
   search: "",
+  excludedCourseTypes: new Set<string>(),
+  excludedCourseLevels: new Set<string>(),
+  excludedInstAppointments: new Set<string>(),
 });
 
+const activeTab = ref<"instructors" | "tas" | "courses">("instructors");
 const searchInputRaw = ref("");
 const debouncedSearch = debounce(() => {
   filters.search = searchInputRaw.value;
 }, 500);
 watch(searchInputRaw, debouncedSearch);
 
-const excludedCourseLevels = ref<Set<string>>(new Set());
-const excludedCourseTypes = ref<Set<string>>(new Set(["IND", "FWK"]));
-const excludedInstAppointments = ref<Set<string>>(new Set());
+const tableRef = ref<HTMLElement>();
+watch(
+  isLoadingComplete,
+  () => {
+    scrollToCurrentTerm();
+  },
+  { immediate: true },
+);
 
-const allTermOptions = computed(() => {
-  return [...termsMap.value.values()].map((term) => ({
-    text: term.name,
-    value: String(term.id),
-  }));
-});
-
-const currentTerm = computed((): Term | null => {
-  const currentTerm = [...termsMap.value.values()].find((term) => {
-    const termStart = dayjs(term.startDate);
-    const termEnd = dayjs(term.endDate);
-    const today = dayjs();
-    return today.isBetween(termStart, termEnd, "day", "[]");
-  });
-
-  return currentTerm ?? null;
-});
-
-function sortEntriesByKey(a, b) {
-  return a[0].localeCompare(b[0]);
-}
-
-const sortedAppointmentTypeFilters = computed(() => {
-  return [...instructorCategoriesMap.value.entries()].sort(sortEntriesByKey);
-});
-
-const sortedCourseTypes = computed(() => {
-  return [...courseTypesMap.value.entries()].sort(sortEntriesByKey);
-});
-
-// not making these computed to avoid reactivity lag
-const termsForReport = ref<Term[]>([]);
-const instructorsForReport = ref<Instructor[]>([]);
-
-function isShowingInstructor(instructor: Instructor) {
-  return (
-    isIncludedInstructorAppointment(instructor) &&
-    hasTaughtCourseMatchingFilters(instructor) &&
-    (filters.search === "" ||
-      doesInstructorNameMatchSearchTerm(instructor, filters.search) ||
-      hasInstructorTaughtCourseMatchingSearchTerm(instructor, filters.search))
-  );
-}
-
-function hasTaughtCourseMatchingFilters(instructor: Instructor) {
-  const allTerms = [...termsMap.value.values()];
-  return allTerms.some((term) => {
-    const courses = getInstructorTermCourses(instructor, term);
-    return courses.some((course) => isShowingCourse(course));
+function scrollToCurrentTerm() {
+  if (!currentTerm.value) return;
+  const currentTermEl = document.getElementById(`term-${currentTerm.value.id}`);
+  if (!currentTermEl) return;
+  currentTermEl.scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+    inline: "center",
   });
 }
 
-const instructorsWithinReportedTerms = computed(() => {
-  const instructorsMap = getInstructorsMap();
-  const reportTerms = getReportTerms();
-  const allInstructors = [...instructorsMap.values()];
+const filteredInstructors = computed(() =>
+  allInstructors.value.filter(
+    (instructor) =>
+      isIncludedInstructorAppointment(instructor) &&
+      hasInstructorTaughtCourseMatchingFilters(instructor) &&
+      (filters.search === "" ||
+        doesInstructorNameMatchSearchTerm(instructor, filters.search) ||
+        hasInstructorTaughtCourseMatchingSearchTerm(instructor)),
+  ),
+);
 
-  const reportInstructors: Instructor[] = [];
+const filteredPrimaryInstructors = computed(() =>
+  filteredInstructors.value.filter(
+    (instructor) => instructor.instructorRole === "PI",
+  ),
+);
 
-  // loop through all instuctors and check if they have taught at least
-  // once course in the filtered terms
-  for (const instructor of allInstructors) {
-    for (const term of reportTerms) {
-      const coursesTaught = getInstructorTermCourses(instructor, term).length;
-      if (coursesTaught) {
-        reportInstructors.push(instructor);
-        break;
-      }
-    }
-  }
+const filteredTeachingAssistants = computed(() =>
+  filteredInstructors.value.filter(
+    (instructor) => instructor.instructorRole === "TA",
+  ),
+);
 
-  const sortedInstructors = reportInstructors.sort(sortByName);
-
-  return sortedInstructors;
-});
-
-function isIncludedInstructorAppointment(instructor: Instructor) {
-  return !excludedInstAppointments.value.has(instructor.academicAppointment);
-}
-
-function getAllCourseLevelsMap() {
-  const allCourses: Course[] = [...coursesByTermMap.value.values()].flat();
-  const courseLevels = new Map<string, number>();
-  allCourses.forEach((course) => {
-    const currentCount = courseLevels.get(course.courseLevel) ?? 0;
-    courseLevels.set(course.courseLevel, currentCount + 1);
-  });
-  return courseLevels;
-}
-
-function getAllCourseTypesMap() {
-  const allCourses: Course[] = [...coursesByTermMap.value.values()].flat();
-  const courseTypes = new Map<string, number>();
-  allCourses.forEach((course) => {
-    const currentCount = courseTypes.get(course.courseType) ?? 0;
-    courseTypes.set(course.courseType, currentCount + 1);
-  });
-  return courseTypes;
-}
-
-function getAllInstructorCategoriesMap() {
-  const allInstructors = [...getInstructorsMap().values()];
-  const instructorCategories = new Map<string, number>();
-  allInstructors.forEach((instructor) => {
-    const currentCount =
-      instructorCategories.get(instructor.academicAppointment) ?? 0;
-    instructorCategories.set(instructor.academicAppointment, currentCount + 1);
-  });
-  return instructorCategories;
-}
-
-function hasInstructorTaughtCourseMatchingSearchTerm(
-  instructor: Instructor,
-  searchTerm: string,
-) {
-  const allTerms = [...termsMap.value.values()];
-  return allTerms.some((term) => {
-    const courses = getInstructorTermCourses(instructor, term);
-    return courses.some((course) =>
-      doesCourseMatchSearchTerm(course, searchTerm),
+const filteredCourses = computed(() => {
+  return allTimelessCourses.value.filter((course) => {
+    return (
+      doesCourseMatchFilter(course) &&
+      hasSomeInstructorMatchingFiltersTaughtCourse(course) &&
+      (filters.search === "" ||
+        doesCourseNumberMatchSearchTerm(course, filters.search) ||
+        hasSomeInstructorMatchingSearchTermTaughtCourse(course))
     );
   });
-}
+});
 
-function getInstructorsMap(): Map<InstructorId, Instructor> {
-  const allInstructors = new Map<InstructorId, Instructor>();
-  coursesByTermMap.value.forEach((courses: Course[]) => {
-    courses.forEach((course) => {
-      allInstructors.set(course.instructor.id, course.instructor);
-    });
-  });
-  return allInstructors;
-}
-
-function getReportTerms() {
-  if (!filters.startTermId || !filters.endTermId) {
-    return [];
-  }
-  const startTerm = termsMap.value.get(Number(filters.startTermId));
-  const endTerm = termsMap.value.get(Number(filters.endTermId));
-  const allTerms = [...termsMap.value.values()];
-
-  if (!startTerm || !endTerm || !allTerms.length) {
-    return [];
-  }
-
-  return selectTermsWithinRangeInclusive(
-    startTerm.startDate,
-    endTerm.endDate,
-    allTerms,
-  ).sort(sortByTermDateAsc);
-}
-
-function getInstructorsTeachingWithinReportTerms() {
-  const instructorsMap = getInstructorsMap();
-  const reportTerms = getReportTerms();
-  const allInstructors = [...instructorsMap.values()];
-
-  const reportInstructors: Instructor[] = [];
-
-  // loop through all instuctors and check if they have taught at least
-  // once course in the filtered terms
-  for (const instructor of allInstructors) {
-    for (const term of reportTerms) {
-      const coursesTaught = getInstructorTermCourses(instructor, term).length;
-      if (coursesTaught) {
-        reportInstructors.push(instructor);
-        break;
-      }
-    }
-  }
-
-  const sortedInstructors = reportInstructors.sort(sortByName);
-  return sortedInstructors;
-}
-
-function sortByName(
-  a: { surName: string; givenName: string },
-  b: { surName: string; givenName: string },
-) {
+function hasSomeInstructorMatchingSearchTermTaughtCourse(course) {
   return (
-    a.surName.localeCompare(b.surName) || a.givenName.localeCompare(b.givenName)
+    getInstructorsForCoursePerTerm(course.shortCode)
+      .flat()
+      // then check if any course matches our search term
+      .some((instructorWithCourse) => {
+        return doesInstructorNameMatchSearchTerm(
+          instructorWithCourse,
+          filters.search,
+        );
+      })
+  );
+}
+function hasSomeInstructorMatchingFiltersTaughtCourse(course) {
+  return (
+    getInstructorsForCoursePerTerm(course.shortCode)
+      .flat()
+      // then check if any course matches our filters
+      .some((instructorWithCourse) => {
+        return isIncludedInstructorAppointment(instructorWithCourse);
+      })
   );
 }
 
@@ -477,216 +379,123 @@ function doesInstructorNameMatchSearchTerm(
   );
 }
 
-function doesCourseMatchSearchTerm(course: Course, searchTerm: string) {
-  const courseTitle =
-    `${course.subject} ${course.catalogNumber} ${course.classSection}`.toLowerCase();
-
-  return courseTitle.includes(searchTerm.toLowerCase());
-}
-
-function sortCoursesByCourseNumber(a: Course, b: Course) {
-  return (
-    a.subject.localeCompare(b.subject) ||
-    String(a.catalogNumber).localeCompare(String(b.catalogNumber)) ||
-    a.classSection.localeCompare(b.classSection)
-  );
-}
-
-function isShowingCourse(course: Course) {
-  return (
-    !excludedCourseTypes.value.has(course.courseType) &&
-    !excludedCourseLevels.value.has(course.courseLevel)
-  );
-}
-
-function getInstructorTermCourses(
-  instructor: Instructor,
-  term: Term,
-): Course[] {
-  const allDeptCoursesInTerm = coursesByTermMap.value.get(term.id);
-  const courses =
-    allDeptCoursesInTerm?.filter((course) => {
-      return course.instructor.id === instructor.id;
-    }) ?? [];
-  return [...courses].sort(sortCoursesByCourseNumber);
-}
-
-function selectInstructorTermLeaves(
-  instructor: Instructor,
-  term: Term,
-): Leave[] {
-  return (
-    instructor.leaves?.filter((leave) => {
-      const leaveStart = dayjs(leave.start_date);
-      const leaveEnd = dayjs(leave.end_date);
-      const termStart = dayjs(term.startDate);
-      const termEnd = dayjs(term.endDate);
-
-      return (
-        termStart.isBetween(leaveStart, leaveEnd, "day", "[]") ||
-        termEnd.isBetween(leaveStart, leaveEnd, "day", "[]")
-      );
-    }) ?? []
-  );
-}
-
-function sortByTermDateAsc(a: Term, b: Term) {
-  return dayjs(a.startDate).isBefore(dayjs(b.startDate)) ? -1 : 1;
-}
-
-function selectTermsWithinRangeInclusive(
-  startDate: ISODate,
-  endDate: ISODate,
-  terms: Term[],
-) {
-  return terms.filter((term) => {
-    const termStart = dayjs(term.startDate);
-    const termEnd = dayjs(term.endDate);
-    return (
-      termStart.isSameOrAfter(startDate) && termEnd.isSameOrBefore(endDate)
-    );
+function getFilteredCoursesForInstructorPerTerm(instructorId: number) {
+  const courses = getCoursesForInstructorPerTerm(instructorId);
+  return courses.map((termCourses) => {
+    return termCourses.filter(doesCourseMatchFilter);
   });
 }
-function toggleAllCourseTypes() {
-  const areAllSelected = excludedCourseTypes.value.size === 0;
-  if (areAllSelected) {
-    // deselect all (i.e. add all keys to the excluded set)
-    excludedCourseTypes.value = new Set(courseTypesMap.value.keys());
-    return;
-  }
 
-  // otherwise select all (i.e. clear the set)
-  excludedCourseTypes.value.clear();
+/**
+ * Returns a list of instructors for a course, filtered by the current filters.
+ */
+function getFilteredInstructorsForCoursePerTerm(
+  courseShortCode: CourseShortCode,
+) {
+  const instructors = getInstructorsForCoursePerTerm(courseShortCode);
+  return instructors.map((termInstructors) => {
+    return termInstructors.filter(isIncludedInstructorAppointment);
+  });
+}
+
+function sortEntriesByKey(
+  a: [key: string, value: unknown],
+  b: [key: string, value: unknown],
+): number {
+  return a[0].localeCompare(b[0]);
+}
+
+const sortedAppointmentTypeFilters = computed(() => {
+  return [...instructorAppointmentTypesMap.value.entries()].sort(
+    sortEntriesByKey,
+  );
+});
+
+const sortedCourseTypes = computed(() => {
+  return [...courseTypesMap.value.entries()].sort(sortEntriesByKey);
+});
+
+function isIncludedInstructorAppointment(instructor: Instructor) {
+  return !filters.excludedInstAppointments.has(instructor.academicAppointment);
+}
+
+function doesCourseMatchFilter(course: Course | TimelessCourse) {
+  return (
+    // course type is not excluded (i.e. included)
+    !filters.excludedCourseTypes.has(course.courseType) &&
+    // course level is not excluded (i.e. included)
+    !filters.excludedCourseLevels.has(course.courseLevel)
+  );
+}
+
+function hasInstructorTaughtCourseMatchingSearchTerm(instructor: Instructor) {
+  // get a flat list of all the courses this instructor has taught
+  return (
+    getCoursesForInstructorPerTerm(instructor.id)
+      .flat()
+      // then check if any course matches our search term
+      .some((course) => doesCourseNumberMatchSearchTerm(course, filters.search))
+  );
+}
+
+function hasInstructorTaughtCourseMatchingFilters(instructor: Instructor) {
+  // get a flat list of all the courses this instructor has taught
+  return (
+    getCoursesForInstructorPerTerm(instructor.id)
+      .flat()
+      // then check if any course matches our filters
+      .some(doesCourseMatchFilter)
+  );
 }
 
 function toggleAllInstructorAppointments() {
-  const areAllSelected = excludedInstAppointments.value.size === 0;
+  const areAllSelected = filters.excludedInstAppointments.size === 0;
   if (areAllSelected) {
     // deselect all (i.e. add all keys to the excluded set)
-    excludedInstAppointments.value = new Set(
-      instructorCategoriesMap.value.keys(),
+    filters.excludedInstAppointments = new Set(
+      instructorAppointmentTypesMap.value.keys(),
     );
     return;
   }
 
   // otherwise select all (i.e. clear the set)
-  excludedInstAppointments.value.clear();
+  filters.excludedInstAppointments.clear();
 }
 
-function toggleAllCourseLevels() {
-  const areAllSelected = excludedCourseLevels.value.size === 0;
+function toggleAllCourseTypes() {
+  const areAllSelected = filters.excludedCourseTypes.size === 0;
   if (areAllSelected) {
     // deselect all (i.e. add all keys to the excluded set)
-    excludedCourseLevels.value = new Set(courseLevelsMap.value.keys());
+    filters.excludedCourseTypes = new Set(courseTypesMap.value.keys());
     return;
   }
 
   // otherwise select all (i.e. clear the set)
-  excludedCourseLevels.value.clear();
+  filters.excludedCourseTypes.clear();
 }
 
-async function loadTerms() {
-  // reset the maps
-  termsMap.value.clear();
+function toggleAllCourseLevels() {
+  const areAllSelected = filters.excludedCourseLevels.size === 0;
+  if (areAllSelected) {
+    // deselect all (i.e. add all keys to the excluded set)
+    filters.excludedCourseLevels = new Set(courseLevelsMap.value.keys());
+    return;
+  }
 
-  // get terms and group info
-  const allTerms = await api.getTerms();
-
-  // init the termsMap with all terms
-  allTerms
-    .filter((t) => {
-      return dayjs(t.endDate).isSameOrBefore(MAX_TERM_DATE);
-    })
-    .forEach((term) => {
-      termsMap.value.set(term.id, term);
-    });
+  // otherwise select all (i.e. clear the set)
+  filters.excludedCourseLevels.clear();
 }
 
-async function loadGroup() {
-  group.value = await api.getGroup(props.groupId);
+function handleTabChange(tab: Tab) {
+  activeTab.value = tab.id as typeof activeTab.value;
 }
 
-async function loadCourseDataForTerm(term: Term) {
-  const courses = await api.getGroupCoursesByTerm({
-    termId: term.id,
-    groupId: props.groupId,
-    roles: [instructorRole.value],
-  });
-
-  coursesByTermMap.value.set(term.id, courses);
-}
-
-async function onInstructorRoleChange() {
-  // clear existing instructor and course data
-  instructorsForReport.value = [];
-  coursesByTermMap.value.clear();
-
-  // rerun the report
-  await runReport();
-}
-
-async function runReport() {
-  isRunningReport.value = true;
-  termsForReport.value = getReportTerms();
-  const termsNeedingData = termsForReport.value.filter(
-    (term) => !coursesByTermMap.value.has(term.id),
-  );
-
-  await pMap(termsNeedingData, loadCourseDataForTerm, {
-    concurrency: 5,
-  });
-
-  instructorsForReport.value = getInstructorsTeachingWithinReportTerms();
-
-  // update course levels and types
-  courseLevelsMap.value = getAllCourseLevelsMap();
-  courseTypesMap.value = getAllCourseTypesMap();
-  instructorCategoriesMap.value = getAllInstructorCategoriesMap();
-
-  isRunningReport.value = false;
-
-  scrollToCurrentTerm();
-}
-
-function scrollToCurrentTerm() {
-  if (!currentTerm.value) return;
-  const currentTermEl = document.getElementById(`term-${currentTerm.value.id}`);
-  if (!currentTermEl) return;
-  currentTermEl.scrollIntoView({
-    behavior: "smooth",
-    block: "center",
-    inline: "center",
-  });
-}
-
-watch(tableRef, () => {
-  scrollToCurrentTerm();
+const allTermOptions = computed(() => {
+  return allTerms.value.map((term) => ({
+    text: term.name,
+    value: term.id,
+  }));
 });
-
-onMounted(async () => {
-  // reset data
-  coursesByTermMap.value.clear();
-  termsMap.value.clear();
-  group.value = undefined;
-
-  // load data
-  await Promise.all([loadGroup(), loadTerms()]);
-
-  // set the default start and end terms
-  const defaultTerms = selectTermsWithinRangeInclusive(
-    DEFAULT_START_DATE,
-    DEFAULT_END_DATE,
-    [...termsMap.value.values()],
-  );
-  filters.startTermId = String(defaultTerms[0].id);
-  filters.endTermId = String(defaultTerms[defaultTerms.length - 1].id);
-
-  runReport();
-});
-
-function isFallTerm(term: Term) {
-  return term.name.includes("Fall");
-}
 </script>
 <style scoped lang="scss">
 .details-list {
@@ -720,5 +529,18 @@ function isFallTerm(term: Term) {
 
 .term-header-column.term-header-column--is-fall-term {
   border-left: 2px solid #eee;
+}
+
+.tab-button.tab-button--active {
+  background: #3490dc;
+  color: #fff;
+}
+
+// fix width of cells to prevent them from embiggening
+// when a collapseable item is expanded
+.scheduling-report-page td,
+.scheduling-report-page th {
+  min-width: 16rem;
+  max-width: 16rem;
 }
 </style>

@@ -60,7 +60,7 @@
 import SortableLink from "@/components/SortableLink.vue";
 import GroupTitle from "@/components/GroupTitle.vue";
 import SimpleNestedSelect from "@/components/SimpleNestedSelect.vue";
-import { dayjs } from "@/lib";
+import { dayjs } from "@/utils";
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
 
 export default {
@@ -160,7 +160,6 @@ export default {
     flattenBranch: function (branch) {
       var resultArray = [];
       resultArray.push(branch.id);
-      console.log(branch);
       if (branch.children) {
         branch.children.forEach((child) => {
           resultArray.push(this.flattenBranch(child));

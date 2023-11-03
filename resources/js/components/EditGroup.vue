@@ -299,7 +299,7 @@ import Members from "./Members.vue";
 import Modal from "./Modal.vue";
 import FolderWidget from "./FolderWidget.vue";
 import PersonSearch from "./PersonSearch.vue";
-import { dayjs, axios } from "@/lib";
+import { dayjs, axios } from "@/utils";
 
 export default {
   components: {

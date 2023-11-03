@@ -68,7 +68,7 @@
 
 <script>
 import SortableLink from "@/components/SortableLink.vue";
-import { dayjs } from "@/lib";
+import { dayjs } from "@/utils";
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
 
 export default {

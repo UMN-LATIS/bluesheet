@@ -29,19 +29,25 @@
         >✧</span
       >
       <NoIcon v-if="leave.status === 'cancelled'" title="cancelled" />
-      <span
+      <div
         :class="{
           'tw-line-through': leave.status === 'cancelled',
         }"
       >
-        {{ prettyLeaveType }} Leave
-      </span>
+        <span v-if="variant === 'instructor' && instructor">
+          {{ instructor.surName }}, {{ instructor.givenName }}
+        </span>
+        <span v-else> {{ prettyLeaveType }} Leave </span>
+      </div>
     </header>
     <div
       v-if="isOpen"
       class="leave-details tw-flex tw-flex-col tw-gap-2 tw-items-center tw-text-xs tw-normal-case"
     >
       <ul class="tw-text-xs tw-pl-6 tw-list-none tw-m-0">
+        <li v-if="variant === 'instructor'" class="tw-capitalize">
+          {{ leave.type }} Leave
+        </li>
         <li class="tw-capitalize">
           {{ isOnlyPartiallyEligible ? "Eligible when Tenured" : leave.status }}
         </li>
@@ -65,9 +71,11 @@ const props = withDefaults(
   defineProps<{
     leave: Leave;
     instructor?: Instructor;
+    variant?: "leaveType" | "instructor";
   }>(),
   {
     instructor: undefined,
+    variant: "leaveType",
   },
 );
 

@@ -3,8 +3,9 @@
     <Td class="instructor-column">
       <RouterLink :to="`/user/${instructor.id}`">
         <div
+          class="tw-truncate"
           :class="{
-            'tw-bg-yellow-100 tw-text-blue-600 ':
+            'tw-bg-yellow-100':
               search.length &&
               doesInstructorNameMatchSearchTerm(instructor, search),
           }"
@@ -13,7 +14,7 @@
         </div>
       </RouterLink>
       <div class="tw-text-xs tw-text-neutral-400 tw-flex tw-flex-col">
-        <span>
+        <span class="tw-truncate">
           {{ instructor.title }}
           {{ instructor.jobCode ? `(${instructor.jobCode})` : "" }}
         </span>
@@ -29,10 +30,10 @@
       class="term-data-column"
       :class="{
         'term-data-column--current': currentTerm?.id === terms[index].id,
-        'term-data-column--fall': isFallTerm(terms[index]),
+        'term-data-column--fall': terms[index].name.includes('Fall'),
       }"
     >
-      <div class="leaves tw-flex tw-flex-col tw-gap-1 tw-mb-2">
+      <div class="leaves tw-flex tw-flex-col tw-gap-1">
         <LeaveChip
           v-for="leave in listOfTermLeaves[index]"
           :key="leave.id"
@@ -42,25 +43,12 @@
           {{ leave.description }} ({{ leave.type }})
         </LeaveChip>
       </div>
-      <div
+      <CourseDetails
         v-for="course in termCourses"
-        v-show="isShowingCourse(course)"
-        :key="course.id"
-      >
-        <div
-          class="tw-my-1 tw-px-1"
-          :class="{
-            'tw-opacity-50 tw-line-through': course.cancelled,
-            'tw-bg-yellow-100':
-              search.length && doesCourseMatchSearchTerm(course, search),
-          }"
-        >
-          {{ course.subject }} {{ course.catalogNumber }}
-          <span class="tw-text-xs tw-text-neutral-400">
-            {{ course.enrollmentTotal }}/{{ course.enrollmentCap }}
-          </span>
-        </div>
-      </div>
+        :key="course.classNumber"
+        :course="course"
+        :search="search"
+      />
     </Td>
   </tr>
 </template>
@@ -68,6 +56,8 @@
 import { Td } from "@/components/Table";
 import LeaveChip from "@/components/LeaveChip.vue";
 import { Instructor, Term, Leave, Course } from "@/types";
+import { doesInstructorNameMatchSearchTerm } from "./doesInstructorNameMatchSearchTerm";
+import CourseDetails from "./CourseDetails.vue";
 
 defineProps<{
   instructor: Instructor;
@@ -75,30 +65,8 @@ defineProps<{
   terms: Term[];
   listOfTermCourses: Course[][];
   listOfTermLeaves: Leave[][];
-  isShowingCourse: (course: Course) => boolean;
   currentTerm: Term | null;
 }>();
-
-function doesInstructorNameMatchSearchTerm(
-  instructor: Instructor,
-  searchTerm: string,
-) {
-  return (
-    instructor.surName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    instructor.givenName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-}
-
-function doesCourseMatchSearchTerm(course: Course, searchTerm: string) {
-  const courseTitle =
-    `${course.subject} ${course.catalogNumber} ${course.classSection}`.toLowerCase();
-
-  return courseTitle.includes(searchTerm.toLowerCase());
-}
-
-function isFallTerm(term: Term) {
-  return term.name.includes("Fall");
-}
 </script>
 <style scoped>
 .term-data-column.term-data-column--current {

@@ -114,6 +114,7 @@ export interface Group {
   active: 0 | 1;
   artifacts: Artifact[]; // what's an artifact?
   notes: string | null;
+  members: Membership[];
 }
 
 export interface ChildGroup {
@@ -199,6 +200,7 @@ export interface Instructor {
   id: number;
   emplid: number;
   title: string;
+  instructorRole: InstructorRole;
   jobCode: string;
   givenName: string;
   surName: string;
@@ -213,14 +215,36 @@ export interface Instructor {
 
 export type TermCode = "FA" | "SP" | "SU";
 
-export interface Course {
+export type CourseShortCode =
+  `${TimelessCourse["subject"]}-${TimelessCourse["catalogNumber"]}`;
+
+export interface TimelessCourse {
+  shortCode: CourseShortCode;
+  subject: string; // HIST
+  catalogNumber: string; // "1001W"
+  title: string; // course name
+  courseType: string; // "LEC"
+  courseLevel: string; //"UGRD" | "GRAD";
+}
+
+export interface Course extends TimelessCourse {
+  classNumber: number; // classNumber from api - uniq for each course section
+  term: number;
+  classSection: string; // "001"
+  enrollmentCap: number;
+  enrollmentTotal: number;
+  cancelled: boolean;
+  instructors: Instructor[];
+}
+
+export interface ApiCourseInstructorRecord {
   id: number;
   term: number;
   subject: string; // HIST
-  catalogNumber: number; // 1001
+  catalogNumber: string; // "1001W"
   classNumber: number; // uniq id of course
   classSection: string; // "001"
-  instructorRole: string; // 'PI' === Primary Instructor
+  instructorRole: InstructorRole;
   title: string; // course name
   enrollmentCap: number;
   enrollmentTotal: number;
@@ -243,3 +267,23 @@ export interface ApiUserLookupResponse {
 export type InstructorRole =
   | "PI" // primary instuctor
   | "TA"; // teaching assistant
+
+export type LoadState = "idle" | "loading" | "complete" | "error";
+
+export type CoursesByInstructorAndTermKey = `${Instructor["id"]}-${Term["id"]}`;
+export type InstructorsByCourseAndTermKey = `${CourseShortCode}-${Term["id"]}`;
+
+export type CoursesByInstructorTermMap = Map<
+  CoursesByInstructorAndTermKey,
+  Course[]
+>;
+export type InstructorsByCourseTermMap = Map<
+  InstructorsByCourseAndTermKey,
+  InstructorWithCourse[]
+>;
+
+export type InstructorWithCourse = Instructor & { course: Course };
+
+export type LeaveWithInstructor = Leave & {
+  instructor: Omit<Instructor, "leaves">;
+};

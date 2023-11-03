@@ -1,31 +1,50 @@
 <template>
-  <DefaultLayout  v-if="$can('view eligibility')">
+  <DefaultLayout v-if="$can('view eligibility')">
     <div class="form-check">
-      <input class="form-check-input" type="radio" name="eligiblity" v-model="eligibility_setting" id="SSLEligible" value="ssl_eligible">
-      <label class="form-check-label" for="SSLEligible">
-        SSL Eligible
-      </label>
+      <input
+        id="SSLEligible"
+        v-model="eligibility_setting"
+        class="form-check-input"
+        type="radio"
+        name="eligiblity"
+        value="ssl_eligible"
+      />
+      <label class="form-check-label" for="SSLEligible"> SSL Eligible </label>
     </div>
-    
+
     <div class="form-check">
-      <input class="form-check-input" type="radio" name="eligiblity" v-model="eligibility_setting" id="SSLApplyEligible" value="ssl_apply_eligible">
+      <input
+        id="SSLApplyEligible"
+        v-model="eligibility_setting"
+        class="form-check-input"
+        type="radio"
+        name="eligiblity"
+        value="ssl_apply_eligible"
+      />
       <label class="form-check-label" for="SSLApplyEligible">
         SSL Application Eligible
       </label>
     </div>
     <div class="form-check">
-      <input class="form-check-input" type="radio" name="eligiblity" v-model="eligibility_setting" id="MidCareerEligible" value="midcareer_eligible">
+      <input
+        id="MidCareerEligible"
+        v-model="eligibility_setting"
+        class="form-check-input"
+        type="radio"
+        name="eligiblity"
+        value="midcareer_eligible"
+      />
       <label class="form-check-label" for="MidCareerEligible">
         Midcareer Eligible
       </label>
     </div>
     <DownloadCSV
-        class="btn btn-info mt-2 mb-2"
-        :data="filteredUserList"
-        :name="eligibility_setting + '.csv'"
-      >
-        Download List
-      </DownloadCSV>
+      class="btn btn-info mt-2 mb-2"
+      :data="filteredUserList"
+      :name="eligibility_setting + '.csv'"
+    >
+      Download List
+    </DownloadCSV>
     <table class="table">
       <thead>
         <tr>
@@ -53,7 +72,7 @@
         <tr v-for="user in sortedList" :key="user.id">
           <td>
             <router-link :to="{ name: 'user', params: { userId: user.id } }">
-                {{ user.displayName }}
+              {{ user.displayName }}
             </router-link>
           </td>
           <td>
@@ -68,68 +87,66 @@
 <script>
 import SortableLink from "@/components/SortableLink.vue";
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
-import { axios } from "@/lib";
+import { axios } from "@/utils";
 import DownloadCSV from "@/components/DownloadCSV.vue";
-import { $can } from "@/lib";
+import { $can } from "@/utils";
 
 export default {
   components: {
     SortableLink,
     DefaultLayout,
-    DownloadCSV
+    DownloadCSV,
   },
   data() {
     return {
       currentSortDir: "asc",
       currentSort: "displayName",
       userList: [],
-      eligibility_setting: 'ssl_eligible'
+      eligibility_setting: "ssl_eligible",
     };
   },
   computed: {
-    filteredUserList: function() {
-        return this.userList.map((user) => {
-            return {
-                displayName: user.displayName,
-                email: user.email,
-                department: user.dept_name,
-                deptid: user.deptid
-            }
-        });
+    filteredUserList: function () {
+      return this.userList.map((user) => {
+        return {
+          displayName: user.displayName,
+          email: user.email,
+          department: user.dept_name,
+          deptid: user.deptid,
+        };
+      });
     },
     sortedList: function () {
-      return [...this.userList]
-        .sort((a, b) => {
-          let modifier = 1;
-          if (this.currentSortDir === "desc") modifier = -1;
+      return [...this.userList].sort((a, b) => {
+        let modifier = 1;
+        if (this.currentSortDir === "desc") modifier = -1;
 
-          const aCurrentSort = a?.[this.currentSort] || " ";
-          const bCurrentSort = b?.[this.currentSort] || " ";
+        const aCurrentSort = a?.[this.currentSort] || " ";
+        const bCurrentSort = b?.[this.currentSort] || " ";
 
-          if (aCurrentSort.toLowerCase() < bCurrentSort.toLowerCase())
-            return -1 * modifier;
-          if (aCurrentSort.toLowerCase() > bCurrentSort.toLowerCase())
-            return 1 * modifier;
-          return 0;
-        });
-    }
+        if (aCurrentSort.toLowerCase() < bCurrentSort.toLowerCase())
+          return -1 * modifier;
+        if (aCurrentSort.toLowerCase() > bCurrentSort.toLowerCase())
+          return 1 * modifier;
+        return 0;
+      });
+    },
   },
   watch: {
-    eligibility_setting: function() {
-        this.userList = [];
-        this.loadUsers();
-    }
+    eligibility_setting: function () {
+      this.userList = [];
+      this.loadUsers();
+    },
   },
   mounted() {
     this.loadUsers();
   },
   methods: {
     $can,
-    loadUsers: function() {
-        axios.get('/api/eligibility/' + this.eligibility_setting)
-        .then((res) => {
-            this.userList = res.data;
-        });
+    loadUsers: function () {
+      axios.get("/api/eligibility/" + this.eligibility_setting).then((res) => {
+        this.userList = res.data;
+      });
     },
     sort: function (s) {
       //if s == current sort, reverse

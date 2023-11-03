@@ -60,7 +60,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import Button from "./Button.vue";
-import { $can } from "@/lib";
+import { $can } from "@/utils";
 import { User } from "@/types";
 import { ExternalLinkIcon } from "@/icons";
 

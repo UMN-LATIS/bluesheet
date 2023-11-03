@@ -103,17 +103,17 @@
       <template v-if="isEditing">
         <Button
           variant="tertiary"
-          @click="$emit('cancelEdit', leaveSnapshot)"
           class="disabled:hover:tw-bg-transparent disabled:tw-text-neutral-400 disabled:tw-cursor-not-allowed tw-mr-2"
+          @click="$emit('cancelEdit', leaveSnapshot)"
         >
           Cancel
         </Button>
 
         <Button
           variant="tertiary"
-          @click="$emit('save', modelValue)"
           :disabled="!((hasLeaveChanged || isNewLeave) && isLeaveValid)"
           class="!tw-bg-bs-blue tw-text-white disabled:tw-opacity-25"
+          @click="$emit('save', modelValue)"
         >
           Save
         </Button>
@@ -125,8 +125,8 @@
 
         <Button
           variant="tertiary"
-          @click="$emit('remove', modelValue)"
           class="tw-text-red-500 hover:tw-text-red-600 hover:tw-bg-red-100"
+          @click="$emit('remove', modelValue)"
         >
           Delete
         </Button>
@@ -137,7 +137,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
-import { dayjs, $can } from "@/lib";
+import { dayjs, $can } from "@/utils";
 import { Leave, leaveStatuses, leaveTypes, NewLeave } from "@/types";
 import Button from "./Button.vue";
 import InputGroup from "./InputGroup.vue";

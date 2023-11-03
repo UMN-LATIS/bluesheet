@@ -25,7 +25,7 @@
 
 <script lang="ts">
 import $ from "jquery";
-import dayjs from "../lib/dayjs";
+import { dayjs } from "@/utils";
 
 $(function () {
   $("[data-toggle='tooltip']").tooltip();

@@ -65,7 +65,7 @@
 <script lang="ts" setup>
 import { ref, computed } from "vue";
 import GroupTitle from "../components/GroupTitle.vue";
-import { dayjs } from "../lib";
+import { dayjs } from "@/utils";
 import { Table, Td, Th } from "@/components/Table";
 import { Membership } from "@/types";
 import CheckboxGroup from "./CheckboxGroup.vue";

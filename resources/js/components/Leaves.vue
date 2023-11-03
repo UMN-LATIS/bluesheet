@@ -62,7 +62,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch, reactive } from "vue";
-import { dayjs, $can } from "@/lib";
+import { dayjs, $can } from "@/utils";
 import { Leave, leaveStatuses, leaveTypes, NewLeave } from "@/types";
 import Button from "./Button.vue";
 import { cloneDeep } from "lodash";

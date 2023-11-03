@@ -124,7 +124,7 @@
 <script>
 import GroupTitle from "./GroupTitle.vue";
 import Members from "./Members.vue";
-import { $can } from "../lib";
+import { $can } from "@/utils";
 
 export default {
   components: {

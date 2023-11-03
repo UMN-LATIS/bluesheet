@@ -36,7 +36,7 @@
 
 <script lang="ts">
 import GanttRow from "./GanttRow.vue";
-import { dayjs } from "@/lib";
+import { dayjs } from "@/utils";
 
 export default {
   components: {
@@ -57,7 +57,7 @@ export default {
   },
   methods: {
     dayjs,
-  }
+  },
 };
 </script>
 
