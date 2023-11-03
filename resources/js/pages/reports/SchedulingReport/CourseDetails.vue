@@ -1,6 +1,6 @@
 <template>
   <div
-    class="tw-px-1"
+    class="course-details tw-px-1"
     :class="{
       'tw-opacity-50 tw-line-through': course.cancelled,
       'tw-bg-yellow-100':
@@ -31,7 +31,7 @@
       v-show="isOpen"
       class="tw-flex tw-flex-col tw-pl-7 tw-gap-1 tw-text-xs tw-text-neutral-500"
     >
-      <div class="tw-font-semibold">
+      <div class="tw-font-semibold tw-truncate">
         {{ course.title }}
       </div>
       <span>Section {{ course.classSection }}</span>

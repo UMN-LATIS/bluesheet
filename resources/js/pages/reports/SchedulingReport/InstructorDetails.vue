@@ -1,5 +1,6 @@
 <template>
   <div
+    class="instructor-details tw-truncate"
     :class="{
       'tw-opacity-50 tw-line-through': instructor.course.cancelled,
       'tw-bg-yellow-100':

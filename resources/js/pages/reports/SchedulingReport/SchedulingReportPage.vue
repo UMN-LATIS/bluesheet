@@ -1,5 +1,5 @@
 <template>
-  <WideLayout>
+  <WideLayout class="scheduling-report-page">
     <h1 class="tw-mb-4">
       {{ group?.group_title }} <br />
       <span class="tw-text-3xl">Scheduling Report</span>
@@ -534,5 +534,13 @@ const allTermOptions = computed(() => {
 .tab-button.tab-button--active {
   background: #3490dc;
   color: #fff;
+}
+
+// fix width of cells to prevent them from embiggening
+// when a collapseable item is expanded
+.scheduling-report-page td,
+.scheduling-report-page th {
+  min-width: 16rem;
+  max-width: 16rem;
 }
 </style>

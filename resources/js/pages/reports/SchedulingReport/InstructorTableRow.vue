@@ -3,6 +3,7 @@
     <Td class="instructor-column">
       <RouterLink :to="`/user/${instructor.id}`">
         <div
+          class="tw-truncate"
           :class="{
             'tw-bg-yellow-100':
               search.length &&
@@ -13,7 +14,7 @@
         </div>
       </RouterLink>
       <div class="tw-text-xs tw-text-neutral-400 tw-flex tw-flex-col">
-        <span>
+        <span class="tw-truncate">
           {{ instructor.title }}
           {{ instructor.jobCode ? `(${instructor.jobCode})` : "" }}
         </span>
