@@ -45,6 +45,7 @@
       <span v-if="instructor.sslApplyEligible">✦ SSL Apply Eligible </span>
       <span v-if="instructor.sslEligible">✦ SSL Eligible</span>
       <span v-if="instructor.midcareerEligible">✦ Midcareer Eligible</span>
+      <span>Section {{ instructor.course.classSection }}</span>
     </div>
   </div>
 </template>
