@@ -209,10 +209,10 @@
       <CourseTable
         v-show="activeTab === 'courses'"
         :terms="groupCourseHistoryStore.termsInRange"
-        :courses="allCourses"
+        :courses="filteredCourses"
         :currentTerm="currentTerm"
         :leavesPerTerm="groupCourseHistoryStore.leavesPerTerm"
-        :getInstructorsForCoursePerTerm="getInstructorsForCoursePerTerm"
+        :getInstructorsForCoursePerTerm="getFilteredInstructorsForCoursePerTerm"
         :search="filters.search"
         :termLoadStateMap="termLoadStateMap"
       />
@@ -226,7 +226,13 @@ import InstructorTable from "./InstructorTable.vue";
 import Button from "@/components/Button.vue";
 import { reactive, ref, watch, computed } from "vue";
 import debounce from "lodash-es/debounce";
-import { Course, Group, Instructor } from "@/types";
+import {
+  Course,
+  CourseShortCode,
+  Group,
+  Instructor,
+  TimelessCourse,
+} from "@/types";
 import { doesCourseNumberMatchSearchTerm } from "./doesCourseMatchSearchTerm";
 import CourseTable from "./CourseTable.vue";
 import { useGroupCourseHistoryStore } from "@/stores/useGroupCourseHistoryStore";
@@ -256,7 +262,7 @@ const {
   isLoadingComplete,
   instructorAppointmentTypesMap,
   allInstructors,
-  allCourses,
+  allCourses: allTimelessCourses,
   courseLevelsMap,
   courseTypesMap,
   termLoadStateMap,
@@ -327,6 +333,28 @@ const filteredTeachingAssistants = computed(() =>
   ),
 );
 
+const filteredCourses = computed(() => {
+  return allTimelessCourses.value.filter((course) => {
+    return (
+      doesCourseMatchFilter(course) &&
+      hasSomeInstructorMatchingFiltersTaughtCourse(course) &&
+      (filters.search === "" ||
+        doesCourseNumberMatchSearchTerm(course, filters.search))
+    );
+  });
+});
+
+function hasSomeInstructorMatchingFiltersTaughtCourse(course) {
+  return (
+    getInstructorsForCoursePerTerm(course.shortCode)
+      .flat()
+      // then check if any course matches our filters
+      .some((instructorWithCourse) => {
+        return isIncludedInstructorAppointment(instructorWithCourse);
+      })
+  );
+}
+
 function doesInstructorNameMatchSearchTerm(
   instructor: Instructor,
   searchTerm: string,
@@ -341,6 +369,18 @@ function getFilteredCoursesForInstructorPerTerm(instructorId: number) {
   const courses = getCoursesForInstructorPerTerm(instructorId);
   return courses.map((termCourses) => {
     return termCourses.filter(doesCourseMatchFilter);
+  });
+}
+
+/**
+ * Returns a list of instructors for a course, filtered by the current filters.
+ */
+function getFilteredInstructorsForCoursePerTerm(
+  courseShortCode: CourseShortCode,
+) {
+  const instructors = getInstructorsForCoursePerTerm(courseShortCode);
+  return instructors.map((termInstructors) => {
+    return termInstructors.filter(isIncludedInstructorAppointment);
   });
 }
 
@@ -365,7 +405,7 @@ function isIncludedInstructorAppointment(instructor: Instructor) {
   return !filters.excludedInstAppointments.has(instructor.academicAppointment);
 }
 
-function doesCourseMatchFilter(course: Course) {
+function doesCourseMatchFilter(course: Course | TimelessCourse) {
   return (
     // course type is not excluded (i.e. included)
     !filters.excludedCourseTypes.has(course.courseType) &&

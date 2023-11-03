@@ -170,7 +170,7 @@ const useStore = defineStore("groupCourseHistory", () => {
       }
       return true;
     }),
-    allCourses: computed(() => {
+    allCourses: computed((): TimelessCourse[] => {
       const courses: TimelessCourse[] = [
         ...state.coursesByInstructorTermMap.value.values(),
       ]
