@@ -19,10 +19,13 @@
     >
       <InputGroup
         v-if="isEditing"
-        v-model="modelValue.description"
+        :modelValue="modelValue.description"
         label="description"
         :showLabel="false"
         :isValid="isDescriptionValid"
+        @update:modelValue="
+          $emit('update:modelValue', { ...modelValue, description: $event })
+        "
       />
       <span v-else>{{ modelValue.description }}</span>
     </Td>
@@ -34,11 +37,14 @@
     >
       <SelectGroup
         v-if="isEditing"
-        v-model="modelValue.type"
+        :modelValue="modelValue.type"
         :options="leaveTypeOptions"
         :showLabel="false"
         :isValid="isTypeValid"
         label="type"
+        @update:modelValue="
+          $emit('update:modelValue', { ...modelValue, type: $event })
+        "
       />
       <span v-else>{{
         capitalizeEachWord(modelValue.type.replace("_", " "))
@@ -52,11 +58,14 @@
     >
       <SelectGroup
         v-if="isEditing"
-        v-model="modelValue.status"
+        :modelValue="modelValue.status"
         :options="leaveStatusOptions"
         :showLabel="false"
         :isValid="isStatusValid"
         label="status"
+        @update:modelValue="
+          $emit('update:modelValue', { ...modelValue, status: $event })
+        "
       />
       <Chip v-else :color="statusColor">{{ modelValue.status }}</Chip>
     </Td>
@@ -68,11 +77,14 @@
     >
       <InputGroup
         v-if="isEditing"
-        v-model="modelValue.start_date"
+        :modelValue="modelValue.start_date"
         label="start date"
         :showLabel="false"
         type="date"
         :isValid="isStartDateValid"
+        @update:modelValue="
+          $emit('update:modelValue', { ...modelValue, start_date: $event })
+        "
       />
       <span v-else>{{
         dayjs(modelValue.start_date).format("MMM D, YYYY")
@@ -86,11 +98,14 @@
     >
       <InputGroup
         v-if="isEditing"
-        v-model="modelValue.end_date"
+        :modelValue="modelValue.end_date"
         label="start date"
         :showLabel="false"
         type="date"
         :isValid="isEndDateValid"
+        @update:modelValue="
+          $emit('update:modelValue', { ...modelValue, end_date: $event })
+        "
       />
       <span v-else>{{ dayjs(modelValue.end_date).format("MMM D, YYYY") }}</span>
     </Td>
@@ -156,6 +171,7 @@ defineEmits<{
   (eventName: "save", value: Leave | NewLeave);
   (eventName: "edit", value: Leave | NewLeave);
   (eventName: "cancelEdit", value: Leave | NewLeave);
+  (eventName: "update:modelValue", value: Leave | NewLeave);
 }>();
 
 const leaveSnapshot = ref<Leave | NewLeave>(props.modelValue);

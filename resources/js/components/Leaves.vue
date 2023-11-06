@@ -46,7 +46,7 @@
         </Td>
       </tr>
       <LeaveTableRow
-        v-for="leave in leavesToShow"
+        v-for="(leave, index) in leavesToShow"
         :key="leave.id"
         :modelValue="leave"
         :isEditing="isEditing(leave)"
@@ -55,6 +55,7 @@
         @cancelEdit="handleCancelEditLeave"
         @remove="handleRemoveLeaveClick"
         @edit="idsOfLeavesInEditMode.add(leave.id!)"
+        @update:modelValue="localLeaves[index] = $event"
       />
     </Table>
   </div>
