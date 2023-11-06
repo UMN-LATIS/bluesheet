@@ -19,10 +19,14 @@
   </DefaultLayout>
 </template>
 
-<script>
+<script lang="ts">
 import ViewGroup from "@/components/ViewGroup.vue";
 import EditGroup from "@/components/EditGroup.vue";
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
+import { usePageTitle } from "@/utils/usePageTitle";
+import { Group } from "@/types";
+import { axios } from "@/utils";
+import { PropType } from "vue";
 
 export default {
   components: {
@@ -30,13 +34,30 @@ export default {
     EditGroup,
     DefaultLayout,
   },
-  props: ["groupId", "hash"],
+  props: {
+    groupId: {
+      type: Number,
+      required: true,
+    },
+    hash: {
+      type: Object as PropType<string | null>,
+      default: null,
+    },
+  },
   data() {
     return {
-      error: null,
-      group: null,
+      error: null as string | null,
+      group: null as Group | null,
       editing: false,
     };
+  },
+  watch: {
+    group: {
+      handler() {
+        usePageTitle(this.group?.group_title || "");
+      },
+      immediate: true,
+    },
   },
   mounted() {
     this.loadGroup();

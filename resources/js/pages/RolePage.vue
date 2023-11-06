@@ -39,17 +39,25 @@
   </DefaultLayout>
 </template>
 
-<script>
+<script lang="ts">
 import Members from "@/components/Members.vue";
 import SimpleNestedSelect from "@/components/SimpleNestedSelect.vue";
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
+import { axios } from "@/utils";
+import { usePageTitle } from "@/utils/usePageTitle";
+
 export default {
   components: {
     Members,
     SimpleNestedSelect,
     DefaultLayout,
   },
-  props: ["roleId"],
+  props: {
+    roleId: {
+      type: String,
+      required: true,
+    },
+  },
   data() {
     return {
       error: null,
@@ -83,6 +91,11 @@ export default {
         );
       }
       return false;
+    },
+  },
+  watch: {
+    role() {
+      usePageTitle(this.role?.label || "");
     },
   },
   mounted() {

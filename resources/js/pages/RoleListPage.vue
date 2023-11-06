@@ -53,6 +53,7 @@
 
 <script>
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
+import { usePageTitle } from "@/utils/usePageTitle";
 
 export default {
   components: { DefaultLayout },
@@ -73,6 +74,7 @@ export default {
     },
   },
   mounted() {
+    usePageTitle("Roles");
     this.loadRoles();
   },
   methods: {

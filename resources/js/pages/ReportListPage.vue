@@ -76,4 +76,7 @@
 <script setup>
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
 import { $can } from "@/utils";
+import { usePageTitle } from "@/utils/usePageTitle";
+
+usePageTitle('Reports');
 </script>

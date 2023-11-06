@@ -113,6 +113,7 @@
 <script>
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
 import { dayjs } from "@/utils";
+import { usePageTitle } from "@/utils/usePageTitle";
 
 export default {
   components: { DefaultLayout },
@@ -127,6 +128,7 @@ export default {
     };
   },
   mounted() {
+    usePageTitle('Users');
     if (this.users) {
       this.loadUsers(this.users);
     }
