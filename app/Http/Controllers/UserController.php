@@ -8,15 +8,14 @@ use DB;
 use App\Http\Resources\User as UserResource;
 use App\Library\LDAP as LDAP;
 use \App\Library\Bandaid;
-class UserController extends Controller
-{
+
+class UserController extends Controller {
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
-    {
+    public function index() {
         //
     }
 
@@ -26,8 +25,7 @@ class UserController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
-    {
+    public function store(Request $request) {
         //
     }
 
@@ -37,28 +35,25 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($user=null)
-    {
+    public function show($user = null) {
 
         // we might not get a user, and we override default laravel checks
-        if(!$user) {
+        if (!$user) {
             $user = Auth::user();
         }
-        
-        if($user != Auth::user() && !Auth::user()->hasPermissionTo('view users') && !Auth::user()->hasRole('super admin')) {
+
+        if ($user != Auth::user() && !Auth::user()->hasPermissionTo('view users') && !Auth::user()->hasRole('super admin')) {
             $returnData = array(
                 'status' => 'error',
                 'message' => "You don't have permission to view this user"
             );
             return Response()->json($returnData, 500);
-        }
-        else {
+        } else {
 
             // some of these might not actually be returned - the resource will gate based on perms
-            $user->load(['memberships', 'memberships.group', 'memberships.role', 'favoriteGroups', 'favoriteRoles', 'leaves']);
-            return new UserResource($user);    
+            $user->load(['memberships', 'memberships.group', 'memberships.role', 'favoriteGroups', 'favoriteRoles', 'leaves', 'leaves.artifacts']);
+            return new UserResource($user);
         }
-        
     }
 
     /**
@@ -68,9 +63,8 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $user)
-    {
-        if(!Auth::user()->can("edit users") && !Auth::user()->hasRole('super admin') && Auth::user()->id !== $user->id) {
+    public function update(Request $request, $user) {
+        if (!Auth::user()->can("edit users") && !Auth::user()->hasRole('super admin') && Auth::user()->id !== $user->id) {
             $returnData = array(
                 'status' => 'error',
                 'message' => "You don't have permission to create a user"
@@ -91,8 +85,7 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
-    {
+    public function destroy($id) {
         //
     }
 
@@ -113,7 +106,7 @@ class UserController extends Controller
         );
         return Response()->json($returnData);
     }
-    
+
     public function destroyFavoriteGroup($group) {
         $user = Auth::user();
         $user->favoriteGroups()->detach($group);
@@ -132,7 +125,7 @@ class UserController extends Controller
         return Response()->json($returnData);
     }
 
-    function extract_emails($str){
+    function extract_emails($str) {
         // This regular expression extracts all emails from a string:
         $regexp = '/([a-z0-9_\.\-])+\@(([a-z0-9\-])+\.)+([a-z0-9]{2,4})+/i';
         preg_match_all($regexp, $str, $m);
@@ -145,7 +138,7 @@ class UserController extends Controller
 
         $userIds = $request->get('users');
 
-        if(is_array($userIds) && count($userIds) == count(array_filter($userIds, 'is_numeric'))) {
+        if (is_array($userIds) && count($userIds) == count(array_filter($userIds, 'is_numeric'))) {
             $users = \App\User::whereIn("id", $userIds)->get();
             $code = 200;
             $returnData['status'] = "Success";
@@ -153,52 +146,47 @@ class UserController extends Controller
             return Response()->json($returnData, $code);
         }
 
-        if(!strstr($userIds, "@")) {
+        if (!strstr($userIds, "@")) {
             $cleanedList = explode(",", $userIds);
-        }
-        else {
+        } else {
             $emailList = $this->extract_emails($userIds);
             $cleanedList = [];
-            foreach($emailList as $entry) {
+            foreach ($emailList as $entry) {
                 $explodedAddress = explode("@", $entry);
                 $cleanedList[] = array_shift($explodedAddress);
             }
         }
-        
+
         $outputArray = [];
         $notFoundUser = [];
-        foreach($cleanedList as $userId) {
+        foreach ($cleanedList as $userId) {
             $userId = trim($userId);
             $user = \App\User::where("email", $userId . "@umn.edu")->first();
-            if($user) {
+            if ($user) {
                 $outputArray[] = new UserResource($user);
-            }
-            else {
+            } else {
                 $foundUser = LDAP::lookupUser($userId);
-                
-                if($foundUser) {
+
+                if ($foundUser) {
                     $foundUser->save();
-                    $outputArray[] = new UserResource($foundUser);   
-                }
-                else {
+                    $outputArray[] = new UserResource($foundUser);
+                } else {
                     $notFoundUser[] = $userId;
                 }
-            }    
+            }
         }
-        
+
 
         $returnData = [];
         $code = 200;
-        if(count($notFoundUser) == 0) {
+        if (count($notFoundUser) == 0) {
             $returnData['status'] = "Success";
             $returnData['users'] = $outputArray;
-        }
-        else if(count($outputArray) == 0) {
+        } else if (count($outputArray) == 0) {
             $returnData['status'] = "Error";
             $returnData['message'] = "We couldn't find that user.";
             $code = 500;
-        }
-        else {
+        } else {
             $returnData['status'] = "Partial";
             $returnData['users'] = $outputArray;
             $returnData['message'] = "We couldn't find these users: " . join(",", $notFoundUser);
@@ -209,7 +197,7 @@ class UserController extends Controller
     }
 
     public function eligibility(string $eligibilityType) {
-        if(!Auth::user()->can("view reports") && !Auth::user()->hasRole('super admin')) { 
+        if (!Auth::user()->can("view reports") && !Auth::user()->hasRole('super admin')) {
             return Response()->json(['message' => 'Forbidden'], 403);
         }
         $validEligibilityTypes = ['ssl_eligible', 'ssl_apply_eligible', 'midcareer_eligible'];
@@ -225,31 +213,30 @@ class UserController extends Controller
         $userEmplids = $users->pluck('emplid')->filter()->toArray();
         $bandaid = new Bandaid();
         $userRecords = $bandaid->getEmployees($userEmplids);
-        
+
         $userRecords = collect($userRecords)->where("JOB_INDICATOR", "P");
-        
+
         $userRecords = $userRecords->keyBy('EMPLID');
 
-        foreach($users as $user) {
-            if(!isset($user->emplid)) {
+        foreach ($users as $user) {
+            if (!isset($user->emplid)) {
                 continue;
             }
-            if(isset($userRecords[$user->emplid])) {
+            if (isset($userRecords[$user->emplid])) {
                 $user->deptid = $userRecords[$user->emplid]->DEPTID;
-                
             }
         }
 
         $departmentRecords = collect($bandaid->getDepartments($users->pluck("deptid")->toArray()))->keyBy("DEPT_ID");
-        foreach($users as $user) {
-            if(!isset($user->deptid)) {
+        foreach ($users as $user) {
+            if (!isset($user->deptid)) {
                 continue;
             }
-            if($departmentRecords[$user->deptid]) {
+            if ($departmentRecords[$user->deptid]) {
                 $user->dept_name = $departmentRecords[$user->deptid]->DESCRIPTION;
             }
         }
-        
+
 
 
         return Response()->json($users);

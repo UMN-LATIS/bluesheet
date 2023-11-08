@@ -112,7 +112,7 @@ export interface Group {
   parent_organization: ParentOrganization;
   parent_organization_id: number;
   active: 0 | 1;
-  artifacts: Artifact[]; // what's an artifact?
+  artifacts: GroupArtifact[]; // what's an artifact?
   notes: string | null;
   members: Membership[];
 }
@@ -141,9 +141,16 @@ export interface Artifact {
   id: number;
   label: string;
   target: string;
-  group_id: number;
   created_at: Date;
   updated_at: Date;
+}
+
+export interface GroupArtifact extends Artifact {
+  group_id: number;
+}
+
+export interface LeaveArtifact extends Artifact {
+  leave_id: number;
 }
 
 export const leaveTypes = {
@@ -177,6 +184,7 @@ export interface Leave {
   created_at: ISODateTime;
   updated_at: ISODateTime;
   deleted_at?: ISODateTime | null;
+  artifacts?: LeaveArtifact[];
 }
 
 export interface NewLeave {
@@ -187,6 +195,7 @@ export interface NewLeave {
   status: LeaveStatus;
   start_date: ISODate;
   end_date: ISODate;
+  artifacts?: LeaveArtifact[];
 }
 
 export interface Term {
