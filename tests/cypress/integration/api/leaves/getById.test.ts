@@ -59,6 +59,7 @@ describe("GET /api/leaves/:id", () => {
               "type",
               "status",
               "user",
+              "artifacts",
               "created_at",
               "updated_at",
             ]);
@@ -84,6 +85,7 @@ describe("GET /api/leaves/:id", () => {
           "type",
           "status",
           "user",
+          "artifacts",
           "created_at",
           "updated_at",
         ]);
