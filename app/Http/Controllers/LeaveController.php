@@ -63,28 +63,9 @@ class LeaveController extends Controller {
             'end_date' => 'required|date|after:start_date',
             'status' => ['required', Rule::in(Leave::STATUSES)],
             'type' => ['required', Rule::in(Leave::TYPES)],
-            'artifacts' => 'array',
-            'artifacts.*.id' => 'integer', // new artifacts won't have an id
-            'artifacts.*.label' => 'required|string',
-            'artifacts.*.target' => 'required|url',
         ]);
 
-        // update leave
-        $validatedLeave = Arr::except($validated, ['artifacts']);
-        $leave->update($validatedLeave);
-
-        // update artifacts
-        collect($validated['artifacts'])
-            ->each(function ($artifact) use ($leave) {
-
-                if (!isset($artifact->id)) {
-                    return $leave->artifacts()->create(Arr::except($artifact, ['id']));
-                }
-
-                $leave->artifacts()
-                    ->findOrFail($artifact['id'])
-                    ->update($artifact);
-            });
+        $leave->update($validated);
 
         return $leave->load(['user', 'artifacts']);
     }
@@ -95,7 +76,9 @@ class LeaveController extends Controller {
      * @param  \App\Leave  $leave
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Leave $leave) {
+    public function destroy(Request $request, Leave $leave) {
+        abort_if($request->user()->cannot('edit leaves'), 403);
+
         $leave->delete();
         return response()->json(null, Response::HTTP_NO_CONTENT);
     }

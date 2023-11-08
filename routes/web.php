@@ -11,6 +11,8 @@
 |
 */
 
+use App\Http\Controllers\LeaveArtifactController;
+
 Route::impersonate();
 
 if (config('shibboleth.emulate_idp')) {
@@ -72,6 +74,13 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
     Route::delete('leaves/{leave}', 'LeaveController@destroy');
     Route::get('users/{user}/leaves', 'UserLeaveController@index');
     Route::put('users/{user}/leaves', 'UserLeaveController@update');
+
+    // Leave Artifacts
+    Route::get('leaves/{leave}/artifacts', [LeaveArtifactController::class, 'index']);
+    Route::post('leaves/{leave}/artifacts', [LeaveArtifactController::class, 'store']);
+    Route::delete('leaves/{leave}/artifacts/{leaveArtifact}', [LeaveArtifactController::class, 'destroy']);
+    Route::put('leaves/{leave}/artifacts/{leaveArtifact}', [LeaveArtifactController::class, 'update']);
+
 
     // Catchall 404 JSON route
     Route::any('{any}', function () {

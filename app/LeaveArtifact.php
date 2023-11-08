@@ -11,6 +11,7 @@ class LeaveArtifact extends Model {
     protected $fillable = [
         'label',
         'target',
+        'leave_id',
     ];
 
     public function leave() {
