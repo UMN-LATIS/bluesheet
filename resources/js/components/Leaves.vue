@@ -57,7 +57,7 @@
         @cancelEdit="handleCancelEditLeave"
         @remove="handleRemoveLeaveClick"
         @edit="idsOfLeavesInEditMode.add(leave.id!)"
-        @update:modelValue="localLeaves[index] = $event"
+        @update="localLeaves[index] = $event"
       />
     </Table>
   </div>

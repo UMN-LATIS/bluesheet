@@ -1,165 +1,117 @@
 <template>
-  <tbody class="tw-bg-neutral-100 tw-shadow-inner">
-    <tr v-for="artifact in localArtifacts" :key="artifact.id">
-      <Td></Td>
-      <Td colspan="3">
-        <InputGroup
-          v-if="isEditing"
-          v-model="artifact.label"
-          label="Label"
-          placeholder="Artifact Label"
-          :showLabel="false"
-        />
-        <span v-else>{{ artifact.label }}</span>
-      </Td>
-      <Td colspan="2">
-        <InputGroup
-          v-if="isEditing"
-          v-model="artifact.target"
-          label="URL"
-          :showLabel="false"
-          placeholder="Artifact URL"
-        />
-        <span v-else>{{ artifact.target }}</span>
-      </Td>
-      <Td>
-        <div v-if="isEditing">
-          <Button
-            variant="tertiary"
-            class="disabled:hover:tw-bg-transparent disabled:tw-text-neutral-400 disabled:tw-cursor-not-allowed tw-mr-2"
-            @click="handleCancelEditArtifact(artifact)"
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="tertiary"
-            class="!tw-bg-bs-blue tw-text-white disabled:tw-opacity-25"
-            @click="handleSaveArtifact(artifact)"
-          >
-            Save
-          </Button>
+  <tr class="tw-bg-neutral-100 tw-shadow-inner">
+    <td></td>
+    <td colspan="8" class="tw-p-2">
+      <h3 class="tw-text-sm tw-font-semibold tw-leading-loose tw-m-0">
+        Artifacts for {{ leave.description || "Leave" }}
+      </h3>
+
+      <template v-if="isEditing">
+        <div
+          v-for="artifact in leave.artifacts"
+          :key="artifact.id"
+          class="tw-grid tw-grid-cols-2 tw-gap-2 tw-mb-4"
+        >
+          <InputGroup
+            :modelValue="artifact.label"
+            label="Label"
+            placeholder="Artifact Label"
+            :showLabel="false"
+            @update:modelValue="
+              handleEditArtifact({
+                ...artifact,
+                label: $event,
+              })
+            "
+          />
+          <InputGroup
+            :modelValue="artifact.target"
+            label="URL"
+            :showLabel="false"
+            placeholder="Artifact URL"
+            @update:modelValue="
+              handleEditArtifact({
+                ...artifact,
+                target: $event,
+              })
+            "
+          />
         </div>
-        <div v-else>
-          <Button variant="tertiary" @click="handleEditArtifact(artifact)"
-            >Edit</Button
+      </template>
+      <ul v-else class="tw-list-none tw-p-0 tw-m-0">
+        <li v-for="artifact in leave.artifacts" :key="artifact.id">
+          <component
+            :is="artifact.target ? 'a' : 'span'"
+            :href="artifact.target"
+            target="_blank"
+            rel="noopener noreferrer"
           >
-          <Button variant="danger" @click="handleDeleteArtifact(artifact)">
-            Delete
-          </Button>
-        </div>
-      </Td>
-    </tr>
-    <tr>
-      <td colspan="8" class="tw-p-4 tw-text-center">
-        <Button variant="tertiary" @click="handleAddArtifact">
-          Add Artifact
-        </Button>
-      </td>
-    </tr>
-  </tbody>
+            {{ artifact.label || "No Artifact Label" }}
+          </component>
+        </li>
+      </ul>
+      <p
+        v-if="!leave.artifacts?.length"
+        class="tw-italic tw-text-sm tw-text-neutral-500 tw-mb-2"
+      >
+        Link to a document or website related to this leave.
+      </p>
+      <Button
+        v-if="isEditing"
+        variant="tertiary"
+        class="-tw-ml-2"
+        @click="handleAddArtifact"
+      >
+        Add Artifact
+      </Button>
+    </td>
+  </tr>
 </template>
 <script setup lang="ts">
-import { ref, reactive } from "vue";
-import { Leave, LeaveArtifact, LoadState, NewLeave } from "@/types";
+import { Leave, LeaveArtifact } from "@/types";
 import { Td } from "./Table";
 import Button from "./Button.vue";
 import InputGroup from "./InputGroup.vue";
-import { $can, dayjs, getTempId, isTempId } from "@/utils";
-import * as api from "@/api";
+import { dayjs, getTempId } from "@/utils";
 
 const props = defineProps<{
   leave: Leave;
+  isEditing: boolean;
 }>();
 
 const emit = defineEmits<{
-  (eventName: "update", value: Leave);
+  (eventName: "update", value: Leave): void;
 }>();
 
-const localArtifacts = reactive(props.leave.artifacts || []);
-const isEditing = reactive(new Set<number | string>());
-
 function handleAddArtifact() {
-  const newArtifact = createLeaveArtifact();
-  localArtifacts.push(newArtifact);
-  isEditing.add(newArtifact.id);
+  const updatedLeave = {
+    ...props.leave,
+    artifacts: [...(props.leave.artifacts ?? []), createLeaveArtifact()],
+  };
+  emit("update", updatedLeave);
 }
 
-function createLeaveArtifact() {
-  const id = getTempId();
-  const newArtifact: LeaveArtifact = {
-    id,
+function createLeaveArtifact(): LeaveArtifact {
+  return {
+    id: getTempId(),
     label: "",
     target: "",
     leave_id: props.leave.id,
     created_at: dayjs().toISOString(),
     updated_at: dayjs().toISOString(),
   };
-  return newArtifact;
 }
 
 function handleEditArtifact(artifact: LeaveArtifact) {
-  isEditing.add(artifact.id);
-}
+  const updatedArtifacts = (props.leave.artifacts ?? []).map((a) => {
+    return a.id === artifact.id ? artifact : a;
+  });
 
-function handleCancelEditArtifact(artifact: LeaveArtifact) {
-  isEditing.delete(artifact.id);
-
-  const localArtifactIndex = localArtifacts.findIndex(
-    (a) => a.id === artifact.id,
-  );
-
-  if (localArtifactIndex === -1) return;
-
-  // if the artifact is new, remove it
-  if (isTempId(artifact.id)) {
-    localArtifacts.splice(localArtifactIndex, 1);
-    return;
-  }
-
-  if (!props.leave.artifacts) {
-    throw new Error(
-      `cannot cancel edit: no artifacts defined on leave with id ${props.leave.id}.`,
-    );
-  }
-
-  // otherwise, restore the artifact to its original state
-  const originalArtifactIndex = props.leave.artifacts.findIndex(
-    (a) => a.id === artifact.id,
-  );
-
-  // if the original artifact is not found, throw an error
-  if (originalArtifactIndex === -1) {
-    throw new Error(
-      `cannot cancel edit correctly. Problem finding original artifact with id ${artifact.id}.`,
-    );
-  }
-
-  localArtifacts.splice(
-    localArtifactIndex,
-    1,
-    props.leave.artifacts[originalArtifactIndex],
-  );
-}
-
-const isSaving = ref(false);
-async function handleSaveArtifact(artifact: LeaveArtifact) {
-  isSaving.value = true;
-  try {
-    // create a new leave
-    await api.createLeaveArtifact(artifact);
-
-    // emit the update
-    emit("update", {
-      ...props.leave,
-      artifacts: localArtifacts,
-    });
-  } catch (error) {
-    throw new Error(`error saving artifact: ${error}`);
-  } finally {
-    isSaving.value = false;
-  }
-
-  // emit the update
+  const updatedLeave = {
+    ...props.leave,
+    artifacts: updatedArtifacts,
+  };
+  emit("update", updatedLeave);
 }
 
 function handleDeleteArtifact(artifact: LeaveArtifact) {

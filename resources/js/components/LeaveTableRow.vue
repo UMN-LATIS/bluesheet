@@ -12,7 +12,7 @@
   >
     <Td>
       <button
-        v-if="!isNewLeave"
+        v-if="!isNewLeave && (isEditing || modelValue.artifacts?.length)"
         class="tw-bg-transparent tw-border-none"
         @click="isShowingDetails = !isShowingDetails"
       >
@@ -132,7 +132,7 @@
         <Button
           variant="tertiary"
           class="disabled:hover:tw-bg-transparent disabled:tw-text-neutral-400 disabled:tw-cursor-not-allowed tw-mr-2"
-          @click="$emit('cancelEdit', leaveSnapshot)"
+          @click="handleCancelEditLeave"
         >
           Cancel
         </Button>
@@ -141,7 +141,7 @@
           variant="tertiary"
           :disabled="!((hasLeaveChanged || isNewLeave) && isLeaveValid)"
           class="!tw-bg-bs-blue tw-text-white disabled:tw-opacity-25"
-          @click="$emit('save', modelValue)"
+          @click="handleSaveLeave"
         >
           Save
         </Button>
@@ -165,6 +165,7 @@
     v-if="isShowingDetails && isLeave(modelValue)"
     class="tw-bg-neutral-100 tw-shadow-inner"
     :leave="modelValue"
+    :isEditing="isEditing"
     @update="$emit('update', $event)"
   />
 </template>
@@ -210,6 +211,8 @@ watch(
   () => {
     if (props.isEditing) {
       leaveSnapshot.value = cloneDeep(props.modelValue);
+      // open the details when editing
+      isShowingDetails.value = true;
     }
   },
   { immediate: true },
@@ -293,6 +296,15 @@ const statusColor = computed(() => {
   }
 });
 
+function handleCancelEditLeave() {
+  emit("cancelEdit", leaveSnapshot.value);
+
+  // close the details if there are no artifacts
+  if (!props.modelValue.artifacts?.length) {
+    isShowingDetails.value = false;
+  }
+}
+
 function isLeaveNew(leave: Leave | NewLeave): leave is NewLeave {
   return isTempId(leave.id);
 }
@@ -334,6 +346,15 @@ function createLeaveArtifact() {
     updated_at: dayjs().toISOString(),
   };
   return newArtifact;
+}
+
+function handleSaveLeave(updatedLeave: Leave | NewLeave) {
+  emit("save", updatedLeave);
+
+  // if the leave has no artifacts, close the details
+  if (!updatedLeave.artifacts?.length) {
+    isShowingDetails.value = false;
+  }
 }
 
 function handleAddArtifact() {
