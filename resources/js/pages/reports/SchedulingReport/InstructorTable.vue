@@ -12,20 +12,22 @@
         :termLoadStateMap="termLoadStateMap"
       />
     </template>
-    <InstructorTableRow
-      v-for="instructor in instructors"
-      :key="instructor.id"
-      :instructor="instructor"
-      :terms="terms"
-      :listOfTermCourses="getCoursesForInstructorPerTerm(instructor.id)"
-      :listOfTermLeaves="getLeavesForInstructorPerTerm(instructor.id)"
-      :currentTerm="currentTerm"
-      :search="search"
-    />
+    <TBody>
+      <InstructorTableRow
+        v-for="instructor in instructors"
+        :key="instructor.id"
+        :instructor="instructor"
+        :terms="terms"
+        :listOfTermCourses="getCoursesForInstructorPerTerm(instructor.id)"
+        :listOfTermLeaves="getLeavesForInstructorPerTerm(instructor.id)"
+        :currentTerm="currentTerm"
+        :search="search"
+      />
+    </TBody>
   </Table>
 </template>
 <script setup lang="ts">
-import { Table, Th } from "@/components/Table";
+import { Table, TBody } from "@/components/Table";
 import InstructorTableRow from "./InstructorTableRow.vue";
 import { Term, Instructor, Leave, Course, LoadState } from "@/types";
 import ReportTableHeaderRow from "./ReportTableHeaderRow.vue";

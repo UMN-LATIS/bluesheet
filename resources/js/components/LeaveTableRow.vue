@@ -10,6 +10,23 @@
         !isNewLeave && !isCurrentOrFutureLeave && isEditing,
     }"
   >
+    <Td>
+      <button
+        v-if="!isNewLeave"
+        class="tw-bg-transparent tw-border-none"
+        @click="isShowingDetails = !isShowingDetails"
+      >
+        <ChevronDownIcon
+          class="tw-w-6 tw-h-6 tw-text-neutral-400 hover:tw-text-neutral-500"
+          :class="{
+            'tw-transform -tw-rotate-90': !isShowingDetails,
+          }"
+        />
+        <span class="tw-sr-only">
+          {{ isShowingDetails ? "Hide" : "Show" }} Details
+        </span>
+      </button>
+    </Td>
     <Td
       data-cy="leaveDescription"
       class="!tw-whitespace-normal"
@@ -24,7 +41,7 @@
         :showLabel="false"
         :isValid="isDescriptionValid"
         @update:modelValue="
-          $emit('update:modelValue', { ...modelValue, description: $event })
+          $emit('update', { ...modelValue, description: $event })
         "
       />
       <span v-else>{{ modelValue.description }}</span>
@@ -42,9 +59,7 @@
         :showLabel="false"
         :isValid="isTypeValid"
         label="type"
-        @update:modelValue="
-          $emit('update:modelValue', { ...modelValue, type: $event })
-        "
+        @update:modelValue="$emit('update', { ...modelValue, type: $event })"
       />
       <span v-else>{{
         capitalizeEachWord(modelValue.type.replace("_", " "))
@@ -63,9 +78,7 @@
         :showLabel="false"
         :isValid="isStatusValid"
         label="status"
-        @update:modelValue="
-          $emit('update:modelValue', { ...modelValue, status: $event })
-        "
+        @update:modelValue="$emit('update', { ...modelValue, status: $event })"
       />
       <Chip v-else :color="statusColor">{{ modelValue.status }}</Chip>
     </Td>
@@ -83,7 +96,7 @@
         type="date"
         :isValid="isStartDateValid"
         @update:modelValue="
-          $emit('update:modelValue', { ...modelValue, start_date: $event })
+          $emit('update', { ...modelValue, start_date: $event })
         "
       />
       <span v-else>{{
@@ -104,7 +117,7 @@
         type="date"
         :isValid="isEndDateValid"
         @update:modelValue="
-          $emit('update:modelValue', { ...modelValue, end_date: $event })
+          $emit('update', { ...modelValue, end_date: $event })
         "
       />
       <span v-else>{{ dayjs(modelValue.end_date).format("MMM D, YYYY") }}</span>
@@ -148,33 +161,48 @@
       </template>
     </Td>
   </tr>
+  <LeaveTableDetails
+    v-if="isShowingDetails && isLeave(modelValue)"
+    class="tw-bg-neutral-100 tw-shadow-inner"
+    :leave="modelValue"
+    @update="$emit('update', $event)"
+  />
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
-import { dayjs, $can } from "@/utils";
-import { Leave, leaveStatuses, leaveTypes, NewLeave } from "@/types";
+import { computed, ref, watch } from "vue";
+import { dayjs, $can, getTempId, isTempId } from "@/utils";
+import {
+  Leave,
+  LeaveArtifact,
+  leaveStatuses,
+  leaveTypes,
+  NewLeave,
+} from "@/types";
 import Button from "./Button.vue";
 import InputGroup from "./InputGroup.vue";
 import SelectGroup from "./SelectGroup.vue";
 import { Td } from "@/components/Table";
 import Chip from "./Chip.vue";
 import { cloneDeep, isEqual } from "lodash";
+import { ChevronDownIcon } from "@/icons";
+import LeaveTableDetails from "./LeaveTableDetails.vue";
 
 const props = defineProps<{
   modelValue: Leave | NewLeave;
   isEditing: boolean;
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
   (eventName: "remove", value: Leave | NewLeave);
   (eventName: "save", value: Leave | NewLeave);
   (eventName: "edit", value: Leave | NewLeave);
   (eventName: "cancelEdit", value: Leave | NewLeave);
-  (eventName: "update:modelValue", value: Leave | NewLeave);
+  (eventName: "update", value: Leave | NewLeave);
 }>();
 
 const leaveSnapshot = ref<Leave | NewLeave>(props.modelValue);
+const isShowingDetails = ref(false);
 
 // when changing edit state, save a snapshot of the leave
 watch(
@@ -265,11 +293,54 @@ const statusColor = computed(() => {
   }
 });
 
-const isNewLeave = computed(
-  () =>
-    !props.modelValue.id ||
-    (typeof props.modelValue.id === "string" &&
-      props.modelValue.id.includes("TEMPID")),
-);
+function isLeaveNew(leave: Leave | NewLeave): leave is NewLeave {
+  return isTempId(leave.id);
+}
+
+function isLeave(leave: Leave | NewLeave): leave is Leave {
+  return !isTempId(leave.id);
+}
+
+const isNewLeave = computed(() => isTempId(props.modelValue.id));
+
+function handleUpdateArtifact(artifact: LeaveArtifact) {
+  const artifacts = props.modelValue.artifacts || [];
+  const index = artifacts.findIndex((a) => a.id === artifact.id);
+
+  if (index === -1) {
+    throw new Error("cannot update leave artifact: artifact id not found");
+  }
+  const updated = [
+    ...artifacts.slice(0, index),
+    artifact,
+    ...artifacts.slice(index + 1),
+  ];
+  emit("update", { ...props.modelValue, artifacts: updated });
+}
+
+function createLeaveArtifact() {
+  if (!props.modelValue.id) {
+    // this should be the real id or a temp id
+    throw new Error("leave id not defined");
+  }
+
+  const id = getTempId();
+  const newArtifact: LeaveArtifact = {
+    id,
+    label: "",
+    target: "",
+    leave_id: props.modelValue.id,
+    created_at: dayjs().toISOString(),
+    updated_at: dayjs().toISOString(),
+  };
+  return newArtifact;
+}
+
+function handleAddArtifact() {
+  const artifacts = props.modelValue.artifacts || [];
+  const newArtifact = createLeaveArtifact();
+  const updated = [...artifacts, newArtifact];
+  emit("update", { ...props.modelValue, artifacts: updated });
+}
 </script>
 <style></style>

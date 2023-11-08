@@ -8,26 +8,28 @@
         :termLoadStateMap="termLoadStateMap"
       />
     </template>
-    <CourseTableLeavesRow
-      :leavesPerTerm="leavesPerTerm"
-      :terms="terms"
-      :currentTerm="currentTerm"
-      :sticky="false"
-      :search="search"
-    />
-    <CourseTableCourseRow
-      v-for="course in courses"
-      :key="course.shortCode"
-      :course="course"
-      :terms="terms"
-      :instructorsPerTerm="getInstructorsForCoursePerTerm(course.shortCode)"
-      :currentTerm="currentTerm"
-      :search="search"
-    />
+    <TBody>
+      <CourseTableLeavesRow
+        :leavesPerTerm="leavesPerTerm"
+        :terms="terms"
+        :currentTerm="currentTerm"
+        :sticky="false"
+        :search="search"
+      />
+      <CourseTableCourseRow
+        v-for="course in courses"
+        :key="course.shortCode"
+        :course="course"
+        :terms="terms"
+        :instructorsPerTerm="getInstructorsForCoursePerTerm(course.shortCode)"
+        :currentTerm="currentTerm"
+        :search="search"
+      />
+    </TBody>
   </Table>
 </template>
 <script setup lang="ts">
-import { Table } from "@/components/Table";
+import { Table, TBody } from "@/components/Table";
 import CourseTableCourseRow from "./CourseTableCourseRow.vue";
 import CourseTableLeavesRow from "./CourseTableLeavesRow.vue";
 import { Term, LoadState, TimelessCourse, CourseShortCode } from "@/types";

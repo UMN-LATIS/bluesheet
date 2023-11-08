@@ -138,11 +138,11 @@ export interface ChildGroup {
 }
 
 export interface Artifact {
-  id: number;
+  id: number | string;
   label: string;
   target: string;
-  created_at: Date;
-  updated_at: Date;
+  created_at: ISODateTime;
+  updated_at: ISODateTime;
 }
 
 export interface GroupArtifact extends Artifact {
@@ -150,7 +150,7 @@ export interface GroupArtifact extends Artifact {
 }
 
 export interface LeaveArtifact extends Artifact {
-  leave_id: number;
+  leave_id: number | string;
 }
 
 export const leaveTypes = {

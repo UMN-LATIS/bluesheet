@@ -29,6 +29,9 @@
     <Table>
       <template #thead>
         <tr>
+          <Th>
+            <span class="tw-sr-only">Actions</span>
+          </Th>
           <Th>Description</Th>
           <Th>Type</Th>
           <Th>Status</Th>
@@ -50,7 +53,6 @@
         :key="leave.id"
         :modelValue="leave"
         :isEditing="isEditing(leave)"
-        data-cy="leaveRow"
         @save="handleSaveLeave"
         @cancelEdit="handleCancelEditLeave"
         @remove="handleRemoveLeaveClick"
@@ -63,7 +65,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch, reactive } from "vue";
-import { dayjs, $can } from "@/utils";
+import { dayjs, $can, getTempId, isTempId } from "@/utils";
 import { Leave, leaveStatuses, leaveTypes, NewLeave } from "@/types";
 import Button from "./Button.vue";
 import { cloneDeep } from "lodash";
@@ -82,9 +84,9 @@ const localLeaves = reactive([] as (Leave | NewLeave)[]);
 const idsOfLeavesInEditMode = reactive(new Set<number | string>());
 
 function addNewLocalLeave() {
-  const randomId = Math.floor(Math.random() * 100000);
+  const id = getTempId();
   const newLeave: NewLeave = {
-    id: `TEMPID-${randomId}`,
+    id,
     description: "",
     type: leaveTypes.SABBATICAL,
     status: leaveStatuses.PENDING,
@@ -93,7 +95,7 @@ function addNewLocalLeave() {
     user_id: props.userId,
   };
   localLeaves.unshift(newLeave);
-  idsOfLeavesInEditMode.add(newLeave.id!);
+  idsOfLeavesInEditMode.add(id);
 }
 
 const sortByStartDateDescending = (a, b) => {
@@ -103,9 +105,7 @@ const sortByStartDateDescending = (a, b) => {
 };
 
 function isNewLeave(leave: Leave | NewLeave) {
-  return (
-    !leave.id || (typeof leave.id === "string" && leave.id.includes("TEMPID"))
-  );
+  return isTempId(leave.id);
 }
 
 function isEditing(leave: Leave | NewLeave): boolean {

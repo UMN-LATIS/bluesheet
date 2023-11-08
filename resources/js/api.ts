@@ -113,3 +113,11 @@ export async function getGroup(groupId: number) {
   const res = await axios.get<Types.Group>(`/api/group/${groupId}`);
   return res.data;
 }
+
+export async function createLeaveArtifact(artifact: Types.LeaveArtifact) {
+  const res = await axios.post<Types.LeaveArtifact>(
+    `/api/leaves/${artifact.leave_id}/artifacts`,
+    artifact,
+  );
+  return res.data;
+}
