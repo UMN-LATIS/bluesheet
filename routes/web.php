@@ -77,10 +77,10 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
 
     // Leave Artifacts
     Route::get('leaves/{leave}/artifacts', [LeaveArtifactController::class, 'index']);
+    Route::get('leaves/{leave}/artifacts/{leaveArtifact}', [LeaveArtifactController::class, 'show']);
     Route::post('leaves/{leave}/artifacts', [LeaveArtifactController::class, 'store']);
-    Route::delete('leaves/{leave}/artifacts/{leaveArtifact}', [LeaveArtifactController::class, 'destroy']);
     Route::put('leaves/{leave}/artifacts/{leaveArtifact}', [LeaveArtifactController::class, 'update']);
-
+    Route::delete('leaves/{leave}/artifacts/{leaveArtifact}', [LeaveArtifactController::class, 'destroy']);
 
     // Catchall 404 JSON route
     Route::any('{any}', function () {
