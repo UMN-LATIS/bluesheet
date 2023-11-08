@@ -1,5 +1,7 @@
 import { axios } from "@/utils";
 import type * as Types from "@/types";
+import { isTempId } from "@/utils";
+import { omit } from "lodash";
 
 export async function lookupUsers(
   query: string,
@@ -25,8 +27,21 @@ export async function createLeave(leave: Types.NewLeave) {
   return res.data;
 }
 
+function normalizeLeaveArtifacts(leaveArtifacts: Types.LeaveArtifact[]) {
+  // remove any artifacts without labels or urls
+  return leaveArtifacts
+    .filter((artifact) => artifact.label?.length || artifact.target?.length)
+    .map((artifact) => {
+      // strip any temp ids
+      return isTempId(artifact.id) ? omit(artifact, "id") : artifact;
+    });
+}
+
 export async function updateLeave(leave: Types.Leave) {
-  const res = await axios.put<Types.Leave>(`/api/leaves/${leave.id}`, leave);
+  const res = await axios.put<Types.Leave>(`/api/leaves/${leave.id}`, {
+    ...leave,
+    artifacts: normalizeLeaveArtifacts(leave.artifacts ?? []),
+  });
   return res.data;
 }
 

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\Response;
 use Auth;
+use Illuminate\Support\Arr;
 
 class LeaveController extends Controller {
     /**
@@ -42,7 +43,7 @@ class LeaveController extends Controller {
         $currentUser = Auth::user();
         abort_if($currentUser->cannot('view leave') && $leave->user_id !== $currentUser->id, 403);
 
-        return $leave->load('user');
+        return $leave->load(['user', 'artifacts']);
     }
 
     /**
@@ -62,10 +63,30 @@ class LeaveController extends Controller {
             'end_date' => 'required|date|after:start_date',
             'status' => ['required', Rule::in(Leave::STATUSES)],
             'type' => ['required', Rule::in(Leave::TYPES)],
+            'artifacts' => 'array',
+            'artifacts.*.id' => 'integer', // new artifacts won't have an id
+            'artifacts.*.label' => 'required|string',
+            'artifacts.*.target' => 'required|url',
         ]);
 
-        $leave->update($validated);
-        return $leave->load('user');
+        // update leave
+        $validatedLeave = Arr::except($validated, ['artifacts']);
+        $leave->update($validatedLeave);
+
+        // update artifacts
+        collect($validated['artifacts'])
+            ->each(function ($artifact) use ($leave) {
+
+                if (!isset($artifact->id)) {
+                    return $leave->artifacts()->create(Arr::except($artifact, ['id']));
+                }
+
+                $leave->artifacts()
+                    ->findOrFail($artifact['id'])
+                    ->update($artifact);
+            });
+
+        return $leave->load(['user', 'artifacts']);
     }
 
     /**

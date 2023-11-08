@@ -51,7 +51,7 @@
       <LeaveTableRow
         v-for="(leave, index) in leavesToShow"
         :key="leave.id"
-        :modelValue="leave"
+        :leave="leave"
         :isEditing="isEditing(leave)"
         @save="handleSaveLeave"
         @cancelEdit="handleCancelEditLeave"
@@ -158,7 +158,7 @@ async function handleCancelEditLeave(originalLeave: NewLeave | Leave) {
 async function handleSaveLeave(leave: Leave | NewLeave) {
   if (!leave.id) throw new Error("Leave does not have an id");
   const updatedLeave: Leave = isNewLeave(leave)
-    ? await api.createLeave(leave)
+    ? await api.createLeave(leave as NewLeave)
     : await api.updateLeave(leave as Leave);
 
   // update the localLeaves with the new leave
