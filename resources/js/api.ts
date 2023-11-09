@@ -132,7 +132,26 @@ export async function getGroup(groupId: number) {
 export async function createLeaveArtifact(artifact: Types.LeaveArtifact) {
   const res = await axios.post<Types.LeaveArtifact>(
     `/api/leaves/${artifact.leave_id}/artifacts`,
+    omit(artifact, "id"), // omit temp id
+  );
+  return res.data;
+}
+
+export async function updateLeaveArtifact(artifact: Types.LeaveArtifact) {
+  if (!artifact.id || isTempId(artifact.id)) {
+    throw new Error("Cannot update artifact without id");
+  }
+
+  const res = await axios.put<Types.LeaveArtifact>(
+    `/api/leaves/${artifact.leave_id}/artifacts/${artifact.id}`,
     artifact,
+  );
+  return res.data;
+}
+
+export async function deleteLeaveArtifact(artifact: Types.LeaveArtifact) {
+  const res = await axios.delete(
+    `/api/leaves/${artifact.leave_id}/artifacts/${artifact.id}`,
   );
   return res.data;
 }

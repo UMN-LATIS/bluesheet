@@ -33,13 +33,13 @@
 
       <Roles id="v-step-4" :memberships="memberships" class="tw-mt-12"></Roles>
 
-      <Leaves
+      <LeavesTableSection
         v-if="user && user.leaves"
         :leaves="user.leaves"
         :userId="user.id"
         class="tw-mt-12"
         @update="handleUpdateLeaves"
-      ></Leaves>
+      />
     </template>
   </DefaultLayout>
 </template>
@@ -48,7 +48,7 @@
 import { ref, computed, watch } from "vue";
 import ViewUser from "@/components/ViewUser.vue";
 import Roles from "@/components/Roles.vue";
-import Leaves from "@/components/Leaves.vue";
+import LeavesTableSection from "@/components/LeavesTableSection";
 import * as api from "@/api";
 import { User } from "@/types";
 import { useStore } from "vuex";

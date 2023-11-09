@@ -112,44 +112,30 @@
       />
       <span v-else>{{ dayjs(leave.end_date).format("MMM D, YYYY") }}</span>
     </Td>
-    <Td
-      v-if="$can('edit leaves')"
-      :class="{
-        '!tw-px-2 !tw-py-1': isEditing,
-      }"
-    >
-      <template v-if="isEditing">
-        <Button
-          variant="tertiary"
-          class="disabled:hover:tw-bg-transparent disabled:tw-text-neutral-400 disabled:tw-cursor-not-allowed tw-mr-2"
-          @click="handleCancelEditLeave"
-        >
-          Cancel
-        </Button>
+    <Td v-if="$can('edit leaves')">
+      <div class="tw-flex tw-gap-1 tw-justify-end tw-items-center">
+        <template v-if="isEditing">
+          <SmallButton @click="handleCancelEditLeave">Cancel</SmallButton>
 
-        <Button
-          variant="tertiary"
-          :disabled="!((hasLeaveChanged || isNewLeave) && isLeaveValid)"
-          class="!tw-bg-bs-blue tw-text-white disabled:tw-opacity-25"
-          @click="handleSaveLeave(leave)"
-        >
-          Save
-        </Button>
-      </template>
-      <template v-else>
-        <Button variant="tertiary" @click="$emit('edit', leave)"> Edit </Button>
+          <SmallButton
+            variant="primary"
+            :disabled="!((hasLeaveChanged || isNewLeave) && isLeaveValid)"
+            @click="handleSaveLeave(leave)"
+          >
+            Save
+          </SmallButton>
+        </template>
+        <template v-else>
+          <SmallButton @click="$emit('edit', leave)">Edit</SmallButton>
 
-        <Button
-          variant="tertiary"
-          class="tw-text-red-500 hover:tw-text-red-600 hover:tw-bg-red-100"
-          @click="$emit('remove', leave)"
-        >
-          Delete
-        </Button>
-      </template>
+          <SmallButton variant="danger" @click="$emit('remove', leave)">
+            Delete
+          </SmallButton>
+        </template>
+      </div>
     </Td>
   </tr>
-  <LeaveTableDetails
+  <LeaveArtifacts
     v-if="isShowingDetails && isLeave(leave)"
     class="tw-bg-neutral-100 tw-shadow-inner"
     :leave="leave"
@@ -168,14 +154,15 @@ import {
   leaveTypes,
   NewLeave,
 } from "@/types";
-import Button from "./Button.vue";
-import InputGroup from "./InputGroup.vue";
-import SelectGroup from "./SelectGroup.vue";
+import Button from "@/components/Button.vue";
+import InputGroup from "@/components/InputGroup.vue";
+import SelectGroup from "@/components/SelectGroup.vue";
 import { Td } from "@/components/Table";
-import Chip from "./Chip.vue";
+import Chip from "@/components/Chip.vue";
 import { cloneDeep, isEqual } from "lodash";
 import { ChevronDownIcon } from "@/icons";
-import LeaveTableDetails from "./LeaveTableDetails.vue";
+import LeaveArtifacts from "./LeaveArtifacts.vue";
+import SmallButton from "./SmallButton.vue";
 
 const props = defineProps<{
   leave: Leave | NewLeave;
