@@ -13,11 +13,11 @@
     <Td>
       <button
         v-if="!isNewLeave && (isEditing || leave.artifacts?.length)"
-        class="tw-bg-transparent tw-border-none"
+        class="tw-border-none tw-text-neutral-900 tw-bg-neutral-100 hover:tw-bg-neutral-200 tw-rounded-full tw-transition tw-duration-300 tw-inline-flex tw-items-center tw-justify-center tw-w-8 tw-h-8"
         @click="isShowingDetails = !isShowingDetails"
       >
         <ChevronDownIcon
-          class="tw-w-6 tw-h-6 tw-text-neutral-400 hover:tw-text-neutral-500"
+          class="tw-w-6 tw-h-6"
           :class="{
             'tw-transform -tw-rotate-90': !isShowingDetails,
           }"
