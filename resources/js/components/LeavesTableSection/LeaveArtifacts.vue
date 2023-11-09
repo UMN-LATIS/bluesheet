@@ -1,5 +1,8 @@
 <template>
-  <tbody class="leave-artifacts tw-bg-neutral-100 tw-shadow-inner">
+  <tbody
+    class="leave-artifacts tw-bg-neutral-100 tw-shadow-inner"
+    data-cy="leaveArtifacts"
+  >
     <tr>
       <Th></Th>
       <Th colspan="3"> Artifacts for {{ leave.description }} </Th>
@@ -15,13 +18,15 @@
       :key="artifact.id"
       :artifact="artifact"
       :leave="leave"
-      @update="handleUpdateArtifact"
-      @delete="handleDeleteArtifact"
+      @update="(updated) => handleUpdateArtifact(artifact.id, updated)"
+      @delete="handleDeleteArtifact(artifact.id)"
     />
     <tr v-if="$can('edit leaves')">
       <Td></Td>
       <Td colspan="8">
-        <Button @click="handleAddArtifact"> Add Artifact </Button>
+        <Button data-cy="addArtifactButton" @click="handleAddArtifact">
+          Add Artifact
+        </Button>
       </Td>
     </tr>
   </tbody>
@@ -52,14 +57,14 @@ function handleAddArtifact() {
   });
 }
 
-function handleUpdateArtifact(artifact: LeaveArtifact) {
-  const index = localArtifacts.findIndex((a) => a.id === artifact.id);
+function handleUpdateArtifact(id: number | string, artifact: LeaveArtifact) {
+  const index = localArtifacts.findIndex((a) => a.id === id);
   if (index === -1) return;
   localArtifacts.splice(index, 1, artifact);
 }
 
-function handleDeleteArtifact(artifact: LeaveArtifact) {
-  const index = localArtifacts.findIndex((a) => a.id === artifact.id);
+function handleDeleteArtifact(id: number | string) {
+  const index = localArtifacts.findIndex((a) => a.id === id);
   if (index === -1) return;
   localArtifacts.splice(index, 1);
 }

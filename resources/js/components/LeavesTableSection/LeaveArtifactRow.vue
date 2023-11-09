@@ -1,5 +1,5 @@
 <template>
-  <tr>
+  <tr data-cy="leaveArtifactRow">
     <Td></Td>
     <template v-if="$can('edit leaves') && (isEditing || isNewArtifact)">
       <Td colspan="3">
@@ -8,6 +8,7 @@
           label="Label"
           placeholder="Artifact Label"
           :showLabel="false"
+          data-cy="artifactLabelInput"
         />
       </Td>
       <Td colspan="2">
@@ -16,12 +17,19 @@
           label="URL"
           :showLabel="false"
           placeholder="Artifact URL"
+          data-cy="artifactTargetInput"
         />
       </Td>
       <Td>
         <div class="tw-flex tw-gap-1 tw-px-2 tw-justify-end tw-items-center">
-          <SmallButton @click="handleCancelEdit">Cancel</SmallButton>
-          <SmallButton variant="primary" @click="handleSave">
+          <SmallButton data-cy="artifactCancelButton" @click="handleCancelEdit"
+            >Cancel</SmallButton
+          >
+          <SmallButton
+            variant="primary"
+            data-cy="artifactSaveButton"
+            @click="handleSave"
+          >
             Save
           </SmallButton>
         </div>
@@ -45,8 +53,13 @@
       </Td>
       <Td v-if="$can('edit leaves')">
         <div class="tw-flex tw-gap-1 tw-px-2 tw-justify-end tw-items-center">
-          <SmallButton @click="isEditing = true">Edit</SmallButton>
-          <SmallButton variant="danger" @click="handleDelete"
+          <SmallButton data-cy="artifactEditButton" @click="isEditing = true"
+            >Edit</SmallButton
+          >
+          <SmallButton
+            variant="danger"
+            data-cy="artifactDeleteButton"
+            @click="handleDelete"
             >Delete</SmallButton
           >
         </div>
@@ -80,13 +93,24 @@ const isNewArtifact = computed(() => isTempId(localArtifact.value.id));
 
 watch(
   () => props.artifact,
-  (artifact) => {
-    localArtifact.value = cloneDeep(artifact);
+  () => {
+    console.log("watch props.artifact", {
+      isNewArtifact: isNewArtifact.value,
+      localArtifact: localArtifact.value,
+      propsArtifact: props.artifact,
+    });
+    localArtifact.value = cloneDeep(props.artifact);
   },
   { immediate: true },
 );
 
 function handleCancelEdit() {
+  console.log("handleCancelEdit", {
+    isNewArtifact: isNewArtifact.value,
+    localArtifact: localArtifact.value,
+    propsArtifact: props.artifact,
+  });
+
   if (isNewArtifact.value) {
     emit("delete", localArtifact.value);
     return;
