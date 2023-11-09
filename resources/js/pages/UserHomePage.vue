@@ -50,83 +50,52 @@ import ViewUser from "@/components/ViewUser.vue";
 import Roles from "@/components/Roles.vue";
 import LeavesTableSection from "@/components/LeavesTableSection";
 import * as api from "@/api";
-import { User } from "@/types";
-import { useStore } from "vuex";
-import { AxiosError } from "axios";
+import { Leave } from "@/types";
 import CheckboxGroup from "@/components/CheckboxGroup.vue";
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
 import { usePageTitle } from "@/utils/usePageTitle";
+import { useUserStore } from "@/stores/useUserStore";
+import { useErrorStore } from "@/stores/useErrorStore";
 
 const props = defineProps<{
   userId: number | null;
 }>();
 
-const user = ref<User | null>(null);
+const userStore = useUserStore();
+
+const user = computed(() => {
+  return props.userId ? userStore.getUser(props.userId) : userStore.currentUser;
+});
+
 const error = ref<string | null>(null);
 const isCurrentUser = computed(() => {
-  return user.value?.id === store.state.user?.id;
+  return props.userId === userStore.currentUser?.id;
 });
+
+watch(
+  () => props.userId,
+  () => {
+    if (props.userId) {
+      userStore.fetchUser(props.userId);
+      return;
+    }
+    userStore.fetchCurrentUser();
+  },
+  { immediate: true },
+);
 
 const memberships = computed(() => {
   return user.value?.memberships ?? [];
 });
 
-const store = useStore();
-const isLoadingUser = ref(false);
-
-watch(
-  [() => props.userId, () => store.state.user],
-  async () => {
-    if (isLoadingUser.value) return;
-
-    // if we're using current user, and it's not loaded, wait
-    if (props.userId === null) {
-      user.value = store.state.user;
-      return;
-    }
-
-    // if the userId matches the current user, use the current user
-    if (props.userId === store.state.user?.id) {
-      user.value = store.state.user;
-      return;
-    }
-
-    // otherwise, load the user
-    isLoadingUser.value = true;
-    await loadUser(props.userId);
-    isLoadingUser.value = false;
-  },
-  { immediate: true },
-);
-
 watch(user, () => usePageTitle(user.value?.displayName ?? ""), {
   immediate: true,
 });
 
-async function loadUser(userId: number) {
-  error.value = null;
-  try {
-    user.value = await api.getUser(userId);
-  } catch (err) {
-    console.error(err);
-    error.value =
-      (err as AxiosError).response?.data ??
-      "Sorry. There was a problem loading the user.";
+async function handleUpdateLeaves(leaves: Leave[]) {
+  if (!user.value) {
+    throw new Error("Cannot update leaves for this user. User not defined.");
   }
-}
-
-async function handleUpdateLeaves(leaves) {
-  if (!user.value?.leaves) {
-    // this would only happen if someone had 'edit leaves' privileges
-    // but not 'view leaves' privileges
-    throw new Error("Cannot update leaves on user without leaves");
-  }
-
-  try {
-    user.value.leaves = await api.updateUserLeaves(user.value.id, leaves);
-  } catch (err) {
-    console.error(err);
-    error.value = "Sorry. There was a problem updating the leaves.";
-  }
+  userStore.updateUserLeaves(user.value.id, leaves);
 }
 </script>

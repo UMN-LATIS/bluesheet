@@ -6,7 +6,7 @@
       </div>
       <ViewGroup
         v-if="!editing && group"
-        v-model:editing="editing"
+        v-model:is-editing="editing"
         :group="group"
       />
       <EditGroup

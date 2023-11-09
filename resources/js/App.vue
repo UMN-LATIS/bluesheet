@@ -52,7 +52,10 @@
       </template>
     </AppHeader>
 
-    <router-view :key="$route.fullPath" :userperms="userperms" />
+    <router-view
+      :key="$route.fullPath"
+      :userperms="userStore.currentUserPermissions"
+    />
 
     <AppFooter />
 
@@ -62,50 +65,33 @@
       :show="createGroup"
       @close="createGroup = false"
     />
+
+    <Teleport to="body">
+      <ErrorModal />
+    </Teleport>
   </div>
 </template>
 
-<script>
+<script setup lang="ts">
 import { AppHeader, NavbarItem, AppFooter } from "@umn-latis/cla-vue-template";
 import UserLookup from "@/components/UserLookup.vue";
 import CreateGroup from "@/components/CreateGroup.vue";
 import { $can } from "@/utils";
-import { mapStores } from "pinia";
-import { useTermsStore } from "./stores/useTermsStore";
+import { onMounted, ref } from "vue";
+import { useUserStore } from "@/stores/useUserStore";
+import ErrorModal from "@/components/ErrorModal.vue";
 
-export default {
-  components: {
-    AppHeader,
-    AppFooter,
-    UserLookup,
-    CreateGroup,
-    NavbarItem,
-  },
-  props: ["userperms"],
-  data() {
-    return {
-      findUser: false,
-      createGroup: false,
-    };
-  },
-  computed: {
-    ...mapStores(useTermsStore),
-  },
-  mounted() {
-    this.$store.dispatch("fetchUser");
-    console.log("Component mounted.");
-  },
-  methods: {
-    $can,
-  },
-};
+const findUser = ref(false);
+const createGroup = ref(false);
+
+const userStore = useUserStore();
+
+onMounted(() => {
+  userStore.init();
+});
 </script>
 
 <style>
-/* .container {
-        margin-top: 10px;
-    } */
-
 .navbar-block .router-link-exact-active {
   color: black !important;
 }

@@ -1,3 +1,5 @@
+import type { AxiosRequestConfig } from "axios";
+
 export type CSSClass = string | Record<string, boolean> | CSSClass[];
 
 export interface UserLookupItem {
@@ -296,3 +298,7 @@ export type InstructorWithCourse = Instructor & { course: Course };
 export type LeaveWithInstructor = Leave & {
   instructor: Omit<Instructor, "leaves">;
 };
+
+export interface CustomAxiosRequestConfig extends AxiosRequestConfig {
+  skipErrorNotifications?: boolean;
+}
