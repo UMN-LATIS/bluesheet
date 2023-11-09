@@ -20,13 +20,8 @@
     />
     <tr v-if="$can('edit leaves')">
       <Td></Td>
-      <Td
-        colspan="8"
-        class="tw-border-0 tw-border-t tw-border-solid tw-border-neutral-200"
-      >
-        <SmallButton variant="primary" @click="handleAddArtifact">
-          Add Artifact
-        </SmallButton>
+      <Td colspan="8">
+        <Button @click="handleAddArtifact"> Add Artifact </Button>
       </Td>
     </tr>
   </tbody>
@@ -34,11 +29,10 @@
 <script setup lang="ts">
 import { reactive } from "vue";
 import { Leave, LeaveArtifact } from "@/types";
-import Button from "@/components/Button.vue";
 import LeaveArtifactRow from "./LeaveArtifactRow.vue";
 import { getTempId, $can } from "@/utils";
 import { Th, Td } from "../Table";
-import SmallButton from "./SmallButton.vue";
+import Button from "../Button.vue";
 
 const props = defineProps<{
   leave: Leave;
