@@ -94,23 +94,12 @@ const isNewArtifact = computed(() => isTempId(localArtifact.value.id));
 watch(
   () => props.artifact,
   () => {
-    console.log("watch props.artifact", {
-      isNewArtifact: isNewArtifact.value,
-      localArtifact: localArtifact.value,
-      propsArtifact: props.artifact,
-    });
     localArtifact.value = cloneDeep(props.artifact);
   },
   { immediate: true },
 );
 
 function handleCancelEdit() {
-  console.log("handleCancelEdit", {
-    isNewArtifact: isNewArtifact.value,
-    localArtifact: localArtifact.value,
-    propsArtifact: props.artifact,
-  });
-
   if (isNewArtifact.value) {
     emit("delete", localArtifact.value);
     return;
