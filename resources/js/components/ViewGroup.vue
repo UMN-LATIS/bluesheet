@@ -9,7 +9,7 @@
         >
           <button
             class="btn btn-outline-primary"
-            @click="userStore.toggleGroupFavorite(group.id)"
+            @click="userStore.toggleGroupFavorite(group)"
           >
             <i
               class="fa-star"

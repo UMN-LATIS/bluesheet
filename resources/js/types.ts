@@ -114,7 +114,7 @@ export interface Group {
   parent_organization: ParentOrganization;
   parent_organization_id: number;
   active: 0 | 1;
-  artifacts: GroupArtifact[]; // what's an artifact?
+  artifacts: GroupArtifact[];
   notes: string | null;
   members: Membership[];
 }

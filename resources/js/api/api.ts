@@ -117,7 +117,7 @@ export async function getGroupCoursesByTerm({
   return [...coursesByClassNumber.values()];
 }
 
-export async function getGroup(groupId: number) {
+export async function fetchGroup(groupId: number) {
   const res = await axios.get<T.Group>(`/api/group/${groupId}`);
   return res.data;
 }
@@ -154,9 +154,11 @@ export async function fetchCurrentUser() {
   return res.data;
 }
 
-export async function postGroupFavorite(groupId: number) {
-  const res = await axios.post<T.Group>(`/api/user/favorite/groups/${groupId}`);
-  return res.data;
+export async function postGroupFavorite(groupId: number): Promise<boolean> {
+  const res = await axios.post<{ status: string }>(
+    `/api/user/favorite/groups/${groupId}`,
+  );
+  return res.data.status === "success";
 }
 
 export async function deleteGroupFavorite(groupId: number) {
@@ -164,11 +166,11 @@ export async function deleteGroupFavorite(groupId: number) {
   return res.data;
 }
 
-export async function postRoleFavorite(roleId: number) {
-  const res = await axios.post<T.MemberRole>(
+export async function postRoleFavorite(roleId: number): Promise<boolean> {
+  const res = await axios.post<{ status: string }>(
     `/api/user/favorite/roles/${roleId}`,
   );
-  return res.data;
+  return res.data.status === "success";
 }
 
 export async function deleteRoleFavorite(roleId: number) {

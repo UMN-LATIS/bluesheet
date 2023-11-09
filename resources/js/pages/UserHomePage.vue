@@ -55,7 +55,6 @@ import CheckboxGroup from "@/components/CheckboxGroup.vue";
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
 import { usePageTitle } from "@/utils/usePageTitle";
 import { useUserStore } from "@/stores/useUserStore";
-import { useErrorStore } from "@/stores/useErrorStore";
 
 const props = defineProps<{
   userId: number | null;
@@ -64,7 +63,9 @@ const props = defineProps<{
 const userStore = useUserStore();
 
 const user = computed(() => {
-  return props.userId ? userStore.getUser(props.userId) : userStore.currentUser;
+  return props.userId
+    ? userStore.userLookup[props.userId]
+    : userStore.currentUser;
 });
 
 const error = ref<string | null>(null);
@@ -75,11 +76,9 @@ const isCurrentUser = computed(() => {
 watch(
   () => props.userId,
   () => {
-    if (props.userId) {
-      userStore.fetchUser(props.userId);
-      return;
-    }
-    userStore.fetchCurrentUser();
+    props.userId
+      ? userStore.fetchUser(props.userId)
+      : userStore.fetchCurrentUser();
   },
   { immediate: true },
 );

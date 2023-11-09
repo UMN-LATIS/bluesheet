@@ -1,9 +1,10 @@
 import { defineStore } from "pinia";
-import { reactive } from "vue";
+import { computed, reactive, toRefs } from "vue";
 import type { Group } from "@/types";
+import * as api from "@/api";
 
 interface GroupsStoreState {
-  groupLookup: Record<Group["id"], Group>;
+  groupLookup: Record<Group["id"], Group | undefined>;
 }
 
 export const useGroupStore = defineStore("groups", () => {
@@ -13,11 +14,17 @@ export const useGroupStore = defineStore("groups", () => {
 
   const getters = {};
 
-  const actions = {};
+  const actions = {
+    async fetchGroup(groupId: Group["id"]) {
+      const group = await api.fetchGroup(groupId);
+      state.groupLookup[groupId] = group;
+      return group;
+    },
+  };
 
-  return {
+  return toRefs({
     ...state,
     ...getters,
     ...actions,
-  };
+  });
 });

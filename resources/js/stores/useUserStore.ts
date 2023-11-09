@@ -7,15 +7,8 @@ import type { Group, Leave, MemberRole, User, UserPermission } from "@/types";
 interface UserStoreState {
   currentUserId: User["id"] | null;
   currentUserPermissions: UserPermission[];
-  userLookup: Record<User["id"], User>;
+  userLookup: Record<User["id"], User | undefined>;
 }
-
-// // pure functions for selecting data from the store state
-const selectors = {
-  selectCurrentUser: (state: UserStoreState): User | null => {
-    return state.currentUserId ? state.userLookup[state.currentUserId] : null;
-  },
-};
 
 export const useUserStore = defineStore("user", () => {
   const state = reactive<UserStoreState>({
@@ -26,19 +19,22 @@ export const useUserStore = defineStore("user", () => {
 
   const getters = {
     currentUser: computed((): User | null => {
-      return state.currentUserId ? state.userLookup[state.currentUserId] : null;
-    }),
-
-    getUser: computed(() => (userId: User["id"]): User | null => {
-      return state.userLookup[userId] ?? null;
+      if (!state.currentUserId) return null;
+      return state.userLookup[state.currentUserId] ?? null;
     }),
 
     currentGroupFavorites: computed((): Group[] => {
       return getters.currentUser.value?.favoriteGroups ?? [];
     }),
+
     currentRoleFavorites: computed((): MemberRole[] => {
       return getters.currentUser.value?.favoriteRoles ?? [];
     }),
+
+    getUserRef: (userId: User["id"]) =>
+      computed((): User | null => {
+        return state.userLookup[userId] ?? null;
+      }),
   };
 
   const actions = {
@@ -63,50 +59,57 @@ export const useUserStore = defineStore("user", () => {
 
     async updateUserLeaves(userId: User["id"], leaves: Leave[]) {
       const updatedLeaves = await api.updateUserLeaves(userId, leaves);
-      state.userLookup[userId].leaves = updatedLeaves;
+      const user =
+        state.userLookup[userId] ?? (await actions.fetchUser(userId));
+      if (!user) {
+        throw new Error("Cannot update leaves for null user");
+      }
+      user.leaves = updatedLeaves;
     },
 
-    async toggleGroupFavorite(groupId: number) {
-      const currentUser = selectors.selectCurrentUser(state);
+    async toggleGroupFavorite(group: Group) {
+      if (!state.currentUserId) throw new Error("No current user");
+
+      const currentUser = state.userLookup[state.currentUserId];
       if (!currentUser) {
         throw new Error("Cannot toggle favorite for null user");
       }
 
       const isFavorited = currentUser.favoriteGroups.some(
-        (g) => g.id === groupId,
+        (g) => g.id === group.id,
       );
 
       if (isFavorited) {
-        await api.deleteGroupFavorite(groupId);
+        await api.deleteGroupFavorite(group.id);
         currentUser.favoriteGroups = currentUser.favoriteGroups.filter(
-          (g) => g.id !== groupId,
+          (g) => g.id !== group.id,
         );
         return;
       }
 
-      const group = await api.postGroupFavorite(groupId);
+      await api.postGroupFavorite(group.id);
       currentUser.favoriteGroups.push(group);
     },
 
-    async toggleRoleFavorite(roleId: number) {
-      const currentUser = selectors.selectCurrentUser(state);
+    async toggleRoleFavorite(role: MemberRole) {
+      const currentUser = getters.currentUser.value;
       if (!currentUser) {
         throw new Error("Cannot toggle favorite for null user");
       }
 
       const isFavorited = currentUser.favoriteRoles.some(
-        (r) => r.id === roleId,
+        (r) => r.id === role.id,
       );
 
       if (isFavorited) {
-        api.deleteRoleFavorite(roleId);
+        api.deleteRoleFavorite(role.id);
         currentUser.favoriteRoles = currentUser.favoriteRoles.filter(
-          (r) => r.id !== roleId,
+          (r) => r.id !== role.id,
         );
         return;
       }
 
-      const role = await api.postRoleFavorite(roleId);
+      await api.postRoleFavorite(role.id);
       currentUser.favoriteRoles.push(role);
     },
   };
