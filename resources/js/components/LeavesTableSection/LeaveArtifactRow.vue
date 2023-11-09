@@ -1,34 +1,34 @@
 <template>
   <tr>
-    <td></td>
-    <template v-if="isEditing || isNewArtifact">
-      <td colspan="3">
+    <Td></Td>
+    <template v-if="$can('edit leaves') && (isEditing || isNewArtifact)">
+      <Td colspan="3">
         <InputGroup
           v-model="localArtifact.label"
           label="Label"
           placeholder="Artifact Label"
           :showLabel="false"
         />
-      </td>
-      <td colspan="2">
+      </Td>
+      <Td colspan="2">
         <InputGroup
           v-model="localArtifact.target"
           label="URL"
           :showLabel="false"
           placeholder="Artifact URL"
         />
-      </td>
-      <td>
+      </Td>
+      <Td>
         <div class="tw-flex tw-gap-1 tw-px-2 tw-justify-end tw-items-center">
           <SmallButton @click="handleCancelEdit">Cancel</SmallButton>
           <SmallButton variant="primary" @click="handleSave">
             Save
           </SmallButton>
         </div>
-      </td>
+      </Td>
     </template>
     <template v-else>
-      <td colspan="5">
+      <Td colspan="3" class="tw-text-sm">
         <a
           :href="localArtifact.target"
           target="_blank"
@@ -36,26 +36,33 @@
         >
           {{ localArtifact.label }}
         </a>
-      </td>
-      <td>
+      </Td>
+      <Td class="tw-text-sm">
+        {{ dayjs(localArtifact.created_at).format("MMM D, YYYY") }}
+      </Td>
+      <Td class="tw-text-sm">
+        {{ dayjs(localArtifact.updated_at).format("MMM D, YYYY") }}
+      </Td>
+      <Td v-if="$can('edit leaves')">
         <div class="tw-flex tw-gap-1 tw-px-2 tw-justify-end tw-items-center">
           <SmallButton @click="isEditing = true">Edit</SmallButton>
           <SmallButton variant="danger" @click="handleDelete"
             >Delete</SmallButton
           >
         </div>
-      </td>
+      </Td>
     </template>
   </tr>
 </template>
 <script setup lang="ts">
 import { Leave, LeaveArtifact } from "@/types";
 import { ref, computed, watch } from "vue";
-import { isTempId } from "@/utils";
+import { isTempId, dayjs, $can } from "@/utils";
 import InputGroup from "@/components/InputGroup.vue";
 import SmallButton from "./SmallButton.vue";
 import * as api from "@/api";
 import { cloneDeep } from "lodash";
+import { Td } from "@/components/Table";
 
 const props = defineProps<{
   leave: Leave;
@@ -110,8 +117,4 @@ async function handleDelete() {
   return emit("delete", localArtifact.value);
 }
 </script>
-<style scoped>
-td {
-  padding: 0.25rem 0.5rem;
-}
-</style>
+<style scoped></style>

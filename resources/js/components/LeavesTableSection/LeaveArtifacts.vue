@@ -1,18 +1,13 @@
 <template>
-  <tbody class="tw-bg-neutral-100 tw-shadow-inner">
+  <tbody class="leave-artifacts tw-bg-neutral-100 tw-shadow-inner">
     <tr>
-      <th></th>
-      <th colspan="8" class="tw-p-2">
-        <h3 class="tw-text-sm tw-italic tw-leading-loose tw-m-0">
-          Artifacts for {{ leave.description || "Leave" }}
-        </h3>
-        <p
-          v-if="!leave.artifacts?.length"
-          class="tw-italic tw-text-sm tw-text-neutral-500 tw-mb-2"
-        >
-          Link to a document or website related to this leave.
-        </p>
-      </th>
+      <Th></Th>
+      <Th colspan="3"> Artifacts for {{ leave.description }} </Th>
+      <Th>Created</Th>
+      <Th>Updated</Th>
+      <Th v-if="$can('edit leaves')">
+        <span class="tw-sr-only">Actions</span>
+      </Th>
     </tr>
 
     <LeaveArtifactRow
@@ -23,13 +18,16 @@
       @update="handleUpdateArtifact"
       @delete="handleDeleteArtifact"
     />
-    <tr>
-      <td></td>
-      <td colspan="8" class="p-2">
-        <Button variant="tertiary" class="-tw-ml-2" @click="handleAddArtifact">
+    <tr v-if="$can('edit leaves')">
+      <Td></Td>
+      <Td
+        colspan="8"
+        class="tw-border-0 tw-border-t tw-border-solid tw-border-neutral-200"
+      >
+        <SmallButton variant="primary" @click="handleAddArtifact">
           Add Artifact
-        </Button>
-      </td>
+        </SmallButton>
+      </Td>
     </tr>
   </tbody>
 </template>
@@ -38,7 +36,9 @@ import { reactive } from "vue";
 import { Leave, LeaveArtifact } from "@/types";
 import Button from "@/components/Button.vue";
 import LeaveArtifactRow from "./LeaveArtifactRow.vue";
-import { getTempId } from "@/utils";
+import { getTempId, $can } from "@/utils";
+import { Th, Td } from "../Table";
+import SmallButton from "./SmallButton.vue";
 
 const props = defineProps<{
   leave: Leave;
@@ -70,4 +70,10 @@ function handleDeleteArtifact(artifact: LeaveArtifact) {
   localArtifacts.splice(index, 1);
 }
 </script>
-<style scoped></style>
+<style scoped>
+.leave-artifacts th:not(:first-child) {
+  font-style: italic;
+  font-size: 0.75rem;
+  border-bottom: 1px solid #ddd;
+}
+</style>
