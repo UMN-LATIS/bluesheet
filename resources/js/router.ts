@@ -58,7 +58,10 @@ export const router = createRouter({
       name: "group",
       path: "/group/:groupId/:hash?",
       component: GroupPage,
-      props: true,
+      props: (route) => ({
+        groupId: parseIntFromParam(route.params.groupId),
+        hash: route.params.hash,
+      }),
     },
     {
       name: "role",
