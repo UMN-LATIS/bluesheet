@@ -111,10 +111,10 @@ export const useUserStore = defineStore("user", () => {
 
   const actions = {
     async init() {
-      await actions.fetchCurrentUser();
+      await actions.loadCurrentUser();
     },
 
-    async fetchCurrentUser() {
+    async loadCurrentUser() {
       const user = await api.fetchCurrentUser();
       state.currentUserId = user.id;
       state.userLookup[user.id] = toNormalizedUser(user);
@@ -123,7 +123,7 @@ export const useUserStore = defineStore("user", () => {
       return user;
     },
 
-    async fetchUser(userId: User["id"]) {
+    async loadUser(userId: User["id"]) {
       const user = await api.fetchUser(userId);
 
       state.userLookup[user.id] = toNormalizedUser(user);
@@ -132,14 +132,10 @@ export const useUserStore = defineStore("user", () => {
       return user;
     },
 
-    async updateUserLeaves(userId: User["id"], leaves: Leave[]) {
-      const updatedLeaves = await api.updateUserLeaves(userId, leaves);
-      const user =
-        state.userLookup[userId] ?? (await actions.fetchUser(userId));
-      if (!user) {
-        throw new Error("Cannot update leaves for null user");
-      }
-      user.leaves = updatedLeaves;
+    async batchUpdateUserLeaves(userId: User["id"], leaves: Leave[]) {
+      await api.updateUserLeaves(userId, leaves);
+
+      state.leaveLookup = concatLeavesToLookup(state.leaveLookup, leaves);
     },
 
     async toggleGroupFavorite(group: Group) {

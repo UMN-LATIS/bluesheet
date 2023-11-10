@@ -33,7 +33,7 @@
 
       <Roles id="v-step-4" :memberships="memberships" class="tw-mt-12"></Roles>
 
-      <LeavesTableSection
+      <LeavesTable
         v-if="user && user.leaves"
         :leaves="user.leaves"
         :userId="user.id"
@@ -48,7 +48,7 @@
 import { ref, computed, watch } from "vue";
 import ViewUser from "@/components/ViewUser.vue";
 import Roles from "@/components/Roles.vue";
-import LeavesTableSection from "@/components/LeavesTableSection";
+import LeavesTable from "@/components/LeavesTable";
 import * as api from "@/api";
 import { Leave } from "@/types";
 import CheckboxGroup from "@/components/CheckboxGroup.vue";
@@ -64,7 +64,7 @@ const userStore = useUserStore();
 
 const user = computed(() => {
   return props.userId
-    ? userStore.userLookup[props.userId]
+    ? userStore.getUserRef(props.userId).value
     : userStore.currentUser;
 });
 
@@ -77,8 +77,8 @@ watch(
   () => props.userId,
   () => {
     props.userId
-      ? userStore.fetchUser(props.userId)
-      : userStore.fetchCurrentUser();
+      ? userStore.loadUser(props.userId)
+      : userStore.loadCurrentUser();
   },
   { immediate: true },
 );
@@ -95,6 +95,6 @@ async function handleUpdateLeaves(leaves: Leave[]) {
   if (!user.value) {
     throw new Error("Cannot update leaves for this user. User not defined.");
   }
-  userStore.updateUserLeaves(user.value.id, leaves);
+  userStore.batchUpdateUserLeaves(user.value.id, leaves);
 }
 </script>
