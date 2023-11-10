@@ -60,7 +60,7 @@ export const router = createRouter({
       component: GroupPage,
       props: (route) => ({
         groupId: parseIntFromParam(route.params.groupId),
-        hash: route.params.hash,
+        hash: route.params.hash ?? null,
       }),
     },
     {
