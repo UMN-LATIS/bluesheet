@@ -12,7 +12,7 @@ import {
   type UserPermission,
   leaveStatuses,
 } from "@/types";
-import { dayjs, getTempId } from "@/utils";
+import { dayjs, getTempId, isTempId } from "@/utils";
 
 interface UserStoreState {
   currentUserId: User["id"] | null;
@@ -146,13 +146,68 @@ export const useUserStore = defineStore("user", () => {
         type: leaveTypes.SABBATICAL,
         status: leaveStatuses.PENDING,
         start_date: dayjs().format("YYYY-MM-DD"),
-        end_date: dayjs().format("YYYY-MM-DD"),
+        end_date: dayjs().add(1, "year").format("YYYY-MM-DD"),
         created_at: dayjs().format(),
         updated_at: dayjs().format(),
       };
 
       user.leaves.push(newLeave.id);
       state.leaveLookup[newLeave.id] = newLeave;
+    },
+
+    updateLeaveInStore(existingLeaveId: Leave["id"], updatedLeave: Leave) {
+      state.leaveLookup[updatedLeave.id] = updatedLeave;
+
+      // if the leave ids match, we're done
+      if (existingLeaveId === updatedLeave.id) {
+        return;
+      }
+
+      // for id changes, we need to remove the old record,
+      delete state.leaveLookup[existingLeaveId];
+
+      // and swap the old and new id's in the normalized
+      // user lookup
+      const normalizedUser = state.userLookup[updatedLeave.user_id];
+      if (!normalizedUser) {
+        throw new Error(
+          "no user loaded into store, cannot update user's leave array.",
+        );
+      }
+      const leaveIndex = normalizedUser.leaves.findIndex(
+        (id) => id === existingLeaveId,
+      );
+      normalizedUser.leaves.splice(leaveIndex, 1, updatedLeave.id);
+    },
+
+    async saveLeave(leave: Leave) {
+      const isNewLeave = isTempId(leave.id);
+      const updatedLeave = isNewLeave
+        ? await api.createLeave(leave)
+        : await api.updateLeave(leave);
+
+      actions.updateLeaveInStore(leave.id, updatedLeave);
+    },
+
+    removeLeaveFromStore(leaveId: Leave["id"]) {
+      const leaveToDelete = state.leaveLookup[leaveId];
+      if (!leaveToDelete) return;
+
+      // remove this leave from the normalized user
+      const normalizedUser = state.userLookup[leaveToDelete.user_id];
+      if (!normalizedUser) return;
+      const leaveIndex = normalizedUser.leaves.findIndex(
+        (id) => id === leaveId,
+      );
+      normalizedUser.leaves.splice(leaveIndex, 1);
+
+      // remove the record from the lookup
+      delete state.leaveLookup[leaveId];
+    },
+
+    async deleteLeave(leaveId: Leave["id"]) {
+      await api.deleteLeave(leaveId);
+      actions.removeLeaveFromStore(leaveId);
     },
 
     // async batchUpdateUserLeaves(userId: User["id"], leaves: Leave[]) {
