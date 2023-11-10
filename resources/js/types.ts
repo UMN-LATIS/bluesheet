@@ -30,7 +30,7 @@ export const UserPermissions = {
 export type UserPermission =
   (typeof UserPermissions)[keyof typeof UserPermissions];
 
-export interface User {
+export interface BaseUser {
   id: number;
   givenname: string;
   surname: string;
@@ -49,13 +49,20 @@ export interface User {
   send_email_reminders: boolean;
   notify_of_favorite_changes: boolean;
   permissions: UserPermission[];
-  leaves?: Leave[];
   ssl_eligible: boolean;
   midcareer_eligible: boolean;
   ssl_apply_eligible: boolean;
   created_at: ISODateTime;
   updated_at: ISODateTime;
   deleted_at: ISODateTime | null;
+}
+
+export interface NormalizedUser extends BaseUser {
+  leaves: Leave["id"][];
+}
+
+export interface User extends BaseUser {
+  leaves: Leave[];
 }
 
 export interface Membership {

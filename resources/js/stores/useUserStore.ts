@@ -2,25 +2,80 @@ import { toRefs } from "@vueuse/core";
 import { defineStore } from "pinia";
 import { computed, reactive } from "vue";
 import * as api from "@/api";
-import type { Group, Leave, MemberRole, User, UserPermission } from "@/types";
+import type {
+  Group,
+  Leave,
+  MemberRole,
+  NormalizedUser,
+  User,
+  UserPermission,
+} from "@/types";
 
 interface UserStoreState {
   currentUserId: User["id"] | null;
   currentUserPermissions: UserPermission[];
-  userLookup: Record<User["id"], User | undefined>;
+  userLookup: Record<User["id"], NormalizedUser | undefined>;
+  leaveLookup: Record<Leave["id"], Leave | undefined>;
+}
+
+function toNormalizedUser(user: User): NormalizedUser {
+  return {
+    ...user,
+    leaves: user.leaves.map((l) => l.id),
+  };
+}
+
+interface NormalizedUserParts {
+  normUser: NormalizedUser;
+  leavesLookup: Record<Leave["id"], Leave | undefined>;
+}
+
+function toDenormalizedUser({
+  normUser,
+  leavesLookup,
+}: NormalizedUserParts): User {
+  return {
+    ...normUser,
+    leaves: toLeavesArray(normUser.leaves, leavesLookup),
+  };
+}
+
+function concatLeavesToLookup(
+  currentLookup: Record<Leave["id"], Leave | undefined>,
+  leaves: Leave[],
+): Record<Leave["id"], Leave> {
+  return {
+    ...currentLookup,
+    ...Object.fromEntries(leaves.map((l) => [l.id, l])),
+  };
+}
+
+function toLeavesArray(
+  leaveIds: Leave["id"][],
+  leavesLookup: Record<Leave["id"], Leave | undefined>,
+): Leave[] {
+  return leaveIds
+    .map((id) => leavesLookup[id] ?? null)
+    .filter(Boolean) as Leave[];
 }
 
 export const useUserStore = defineStore("user", () => {
   const state = reactive<UserStoreState>({
     currentUserId: null,
     userLookup: {},
+    leaveLookup: {},
     currentUserPermissions: window.Permissions,
   });
 
   const getters = {
     currentUser: computed((): User | null => {
       if (!state.currentUserId) return null;
-      return state.userLookup[state.currentUserId] ?? null;
+      const normedUser = state.userLookup[state.currentUserId];
+      if (!normedUser) return null;
+      return toDenormalizedUser({
+        normUser: normedUser,
+        leavesLookup: state.leaveLookup,
+      });
     }),
 
     currentGroupFavorites: computed((): Group[] => {
@@ -33,7 +88,12 @@ export const useUserStore = defineStore("user", () => {
 
     getUserRef: (userId: User["id"]) =>
       computed((): User | null => {
-        return state.userLookup[userId] ?? null;
+        const normedUser = state.userLookup[userId] ?? null;
+        if (!normedUser) return null;
+        return toDenormalizedUser({
+          normUser: normedUser,
+          leavesLookup: state.leaveLookup,
+        });
       }),
 
     isRoleFavorited: (roleId: number) =>
@@ -57,16 +117,19 @@ export const useUserStore = defineStore("user", () => {
     async fetchCurrentUser() {
       const user = await api.fetchCurrentUser();
       state.currentUserId = user.id;
-      state.userLookup[user.id] = user;
+      state.userLookup[user.id] = toNormalizedUser(user);
+      state.leaveLookup = concatLeavesToLookup(state.leaveLookup, user.leaves);
+
+      return user;
     },
 
     async fetchUser(userId: User["id"]) {
-      if (!state.userLookup[userId]) {
-        const user = await api.fetchUser(userId);
-        state.userLookup[user.id] = user;
-      }
+      const user = await api.fetchUser(userId);
 
-      return state.userLookup[userId];
+      state.userLookup[user.id] = toNormalizedUser(user);
+      state.leaveLookup = concatLeavesToLookup(state.leaveLookup, user.leaves);
+
+      return user;
     },
 
     async updateUserLeaves(userId: User["id"], leaves: Leave[]) {
