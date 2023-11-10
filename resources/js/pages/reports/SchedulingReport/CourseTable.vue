@@ -32,12 +32,15 @@
 import { Table, TBody } from "@/components/Table";
 import CourseTableCourseRow from "./CourseTableCourseRow.vue";
 import CourseTableLeavesRow from "./CourseTableLeavesRow.vue";
-import { Term, LoadState, TimelessCourse, CourseShortCode } from "@/types";
-import ReportTableHeaderRow from "./ReportTableHeaderRow.vue";
 import {
+  Term,
+  LoadState,
+  TimelessCourse,
+  CourseShortCode,
   InstructorWithCourse,
   LeaveWithInstructor,
-} from "@/stores/useGroupCourseHistoryStore";
+} from "@/types";
+import ReportTableHeaderRow from "./ReportTableHeaderRow.vue";
 
 defineProps<{
   terms: Term[];

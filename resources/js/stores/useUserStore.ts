@@ -2,14 +2,17 @@ import { toRefs } from "@vueuse/core";
 import { defineStore } from "pinia";
 import { computed, reactive } from "vue";
 import * as api from "@/api";
-import type {
-  Group,
-  Leave,
-  MemberRole,
-  NormalizedUser,
-  User,
-  UserPermission,
+import {
+  leaveTypes,
+  type Group,
+  type Leave,
+  type MemberRole,
+  type NormalizedUser,
+  type User,
+  type UserPermission,
+  leaveStatuses,
 } from "@/types";
+import { dayjs, getTempId } from "@/utils";
 
 interface UserStoreState {
   currentUserId: User["id"] | null;
@@ -132,11 +135,31 @@ export const useUserStore = defineStore("user", () => {
       return user;
     },
 
-    async batchUpdateUserLeaves(userId: User["id"], leaves: Leave[]) {
-      await api.updateUserLeaves(userId, leaves);
+    addLeaveForUser(userId: User["id"]) {
+      const user = state.userLookup[userId];
+      if (!user) throw new Error("No user found");
 
-      state.leaveLookup = concatLeavesToLookup(state.leaveLookup, leaves);
+      const newLeave: Leave = {
+        id: getTempId(),
+        user_id: userId,
+        description: "",
+        type: leaveTypes.SABBATICAL,
+        status: leaveStatuses.PENDING,
+        start_date: dayjs().format("YYYY-MM-DD"),
+        end_date: dayjs().format("YYYY-MM-DD"),
+        created_at: dayjs().format(),
+        updated_at: dayjs().format(),
+      };
+
+      user.leaves.push(newLeave.id);
+      state.leaveLookup[newLeave.id] = newLeave;
     },
+
+    // async batchUpdateUserLeaves(userId: User["id"], leaves: Leave[]) {
+    //   await api.updateUserLeaves(userId, leaves);
+
+    //   state.leaveLookup = concatLeavesToLookup(state.leaveLookup, leaves);
+    // },
 
     async toggleGroupFavorite(group: Group) {
       if (!state.currentUserId) throw new Error("No current user");

@@ -1,8 +1,7 @@
 export function getTempId() {
-  const id = Math.floor(Math.random() * 1000000);
-  return `TEMPID-${id}`;
+  return -1 * Math.floor(Math.random() * 1000000);
 }
 
 export function isTempId(id?: unknown) {
-  return typeof id === "string" && id.startsWith("TEMPID-");
+  return typeof id === "number" && id < 0;
 }

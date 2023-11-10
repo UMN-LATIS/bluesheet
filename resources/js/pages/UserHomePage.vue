@@ -38,7 +38,6 @@
         :leaves="user.leaves"
         :userId="user.id"
         class="tw-mt-12"
-        @update="handleUpdateLeaves"
       />
     </template>
   </DefaultLayout>
@@ -69,9 +68,7 @@ const user = computed(() => {
 });
 
 const error = ref<string | null>(null);
-const isCurrentUser = computed(() => {
-  return props.userId === userStore.currentUser?.id;
-});
+const isCurrentUser = computed(() => props.userId === null);
 
 watch(
   () => props.userId,
@@ -91,10 +88,10 @@ watch(user, () => usePageTitle(user.value?.displayName ?? ""), {
   immediate: true,
 });
 
-async function handleUpdateLeaves(leaves: Leave[]) {
-  if (!user.value) {
-    throw new Error("Cannot update leaves for this user. User not defined.");
-  }
-  userStore.batchUpdateUserLeaves(user.value.id, leaves);
-}
+// async function handleUpdateLeaves(leaves: Leave[]) {
+//   if (!user.value) {
+//     throw new Error("Cannot update leaves for this user. User not defined.");
+//   }
+//   userStore.batchUpdateUserLeaves(user.value.id, leaves);
+// }
 </script>

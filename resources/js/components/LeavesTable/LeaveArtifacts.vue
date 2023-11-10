@@ -41,7 +41,6 @@ import Button from "../Button.vue";
 
 const props = defineProps<{
   leave: Leave;
-  isEditing: boolean;
 }>();
 
 const localArtifacts = reactive<LeaveArtifact[]>(props.leave.artifacts ?? []);

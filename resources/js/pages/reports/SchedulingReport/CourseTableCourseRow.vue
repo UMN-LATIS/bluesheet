@@ -35,9 +35,8 @@
 </template>
 <script setup lang="ts">
 import { Td } from "@/components/Table";
-import { Term, TimelessCourse } from "@/types";
+import { Term, TimelessCourse, InstructorWithCourse } from "@/types";
 import InstructorDetails from "./InstructorDetails.vue";
-import { InstructorWithCourse } from "@/stores/useGroupCourseHistoryStore";
 import { doesCourseNumberMatchSearchTerm } from "./doesCourseMatchSearchTerm";
 
 defineProps<{

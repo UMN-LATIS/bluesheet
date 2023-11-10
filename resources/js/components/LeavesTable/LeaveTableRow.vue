@@ -12,7 +12,6 @@
   >
     <Td>
       <button
-        v-if="!isNewLeave && (isEditing || leave.artifacts?.length)"
         class="tw-border-none tw-text-neutral-900 tw-bg-neutral-100 hover:tw-bg-neutral-200 tw-rounded-full tw-transition tw-duration-300 tw-inline-flex tw-items-center tw-justify-center tw-w-8 tw-h-8"
         @click="isShowingDetails = !isShowingDetails"
       >
@@ -36,11 +35,10 @@
     >
       <InputGroup
         v-if="isEditing"
-        :modelValue="leave.description"
+        v-model="localLeave.description"
         label="description"
         :showLabel="false"
-        :isValid="isDescriptionValid"
-        @update:modelValue="$emit('update', { ...leave, description: $event })"
+        :validator="isNotEmptyString"
       />
       <span v-else>{{ leave.description }}</span>
     </Td>
@@ -52,12 +50,11 @@
     >
       <SelectGroup
         v-if="isEditing"
-        :modelValue="leave.type"
+        v-model="localLeave.type"
         :options="leaveTypeOptions"
         :showLabel="false"
-        :isValid="isTypeValid"
+        :validator="isNotEmptyString"
         label="type"
-        @update:modelValue="$emit('update', { ...leave, type: $event })"
       />
       <span v-else>{{ capitalizeEachWord(leave.type.replace("_", " ")) }}</span>
     </Td>
@@ -69,12 +66,11 @@
     >
       <SelectGroup
         v-if="isEditing"
-        :modelValue="leave.status"
+        v-model="localLeave.status"
         :options="leaveStatusOptions"
         :showLabel="false"
-        :isValid="isStatusValid"
+        :validator="isNotEmptyString"
         label="status"
-        @update:modelValue="$emit('update', { ...leave, status: $event })"
       />
       <Chip v-else :color="statusColor">{{ leave.status }}</Chip>
     </Td>
@@ -86,12 +82,15 @@
     >
       <InputGroup
         v-if="isEditing"
-        :modelValue="leave.start_date"
+        v-model="localLeave.start_date"
         label="start date"
         :showLabel="false"
         type="date"
-        :isValid="isStartDateValid"
-        @update:modelValue="$emit('update', { ...leave, start_date: $event })"
+        :validator="
+          (startDate) =>
+            areStartAndEndDatesValid(startDate, localLeave.end_date)
+        "
+        :validateWhenUntouched="true"
       />
       <span v-else>{{ dayjs(leave.start_date).format("MMM D, YYYY") }}</span>
     </Td>
@@ -103,12 +102,14 @@
     >
       <InputGroup
         v-if="isEditing"
-        :modelValue="leave.end_date"
+        v-model="localLeave.end_date"
         label="start date"
         :showLabel="false"
         type="date"
-        :isValid="isEndDateValid"
-        @update:modelValue="$emit('update', { ...leave, end_date: $event })"
+        :validator="
+          (endDate) => areStartAndEndDatesValid(localLeave.start_date, endDate)
+        "
+        :validateWhenUntouched="true"
       />
       <span v-else>{{ dayjs(leave.end_date).format("MMM D, YYYY") }}</span>
     </Td>
@@ -126,9 +127,9 @@
           </SmallButton>
         </template>
         <template v-else>
-          <SmallButton @click="$emit('edit', leave)">Edit</SmallButton>
+          <SmallButton @click="handleEditClick">Edit</SmallButton>
 
-          <SmallButton variant="danger" @click="$emit('remove', leave)">
+          <SmallButton variant="danger" @click="handleRemoveClick">
             Delete
           </SmallButton>
         </template>
@@ -136,16 +137,14 @@
     </Td>
   </tr>
   <LeaveArtifacts
-    v-if="isShowingDetails && isLeave(leave)"
+    v-show="isShowingDetails"
     class="tw-bg-neutral-100 tw-shadow-inner"
     :leave="leave"
-    :isEditing="isEditing"
-    @update="$emit('update', $event)"
   />
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref, watch, reactive } from "vue";
 import { dayjs, $can, getTempId, isTempId } from "@/utils";
 import {
   Leave,
@@ -165,33 +164,52 @@ import LeaveArtifacts from "./LeaveArtifacts.vue";
 import SmallButton from "./SmallButton.vue";
 
 const props = defineProps<{
-  leave: Leave | NewLeave;
-  isEditing: boolean;
+  leave: Leave;
 }>();
 
-const emit = defineEmits<{
-  (eventName: "remove", value: Leave | NewLeave);
-  (eventName: "save", value: Leave | NewLeave);
-  (eventName: "edit", value: Leave | NewLeave);
-  (eventName: "cancelEdit", value: Leave | NewLeave);
-  (eventName: "update", value: Leave | NewLeave);
-}>();
-
-const leaveSnapshot = ref<Leave | NewLeave>(props.leave);
 const isShowingDetails = ref(false);
+const isNewLeave = computed(() => isTempId(props.leave.id));
+const isEditing = ref(isNewLeave.value);
+
+const localLeave = reactive({
+  description: props.leave.description,
+  type: props.leave.type,
+  status: props.leave.status,
+  start_date: props.leave.start_date,
+  end_date: props.leave.end_date,
+});
+
+// sync local leave if props changed are passed in
+watch(() => props.leave, resetLocalLeaveToProps);
+
+function resetLocalLeaveToProps() {
+  Object.keys(localLeave).forEach((key) => {
+    localLeave[key] = props.leave[key];
+  });
+}
+
+function handleEditClick() {
+  isEditing.value = true;
+  isShowingDetails.value = true;
+}
+
+function handleCancelEditLeave() {
+  isEditing.value = false;
+  resetLocalLeaveToProps();
+}
 
 // when changing edit state, save a snapshot of the leave
-watch(
-  () => props.isEditing,
-  () => {
-    if (props.isEditing) {
-      leaveSnapshot.value = cloneDeep(props.leave);
-      // open the details when editing
-      isShowingDetails.value = true;
-    }
-  },
-  { immediate: true },
-);
+// watch(
+//   () => props.isEditing,
+//   () => {
+//     if (props.isEditing) {
+//       leaveSnapshot.value = cloneDeep(props.leave);
+//       // open the details when editing
+//       isShowingDetails.value = true;
+//     }
+//   },
+//   { immediate: true },
+// );
 
 const capitalizeEachWord = (str: string) =>
   str
@@ -216,41 +234,37 @@ const leaveStatusOptions = computed(() => {
 });
 
 const hasLeaveChanged = computed(() => {
-  return !isEqual(props.leave, leaveSnapshot.value);
+  return Object.keys(localLeave).some((key) => {
+    return !isEqual(localLeave[key], props.leave[key]);
+  });
 });
 
-const isDescriptionValid = computed(() => {
-  return props.leave.description.length > 0;
-});
+const isNotEmptyString = (value: unknown) => value !== "";
 
-const isTypeValid = computed(() => {
-  return props.leave.type.length > 0;
-});
+// const isDescriptionValid = (description) => {
+//   return props.leave.description.length > 0;
+// });
 
-const isStatusValid = computed(() => {
-  return props.leave.status.length > 0;
-});
+// const isTypeValid = computed(() => {
+//   return props.leave.type.length > 0;
+// });
 
-const isStartDateValid = computed(() => {
-  return dayjs(props.leave.start_date).isValid();
-});
+// const isStatusValid = computed(() => {
+//   return props.leave.status.length > 0;
+// });
 
-const isEndDateValid = computed(() => {
-  return (
-    dayjs(props.leave.end_date).isValid() &&
-    dayjs(props.leave.end_date).isAfter(dayjs(props.leave.start_date))
-  );
-});
+const isStartDateValid = (start_date) => dayjs(start_date).isValid();
 
-const isLeaveValid = computed(() => {
-  return (
-    isDescriptionValid.value &&
-    isTypeValid.value &&
-    isStatusValid.value &&
-    isStartDateValid.value &&
-    isEndDateValid.value
-  );
-});
+const areStartAndEndDatesValid = (startDate: unknown, endDate: unknown) =>
+  typeof startDate === "string" &&
+  typeof endDate === "string" &&
+  dayjs(startDate).isValid() &&
+  dayjs(endDate).isValid() &&
+  dayjs(endDate).isAfter(dayjs(startDate));
+
+const isLeaveValid = (leave: Leave) =>
+  [leave.description, leave.type, leave.status].every(isNotEmptyString) &&
+  areStartAndEndDatesValid(leave.start_date, leave.end_date);
 
 const isCurrentOrFutureLeave = computed(() =>
   dayjs(props.leave.end_date).isAfter(dayjs()),
@@ -271,72 +285,72 @@ const statusColor = computed(() => {
   }
 });
 
-function handleCancelEditLeave() {
-  emit("cancelEdit", leaveSnapshot.value);
+// function handleCancelEditLeave() {
+//   emit("cancelEdit", leaveSnapshot.value);
 
-  // close the details if there are no artifacts
-  if (!props.leave.artifacts?.length) {
-    isShowingDetails.value = false;
-  }
-}
+//   // close the details if there are no artifacts
+//   if (!props.leave.artifacts?.length) {
+//     isShowingDetails.value = false;
+//   }
+// }
 
-function isLeaveNew(leave: Leave | NewLeave): leave is NewLeave {
-  return isTempId(leave.id);
-}
+// function isLeaveNew(leave: Leave | NewLeave): leave is NewLeave {
+//   return isTempId(leave.id);
+// }
 
-function isLeave(leave: Leave | NewLeave): leave is Leave {
-  return !isTempId(leave.id);
-}
+// function isLeave(leave: Leave | NewLeave): leave is Leave {
+//   return !isTempId(leave.id);
+// }
 
-const isNewLeave = computed(() => isTempId(props.leave.id));
+// const isNewLeave = computed(() => isTempId(props.leave.id));
 
-function handleUpdateArtifact(artifact: LeaveArtifact) {
-  const artifacts = props.leave.artifacts || [];
-  const index = artifacts.findIndex((a) => a.id === artifact.id);
+// function handleUpdateArtifact(artifact: LeaveArtifact) {
+//   const artifacts = props.leave.artifacts || [];
+//   const index = artifacts.findIndex((a) => a.id === artifact.id);
 
-  if (index === -1) {
-    throw new Error("cannot update leave artifact: artifact id not found");
-  }
-  const updated = [
-    ...artifacts.slice(0, index),
-    artifact,
-    ...artifacts.slice(index + 1),
-  ];
-  emit("update", { ...props.leave, artifacts: updated });
-}
+//   if (index === -1) {
+//     throw new Error("cannot update leave artifact: artifact id not found");
+//   }
+//   const updated = [
+//     ...artifacts.slice(0, index),
+//     artifact,
+//     ...artifacts.slice(index + 1),
+//   ];
+//   emit("update", { ...props.leave, artifacts: updated });
+// }
 
-function createLeaveArtifact() {
-  if (!props.leave.id) {
-    // this should be the real id or a temp id
-    throw new Error("leave id not defined");
-  }
+// function createLeaveArtifact() {
+//   if (!props.leave.id) {
+//     // this should be the real id or a temp id
+//     throw new Error("leave id not defined");
+//   }
 
-  const id = getTempId();
-  const newArtifact: LeaveArtifact = {
-    id,
-    label: "",
-    target: "",
-    leave_id: props.leave.id,
-    created_at: dayjs().toISOString(),
-    updated_at: dayjs().toISOString(),
-  };
-  return newArtifact;
-}
+//   const id = getTempId();
+//   const newArtifact: LeaveArtifact = {
+//     id,
+//     label: "",
+//     target: "",
+//     leave_id: props.leave.id,
+//     created_at: dayjs().toISOString(),
+//     updated_at: dayjs().toISOString(),
+//   };
+//   return newArtifact;
+// }
 
-function handleSaveLeave(updatedLeave: Leave | NewLeave) {
-  emit("save", updatedLeave);
+// function handleSaveLeave(updatedLeave: Leave | NewLeave) {
+//   emit("save", updatedLeave);
 
-  // if the leave has no artifacts, close the details
-  if (!updatedLeave.artifacts?.length) {
-    isShowingDetails.value = false;
-  }
-}
+//   // if the leave has no artifacts, close the details
+//   if (!updatedLeave.artifacts?.length) {
+//     isShowingDetails.value = false;
+//   }
+// }
 
-function handleAddArtifact() {
-  const artifacts = props.leave.artifacts || [];
-  const newArtifact = createLeaveArtifact();
-  const updated = [...artifacts, newArtifact];
-  emit("update", { ...props.leave, artifacts: updated });
-}
+// function handleAddArtifact() {
+//   const artifacts = props.leave.artifacts || [];
+//   const newArtifact = createLeaveArtifact();
+//   const updated = [...artifacts, newArtifact];
+//   emit("update", { ...props.leave, artifacts: updated });
+// }
 </script>
 <style></style>
