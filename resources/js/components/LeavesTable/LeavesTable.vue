@@ -106,6 +106,10 @@ const sortNewLeavesFirst = (a, b) => {
 
 const sortedAndFilteredLeaves = computed(() => {
   return [...props.leaves]
+    .filter((leave) => {
+      if (showPastLeaves.value) return true;
+      return !dayjs(leave.end_date).isBefore(dayjs());
+    })
     .sort(sortByStartDateDescending)
     .sort(sortNewLeavesFirst);
 });
