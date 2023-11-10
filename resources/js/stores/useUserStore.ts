@@ -35,6 +35,18 @@ export const useUserStore = defineStore("user", () => {
       computed((): User | null => {
         return state.userLookup[userId] ?? null;
       }),
+
+    isRoleFavorited: (roleId: number) =>
+      computed((): boolean => {
+        return getters.currentRoleFavorites.value.some((r) => r.id === roleId);
+      }),
+
+    isGroupFavorited: (groupId: number) =>
+      computed((): boolean => {
+        return getters.currentGroupFavorites.value.some(
+          (g) => g.id === groupId,
+        );
+      }),
   };
 
   const actions = {

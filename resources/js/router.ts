@@ -60,7 +60,14 @@ export const router = createRouter({
       component: GroupPage,
       props: true,
     },
-    { name: "role", path: "/role/:roleId", component: RolePage, props: true },
+    {
+      name: "role",
+      path: "/role/:roleId",
+      component: RolePage,
+      props: (route) => ({
+        roleId: parseIntFromParam(route.params.roleId),
+      }),
+    },
     {
       name: "groupList",
       path: "/groups/:parent?",

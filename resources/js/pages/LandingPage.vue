@@ -19,14 +19,14 @@
         </div>
       </div>
 
-      <div v-if="$store.state.user" class="row mt-5">
-        <div v-if="$store.state.favorites.groups.length > 0" class="col">
+      <div v-if="userStore.currentUser" class="row mt-5">
+        <div v-if="userStore.currentUser.favoriteGroups.length" class="col">
           <h3>Favorite Groups</h3>
-          <Favorites :user="$store.state.user" type="group"></Favorites>
+          <Favorites :user="userStore.currentUser" type="group"></Favorites>
         </div>
-        <div v-if="$store.state.favorites.roles.length > 0" class="col">
+        <div v-if="userStore.currentUser.favoriteRoles.length" class="col">
           <h3>Favorite Roles</h3>
-          <Favorites :user="$store.state.user" type="role"></Favorites>
+          <Favorites :user="userStore.currentUser" type="role"></Favorites>
         </div>
       </div>
       <div class="row mt-5">
@@ -55,44 +55,39 @@
   </DefaultLayout>
 </template>
 
-<script>
+<script setup lang="ts">
 import Favorites from "@/components/Favorites.vue";
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
+import { useUserStore } from "@/stores/useUserStore";
 import { usePageTitle } from "@/utils/usePageTitle";
+import { onMounted, ref } from "vue";
 
-export default {
-  components: {
-    Favorites,
-    DefaultLayout,
+const userStore = useUserStore();
+
+const frequentRoles = ref([
+  {
+    id: 23,
+    label: "Academic Department Administrator",
   },
-  data() {
-    return {
-      frequentRoles: [
-        {
-          id: 23,
-          label: "Academic Department Administrator",
-        },
-        {
-          id: 22,
-          label: "Academic Unit Chair/Director",
-        },
-        {
-          id: 18,
-          label: "Director of Graduate Studies",
-        },
-        {
-          id: 21,
-          label: "Director of Undergraduate Studies",
-        },
-        {
-          id: 39,
-          label: "Research and Support Center Admin",
-        },
-      ],
-    };
+  {
+    id: 22,
+    label: "Academic Unit Chair/Director",
   },
-  mounted() {
-    usePageTitle("Home");
+  {
+    id: 18,
+    label: "Director of Graduate Studies",
   },
-};
+  {
+    id: 21,
+    label: "Director of Undergraduate Studies",
+  },
+  {
+    id: 39,
+    label: "Research and Support Center Admin",
+  },
+]);
+
+onMounted(() => {
+  usePageTitle("Home");
+});
 </script>

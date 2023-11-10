@@ -87,6 +87,7 @@ export interface MemberRole {
   deleted_at?: ISODateTime | null;
   official_role_category_id: number;
   official_group_type: GroupType[];
+  members?: Membership[];
 }
 
 export interface ParentOrganization {
@@ -94,6 +95,7 @@ export interface ParentOrganization {
   id: number;
   group_title: string;
   parent_organization_id: number;
+  child_organizations_recursive: ParentOrganization[];
 }
 
 export interface Group {
@@ -117,6 +119,9 @@ export interface Group {
   artifacts: GroupArtifact[];
   notes: string | null;
   members: Membership[];
+  created_at: ISODateTime | null; // why null?
+  updated_at: ISODateTime | null; // why null?
+  deleted_at?: ISODateTime | null;
 }
 
 export interface ChildGroup {

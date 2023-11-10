@@ -182,3 +182,14 @@ export async function fetchAllGroupRoles() {
   const res = await axios.get<T.MemberRole[]>(`/api/group/roles`);
   return res.data;
 }
+
+export async function fetchRole(roleId: number) {
+  const res = await axios.get<T.MemberRole>(`/api/role/${roleId}`);
+  return res.data;
+}
+
+export async function fetchParentOrganizations() {
+  const res = await axios.get<T.ParentOrganization[]>(`/api/group/parents`);
+
+  return res.data;
+}

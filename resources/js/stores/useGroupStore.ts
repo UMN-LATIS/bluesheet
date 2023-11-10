@@ -22,9 +22,9 @@ export const useGroupStore = defineStore("groups", () => {
     },
   };
 
-  return toRefs({
-    ...state,
+  return {
+    ...toRefs(state),
     ...getters,
     ...actions,
-  });
+  };
 });
