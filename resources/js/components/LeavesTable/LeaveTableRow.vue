@@ -120,7 +120,7 @@
 
           <SmallButton
             variant="primary"
-            :disabled="!((hasLeaveChanged || isNewLeave) && isLeaveValid)"
+            :disabled="!isLeaveValid || !hasLeaveChanged"
             @click="
               userStore.saveLeave({
                 ...leave,

@@ -55,9 +55,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, reactive } from "vue";
-import { dayjs, $can, getTempId, isTempId } from "@/utils";
-import { Leave, leaveStatuses, leaveTypes, NewLeave } from "@/types";
+import { computed, ref } from "vue";
+import { dayjs, $can, isTempId } from "@/utils";
+import { Leave } from "@/types";
 import Button from "@/components/Button.vue";
 // import { cloneDeep } from "lodash";
 import { Table, Th, Td } from "@/components/Table";
@@ -73,24 +73,6 @@ const props = defineProps<{
 
 const userStore = useUserStore();
 const showPastLeaves = ref(false);
-
-// const localLeaves = reactive([] as (Leave | NewLeave)[]);
-// const idsOfLeavesInEditMode = reactive(new Set<number | string>());
-
-// function addNewLocalLeave() {
-//   const id = getTempId();
-//   const newLeave: NewLeave = {
-//     id,
-//     description: "",
-//     type: leaveTypes.SABBATICAL,
-//     status: leaveStatuses.PENDING,
-//     start_date: dayjs().format("YYYY-MM-DD"),
-//     end_date: dayjs().add(1, "year").format("YYYY-MM-DD"),
-//     user_id: props.userId,
-//   };
-//   localLeaves.unshift(newLeave);
-//   idsOfLeavesInEditMode.add(id);
-// }
 
 const sortByStartDateDescending = (a, b) => {
   if (dayjs(a.start_date).isBefore(dayjs(b.start_date))) return 1;
@@ -113,106 +95,5 @@ const sortedAndFilteredLeaves = computed(() => {
     .sort(sortByStartDateDescending)
     .sort(sortNewLeavesFirst);
 });
-
-// function isNewLeave(leave: Leave | NewLeave) {
-//   return isTempId(leave.id);
-// }
-
-// function isEditing(leave: Leave | NewLeave): boolean {
-//   if (!leave.id) return false;
-//   return idsOfLeavesInEditMode.has(leave.id);
-// }
-
-// function isPastLeave(leave: Leave | NewLeave): boolean {
-//   return dayjs(leave.end_date).isBefore(dayjs());
-// }
-
-// const leavesToShow = computed(() => {
-//   return localLeaves.filter((leave) => {
-//     if (isEditing(leave)) return true;
-//     if (showPastLeaves.value) return true;
-//     return !isPastLeave(leave);
-//   });
-// });
-
-// function removeFromLocalLeaves(leaveId: string | number) {
-//   const index = localLeaves.findIndex((l) => l.id === leaveId);
-//   if (index === -1) {
-//     throw new Error("Leave not found in localLeaves");
-//   }
-//   localLeaves.splice(index, 1);
-// }
-
-// async function handleCancelEditLeave(originalLeave: NewLeave | Leave) {
-//   if (!originalLeave.id) {
-//     throw new Error("Leave does not have an id");
-//   }
-
-//   // if we can't find the saved leave, then it must be new
-//   // so just remove it from the localLeaves
-//   if (isNewLeave(originalLeave)) {
-//     removeFromLocalLeaves(originalLeave.id);
-//     return;
-//   }
-
-//   // otherwsie get the initial leave and replace the localLeave
-//   const index = localLeaves.findIndex((l) => l.id === originalLeave.id);
-//   if (index === -1) {
-//     throw new Error("Leave not found in localLeaves");
-//   }
-
-//   localLeaves[index] = originalLeave;
-//   idsOfLeavesInEditMode.delete(originalLeave.id);
-// }
-
-// async function handleSaveLeave(leave: Leave | NewLeave) {
-//   if (!leave.id) throw new Error("Leave does not have an id");
-//   const updatedLeave: Leave = isNewLeave(leave)
-//     ? await api.createLeave(leave as NewLeave)
-//     : await api.updateLeave(leave as Leave);
-
-//   // update the localLeaves with the new leave
-//   const index = localLeaves.findIndex((l) => l.id === leave.id);
-//   if (index === -1) {
-//     throw new Error("Leave not found in localLeaves");
-//   }
-//   localLeaves[index] = updatedLeave;
-//   resortLocalLeaves();
-//   idsOfLeavesInEditMode.delete(leave.id);
-// }
-
-// async function handleRemoveLeaveClick(leave: Leave | NewLeave) {
-//   if (!leave.id) throw new Error("Leave does not have an id");
-//   const isConfirmed = confirm(
-//     `Remove ${leave.type} leave '${leave.description}'?`,
-//   );
-//   if (!isConfirmed) return;
-
-//   removeFromLocalLeaves(leave.id);
-
-//   if (!isNewLeave(leave) && typeof leave.id === "number") {
-//     await api.deleteLeave(leave.id);
-//   }
-// }
-
-// function resortLocalLeaves() {
-//   localLeaves.sort(sortByStartDateDescending);
-// }
-
-// function initLocalLeaves() {
-//   const initialLeaves = cloneDeep(props.leaves)
-//     .sort(sortByStartDateDescending)
-//     .map((l) => ({
-//       ...l,
-//       isEditing: false,
-//     }));
-//   localLeaves.splice(0, localLeaves.length, ...initialLeaves);
-// }
-
-// watch(
-//   () => props.leaves,
-//   () => initLocalLeaves(),
-//   { immediate: true, deep: true },
-// );
 </script>
 <style></style>
