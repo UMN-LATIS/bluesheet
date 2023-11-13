@@ -12,6 +12,7 @@
   >
     <Td>
       <button
+        v-show="!isNewLeave"
         class="tw-border-none tw-text-neutral-900 tw-bg-neutral-100 hover:tw-bg-neutral-200 tw-rounded-full tw-transition tw-duration-300 tw-inline-flex tw-items-center tw-justify-center tw-w-8 tw-h-8"
         @click="isShowingDetails = !isShowingDetails"
       >

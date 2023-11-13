@@ -4,13 +4,14 @@ import { computed, reactive } from "vue";
 import * as api from "@/api";
 import {
   leaveTypes,
+  leaveStatuses,
   type Group,
   type Leave,
   type MemberRole,
   type NormalizedUser,
   type User,
   type UserPermission,
-  leaveStatuses,
+  type LeaveArtifact,
 } from "@/types";
 import { dayjs, getTempId, isTempId } from "@/utils";
 
@@ -210,12 +211,78 @@ export const useUserStore = defineStore("user", () => {
       actions.removeLeaveFromStore(leaveId);
     },
 
-    // async batchUpdateUserLeaves(userId: User["id"], leaves: Leave[]) {
-    //   await api.updateUserLeaves(userId, leaves);
+    addArtifactForLeave(leaveId: Leave["id"]) {
+      const leave = state.leaveLookup[leaveId];
+      if (!leave) {
+        throw new Error(
+          `Cannot add artifact for leave. No leave found with id '${leaveId}'.`,
+        );
+      }
 
-    //   state.leaveLookup = concatLeavesToLookup(state.leaveLookup, leaves);
-    // },
+      leave.artifacts = leave.artifacts ?? [];
 
+      leave.artifacts.push({
+        id: getTempId(),
+        leave_id: leaveId,
+        label: "",
+        target: "",
+        created_at: dayjs().format(),
+        updated_at: dayjs().format(),
+      });
+    },
+
+    async saveLeaveArtifact(artifact: LeaveArtifact) {
+      const isNewArtifact = isTempId(artifact.id);
+      const updatedArtifact = isNewArtifact
+        ? await api.createLeaveArtifact(artifact)
+        : await api.updateLeaveArtifact(artifact);
+
+      const leave = state.leaveLookup[artifact.leave_id];
+      if (!leave) {
+        throw new Error(
+          `Cannot update leave artifact. No leave found with id '${artifact.leave_id}'.`,
+        );
+      }
+
+      // make sure the leave has an artifacts array
+      leave.artifacts = leave.artifacts ?? [];
+
+      const artifactIndex = leave.artifacts.findIndex(
+        (a) => a.id === artifact.id,
+      );
+
+      // if artifactIndex is -1, we're adding a new artifact
+      leave.artifacts.splice(artifactIndex, 1, updatedArtifact);
+    },
+
+    async deleteLeaveArtifact(artifact: LeaveArtifact) {
+      await api.deleteLeaveArtifact(artifact);
+
+      const leave = state.leaveLookup[artifact.leave_id];
+      if (!leave) {
+        throw new Error(
+          `Cannot delete leave artifact. No leave found with id '${artifact.leave_id}'.`,
+        );
+      }
+
+      if (!leave.artifacts) {
+        throw new Error(
+          `Cannot delete leave artifact. Leave '${leave.id}' has no artifacts array. Which is weird.`,
+        );
+      }
+
+      const artifactIndex = leave.artifacts.findIndex(
+        (a) => a.id === artifact.id,
+      );
+
+      if (artifactIndex === -1) {
+        throw new Error(
+          `Cannot delete leave artifact. No artifact found with id '${artifact.id}'.`,
+        );
+      }
+
+      leave.artifacts.splice(artifactIndex, 1);
+    },
     async toggleGroupFavorite(group: Group) {
       if (!state.currentUserId) throw new Error("No current user");
 

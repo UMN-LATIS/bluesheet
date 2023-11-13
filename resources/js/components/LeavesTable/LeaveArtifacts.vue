@@ -14,17 +14,18 @@
     </tr>
 
     <LeaveArtifactRow
-      v-for="artifact in localArtifacts"
+      v-for="artifact in leave.artifacts"
       :key="artifact.id"
       :artifact="artifact"
       :leave="leave"
-      @update="(updated) => handleUpdateArtifact(artifact.id, updated)"
-      @delete="handleDeleteArtifact(artifact.id)"
     />
     <tr v-if="$can('edit leaves')">
       <Td></Td>
       <Td colspan="8">
-        <Button data-cy="addArtifactButton" @click="handleAddArtifact">
+        <Button
+          data-cy="addArtifactButton"
+          @click="userStore.addArtifactForLeave(leave.id)"
+        >
           Add Artifact
         </Button>
       </Td>
@@ -32,41 +33,43 @@
   </tbody>
 </template>
 <script setup lang="ts">
-import { reactive } from "vue";
-import { Leave, LeaveArtifact } from "@/types";
+import { Leave } from "@/types";
 import LeaveArtifactRow from "./LeaveArtifactRow.vue";
-import { getTempId, $can } from "@/utils";
+import { $can } from "@/utils";
 import { Th, Td } from "../Table";
 import Button from "../Button.vue";
+import { useUserStore } from "@/stores/useUserStore";
 
-const props = defineProps<{
+defineProps<{
   leave: Leave;
 }>();
 
-const localArtifacts = reactive<LeaveArtifact[]>(props.leave.artifacts ?? []);
+const userStore = useUserStore();
 
-function handleAddArtifact() {
-  localArtifacts.push({
-    id: getTempId(),
-    label: "",
-    target: "",
-    leave_id: props.leave.id,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  });
-}
+// const localArtifacts = reactive<LeaveArtifact[]>(props.leave.artifacts ?? []);
 
-function handleUpdateArtifact(id: number | string, artifact: LeaveArtifact) {
-  const index = localArtifacts.findIndex((a) => a.id === id);
-  if (index === -1) return;
-  localArtifacts.splice(index, 1, artifact);
-}
+// function handleAddArtifact() {
+//   localArtifacts.push({
+//     id: getTempId(),
+//     label: "",
+//     target: "",
+//     leave_id: props.leave.id,
+//     created_at: new Date().toISOString(),
+//     updated_at: new Date().toISOString(),
+//   });
+// }
 
-function handleDeleteArtifact(id: number | string) {
-  const index = localArtifacts.findIndex((a) => a.id === id);
-  if (index === -1) return;
-  localArtifacts.splice(index, 1);
-}
+// function handleUpdateArtifact(id: number | string, artifact: LeaveArtifact) {
+//   const index = localArtifacts.findIndex((a) => a.id === id);
+//   if (index === -1) return;
+//   localArtifacts.splice(index, 1, artifact);
+// }
+
+// function handleDeleteArtifact(id: number | string) {
+//   const index = localArtifacts.findIndex((a) => a.id === id);
+//   if (index === -1) return;
+//   localArtifacts.splice(index, 1);
+// }
 </script>
 <style scoped>
 .leave-artifacts th:not(:first-child) {

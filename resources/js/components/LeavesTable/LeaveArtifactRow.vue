@@ -46,10 +46,10 @@
         </a>
       </Td>
       <Td class="tw-text-sm">
-        {{ dayjs(localArtifact.created_at).format("MMM D, YYYY") }}
+        {{ dayjs(artifact.created_at).format("MMM D, YYYY") }}
       </Td>
       <Td class="tw-text-sm">
-        {{ dayjs(localArtifact.updated_at).format("MMM D, YYYY") }}
+        {{ dayjs(artifact.updated_at).format("MMM D, YYYY") }}
       </Td>
       <Td v-if="$can('edit leaves')">
         <div class="tw-flex tw-gap-1 tw-px-2 tw-justify-end tw-items-center">
@@ -69,65 +69,53 @@
 </template>
 <script setup lang="ts">
 import { Leave, LeaveArtifact } from "@/types";
-import { ref, computed, watch } from "vue";
+import { ref, reactive, computed, watch } from "vue";
 import { isTempId, dayjs, $can } from "@/utils";
 import InputGroup from "@/components/InputGroup.vue";
 import SmallButton from "./SmallButton.vue";
 import * as api from "@/api";
 import { cloneDeep } from "lodash";
 import { Td } from "@/components/Table";
+import { useUserStore } from "@/stores/useUserStore";
 
 const props = defineProps<{
   leave: Leave;
   artifact: LeaveArtifact;
 }>();
 
-const emit = defineEmits<{
-  (eventName: "update", value: LeaveArtifact);
-  (eventName: "delete", value: LeaveArtifact);
-}>();
+const userStore = useUserStore();
 
-const localArtifact = ref<LeaveArtifact>(cloneDeep(props.artifact));
-const isEditing = ref(false);
-const isNewArtifact = computed(() => isTempId(localArtifact.value.id));
+const localArtifact = reactive({
+  label: props.artifact.label,
+  target: props.artifact.target,
+});
 
-watch(
-  () => props.artifact,
-  () => {
-    localArtifact.value = cloneDeep(props.artifact);
-  },
-  { immediate: true },
-);
+const isNewArtifact = computed(() => isTempId(props.artifact.id));
+const isEditing = ref(isNewArtifact.value);
+
+watch(() => props.artifact, resetLocalArtifactToProps, { immediate: true });
+
+function resetLocalArtifactToProps() {
+  Object.keys(localArtifact).forEach((key) => {
+    localArtifact[key] = props.artifact[key];
+  });
+}
 
 function handleCancelEdit() {
-  if (isNewArtifact.value) {
-    emit("delete", localArtifact.value);
-    return;
-  }
+  isEditing.value = false;
+  resetLocalArtifactToProps();
+}
 
-  // reset the local artifact to the original
-  localArtifact.value = cloneDeep(props.artifact);
+function handleSave() {
+  userStore.saveLeaveArtifact({
+    ...props.artifact,
+    ...localArtifact,
+  });
   isEditing.value = false;
 }
 
-async function handleSave() {
-  const artifact = isNewArtifact.value
-    ? await api.createLeaveArtifact(localArtifact.value)
-    : await api.updateLeaveArtifact(localArtifact.value);
-
-  isEditing.value = false;
-  localArtifact.value = artifact;
-  return emit("update", artifact);
-}
-
-async function handleDelete() {
-  if (isNewArtifact.value) {
-    emit("delete", localArtifact.value);
-    return;
-  }
-
-  await api.deleteLeaveArtifact(localArtifact.value);
-  return emit("delete", localArtifact.value);
+function handleDelete() {
+  userStore.deleteLeaveArtifact(props.artifact);
 }
 </script>
 <style scoped></style>
