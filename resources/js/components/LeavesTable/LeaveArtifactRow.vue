@@ -38,12 +38,19 @@
     <template v-else>
       <Td colspan="3" class="tw-text-sm">
         <a
+          v-if="hasValidUrl"
           :href="localArtifact.target"
           target="_blank"
           rel="noopener noreferrer nofollow"
         >
           {{ localArtifact.label }}
         </a>
+        <div v-else>
+          <div>{{ localArtifact.label }}</div>
+          <div class="tw-text-neutral-500 tw-text-xs">
+            {{ localArtifact.target }}
+          </div>
+        </div>
       </Td>
       <Td class="tw-text-sm">
         {{ dayjs(artifact.created_at).format("MMM D, YYYY") }}
@@ -90,6 +97,15 @@ const localArtifact = reactive({
 
 const isNewArtifact = computed(() => isTempId(props.artifact.id));
 const isEditing = ref(isNewArtifact.value);
+
+const hasValidUrl = computed(() => {
+  try {
+    new URL(localArtifact.target);
+    return true;
+  } catch (e) {
+    return false;
+  }
+});
 
 watch(() => props.artifact, resetLocalArtifactToProps, { immediate: true });
 
