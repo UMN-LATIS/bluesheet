@@ -73,8 +73,6 @@ import { ref, reactive, computed, watch } from "vue";
 import { isTempId, dayjs, $can } from "@/utils";
 import InputGroup from "@/components/InputGroup.vue";
 import SmallButton from "./SmallButton.vue";
-import * as api from "@/api";
-import { cloneDeep } from "lodash";
 import { Td } from "@/components/Table";
 import { useUserStore } from "@/stores/useUserStore";
 
@@ -102,8 +100,10 @@ function resetLocalArtifactToProps() {
 }
 
 function handleCancelEdit() {
+  isNewArtifact.value
+    ? userStore.deleteLeaveArtifact(props.artifact)
+    : resetLocalArtifactToProps();
   isEditing.value = false;
-  resetLocalArtifactToProps();
 }
 
 function handleSave() {

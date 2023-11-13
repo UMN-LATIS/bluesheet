@@ -256,7 +256,11 @@ export const useUserStore = defineStore("user", () => {
     },
 
     async deleteLeaveArtifact(artifact: LeaveArtifact) {
-      await api.deleteLeaveArtifact(artifact);
+      const isNewArtifact = isTempId(artifact.id);
+
+      if (!isNewArtifact) {
+        await api.deleteLeaveArtifact(artifact);
+      }
 
       const leave = state.leaveLookup[artifact.leave_id];
       if (!leave) {
