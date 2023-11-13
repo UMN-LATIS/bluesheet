@@ -45,10 +45,9 @@
 import Members from "@/components/Members.vue";
 import SimpleNestedSelect from "@/components/SimpleNestedSelect.vue";
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
-import { axios } from "@/utils";
 import { usePageTitle } from "@/utils/usePageTitle";
-import { reactive, ref, computed, watch } from "vue";
-import { MemberRole, Membership, ParentOrganization } from "@/types";
+import { reactive, computed, watch } from "vue";
+import { MemberRole, ParentOrganization } from "@/types";
 import { useUserStore } from "@/stores/useUserStore";
 import { useRoleStore } from "@/stores/useRoleStore";
 import { OptionNode } from "@/components/SimpleNestedSelect.vue";
@@ -173,118 +172,4 @@ function recursivePluckId(items: NestedObject): (number | string)[] {
   }
   return returnArray.flat();
 }
-
-// export default {
-//   components: {
-//     Members,
-//     SimpleNestedSelect,
-//     DefaultLayout,
-//   },
-//   props: {
-//     roleId: {
-//       type: String,
-//       required: true,
-//     },
-//   },
-//   data() {
-//     return {
-//       error: null,
-//       role: { label: "", members: [] },
-//       editing: false,
-//       parentOrganization: null,
-//       parentOrganizations: null,
-//     };
-//   },
-//   computed: {
-//     filteredMembers: function () {
-//       if (!this.parentOrganization) {
-//         return this.role.members;
-//       } else {
-//         let targetLeaf = this.findLeaf(
-//           this.parentOrganizations[0],
-//           this.parentOrganization,
-//         );
-//         let targetOrganizations = this.recursivePluckId(targetLeaf);
-//         return this.role.members.filter((m) =>
-//           targetOrganizations.includes(m.group.parent_organization_id),
-//         );
-//       }
-//     },
-//     roleFavorited: function () {
-//       if (this.$store.state.favorites["roles"]) {
-//         return (
-//           this.$store.state.favorites["roles"].filter(
-//             (g) => g.id == this.role.id,
-//           ).length > 0
-//         );
-//       }
-//       return false;
-//     },
-//   },
-//   watch: {
-//     role() {
-//       usePageTitle(this.role?.label || "");
-//     },
-//   },
-//   mounted() {
-//     axios
-//       .get("/api/role/" + this.roleId)
-//       .then((res) => {
-//         this.role = res.data;
-//       })
-//       .catch((err) => {
-//         this.error = err.response.data;
-//       });
-//     axios
-//       .get("/api/group/parents")
-//       .then((res) => {
-//         this.parentOrganizations = this.remapParents(res.data);
-//       })
-//       .catch((err) => {
-//         console.error(err);
-//       });
-//   },
-//   methods: {
-//     remapParents: function (p) {
-//       return p.map((org) => {
-//         var result = { id: org.id, label: org.group_title };
-//         if (org.child_organizations_recursive.length > 0) {
-//           result.children = this.remapParents(
-//             org.child_organizations_recursive,
-//           );
-//         }
-//         return result;
-//       });
-//     },
-//     findLeaf: function (element, id) {
-//       if (element.id == id) {
-//         return element;
-//       } else {
-//         if (element.children) {
-//           for (const child of element.children) {
-//             element = this.findLeaf(child, id);
-//             if (element) {
-//               return element;
-//             }
-//           }
-//         }
-//       }
-//       return false;
-//     },
-//     recursivePluckId: function (organization) {
-//       var returnArray = [];
-//       if (organization.id) {
-//         if (organization.children) {
-//           for (let child of organization.children) {
-//             returnArray.push(this.recursivePluckId(child));
-//           }
-//         }
-
-//         returnArray.push(organization.id);
-//       }
-//       return returnArray.flat();
-//     },
-//   },
-// };
-//
 </script>
