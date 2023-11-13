@@ -41,76 +41,74 @@
   </table>
 </template>
 
-<script>
+<script lang="ts" setup>
+import { ref, computed } from "vue";
 import SortableLink from "./SortableLink.vue";
 import { dayjs } from "@/utils";
+import { Group, MemberRole, User } from "@/types";
+import { RouteLocationRaw } from "vue-router";
 
-export default {
-  components: {
-    SortableLink,
-  },
-  // we use newly loaded user, not state
-  props: ["user", "type"],
-  data() {
-    return {
-      currentSortDir: "desc",
-      currentSort: "updated_at",
-    };
-  },
-  computed: {
-    titleItem: function () {
-      if (this.type == "group") {
-        return "group_title";
-      }
-      if (this.type == "role") {
-        return "label";
-      }
-      throw new Error(
-        `Cannot compute titleItem in Favorites: Unknown type: ${this.type}`,
-      );
-    },
-    sortedList: function () {
-      let sortItem = [];
-      if (this.type == "group") {
-        sortItem = this.$store.state.favorites.groups;
-      }
-      if (this.type == "role") {
-        sortItem = this.$store.state.favorites.roles;
-      }
-      return sortItem.sort(
-        function (a, b) {
-          let modifier = 1;
-          if (this.currentSortDir === "desc") modifier = -1;
+const props = defineProps<{
+  type: "group" | "role";
+  user: User;
+}>();
 
-          const aCurrentSort = a?.[this.currentSort] || " ";
-          const bCurrentSort = b?.[this.currentSort] || " ";
+const currentSortDir = ref<"desc" | "asc">("desc");
+const currentSort = ref("updated_at");
 
-          if (aCurrentSort < bCurrentSort) return -1 * modifier;
-          if (aCurrentSort > bCurrentSort) return 1 * modifier;
-          return 0;
-        }.bind(this),
-      );
-    },
-  },
-  methods: {
-    dayjs,
-    routeLink: function (favorite) {
-      if (this.type == "group") {
-        return { name: "group", params: { groupId: favorite.id } };
-      }
-      if (this.type == "role") {
-        return { name: "role", params: { roleId: favorite.id } };
-      }
-    },
-    sort: function (s) {
-      //if s == current sort, reverse
-      if (s === this.currentSort) {
-        this.currentSortDir = this.currentSortDir === "asc" ? "desc" : "asc";
-      } else {
-        this.currentSortDir = "asc";
-      }
-      this.currentSort = s;
-    },
-  },
-};
+const titleItem = computed(() => {
+  if (props.type == "group") {
+    return "group_title";
+  }
+  if (props.type == "role") {
+    return "label";
+  }
+  throw new Error(
+    `Cannot compute titleItem in Favorites: Unknown type: ${props.type}`,
+  );
+});
+
+const sortedList = computed(() => {
+  let sortItem = [] as (Group | MemberRole)[];
+  if (props.type == "group") {
+    sortItem = props.user.favoriteGroups;
+  }
+  if (props.type == "role") {
+    sortItem = props.user.favoriteRoles;
+  }
+  return sortItem.sort((a, b) => {
+    let modifier = 1;
+    if (currentSortDir.value === "desc") modifier = -1;
+
+    const aCurrentSort = a?.[currentSort.value] || " ";
+    const bCurrentSort = b?.[currentSort.value] || " ";
+
+    if (aCurrentSort < bCurrentSort) return -1 * modifier;
+    if (aCurrentSort > bCurrentSort) return 1 * modifier;
+    return 0;
+  });
+});
+
+function routeLink(favorite): RouteLocationRaw {
+  if (props.type == "group") {
+    return { name: "group", params: { groupId: favorite.id } };
+  }
+  if (props.type == "role") {
+    return { name: "role", params: { roleId: favorite.id } };
+  }
+
+  throw new Error(
+    `Cannot compute routeLink in Favorites: Unknown type: ${props.type}`,
+  );
+}
+
+function sort(s) {
+  //if s == current sort, reverse
+  if (s === currentSort.value) {
+    currentSortDir.value = currentSortDir.value === "asc" ? "desc" : "asc";
+  } else {
+    currentSortDir.value = "asc";
+  }
+  currentSort.value = s;
+}
 </script>

@@ -1,3 +1,5 @@
+import type { AxiosRequestConfig } from "axios";
+
 export type CSSClass = string | Record<string, boolean> | CSSClass[];
 
 export interface UserLookupItem {
@@ -28,7 +30,7 @@ export const UserPermissions = {
 export type UserPermission =
   (typeof UserPermissions)[keyof typeof UserPermissions];
 
-export interface User {
+export interface BaseUser {
   id: number;
   givenname: string;
   surname: string;
@@ -47,13 +49,20 @@ export interface User {
   send_email_reminders: boolean;
   notify_of_favorite_changes: boolean;
   permissions: UserPermission[];
-  leaves?: Leave[];
   ssl_eligible: boolean;
   midcareer_eligible: boolean;
   ssl_apply_eligible: boolean;
   created_at: ISODateTime;
   updated_at: ISODateTime;
   deleted_at: ISODateTime | null;
+}
+
+export interface NormalizedUser extends BaseUser {
+  leaves: Leave["id"][];
+}
+
+export interface User extends BaseUser {
+  leaves: Leave[];
 }
 
 export interface Membership {
@@ -85,6 +94,7 @@ export interface MemberRole {
   deleted_at?: ISODateTime | null;
   official_role_category_id: number;
   official_group_type: GroupType[];
+  members?: Membership[];
 }
 
 export interface ParentOrganization {
@@ -92,6 +102,7 @@ export interface ParentOrganization {
   id: number;
   group_title: string;
   parent_organization_id: number;
+  child_organizations_recursive: ParentOrganization[];
 }
 
 export interface Group {
@@ -112,9 +123,12 @@ export interface Group {
   parent_organization: ParentOrganization;
   parent_organization_id: number;
   active: 0 | 1;
-  artifacts: Artifact[]; // what's an artifact?
+  artifacts: GroupArtifact[];
   notes: string | null;
   members: Membership[];
+  created_at: ISODateTime | null; // why null?
+  updated_at: ISODateTime | null; // why null?
+  deleted_at?: ISODateTime | null;
 }
 
 export interface ChildGroup {
@@ -138,12 +152,19 @@ export interface ChildGroup {
 }
 
 export interface Artifact {
-  id: number;
+  id: number | string;
   label: string;
   target: string;
+  created_at: ISODateTime;
+  updated_at: ISODateTime;
+}
+
+export interface GroupArtifact extends Artifact {
   group_id: number;
-  created_at: Date;
-  updated_at: Date;
+}
+
+export interface LeaveArtifact extends Artifact {
+  leave_id: number | string;
 }
 
 export const leaveTypes = {
@@ -177,6 +198,7 @@ export interface Leave {
   created_at: ISODateTime;
   updated_at: ISODateTime;
   deleted_at?: ISODateTime | null;
+  artifacts?: LeaveArtifact[];
 }
 
 export interface NewLeave {
@@ -187,6 +209,7 @@ export interface NewLeave {
   status: LeaveStatus;
   start_date: ISODate;
   end_date: ISODate;
+  artifacts?: LeaveArtifact[];
 }
 
 export interface Term {
@@ -287,3 +310,7 @@ export type InstructorWithCourse = Instructor & { course: Course };
 export type LeaveWithInstructor = Leave & {
   instructor: Omit<Instructor, "leaves">;
 };
+
+export interface CustomAxiosRequestConfig extends AxiosRequestConfig {
+  skipErrorNotifications?: boolean;
+}

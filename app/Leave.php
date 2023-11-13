@@ -64,6 +64,10 @@ class Leave extends Model implements Auditable {
         return $this->belongsTo(User::class);
     }
 
+    public function artifacts() {
+        return $this->hasMany(LeaveArtifact::class);
+    }
+
     public function setStatusAttribute($value) {
         $allowed = [
             self::STATUS_CONFIRMED,

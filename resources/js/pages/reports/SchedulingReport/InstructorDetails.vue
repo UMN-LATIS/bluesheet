@@ -53,7 +53,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
-import type { InstructorWithCourse } from "@/stores/useGroupCourseHistoryStore";
+import type { InstructorWithCourse } from "@/types";
 import { doesInstructorNameMatchSearchTerm } from "./doesInstructorNameMatchSearchTerm";
 
 defineProps<{

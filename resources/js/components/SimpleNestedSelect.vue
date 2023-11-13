@@ -23,7 +23,6 @@ import { computed } from "vue";
 
 export interface OptionNode {
   id: number | string;
-  parent_id: number | string | null;
   label: string;
   children: OptionNode[];
 }

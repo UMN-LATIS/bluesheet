@@ -20,7 +20,7 @@
       class="form-control tw-text-sm tw-bg-transparent"
       :class="[
         {
-          'is-invalid': isValid === false && isTouched,
+          'is-invalid': isValidComputed === false && isTouched,
         },
         selectClass,
       ]"
@@ -35,14 +35,14 @@
       </option>
     </select>
     <small v-if="helpText" class="form-text text-muted">{{ helpText }}</small>
-    <div v-if="isValid === false && isTouched" class="invalid-feedback">
+    <div v-if="isValidComputed === false && isTouched" class="invalid-feedback">
       {{ errorText || `Invalid ${label}` }}
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { CSSClass } from "@/types";
 
 export interface OptionType {
@@ -50,13 +50,14 @@ export interface OptionType {
   text: string;
 }
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     modelValue: string | number;
     label: string;
     options: OptionType[];
     helpText?: string;
     isValid?: boolean;
+    validator?: (value: unknown) => boolean;
     errorText?: string;
     required?: boolean;
     placeholder?: string;
@@ -72,6 +73,7 @@ withDefaults(
     placeholder: "",
     showLabel: true,
     isValid: undefined,
+    validator: () => true,
   },
 );
 
@@ -79,6 +81,21 @@ const emits = defineEmits(["update:modelValue"]);
 
 const selectId = `select-${Math.random().toString(36).substring(7)}`;
 const isTouched = ref(false);
+const isValidComputed = computed(() => {
+  if (props.isValid !== undefined) {
+    return props.isValid;
+  }
+
+  if (props.validator) {
+    return props.validator(props.modelValue);
+  }
+
+  if (props.required) {
+    return props.modelValue !== "";
+  }
+
+  return true;
+});
 
 const updateValue = (event: Event) => {
   isTouched.value = true;

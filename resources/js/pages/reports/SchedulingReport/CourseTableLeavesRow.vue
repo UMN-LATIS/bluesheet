@@ -35,8 +35,7 @@
 <script setup lang="ts">
 import LeaveChip from "@/components/LeaveChip.vue";
 import { Td } from "@/components/Table";
-import { LeaveWithInstructor } from "@/stores/useGroupCourseHistoryStore";
-import type { Term } from "@/types";
+import type { Term, LeaveWithInstructor } from "@/types";
 import { doesInstructorNameMatchSearchTerm } from "./doesInstructorNameMatchSearchTerm";
 
 withDefaults(

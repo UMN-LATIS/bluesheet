@@ -9,20 +9,18 @@
         >
           <button
             class="btn btn-outline-primary"
-            @click="
-              $store.dispatch('toggleFavorite', { type: 'groups', item: group })
-            "
+            @click="userStore.toggleGroupFavorite(group)"
           >
             <i
               class="fa-star"
-              :class="{ fas: groupFavorited, far: !groupFavorited }"
+              :class="{ fas: isGroupFavorited, far: !isGroupFavorited }"
             ></i>
             Favorite
           </button>
           <button
             v-if="$can('edit groups') || group.user_can_edit"
             class="btn btn-outline-primary"
-            @click="$emit('update:editing', true)"
+            @click="$emit('update:isEditing', true)"
           >
             Edit Group
           </button>
@@ -66,7 +64,7 @@
           <li>{{ group.notes }}</li>
           <li
             v-if="
-              group.child_groups.filter((e) => e.active_group).length > 0 &&
+              group.child_groups?.some((g) => g.active_group) &&
               $can('view groups')
             "
           >
@@ -107,7 +105,7 @@
       :group="group"
       :editing="false"
       :show_unit="group.show_unit"
-      :roles="filteredRoles"
+      :roles="rolesRelatedToGroup"
       viewType="group"
       :downloadTitle="group.group_title"
     ></Members>
@@ -121,61 +119,44 @@
   </div>
 </template>
 
-<script>
+<script lang="ts" setup>
 import GroupTitle from "./GroupTitle.vue";
 import Members from "./Members.vue";
 import { $can } from "@/utils";
+import { computed, onMounted, ref } from "vue";
+import * as T from "@/types";
+import { useUserStore } from "@/stores/useUserStore";
+import * as api from "@/api";
 
-export default {
-  components: {
-    GroupTitle,
-    Members,
-  },
-  props: ["group", "editing"],
-  emits: ["update:editing"],
-  data() {
-    return {
-      roles: [],
-    };
-  },
-  computed: {
-    groupFavorited: function () {
-      if (this.$store.state.favorites["groups"]) {
-        return (
-          this.$store.state.favorites["groups"].filter(
-            (g) => g.id == this.group.id,
-          ).length > 0
-        );
-      }
-      return false;
-    },
-    filteredRoles: function () {
-      if (!this.roles) {
-        return [];
-      }
-      return this.roles.filter(
-        (r) =>
-          !r.official_group_type ||
-          r.official_group_type
-            .map((gt) => gt.label)
-            .includes(this.group.group_type.label),
-      );
-    },
-  },
-  mounted() {
-    axios
-      .get("/api/group/roles/")
-      .then((res) => {
-        this.roles = res.data;
-      })
-      .catch((err) => {
-        this.error = err.response.data;
-      });
-  },
-  methods: {
-    $can,
-  },
-};
+const props = defineProps<{
+  group: T.Group;
+  isEditing: boolean;
+}>();
+
+defineEmits<{
+  (eventName: "update:isEditing", value: boolean): void;
+}>();
+
+const allRoles = ref<T.MemberRole[]>([]);
+const userStore = useUserStore();
+
+const isGroupFavorited = computed(() => {
+  return userStore.currentGroupFavorites.some((g) => g.id == props.group.id);
+});
+
+const rolesRelatedToGroup = computed(() => {
+  return allRoles.value.filter(
+    (r) =>
+      !r.official_group_type ||
+      r.official_group_type
+        .map((gt) => gt.label)
+        .includes(props.group.group_type.label),
+  );
+});
+
+onMounted(async () => {
+  allRoles.value = await api.fetchAllGroupRoles();
+});
 </script>
 
 <style scoped></style>

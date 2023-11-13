@@ -251,7 +251,7 @@ const group = ref<null | Group>(null);
 watch(
   () => props.groupId,
   async (newGroupId) => {
-    group.value = await api.getGroup(newGroupId);
+    group.value = await api.fetchGroup(newGroupId);
   },
   { immediate: true },
 );

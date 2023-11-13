@@ -9,7 +9,6 @@ import "./bootstrap";
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 import VTooltip from "v-tooltip";
-import { store } from "./store";
 import { router } from "./router";
 import App from "./App.vue";
 
@@ -20,6 +19,6 @@ import "../sass/utils.css";
 
 const pinia = createPinia();
 
-const app = createApp(App).use(store).use(pinia).use(router).use(VTooltip);
+const app = createApp(App).use(pinia).use(router).use(VTooltip);
 
 app.mount("#app");

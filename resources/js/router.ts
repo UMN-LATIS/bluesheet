@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
+import { useErrorStore } from "@/stores/useErrorStore";
 
 // pages
 import UserHomePage from "./pages/UserHomePage.vue";
@@ -57,9 +58,19 @@ export const router = createRouter({
       name: "group",
       path: "/group/:groupId/:hash?",
       component: GroupPage,
-      props: true,
+      props: (route) => ({
+        groupId: parseIntFromParam(route.params.groupId),
+        hash: route.params.hash ?? null,
+      }),
     },
-    { name: "role", path: "/role/:roleId", component: RolePage, props: true },
+    {
+      name: "role",
+      path: "/role/:roleId",
+      component: RolePage,
+      props: (route) => ({
+        roleId: parseIntFromParam(route.params.roleId),
+      }),
+    },
     {
       name: "groupList",
       path: "/groups/:parent?",
@@ -126,7 +137,26 @@ export const router = createRouter({
     {
       name: "eligibilityReport",
       path: "/reports/eligibilityReport",
-      component: EligibilityReportPage
+      component: EligibilityReportPage,
     },
   ],
+});
+
+router.onError((error) => {
+  const errorStore = useErrorStore();
+  errorStore.setError(error);
+});
+
+router.beforeResolve((to, from, next) => {
+  // clear any errors in our error store
+  // this prevents the error modal from persisting across pages
+  const errorStore = useErrorStore();
+  errorStore.clearError();
+
+  // scrub any '//' in the path
+  const path = to.path.replace(/\/\//g, "/");
+  if (path !== to.path) {
+    next(path);
+  }
+  next();
 });

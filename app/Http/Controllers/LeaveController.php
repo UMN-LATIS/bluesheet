@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\Response;
 use Auth;
+use Illuminate\Support\Arr;
 
 class LeaveController extends Controller {
     /**
@@ -42,7 +43,7 @@ class LeaveController extends Controller {
         $currentUser = Auth::user();
         abort_if($currentUser->cannot('view leave') && $leave->user_id !== $currentUser->id, 403);
 
-        return $leave->load('user');
+        return $leave->load(['user', 'artifacts']);
     }
 
     /**
@@ -65,7 +66,8 @@ class LeaveController extends Controller {
         ]);
 
         $leave->update($validated);
-        return $leave->load('user');
+
+        return $leave->load(['user', 'artifacts']);
     }
 
     /**
@@ -74,7 +76,9 @@ class LeaveController extends Controller {
      * @param  \App\Leave  $leave
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Leave $leave) {
+    public function destroy(Request $request, Leave $leave) {
+        abort_if($request->user()->cannot('edit leaves'), 403);
+
         $leave->delete();
         return response()->json(null, Response::HTTP_NO_CONTENT);
     }

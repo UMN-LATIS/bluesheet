@@ -12,9 +12,8 @@
       <thead class="tw-bg-gray-50">
         <slot name="thead" />
       </thead>
-      <tbody class="tw-divide-y tw-divide-gray-200 tw-bg-white">
-        <slot />
-      </tbody>
+
+      <slot />
       <tfoot>
         <slot name="tfoot" />
       </tfoot>
