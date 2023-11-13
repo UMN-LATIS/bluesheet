@@ -9,6 +9,7 @@
           placeholder="Artifact Label"
           :showLabel="false"
           data-cy="artifactLabelInput"
+          inputClass="tw-bg-white tw-border-neutral-200"
         />
       </Td>
       <Td colspan="2">
@@ -18,6 +19,7 @@
           :showLabel="false"
           placeholder="Artifact URL"
           data-cy="artifactTargetInput"
+          inputClass="tw-bg-white tw-border-neutral-200"
         />
       </Td>
       <Td>
