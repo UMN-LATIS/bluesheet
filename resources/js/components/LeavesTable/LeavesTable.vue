@@ -59,10 +59,8 @@ import { computed, ref } from "vue";
 import { dayjs, $can, isTempId } from "@/utils";
 import { Leave } from "@/types";
 import Button from "@/components/Button.vue";
-// import { cloneDeep } from "lodash";
 import { Table, Th, Td } from "@/components/Table";
 import CheckboxGroup from "@/components/CheckboxGroup.vue";
-// import * as api from "@/api";
 import LeaveTableRow from "./LeaveTableRow.vue";
 import { useUserStore } from "@/stores/useUserStore";
 

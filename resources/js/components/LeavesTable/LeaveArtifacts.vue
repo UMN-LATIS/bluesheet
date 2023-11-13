@@ -45,31 +45,6 @@ defineProps<{
 }>();
 
 const userStore = useUserStore();
-
-// const localArtifacts = reactive<LeaveArtifact[]>(props.leave.artifacts ?? []);
-
-// function handleAddArtifact() {
-//   localArtifacts.push({
-//     id: getTempId(),
-//     label: "",
-//     target: "",
-//     leave_id: props.leave.id,
-//     created_at: new Date().toISOString(),
-//     updated_at: new Date().toISOString(),
-//   });
-// }
-
-// function handleUpdateArtifact(id: number | string, artifact: LeaveArtifact) {
-//   const index = localArtifacts.findIndex((a) => a.id === id);
-//   if (index === -1) return;
-//   localArtifacts.splice(index, 1, artifact);
-// }
-
-// function handleDeleteArtifact(id: number | string) {
-//   const index = localArtifacts.findIndex((a) => a.id === id);
-//   if (index === -1) return;
-//   localArtifacts.splice(index, 1);
-// }
 </script>
 <style scoped>
 .leave-artifacts th:not(:first-child) {

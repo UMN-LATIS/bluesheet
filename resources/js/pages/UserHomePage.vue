@@ -49,7 +49,6 @@ import ViewUser from "@/components/ViewUser.vue";
 import Roles from "@/components/Roles.vue";
 import LeavesTable from "@/components/LeavesTable";
 import * as api from "@/api";
-import { Leave } from "@/types";
 import CheckboxGroup from "@/components/CheckboxGroup.vue";
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
 import { usePageTitle } from "@/utils/usePageTitle";
@@ -87,11 +86,4 @@ const memberships = computed(() => {
 watch(user, () => usePageTitle(user.value?.displayName ?? ""), {
   immediate: true,
 });
-
-// async function handleUpdateLeaves(leaves: Leave[]) {
-//   if (!user.value) {
-//     throw new Error("Cannot update leaves for this user. User not defined.");
-//   }
-//   userStore.batchUpdateUserLeaves(user.value.id, leaves);
-// }
 </script>
