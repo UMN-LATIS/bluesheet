@@ -62,6 +62,19 @@ Additional users can be configured in `config/shibboleth.php`.
 
 Stop the application: `sail down`.
 
+## Local Development with Bandaid
+
+Some features of BlueSheet require access to [Bandaid](https://github.com/UMN-LATIS/Bandaid) API (e.g. the Scheduling Report).
+
+To connect to Bandaid for local development:
+
+1. Connect to UMN VPN.
+2. Login to <https://cla-bandaid-prd-web.oit.umn.edu/admin>
+3. In Bandaid, add a new API Token for your user: Users > `username` > Edit > Add Token.
+4. Add the token in `.env` as `BANDAID_KEY=<your token>`
+5. Get your VPN ip address from https://z.umn.edu/ip
+6. Add your ip address to Bandaid's Allow List. (You'll need to do this each time your ip address changes. Be sure to remove the old ip address from the list.)
+
 ## Deploy
 
 | Enviroment Name | URL                                  |
