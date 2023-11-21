@@ -1,5 +1,5 @@
 <template>
-  <tr>
+  <tr class="instructor-table-row">
     <Td class="instructor-column">
       <RouterLink :to="`/user/${instructor.id}`">
         <div
@@ -27,26 +27,18 @@
     <Td
       v-for="(termCourses, index) in listOfTermCourses"
       :key="index"
-      class="term-data-column"
+      class="term-data-column tw-group"
       :class="{
         'term-data-column--current': currentTerm?.id === terms[index].id,
         'term-data-column--fall': terms[index].name.includes('Fall'),
       }"
     >
-      <div class="leaves tw-flex tw-flex-col tw-gap-1">
-        <LeaveChip
-          v-for="leave in listOfTermLeaves[index]"
-          :key="leave.id"
-          :leave="leave"
-          :instructor="instructor"
-        >
-          {{ leave.description }} ({{ leave.type }})
-        </LeaveChip>
-      </div>
-      <CourseDetails
-        v-for="course in termCourses"
-        :key="course.classNumber"
-        :course="course"
+      <InstructorTableCell
+        :instructor="instructor"
+        :term="terms[index]"
+        :termCourses="termCourses"
+        :termLeaves="listOfTermLeaves[index]"
+        :currentTerm="currentTerm"
         :search="search"
       />
     </Td>
@@ -54,10 +46,9 @@
 </template>
 <script setup lang="ts">
 import { Td } from "@/components/Table";
-import LeaveChip from "@/components/LeaveChip.vue";
 import { Instructor, Term, Leave, Course } from "@/types";
 import { doesInstructorNameMatchSearchTerm } from "./doesInstructorNameMatchSearchTerm";
-import CourseDetails from "./CourseDetails.vue";
+import InstructorTableCell from "./InstructorTableCell.vue";
 
 defineProps<{
   instructor: Instructor;
@@ -69,6 +60,10 @@ defineProps<{
 }>();
 </script>
 <style scoped>
+.term-data-column {
+  border-left: 1px solid #f3f3f3;
+}
+
 .term-data-column.term-data-column--current {
   background: #fffcf0;
   border-top: 1px solid #fde68a;
@@ -80,5 +75,8 @@ defineProps<{
 
 .term-data-column.term-data-column--fall {
   border-left: 2px solid #f3f3f3;
+}
+.instructor-table-row:hover .instructor-column {
+  background-color: #f3f3f3;
 }
 </style>
