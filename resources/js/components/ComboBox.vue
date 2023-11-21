@@ -64,22 +64,29 @@
           v-for="option in filteredOptions"
           :key="option.id ?? option.label"
           ref="optionRefs"
-          class="combobox__item"
+          class="combobox__item tw-flex"
           :class="{
             'combobox__item--is-selected': isOptionSelected(option),
           }"
           type="button"
           @click="handleSelectOption(option)"
         >
-          <span class="sr-only">Selected</span>
-          <CheckIcon
-            v-if="isOptionSelected(option)"
-            class="combobox__check-icon"
-          />
-          <span class="combobox__name">{{ option.label }}</span>
-          <span v-if="option.secondaryLabel" class="combobox__id">
-            ({{ option.secondaryLabel }})
-          </span>
+          <div>
+            <span class="sr-only">Selected</span>
+            <CheckIcon
+              v-if="isOptionSelected(option)"
+              class="combobox__check-icon tw-mr-2"
+            />
+          </div>
+          <div>
+            <div class="combobox__name">{{ option.label }}</div>
+            <div
+              v-if="option.secondaryLabel"
+              class="tw-text-xs tw-text-neutral-400"
+            >
+              {{ option.secondaryLabel }}
+            </div>
+          </div>
         </button>
 
         <slot name="append" />
@@ -96,7 +103,7 @@ import CircleXIcon from "@/icons/CircleXIcon.vue";
 import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
 import CheckIcon from "@/icons/CheckIcon.vue";
 
-interface Option {
+export interface ComboBoxOption {
   id?: string | number; // new options might have an undefined id
   label: string;
   secondaryLabel?: string;
@@ -104,8 +111,8 @@ interface Option {
 
 const props = withDefaults(
   defineProps<{
-    modelValue: Option | null;
-    options: Option[];
+    modelValue: ComboBoxOption | null;
+    options: ComboBoxOption[];
     inputClass?: CSSClass;
     showClearButton?: boolean;
     canAddNewOption?: boolean;
@@ -118,8 +125,8 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-  (eventName: "update:modelValue", value: Option | null);
-  (eventName: "update:options", value: Option[]): void;
+  (eventName: "update:modelValue", value: ComboBoxOption | null);
+  (eventName: "update:options", value: ComboBoxOption[]): void;
 }>();
 
 const comboboxResultsId = `comboboxDropdownList-${Date.now()}`;
@@ -157,7 +164,7 @@ function handleAddNewOption() {
   handleSelectOption(newOption);
 }
 
-function isOptionSelected(option: Option) {
+function isOptionSelected(option: ComboBoxOption) {
   if (!props.modelValue) {
     return false;
   }
@@ -197,7 +204,7 @@ const shouldShowAddNewOptionButton = computed(() => {
   );
 });
 
-function fuzzySearch(options: Option[], query: string) {
+function fuzzySearch(options: ComboBoxOption[], query: string) {
   const fuse = new Fuse(options, {
     keys: ["label", "secondaryLabel"],
     threshold: 0.3,
@@ -210,7 +217,7 @@ function handleInput(event: Event) {
   filterText.value = (event.target as HTMLInputElement).value;
 }
 
-function handleSelectOption(option: Option) {
+function handleSelectOption(option: ComboBoxOption) {
   emit("update:modelValue", option);
   isComboboxOpen.value = false;
   inputRef.value?.blur();
@@ -239,7 +246,7 @@ watch(
   },
 );
 
-function getOption(option: Partial<Option>): Option | null {
+function getOption(option: Partial<ComboBoxOption>): ComboBoxOption | null {
   if (option.id) {
     return props.options.find((opt) => opt.id === option.id) ?? null;
   }
@@ -368,11 +375,11 @@ function handleEnterKey(event: KeyboardEvent) {
   background: transparent;
   padding: 0.33rem 0.5rem;
   border: 0;
-  display: flex;
+  /* display: flex; */
   text-align: left;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.5rem;
+  /* justify-content: space-between; */
+  /* align-items: center; */
+  /* gap: 0.5rem; */
   padding-left: 2rem;
 }
 
@@ -389,10 +396,6 @@ function handleEnterKey(event: KeyboardEvent) {
 
 .combobox__name {
   flex: 1;
-}
-.combobox__id {
-  color: #999;
-  font-size: 0.875rem;
 }
 
 .combobox__toggle-button {
