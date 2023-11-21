@@ -17,7 +17,7 @@
         ]"
       />
     </Switch>
-    <SwitchLabel as="span" class="tw-ml-2 tw-text-sm">
+    <SwitchLabel as="span" class="tw-whitespace-nowrap tw-ml-1 tw-text-sm">
       <slot />
     </SwitchLabel>
   </SwitchGroup>
