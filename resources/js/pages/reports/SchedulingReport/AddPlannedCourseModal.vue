@@ -9,7 +9,7 @@
       <div class="tw-flex tw-flex-col tw-gap-4">
         <ComboBox
           id="select-course-combobox"
-          v-model="selected.course"
+          v-model="selectedOptions.course"
           :options="courseOptions"
           label="Course"
           :showLabel="true"
@@ -17,7 +17,7 @@
         />
         <ComboBox
           id="select-term-combobox"
-          v-model="selected.term"
+          v-model="selectedOptions.term"
           label="Term"
           :showLabel="true"
           :options="termOptions"
@@ -25,7 +25,7 @@
         />
         <ComboBox
           id="select-instructor-combobox"
-          v-model="selected.instructor"
+          v-model="selectedOptions.instructor"
           label="Instructor"
           :showLabel="true"
           :options="instructorOptions"
@@ -43,7 +43,7 @@
 import Modal from "@/components/Modal.vue";
 import ComboBox, { ComboBoxOption } from "@/components/ComboBox2.vue";
 import { Instructor, Term, TimelessCourse } from "@/types";
-import { computed, reactive } from "vue";
+import { computed, onMounted, reactive } from "vue";
 import Button from "@/components/Button.vue";
 
 const props = defineProps<{
@@ -87,7 +87,7 @@ const initialSelected = computed(() => ({
   term: props.initialTerm ? toTermOption(props.initialTerm) : null,
 }));
 
-const selected = reactive<{
+const selectedOptions = reactive<{
   instructor: ComboBoxOption | null;
   course: ComboBoxOption | null;
   term: ComboBoxOption | null;
@@ -95,6 +95,14 @@ const selected = reactive<{
   instructor: initialSelected.value.instructor,
   course: initialSelected.value.course,
   term: initialSelected.value.term,
+});
+
+onMounted(() => {
+  console.log("mounted", {
+    initialSelected,
+    selectedOptions,
+    props,
+  });
 });
 
 const termOptions = computed(() => props.terms.map(toTermOption));
@@ -106,34 +114,29 @@ const instructorOptions = computed(() =>
 );
 
 const selectedCourse = computed(() => {
-  if (!selected.course) {
-    return null;
-  }
-
-  return props.courses.find((c) => c.shortCode === selected.course?.id);
+  return (
+    props.courses.find((c) => c.shortCode === selectedOptions.course?.id) ??
+    null
+  );
 });
 
 const selectedTerm = computed(() => {
-  if (!selected.term) {
-    return null;
-  }
-
-  return props.terms.find((t) => t.id === selected.term?.id);
+  return props.terms.find((t) => t.id === selectedOptions.term?.id) ?? null;
 });
 
 const selectedInstructor = computed(() => {
-  if (!selected.instructor) {
-    return null;
-  }
-
-  return props.instructors.find((i) => i.id === selected.instructor?.id);
+  return (
+    props.instructors.find((i) => i.id === selectedOptions.instructor?.id) ??
+    null
+  );
 });
 
 function resetForm() {
-  selected.course = initialSelected.value.course;
-  selected.term = initialSelected.value.term;
-  selected.instructor = initialSelected.value.instructor;
+  selectedOptions.course = initialSelected.value.course;
+  selectedOptions.term = initialSelected.value.term;
+  selectedOptions.instructor = initialSelected.value.instructor;
 }
+
 function handleCancel() {
   resetForm();
   emits("close");

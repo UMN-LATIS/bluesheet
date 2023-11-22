@@ -1,5 +1,12 @@
 <template>
   <div class="tw-flex tw-flex-col tw-gap-1">
+    <button
+      v-if="groupCourseHistoryStore.isInPlanningMode"
+      class="tw-bg-transparent tw-border-1 tw-border-dashed tw-border-black/10 tw-rounded tw-p-2 tw-text-sm tw-text-neutral-400 hover:tw-bg-neutral-900 hover:tw-text-neutral-200 tw-block group-hover:tw-visible tw-leading-none"
+      @click="isShowingAddCourse = true"
+    >
+      + Add Course
+    </button>
     <LeaveChip
       v-for="leave in termLeaves"
       :key="leave.id"
@@ -15,14 +22,9 @@
       :course="course"
       :search="search"
     />
-    <button
-      v-if="groupCourseHistoryStore.isInPlanningMode"
-      class="tw-bg-black/10 tw-border-1 tw-border-dashed tw-border-black/10 tw-rounded tw-p-2 tw-text-sm tw-text-neutral-500 hover:tw-bg-neutral-900 hover:tw-text-neutral-200 tw-invisible tw-flex group-hover:tw-visible tw-justify-center tw-items-center"
-      @click="isShowingAddCourse = true"
-    >
-      Add
-    </button>
+
     <AddPlannedCourseModal
+      v-if="isShowingAddCourse"
       :terms="groupCourseHistoryStore.allTerms"
       :courses="groupCourseHistoryStore.allCourses"
       :instructors="groupCourseHistoryStore.allInstructors"

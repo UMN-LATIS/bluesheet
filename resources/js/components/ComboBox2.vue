@@ -1,5 +1,10 @@
 <template>
-  <Combobox v-model="selectedOption" as="div" :nullable="nullable">
+  <Combobox
+    :modelValue="modelValue"
+    as="div"
+    :nullable="nullable"
+    @update:modelValue="(opt) => $emit('update:modelValue', opt)"
+  >
     <ComboboxLabel
       v-if="label"
       :class="[
@@ -11,10 +16,9 @@
         labelClass,
       ]"
     >
-      <Label is="div">
+      <Label is="div" :required="required">
         {{ label }}
       </Label>
-      <span v-if="required" class="tw-text-red-600">*</span>
     </ComboboxLabel>
     <div class="tw-relative">
       <!--
@@ -59,7 +63,7 @@
                 selected && !active && 'tw-bg-blue-100',
               ]"
             >
-              <div class="tw-flex tw-flex-col tw-gap-2">
+              <div class="tw-flex tw-flex-col">
                 <div
                   :class="[
                     'tw-block tw-truncate',
@@ -165,7 +169,6 @@ const emit = defineEmits<{
 }>();
 
 const query = ref("");
-const selectedOption = ref<ComboBoxOption | null>(null);
 const filteredOptions = computed(() =>
   query.value === ""
     ? props.options
@@ -177,9 +180,13 @@ const filteredOptions = computed(() =>
       }),
 );
 
-watch(selectedOption, (newValue) => {
-  emit("update:modelValue", newValue);
-});
+// watch(() => props.modelValue, (newValue) => {
+//   selectedOption.value = newValue;
+// });
+
+// watch(selectedOption, (newValue) => {
+//   emit("update:modelValue", newValue);
+// });
 
 function handleAddNewOption() {
   if (!props.canAddNewOption) {
@@ -193,7 +200,7 @@ function handleAddNewOption() {
   );
 
   if (existingOption) {
-    selectedOption.value = existingOption;
+    emit("update:modelValue", existingOption);
     return;
   }
 
@@ -202,6 +209,6 @@ function handleAddNewOption() {
     label: query.value,
   };
   emit("update:options", [...props.options, newOption]);
-  selectedOption.value = newOption;
+  emit("update:modelValue", newOption);
 }
 </script>
