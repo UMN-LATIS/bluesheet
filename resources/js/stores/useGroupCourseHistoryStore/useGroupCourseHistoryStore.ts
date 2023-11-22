@@ -25,6 +25,7 @@ const useStore = defineStore("groupCourseHistory", () => {
     termLoadStateMap: ref<Map<Types.Term["id"], Types.LoadState>>(new Map()),
     startTermId: ref<Types.Term["id"] | null>(null),
     endTermId: ref<Types.Term["id"] | null>(null),
+    isInPlanningMode: ref(false),
   };
 
   const getters = {
@@ -344,6 +345,10 @@ const useStore = defineStore("groupCourseHistory", () => {
     setEndTermId(termId: Types.Term["id"]) {
       state.endTermId.value = termId;
     },
+
+    // togglePlanningMode(value?: boolean) {
+    //   state.inPlanningMode.value = value ?? !state.inPlanningMode.value;
+    // },
   };
 
   return {
@@ -355,9 +360,9 @@ const useStore = defineStore("groupCourseHistory", () => {
 
 // this is a convenience function that allows us to
 // automatically initialize a store for a given group
-export const useGroupCourseHistoryStore = (groupId: Types.Group["id"]) => {
+export const useGroupCourseHistoryStore = (groupId?: Types.Group["id"]) => {
   const store = useStore();
-  if (store.groupId !== groupId) {
+  if (groupId && store.groupId !== groupId) {
     store.init(groupId);
   }
 

@@ -139,11 +139,9 @@
       </div>
     </section>
 
-    <div
-      class="tw-flex tw-justify-between tw-flex-wrap tw-items-baseline gap-2"
-    >
+    <div class="tw-flex tw-justify-between tw-flex-wrap tw-items-center gap-2">
       <Tabs
-        class="tw-mt-4"
+        class="tw-mb-2"
         :tabs="[
           {
             id: 'instructors',
@@ -159,17 +157,26 @@
         ]"
         @change="handleTabChange"
       />
-      <label
-        class="tw-border tw-border-umn-neutral-200 tw-max-w-xs tw-w-full tw-rounded-md !tw-block"
-      >
-        <span class="sr-only">Filter by instructor name or course number</span>
-        <input
-          v-model="searchInputRaw"
-          placeholder="Search table"
-          :showLabel="false"
-          class="tw-w-full tw-border-none tw-rounded-none tw-px-4 tw-py-2 tw-bg-transparent tw-text-sm"
-        />
-      </label>
+
+      <div class="tw-flex tw-items-center tw-gap-4">
+        <Toggle v-model="groupCourseHistoryStore.isInPlanningMode">
+          Planning Mode
+        </Toggle>
+
+        <label
+          class="tw-border tw-border-umn-neutral-200 tw-max-w-xs tw-w-full tw-rounded-md !tw-block !tw-mb-0"
+        >
+          <span class="sr-only"
+            >Filter by instructor name or course number</span
+          >
+          <input
+            v-model="searchInputRaw"
+            placeholder="Search table"
+            :showLabel="false"
+            class="tw-w-full tw-border-none tw-rounded-none tw-px-4 tw-py-2 tw-bg-transparent tw-text-sm"
+          />
+        </label>
+      </div>
     </div>
 
     <div class="tw-relative tw-min-h-[8em] tw-overflow-hidden">
@@ -240,6 +247,7 @@ import { storeToRefs } from "pinia";
 import * as api from "@/api";
 import Tabs, { type Tab } from "@/components/Tabs.vue";
 import SelectGroup from "@/components/SelectGroup.vue";
+import Toggle from "@/components/Toggle.vue";
 
 const props = defineProps<{
   groupId: number;
@@ -247,6 +255,7 @@ const props = defineProps<{
 
 const groupCourseHistoryStore = useGroupCourseHistoryStore(props.groupId);
 const group = ref<null | Group>(null);
+const isInPlanningMode = ref(false);
 
 watch(
   () => props.groupId,
