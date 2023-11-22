@@ -1,34 +1,48 @@
 <template>
-  <Combobox v-model="selectedOption" as="div">
+  <Combobox v-model="selectedOption" as="div" :nullable="nullable">
     <ComboboxLabel
+      v-if="label"
       :class="[
-        'tw-block tw-text-xs tw-uppercase tw-text-neutral-500 tw-mb-1',
+        'tw-block tw-text-xs tw-uppercase tw-text-neutral-500 tw-my-0',
         {
           'tw-sr-only': !showLabel,
+          'tw-mb-1': showLabel,
         },
         labelClass,
       ]"
     >
-      {{ label }}
+      <Label is="div">
+        {{ label }}
+      </Label>
       <span v-if="required" class="tw-text-red-600">*</span>
     </ComboboxLabel>
     <div class="tw-relative">
-      <ComboboxInput
-        class="tw-w-full tw-rounded-md tw-border-0 tw-bg-white tw-py-1.5 tw-pl-3 tw-pr-10 tw-text-gray-900 tw-ring-1 tw-ring-inset tw-ring-gray-300 focus:tw-ring-2 focus:tw-ring-inset focus:tw-ring-blue-600 sm:tw-text-sm sm:tw-leading-6"
-        :displayValue="(item) => (item as ComboBoxOption | null)?.label ?? ''"
-        @change="query = $event.target.value"
-      />
-      <ComboboxButton
-        class="tw-absolute tw-inset-y-0 tw-right-0 tw-flex tw-items-center tw-rounded-r-md tw-px-2 focus:tw-outline-none tw-bg-transparent tw-border-none"
-      >
-        <ChevronUpDownIcon
-          class="tw-h-5 tw-w-5 tw-text-gray-400"
-          aria-hidden="true"
+      <!--
+        wrap <ComboboxInput> with <ComboboxButton> so
+        that the options automatically open when the input
+        is focused
+        see: https://github.com/tailwindlabs/headlessui/discussions/1236
+      -->
+      <ComboboxButton as="div">
+        <ComboboxInput
+          class="tw-w-full tw-rounded tw-border-0 tw-bg-white tw-py-2 tw-pl-3 tw-pr-10 tw-text-neutral-900 tw-ring-1 tw-ring-inset tw-ring-neutral-300 focus:tw-ring-2 focus:tw-ring-inset focus:tw-ring-blue-600 sm:tw-leading-6"
+          :class="inputClass"
+          :displayValue="(item) => (item as ComboBoxOption | null)?.label ?? ''"
+          :placeholder="placeholder"
+          @change="query = $event.target.value"
         />
+
+        <div
+          class="tw-absolute tw-inset-y-0 tw-right-0 tw-flex tw-items-center tw-rounded-r-md tw-px-2 focus:tw-outline-none tw-bg-transparent tw-border-none"
+        >
+          <ChevronDownIcon
+            class="tw-h-5 tw-w-5 tw-text-neutral-400"
+            aria-hidden="true"
+          />
+        </div>
       </ComboboxButton>
       <Transition name="fade-slide">
         <ComboboxOptions
-          v-if="filteredOptions.length"
           class="tw-absolute tw-z-10 tw-mt-1 tw-max-h-60 tw-w-full tw-overflow-auto tw-rounded-md tw-bg-white tw-py-1 tw-text-base tw-shadow-lg tw-ring-1 tw-ring-black tw-ring-opacity-5 focus:tw-outline-none sm:tw-text-sm tw-pl-0"
         >
           <ComboboxOption
@@ -41,7 +55,7 @@
             <li
               :class="[
                 'tw-relative tw-cursor-default tw-select-none tw-py-2 tw-pl-8 tw-pr-4 tw-list-none',
-                active ? 'tw-bg-blue-600 tw-text-white' : 'tw-text-gray-900',
+                active ? 'tw-bg-blue-600 tw-text-white' : 'tw-text-neutral-900',
                 selected && !active && 'tw-bg-blue-100',
               ]"
             >
@@ -77,6 +91,23 @@
               </span>
             </li>
           </ComboboxOption>
+          <div class="tw-mx-4 tw-my-2 tw-flex tw-flex-col tw-gap-2">
+            <div
+              v-if="!filteredOptions.length"
+              class="tw-text-center tw-italic tw-text-neutral-500"
+            >
+              No results found
+            </div>
+            <button
+              v-if="canAddNewOption"
+              type="button"
+              :disabled="!query.length"
+              class="tw-block tw-w-full tw-mt-2 tw-py-2 tw-px-4 tw-border tw-border-transparent tw-rounded tw-shadow-sm tw-text-sm tw-font-medium tw-text-white tw-bg-neutral-700 hover:tw-bg-neutral-900 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-offset-2 focus:tw-ring-blue-500 disabled:tw-opacity-25 hover:disabled:tw-bg-neutral-700 disabled:tw-cursor-not-allowed"
+              @click="handleAddNewOption"
+            >
+              Add New Option
+            </button>
+          </div>
         </ComboboxOptions>
       </Transition>
     </div>
@@ -84,8 +115,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import { CheckIcon, ChevronUpDownIcon } from "@/icons";
+import { computed, ref, watch } from "vue";
+import { CheckIcon, ChevronDownIcon } from "@/icons";
 import {
   Combobox,
   ComboboxButton,
@@ -95,6 +126,7 @@ import {
   ComboboxOptions,
 } from "@headlessui/vue";
 import { CSSClass } from "@/types";
+import Label from "./Label.vue";
 
 export interface ComboBoxOption {
   id?: string | number; // new options might have an undefined id
@@ -104,22 +136,32 @@ export interface ComboBoxOption {
 
 const props = withDefaults(
   defineProps<{
-    label: string;
+    label?: string;
     options: ComboBoxOption[];
     modelValue: ComboBoxOption | null;
     labelClass?: CSSClass;
+    inputClass?: CSSClass;
     showLabel?: boolean;
     required?: boolean;
+    canAddNewOption?: boolean;
+    nullable?: boolean; // can be cleared after selected
+    placeholder?: string;
   }>(),
   {
+    label: "",
     labelClass: "",
-    showLabel: false,
+    inputClass: "",
+    showLabel: true,
     required: false,
+    canAddNewOption: false,
+    nullable: false,
+    placeholder: "",
   },
 );
 
-const emits = defineEmits<{
+const emit = defineEmits<{
   (eventName: "update:modelValue", value: ComboBoxOption | null);
+  (eventName: "update:options", value: ComboBoxOption[]);
 }>();
 
 const query = ref("");
@@ -134,4 +176,32 @@ const filteredOptions = computed(() =>
         );
       }),
 );
+
+watch(selectedOption, (newValue) => {
+  emit("update:modelValue", newValue);
+});
+
+function handleAddNewOption() {
+  if (!props.canAddNewOption) {
+    return;
+  }
+
+  // check that the option is not already in the list
+  // if it is, then select it
+  const existingOption = props.options.find(
+    (option) => option.label === query.value,
+  );
+
+  if (existingOption) {
+    selectedOption.value = existingOption;
+    return;
+  }
+
+  // otherwise add it to the list
+  const newOption = {
+    label: query.value,
+  };
+  emit("update:options", [...props.options, newOption]);
+  selectedOption.value = newOption;
+}
 </script>
