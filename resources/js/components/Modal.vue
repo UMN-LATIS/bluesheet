@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
     <Transition name="modal">
-      <div v-show="show" class="modal-mask" @mousedown="$emit('close')">
+      <div v-if="show" class="modal-mask" @mousedown="$emit('close')">
         <div class="modal-container" @mousedown.stop>
           <div v-if="title" class="modal-header">
             <h5 class="modal-title">{{ title }}</h5>
