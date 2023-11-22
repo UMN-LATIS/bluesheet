@@ -22,18 +22,25 @@
     >
       Add
     </button>
-    <div v-if="isShowingAddCourse">
-      <ComboBox v-model="selectedCourse" :options="selectCourseOptions" />
-    </div>
+    <AddPlannedCourseModal
+      :terms="groupCourseHistoryStore.allTerms"
+      :courses="groupCourseHistoryStore.allCourses"
+      :instructors="groupCourseHistoryStore.allInstructors"
+      :initialInstructor="instructor"
+      :initialTerm="term"
+      :show="isShowingAddCourse"
+      @close="isShowingAddCourse = false"
+    />
   </div>
 </template>
 <script setup lang="ts">
 import LeaveChip from "@/components/LeaveChip.vue";
 import CourseDetails from "./CourseDetails.vue";
-import ComboBox, { type ComboBoxOption } from "@/components/ComboBox.vue";
+import { type ComboBoxOption } from "@/components/ComboBox.vue";
 import { Instructor, Term, Leave, Course, TimelessCourse } from "@/types";
 import { useGroupCourseHistoryStore } from "@/stores/useGroupCourseHistoryStore";
 import { ref, computed } from "vue";
+import AddPlannedCourseModal from "./AddPlannedCourseModal.vue";
 
 defineProps<{
   instructor: Instructor;

@@ -29,10 +29,17 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from "vue";
 
-const props = defineProps<{
-  title?: string;
-  show: boolean;
-}>();
+const props = withDefaults(
+  defineProps<{
+    title?: string;
+    show: boolean;
+    closeOnEsc?: boolean;
+  }>(),
+  {
+    title: "",
+    closeOnEsc: true,
+  },
+);
 
 const emit = defineEmits<{
   (eventName: "close");
@@ -45,11 +52,15 @@ function closeModalOnEsc(event: KeyboardEvent) {
 }
 
 onMounted(() => {
-  document.addEventListener("keydown", closeModalOnEsc);
+  if (props.closeOnEsc) {
+    document.addEventListener("keydown", closeModalOnEsc);
+  }
 });
 
 onUnmounted(() => {
-  document.removeEventListener("keydown", closeModalOnEsc);
+  if (props.closeOnEsc) {
+    document.removeEventListener("keydown", closeModalOnEsc);
+  }
 });
 </script>
 

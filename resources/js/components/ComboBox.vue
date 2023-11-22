@@ -10,6 +10,19 @@
     @keydown.down.prevent="handleArrowKeyNav"
     @keydown.up.prevent="handleArrowKeyNav"
   >
+    <label
+      :for="inputId"
+      class="tw-uppercase tw-text-neutral-500 tw-font-bold tw-text-xs tw-tracking-wider tw-mb-1 tw-block"
+      :class="[
+        {
+          'sr-only': !showLabel,
+        },
+        labelClass,
+      ]"
+    >
+      {{ label }}
+      <span v-if="required" class="tw-text-red-600">*</span>
+    </label>
     <div class="combobox__input-group">
       <input
         v-bind="$attrs"
@@ -116,11 +129,19 @@ const props = withDefaults(
     inputClass?: CSSClass;
     showClearButton?: boolean;
     canAddNewOption?: boolean;
+    showLabel?: boolean;
+    label?: string;
+    required?: boolean;
+    labelClass?: CSSClass;
   }>(),
   {
     showClearButton: false,
     inputClass: "",
     canAddNewOption: false,
+    label: "",
+    showLabel: false,
+    required: false,
+    labelClass: "",
   },
 );
 
@@ -129,8 +150,8 @@ const emit = defineEmits<{
   (eventName: "update:options", value: ComboBoxOption[]): void;
 }>();
 
+const inputId = `input-${Math.random().toString(36).substring(7)}`;
 const comboboxResultsId = `comboboxDropdownList-${Date.now()}`;
-
 const comboboxContainerRef = ref<HTMLDivElement>();
 const inputRef = ref<HTMLInputElement>();
 
