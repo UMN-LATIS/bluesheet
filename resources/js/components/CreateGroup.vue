@@ -27,6 +27,9 @@
           v-model:options="groupTypes"
           placeholder="Select..."
           :canAddNewOption="true"
+          :nullable="true"
+          label="Group Type"
+          :showLabel="false"
         />
       </div>
     </div>
@@ -60,7 +63,7 @@
 <script>
 import Modal from "./Modal.vue";
 import FolderWidget from "./FolderWidget.vue";
-import ComboBox from "./ComboBox.vue";
+import ComboBox from "./ComboBox2.vue";
 
 export default {
   components: {

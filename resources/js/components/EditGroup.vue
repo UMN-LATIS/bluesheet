@@ -56,6 +56,8 @@
                 v-model:options="groupTypes"
                 placeholder="Select..."
                 :canAddNewOption="true"
+                label="Group Type"
+                :showLabel="false"
               />
             </div>
           </div>
@@ -77,6 +79,8 @@
                 :modelValue="parentGroup"
                 :options="groups"
                 placeholder="Select..."
+                label="Parent Group"
+                :showLabel="false"
                 @update:modelValue="handleUpdateParentGroup"
               />
             </div>
@@ -267,6 +271,8 @@
             v-model="newRole"
             :options="filteredRoles"
             :canAddNewOption="true"
+            label="Role"
+            :showLabel="false"
             @update:options="(updatedRoles) => (roles = updatedRoles)"
           />
         </div>
@@ -294,7 +300,7 @@
 </template>
 
 <script>
-import ComboBox from "./ComboBox.vue";
+import ComboBox from "./ComboBox2.vue";
 import Members from "./Members.vue";
 import Modal from "./Modal.vue";
 import FolderWidget from "./FolderWidget.vue";

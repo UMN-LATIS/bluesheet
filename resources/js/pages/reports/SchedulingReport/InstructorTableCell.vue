@@ -36,7 +36,7 @@
 <script setup lang="ts">
 import LeaveChip from "@/components/LeaveChip.vue";
 import CourseDetails from "./CourseDetails.vue";
-import { type ComboBoxOption } from "@/components/ComboBox.vue";
+import { type ComboBoxOption } from "@/components/ComboBox2.vue";
 import { Instructor, Term, Leave, Course, TimelessCourse } from "@/types";
 import { useGroupCourseHistoryStore } from "@/stores/useGroupCourseHistoryStore";
 import { ref, computed } from "vue";
