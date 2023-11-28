@@ -21,6 +21,7 @@ class TestDatabaseSeeder extends Seeder {
             TestGroupsGroupTypeRoleTableSeeder::class,
             ParentOrganizationsTableSeeder::class,
             TestLeavesSeeder::class,
+            TestGroupsSeeder::class,
         ]);
     }
 }

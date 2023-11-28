@@ -20,18 +20,18 @@ class GroupFactory extends Factory {
      */
     public function definition() {
         return [
-            'group_title' => $this->faker->sentence(),
+            'group_title' => $this->faker->word(3, true),
             'group_type_id' => GroupType::factory(),
             'private_group' => false,
             'active_group' => true,
             'start_date' => null,
             'end_date' => null,
             'notes' => $this->faker->paragraph(),
-            'parent_organization_id' => ParentOrganization::factory(),
+            'parent_organization_id' => 1, // 'CLA'
             'google_group' => null,
             'show_unit' => $this->faker->boolean(),
             'parent_group_id' => null,
-            'abbreviation' => $this->faker->word(),
+            'abbreviation' => null,
             'dept_id' => $this->faker->numberBetween(10000, 99999),
             'include_child_groups' => false,
         ];
