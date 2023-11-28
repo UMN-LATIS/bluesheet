@@ -194,16 +194,6 @@ export async function fetchParentOrganizations() {
   return res.data;
 }
 
-const toApiPlannedCourse = (course: T.Course): Partial<T.ApiPlannedCourse> => ({
-  term_id: course.term,
-  subject: course.subject,
-  catalog_number: course.catalogNumber,
-  title: course.title,
-  course_type: course.courseType,
-  course_level: course.courseLevel,
-  user_id: course.instructors[0]?.id ?? null,
-});
-
 export async function postPlannedCourseForGroup({
   groupId,
   course,
@@ -217,6 +207,14 @@ export async function postPlannedCourseForGroup({
   const res = await axios.post<T.ApiPlannedCourse>(
     `/api/group/${groupId}/planned-courses`,
     course,
+  );
+
+  return res.data;
+}
+
+export async function fetchPlannedCoursesForGroup(groupId: number) {
+  const res = await axios.get<T.ApiPlannedCourse[]>(
+    `/api/group/${groupId}/planned-courses`,
   );
 
   return res.data;
