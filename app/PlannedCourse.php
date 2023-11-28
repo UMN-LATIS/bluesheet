@@ -10,9 +10,11 @@ class PlannedCourse extends Model {
     use HasFactory;
 
     protected $fillable = [
-        'id',
-        'subject',
-        'catalog_number',
+        'subject', // "HIST
+        'catalog_number', // "10001W"
+        'title', // "History of the World"
+        'course_type', // "LEC"
+        'course_level', // "UGRD"
         'user_id',
         'term_id',
         'group_id',
