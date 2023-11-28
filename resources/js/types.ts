@@ -253,11 +253,12 @@ export interface TimelessCourse {
 export interface Course extends TimelessCourse {
   classNumber: number; // classNumber from api - uniq for each course section
   term: number;
-  classSection: string; // "001"
+  classSection: string | "TBD"; // "001", "TBD"
   enrollmentCap: number;
   enrollmentTotal: number;
   cancelled: boolean;
   instructors: Instructor[];
+  isPlanned?: boolean;
 }
 
 export interface ApiCourseInstructorRecord {
