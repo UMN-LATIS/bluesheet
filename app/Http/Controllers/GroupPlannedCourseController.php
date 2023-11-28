@@ -61,4 +61,15 @@ class GroupPlannedCourseController extends Controller {
 
         return $plannedCourse;
     }
+
+    public function destroy(Request $request, Group $group, PlannedCourse $plannedCourse) {
+        abort_if($request->user()->cannot('edit planned courses'), 403);
+
+        // 404 if the planned course isn't within this group
+        abort_if($plannedCourse->group_id !== $group->id, 404);
+
+        $plannedCourse->delete();
+
+        return response()->noContent();
+    }
 }
