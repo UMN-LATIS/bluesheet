@@ -11,7 +11,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Permission\Traits\HasRoles;
 use Spatie\Permission\Models\Permission;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Leave;
+use App\PlannedCourse;
 
 class User extends Authenticatable implements Auditable {
     use HasFactory;
@@ -76,5 +78,9 @@ class User extends Authenticatable implements Auditable {
 
     public function leavesIncludingTrashed() {
         return $this->hasMany(Leave::class)->withTrashed();
+    }
+
+    public function plannedCourses(): HasMany {
+        return $this->hasMany(PlannedCourse::class);
     }
 }

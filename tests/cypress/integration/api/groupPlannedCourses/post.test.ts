@@ -54,7 +54,7 @@ describe("POST /api/group/:groupId/planned-courses", () => {
 
     it("creates a new planned course", () => {
       api
-        .post("/api/group/1/planned-courses", validPlannedCourse)
+        .post(`/api/group/1/planned-courses`, validPlannedCourse)
         .then((response) => {
           expect(response.status).to.eq(201);
           const plannedCourse = response.body;
@@ -67,6 +67,7 @@ describe("POST /api/group/:groupId/planned-courses", () => {
             "course_level",
             "user_id",
             "term_id",
+            "group_id",
             "created_at",
             "updated_at",
           ]);
