@@ -22,7 +22,7 @@ class PlannedCourseFactory extends Factory {
     public function definition() {
         return [
             'subject' => 'TEST',
-            'catalog_number' => $this->faker->numberBetween(1000, 9999),
+            'catalog_number' => (string) $this->faker->numberBetween(1000, 9999),
             'title' => $this->faker->words(5, true),
             'course_type' => 'LEC',
             'course_level' => 'UGRD',
