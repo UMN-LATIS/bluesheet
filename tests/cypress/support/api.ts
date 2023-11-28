@@ -53,7 +53,8 @@ export const put = (url: string, body: object, options: RequestOptions = {}) =>
     }),
   );
 
-export const deleteById = (url: string, options: RequestOptions = {}) =>
+// `delete` is a reserved word
+export const destroy = (url: string, options: RequestOptions = {}) =>
   cy.csrfToken().then((token) =>
     cy.request({
       method: "DELETE",
@@ -71,5 +72,5 @@ export default {
   get,
   post,
   put,
-  delete: deleteById,
+  delete: destroy,
 };

@@ -1,4 +1,4 @@
-import * as api from "../../../support/api";
+import api from "../../../support/api";
 import { ApiPlannedCourse } from "../../../../../resources/js/types";
 
 describe("PUT /api/group/:groupId/planned-courses/:courseId", () => {
