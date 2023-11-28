@@ -40,4 +40,25 @@ class GroupPlannedCourseController extends Controller {
             'group_id' => $group->id,
         ]);
     }
+
+    public function update(Request $request, Group $group, PlannedCourse $plannedCourse) {
+        abort_if($request->user()->cannot('edit planned courses'), 403);
+
+        // 404 if the planned course isn't within this group
+        abort_if($plannedCourse->group_id !== $group->id, 404);
+
+        $validated = $request->validate([
+            'subject' => 'required|string',
+            'catalog_number' => 'required|string',
+            'title' => 'required|string',
+            'course_type' => 'required|string',
+            'course_level' => 'required|string',
+            'user_id' => 'required|integer|exists:users,id',
+            'term_id' => 'required|integer',
+        ]);
+
+        $plannedCourse->update($validated);
+
+        return $plannedCourse;
+    }
 }
