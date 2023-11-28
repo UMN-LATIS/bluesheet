@@ -194,15 +194,28 @@ export async function fetchParentOrganizations() {
   return res.data;
 }
 
+const toApiPlannedCourse = (course: T.Course): Partial<T.ApiPlannedCourse> => ({
+  term_id: course.term,
+  subject: course.subject,
+  catalog_number: course.catalogNumber,
+  title: course.title,
+  course_type: course.courseType,
+  course_level: course.courseLevel,
+  user_id: course.instructors[0]?.id ?? null,
+});
+
 export async function postPlannedCourseForGroup({
   groupId,
   course,
 }: {
   groupId: number;
-  course: T.Course;
-}) {
-  const res = await axios.post<T.Course>(
-    `/api/groups/${groupId}/planned-courses`,
+  course: Omit<
+    T.ApiPlannedCourse,
+    "id" | "group_id" | "created_at" | "updated_at"
+  >;
+}): Promise<T.ApiPlannedCourse> {
+  const res = await axios.post<T.ApiPlannedCourse>(
+    `/api/group/${groupId}/planned-courses`,
     course,
   );
 

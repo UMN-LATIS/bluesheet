@@ -103,14 +103,6 @@ const selectedOptions = reactive<{
   term: initialSelected.value.term,
 });
 
-onMounted(() => {
-  console.log("mounted", {
-    initialSelected,
-    selectedOptions,
-    props,
-  });
-});
-
 const termOptions = computed(() => props.terms.map(toTermOption));
 
 const courseOptions = computed(() => props.courses.map(toTimelessCourseOption));
@@ -157,20 +149,8 @@ function handleAddTentativeCourse() {
     throw new Error("Missing required fields");
   }
 
-  const tentativeCourse: Course = {
-    ...selectedCourse.value,
-    classNumber: getTempId(),
-    classSection: "TBD",
-    term: selectedTerm.value.id,
-    instructors: [selectedInstructor.value],
-    enrollmentCap: 0,
-    enrollmentTotal: 0,
-    isPlanned: true,
-    cancelled: false,
-  };
-
-  groupCourseHistoryStore.addTentativeCourseToTerm({
-    course: tentativeCourse,
+  groupCourseHistoryStore.addPlannedCourseToTerm({
+    course: selectedCourse.value,
     term: selectedTerm.value,
     instructor: selectedInstructor.value,
   });

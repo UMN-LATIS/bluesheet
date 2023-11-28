@@ -417,7 +417,7 @@ const useStore = defineStore("groupCourseHistory", () => {
       );
     },
 
-    async addTentativeCourseToTerm({
+    async addPlannedCourseToTerm({
       course,
       instructor,
       term,
@@ -430,7 +430,7 @@ const useStore = defineStore("groupCourseHistory", () => {
         throw new Error("Cannot add tentative course without a `groupId`");
       }
 
-      const tentativeCourse: T.Course = {
+      const plannedCourse: T.Course = {
         ...course,
         classNumber: getTempId(),
         classSection: "TBD",
@@ -444,26 +444,41 @@ const useStore = defineStore("groupCourseHistory", () => {
 
       // optimistic update: add course to store
       actions.addCourseHistory({
-        course: tentativeCourse,
+        course: plannedCourse,
         instructor,
         term,
       });
 
+      const apiPlannedCourse = {
+        term_id: term.id,
+        subject: course.subject,
+        catalog_number: course.catalogNumber,
+        title: course.title,
+        course_type: course.courseType,
+        course_level: course.courseLevel,
+        user_id: instructor.id,
+      };
+
       // make api call to add course
       const savedCourse = await api.postPlannedCourseForGroup({
-        course: tentativeCourse,
+        course: apiPlannedCourse,
         groupId: state.groupId,
       });
 
       // update course with response from api
       actions.removeCourseHistory({
-        course: tentativeCourse,
+        course: plannedCourse,
         instructor,
         term,
       });
 
       actions.addCourseHistory({
-        course: savedCourse,
+        course: {
+          // planned course has some properties that are not
+          // present in the api response, so we spread them here
+          ...plannedCourse,
+          ...savedCourse,
+        },
         instructor,
         term,
       });
