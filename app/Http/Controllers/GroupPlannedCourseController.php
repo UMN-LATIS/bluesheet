@@ -16,6 +16,9 @@ class GroupPlannedCourseController extends Controller {
     public function show(Request $request, Group $group, PlannedCourse $plannedCourse) {
         abort_if($request->user()->cannot('view planned courses'), 403);
 
+        // 404 if the planned course isn't within this group
+        abort_if($plannedCourse->group_id !== $group->id, 404);
+
         return $plannedCourse;
     }
 
@@ -29,10 +32,12 @@ class GroupPlannedCourseController extends Controller {
             'course_type' => 'required|string',
             'course_level' => 'required|string',
             'user_id' => 'required|integer|exists:users,id',
-            'group_id' => 'required|integer|exists:groups,id',
             'term_id' => 'required|integer',
         ]);
 
-        return $group->plannedCourses()->create($validated);
+        return $group->plannedCourses()->create([
+            ...$validated,
+            'group_id' => $group->id,
+        ]);
     }
 }
