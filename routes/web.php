@@ -54,6 +54,7 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
 
     Route::resource('group', 'GroupController');
     Route::get('group/{group}/members', 'GroupController@members');
+    Route::resource('group/{group}/planned-courses', 'GroupPlannedCourseController');
 
     Route::post("user/favorite/groups/{group}", "UserController@addFavoriteGroup");
     Route::post("user/favorite/roles/{role}", "UserController@addFavoriteRole");

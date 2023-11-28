@@ -352,6 +352,74 @@
       "DELETE"
     ]
   },
+  "planned-courses.index": {
+    "name": "planned-courses.index",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\GroupPlannedCourseController@index",
+    "uri": "api/group/{group}/planned-courses",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "planned-courses.create": {
+    "name": "planned-courses.create",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\GroupPlannedCourseController@create",
+    "uri": "api/group/{group}/planned-courses/create",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "planned-courses.store": {
+    "name": "planned-courses.store",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\GroupPlannedCourseController@store",
+    "uri": "api/group/{group}/planned-courses",
+    "method": [
+      "POST"
+    ]
+  },
+  "planned-courses.show": {
+    "name": "planned-courses.show",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\GroupPlannedCourseController@show",
+    "uri": "api/group/{group}/planned-courses/{planned_course}",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "planned-courses.edit": {
+    "name": "planned-courses.edit",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\GroupPlannedCourseController@edit",
+    "uri": "api/group/{group}/planned-courses/{planned_course}/edit",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "planned-courses.update": {
+    "name": "planned-courses.update",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\GroupPlannedCourseController@update",
+    "uri": "api/group/{group}/planned-courses/{planned_course}",
+    "method": [
+      "PUT",
+      "PATCH"
+    ]
+  },
+  "planned-courses.destroy": {
+    "name": "planned-courses.destroy",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\GroupPlannedCourseController@destroy",
+    "uri": "api/group/{group}/planned-courses/{planned_course}",
+    "method": [
+      "DELETE"
+    ]
+  },
   "index": {
     "name": "index",
     "domain": null,

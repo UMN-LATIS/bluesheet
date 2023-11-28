@@ -23,3 +23,24 @@
 //
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
+
+Cypress.Commands.add("getUserByUsername", (umndid: string) => {
+  return cy.php(`App\\User::where('umndid', '${umndid}')->firstOrFail()`);
+});
+
+Cypress.Commands.add("addRoleToUser", (roleName: string, umndid: string) => {
+  cy.php(`
+    $roleId = App\\Role::where('name', '${roleName}')->firstOrFail()->id;
+    $user = App\\User::where('umndid', '${umndid}')->firstOrFail();
+    $user->roles()->attach($roleId);
+  `);
+});
+
+Cypress.Commands.add(
+  "givePermissionToUser",
+  (permissionName: string, umndid: string) => {
+    cy.php(`
+    App\\User::where('umndid', '${umndid}')->firstOrFail()->givePermissionTo('${permissionName}');
+  `);
+  },
+);
