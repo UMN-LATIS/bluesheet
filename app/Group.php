@@ -3,23 +3,34 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-use OwenIt\Auditing\Contracts\Auditable;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
+use OwenIt\Auditing\Auditable as AuditableTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 
-class Group extends Model implements Auditable
-{
-    use \OwenIt\Auditing\Auditable;
+class Group extends Model implements AuditableContract {
+    use AuditableTrait;
     use SoftDeletes;
+    use HasFactory;
+
     public $timestamps = true;
 
     protected $casts = [
         'include_child_groups' => 'boolean',
         'show_unit' => 'boolean'
-     ];
+    ];
 
     protected $fillable = [
-        'group_title', 'private_group', 'notes', 'google_group', 'show_unit', 'parent_group_id', 'abbreviation', 'dept_id', 'include_child_groups'
+        'group_title',
+        'private_group',
+        'notes',
+        'google_group',
+        'show_unit', // show member's unit in group member list
+        'parent_group_id',
+        'abbreviation',
+        'dept_id',
+        'include_child_groups'
     ];
 
     /**
@@ -30,15 +41,15 @@ class Group extends Model implements Auditable
     protected $dates = ['deleted_at', 'start_date', 'end_date'];
 
     public function parentOrganization() {
-    	return $this->belongsTo("App\ParentOrganization");
+        return $this->belongsTo("App\ParentOrganization");
     }
 
     public function groupType() {
-    	return $this->belongsTo("App\GroupType");
+        return $this->belongsTo("App\GroupType");
     }
 
     public function members() {
-    	return $this->hasMany("App\Membership");
+        return $this->hasMany("App\Membership");
     }
 
     public function users() {
@@ -46,7 +57,7 @@ class Group extends Model implements Auditable
     }
 
     public function activeMembers() {
-        return $this->members()->where(function($query) {
+        return $this->members()->where(function ($query) {
             return $query->whereNull("end_date")->orWhere("end_date", ">", date('Y-m-d'));
         });
     }
@@ -62,25 +73,23 @@ class Group extends Model implements Auditable
     public function childGroups() {
         return $this->hasMany("App\Group", "parent_group_id");
     }
-    
+
     public function activeUsers() {
         return $this->activeMembers->pluck('user');
     }
 
     public function userCanEdit($user) {
         $activeMembers = $this->activeMembers;
-        
-        foreach($activeMembers as $member) {
-            if($member->user && $member->user->is($user) && $member->admin) {
+
+        foreach ($activeMembers as $member) {
+            if ($member->user && $member->user->is($user) && $member->admin) {
                 return true;
             }
         }
         return false;
     }
 
-    public function getHashAttribute()
-    {
+    public function getHashAttribute() {
         return substr(sha1($this->id . config("app.key")), 0, 10);
     }
-
 }

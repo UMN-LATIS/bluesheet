@@ -3,18 +3,20 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class GroupType extends Model
-{
+class GroupType extends Model {
 
-	public $timestamps = false;
-	public $fillable = ["label"];
+    use HasFactory;
+
+    public $timestamps = false;
+    public $fillable = ["label"];
+
     public function groups() {
-    	return $this->belongsTo("App\Group");
+        return $this->belongsTo("App\Group");
     }
 
-    public function officialRoles()
-    {
+    public function officialRoles() {
         return $this->belongsToMany('App\Role');
     }
 }
