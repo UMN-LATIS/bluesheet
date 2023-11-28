@@ -193,3 +193,18 @@ export async function fetchParentOrganizations() {
 
   return res.data;
 }
+
+export async function postPlannedCourseForGroup({
+  groupId,
+  course,
+}: {
+  groupId: number;
+  course: T.Course;
+}) {
+  const res = await axios.post<T.Course>(
+    `/api/groups/${groupId}/planned-courses`,
+    course,
+  );
+
+  return res.data;
+}

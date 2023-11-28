@@ -34,7 +34,9 @@
       </div>
       <div class="tw-mt-4 tw-flex tw-items-center tw-justify-end tw-gap-2">
         <Button variant="tertiary" @click="handleCancel"> Cancel </Button>
-        <Button variant="primary">Save</Button>
+        <Button variant="primary" @click="handleAddTentativeCourse">
+          Save
+        </Button>
       </div>
     </form>
   </Modal>
@@ -42,9 +44,11 @@
 <script setup lang="ts">
 import Modal from "@/components/Modal.vue";
 import ComboBox, { ComboBoxOption } from "@/components/ComboBox2.vue";
-import { Instructor, Term, TimelessCourse } from "@/types";
+import { Course, Instructor, Term, TimelessCourse } from "@/types";
 import { computed, onMounted, reactive } from "vue";
 import Button from "@/components/Button.vue";
+import { useGroupCourseHistoryStore } from "@/stores/useGroupCourseHistoryStore";
+import { getTempId } from "@/utils";
 
 const props = defineProps<{
   terms: Term[];
@@ -59,6 +63,8 @@ const props = defineProps<{
 const emits = defineEmits<{
   (eventName: "close");
 }>();
+
+const groupCourseHistoryStore = useGroupCourseHistoryStore();
 
 const toTermOption = (t: Term) => ({
   id: t.id,
@@ -143,11 +149,38 @@ function handleCancel() {
 }
 
 function handleAddTentativeCourse() {
+  if (
+    !selectedTerm.value ||
+    !selectedCourse.value ||
+    !selectedInstructor.value
+  ) {
+    throw new Error("Missing required fields");
+  }
+
+  const tentativeCourse: Course = {
+    ...selectedCourse.value,
+    classNumber: getTempId(),
+    classSection: "TBD",
+    term: selectedTerm.value.id,
+    instructors: [selectedInstructor.value],
+    enrollmentCap: 0,
+    enrollmentTotal: 0,
+    isPlanned: true,
+    cancelled: false,
+  };
+
+  groupCourseHistoryStore.addTentativeCourseToTerm({
+    course: tentativeCourse,
+    term: selectedTerm.value,
+    instructor: selectedInstructor.value,
+  });
+
   console.log("add tentative course", {
     course: selectedCourse.value,
     term: selectedTerm.value,
     instructor: selectedInstructor.value,
   });
+  resetForm();
   emits("close");
 }
 </script>
