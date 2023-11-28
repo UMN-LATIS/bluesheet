@@ -315,3 +315,16 @@ export type LeaveWithInstructor = Leave & {
 export interface CustomAxiosRequestConfig extends AxiosRequestConfig {
   skipErrorNotifications?: boolean;
 }
+export interface ApiPlannedCourse {
+  id: number;
+  subject: string;
+  catalog_number: string;
+  title: string;
+  course_type: string;
+  course_level: string;
+  user_id: number;
+  term_id: number;
+  group_id: number;
+  created_at: string;
+  updated_at: string;
+}
