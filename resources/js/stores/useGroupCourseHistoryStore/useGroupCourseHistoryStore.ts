@@ -4,7 +4,7 @@ import pMap from "p-map";
 import { uniqBy } from "lodash-es";
 import { computed, watch, reactive, toRefs } from "vue";
 import { useTermsStore } from "@/stores/useTermsStore";
-import { sortByName, dayjs } from "@/utils";
+import { sortByName, dayjs, getTempId } from "@/utils";
 import { omit } from "lodash";
 import { toTimelessCourse } from "./toTimelessCourse";
 import {
@@ -12,6 +12,7 @@ import {
   selectTermsWithinRangeInclusive,
 } from "./selectors";
 import { fetchCoursesAndInstructorsForTerm } from "./fetchCourseAndInstructorsForTerm";
+import * as api from "@/api";
 
 export interface GroupCourseHistoryState {
   groupId: T.Group["id"] | null;
@@ -345,7 +346,7 @@ const useStore = defineStore("groupCourseHistory", () => {
       state.endTermId = termId;
     },
 
-    addCourseToTerm({
+    addCourseHistory({
       course,
       instructor,
       term,
@@ -378,6 +379,94 @@ const useStore = defineStore("groupCourseHistory", () => {
         ...existingInstructors,
         instructorWithCourse,
       ]);
+    },
+
+    removeCourseHistory({
+      course,
+      instructor,
+      term,
+    }: {
+      course: T.Course;
+      term: T.Term;
+      instructor: T.Instructor;
+    }) {
+      // update the coursesByInstructorTermMap
+      const instructorAndTermKey =
+        `${instructor.id}-${term.id}` as T.CoursesByInstructorAndTermKey;
+      const existingCourses =
+        state.coursesByInstructorTermMap.get(instructorAndTermKey) ?? [];
+      const updatedCourses = existingCourses.filter(
+        (c) => c.classNumber !== course.classNumber,
+      );
+      state.coursesByInstructorTermMap.set(
+        instructorAndTermKey,
+        updatedCourses,
+      );
+
+      // update the instructorsByCourseTermMap
+      const courseAndTermKey =
+        `${course.shortCode}-${term.id}` as T.InstructorsByCourseAndTermKey;
+      const existingInstructors =
+        state.instructorsByCourseTermMap.get(courseAndTermKey) ?? [];
+      const updatedInstructors = existingInstructors.filter(
+        (i) => i.id !== instructor.id,
+      );
+      state.instructorsByCourseTermMap.set(
+        courseAndTermKey,
+        updatedInstructors,
+      );
+    },
+
+    async addTentativeCourseToTerm({
+      course,
+      instructor,
+      term,
+    }: {
+      course: T.TimelessCourse;
+      term: T.Term;
+      instructor: T.Instructor;
+    }) {
+      if (!state.groupId) {
+        throw new Error("Cannot add tentative course without a `groupId`");
+      }
+
+      const tentativeCourse: T.Course = {
+        ...course,
+        classNumber: getTempId(),
+        classSection: "TBD",
+        term: term.id,
+        instructors: [instructor],
+        enrollmentCap: 0,
+        enrollmentTotal: 0,
+        isPlanned: true,
+        cancelled: false,
+      };
+
+      // optimistic update: add course to store
+      actions.addCourseHistory({
+        course: tentativeCourse,
+        instructor,
+        term,
+      });
+
+      // make api call to add course
+      const savedCourse = await api.postPlannedCourseForGroup({
+        course: tentativeCourse,
+        groupId: state.groupId,
+      });
+
+      // update course with response from api
+      actions.removeCourseHistory({
+        course: tentativeCourse,
+        instructor,
+        term,
+      });
+
+      actions.addCourseHistory({
+        course: savedCourse,
+        instructor,
+        term,
+      });
     },
   };
 
