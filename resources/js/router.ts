@@ -10,6 +10,8 @@ import GroupListPage from "./pages/GroupListPage.vue";
 import ReportListPage from "./pages/ReportListPage.vue";
 import RoleListPage from "./pages/RoleListPage.vue";
 import RolePage from "./pages/RolePage.vue";
+import GroupCoursePlanningPage from "./pages/GroupCoursePlanningPage.vue";
+import ErrorPage from "./pages/ErrorPage.vue";
 
 // reports
 import CeddLikeReportPage from "./pages/reports/CeddLikeReportPage.vue";
@@ -138,6 +140,32 @@ export const router = createRouter({
       name: "eligibilityReport",
       path: "/reports/eligibilityReport",
       component: EligibilityReportPage,
+    },
+    {
+      name: "groupCoursePlanning",
+      path: "/course-planning/:groupId",
+      component: GroupCoursePlanningPage,
+      props: (route) => ({
+        groupId: parseIntFromParam(route.params.groupId),
+      }),
+    },
+
+    {
+      name: "error",
+      path: "/error/:errorCode",
+      component: ErrorPage,
+      props: (route) => ({
+        errorCode: parseIntFromParam(route.params.errorCode),
+      }),
+    },
+
+    {
+      name: "catchall",
+      path: "/:pathMatch(.*)",
+      component: ErrorPage,
+      props: () => ({
+        errorCode: 404,
+      }),
     },
   ],
 });
