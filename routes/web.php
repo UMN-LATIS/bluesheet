@@ -11,7 +11,9 @@
 |
 */
 
-use App\Http\Controllers\CoursePlanning\CoursePlanningGroupController;
+use App\Http\Controllers\CoursePlanning\GroupSectionController;
+use App\Http\Controllers\CoursePlanning\TermController;
+use App\Http\Controllers\CoursePlanning\GroupEnrollmentController;
 use App\Http\Controllers\LeaveArtifactController;
 
 Route::impersonate();
@@ -85,10 +87,13 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
     Route::delete('leaves/{leave}/artifacts/{leaveArtifact}', [LeaveArtifactController::class, 'destroy']);
 
     // Course Planning
-    Route::get(
-        'course-planning/groups/{group}',
-        [CoursePlanningGroupController::class, 'show'],
-    );
+    Route::prefix('course-planning')->group(function () {
+        Route::get('/terms', [TermController::class, 'index']);
+        Route::get('/groups/{group}/sections', [GroupSectionController::class, 'index']);
+        Route::get('/groups/{group}/enrollments', [GroupEnrollmentController::class, 'index']);
+    });
+
+
 
     // Catchall 404 JSON route
     Route::any('{any}', function () {

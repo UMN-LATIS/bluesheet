@@ -10,6 +10,7 @@ use Illuminate\Support\Collection;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Log;
+
 class Bandaid {
     private $client;
     public function __construct() {
@@ -27,25 +28,23 @@ class Bandaid {
     }
 
     public function performRequest($url) {
-        if($value = Cache::get($url)) {
+        if ($value = Cache::get($url)) {
             return $value;
-        }
-        else {
+        } else {
             $result = $this->client->get($url);
             $value = json_decode($result->getBody());
             Cache::put($url, $value, 600);
             return $value;
         }
     }
-    
+
     public function performPostRequest($url, $body) {
-        if($value = Cache::get(json_encode($body))) {
+        if ($value = Cache::get(json_encode($body))) {
             return $value;
-        }
-        else {
-            $result = $this->client->post($url,['form_params' => $body]);
+        } else {
+            $result = $this->client->post($url, ['form_params' => $body]);
             $value = json_decode($result->getBody());
-            if(!$value) {
+            if (!$value) {
                 return [];
             }
             Cache::put(json_encode($body), $value, 600);
@@ -62,11 +61,11 @@ class Bandaid {
             $errorMessage = 'getUserName Error: ' . $msg;
             throw new RuntimeException($errorMessage);
         }
-    }    
-    
+    }
+
     public function getEmployees(array $emplIds): array {
         try {
-            $result = $this->performPostRequest('employment/employees', ["emplids"=>$emplIds]);
+            $result = $this->performPostRequest('employment/employees', ["emplids" => $emplIds]);
             return $result;
         } catch (RequestException $e) {
             $msg = $e->getMessage();
@@ -74,7 +73,7 @@ class Bandaid {
             throw new RuntimeException($errorMessage);
         }
     }
-    
+
     public function getEmployeesForDepartment($deptId): array {
         try {
             $result = $this->performRequest('department/' . $deptId . '/employees');
@@ -122,6 +121,17 @@ class Bandaid {
                     $term->ACADEMIC_CAREER === 'UGRD'
                     && $term->INSTITUTION === 'UMNTC';
             })->values();
+    }
+
+    public function getDeptClassList(int $deptId): array {
+        try {
+            $result = $this->performRequest('classes/list/' . $deptId);
+            return $result;
+        } catch (RequestException $e) {
+            $msg = $e->getMessage();
+            $errorMessage = 'getDeptCourses Error: ' . $msg;
+            throw new RuntimeException($errorMessage);
+        }
     }
 
     public function getDeptScheduleForTerm(int $deptId, int $term): array {

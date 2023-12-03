@@ -10,7 +10,6 @@ import GroupListPage from "./pages/GroupListPage.vue";
 import ReportListPage from "./pages/ReportListPage.vue";
 import RoleListPage from "./pages/RoleListPage.vue";
 import RolePage from "./pages/RolePage.vue";
-import GroupCoursePlanningPage from "./pages/GroupCoursePlanningPage.vue";
 import ErrorPage from "./pages/ErrorPage.vue";
 
 // reports
@@ -23,17 +22,8 @@ import OrgpReportPage from "./pages/reports/OrgpReportPage.vue";
 import SchedulingReportPage from "./pages/reports/SchedulingReport/SchedulingReportPage.vue";
 import GroupAdminsReportPage from "./pages/reports/GroupAdmins.vue";
 import EligibilityReportPage from "./pages/reports/EligibilityReport.vue";
-
-function parseIntFromParam(
-  param: string | string[] | undefined,
-): number | null {
-  if (typeof param !== "string") {
-    return null;
-  }
-
-  const n = Number.parseInt(param);
-  return Number.isNaN(n) ? null : n;
-}
+import { parseIntFromRouteParam as parseIntFromParam } from "@/utils";
+import { coursePlanningRoutes } from "./features/course-planning/coursePlanningRoutes";
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -142,14 +132,9 @@ export const router = createRouter({
       component: EligibilityReportPage,
     },
     {
-      name: "groupCoursePlanning",
-      path: "/course-planning/groups/:groupId",
-      component: GroupCoursePlanningPage,
-      props: (route) => ({
-        groupId: parseIntFromParam(route.params.groupId),
-      }),
+      path: "/course-planning",
+      children: coursePlanningRoutes,
     },
-
     {
       name: "error",
       path: "/error/:errorCode",

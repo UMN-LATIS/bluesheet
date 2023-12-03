@@ -23,7 +23,7 @@ class CoursePlanningGroupController extends Controller {
         abort_if($request->user()->cannot('view planned courses'), 403);
 
         $terms = $this->bandaid->getCLATerms();
-        $courses = $terms->map(fn ($term) => $this->bandaid->getDeptScheduleForTerm($group->dept_id, $term->id));
+        $courses = $this->bandaid->getDeptClassList($group->dept_id);
 
         return response()->json([
             'terms' => TermResource::collection($terms),

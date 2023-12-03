@@ -42,7 +42,6 @@ export interface AcademicDepartment {
   abbreviation: string;
 }
 
-// /api/course-planning/groups/{groupId}
 export interface ApiGetGroupCoursePlanningResponse {
   dept: AcademicDepartment;
   terms: Term[];
