@@ -17,11 +17,11 @@ export interface Person {
   surName: string;
   displayName: string;
   email: string;
+  academicAppointment: string; // "Faculty"
   leaveIds?: Leave["id"][];
   midcareerEligible: boolean;
   sslEligible: boolean;
   sslApplyEligible: boolean;
-  academicAppointment: string; // "Faculty"
 }
 
 /**
@@ -33,6 +33,24 @@ export interface Enrollment {
   role: EnrollmentRole;
   personId: Person["id"];
   sectionId: CourseSection["id"];
+}
+
+export interface AcademicDepartment {
+  groupId: Group["id"];
+  deptId: number;
+  name: string;
+  abbreviation: string;
+}
+
+// /api/course-planning/groups/{groupId}
+export interface ApiGetGroupCoursePlanningResponse {
+  dept: AcademicDepartment;
+  terms: Term[];
+  courses: Course[];
+  courseSections: CourseSection[];
+  enrollments: Enrollment[];
+  persons: Person[];
+  leaves: Leave[];
 }
 
 export interface CourseSection {

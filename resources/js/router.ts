@@ -143,7 +143,7 @@ export const router = createRouter({
     },
     {
       name: "groupCoursePlanning",
-      path: "/course-planning/:groupId",
+      path: "/course-planning/groups/:groupId",
       component: GroupCoursePlanningPage,
       props: (route) => ({
         groupId: parseIntFromParam(route.params.groupId),

@@ -11,6 +11,7 @@
 |
 */
 
+use App\Http\Controllers\CoursePlanning\CoursePlanningGroupController;
 use App\Http\Controllers\LeaveArtifactController;
 
 Route::impersonate();
@@ -82,6 +83,12 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
     Route::post('leaves/{leave}/artifacts', [LeaveArtifactController::class, 'store']);
     Route::put('leaves/{leave}/artifacts/{leaveArtifact}', [LeaveArtifactController::class, 'update']);
     Route::delete('leaves/{leave}/artifacts/{leaveArtifact}', [LeaveArtifactController::class, 'destroy']);
+
+    // Course Planning
+    Route::get(
+        'course-planning/groups/{group}',
+        [CoursePlanningGroupController::class, 'show'],
+    );
 
     // Catchall 404 JSON route
     Route::any('{any}', function () {
