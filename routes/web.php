@@ -12,8 +12,8 @@
 */
 
 use App\Http\Controllers\LeaveArtifactController;
+use App\Http\Controllers\TermController;
 use App\Http\Controllers\CoursePlanning\GroupSectionController;
-use App\Http\Controllers\CoursePlanning\TermController;
 use App\Http\Controllers\CoursePlanning\GroupEnrollmentController;
 use App\Http\Controllers\CoursePlanning\GroupPersonController;
 use App\Http\Controllers\CoursePlanning\GroupLeaveController;
@@ -68,7 +68,7 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
 
     Route::get('lookup/department/{deptId?}', 'LookupController@departmentInfo');
 
-    Route::get('terms', 'SchedulingController@getTerms');
+    Route::get('terms', [TermController::class, 'index']);
     Route::get('terms/{termId}/groups/{group}/courses', 'SchedulingController@getDeptCoursesForTerm');
     Route::get('eligibility/{type}', 'UserController@eligibility');
 
@@ -90,7 +90,6 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
 
     // Course Planning
     Route::prefix('course-planning')->group(function () {
-        Route::get('/terms', [TermController::class, 'index']);
         Route::get('/groups/{group}/sections', [GroupSectionController::class, 'index']);
         Route::get('/groups/{group}/enrollments', [GroupEnrollmentController::class, 'index']);
         Route::get('/groups/{group}/people', [GroupPersonController::class, 'index']);

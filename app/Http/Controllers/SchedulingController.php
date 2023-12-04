@@ -5,9 +5,7 @@ namespace App\Http\Controllers;
 use \App\Library\Bandaid;
 use App\Group;
 use App\Http\Resources\CourseWithInstructors;
-use App\Http\Resources\TermResource;
 use App\Library\UserService;
-use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Http\Request;
 
 class SchedulingController extends Controller {
@@ -18,11 +16,6 @@ class SchedulingController extends Controller {
     public function __construct(Bandaid $bandaid, UserService $userService) {
         $this->bandaid = $bandaid;
         $this->userService = $userService;
-    }
-
-    public function getTerms() {
-        $terms = $this->bandaid->getCLATerms();
-        return TermResource::collection($terms);
     }
 
     public function getDeptCoursesForTerm(int $termId, Group $group, Request $request) {

@@ -60,13 +60,8 @@ export async function updateUserLeaves(userId: number, leaves: T.Leave[]) {
   return res.data;
 }
 
-let getTermsCache = [] as T.Term[];
-export async function getTerms() {
-  if (getTermsCache.length) {
-    return getTermsCache;
-  }
+export async function fetchTerms() {
   const res = await axios.get<T.Term[]>(`/api/terms`);
-  getTermsCache = res.data;
   return res.data;
 }
 

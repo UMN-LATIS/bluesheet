@@ -36,13 +36,15 @@ export const useTermsStore = defineStore("terms", () => {
       }
     },
     async fetchTerms() {
-      const allTerms = await api.getTerms();
+      const allTerms = await api.fetchTerms();
       const MAX_TERM_DATE = dayjs().add(3, "year").format("YYYY-MM-DD");
 
       state.terms.value = allTerms.filter((t) => {
         // ignore terms that are super far out
         return dayjs(t.endDate).isSameOrBefore(MAX_TERM_DATE);
       });
+
+      return state.terms.value;
     },
   };
 

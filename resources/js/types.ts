@@ -201,6 +201,7 @@ export interface Leave {
   updated_at: ISODateTime;
   deleted_at?: ISODateTime | null;
   artifacts?: LeaveArtifact[];
+  termIds?: Term["id"][]; // leave overlaps with these terms
 }
 
 export interface NewLeave {
