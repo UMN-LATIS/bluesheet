@@ -19,6 +19,10 @@ class GroupEnrollmentController extends Controller {
     public function index(Request $request, Group $group) {
         abort_if($request->user()->cannot('view planned courses'), 403);
 
+        $validated = $request->validate([
+            'includeRoles' => 'string'
+        ]);
+
         // each "class" in a class list is the section
         // of a course with a particular instructor
         // and their role.
@@ -35,6 +39,14 @@ class GroupEnrollmentController extends Controller {
                     'role' => $classRecord->INSTRUCTOR_ROLE,
                 ];
             })->sortBy('sectionId');
+
+
+        if (isset($validated['includeRoles'])) {
+            $roles = explode(',', $validated['includeRoles']);
+            $enrollments = $enrollments->filter(function ($enrollment) use ($roles) {
+                return in_array($enrollment['role'], $roles);
+            });
+        }
 
         return $enrollments->values();
     }
