@@ -11,10 +11,12 @@
 |
 */
 
+use App\Http\Controllers\LeaveArtifactController;
 use App\Http\Controllers\CoursePlanning\GroupSectionController;
 use App\Http\Controllers\CoursePlanning\TermController;
 use App\Http\Controllers\CoursePlanning\GroupEnrollmentController;
-use App\Http\Controllers\LeaveArtifactController;
+use App\Http\Controllers\CoursePlanning\GroupPersonController;
+use App\Http\Controllers\CoursePlanning\GroupLeaveController;
 
 Route::impersonate();
 
@@ -91,6 +93,8 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
         Route::get('/terms', [TermController::class, 'index']);
         Route::get('/groups/{group}/sections', [GroupSectionController::class, 'index']);
         Route::get('/groups/{group}/enrollments', [GroupEnrollmentController::class, 'index']);
+        Route::get('/groups/{group}/people', [GroupPersonController::class, 'index']);
+        Route::get('/groups/{group}/leaves', [GroupLeaveController::class, 'index']);
     });
 
 

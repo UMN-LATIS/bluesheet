@@ -144,4 +144,14 @@ class Bandaid {
             throw new RuntimeException($errorMessage);
         }
     }
+
+    public function getTermsOverlappingDates($startDate, $endDate) {
+        $terms = $this->getCLATerms();
+        return $terms->filter(function ($term) use ($startDate, $endDate) {
+            $termStartDate = $term->TERM_BEGIN_DT;
+            $termEndDate = $term->TERM_END_DT;
+
+            return $startDate <= $termEndDate && $termEndDate <= $endDate;
+        });
+    }
 }
