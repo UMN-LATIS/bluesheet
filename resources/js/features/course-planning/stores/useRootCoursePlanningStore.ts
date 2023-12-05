@@ -9,12 +9,31 @@ import { useGroupStore } from "@/stores/useGroupStore";
 import { useTermsStore } from "@/stores/useTermsStore";
 import { uniq } from "lodash";
 import { sortByName } from "@/utils";
+import { SelectOption, Term } from "@/types";
+
+interface RootCoursePlanningState {
+  isInPlanningMode: boolean;
+  filters: {
+    startTermId: number | null;
+    endTermId: number | null;
+    excludedCourseTypes: Set<string>;
+    excludedCourseLevels: Set<string>;
+    excludedAcadAppts: Set<string>;
+  };
+}
 
 export const useRootCoursePlanningStore = defineStore(
   "rootCoursePlanning",
   () => {
-    const state = reactive({
+    const state = reactive<RootCoursePlanningState>({
       isInPlanningMode: false,
+      filters: {
+        startTermId: null,
+        endTermId: null,
+        excludedCourseTypes: new Set(),
+        excludedCourseLevels: new Set(),
+        excludedAcadAppts: new Set(),
+      },
     });
 
     const stores = {
@@ -28,7 +47,18 @@ export const useRootCoursePlanningStore = defineStore(
 
     const getters = {
       terms: computed(() => stores.termsStore.terms),
+
       currentTerm: computed(() => stores.termsStore.currentTerm),
+
+      /**
+       * a list of terms for a term select dropdown
+       */
+      termSelectOptions: computed((): SelectOption[] =>
+        stores.termsStore.terms.map((term) => ({
+          text: term.name,
+          value: term.id,
+        })),
+      ),
     };
 
     const actions = {
@@ -41,6 +71,18 @@ export const useRootCoursePlanningStore = defineStore(
           stores.courseStore.fetchCoursesForGroup(groupId),
           stores.courseSectionStore.fetchCourseSectionsForGroup(groupId),
         ]);
+      },
+
+      setStartTermId(termId: Term["id"] | null) {
+        state.filters.startTermId = termId;
+      },
+
+      setEndTermId(termId: Term["id"] | null) {
+        state.filters.endTermId = termId;
+      },
+
+      setExcludedAcadAppts(acadAppts: T.Person["academicAppointment"][]) {
+        state.filters.excludedAcadAppts = new Set(acadAppts);
       },
     };
 
@@ -85,6 +127,7 @@ export const useRootCoursePlanningStore = defineStore(
 
       isCurrentTerm: stores.termsStore.isCurrentTerm,
       getGroup: stores.groupStore.getGroup,
+      getAcadApptCountsForGroup: stores.personStore.getAcadApptCountsForGroup,
     };
 
     return {

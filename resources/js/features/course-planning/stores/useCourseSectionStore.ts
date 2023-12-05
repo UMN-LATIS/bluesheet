@@ -20,6 +20,7 @@ export const useCourseSectionStore = defineStore("couseSection", () => {
 
   const getters = {
     allCourseSections: computed(() => Object.values(state.courseSectionLookup)),
+
     courseSectionsInGroup: (groupId: number) =>
       computed((): T.CourseSection[] => {
         const groupSectionIds = state.sectionIdsByGroup[groupId];

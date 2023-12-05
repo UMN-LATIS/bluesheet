@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { computed, reactive, toRefs } from "vue";
 import * as api from "../coursePlanningApi";
 import * as T from "../coursePlanningTypes";
+import { Group } from "@/types";
 
 interface PersonStoreState {
   personLookup: Record<T.Person["emplid"], T.Person | undefined>;
@@ -20,6 +21,40 @@ export const usePersonStore = defineStore("person", () => {
 
   const getters = {
     allPeople: computed(() => Object.values(state.personLookup)),
+
+    /**
+     * counts the number of people with a particular academic
+     * appointment for each group
+     */
+    acadApptCountsByGroup: computed(() => {
+      const counts: Record<
+        Group["id"],
+        Record<T.Person["academicAppointment"], number>
+      > = {};
+
+      const groupIds = Object.keys(state.personIdsByGroup).map(Number);
+
+      groupIds.forEach((groupId) => {
+        const people = methods.getPeopleForGroup(groupId);
+
+        if (!people) return;
+
+        counts[groupId] = people.reduce(
+          (acc, person) => {
+            if (!acc[person.academicAppointment]) {
+              acc[person.academicAppointment] = 0;
+            }
+
+            acc[person.academicAppointment]++;
+
+            return acc;
+          },
+          {} as Record<T.Person["academicAppointment"], number>,
+        );
+      });
+
+      return counts;
+    }),
   };
 
   const actions = {
@@ -55,6 +90,19 @@ export const usePersonStore = defineStore("person", () => {
       return personIds
         .map((id) => this.getPersonByEmplId(id))
         .filter(Boolean) as T.Person[];
+    },
+
+    getAcadApptCountsForGroup(
+      groupId: number,
+    ): [T.Person["academicAppointment"], number][] {
+      return Object.entries(getters.acadApptCountsByGroup.value[groupId]).sort(
+        (a, b) => {
+          // sort by academic appointment name
+          const aKey = a[0];
+          const bKey = b[0];
+          return aKey.localeCompare(bKey);
+        },
+      );
     },
   };
 

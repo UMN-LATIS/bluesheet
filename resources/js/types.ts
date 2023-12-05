@@ -331,3 +331,8 @@ export interface ApiPlannedCourse {
   created_at: string;
   updated_at: string;
 }
+
+export interface SelectOption {
+  text: string;
+  value: string | number;
+}

@@ -5,6 +5,8 @@
       <span class="tw-text-3xl">Scheduling Report</span>
     </h1>
 
+    <CoursePlanningFilters v-if="isReady" :groupId="props.groupId" />
+
     <InstructorTable
       v-if="isReady"
       label="Instructors"
@@ -19,6 +21,7 @@ import { onMounted } from "vue";
 import { computed, ref } from "vue";
 import InstructorTable from "./components/InstructorTable.vue";
 import { useRootCoursePlanningStore } from "./stores/useRootCoursePlanningStore";
+import CoursePlanningFilters from "./components/CoursePlanningFilters.vue";
 
 const props = defineProps<{
   groupId: number;
