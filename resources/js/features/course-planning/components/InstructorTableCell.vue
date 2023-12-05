@@ -52,8 +52,8 @@ const props = defineProps<{
 const coursePlanningStore = useRootCoursePlanningStore();
 
 const courseSections = computed(() =>
-  coursePlanningStore.getSectionsForPersonInTerm(
-    props.person.id,
+  coursePlanningStore.getSectionsForEmplIdInTerm(
+    props.person.emplid,
     props.term.id,
   ),
 );

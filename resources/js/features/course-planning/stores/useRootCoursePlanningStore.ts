@@ -27,8 +27,8 @@ export const useRootCoursePlanningStore = defineStore(
     };
 
     const getters = {
-      terms: stores.termsStore.terms,
-      currentTerm: stores.termsStore.currentTerm,
+      terms: computed(() => stores.termsStore.terms),
+      currentTerm: computed(() => stores.termsStore.currentTerm),
     };
 
     const actions = {
@@ -45,9 +45,9 @@ export const useRootCoursePlanningStore = defineStore(
     };
 
     const methods = {
-      getSectionsForPerson(personId: number): T.CourseSection[] {
+      getSectionsForEmplId(emplId: T.Person["emplid"]): T.CourseSection[] {
         const enrollmentStore = useEnrollmentStore();
-        const enrollments = enrollmentStore.getEnrollmentsForEmplId(personId);
+        const enrollments = enrollmentStore.getEnrollmentsForEmplId(emplId);
 
         const sectionIds = enrollments.map((e) => e.sectionId);
 
@@ -57,9 +57,8 @@ export const useRootCoursePlanningStore = defineStore(
           .filter(Boolean) as T.CourseSection[];
       },
 
-      getSectionsForPersonInTerm(personId: number, termId: number) {
-        const sections = methods.getSectionsForPerson(personId);
-
+      getSectionsForEmplIdInTerm(emplId: T.Person["emplid"], termId: number) {
+        const sections = methods.getSectionsForEmplId(emplId);
         return sections.filter((section) => section.termId === termId);
       },
 

@@ -65,7 +65,7 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
         .map((id) => state.enrollmentLookup[id])
         .filter(Boolean) as T.Enrollment[];
     },
-    getEnrollmentsForEmplId(emplId: number): T.Enrollment[] {
+    getEnrollmentsForEmplId(emplId: T.Enrollment["emplId"]): T.Enrollment[] {
       const enrollmentIds = getters.enrollmentsByEmplId.value[emplId] || [];
       return enrollmentIds
         .map((id) => state.enrollmentLookup[id])
