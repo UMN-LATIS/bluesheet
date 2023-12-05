@@ -3,6 +3,7 @@
     <Th class="row-header-column">{{ label }}</Th>
     <Th
       v-for="term in terms"
+      v-show="coursePlanningStore.isTermVisible(term)"
       :id="`term-${term.id}`"
       :key="term.id"
       class="tw-whitespace-nowrap term-header-column"

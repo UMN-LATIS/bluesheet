@@ -141,6 +141,19 @@ export const useRootCoursePlanningStore = defineStore(
         return !state.filters.excludedAcadAppts.has(person.academicAppointment);
       },
 
+      isTermVisible(term: Term) {
+        if (!state.filters.startTermId || !state.filters.endTermId) {
+          return true;
+        }
+
+        // term ids are well ordered, so we can just check if the term id is
+        // between the start and end term ids
+        return (
+          state.filters.startTermId <= term.id &&
+          term.id <= state.filters.endTermId
+        );
+      },
+
       isCurrentTerm: stores.termsStore.isCurrentTerm,
       getGroup: stores.groupStore.getGroup,
       getAcadApptCountsForGroup: stores.personStore.getAcadApptCountsForGroup,

@@ -125,21 +125,12 @@ import { computed } from "vue";
 import SelectGroup from "@/components/SelectGroup.vue";
 import Button from "@/components/Button.vue";
 import { useRootCoursePlanningStore } from "../stores/useRootCoursePlanningStore";
-import { storeToRefs, reactive } from "pinia";
+import { storeToRefs } from "pinia";
 import { Group } from "@/types";
 
 const props = defineProps<{
   groupId: Group["id"];
 }>();
-
-// const localFilters = reactive({
-//   startTermId: "",
-//   endTermId: "",
-//   search: "",
-//   excludedCourseTypes: new Set<string>(),
-//   excludedCourseLevels: new Set<string>(),
-//   excludedInstAppointments: new Set<string>(),
-// });
 
 const coursePlanningStore = useRootCoursePlanningStore();
 
