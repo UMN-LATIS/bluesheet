@@ -7,43 +7,11 @@ use Illuminate\Support\Collection;
 use App\Library\Bandaid;
 
 class UserService {
-    private $userCache = [];
+    private $dbUserCache = [];
     private $bandaid;
 
     public function __construct(Bandaid $bandaid) {
         $this->bandaid = $bandaid;
-    }
-
-    public function findOrCreateByEmplid(string $emplid): ?User {
-        if (isset($this->userCache[$emplid])) {
-            return $this->userCache[$emplid];
-        }
-        $user = User::where('emplid', $emplid)->first();
-        if ($user) {
-            $this->userCache[$emplid] = $user;
-            return $user;
-        }
-
-        $user = LDAP::lookupUser(str_pad($emplid, 7, 0, STR_PAD_LEFT), 'umnemplid');
-        if (!$user) return null;
-
-        try {
-            $user->save();
-        } catch (\Exception $e) {
-            // user already exists, reload
-            $user = User::where('emplid', $emplid)->first();
-            if (!$user) return null;
-        }
-
-        $this->userCache[$emplid] = $user;
-        return $user;
-    }
-
-    protected function loadUsersIntoCache(Collection $emplids) {
-        $loadedUsers = User::whereIn('emplid', $emplids)->with('leaves')->get();
-        $loadedUsers->each(function ($user) {
-            $this->userCache[$user->emplid] = $user;
-        });
     }
 
     /**
@@ -52,47 +20,79 @@ class UserService {
      * @return Collection<User>
      */
     public function findOrCreateManyByEmplId(array $emplids): Collection {
-        $uniqEmplids = collect($emplids)->unique()->filter();
+        // first filter out any emplids that we already have in the cache
+        $uncachedEmplIds = collect($emplids)->diff(collect($this->dbUserCache)->keys());
 
-        $this->loadUsersIntoCache($uniqEmplids);
+        // Bulk fetch uncached users from the DB
+        $uncachedUsers = User::whereIn('emplid', $uncachedEmplIds)->get();
 
-        return $uniqEmplids->map(function ($emplid) {
-            return $this->findOrCreateByEmplid($emplid);
+        // add users to the cache
+        $uncachedUsers->each(function ($user) {
+            $this->dbUserCache[$user->emplid] = $user;
+        });
+
+        // identify users that dont exist in the DB
+        $missingEmplids = collect($emplids)->diff(collect($this->dbUserCache)->keys());
+
+        // lookup and created missing users from LDAP
+        $missingEmplids->each(function ($emplid) {
+            $ldapUser = LDAP::lookupUser(str_pad($emplid, 7, 0, STR_PAD_LEFT), 'umnemplid');
+            if (!$ldapUser) return;
+            $user = User::firstOrCreate(['emplid' => $emplid], $ldapUser->toArray());
+
+            // add the created user to the cache
+            $this->dbUserCache[$emplid] = $user;
+        });
+
+        // return the requested users if they exist
+        return collect($emplids)->unique()->map(function ($emplid) {
+            return $this->dbUserCache[$emplid] ?? null;
         })->filter();
     }
 
     public function getDeptEmployees(string $deptId): Collection {
-        $deptEmployees = $this->bandaid->getEmployeesForDepartment($deptId);
+        $employeeInfoLookup = collect($this->bandaid->getEmployeesForDepartment($deptId))->keyBy('EMPLID');
 
-        $deptEmplIds = collect($deptEmployees)->pluck('EMPLID')->toArray();
 
-        $users = $this->findOrCreateManyByEmplId($deptEmplIds)->values();
+        $deptEmplIds = $employeeInfoLookup->keys()->toArray();
 
-        return $users;
+        $users = $this
+            ->findOrCreateManyByEmplId($deptEmplIds)
+            ->map(function ($dbUser) use ($employeeInfoLookup) {
+                return $this->joinDBUserWithEmployeeInfo($dbUser, $employeeInfoLookup[$dbUser->emplid]);
+        });
+
+        return $users->values();
+    }
+
+    protected function joinDBUserWithEmployeeInfo(User $user, $employeeInfo) {
+        $user->jobCategory = $employeeInfo?->CATEGORY;
+        $user->jobCode = $employeeInfo?->JOBCODE;
+
+        return $user;
     }
 
     public function attachInstructorsToCourses(Collection $courses, Collection $employeeList): Collection {
         // prefetch any instructors that we know about and stuff them in our user cache so we avoid n+1 queries
-        $allInstructorsFromCourses = $courses->pluck('INSTRUCTOR_EMPLID')->unique()->filter();
-        $this->loadUsersIntoCache($allInstructorsFromCourses);
+        $emplids = $courses->pluck('INSTRUCTOR_EMPLID')->unique()->filter();
+        // $this->loadUsersIntoCache($allInstructorsFromCourses);
 
-        return $courses->each(function ($course) use ($employeeList) {
-            if (!$course->INSTRUCTOR_EMPLID) return;
+        $dbUserLookup = $this
+            ->findOrCreateManyByEmplId($emplids->toArray())
+            ->keyBy('emplid');
 
-            $user = $this->findOrCreateByEmplid($course->INSTRUCTOR_EMPLID);
+        $employeeInfoLookup = $employeeList->keyBy('EMPLID');
 
-            if (!$user) {
-                $course->instructor = null;
-                return;
-            }
-
-            $employeeInfo = $employeeList->where('EMPLID', $user->emplid)->first();
-
-            $user->jobCategory = $employeeInfo?->CATEGORY;
-            $user->jobCode = $employeeInfo?->JOBCODE;
-            $user->instructorRole = $course->INSTRUCTOR_ROLE;
-
-            $course->instructor = $user;
+        // augment db user info with employee info from bandaid
+        $usersWithJobInfo = $dbUserLookup->map(function ($user) use ($employeeInfoLookup) {
+            return $this->joinDBUserWithEmployeeInfo($user, $employeeInfoLookup[$user->emplid]);
         });
+
+        // attach instructors to courses
+        $courses->each(function ($course) use ($usersWithJobInfo) {
+            $course->instructor = $usersWithJobInfo[$course->INSTRUCTOR_EMPLID];
+        });
+
+        return $courses;
     }
 }
