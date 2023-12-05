@@ -1,18 +1,28 @@
 <template>
   <WideLayout>
-    <h1 class="tw-mb-4">
-      {{ group?.group_title }} <br />
-      <span class="tw-text-3xl">Scheduling Report</span>
-    </h1>
+    <Transition name="fade" mode="out-in">
+      <div v-if="isReady">
+        <h1 class="tw-mb-4">
+          {{ group?.group_title }} <br />
+          <span class="tw-text-3xl">Scheduling Report</span>
+        </h1>
 
-    <CoursePlanningFilters v-if="isReady" :groupId="props.groupId" />
+        <CoursePlanningFilters :groupId="props.groupId" />
 
-    <InstructorTable
-      v-if="isReady"
-      label="Instructors"
-      :groupId="props.groupId"
-      :roles="['PI']"
-    />
+        <InstructorTable
+          label="Instructors"
+          :groupId="props.groupId"
+          :roles="['PI']"
+        />
+      </div>
+      <div
+        v-else
+        class="tw-flex tw-min-h-[25vh] tw-rounded-md tw-items-center tw-justify-center tw-gap-2"
+      >
+        <Spinner class="tw-w-6 tw-h-6 tw-text-neutral-200" />
+        <span class="tw-text-neutral-400">Loading...</span>
+      </div>
+    </Transition>
   </WideLayout>
 </template>
 <script setup lang="ts">
@@ -22,6 +32,7 @@ import { computed, ref } from "vue";
 import InstructorTable from "./components/InstructorTable.vue";
 import { useRootCoursePlanningStore } from "./stores/useRootCoursePlanningStore";
 import CoursePlanningFilters from "./components/CoursePlanningFilters.vue";
+import Spinner from "@/components/Spinner.vue";
 
 const props = defineProps<{
   groupId: number;
