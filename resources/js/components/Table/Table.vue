@@ -1,23 +1,25 @@
 <template>
-  <div
-    class="tw-shadow-sm tw-ring-1 tw-ring-black tw-ring-opacity-5 sm:tw-rounded-lg tw-overflow-auto tw-max-h-[90vh]"
-  >
-    <table
-      class="better-table tw-min-w-full tw-divide-y tw-divide-gray-300"
-      :class="{
-        'better-table--sticky-header': stickyHeader,
-        'better-table--sticky-first-col': stickyFirstColumn,
-      }"
+  <div class="tw-relative tw-min-h-[8em] tw-overflow-hidden">
+    <div
+      class="tw-shadow-sm tw-ring-1 tw-ring-black tw-ring-opacity-5 sm:tw-rounded-lg tw-overflow-auto tw-max-h-[90vh]"
     >
-      <thead class="tw-bg-gray-50">
-        <slot name="thead" />
-      </thead>
+      <table
+        class="better-table tw-min-w-full tw-divide-y tw-divide-gray-300"
+        :class="{
+          'better-table--sticky-header': stickyHeader,
+          'better-table--sticky-first-col': stickyFirstColumn,
+        }"
+      >
+        <thead class="tw-bg-gray-50">
+          <slot name="thead" />
+        </thead>
 
-      <slot />
-      <tfoot>
-        <slot name="tfoot" />
-      </tfoot>
-    </table>
+        <slot />
+        <tfoot>
+          <slot name="tfoot" />
+        </tfoot>
+      </table>
+    </div>
   </div>
 </template>
 <script setup lang="ts">

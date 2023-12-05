@@ -5,11 +5,7 @@
     :stickyHeader="true"
   >
     <template #thead>
-      <ReportTableHeaderRow
-        :label="label"
-        :terms="coursePlanningStore.terms"
-        :currentTerm="coursePlanningStore.currentTerm"
-      />
+      <ReportTableHeaderRow :label="label" />
     </template>
     <TBody>
       <InstructorTableRow
@@ -36,12 +32,18 @@ const props = defineProps<{
 
 const coursePlanningStore = useRootCoursePlanningStore();
 const people = computed(() => {
-  const peopleWithRoles = coursePlanningStore.getPeopleInGroupWithRoles(
+  return coursePlanningStore.getPeopleInGroupWithRoles(
     props.groupId,
     props.roles,
   );
-  console.log("peopleWithRoles", peopleWithRoles);
-  return peopleWithRoles;
 });
 </script>
-<style scoped></style>
+<style lang="scss">
+// fix width of cells to prevent them from embiggening
+// when a collapseable item is expanded
+.scheduling-report td,
+.scheduling-report th {
+  min-width: 16rem;
+  max-width: 16rem;
+}
+</style>

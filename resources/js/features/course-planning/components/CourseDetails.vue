@@ -4,7 +4,7 @@
     class="course-details tw-px-1"
     :class="{
       'tw-opacity-50 tw-line-through': section.status === 'cancelled',
-      'tw-rounded-2xl tw-bg-black/5 tw-p-2 tw-pr-4 tw-mb-2': isOpen,
+      'tw-rounded-lg tw-bg-black/5 tw-p-2 tw-pr-4 tw-mb-2': isOpen,
       'tw-rounded-full': !isOpen,
     }"
   >
