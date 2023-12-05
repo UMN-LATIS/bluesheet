@@ -25,6 +25,15 @@ interface RootCoursePlanningState {
 export const useRootCoursePlanningStore = defineStore(
   "rootCoursePlanning",
   () => {
+    const stores = {
+      personStore: usePersonStore(),
+      enrollmentStore: useEnrollmentStore(),
+      courseStore: useCourseStore(),
+      groupStore: useGroupStore(),
+      termsStore: useTermsStore(),
+      courseSectionStore: useCourseSectionStore(),
+    };
+
     const state = reactive<RootCoursePlanningState>({
       isInPlanningMode: false,
       filters: {
@@ -35,15 +44,6 @@ export const useRootCoursePlanningStore = defineStore(
         excludedAcadAppts: new Set(),
       },
     });
-
-    const stores = {
-      personStore: usePersonStore(),
-      enrollmentStore: useEnrollmentStore(),
-      courseStore: useCourseStore(),
-      groupStore: useGroupStore(),
-      termsStore: useTermsStore(),
-      courseSectionStore: useCourseSectionStore(),
-    };
 
     const getters = {
       terms: computed(() => stores.termsStore.terms),
@@ -59,11 +59,14 @@ export const useRootCoursePlanningStore = defineStore(
           value: term.id,
         })),
       ),
+
+      earliestTerm: computed(() => stores.termsStore.earliestTerm),
+      latestTerm: computed(() => stores.termsStore.latestTerm),
     };
 
     const actions = {
-      initGroup(groupId: number) {
-        return Promise.all([
+      async initGroup(groupId: number) {
+        await Promise.all([
           stores.termsStore.init(),
           stores.groupStore.fetchGroup(groupId),
           stores.personStore.fetchPeopleForGroup(groupId),
@@ -71,6 +74,9 @@ export const useRootCoursePlanningStore = defineStore(
           stores.courseStore.fetchCoursesForGroup(groupId),
           stores.courseSectionStore.fetchCourseSectionsForGroup(groupId),
         ]);
+
+        this.setStartTermId(getters.earliestTerm.value?.id ?? null);
+        this.setEndTermId(getters.latestTerm.value?.id ?? null);
       },
 
       setStartTermId(termId: Term["id"] | null) {
@@ -83,6 +89,12 @@ export const useRootCoursePlanningStore = defineStore(
 
       setExcludedAcadAppts(acadAppts: T.Person["academicAppointment"][]) {
         state.filters.excludedAcadAppts = new Set(acadAppts);
+      },
+
+      toggleAcadApptFilter(acadAppt: T.Person["academicAppointment"]) {
+        state.filters.excludedAcadAppts.has(acadAppt)
+          ? state.filters.excludedAcadAppts.delete(acadAppt)
+          : state.filters.excludedAcadAppts.add(acadAppt);
       },
     };
 
@@ -123,6 +135,10 @@ export const useRootCoursePlanningStore = defineStore(
           .filter(Boolean) as T.Person[];
 
         return people.sort(sortByName);
+      },
+
+      isPersonVisible(person: T.Person) {
+        return !state.filters.excludedAcadAppts.has(person.academicAppointment);
       },
 
       isCurrentTerm: stores.termsStore.isCurrentTerm,

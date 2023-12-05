@@ -47,11 +47,7 @@
             type="checkbox"
             :checked="!filters.excludedAcadAppts.has(category)"
             class="tw-form-checkbox tw-mr-2 tw-border tw-border-neutral-500 tw-rounded"
-            @change="
-              filters.excludedAcadAppts.has(category)
-                ? filters.excludedAcadAppts.delete(category)
-                : filters.excludedAcadAppts.add(category)
-            "
+            @change="toggleAcadApptFilter(category)"
           />
 
           {{ category }}
@@ -129,25 +125,35 @@ import { computed } from "vue";
 import SelectGroup from "@/components/SelectGroup.vue";
 import Button from "@/components/Button.vue";
 import { useRootCoursePlanningStore } from "../stores/useRootCoursePlanningStore";
-import { storeToRefs } from "pinia";
+import { storeToRefs, reactive } from "pinia";
 import { Group } from "@/types";
 
 const props = defineProps<{
   groupId: Group["id"];
 }>();
 
+// const localFilters = reactive({
+//   startTermId: "",
+//   endTermId: "",
+//   search: "",
+//   excludedCourseTypes: new Set<string>(),
+//   excludedCourseLevels: new Set<string>(),
+//   excludedInstAppointments: new Set<string>(),
+// });
+
 const coursePlanningStore = useRootCoursePlanningStore();
 
 const { filters, termSelectOptions } = storeToRefs(coursePlanningStore);
-const { setStartTermId, setEndTermId } = coursePlanningStore;
+const { setStartTermId, setEndTermId, toggleAcadApptFilter } =
+  coursePlanningStore;
 
 const academicApptCounts = computed(() => {
   return coursePlanningStore.getAcadApptCountsForGroup(props.groupId);
 });
 
 function toggleAllAcadAppts() {
-  const areAllExcluded = academicApptCounts.value.every(
-    ([acadAppt]) => !filters.value.excludedAcadAppts.has(acadAppt),
+  const areAllExcluded = academicApptCounts.value.every(([acadAppt]) =>
+    filters.value.excludedAcadAppts.has(acadAppt),
   );
 
   if (areAllExcluded) {

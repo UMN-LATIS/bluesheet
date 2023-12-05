@@ -20,6 +20,33 @@ export const useTermsStore = defineStore("terms", () => {
       });
       return currentTerm ?? null;
     }),
+    earliestTerm: computed((): Term | null => {
+      return state.terms.value.reduce(
+        (earliest: Term | null, term: Term | null) => {
+          if (!earliest || !term) {
+            return term;
+          }
+
+          return dayjs(term.startDate).isBefore(earliest.startDate)
+            ? term
+            : earliest;
+        },
+        null,
+      );
+    }),
+    latestTerm: computed((): Term | null => {
+      return state.terms.value.reduce(
+        (latest: Term | null, term: Term | null) => {
+          if (!latest || !term) {
+            return term;
+          }
+
+          return dayjs(term.endDate).isAfter(latest.endDate) ? term : latest;
+        },
+        null,
+      );
+    }),
+
     hasTerms: computed(() => state.terms.value.length > 0),
   };
 

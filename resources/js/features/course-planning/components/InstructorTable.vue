@@ -10,6 +10,7 @@
     <TBody>
       <InstructorTableRow
         v-for="person in people"
+        v-show="coursePlanningStore.isPersonVisible(person)"
         :key="person.id"
         :person="person"
       />
@@ -20,17 +21,18 @@
 import { Table, TBody } from "@/components/Table";
 import InstructorTableRow from "./InstructorTableRow.vue";
 import ReportTableHeaderRow from "./ReportTableHeaderRow.vue";
-import { EnrollmentRole } from "../coursePlanningTypes";
+import * as T from "../coursePlanningTypes";
 import { useRootCoursePlanningStore } from "../stores/useRootCoursePlanningStore";
 import { computed } from "vue";
 
 const props = defineProps<{
   label: string;
   groupId: number;
-  roles: EnrollmentRole[];
+  roles: T.EnrollmentRole[];
 }>();
 
 const coursePlanningStore = useRootCoursePlanningStore();
+
 const people = computed(() => {
   return coursePlanningStore.getPeopleInGroupWithRoles(
     props.groupId,
