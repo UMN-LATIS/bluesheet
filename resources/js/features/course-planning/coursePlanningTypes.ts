@@ -70,5 +70,4 @@ export interface Course {
   title: string; // course name
   courseType: string; // "LEC"
   courseLevel: string; //"UGRD" | "GRAD";
-  groupId: Group["id"];
 }

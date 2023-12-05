@@ -22,9 +22,16 @@ export const useGroupStore = defineStore("groups", () => {
     },
   };
 
+  const methods = {
+    getGroup(groupId: Group["id"]) {
+      return state.groupLookup[groupId] ?? null;
+    },
+  };
+
   return {
     ...toRefs(state),
     ...getters,
     ...actions,
+    ...methods,
   };
 });

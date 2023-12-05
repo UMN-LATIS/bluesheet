@@ -20,9 +20,13 @@ export const useTermsStore = defineStore("terms", () => {
       });
       return currentTerm ?? null;
     }),
+    hasTerms: computed(() => state.terms.value.length > 0),
   };
 
   const actions = {
+    /**
+     * Fetches terms from the API if needed
+     */
     async init() {
       // if we're already loading or loaded, don't do anything
       if (state.loadStatus.value !== "idle") return;
@@ -43,8 +47,12 @@ export const useTermsStore = defineStore("terms", () => {
         // ignore terms that are super far out
         return dayjs(t.endDate).isSameOrBefore(MAX_TERM_DATE);
       });
+    },
+  };
 
-      return state.terms.value;
+  const methods = {
+    isCurrentTerm(termId: Term["id"]) {
+      return getters.currentTerm.value?.id === termId;
     },
   };
 
@@ -55,5 +63,6 @@ export const useTermsStore = defineStore("terms", () => {
     ...state,
     ...getters,
     ...actions,
+    ...methods,
   };
 });

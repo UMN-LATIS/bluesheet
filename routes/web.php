@@ -17,6 +17,7 @@ use App\Http\Controllers\CoursePlanning\GroupSectionController;
 use App\Http\Controllers\CoursePlanning\GroupEnrollmentController;
 use App\Http\Controllers\CoursePlanning\GroupPersonController;
 use App\Http\Controllers\CoursePlanning\GroupLeaveController;
+use App\Http\Controllers\CoursePlanning\GroupCourseController;
 
 Route::impersonate();
 
@@ -90,6 +91,7 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
 
     // Course Planning
     Route::prefix('course-planning')->group(function () {
+        Route::get('/groups/{group}/courses', [GroupCourseController::class, 'index']);
         Route::get('/groups/{group}/sections', [GroupSectionController::class, 'index']);
         Route::get('/groups/{group}/enrollments', [GroupEnrollmentController::class, 'index']);
         Route::get('/groups/{group}/people', [GroupPersonController::class, 'index']);

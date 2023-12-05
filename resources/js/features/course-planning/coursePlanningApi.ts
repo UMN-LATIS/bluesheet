@@ -9,21 +9,21 @@ export async function getGroup(groupId: number) {
   return res.data;
 }
 
-export async function fetchCourses(groupId: number) {
+export async function fetchCoursesForGroup(groupId: number) {
   const res = await axios.get<T.Course[]>(
     `/api/course-planning/groups/${groupId}/courses`,
   );
   return res.data;
 }
 
-export async function fetchCourseSections(groupId: number) {
+export async function fetchCourseSectionsForGroup(groupId: number) {
   const res = await axios.get<T.CourseSection[]>(
     `/api/course-planning/groups/${groupId}/sections`,
   );
   return res.data;
 }
 
-export async function fetchEnrollments(
+export async function fetchEnrollmentsForGroup(
   groupId: number,
   roles: T.EnrollmentRole[] = [],
 ) {
@@ -40,14 +40,14 @@ export async function fetchEnrollments(
   return res.data;
 }
 
-export async function fetchPeople(groupId: number) {
+export async function fetchPeopleForGroup(groupId: number) {
   const res = await axios.get<T.Person[]>(
     `/api/course-planning/groups/${groupId}/people`,
   );
   return res.data;
 }
 
-export async function fetchLeaves(groupId: number) {
+export async function fetchLeavesForGroup(groupId: number) {
   const res = await axios.get<Leave[]>(
     `/api/course-planning/groups/${groupId}/leaves`,
   );
