@@ -34,8 +34,12 @@ class GroupEnrollmentController extends Controller {
                 $classRecord->INSTRUCTOR_EMPLID !== null
             )->map(function ($classRecord) {
                 return [
+                    'id' => join('-', [
+                        $classRecord->CLASS_NUMBER,
+                        $classRecord->INSTRUCTOR_EMPLID,
+                    ]),
                     'sectionId' => $classRecord->CLASS_NUMBER,
-                    'personId' => $classRecord->INSTRUCTOR_EMPLID,
+                    'emplId' => $classRecord->INSTRUCTOR_EMPLID,
                     'role' => $classRecord->INSTRUCTOR_ROLE,
                 ];
             })->sortBy('sectionId');

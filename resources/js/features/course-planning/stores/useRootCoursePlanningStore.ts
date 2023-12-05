@@ -7,6 +7,8 @@ import { useCourseSectionStore } from "./useCourseSectionStore";
 import { useCourseStore } from "./useCourseStore";
 import { useGroupStore } from "@/stores/useGroupStore";
 import { useTermsStore } from "@/stores/useTermsStore";
+import { uniq } from "lodash";
+import { sortByName } from "@/utils";
 
 export const useRootCoursePlanningStore = defineStore(
   "rootCoursePlanning",
@@ -45,7 +47,7 @@ export const useRootCoursePlanningStore = defineStore(
     const methods = {
       getSectionsForPerson(personId: number): T.CourseSection[] {
         const enrollmentStore = useEnrollmentStore();
-        const enrollments = enrollmentStore.getEnrollmentsForPerson(personId);
+        const enrollments = enrollmentStore.getEnrollmentsForEmplId(personId);
 
         const sectionIds = enrollments.map((e) => e.sectionId);
 
@@ -69,12 +71,17 @@ export const useRootCoursePlanningStore = defineStore(
         const enrollmentsForGroupWithRole = enrollmentsForGroup.filter(
           (enrollment) => roles.includes(enrollment.role),
         );
-        console.log("enrollmentsForGroup", enrollmentsForGroupWithRole);
+
+        const uniqEmplids = uniq(
+          enrollmentsForGroupWithRole.map((e) => e.emplId),
+        );
 
         // get the people for these enrollments
-        return enrollmentsForGroupWithRole
-          .map((e) => stores.personStore.getPerson(e.personId))
+        const people = uniqEmplids
+          .map((emplid) => stores.personStore.getPersonByEmplId(emplid))
           .filter(Boolean) as T.Person[];
+
+        return people.sort(sortByName);
       },
 
       isCurrentTerm: stores.termsStore.isCurrentTerm,

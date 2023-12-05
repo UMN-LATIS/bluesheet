@@ -43,17 +43,17 @@ export const usePersonStore = defineStore("person", () => {
     /**
      * get a person by id
      */
-    getPerson(id: number): T.Person | null {
-      const person = state.personLookup[id] ?? null;
+    getPersonByEmplId(emplId: T.Person["emplid"]): T.Person | null {
+      const person = state.personLookup[emplId] ?? null;
       if (!person) {
-        console.warn(`no person found with id ${id}`);
+        console.warn(`no person found with emplid ${emplId}`);
       }
       return person;
     },
     getPeopleForGroup(groupId: number): T.Person[] {
       const personIds = state.personIdsByGroup[groupId] || [];
       return personIds
-        .map((id) => this.getPerson(id))
+        .map((id) => this.getPersonByEmplId(id))
         .filter(Boolean) as T.Person[];
     },
   };

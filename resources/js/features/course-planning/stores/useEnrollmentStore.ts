@@ -3,7 +3,6 @@ import { reactive, toRefs, computed } from "vue";
 import * as api from "../coursePlanningApi";
 import * as T from "../coursePlanningTypes";
 import { Group } from "@/types";
-
 interface EnrollmentStoreState {
   enrollmentLookup: Record<T.Enrollment["id"], T.Enrollment | undefined>;
   enrollmentIdsByGroup: Record<Group["id"], T.Enrollment["id"][] | undefined>;
@@ -20,16 +19,16 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
       () =>
         Object.values(state.enrollmentLookup).filter(Boolean) as T.Enrollment[],
     ),
-    enrollmentIdsByPerson: computed(
+    enrollmentsByEmplId: computed(
       (): Record<T.Person["id"], T.Enrollment["id"][]> => {
         return getters.allEnrollments.value.reduce(
           (acc, enrollment) => {
-            const personId = enrollment.personId;
-            const previousEnrollmentIds = acc[personId] || [];
+            const emplId = enrollment.emplId;
+            const previousEnrollmentIds = acc[emplId] || [];
 
             return {
               ...acc,
-              [personId]: [...previousEnrollmentIds, enrollment.id],
+              [emplId]: [...previousEnrollmentIds, enrollment.id],
             };
           },
           {} as Record<T.Person["id"], T.Enrollment["id"][]>,
@@ -66,8 +65,8 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
         .map((id) => state.enrollmentLookup[id])
         .filter(Boolean) as T.Enrollment[];
     },
-    getEnrollmentsForPerson(personId: number): T.Enrollment[] {
-      const enrollmentIds = getters.enrollmentIdsByPerson.value[personId] || [];
+    getEnrollmentsForEmplId(emplId: number): T.Enrollment[] {
+      const enrollmentIds = getters.enrollmentsByEmplId.value[emplId] || [];
       return enrollmentIds
         .map((id) => state.enrollmentLookup[id])
         .filter(Boolean) as T.Enrollment[];

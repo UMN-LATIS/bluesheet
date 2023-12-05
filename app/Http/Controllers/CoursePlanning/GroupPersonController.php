@@ -24,7 +24,6 @@ class GroupPersonController extends Controller {
 
         $users = $this->userService->getDeptEmployees($group->dept_id);
 
-        return $users;
-        // return InstructorResource::collection($users);
+        return InstructorResource::collection($users);
     }
 }
