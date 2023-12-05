@@ -19,7 +19,7 @@ class Membership extends JsonResource
             "filtered"=>false,
             "id"=>$this->id,
             "user"=>$this->user,
-            "role"=>$this->role->load("officialGroupType"),
+            "role"=>$this->role,
             "start_date"=>$this->start_date?$this->start_date->format('Y-m-d'):null,
             "end_date"=>$this->end_date?$this->end_date->format('Y-m-d'):null,
             "admin"=>$this->admin,
