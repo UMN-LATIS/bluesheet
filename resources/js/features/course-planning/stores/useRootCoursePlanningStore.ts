@@ -182,7 +182,7 @@ export const useRootCoursePlanningStore = defineStore(
         return isAcadApptVisible && hasVisibleSection;
       },
 
-      isTermVisible(term: Term) {
+      isTermVisible(termId: Term["id"]) {
         if (!state.filters.startTermId || !state.filters.endTermId) {
           return true;
         }
@@ -190,8 +190,8 @@ export const useRootCoursePlanningStore = defineStore(
         // term ids are well ordered, so we can just check if the term id is
         // between the start and end term ids
         return (
-          state.filters.startTermId <= term.id &&
-          term.id <= state.filters.endTermId
+          state.filters.startTermId <= termId &&
+          termId <= state.filters.endTermId
         );
       },
 
@@ -201,6 +201,8 @@ export const useRootCoursePlanningStore = defineStore(
           return false;
         }
 
+        const isSectionTermVisible = methods.isTermVisible(section.termId);
+
         const isCourseTypeVisible = !state.filters.excludedCourseTypes.has(
           course.courseType,
         );
@@ -208,7 +210,9 @@ export const useRootCoursePlanningStore = defineStore(
           course.courseLevel,
         );
 
-        return isCourseTypeVisible && isCourseLevelVisible;
+        return (
+          isSectionTermVisible && isCourseTypeVisible && isCourseLevelVisible
+        );
       },
 
       isCurrentTerm: stores.termsStore.isCurrentTerm,

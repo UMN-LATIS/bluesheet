@@ -19,7 +19,7 @@
     </Td>
     <Td
       v-for="term in coursePlanningStore.terms"
-      v-show="coursePlanningStore.isTermVisible(term)"
+      v-show="coursePlanningStore.isTermVisible(term.id)"
       :key="term.id"
       class="term-data-column tw-group"
       :class="{
