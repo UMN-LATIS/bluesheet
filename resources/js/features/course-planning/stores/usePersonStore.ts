@@ -35,7 +35,7 @@ export const usePersonStore = defineStore("person", () => {
       const groupIds = Object.keys(state.personIdsByGroup).map(Number);
 
       groupIds.forEach((groupId) => {
-        const people = methods.getPeopleForGroup(groupId);
+        const people = methods.getPeopleInGroup(groupId);
 
         if (!people) return;
 
@@ -79,9 +79,15 @@ export const usePersonStore = defineStore("person", () => {
      * get a person by id
      */
     getPersonByEmplId(emplId: T.Person["emplid"]): T.Person | null {
-      return state.personLookup[emplId] ?? null;
+      const person = state.personLookup[emplId] ?? null;
+
+      // for debugging
+      // if (!person) {
+      //   console.warn(`No person found with emplId ${emplId}.`);
+      // }
+      return person;
     },
-    getPeopleForGroup(groupId: number): T.Person[] {
+    getPeopleInGroup(groupId: number): T.Person[] {
       const personIds = state.personIdsByGroup[groupId] || [];
       return personIds
         .map((id) => this.getPersonByEmplId(id))

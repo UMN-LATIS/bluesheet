@@ -26,7 +26,8 @@ class CourseSectionResource extends JsonResource {
             'enrollmentTotal' => $this->ENROLLMENT_TOTAL,
             'waitlistCap' => $this->WAITLIST_CAP,
             'waitlistTotal' => $this->WAITLIST_TOTAL,
-            'status' => $this->getSectionStatus($request),
+            'enrollments' => $this->ENROLLMENTS,
+            'status' => $this->getSectionStatus(),
         ];
     }
 }

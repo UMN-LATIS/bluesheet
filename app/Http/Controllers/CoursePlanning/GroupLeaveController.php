@@ -29,7 +29,7 @@ class GroupLeaveController extends Controller {
         })->map(function ($leave) {
             $termsBetweenDates = $this->bandaid->getTermsOverlappingDates($leave->start_date, $leave->end_date);
 
-            $leave['termIds'] = $termsBetweenDates->pluck('id');
+            $leave['termIds'] = $termsBetweenDates->pluck('TERM');
             return $leave;
         })->filter(function ($leave) {
             // if terms are empty, then the leave is out of range

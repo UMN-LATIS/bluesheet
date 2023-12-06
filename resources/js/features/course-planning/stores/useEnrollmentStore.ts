@@ -59,6 +59,10 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
   };
 
   const methods = {
+    getEnrollment(id: T.Enrollment["id"]) {
+      return state.enrollmentLookup[id] ?? null;
+    },
+
     getEnrollmentsForGroup(groupId: number): T.Enrollment[] {
       const enrollmentIds = state.enrollmentIdsByGroup[groupId] || [];
       return enrollmentIds

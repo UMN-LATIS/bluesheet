@@ -18,12 +18,33 @@ class GroupSectionController extends Controller {
     public function index(Request $request, Group $group) {
         abort_if($request->user()->cannot('view planned courses'), 403);
 
+        // each "section" contains a different enrolled instructor
         $sections = collect($this->bandaid
             ->getDeptClassList($group->dept_id))
             ->filter(
+                // filter out sections with no instructor
                 fn ($classRecord) =>
                 $classRecord->INSTRUCTOR_EMPLID !== null
-            )->unique('CLASS_NUMBER');
+            )->groupBy('CLASS_NUMBER')->map(
+                function ($classRecords) {
+                    // combine all "instructors" into one section
+                    // with a list of enrollments
+                    $section = $classRecords->except([
+                        'INSTRUCTOR_EMPLID',
+                        'INSTRUCTOR_ROLE',
+                    ])->first();
+                    $section->ENROLLMENTS = $classRecords->map(
+                        fn ($classRecord) => ([
+                            'id' => join('-', [$classRecord->CLASS_NUMBER, $classRecord->INSTRUCTOR_EMPLID]),
+                            'emplId' => $classRecord->INSTRUCTOR_EMPLID,
+                            'sectionId' => $classRecord->CLASS_NUMBER,
+                            'role' => $classRecord->INSTRUCTOR_ROLE,
+                        ])
+                    )->toArray();
+
+                    return $section;
+                }
+            );
 
         return CourseSectionResource::collection($sections);
     }

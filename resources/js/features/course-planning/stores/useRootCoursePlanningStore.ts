@@ -22,6 +22,7 @@ interface RootCoursePlanningState {
     excludedCourseLevels: Set<string>;
     excludedAcadAppts: Set<string>;
     search: string;
+    includedEnrollmentRoles: T.EnrollmentRole[];
   };
 }
 
@@ -48,6 +49,7 @@ export const useRootCoursePlanningStore = defineStore(
         excludedCourseLevels: new Set(),
         excludedAcadAppts: new Set(),
         search: "",
+        includedEnrollmentRoles: ["PI"],
       },
     });
 
@@ -68,27 +70,130 @@ export const useRootCoursePlanningStore = defineStore(
 
       earliestTerm: computed(() => stores.termsStore.earliestTerm),
       latestTerm: computed(() => stores.termsStore.latestTerm),
-      acadApptCounts: computed(
-        (): Record<T.Person["academicAppointment"], number> =>
-          state.activeGroupId
-            ? stores.personStore.getAcadApptCountsForGroup(state.activeGroupId)
-            : {},
+      sectionsForActiveGroup: computed((): T.CourseSection[] => {
+        if (!state.activeGroupId) {
+          return [];
+        }
+
+        return stores.courseSectionStore.getCoursesSectionsForGroup(
+          state.activeGroupId,
+        );
+      }),
+
+      coursesForActiveGroup: computed((): T.Course[] => {
+        if (!state.activeGroupId) {
+          return [];
+        }
+
+        return getters.sectionsForActiveGroup.value
+          .map((section) => stores.courseStore.getCourse(section.courseId))
+          .filter(Boolean) as T.Course[];
+      }),
+
+      sectionsWithinVisibleTerms: computed((): T.CourseSection[] => {
+        return getters.sectionsForActiveGroup.value.filter((section) =>
+          methods.isTermVisible(section.termId),
+        );
+      }),
+
+      coursesWithinVisibleTerms: computed((): T.Course[] => {
+        return getters.sectionsWithinVisibleTerms.value
+          .map((section) => stores.courseStore.getCourse(section.courseId))
+          .filter(Boolean) as T.Course[];
+      }),
+
+      enrollmentsInVisibleTerms: computed((): T.Enrollment[] => {
+        if (!state.activeGroupId) {
+          return [];
+        }
+
+        return getters.sectionsWithinVisibleTerms.value
+          .flatMap((section) => section.enrollments)
+          .filter(Boolean) as T.Enrollment[];
+      }),
+      peopleInVisibleTerms: computed((): T.Person[] => {
+        if (!state.activeGroupId) {
+          return [];
+        }
+
+        const emplIds = getters.enrollmentsInVisibleTerms.value.map(
+          (enrollment) => enrollment.emplId,
+        );
+        return uniq(emplIds)
+          .map((emplId) => stores.personStore.getPersonByEmplId(emplId))
+          .filter(Boolean) as T.Person[];
+      }),
+
+      peopleWithIncludedRolesInVisibleTerms: computed((): T.Person[] => {
+        if (!state.activeGroupId) {
+          return [];
+        }
+
+        const people = getters.peopleInVisibleTerms.value;
+        return people.filter(methods.isPersonEnrolledWithVisibleRole);
+      }),
+
+      acadApptCountsForVisibleTerms: computed(
+        (): Record<T.Person["academicAppointment"], number> => {
+          if (!state.activeGroupId) {
+            return {};
+          }
+
+          const people = getters.peopleWithIncludedRolesInVisibleTerms.value;
+          const acadApptCount = people.reduce(
+            (acc, person) => {
+              const acadAppt = person.academicAppointment;
+              const previousCount = acc[acadAppt] ?? 0;
+              return {
+                ...acc,
+                [acadAppt]: previousCount + 1,
+              };
+            },
+            {} as Record<T.Person["academicAppointment"], number>,
+          );
+
+          return acadApptCount;
+        },
       ),
-      courseTypeCounts: computed(
-        (): Record<T.Course["courseType"], number> =>
-          state.activeGroupId
-            ? stores.courseStore.getCourseTypeCountsForGroup(
-                state.activeGroupId,
-              )
-            : {},
+      courseTypeCountsForVisibleTerms: computed(
+        (): Record<T.Course["courseType"], number> => {
+          if (!state.activeGroupId) {
+            return {};
+          }
+
+          const courses = getters.coursesWithinVisibleTerms.value;
+          return courses.reduce(
+            (acc, course) => {
+              const courseType = course.courseType;
+              const previousCount = acc[courseType] ?? 0;
+              return {
+                ...acc,
+                [courseType]: previousCount + 1,
+              };
+            },
+            {} as Record<T.Course["courseType"], number>,
+          );
+        },
       ),
       courseLevelCounts: computed(
-        (): Record<T.Course["courseLevel"], number> =>
-          state.activeGroupId
-            ? stores.courseStore.getCourseLevelCountsForGroup(
-                state.activeGroupId,
-              )
-            : {},
+        (): Record<T.Course["courseLevel"], number> => {
+          if (!state.activeGroupId) {
+            return {};
+          }
+
+          const courses = getters.coursesForActiveGroup.value;
+          return courses.reduce(
+            (acc, course) => {
+              const courseLevel = course.courseLevel;
+              const previousCount = acc[courseLevel] ?? 0;
+              return {
+                ...acc,
+                [courseLevel]: previousCount + 1,
+              };
+            },
+            {} as Record<T.Course["courseLevel"], number>,
+          );
+        },
       ),
 
       sortedCourseLevels: computed((): [T.Course["courseLevel"], number][] => {
@@ -101,7 +206,7 @@ export const useRootCoursePlanningStore = defineStore(
 
       sortedCourseTypes: computed((): [T.Course["courseType"], number][] => {
         const courseTypeCounts: Record<T.Course["courseType"], number> =
-          getters.courseTypeCounts.value;
+          getters.courseTypeCountsForVisibleTerms.value;
         return Object.entries(courseTypeCounts).sort((a, b) => {
           return a[0].localeCompare(b[0]);
         });
@@ -112,17 +217,17 @@ export const useRootCoursePlanningStore = defineStore(
           const acadApptCounts: Record<
             T.Person["academicAppointment"],
             number
-          > = getters.acadApptCounts.value;
+          > = getters.acadApptCountsForVisibleTerms.value;
           return Object.entries(acadApptCounts).sort((a, b) => {
             return a[0].localeCompare(b[0]);
           });
         },
       ),
       allAcadApptTypes: computed((): T.Person["academicAppointment"][] =>
-        Object.keys(getters.acadApptCounts.value),
+        Object.keys(getters.acadApptCountsForVisibleTerms.value),
       ),
       allCourseTypes: computed((): T.Course["courseType"][] =>
-        Object.keys(getters.courseTypeCounts.value),
+        Object.keys(getters.courseTypeCountsForVisibleTerms.value),
       ),
       allCourseLevels: computed((): T.Course["courseLevel"][] =>
         Object.keys(getters.courseLevelCounts.value),
@@ -239,6 +344,7 @@ export const useRootCoursePlanningStore = defineStore(
         const sections = methods.getSectionsForEmplId(emplId);
         return sections.filter((section) => section.termId === termId);
       },
+      getPeopleInGroup: stores.personStore.getPeopleInGroup,
 
       getPeopleInGroupWithRoles(groupId: number, roles: T.EnrollmentRole[]) {
         const enrollmentsForGroup =
@@ -279,12 +385,29 @@ export const useRootCoursePlanningStore = defineStore(
         const visibleSections = sections.filter(methods.isSectionVisible);
         return visibleSections.length > 0;
       },
+      isPersonEnrolledWithVisibleRole(person: T.Person) {
+        if (!state.activeGroupId) {
+          return false;
+        }
+        const personEnrollments =
+          stores.enrollmentStore.getEnrollmentsForEmplIdInGroup(
+            person.emplid,
+            state.activeGroupId,
+          );
+
+        return personEnrollments.some((enrollment) => {
+          return state.filters.includedEnrollmentRoles.includes(
+            enrollment.role,
+          );
+        });
+      },
 
       isPersonVisible(person: T.Person) {
         if (!state.activeGroupId) {
           throw new Error("active group id is not set");
         }
 
+        const hasVisibleRole = methods.isPersonEnrolledWithVisibleRole(person);
         const isAcadApptVisible = !state.filters.excludedAcadAppts.has(
           person.academicAppointment,
         );
@@ -293,6 +416,7 @@ export const useRootCoursePlanningStore = defineStore(
         );
 
         return (
+          hasVisibleRole &&
           isAcadApptVisible &&
           hasVisibleSection &&
           (methods.isPersonMatchingSearch(person) ||
@@ -374,11 +498,13 @@ export const useRootCoursePlanningStore = defineStore(
 
       isCurrentTerm: stores.termsStore.isCurrentTerm,
       getGroup: stores.groupStore.getGroup,
-      getAcadApptCountsForGroup: stores.personStore.getAcadApptCountsForGroup,
-      getCourseTypeCountsForGroup:
-        stores.courseStore.getCourseTypeCountsForGroup,
-      getCourseLevelCountsForGroup:
-        stores.courseStore.getCourseLevelCountsForGroup,
+      // getAcadApptCountsForGroup: stores.personStore.getAcadApptCountsForGroup,
+      // getCourseTypeCountsForGroup:
+      //   stores.courseStore.getCourseTypeCountsForGroup,
+      // getCourseLevelCountsForGroup:
+      //   stores.courseStore.getCourseLevelCountsForGroup,
+      getLeavesForPersonInTerm: stores.leaveStore.getLeavesForPersonInTerm,
+      getLeavesForPerson: stores.leaveStore.getLeavesForPerson,
     };
 
     return {

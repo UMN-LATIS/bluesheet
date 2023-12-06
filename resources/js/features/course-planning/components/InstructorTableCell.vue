@@ -7,14 +7,14 @@
     >
       + Add Course
     </button>
-    <!-- <LeaveChip
+    <LeaveChip
       v-for="leave in termLeaves"
       :key="leave.id"
       :leave="leave"
-      :instructor="person"
+      :person="person"
     >
       {{ leave.description }} ({{ leave.type }})
-    </LeaveChip> -->
+    </LeaveChip>
 
     <SectionDetails
       v-for="section in courseSections"
@@ -35,7 +35,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import LeaveChip from "@/components/LeaveChip.vue";
+import LeaveChip from "./LeaveChip.vue";
 import SectionDetails from "./SectionDetails.vue";
 import { type ComboBoxOption } from "@/components/ComboBox2.vue";
 import { Term } from "@/types";
@@ -59,6 +59,10 @@ const courseSections = computed(() =>
 );
 
 const isShowingAddCourse = ref(false);
+
+const termLeaves = computed(() =>
+  coursePlanningStore.getLeavesForPersonInTerm(props.person.id, props.term.id),
+);
 
 // const selectedCourse = ref<ComboBoxOption | null>(null);
 

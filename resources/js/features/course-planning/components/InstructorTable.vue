@@ -20,23 +20,18 @@
 import { Table, TBody } from "@/components/Table";
 import InstructorTableRow from "./InstructorTableRow.vue";
 import ReportTableHeaderRow from "./ReportTableHeaderRow.vue";
-import * as T from "../coursePlanningTypes";
 import { useRootCoursePlanningStore } from "../stores/useRootCoursePlanningStore";
 import { computed } from "vue";
 
 const props = defineProps<{
   label: string;
   groupId: number;
-  roles: T.EnrollmentRole[];
 }>();
 
 const coursePlanningStore = useRootCoursePlanningStore();
 
 const people = computed(() => {
-  return coursePlanningStore.getPeopleInGroupWithRoles(
-    props.groupId,
-    props.roles,
-  );
+  return coursePlanningStore.getPeopleInGroup(props.groupId);
 });
 </script>
 <style lang="scss">

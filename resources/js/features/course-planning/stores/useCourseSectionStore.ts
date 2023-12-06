@@ -52,9 +52,9 @@ export const useCourseSectionStore = defineStore("couseSection", () => {
     },
     getCoursesSectionsForGroup(groupId: Group["id"]) {
       const sectionIds = state.sectionIdsByGroup[groupId] ?? [];
-      return sectionIds.map(
-        (sectionId) => state.courseSectionLookup[sectionId],
-      );
+      return sectionIds
+        .map((sectionId) => state.courseSectionLookup[sectionId])
+        .filter(Boolean) as T.CourseSection[];
     },
   };
 
