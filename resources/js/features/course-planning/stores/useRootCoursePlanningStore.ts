@@ -64,6 +64,65 @@ export const useRootCoursePlanningStore = defineStore(
 
       earliestTerm: computed(() => stores.termsStore.earliestTerm),
       latestTerm: computed(() => stores.termsStore.latestTerm),
+      acadApptCounts: computed(
+        (): Record<T.Person["academicAppointment"], number> =>
+          state.activeGroupId
+            ? stores.personStore.getAcadApptCountsForGroup(state.activeGroupId)
+            : {},
+      ),
+      courseTypeCounts: computed(
+        (): Record<T.Course["courseType"], number> =>
+          state.activeGroupId
+            ? stores.courseStore.getCourseTypeCountsForGroup(
+                state.activeGroupId,
+              )
+            : {},
+      ),
+      courseLevelCounts: computed(
+        (): Record<T.Course["courseLevel"], number> =>
+          state.activeGroupId
+            ? stores.courseStore.getCourseLevelCountsForGroup(
+                state.activeGroupId,
+              )
+            : {},
+      ),
+
+      sortedCourseLevels: computed((): [T.Course["courseLevel"], number][] => {
+        const courseLevelCounts: Record<T.Course["courseLevel"], number> =
+          getters.courseLevelCounts.value;
+        return Object.entries(courseLevelCounts).sort((a, b) => {
+          return a[0].localeCompare(b[0]);
+        });
+      }),
+
+      sortedCourseTypes: computed((): [T.Course["courseType"], number][] => {
+        const courseTypeCounts: Record<T.Course["courseType"], number> =
+          getters.courseTypeCounts.value;
+        return Object.entries(courseTypeCounts).sort((a, b) => {
+          return a[0].localeCompare(b[0]);
+        });
+      }),
+
+      sortedAcadAppts: computed(
+        (): [T.Person["academicAppointment"], number][] => {
+          const acadApptCounts: Record<
+            T.Person["academicAppointment"],
+            number
+          > = getters.acadApptCounts.value;
+          return Object.entries(acadApptCounts).sort((a, b) => {
+            return a[0].localeCompare(b[0]);
+          });
+        },
+      ),
+      allAcadApptTypes: computed((): T.Person["academicAppointment"][] =>
+        Object.keys(getters.acadApptCounts.value),
+      ),
+      allCourseTypes: computed((): T.Course["courseType"][] =>
+        Object.keys(getters.courseTypeCounts.value),
+      ),
+      allCourseLevels: computed((): T.Course["courseLevel"][] =>
+        Object.keys(getters.courseLevelCounts.value),
+      ),
     };
 
     const actions = {
@@ -100,6 +159,51 @@ export const useRootCoursePlanningStore = defineStore(
 
       setExcludedCourseLevels(courseLevels: T.Course["courseLevel"][]) {
         state.filters.excludedCourseLevels = new Set(courseLevels);
+      },
+
+      toggleAllAcadAppts() {
+        const areAllExcluded = getters.allAcadApptTypes.value.every(
+          (acadAppt) => state.filters.excludedAcadAppts.has(acadAppt),
+        );
+
+        if (areAllExcluded) {
+          state.filters.excludedAcadAppts = new Set();
+          return;
+        }
+
+        state.filters.excludedAcadAppts = new Set(
+          getters.allAcadApptTypes.value,
+        );
+      },
+
+      toggleAllCourseTypes() {
+        const areAllExcluded = getters.allCourseTypes.value.every(
+          (courseType) => state.filters.excludedCourseTypes.has(courseType),
+        );
+
+        if (areAllExcluded) {
+          state.filters.excludedCourseTypes = new Set();
+          return;
+        }
+
+        state.filters.excludedCourseTypes = new Set(
+          getters.allCourseTypes.value,
+        );
+      },
+
+      toggleAllCourseLevels() {
+        const areAllExcluded = getters.allCourseLevels.value.every(
+          (courseLevel) => state.filters.excludedCourseLevels.has(courseLevel),
+        );
+
+        if (areAllExcluded) {
+          state.filters.excludedCourseLevels = new Set();
+          return;
+        }
+
+        state.filters.excludedCourseLevels = new Set(
+          getters.allCourseLevels.value,
+        );
       },
 
       toggleAcadApptFilter(acadAppt: T.Person["academicAppointment"]) {

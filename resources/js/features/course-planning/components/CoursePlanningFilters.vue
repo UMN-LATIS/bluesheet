@@ -27,7 +27,7 @@
     </fieldset>
 
     <div class="tw-flex tw-gap-8 tw-mb-4 tw-flex-wrap">
-      <fieldset v-show="academicApptCounts.length">
+      <fieldset>
         <div class="tw-flex tw-items-baseline tw-mb-1">
           <legend
             class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"
@@ -39,7 +39,7 @@
           </Button>
         </div>
         <label
-          v-for="[category, count] in academicApptCounts"
+          v-for="[category, count] in sortedAcadAppts"
           :key="category"
           class="tw-flex tw-items-center tw-text-sm gap-1"
         >
@@ -121,94 +121,27 @@
   </section>
 </template>
 <script setup lang="ts">
-import { computed } from "vue";
 import SelectGroup from "@/components/SelectGroup.vue";
 import Button from "@/components/Button.vue";
 import { useRootCoursePlanningStore } from "../stores/useRootCoursePlanningStore";
 import { storeToRefs } from "pinia";
-import { Group } from "@/types";
-import * as T from "../coursePlanningTypes";
-
-const props = defineProps<{
-  groupId: Group["id"];
-}>();
 
 const coursePlanningStore = useRootCoursePlanningStore();
 
-const { filters, termSelectOptions } = storeToRefs(coursePlanningStore);
-const { setStartTermId, setEndTermId, toggleAcadApptFilter } =
-  coursePlanningStore;
-
-const academicApptCounts = computed(() => {
-  return coursePlanningStore.getAcadApptCountsForGroup(props.groupId);
-});
-
-const courseTypeCounts = computed(
-  (): Record<T.Course["courseType"], number> => {
-    return coursePlanningStore.getCourseTypeCountsForGroup(props.groupId);
-  },
-);
-const sortedCourseTypes = computed(() => {
-  return Object.entries(courseTypeCounts.value).sort((a, b) => {
-    return a[0].localeCompare(b[0]);
-  });
-});
-
-const courseLevelCounts = computed(
-  (): Record<T.Course["courseLevel"], number> => {
-    return coursePlanningStore.getCourseLevelCountsForGroup(props.groupId);
-  },
-);
-
-const sortedCourseLevels = computed(() => {
-  return Object.entries(courseLevelCounts.value).sort((a, b) => {
-    return a[0].localeCompare(b[0]);
-  });
-});
-
-function toggleAllAcadAppts() {
-  const areAllExcluded = academicApptCounts.value.every(([acadAppt]) =>
-    filters.value.excludedAcadAppts.has(acadAppt),
-  );
-
-  if (areAllExcluded) {
-    coursePlanningStore.setExcludedAcadAppts([]);
-    return;
-  }
-
-  const allApptTypes = academicApptCounts.value.map(([acadAppt]) => acadAppt);
-  coursePlanningStore.setExcludedAcadAppts(allApptTypes);
-}
-
-function toggleAllCourseTypes() {
-  const areAllExcluded = sortedCourseTypes.value.every(([courseType]) =>
-    filters.value.excludedCourseTypes.has(courseType),
-  );
-  console.log(areAllExcluded);
-
-  if (areAllExcluded) {
-    return coursePlanningStore.setExcludedCourseTypes([]);
-  }
-
-  const allCourseTypes = sortedCourseTypes.value.map(
-    ([courseType]) => courseType,
-  );
-  coursePlanningStore.setExcludedCourseTypes(allCourseTypes);
-}
-
-function toggleAllCourseLevels() {
-  const areAllExcluded = sortedCourseLevels.value.every(([courseLevel]) =>
-    filters.value.excludedCourseLevels.has(courseLevel),
-  );
-
-  if (areAllExcluded) {
-    return coursePlanningStore.setExcludedCourseLevels([]);
-  }
-
-  const allCourseLevels = sortedCourseLevels.value.map(
-    ([courseLevel]) => courseLevel,
-  );
-  coursePlanningStore.setExcludedCourseLevels(allCourseLevels);
-}
+const {
+  filters,
+  termSelectOptions,
+  sortedAcadAppts,
+  sortedCourseLevels,
+  sortedCourseTypes,
+} = storeToRefs(coursePlanningStore);
+const {
+  setStartTermId,
+  setEndTermId,
+  toggleAcadApptFilter,
+  toggleAllAcadAppts,
+  toggleAllCourseLevels,
+  toggleAllCourseTypes,
+} = coursePlanningStore;
 </script>
 <style scoped></style>

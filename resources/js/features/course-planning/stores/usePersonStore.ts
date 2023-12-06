@@ -94,15 +94,9 @@ export const usePersonStore = defineStore("person", () => {
 
     getAcadApptCountsForGroup(
       groupId: number,
-    ): [T.Person["academicAppointment"], number][] {
-      return Object.entries(getters.acadApptCountsByGroup.value[groupId]).sort(
-        (a, b) => {
-          // sort by academic appointment name
-          const aKey = a[0];
-          const bKey = b[0];
-          return aKey.localeCompare(bKey);
-        },
-      );
+    ): Record<T.Person["academicAppointment"], number> {
+      const acadAppts = getters.acadApptCountsByGroup.value[groupId] ?? [];
+      return acadAppts;
     },
   };
 
