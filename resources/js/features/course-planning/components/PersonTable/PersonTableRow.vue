@@ -42,8 +42,8 @@
 import { storeToRefs } from "pinia";
 import { Td } from "@/components/Table";
 import PersonTableCell from "./PersonTableCell.vue";
-import { Person } from "../coursePlanningTypes";
-import { useRootCoursePlanningStore } from "../stores/useRootCoursePlanningStore";
+import { Person } from "../../coursePlanningTypes";
+import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
 import { computed } from "vue";
 import { Term } from "@/types";
 

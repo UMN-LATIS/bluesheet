@@ -35,14 +35,14 @@
   </div>
 </template>
 <script setup lang="ts">
-import LeaveChip from "./LeaveChip.vue";
-import SectionDetails from "./SectionDetails.vue";
+import LeaveChip from "../LeaveChip.vue";
+import SectionDetails from "../SectionDetails.vue";
 import { type ComboBoxOption } from "@/components/ComboBox2.vue";
 import { Term } from "@/types";
 import { ref, computed } from "vue";
-import AddPlannedCourseModal from "./AddPlannedCourseModal.vue";
-import { Person } from "../coursePlanningTypes";
-import { useRootCoursePlanningStore } from "../stores/useRootCoursePlanningStore";
+import AddPlannedCourseModal from "../AddPlannedCourseModal.vue";
+import { Person } from "../../coursePlanningTypes";
+import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
 
 const props = defineProps<{
   person: Person;

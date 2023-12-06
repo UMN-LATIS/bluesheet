@@ -35,6 +35,7 @@
         </div>
 
         <PersonTable
+          v-show="['instructors', 'tas'].includes(activeTab)"
           ref="tableRef"
           label="Instructors"
           :groupId="props.groupId"
@@ -53,14 +54,12 @@
 <script setup lang="ts">
 import WideLayout from "@/layouts/WideLayout.vue";
 import { computed, ref, watch, onMounted } from "vue";
-import { debounce } from "lodash";
-import PersonTable from "./components/PersonTable.vue";
+import { PersonTable } from "./components/PersonTable";
 import { useRootCoursePlanningStore } from "./stores/useRootCoursePlanningStore";
 import CoursePlanningFilters from "./components/CoursePlanningFilters.vue";
 import Spinner from "@/components/Spinner.vue";
 import Tabs, { type Tab } from "@/components/Tabs.vue";
 import Toggle from "@/components/Toggle.vue";
-import { Enrollment } from "./coursePlanningTypes";
 
 const props = defineProps<{
   groupId: number;
