@@ -29,7 +29,7 @@ export interface Person {
  * like "primary instructor" or "teaching assistant"
  */
 export interface Enrollment {
-  id: `${Enrollment["emplId"]}-${Enrollment["sectionId"]}`;
+  id: `${Enrollment["sectionId"]}-${Enrollment["emplId"]}`;
   role: EnrollmentRole;
   emplId: Person["emplid"];
   sectionId: CourseSection["id"];
@@ -59,7 +59,7 @@ export interface CourseSection {
   classSection: string; // "001"
   enrollmentCap: number;
   enrollmentTotal: number;
-  enrollmentIds: Enrollment["id"][];
+  enrollments: Enrollment[];
   status: "active" | "tentative" | "cancelled";
 }
 
