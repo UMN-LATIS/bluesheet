@@ -86,7 +86,7 @@
           <span class="tw-text-neutral-400 tw-text-xs ml-1">({{ count }})</span>
         </label>
       </fieldset>
-      <!-- <fieldset v-show="courseLevelsMap.size">
+      <fieldset>
         <div class="tw-flex tw-items-baseline tw-mb-1">
           <legend
             class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"
@@ -98,7 +98,7 @@
           >
         </div>
         <label
-          v-for="[courseLevel, count] in courseLevelsMap.entries()"
+          v-for="[courseLevel, count] in sortedCourseLevels"
           :key="courseLevel"
           class="tw-flex tw-items-center tw-text-sm gap-1"
         >
@@ -116,7 +116,7 @@
           {{ courseLevel }}
           <span class="tw-text-neutral-400 tw-text-xs ml-1">({{ count }})</span>
         </label>
-      </fieldset> -->
+      </fieldset>
     </div>
   </section>
 </template>
@@ -160,6 +160,12 @@ const courseLevelCounts = computed(
   },
 );
 
+const sortedCourseLevels = computed(() => {
+  return Object.entries(courseLevelCounts.value).sort((a, b) => {
+    return a[0].localeCompare(b[0]);
+  });
+});
+
 function toggleAllAcadAppts() {
   const areAllExcluded = academicApptCounts.value.every(([acadAppt]) =>
     filters.value.excludedAcadAppts.has(acadAppt),
@@ -188,6 +194,21 @@ function toggleAllCourseTypes() {
     ([courseType]) => courseType,
   );
   coursePlanningStore.setExcludedCourseTypes(allCourseTypes);
+}
+
+function toggleAllCourseLevels() {
+  const areAllExcluded = sortedCourseLevels.value.every(([courseLevel]) =>
+    filters.value.excludedCourseLevels.has(courseLevel),
+  );
+
+  if (areAllExcluded) {
+    return coursePlanningStore.setExcludedCourseLevels([]);
+  }
+
+  const allCourseLevels = sortedCourseLevels.value.map(
+    ([courseLevel]) => courseLevel,
+  );
+  coursePlanningStore.setExcludedCourseLevels(allCourseLevels);
 }
 </script>
 <style scoped></style>

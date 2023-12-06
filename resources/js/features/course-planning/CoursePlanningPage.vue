@@ -44,7 +44,6 @@ const isLoadingComplete = ref(false);
 
 onMounted(async () => {
   await coursePlanningStore.initGroup(props.groupId);
-  console.log("group initialized");
   isLoadingComplete.value = true;
 });
 
