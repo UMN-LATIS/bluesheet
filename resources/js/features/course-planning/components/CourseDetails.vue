@@ -1,6 +1,7 @@
 <template>
   <div
     v-if="course"
+    v-show="isSectionVisible"
     class="course-details tw-px-1"
     :class="{
       'tw-opacity-50 tw-line-through': section.status === 'cancelled',
@@ -53,6 +54,10 @@ const planningStore = useRootCoursePlanningStore();
 
 const course = computed(() =>
   planningStore.courseStore.getCourse(props.section.courseId),
+);
+
+const isSectionVisible = computed(() =>
+  planningStore.isSectionVisible(props.section),
 );
 
 const isOpen = ref(false);

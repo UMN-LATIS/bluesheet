@@ -10,7 +10,6 @@
     <TBody>
       <InstructorTableRow
         v-for="person in people"
-        v-show="coursePlanningStore.isPersonVisible(person)"
         :key="person.id"
         :person="person"
       />

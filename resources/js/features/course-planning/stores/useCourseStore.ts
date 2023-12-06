@@ -1,11 +1,12 @@
 import { defineStore } from "pinia";
 import { computed, reactive, toRefs } from "vue";
-import { Course } from "../coursePlanningTypes";
+import * as T from "../coursePlanningTypes";
 import * as api from "../coursePlanningApi";
+import { countBy } from "lodash";
 
 interface CourseStoreState {
-  courseLookup: Record<Course["id"], Course | undefined>;
-  courseIdsByGroup: Record<number, Course["id"][] | undefined>;
+  courseLookup: Record<T.Course["id"], T.Course | undefined>;
+  courseIdsByGroup: Record<number, T.Course["id"][] | undefined>;
 }
 
 export const useCourseStore = defineStore("course", () => {
@@ -34,8 +35,31 @@ export const useCourseStore = defineStore("course", () => {
       state.courseIdsByGroup[groupId] = courses.map((course) => course.id);
     },
 
-    getCourse(id: Course["id"]) {
+    getCourse(id: T.Course["id"]) {
       return state.courseLookup[id];
+    },
+
+    getCoursesByGroup(groupId: number) {
+      const courseIds = state.courseIdsByGroup[groupId] ?? [];
+      return courseIds
+        .map((courseId) => state.courseLookup[courseId])
+        .filter(Boolean) as T.Course[];
+    },
+
+    getCourseTypeCountsForGroup(
+      groupId: number,
+    ): Record<T.Course["courseType"], number> {
+      const courses = actions.getCoursesByGroup(groupId);
+      const courseTypes = courses.map((c) => c.courseType);
+      return countBy(courseTypes);
+    },
+
+    getCourseLevelCountsForGroup(
+      groupId: number,
+    ): Record<T.Course["courseLevel"], number> {
+      const courses = actions.getCoursesByGroup(groupId);
+      const courseLevels = courses.map((c) => c.courseLevel);
+      return countBy(courseLevels);
     },
   };
 

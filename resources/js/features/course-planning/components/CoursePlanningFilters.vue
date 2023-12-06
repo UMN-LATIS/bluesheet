@@ -55,7 +55,7 @@
         </label>
       </fieldset>
 
-      <!-- <fieldset v-show="courseTypesMap.size">
+      <fieldset>
         <div class="tw-flex tw-items-baseline tw-mb-1">
           <legend
             class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"
@@ -86,7 +86,7 @@
           <span class="tw-text-neutral-400 tw-text-xs ml-1">({{ count }})</span>
         </label>
       </fieldset>
-      <fieldset v-show="courseLevelsMap.size">
+      <!-- <fieldset v-show="courseLevelsMap.size">
         <div class="tw-flex tw-items-baseline tw-mb-1">
           <legend
             class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"
@@ -127,6 +127,7 @@ import Button from "@/components/Button.vue";
 import { useRootCoursePlanningStore } from "../stores/useRootCoursePlanningStore";
 import { storeToRefs } from "pinia";
 import { Group } from "@/types";
+import * as T from "../coursePlanningTypes";
 
 const props = defineProps<{
   groupId: Group["id"];
@@ -142,6 +143,23 @@ const academicApptCounts = computed(() => {
   return coursePlanningStore.getAcadApptCountsForGroup(props.groupId);
 });
 
+const courseTypeCounts = computed(
+  (): Record<T.Course["courseType"], number> => {
+    return coursePlanningStore.getCourseTypeCountsForGroup(props.groupId);
+  },
+);
+const sortedCourseTypes = computed(() => {
+  return Object.entries(courseTypeCounts.value).sort((a, b) => {
+    return a[0].localeCompare(b[0]);
+  });
+});
+
+const courseLevelCounts = computed(
+  (): Record<T.Course["courseLevel"], number> => {
+    return coursePlanningStore.getCourseLevelCountsForGroup(props.groupId);
+  },
+);
+
 function toggleAllAcadAppts() {
   const areAllExcluded = academicApptCounts.value.every(([acadAppt]) =>
     filters.value.excludedAcadAppts.has(acadAppt),
@@ -154,6 +172,22 @@ function toggleAllAcadAppts() {
 
   const allApptTypes = academicApptCounts.value.map(([acadAppt]) => acadAppt);
   coursePlanningStore.setExcludedAcadAppts(allApptTypes);
+}
+
+function toggleAllCourseTypes() {
+  const areAllExcluded = sortedCourseTypes.value.every(([courseType]) =>
+    filters.value.excludedCourseTypes.has(courseType),
+  );
+  console.log(areAllExcluded);
+
+  if (areAllExcluded) {
+    return coursePlanningStore.setExcludedCourseTypes([]);
+  }
+
+  const allCourseTypes = sortedCourseTypes.value.map(
+    ([courseType]) => courseType,
+  );
+  coursePlanningStore.setExcludedCourseTypes(allCourseTypes);
 }
 </script>
 <style scoped></style>

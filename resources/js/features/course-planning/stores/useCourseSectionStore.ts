@@ -20,35 +20,6 @@ export const useCourseSectionStore = defineStore("couseSection", () => {
 
   const getters = {
     allCourseSections: computed(() => Object.values(state.courseSectionLookup)),
-
-    courseSectionsInGroup: (groupId: number) =>
-      computed((): T.CourseSection[] => {
-        const groupSectionIds = state.sectionIdsByGroup[groupId];
-        if (!groupSectionIds) return [];
-
-        return groupSectionIds.map((sectionId) => {
-          const section = state.courseSectionLookup[sectionId];
-          if (!section) throw new Error(`section ${sectionId} not found`);
-          return section;
-        });
-      }),
-
-    sectionsByTermForGroup: (groupId: number) =>
-      computed(() => {
-        const sections = getters.courseSectionsInGroup(groupId).value;
-
-        const sectionsByTerm: Record<Term["id"], T.CourseSection["id"][]> = {};
-
-        sections.forEach((section) => {
-          if (!sectionsByTerm[section.termId]) {
-            sectionsByTerm[section.termId] = [];
-          }
-
-          sectionsByTerm[section.termId].push(section.id);
-        });
-
-        return sectionsByTerm;
-      }),
   };
 
   const actions = {
@@ -78,6 +49,12 @@ export const useCourseSectionStore = defineStore("couseSection", () => {
   const methods = {
     getCourseSection(sectionId: T.CourseSection["id"]) {
       return state.courseSectionLookup[sectionId] ?? null;
+    },
+    getCoursesSectionsForGroup(groupId: Group["id"]) {
+      const sectionIds = state.sectionIdsByGroup[groupId] ?? [];
+      return sectionIds.map(
+        (sectionId) => state.courseSectionLookup[sectionId],
+      );
     },
   };
 

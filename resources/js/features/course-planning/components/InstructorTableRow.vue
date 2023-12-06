@@ -1,5 +1,5 @@
 <template>
-  <tr class="instructor-table-row">
+  <tr v-show="isPersonVisible" class="instructor-table-row">
     <Td class="instructor-column">
       <RouterLink :to="`/user/${person.id}`">
         <div class="tw-truncate">
@@ -36,12 +36,16 @@ import { Td } from "@/components/Table";
 import InstructorTableCell from "./InstructorTableCell.vue";
 import { Person } from "../coursePlanningTypes";
 import { useRootCoursePlanningStore } from "../stores/useRootCoursePlanningStore";
+import { computed } from "vue";
 
-defineProps<{
+const props = defineProps<{
   person: Person;
 }>();
 
 const coursePlanningStore = useRootCoursePlanningStore();
+const isPersonVisible = computed(() =>
+  coursePlanningStore.isPersonVisible(props.person),
+);
 </script>
 <style scoped>
 .term-data-column {

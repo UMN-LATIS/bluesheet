@@ -71,6 +71,13 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
         .map((id) => state.enrollmentLookup[id])
         .filter(Boolean) as T.Enrollment[];
     },
+    getEnrollmentsForEmplIdInGroup(
+      emplid: T.Enrollment["emplId"],
+      groupId: Group["id"],
+    ): T.Enrollment[] {
+      const groupEnrollments = methods.getEnrollmentsForGroup(groupId);
+      return groupEnrollments.filter((e) => e.emplId === emplid);
+    },
   };
 
   return {

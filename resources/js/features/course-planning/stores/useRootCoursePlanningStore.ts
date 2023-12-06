@@ -9,9 +9,10 @@ import { useGroupStore } from "@/stores/useGroupStore";
 import { useTermsStore } from "@/stores/useTermsStore";
 import { uniq } from "lodash";
 import { sortByName } from "@/utils";
-import { SelectOption, Term } from "@/types";
+import { Group, SelectOption, Term } from "@/types";
 
 interface RootCoursePlanningState {
+  activeGroupId: Group["id"] | null;
   isInPlanningMode: boolean;
   filters: {
     startTermId: number | null;
@@ -35,6 +36,7 @@ export const useRootCoursePlanningStore = defineStore(
     };
 
     const state = reactive<RootCoursePlanningState>({
+      activeGroupId: null,
       isInPlanningMode: false,
       filters: {
         startTermId: null,
@@ -66,6 +68,7 @@ export const useRootCoursePlanningStore = defineStore(
 
     const actions = {
       async initGroup(groupId: number) {
+        state.activeGroupId = groupId;
         await Promise.all([
           stores.termsStore.init(),
           stores.groupStore.fetchGroup(groupId),
@@ -89,6 +92,14 @@ export const useRootCoursePlanningStore = defineStore(
 
       setExcludedAcadAppts(acadAppts: T.Person["academicAppointment"][]) {
         state.filters.excludedAcadAppts = new Set(acadAppts);
+      },
+
+      setExcludedCourseTypes(courseTypes: T.Course["courseType"][]) {
+        state.filters.excludedCourseTypes = new Set(courseTypes);
+      },
+
+      setExcludedCourseLevels(courseLevels: T.Course["courseLevel"][]) {
+        state.filters.excludedCourseLevels = new Set(courseLevels);
       },
 
       toggleAcadApptFilter(acadAppt: T.Person["academicAppointment"]) {
@@ -137,8 +148,38 @@ export const useRootCoursePlanningStore = defineStore(
         return people.sort(sortByName);
       },
 
+      isPersonEnrolledInVisibleSection(emplid: T.Person["emplid"]) {
+        if (!state.activeGroupId) {
+          throw new Error("active group id is not set");
+        }
+
+        const enrollmentForPersonInGroup =
+          stores.enrollmentStore.getEnrollmentsForEmplIdInGroup(
+            emplid,
+            state.activeGroupId,
+          );
+        const sectionIds = enrollmentForPersonInGroup.map((e) => e.sectionId);
+        const sections = sectionIds
+          .map((id) => stores.courseSectionStore.getCourseSection(id))
+          .filter(Boolean) as T.CourseSection[];
+
+        const visibleSections = sections.filter(methods.isSectionVisible);
+        return visibleSections.length > 0;
+      },
+
       isPersonVisible(person: T.Person) {
-        return !state.filters.excludedAcadAppts.has(person.academicAppointment);
+        if (!state.activeGroupId) {
+          throw new Error("active group id is not set");
+        }
+
+        const isAcadApptVisible = !state.filters.excludedAcadAppts.has(
+          person.academicAppointment,
+        );
+        const hasVisibleSection = methods.isPersonEnrolledInVisibleSection(
+          person.emplid,
+        );
+
+        return isAcadApptVisible && hasVisibleSection;
       },
 
       isTermVisible(term: Term) {
@@ -154,9 +195,29 @@ export const useRootCoursePlanningStore = defineStore(
         );
       },
 
+      isSectionVisible(section: T.CourseSection) {
+        const course = stores.courseStore.getCourse(section.courseId);
+        if (!course) {
+          return false;
+        }
+
+        const isCourseTypeVisible = !state.filters.excludedCourseTypes.has(
+          course.courseType,
+        );
+        const isCourseLevelVisible = !state.filters.excludedCourseLevels.has(
+          course.courseLevel,
+        );
+
+        return isCourseTypeVisible && isCourseLevelVisible;
+      },
+
       isCurrentTerm: stores.termsStore.isCurrentTerm,
       getGroup: stores.groupStore.getGroup,
       getAcadApptCountsForGroup: stores.personStore.getAcadApptCountsForGroup,
+      getCourseTypeCountsForGroup:
+        stores.courseStore.getCourseTypeCountsForGroup,
+      getCourseLevelCountsForGroup:
+        stores.courseStore.getCourseLevelCountsForGroup,
     };
 
     return {
