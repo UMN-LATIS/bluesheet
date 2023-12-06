@@ -34,11 +34,10 @@
           </div>
         </div>
 
-        <InstructorTable
+        <PersonTable
           ref="tableRef"
           label="Instructors"
           :groupId="props.groupId"
-          :roles="['PI']"
         />
       </div>
       <div
@@ -55,7 +54,7 @@
 import WideLayout from "@/layouts/WideLayout.vue";
 import { computed, ref, watch, onMounted } from "vue";
 import { debounce } from "lodash";
-import InstructorTable from "./components/InstructorTable.vue";
+import PersonTable from "./components/PersonTable.vue";
 import { useRootCoursePlanningStore } from "./stores/useRootCoursePlanningStore";
 import CoursePlanningFilters from "./components/CoursePlanningFilters.vue";
 import Spinner from "@/components/Spinner.vue";

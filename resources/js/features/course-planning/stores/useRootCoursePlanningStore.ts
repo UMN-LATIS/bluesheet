@@ -80,6 +80,26 @@ export const useRootCoursePlanningStore = defineStore(
         );
       }),
 
+      sectionIdsByTerm: computed((): Record<Term["id"], T.CourseSection[]> => {
+        if (!state.activeGroupId) {
+          return {};
+        }
+
+        const sections = getters.sectionsForActiveGroup.value;
+        const sectionIdsByTerm = sections.reduce(
+          (acc, section) => {
+            const previousSections = acc[section.termId] ?? [];
+            return {
+              ...acc,
+              [section.termId]: [...previousSections, section],
+            };
+          },
+          {} as Record<Term["id"], T.CourseSection[]>,
+        );
+
+        return sectionIdsByTerm;
+      }),
+
       coursesForActiveGroup: computed((): T.Course[] => {
         if (!state.activeGroupId) {
           return [];
@@ -111,6 +131,14 @@ export const useRootCoursePlanningStore = defineStore(
           .flatMap((section) => section.enrollments)
           .filter(Boolean) as T.Enrollment[];
       }),
+      peopleInActiveGroup: computed((): T.Person[] => {
+        if (!state.activeGroupId) {
+          return [];
+        }
+
+        return stores.personStore.getPeopleInGroup(state.activeGroupId);
+      }),
+
       peopleInVisibleTerms: computed((): T.Person[] => {
         if (!state.activeGroupId) {
           return [];
@@ -495,7 +523,6 @@ export const useRootCoursePlanningStore = defineStore(
           isSectionTermVisible && isCourseTypeVisible && isCourseLevelVisible
         );
       },
-
       isCurrentTerm: stores.termsStore.isCurrentTerm,
       getGroup: stores.groupStore.getGroup,
       // getAcadApptCountsForGroup: stores.personStore.getAcadApptCountsForGroup,

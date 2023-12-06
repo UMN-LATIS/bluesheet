@@ -32,13 +32,13 @@
         'term-data-column--fall': term.name.includes('Fall'),
       }"
     >
-      <InstructorTableCell :person="person" :term="term" />
+      <PersonTableCell :person="person" :term="term" />
     </Td>
   </tr>
 </template>
 <script setup lang="ts">
 import { Td } from "@/components/Table";
-import InstructorTableCell from "./InstructorTableCell.vue";
+import PersonTableCell from "./PersonTableCell.vue";
 import { Person } from "../coursePlanningTypes";
 import { useRootCoursePlanningStore } from "../stores/useRootCoursePlanningStore";
 import { computed } from "vue";
