@@ -23,19 +23,9 @@ export async function fetchCourseSectionsForGroup(groupId: number) {
   return res.data;
 }
 
-export async function fetchEnrollmentsForGroup(
-  groupId: number,
-  roles: T.EnrollmentRole[] = [],
-) {
-  const params = new URLSearchParams();
-
-  if (roles.length > 0) {
-    params.append("includeRoles", roles.join(","));
-  }
-
+export async function fetchEnrollmentsForGroup(groupId: number) {
   const res = await axios.get<T.Enrollment[]>(
     `/api/course-planning/groups/${groupId}/enrollments`,
-    { params },
   );
   return res.data;
 }
