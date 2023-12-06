@@ -32,25 +32,29 @@
           <legend
             class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"
           >
-            Instructor Appointment
+            Course Levels
           </legend>
-          <Button variant="tertiary" @click="toggleAllAcadAppts">
-            Select All
-          </Button>
+          <Button variant="tertiary" @click="toggleAllCourseLevels"
+            >Select All</Button
+          >
         </div>
         <label
-          v-for="[category, count] in sortedAcadAppts"
-          :key="category"
+          v-for="[courseLevel, count] in sortedCourseLevels"
+          :key="courseLevel"
           class="tw-flex tw-items-center tw-text-sm gap-1"
         >
           <input
             type="checkbox"
-            :checked="!filters.excludedAcadAppts.has(category)"
+            :checked="!filters.excludedCourseLevels.has(courseLevel)"
             class="tw-form-checkbox tw-mr-2 tw-border tw-border-neutral-500 tw-rounded"
-            @change="toggleAcadApptFilter(category)"
+            @change="
+              filters.excludedCourseLevels.has(courseLevel)
+                ? filters.excludedCourseLevels.delete(courseLevel)
+                : filters.excludedCourseLevels.add(courseLevel)
+            "
           />
 
-          {{ category }}
+          {{ courseLevel }}
           <span class="tw-text-neutral-400 tw-text-xs ml-1">({{ count }})</span>
         </label>
       </fieldset>
@@ -91,29 +95,25 @@
           <legend
             class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"
           >
-            Course Levels
+            Employee Appointment
           </legend>
-          <Button variant="tertiary" @click="toggleAllCourseLevels"
-            >Select All</Button
-          >
+          <Button variant="tertiary" @click="toggleAllAcadAppts">
+            Select All
+          </Button>
         </div>
         <label
-          v-for="[courseLevel, count] in sortedCourseLevels"
-          :key="courseLevel"
+          v-for="[category, count] in sortedAcadAppts"
+          :key="category"
           class="tw-flex tw-items-center tw-text-sm gap-1"
         >
           <input
             type="checkbox"
-            :checked="!filters.excludedCourseLevels.has(courseLevel)"
+            :checked="!filters.excludedAcadAppts.has(category)"
             class="tw-form-checkbox tw-mr-2 tw-border tw-border-neutral-500 tw-rounded"
-            @change="
-              filters.excludedCourseLevels.has(courseLevel)
-                ? filters.excludedCourseLevels.delete(courseLevel)
-                : filters.excludedCourseLevels.add(courseLevel)
-            "
+            @change="toggleAcadApptFilter(category)"
           />
 
-          {{ courseLevel }}
+          {{ category }}
           <span class="tw-text-neutral-400 tw-text-xs ml-1">({{ count }})</span>
         </label>
       </fieldset>
