@@ -79,11 +79,7 @@ export const usePersonStore = defineStore("person", () => {
      * get a person by id
      */
     getPersonByEmplId(emplId: T.Person["emplid"]): T.Person | null {
-      const person = state.personLookup[emplId] ?? null;
-      if (!person) {
-        console.warn(`no person found with emplid ${emplId}`);
-      }
-      return person;
+      return state.personLookup[emplId] ?? null;
     },
     getPeopleForGroup(groupId: number): T.Person[] {
       const personIds = state.personIdsByGroup[groupId] || [];

@@ -16,7 +16,7 @@
       {{ leave.description }} ({{ leave.type }})
     </LeaveChip> -->
 
-    <CourseDetails
+    <SectionDetails
       v-for="section in courseSections"
       :key="section.id"
       :section="section"
@@ -36,7 +36,7 @@
 </template>
 <script setup lang="ts">
 import LeaveChip from "@/components/LeaveChip.vue";
-import CourseDetails from "./CourseDetails.vue";
+import SectionDetails from "./SectionDetails.vue";
 import { type ComboBoxOption } from "@/components/ComboBox2.vue";
 import { Term } from "@/types";
 import { ref, computed } from "vue";
@@ -59,6 +59,7 @@ const courseSections = computed(() =>
 );
 
 const isShowingAddCourse = ref(false);
+
 // const selectedCourse = ref<ComboBoxOption | null>(null);
 
 // const selectCourseOptions = computed((): ComboBoxOption[] => {

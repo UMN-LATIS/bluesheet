@@ -5,6 +5,7 @@
     class="course-details tw-px-1"
     :class="{
       'tw-opacity-50 tw-line-through': section.status === 'cancelled',
+      'tw-bg-yellow-100': isSectionHighlighted,
       'tw-rounded-md tw-bg-black/5 tw-pl-2 tw-pt-1 tw-pb-2 tw-pr-4 tw-mb-2':
         isOpen,
       'tw-rounded-full': !isOpen,
@@ -61,5 +62,11 @@ const isSectionVisible = computed(() =>
 );
 
 const isOpen = ref(false);
+
+const isSectionHighlighted = computed(
+  () =>
+    planningStore.filters.search.length &&
+    planningStore.isSectionMatchingSearch(props.section),
+);
 </script>
 <style scoped></style>

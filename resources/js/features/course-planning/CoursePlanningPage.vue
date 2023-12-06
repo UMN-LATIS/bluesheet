@@ -8,6 +8,31 @@
         </h1>
 
         <CoursePlanningFilters :groupId="props.groupId" />
+        <div
+          class="tw-flex tw-justify-between tw-flex-wrap tw-items-center gap-2"
+        >
+          <Tabs class="tw-mb-2" :tabs="tabs" @change="handleTabChange" />
+
+          <div class="tw-flex tw-items-center tw-gap-4">
+            <Toggle v-model="coursePlanningStore.isInPlanningMode">
+              Planning Mode
+            </Toggle>
+
+            <label
+              class="tw-border tw-border-umn-neutral-200 tw-max-w-xs tw-w-full tw-rounded-md !tw-block !tw-mb-0"
+            >
+              <span class="sr-only"
+                >Filter by instructor name or course number</span
+              >
+              <input
+                v-model="searchInputRaw"
+                placeholder="Search table"
+                :showLabel="false"
+                class="tw-w-full tw-border-none tw-rounded-none tw-px-4 tw-py-2 tw-bg-transparent tw-text-sm"
+              />
+            </label>
+          </div>
+        </div>
 
         <InstructorTable
           ref="tableRef"
@@ -28,12 +53,14 @@
 </template>
 <script setup lang="ts">
 import WideLayout from "@/layouts/WideLayout.vue";
-import { onMounted } from "vue";
-import { computed, ref, watch } from "vue";
+import { computed, ref, watch, onMounted } from "vue";
+import { debounce } from "lodash";
 import InstructorTable from "./components/InstructorTable.vue";
 import { useRootCoursePlanningStore } from "./stores/useRootCoursePlanningStore";
 import CoursePlanningFilters from "./components/CoursePlanningFilters.vue";
 import Spinner from "@/components/Spinner.vue";
+import Tabs, { type Tab } from "@/components/Tabs.vue";
+import Toggle from "@/components/Toggle.vue";
 
 const props = defineProps<{
   groupId: number;
@@ -48,7 +75,28 @@ onMounted(async () => {
 });
 
 const group = computed(() => coursePlanningStore.getGroup(props.groupId));
+
 const currentTerm = computed(() => coursePlanningStore.currentTerm);
+
+const activeTab = ref<"instructors" | "tas" | "courses">("instructors");
+
+const tabs = computed(() => [
+  {
+    id: "instructors",
+    name: "Instructors",
+    current: activeTab.value === "instructors",
+  },
+  {
+    id: "tas",
+    name: "Teaching Assistants",
+    current: activeTab.value === "tas",
+  },
+  { id: "courses", name: "Courses", current: activeTab.value === "courses" },
+]);
+
+function handleTabChange(tab: Tab) {
+  activeTab.value = tab.id as typeof activeTab.value;
+}
 
 const tableRef = ref<HTMLElement>();
 watch(
@@ -57,6 +105,13 @@ watch(
     if (!isLoadingComplete.value || !tableRef.value) return;
     scrollToCurrentTerm();
   },
+  { immediate: true },
+);
+
+const searchInputRaw = ref("");
+watch(
+  searchInputRaw,
+  () => coursePlanningStore.setSearchFilter(searchInputRaw.value),
   { immediate: true },
 );
 

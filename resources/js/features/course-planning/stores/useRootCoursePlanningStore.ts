@@ -7,7 +7,7 @@ import { useCourseSectionStore } from "./useCourseSectionStore";
 import { useCourseStore } from "./useCourseStore";
 import { useGroupStore } from "@/stores/useGroupStore";
 import { useTermsStore } from "@/stores/useTermsStore";
-import { uniq } from "lodash";
+import { debounce, uniq } from "lodash";
 import { sortByName } from "@/utils";
 import { Group, SelectOption, Term } from "@/types";
 
@@ -20,6 +20,7 @@ interface RootCoursePlanningState {
     excludedCourseTypes: Set<string>;
     excludedCourseLevels: Set<string>;
     excludedAcadAppts: Set<string>;
+    search: string;
   };
 }
 
@@ -44,6 +45,7 @@ export const useRootCoursePlanningStore = defineStore(
         excludedCourseTypes: new Set(),
         excludedCourseLevels: new Set(),
         excludedAcadAppts: new Set(),
+        search: "",
       },
     });
 
@@ -211,6 +213,10 @@ export const useRootCoursePlanningStore = defineStore(
           ? state.filters.excludedAcadAppts.delete(acadAppt)
           : state.filters.excludedAcadAppts.add(acadAppt);
       },
+
+      setSearchFilter: debounce((search: string) => {
+        state.filters.search = search;
+      }, 500),
     };
 
     const methods = {
@@ -283,7 +289,51 @@ export const useRootCoursePlanningStore = defineStore(
           person.emplid,
         );
 
-        return isAcadApptVisible && hasVisibleSection;
+        return (
+          isAcadApptVisible &&
+          hasVisibleSection &&
+          (methods.isPersonMatchingSearch(person) ||
+            methods.isPersonEnrolledInCourseMatchingSearch(person))
+        );
+      },
+
+      isPersonMatchingSearch(person: T.Person) {
+        return (
+          state.filters.search === "" ||
+          person.displayName
+            .toLowerCase()
+            .includes(state.filters.search.toLowerCase())
+        );
+      },
+
+      isPersonEnrolledInCourseMatchingSearch(person: T.Person) {
+        const sections = methods.getSectionsForEmplId(person.emplid);
+        const courses = sections
+          .map((section) => stores.courseStore.getCourse(section.courseId))
+          .filter(Boolean) as T.Course[];
+
+        const courseCodes = courses.map(
+          (course) => `${course.subject} ${course.catalogNumber}`,
+        );
+        const uniqueCourseCodes = uniq(courseCodes);
+
+        return uniqueCourseCodes.some((courseCode) =>
+          courseCode.toLowerCase().includes(state.filters.search.toLowerCase()),
+        );
+      },
+
+      isSectionMatchingSearch(section: T.CourseSection) {
+        const course = stores.courseStore.getCourse(section.courseId);
+        if (!course) {
+          return false;
+        }
+
+        const courseCode = `${course.subject} ${course.catalogNumber}`;
+
+        return (
+          state.filters.search === "" ||
+          courseCode.toLowerCase().includes(state.filters.search.toLowerCase())
+        );
       },
 
       isTermVisible(termId: Term["id"]) {

@@ -2,7 +2,12 @@
   <tr v-show="isPersonVisible" class="instructor-table-row">
     <Td class="instructor-column">
       <RouterLink :to="`/user/${person.id}`">
-        <div class="tw-truncate">
+        <div
+          class="tw-truncate"
+          :class="{
+            'tw-bg-yellow-100': isPersonHighlighted,
+          }"
+        >
           {{ person.surName }}, {{ person.givenName }}
         </div>
       </RouterLink>
@@ -45,6 +50,12 @@ const props = defineProps<{
 const coursePlanningStore = useRootCoursePlanningStore();
 const isPersonVisible = computed(() =>
   coursePlanningStore.isPersonVisible(props.person),
+);
+
+const isPersonHighlighted = computed(
+  () =>
+    coursePlanningStore.filters.search.length &&
+    coursePlanningStore.isPersonMatchingSearch(props.person),
 );
 </script>
 <style scoped>
