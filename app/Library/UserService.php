@@ -24,12 +24,17 @@ class UserService {
         $uncachedEmplIds = collect($emplids)->diff(collect($this->dbUserCache)->keys());
 
         // Bulk fetch uncached users from the DB
-        $uncachedUsers = User::whereIn('emplid', $uncachedEmplIds)->get();
+        // eager load leaves
+        User::whereIn('emplid', $uncachedEmplIds)
+            ->with('leaves')
+            ->get()
+            ->each(function ($user) {
+                // pluck leave ids
+                $user->leaveIds = $user->leaves->pluck('id')->toArray();
 
-        // add users to the cache
-        $uncachedUsers->each(function ($user) {
-            $this->dbUserCache[$user->emplid] = $user;
-        });
+                // add users to the cache
+                $this->dbUserCache[$user->emplid] = $user;
+            });
 
         // identify users that dont exist in the DB
         $missingEmplids = collect($emplids)->diff(collect($this->dbUserCache)->keys());
@@ -60,7 +65,7 @@ class UserService {
             ->findOrCreateManyByEmplId($deptEmplIds)
             ->map(function ($dbUser) use ($employeeInfoLookup) {
                 return $this->joinDBUserWithEmployeeInfo($dbUser, $employeeInfoLookup[$dbUser->emplid]);
-        });
+            });
 
         return $users->values();
     }

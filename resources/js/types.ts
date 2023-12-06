@@ -197,11 +197,11 @@ export interface Leave {
   status: LeaveStatus;
   start_date: ISODate;
   end_date: ISODate;
+  artifacts?: LeaveArtifact[];
+  termIds?: Term["id"][]; // leave overlaps with these terms
   created_at: ISODateTime;
   updated_at: ISODateTime;
   deleted_at?: ISODateTime | null;
-  artifacts?: LeaveArtifact[];
-  termIds?: Term["id"][]; // leave overlaps with these terms
 }
 
 export interface NewLeave {

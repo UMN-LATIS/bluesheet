@@ -27,7 +27,7 @@ class CourseWithInstructors extends JsonResource {
             "cancelled" => (bool) $this->CANCELLED,
             "courseType" => Utilities::trimWithFallback($this->COMPONENT_CLASS),
             "courseLevel" => Utilities::trimWithFallback($this->ACADEMIC_CAREER),
-            "instructor" => $this->when($this->instructor, new InstructorResource($this->instructor), null),
+            "instructor" => $this->when($this->instructor, new PersonResource($this->instructor), null),
         ];
     }
 }

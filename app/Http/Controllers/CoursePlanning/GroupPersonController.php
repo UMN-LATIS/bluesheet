@@ -4,7 +4,7 @@ namespace App\Http\Controllers\CoursePlanning;
 
 use App\Http\Controllers\Controller;
 use App\Group;
-use App\Http\Resources\InstructorResource;
+use App\Http\Resources\PersonResource;
 use Illuminate\Http\Request;
 use App\Library\Bandaid;
 use App\Library\UserService;
@@ -24,6 +24,6 @@ class GroupPersonController extends Controller {
 
         $users = $this->userService->getDeptEmployees($group->dept_id);
 
-        return InstructorResource::collection($users);
+        return PersonResource::collection($users);
     }
 }

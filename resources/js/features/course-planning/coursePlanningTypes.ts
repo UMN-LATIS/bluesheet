@@ -18,7 +18,7 @@ export interface Person {
   displayName: string;
   email: string;
   academicAppointment: string; // "Faculty"
-  leaveIds?: Leave["id"][];
+  leaveIds: Leave["id"][];
   midcareerEligible: boolean;
   sslEligible: boolean;
   sslApplyEligible: boolean;

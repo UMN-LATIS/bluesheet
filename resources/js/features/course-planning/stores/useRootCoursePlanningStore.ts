@@ -7,6 +7,7 @@ import { useCourseSectionStore } from "./useCourseSectionStore";
 import { useCourseStore } from "./useCourseStore";
 import { useGroupStore } from "@/stores/useGroupStore";
 import { useTermsStore } from "@/stores/useTermsStore";
+import { useLeaveStore } from "./useLeaveStore";
 import { debounce, uniq } from "lodash";
 import { sortByName } from "@/utils";
 import { Group, SelectOption, Term } from "@/types";
@@ -34,6 +35,7 @@ export const useRootCoursePlanningStore = defineStore(
       groupStore: useGroupStore(),
       termsStore: useTermsStore(),
       courseSectionStore: useCourseSectionStore(),
+      leaveStore: useLeaveStore(),
     };
 
     const state = reactive<RootCoursePlanningState>({
@@ -137,6 +139,7 @@ export const useRootCoursePlanningStore = defineStore(
           stores.enrollmentStore.fetchEnrollmentsForGroup(groupId),
           stores.courseStore.fetchCoursesForGroup(groupId),
           stores.courseSectionStore.fetchCourseSectionsForGroup(groupId),
+          stores.leaveStore.fetchLeavesForGroup(groupId),
         ]);
 
         this.setStartTermId(getters.earliestTerm.value?.id ?? null);
