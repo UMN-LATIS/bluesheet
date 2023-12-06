@@ -1,7 +1,7 @@
 <template>
   <div class="tw-flex tw-flex-col tw-gap-1">
     <button
-      v-if="coursePlanningStore.isInPlanningMode"
+      v-if="coursePlanningStore.isInPlanningMode && canTermBePlanned"
       class="tw-bg-transparent tw-border-1 tw-border-dashed tw-border-black/10 tw-rounded tw-p-2 tw-text-sm tw-text-neutral-400 hover:tw-bg-neutral-900 hover:tw-text-neutral-200 tw-block group-hover:tw-visible tw-leading-none"
       @click="isShowingAddCourse = true"
     >
@@ -62,6 +62,10 @@ const isShowingAddCourse = ref(false);
 
 const termLeaves = computed(() =>
   coursePlanningStore.getLeavesForPersonInTerm(props.person.id, props.term.id),
+);
+
+const canTermBePlanned = computed(() =>
+  coursePlanningStore.canTermBePlanned(props.term.id),
 );
 
 // const selectedCourse = ref<ComboBoxOption | null>(null);

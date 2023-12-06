@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { computed, reactive, toRefs } from "vue";
-import { Group } from "@/types";
+import { Group, Term } from "@/types";
 import * as T from "../coursePlanningTypes";
 import * as api from "../coursePlanningApi";
 
@@ -19,7 +19,23 @@ export const useCourseSectionStore = defineStore("couseSection", () => {
   });
 
   const getters = {
-    allCourseSections: computed(() => Object.values(state.courseSectionLookup)),
+    allCourseSections: computed(
+      () =>
+        Object.values(state.courseSectionLookup).filter(
+          Boolean,
+        ) as T.CourseSection[],
+    ),
+    sectionsByTerm: computed((): Record<Term["id"], T.CourseSection[]> => {
+      const sectionsByTerm: Record<Term["id"], T.CourseSection[]> = {};
+
+      getters.allCourseSections.value.forEach((section) => {
+        sectionsByTerm[section.termId] = [
+          ...(sectionsByTerm[section.termId] ?? []),
+          section,
+        ];
+      });
+      return sectionsByTerm;
+    }),
   };
 
   const actions = {

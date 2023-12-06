@@ -24,12 +24,14 @@
     </Td>
     <Td
       v-for="term in coursePlanningStore.terms"
-      v-show="coursePlanningStore.isTermVisible(term.id)"
+      v-show="isTermVisible(term.id)"
       :key="term.id"
       class="term-data-column tw-group"
       :class="{
         'term-data-column--current': coursePlanningStore.isCurrentTerm(term.id),
         'term-data-column--fall': term.name.includes('Fall'),
+        'tw-bg-neutral-100 tw-opacity-50':
+          isInPlanningMode && !canTermBePlanned(term.id),
       }"
     >
       <PersonTableCell :person="person" :term="term" />
@@ -37,17 +39,21 @@
   </tr>
 </template>
 <script setup lang="ts">
+import { storeToRefs } from "pinia";
 import { Td } from "@/components/Table";
 import PersonTableCell from "./PersonTableCell.vue";
 import { Person } from "../coursePlanningTypes";
 import { useRootCoursePlanningStore } from "../stores/useRootCoursePlanningStore";
 import { computed } from "vue";
+import { Term } from "@/types";
 
 const props = defineProps<{
   person: Person;
 }>();
 
 const coursePlanningStore = useRootCoursePlanningStore();
+const { isInPlanningMode } = storeToRefs(coursePlanningStore);
+
 const isPersonVisible = computed(() =>
   coursePlanningStore.isPersonVisible(props.person),
 );
@@ -57,6 +63,34 @@ const isPersonHighlighted = computed(
     coursePlanningStore.filters.search.length &&
     coursePlanningStore.isPersonMatchingSearch(props.person),
 );
+
+const canTermBePlannedLookup = computed(() =>
+  coursePlanningStore.terms.reduce(
+    (acc, term) => ({
+      ...acc,
+      [term.id]: coursePlanningStore.canTermBePlanned(term.id),
+    }),
+    {} as Record<string, boolean>,
+  ),
+);
+
+function canTermBePlanned(termId: Term["id"]) {
+  return canTermBePlannedLookup.value[termId];
+}
+
+const isTermVisibleLookup = computed(() =>
+  coursePlanningStore.terms.reduce(
+    (acc, term) => ({
+      ...acc,
+      [term.id]: coursePlanningStore.isTermVisible(term.id),
+    }),
+    {} as Record<string, boolean>,
+  ),
+);
+
+function isTermVisible(termId: Term["id"]) {
+  return isTermVisibleLookup.value[termId];
+}
 </script>
 <style scoped>
 .term-data-column {

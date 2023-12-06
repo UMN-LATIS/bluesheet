@@ -80,26 +80,6 @@ export const useRootCoursePlanningStore = defineStore(
         );
       }),
 
-      sectionIdsByTerm: computed((): Record<Term["id"], T.CourseSection[]> => {
-        if (!state.activeGroupId) {
-          return {};
-        }
-
-        const sections = getters.sectionsForActiveGroup.value;
-        const sectionIdsByTerm = sections.reduce(
-          (acc, section) => {
-            const previousSections = acc[section.termId] ?? [];
-            return {
-              ...acc,
-              [section.termId]: [...previousSections, section],
-            };
-          },
-          {} as Record<Term["id"], T.CourseSection[]>,
-        );
-
-        return sectionIdsByTerm;
-      }),
-
       coursesForActiveGroup: computed((): T.Course[] => {
         if (!state.activeGroupId) {
           return [];
@@ -370,6 +350,20 @@ export const useRootCoursePlanningStore = defineStore(
         return sectionIds
           .map(sectionStore.getCourseSection)
           .filter(Boolean) as T.CourseSection[];
+      },
+
+      canTermBePlanned(termId: Term["id"]): boolean {
+        const termSections = stores.courseSectionStore.sectionsByTerm[termId];
+        if (!termSections) {
+          // if no sections found, then the term can be planned
+          return true;
+        }
+
+        // if there are sections, then make sure none of
+        // them are active or cancelled
+        return !termSections.some((section) =>
+          ["active", "cancelled"].includes(section.status),
+        );
       },
 
       getSectionsForEmplIdInTerm(emplId: T.Person["emplid"], termId: number) {
