@@ -43,7 +43,7 @@ class UserService {
         $missingEmplids->each(function ($emplid) {
             $ldapUser = LDAP::lookupUser(str_pad($emplid, 7, 0, STR_PAD_LEFT), 'umnemplid');
             if (!$ldapUser) return;
-            $user = User::firstOrCreate(['emplid' => $emplid], $ldapUser->toArray());
+            $user = User::firstOrCreate(['umndid' => $ldapUser->umndid], $ldapUser->toArray());
 
             // add the created user to the cache
             $this->dbUserCache[$emplid] = $user;
