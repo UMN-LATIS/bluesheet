@@ -209,7 +209,7 @@ export const useRootCoursePlanningStore = defineStore(
             return {};
           }
 
-          const courses = getters.coursesForActiveGroup.value;
+          const courses = getters.coursesWithinVisibleTerms.value;
           return courses.reduce(
             (acc, course) => {
               const courseLevel = course.courseLevel;
@@ -353,6 +353,10 @@ export const useRootCoursePlanningStore = defineStore(
       setSearchFilter: debounce((search: string) => {
         state.filters.search = search;
       }, 500),
+
+      setIncludedEnrollmentRoles(roles: T.EnrollmentRole[]) {
+        state.filters.includedEnrollmentRoles = roles;
+      },
     };
 
     const methods = {

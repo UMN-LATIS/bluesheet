@@ -60,6 +60,7 @@ import CoursePlanningFilters from "./components/CoursePlanningFilters.vue";
 import Spinner from "@/components/Spinner.vue";
 import Tabs, { type Tab } from "@/components/Tabs.vue";
 import Toggle from "@/components/Toggle.vue";
+import { Enrollment } from "./coursePlanningTypes";
 
 const props = defineProps<{
   groupId: number;
@@ -95,6 +96,17 @@ const tabs = computed(() => [
 
 function handleTabChange(tab: Tab) {
   activeTab.value = tab.id as typeof activeTab.value;
+
+  // update the planning store's included roles
+  if (activeTab.value === "instructors") {
+    coursePlanningStore.setIncludedEnrollmentRoles(["PI"]);
+    return;
+  }
+  if (activeTab.value === "tas") {
+    coursePlanningStore.setIncludedEnrollmentRoles(["TA"]);
+    return;
+  }
+  coursePlanningStore.setIncludedEnrollmentRoles(["PI", "TA"]);
 }
 
 const tableRef = ref<HTMLElement>();
