@@ -151,7 +151,12 @@ class Bandaid {
             $termStartDate = $term->TERM_BEGIN_DT;
             $termEndDate = $term->TERM_END_DT;
 
-            return $startDate <= $termEndDate && $termEndDate <= $endDate;
+            // is term start or end between the leave start and end dates?
+            $isTermStartInRange = ($startDate <= $termStartDate && $termStartDate <= $endDate);
+
+            $isTermEndInRange = ($startDate <= $termEndDate && $termEndDate <= $endDate);
+
+            return ($isTermStartInRange || $isTermEndInRange);
         });
     }
 }
