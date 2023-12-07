@@ -10,7 +10,7 @@ import { useTermsStore } from "@/stores/useTermsStore";
 import { useLeaveStore } from "./useLeaveStore";
 import { debounce, uniq } from "lodash";
 import { sortByName } from "@/utils";
-import { Group, Leave, SelectOption, Term } from "@/types";
+import { Group, SelectOption, Term } from "@/types";
 
 interface RootCoursePlanningState {
   activeGroupId: Group["id"] | null;
@@ -81,7 +81,7 @@ export const useRootCoursePlanningStore = defineStore(
           return [];
         }
 
-        return stores.courseSectionStore.getCoursesSectionsForGroup(
+        return stores.courseSectionStore.getSectionsForGroup(
           state.activeGroupId,
         );
       }),
@@ -258,7 +258,8 @@ export const useRootCoursePlanningStore = defineStore(
           ),
       ),
 
-      disabledTermCountInPlanningMode: computed((): number => {
+      // for colspan
+      countOfTermsDisabledForPlanning: computed((): number => {
         return getters.visibleTerms.value.reduce((acc, term) => {
           return methods.canTermBePlanned(term.id) ? acc : acc + 1;
         }, 0);
@@ -387,12 +388,13 @@ export const useRootCoursePlanningStore = defineStore(
 
         const sectionStore = useCourseSectionStore();
         return sectionIds
-          .map(sectionStore.getCourseSection)
+          .map(sectionStore.getSection)
           .filter(Boolean) as T.CourseSection[];
       },
 
       canTermBePlanned(termId: Term["id"]): boolean {
-        const termSections = stores.courseSectionStore.sectionsByTerm[termId];
+        const termSections =
+          stores.courseSectionStore.getSectionsForTerm(termId);
         if (!termSections) {
           // if no sections found, then the term can be planned
           return true;
@@ -409,6 +411,25 @@ export const useRootCoursePlanningStore = defineStore(
         const sections = methods.getSectionsForEmplId(emplId);
         return sections.filter((section) => section.termId === termId);
       },
+
+      getEnrollmentsInCourseByTerm(
+        courseId: T.Course["id"],
+      ): Record<Term["id"], T.Enrollment[]> {
+        const sections =
+          stores.courseSectionStore.getSectionsForCourse(courseId);
+
+        const enrollmentsByTerm: Record<Term["id"], T.Enrollment[]> = {};
+
+        sections.forEach((section) => {
+          enrollmentsByTerm[section.termId] = [
+            ...(enrollmentsByTerm[section.termId] ?? []),
+            ...section.enrollments,
+          ];
+        });
+
+        return enrollmentsByTerm;
+      },
+
       getPeopleInGroup: stores.personStore.getPeopleInGroup,
 
       getPeopleInGroupWithRoles(groupId: number, roles: T.EnrollmentRole[]) {
@@ -444,7 +465,7 @@ export const useRootCoursePlanningStore = defineStore(
           );
         const sectionIds = enrollmentForPersonInGroup.map((e) => e.sectionId);
         const sections = sectionIds
-          .map((id) => stores.courseSectionStore.getCourseSection(id))
+          .map((id) => stores.courseSectionStore.getSection(id))
           .filter(Boolean) as T.CourseSection[];
 
         const visibleSections = sections.filter(methods.isSectionVisible);
@@ -560,17 +581,43 @@ export const useRootCoursePlanningStore = defineStore(
           isSectionTermVisible && isCourseTypeVisible && isCourseLevelVisible
         );
       },
+      getPeopleInCourseByTerm(
+        courseId: T.Course["id"],
+      ): Record<Term["id"], T.Person[]> {
+        const sections =
+          stores.courseSectionStore.getSectionsForCourse(courseId);
+
+        const peopleByTerm: Record<Term["id"], T.Person[]> = sections.reduce(
+          (acc, section) => {
+            const enrollments = stores.enrollmentStore.getEnrollmentsForSection(
+              section.id,
+            );
+
+            const people = enrollments.map((enrollment) =>
+              stores.personStore.getPersonByEmplId(enrollment.emplId),
+            );
+
+            const termId = section.termId;
+
+            return {
+              ...acc,
+              [termId]: people.filter(Boolean) as T.Person[],
+            };
+          },
+          {} as Record<Term["id"], T.Person[]>,
+        );
+
+        return peopleByTerm;
+      },
       isCurrentTerm: stores.termsStore.isCurrentTerm,
       getGroup: stores.groupStore.getGroup,
-      // getAcadApptCountsForGroup: stores.personStore.getAcadApptCountsForGroup,
-      // getCourseTypeCountsForGroup:
-      //   stores.courseStore.getCourseTypeCountsForGroup,
-      // getCourseLevelCountsForGroup:
-      //   stores.courseStore.getCourseLevelCountsForGroup,
       getLeavesForPersonInTerm: stores.leaveStore.getLeavesForPersonInTerm,
       getLeavesForPerson: stores.leaveStore.getLeavesForPerson,
       getLeavesForGroupInTerm: stores.leaveStore.getLeavesForGroupInTerm,
       getPersonByUserId: stores.personStore.getPersonByUserId,
+      getPersonByEmplId: stores.personStore.getPersonByEmplId,
+      getCoursesForGroup: stores.courseStore.getCoursesForGroup,
+      getSection: stores.courseSectionStore.getSection,
     };
 
     return {

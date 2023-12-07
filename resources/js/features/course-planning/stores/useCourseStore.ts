@@ -3,6 +3,7 @@ import { computed, reactive, toRefs } from "vue";
 import * as T from "../coursePlanningTypes";
 import * as api from "../coursePlanningApi";
 import { countBy } from "lodash";
+import { Group } from "@/types";
 
 interface CourseStoreState {
   courseLookup: Record<T.Course["id"], T.Course | undefined>;
@@ -16,11 +17,32 @@ export const useCourseStore = defineStore("course", () => {
   });
 
   const getters = {
-    allCourses: computed(() => Object.values(state.courseLookup)),
+    allCourses: computed(
+      (): T.Course[] =>
+        Object.values(state.courseLookup).filter(Boolean) as T.Course[],
+    ),
+    coursesByGroup: computed((): Record<Group["id"], T.Course[]> => {
+      return Object.entries(state.courseIdsByGroup).reduce<
+        Record<number, T.Course[]>
+      >((acc, [groupId, courseIds]) => {
+        if (!courseIds) {
+          return acc;
+        }
+
+        const courses = courseIds.map(
+          (courseId) => state.courseLookup[courseId],
+        );
+
+        return {
+          ...acc,
+          [groupId]: courses.filter(Boolean) as T.Course[],
+        };
+      }, {});
+    }),
   };
 
   const actions = {
-    async fetchCoursesForGroup(groupId: number) {
+    async fetchCoursesForGroup(groupId: number): Promise<void> {
       const courses = await api.fetchCoursesForGroup(groupId);
 
       // update the course lookup in one fell swoop
@@ -35,21 +57,18 @@ export const useCourseStore = defineStore("course", () => {
       state.courseIdsByGroup[groupId] = courses.map((course) => course.id);
     },
 
-    getCourse(id: T.Course["id"]) {
+    getCourse(id: T.Course["id"]): T.Course | undefined {
       return state.courseLookup[id];
     },
 
-    getCoursesByGroup(groupId: number) {
-      const courseIds = state.courseIdsByGroup[groupId] ?? [];
-      return courseIds
-        .map((courseId) => state.courseLookup[courseId])
-        .filter(Boolean) as T.Course[];
+    getCoursesForGroup(groupId: number): T.Course[] {
+      return getters.coursesByGroup.value[groupId] || [];
     },
 
     getCourseTypeCountsForGroup(
       groupId: number,
     ): Record<T.Course["courseType"], number> {
-      const courses = actions.getCoursesByGroup(groupId);
+      const courses = actions.getCoursesForGroup(groupId);
       const courseTypes = courses.map((c) => c.courseType);
       return countBy(courseTypes);
     },
@@ -57,7 +76,7 @@ export const useCourseStore = defineStore("course", () => {
     getCourseLevelCountsForGroup(
       groupId: number,
     ): Record<T.Course["courseLevel"], number> {
-      const courses = actions.getCoursesByGroup(groupId);
+      const courses = actions.getCoursesForGroup(groupId);
       const courseLevels = courses.map((c) => c.courseLevel);
       return countBy(courseLevels);
     },

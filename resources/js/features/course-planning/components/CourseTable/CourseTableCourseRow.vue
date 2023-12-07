@@ -3,7 +3,7 @@
     <Td class="course-column">
       <div
         :class="{
-          'tw-bg-yellow-100': search.length && false,
+          'tw-bg-yellow-100': false,
         }"
       >
         {{ course.subject }} {{ course.catalogNumber }}
@@ -15,36 +15,46 @@
       </div>
     </Td>
     <Td
-      v-for="(termInstructors, index) in instructorsPerTerm"
-      :key="index"
+      v-for="term in visibleTerms"
+      :key="term.id"
       class="term-data-column"
       :class="{
-        'term-data-column--current': currentTerm?.id === terms[index].id,
-        'term-data-column--fall': terms[index].name.includes('Fall'),
+        'term-data-column--current': currentTerm?.id === term.id,
+        'term-data-column--fall': term.name.includes('Fall'),
       }"
     >
-      <InstructorDetails
-        v-for="instructor in termInstructors"
-        :key="instructor.id"
-        :instructor="instructor"
-        :search="search"
+      <EnrollmentDetails
+        v-for="enrollment in getEnrollmentsForTerm(term)"
+        :key="enrollment.id"
+        :enrollment="enrollment"
       />
     </Td>
   </tr>
 </template>
 <script setup lang="ts">
 import { Td } from "@/components/Table";
-import { Term, TimelessCourse, InstructorWithCourse } from "@/types";
-import InstructorDetails from "./InstructorDetails.vue";
-// import { doesCourseNumberMatchSearchTerm } from "./doesCourseMatchSearchTerm";
+import { Term } from "@/types";
+import EnrollmentDetails from "./EnrollmentDetails.vue";
+import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
+import { storeToRefs } from "pinia";
+import * as T from "../../coursePlanningTypes";
+import { computed } from "vue";
 
-defineProps<{
-  course: TimelessCourse;
-  search: string;
-  terms: Term[];
-  instructorsPerTerm: InstructorWithCourse[][];
-  currentTerm: Term | null;
+const coursePlanningStore = useRootCoursePlanningStore();
+const { visibleTerms, currentTerm } = storeToRefs(coursePlanningStore);
+
+const props = defineProps<{
+  course: T.Course;
 }>();
+
+const enrollmentsByTermLookup = computed(
+  (): Record<Term["id"], T.Enrollment[]> =>
+    coursePlanningStore.getEnrollmentsInCourseByTerm(props.course.id),
+);
+
+function getEnrollmentsForTerm(term: Term): T.Enrollment[] {
+  return enrollmentsByTermLookup.value[term.id] ?? [];
+}
 </script>
 <style scoped>
 .term-data-column.term-data-column--current {

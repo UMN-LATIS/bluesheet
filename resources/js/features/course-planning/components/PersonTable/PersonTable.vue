@@ -43,7 +43,8 @@ defineProps<{
 }>();
 
 const coursePlanningStore = useRootCoursePlanningStore();
-const { disabledTermCountInPlanningMode } = coursePlanningStore;
+const { countOfTermsDisabledForPlanning: disabledTermCountInPlanningMode } =
+  coursePlanningStore;
 </script>
 <style lang="scss">
 // fix width of cells to prevent them from embiggening

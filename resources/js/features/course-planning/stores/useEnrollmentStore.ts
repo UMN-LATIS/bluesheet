@@ -35,6 +35,22 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
         );
       },
     ),
+    enrollmentsBySectionId: computed(
+      (): Record<T.CourseSection["id"], T.Enrollment[]> => {
+        const enrollmentsBySection: Record<
+          T.CourseSection["id"],
+          T.Enrollment[]
+        > = {};
+
+        getters.allEnrollments.value.forEach((enrollment) => {
+          enrollmentsBySection[enrollment.sectionId] = [
+            ...(enrollmentsBySection[enrollment.sectionId] ?? []),
+            enrollment,
+          ];
+        });
+        return enrollmentsBySection;
+      },
+    ),
   };
 
   const actions = {
@@ -81,6 +97,9 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
     ): T.Enrollment[] {
       const groupEnrollments = methods.getEnrollmentsForGroup(groupId);
       return groupEnrollments.filter((e) => e.emplId === emplid);
+    },
+    getEnrollmentsForSection(sectionId: T.CourseSection["id"]): T.Enrollment[] {
+      return getters.enrollmentsBySectionId.value[sectionId] || [];
     },
   };
 

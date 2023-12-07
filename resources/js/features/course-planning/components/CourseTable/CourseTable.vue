@@ -5,15 +5,11 @@
     </template>
     <TBody>
       <CourseTableLeavesRow :groupId="groupId" />
-      <!-- <CourseTableCourseRow
+      <CourseTableCourseRow
         v-for="course in courses"
-        :key="course.shortCode"
+        :key="course.id"
         :course="course"
-        :terms="terms"
-        :instructorsPerTerm="getInstructorsForCoursePerTerm(course.shortCode)"
-        :currentTerm="currentTerm"
-        :search="search"
-      /> -->
+      />
     </TBody>
   </Table>
 </template>
@@ -24,13 +20,17 @@ import CourseTableLeavesRow from "./CourseTableLeavesRow.vue";
 import ReportTableHeaderRow from "../ReportTableHeaderRow.vue";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
 import { Group } from "@/types";
+import { computed } from "vue";
 
-defineProps<{
+const props = defineProps<{
   label: string;
   groupId: Group["id"];
 }>();
 
 const coursePlanningStore = useRootCoursePlanningStore();
+const courses = computed(() =>
+  coursePlanningStore.getCoursesForGroup(props.groupId),
+);
 </script>
 <style scoped>
 .term-data-column.term-data-column--current {

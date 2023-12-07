@@ -6,29 +6,24 @@ import * as api from "../coursePlanningApi";
 
 interface CourseSectionStoreState {
   sectionIdsByGroup: Record<Group["id"], T.CourseSection["id"][] | undefined>;
-  courseSectionLookup: Record<
-    T.CourseSection["id"],
-    T.CourseSection | undefined
-  >;
+  sectionLookup: Record<T.CourseSection["id"], T.CourseSection | undefined>;
 }
 
 export const useCourseSectionStore = defineStore("couseSection", () => {
   const state = reactive<CourseSectionStoreState>({
-    courseSectionLookup: {},
+    sectionLookup: {},
     sectionIdsByGroup: {},
   });
 
   const getters = {
-    allCourseSections: computed(
-      () =>
-        Object.values(state.courseSectionLookup).filter(
-          Boolean,
-        ) as T.CourseSection[],
+    allSections: computed(
+      (): T.CourseSection[] =>
+        Object.values(state.sectionLookup).filter(Boolean) as T.CourseSection[],
     ),
-    sectionsByTerm: computed((): Record<Term["id"], T.CourseSection[]> => {
+    sectionsByTermId: computed((): Record<Term["id"], T.CourseSection[]> => {
       const sectionsByTerm: Record<Term["id"], T.CourseSection[]> = {};
 
-      getters.allCourseSections.value.forEach((section) => {
+      getters.allSections.value.forEach((section) => {
         sectionsByTerm[section.termId] = [
           ...(sectionsByTerm[section.termId] ?? []),
           section,
@@ -36,15 +31,42 @@ export const useCourseSectionStore = defineStore("couseSection", () => {
       });
       return sectionsByTerm;
     }),
+    sectionsByCourseId: computed(
+      (): Record<T.Course["id"], T.CourseSection[]> => {
+        const sectionsByCourse: Record<T.Course["id"], T.CourseSection[]> = {};
+
+        getters.allSections.value.forEach((section) => {
+          sectionsByCourse[section.courseId] = [
+            ...(sectionsByCourse[section.courseId] ?? []),
+            section,
+          ];
+        });
+        return sectionsByCourse;
+      },
+    ),
+    sectionsByGroupId: computed((): Record<Group["id"], T.CourseSection[]> => {
+      const sectionsByGroup: Record<Group["id"], T.CourseSection[]> = {};
+
+      Object.entries(state.sectionIdsByGroup).forEach(
+        ([groupId, sectionIds]) => {
+          if (!sectionIds) return;
+
+          sectionsByGroup[groupId] = sectionIds.map(
+            (sectionId) => state.sectionLookup[sectionId],
+          ) as T.CourseSection[];
+        },
+      );
+      return sectionsByGroup;
+    }),
   };
 
   const actions = {
-    async fetchCourseSectionsForGroup(groupId: number) {
+    async fetchCourseSectionsForGroup(groupId: number): Promise<void> {
       const courseSections = await api.fetchCourseSectionsForGroup(groupId);
 
       // update the course section lookup in one fell swoop
       const updatedCourseSectionLookup = {
-        ...state.courseSectionLookup,
+        ...state.sectionLookup,
         ...Object.fromEntries(
           courseSections.map((courseSection) => [
             courseSection.id,
@@ -53,7 +75,7 @@ export const useCourseSectionStore = defineStore("couseSection", () => {
         ),
       };
 
-      state.courseSectionLookup = updatedCourseSectionLookup;
+      state.sectionLookup = updatedCourseSectionLookup;
 
       // update sectionIdsByGroup list
       state.sectionIdsByGroup[groupId] = courseSections.map(
@@ -63,14 +85,18 @@ export const useCourseSectionStore = defineStore("couseSection", () => {
   };
 
   const methods = {
-    getCourseSection(sectionId: T.CourseSection["id"]) {
-      return state.courseSectionLookup[sectionId] ?? null;
+    getSection(sectionId: T.CourseSection["id"]): T.CourseSection | null {
+      return state.sectionLookup[sectionId] ?? null;
     },
-    getCoursesSectionsForGroup(groupId: Group["id"]) {
-      const sectionIds = state.sectionIdsByGroup[groupId] ?? [];
-      return sectionIds
-        .map((sectionId) => state.courseSectionLookup[sectionId])
-        .filter(Boolean) as T.CourseSection[];
+    getSectionsForGroup(groupId: Group["id"]): T.CourseSection[] {
+      return getters.sectionsByGroupId.value[groupId] ?? [];
+    },
+    getSectionsForCourse(courseId: T.Course["id"]): T.CourseSection[] {
+      return getters.sectionsByCourseId.value[courseId] ?? [];
+    },
+
+    getSectionsForTerm(termId: Term["id"]): T.CourseSection[] {
+      return getters.sectionsByTermId.value[termId] ?? [];
     },
   };
 

@@ -54,7 +54,7 @@ export interface ApiGetGroupCoursePlanningResponse {
 
 export interface CourseSection {
   id: ApiCourseInstructorRecord["classNumber"];
-  courseId: Course["id"]; // short code
+  courseId: Course["id"]; // short code like "HIST-1001W"
   termId: Term["id"];
   classSection: string; // "001"
   enrollmentCap: number;
