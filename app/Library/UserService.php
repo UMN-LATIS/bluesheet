@@ -61,6 +61,11 @@ class UserService {
         })->filter();
     }
 
+    public function findOrCreateByEmplId(int $emplid): ?User {
+        $users = $this->findOrCreateManyByEmplId([$emplid]);
+        return $users->first();
+    }
+
     public function getDeptEmployees(string $deptId): Collection {
         $employeeInfoLookup = collect($this->bandaid->getEmployeesForDepartment($deptId))->keyBy('EMPLID');
 
