@@ -30,8 +30,6 @@
       :class="{
         'term-data-column--current': coursePlanningStore.isCurrentTerm(term.id),
         'term-data-column--fall': term.name.includes('Fall'),
-        'tw-bg-neutral-100 tw-opacity-50':
-          isInPlanningMode && !canTermBePlanned(term.id),
       }"
     >
       <PersonTableCell :person="person" :term="term" />
@@ -39,7 +37,6 @@
   </tr>
 </template>
 <script setup lang="ts">
-import { storeToRefs } from "pinia";
 import { Td } from "@/components/Table";
 import PersonTableCell from "./PersonTableCell.vue";
 import { Person } from "../../coursePlanningTypes";
@@ -52,7 +49,6 @@ const props = defineProps<{
 }>();
 
 const coursePlanningStore = useRootCoursePlanningStore();
-const { isInPlanningMode } = storeToRefs(coursePlanningStore);
 
 const isPersonVisible = computed(() =>
   coursePlanningStore.isPersonVisible(props.person),
@@ -63,20 +59,6 @@ const isPersonHighlighted = computed(
     coursePlanningStore.filters.search.length &&
     coursePlanningStore.isPersonMatchingSearch(props.person),
 );
-
-const canTermBePlannedLookup = computed(() =>
-  coursePlanningStore.terms.reduce(
-    (acc, term) => ({
-      ...acc,
-      [term.id]: coursePlanningStore.canTermBePlanned(term.id),
-    }),
-    {} as Record<string, boolean>,
-  ),
-);
-
-function canTermBePlanned(termId: Term["id"]) {
-  return canTermBePlannedLookup.value[termId];
-}
 
 const isTermVisibleLookup = computed(() =>
   coursePlanningStore.terms.reduce(
@@ -98,7 +80,7 @@ function isTermVisible(termId: Term["id"]) {
 }
 
 .term-data-column.term-data-column--current {
-  background: #fffcf0;
+  background: rgb(255 248 220 / 68%);
   border-top: 1px solid #fde68a;
 }
 

@@ -16,6 +16,10 @@ module.exports = {
         "umn-neutral-900": `#1a1a1a`,
         "bs-blue": "#3490dc",
       },
+      backgroundImage: {
+        striped:
+          "repeating-linear-gradient(var(--line-angle, 45deg), var(--line-color, #ccc), var(--line-color, #ccc) var(--line-width, 1px), transparent var(--line-width, 1px), transparent var(--line-spacing, 0.5rem))",
+      },
     },
   },
   prefix: "tw-",

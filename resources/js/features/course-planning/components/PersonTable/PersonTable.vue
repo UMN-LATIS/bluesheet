@@ -4,10 +4,18 @@
     :stickyFirstColumn="true"
     :stickyHeader="true"
   >
+    <colgroup v-if="coursePlanningStore.isInPlanningMode">
+      <col class="person-col" />
+      <col
+        class="term-col tw-bg-striped"
+        :span="colspanOfDisabledColsInPlanningMode"
+      />
+    </colgroup>
+
     <template #thead>
       <ReportTableHeaderRow :label="label" />
     </template>
-    <TBody>
+    <TBody class="!tw-bg-transparent">
       <PersonTableRow
         v-for="person in coursePlanningStore.peopleInActiveGroup"
         :key="person.id"
@@ -21,6 +29,7 @@ import { Table, TBody } from "@/components/Table";
 import PersonTableRow from "./PersonTableRow.vue";
 import ReportTableHeaderRow from "../ReportTableHeaderRow.vue";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
+import { computed } from "vue";
 
 defineProps<{
   label: string;
@@ -28,6 +37,15 @@ defineProps<{
 }>();
 
 const coursePlanningStore = useRootCoursePlanningStore();
+
+const colspanOfDisabledColsInPlanningMode = computed((): number => {
+  return Object.values(coursePlanningStore.canTermBePlannedLookup).reduce(
+    (acc, canTermBePlanned) => {
+      return canTermBePlanned ? acc : acc + 1;
+    },
+    0,
+  );
+});
 </script>
 <style lang="scss">
 // fix width of cells to prevent them from embiggening
