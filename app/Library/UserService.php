@@ -42,8 +42,14 @@ class UserService {
         // lookup and created missing users from LDAP
         $missingEmplids->each(function ($emplid) {
             $ldapUser = LDAP::lookupUser(str_pad($emplid, 7, 0, STR_PAD_LEFT), 'umnemplid');
-            if (!$ldapUser) return;
-            $user = User::firstOrCreate(['umndid' => $ldapUser->umndid], $ldapUser->toArray());
+            if (!$ldapUser || !$ldapUser->emplid) return;
+
+            // it's possiblee that emplid is null in the db,
+            // but not noull in ldap, so use the umndid as the key
+            // and then update (or create) the user
+            $user = User::updateOrCreate([
+                'umndid' => $ldapUser->umndid,
+            ], $ldapUser->toArray());
 
             // add the created user to the cache
             $this->dbUserCache[$emplid] = $user;
