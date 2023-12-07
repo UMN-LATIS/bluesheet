@@ -265,9 +265,41 @@ export const useRootCoursePlanningStore = defineStore(
         }, 0);
       }),
 
+      isPersonVisibleLookup: computed(() => {
+        if (!state.activeGroupId) {
+          throw new Error("active group id is not set");
+        }
+
+        const isPersonVisibleLookupByEmplId: Record<
+          T.Person["emplid"],
+          boolean
+        > = {};
+        getters.peopleInActiveGroup.value.forEach((person) => {
+          const hasVisibleRole =
+            methods.isPersonEnrolledWithVisibleRole(person);
+          const isAcadApptVisible = !state.filters.excludedAcadAppts.has(
+            person.academicAppointment,
+          );
+          const hasVisibleSection = methods.isPersonEnrolledInVisibleSection(
+            person.emplid,
+          );
+
+          const isPersonVisible =
+            hasVisibleRole &&
+            isAcadApptVisible &&
+            hasVisibleSection &&
+            (methods.isPersonMatchingSearch(person) ||
+              methods.isPersonEnrolledInCourseMatchingSearch(person));
+
+          isPersonVisibleLookupByEmplId[person.emplid] = isPersonVisible;
+        });
+
+        return isPersonVisibleLookupByEmplId;
+      }),
+
       visiblePeople: computed((): T.Person[] => {
-        return getters.peopleInVisibleTerms.value.filter(
-          methods.isPersonVisible,
+        return getters.peopleInActiveGroup.value.filter(
+          (person) => getters.isPersonVisibleLookup.value[person.emplid],
         );
       }),
     };
@@ -488,28 +520,6 @@ export const useRootCoursePlanningStore = defineStore(
         });
       },
 
-      isPersonVisible(person: T.Person) {
-        if (!state.activeGroupId) {
-          throw new Error("active group id is not set");
-        }
-
-        const hasVisibleRole = methods.isPersonEnrolledWithVisibleRole(person);
-        const isAcadApptVisible = !state.filters.excludedAcadAppts.has(
-          person.academicAppointment,
-        );
-        const hasVisibleSection = methods.isPersonEnrolledInVisibleSection(
-          person.emplid,
-        );
-
-        return (
-          hasVisibleRole &&
-          isAcadApptVisible &&
-          hasVisibleSection &&
-          (methods.isPersonMatchingSearch(person) ||
-            methods.isPersonEnrolledInCourseMatchingSearch(person))
-        );
-      },
-
       isPersonMatchingSearch(person: T.Person) {
         return (
           state.filters.search === "" ||
@@ -608,6 +618,9 @@ export const useRootCoursePlanningStore = defineStore(
         );
 
         return peopleByTerm;
+      },
+      isPersonVisible(person: T.Person) {
+        return getters.isPersonVisibleLookup.value[person.emplid] ?? false;
       },
       isCurrentTerm: stores.termsStore.isCurrentTerm,
       getGroup: stores.groupStore.getGroup,

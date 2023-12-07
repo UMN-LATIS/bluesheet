@@ -35,7 +35,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { Table, TBody, Td } from "@/components/Table";
+import { Table, TBody } from "@/components/Table";
 import PersonTableRow from "./PersonTableRow.vue";
 import ReportTableHeaderRow from "../ReportTableHeaderRow.vue";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";

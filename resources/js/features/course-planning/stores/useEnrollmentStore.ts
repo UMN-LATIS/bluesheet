@@ -20,7 +20,7 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
         Object.values(state.enrollmentLookup).filter(Boolean) as T.Enrollment[],
     ),
     enrollmentsByEmplId: computed(
-      (): Record<T.Person["id"], T.Enrollment["id"][]> => {
+      (): Record<T.Person["id"], T.Enrollment[]> => {
         return getters.allEnrollments.value.reduce(
           (acc, enrollment) => {
             const emplId = enrollment.emplId;
@@ -28,10 +28,10 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
 
             return {
               ...acc,
-              [emplId]: [...previousEnrollmentIds, enrollment.id],
+              [emplId]: [...previousEnrollmentIds, enrollment],
             };
           },
-          {} as Record<T.Person["id"], T.Enrollment["id"][]>,
+          {} as Record<T.Person["id"], T.Enrollment[]>,
         );
       },
     ),
@@ -86,10 +86,7 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
         .filter(Boolean) as T.Enrollment[];
     },
     getEnrollmentsForEmplId(emplId: T.Enrollment["emplId"]): T.Enrollment[] {
-      const enrollmentIds = getters.enrollmentsByEmplId.value[emplId] || [];
-      return enrollmentIds
-        .map((id) => state.enrollmentLookup[id])
-        .filter(Boolean) as T.Enrollment[];
+      return getters.enrollmentsByEmplId.value[emplId] || [];
     },
     getEnrollmentsForEmplIdInGroup(
       emplid: T.Enrollment["emplId"],
