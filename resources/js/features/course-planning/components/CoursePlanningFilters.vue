@@ -1,7 +1,10 @@
 <template>
-  <section class="tw-flex tw-flex-col tw-gap-4 tw-mb-4">
-    <h2 class="sr-only">Report Filters</h2>
-
+  <section class="tw-flex tw-flex-col tw-gap-4">
+    <h3
+      class="tw-inline-block tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide"
+    >
+      Filter Results
+    </h3>
     <fieldset>
       <legend
         class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"

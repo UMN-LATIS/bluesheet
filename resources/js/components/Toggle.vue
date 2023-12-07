@@ -1,5 +1,8 @@
 <template>
   <SwitchGroup as="div" class="tw-flex tw-items-center">
+    <SwitchLabel as="span" class="tw-whitespace-nowrap tw-mr-2 tw-text-sm">
+      <slot />
+    </SwitchLabel>
     <Switch
       :modelValue="modelValue"
       :class="[
@@ -17,9 +20,6 @@
         ]"
       />
     </Switch>
-    <SwitchLabel as="span" class="tw-whitespace-nowrap tw-ml-1.5 tw-text-sm">
-      <slot />
-    </SwitchLabel>
   </SwitchGroup>
 </template>
 

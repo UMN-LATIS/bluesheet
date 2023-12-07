@@ -4,6 +4,7 @@ export { default as ChevronDownIcon } from "./ChevronDownIcon.vue";
 export { default as CircleCheckIcon } from "./CircleCheckIcon.vue";
 export { default as CircleXIcon } from "./CircleXIcon.vue";
 export { default as ExternalLinkIcon } from "./ExternalLinkIcon.vue";
+export { default as FilterIcon } from "./FilterIcon.vue";
 export { default as InfoIcon } from "./InfoIcon.vue";
 export { default as NoIcon } from "./NoIcon.vue";
 export { default as QuestionIcon } from "./QuestionIcon.vue";

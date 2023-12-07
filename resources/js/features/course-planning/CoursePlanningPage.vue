@@ -2,42 +2,66 @@
   <WideLayout>
     <Transition name="fade" mode="out-in">
       <div v-if="isLoadingComplete">
-        <h1 class="tw-mb-4">
-          {{ group?.group_title }} <br />
-          <span class="tw-text-3xl">Scheduling Report</span>
-        </h1>
-
-        <CoursePlanningFilters :groupId="props.groupId" />
         <div
-          class="tw-flex tw-justify-between tw-flex-wrap tw-items-center gap-2"
+          class="tw-flex tw-justify-between tw-flex-wrap tw-gap-4 tw-items-baseline tw-mb-4"
+        >
+          <header>
+            <h1>{{ group?.group_title }}</h1>
+            <h2 class="tw-text-3xl">Scheduling Report</h2>
+          </header>
+          <aside
+            class="tw-max-w-xs tw-bg-neutral-100 tw-p-4 tw-rounded-md tw-w-full"
+          >
+            <h2
+              class="tw-inline-block tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-mb-4"
+            >
+              Settings
+            </h2>
+            <CheckboxGroup
+              id="toggle-planning-mode"
+              v-model="coursePlanningStore.isInPlanningMode"
+              label="Planning Mode"
+              description="Add/remove tentative courses."
+            />
+            <CheckboxGroup
+              id="toggle-filters"
+              :modelValue="isShowingFilters"
+              label="Filter Results"
+              description="By date, course, or instructor"
+              @update:modelValue="handleToggleFiltersClick"
+            />
+          </aside>
+        </div>
+
+        <CoursePlanningFilters
+          v-show="isShowingFilters"
+          :groupId="props.groupId"
+          class="tw-bg-neutral-100 tw-p-4 tw-rounded-md tw-my-4"
+        />
+        <div
+          class="tw-flex tw-justify-between tw-flex-wrap tw-items-center gap-2 tw-mt-12"
         >
           <Tabs class="tw-mb-2" :tabs="tabs" @change="handleTabChange" />
 
-          <div class="tw-flex tw-items-center tw-gap-4">
-            <Toggle v-model="coursePlanningStore.isInPlanningMode">
-              Planning Mode
-            </Toggle>
-
-            <label
-              class="tw-border tw-border-umn-neutral-200 tw-max-w-xs tw-w-full tw-rounded-md !tw-block !tw-mb-0"
+          <label
+            class="tw-border tw-border-umn-neutral-200 tw-max-w-xs tw-w-full tw-rounded-md !tw-block !tw-mb-0"
+          >
+            <span class="sr-only"
+              >Filter by instructor name or course number</span
             >
-              <span class="sr-only"
-                >Filter by instructor name or course number</span
-              >
-              <input
-                v-model="searchInputRaw"
-                placeholder="Search table"
-                :showLabel="false"
-                class="tw-w-full tw-border-none tw-rounded-none tw-px-4 tw-py-2 tw-bg-transparent tw-text-sm"
-              />
-            </label>
-          </div>
+            <input
+              v-model="searchInputRaw"
+              placeholder="Search table"
+              :showLabel="false"
+              class="tw-w-full tw-border-none tw-rounded-none tw-px-4 tw-py-2 tw-bg-transparent tw-text-sm"
+            />
+          </label>
         </div>
 
         <PersonTable
           v-show="['instructors', 'tas'].includes(activeTab)"
           ref="tableRef"
-          label="Instructors"
+          :label="personTableLabel"
           :groupId="props.groupId"
         />
       </div>
@@ -60,6 +84,9 @@ import CoursePlanningFilters from "./components/CoursePlanningFilters.vue";
 import Spinner from "@/components/Spinner.vue";
 import Tabs, { type Tab } from "@/components/Tabs.vue";
 import Toggle from "@/components/Toggle.vue";
+import Button from "@/components/Button.vue";
+import { FilterIcon } from "@/icons";
+import CheckboxGroup from "@/components/CheckboxGroup.vue";
 
 const props = defineProps<{
   groupId: number;
@@ -67,6 +94,7 @@ const props = defineProps<{
 
 const coursePlanningStore = useRootCoursePlanningStore();
 const isLoadingComplete = ref(false);
+const isShowingFilters = ref(false);
 
 onMounted(async () => {
   await coursePlanningStore.initGroup(props.groupId);
@@ -92,6 +120,12 @@ const tabs = computed(() => [
   },
   { id: "courses", name: "Courses", current: activeTab.value === "courses" },
 ]);
+
+const personTableLabel = computed(() => {
+  if (activeTab.value === "instructors") return "Instructors";
+  if (activeTab.value === "tas") return "Teaching Assistants";
+  return "People";
+});
 
 function handleTabChange(tab: Tab) {
   activeTab.value = tab.id as typeof activeTab.value;
@@ -124,6 +158,15 @@ watch(
   () => coursePlanningStore.setSearchFilter(searchInputRaw.value),
   { immediate: true },
 );
+
+function handleToggleFiltersClick(isChecked: boolean) {
+  isShowingFilters.value = isChecked;
+
+  // reset all filters when filters are hidden
+  if (!isChecked) {
+    coursePlanningStore.resetFilters();
+  }
+}
 
 function scrollToCurrentTerm() {
   if (!currentTerm.value) return;

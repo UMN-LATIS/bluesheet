@@ -366,6 +366,16 @@ export const useRootCoursePlanningStore = defineStore(
       setIncludedEnrollmentRoles(roles: T.EnrollmentRole[]) {
         state.filters.includedEnrollmentRoles = roles;
       },
+
+      resetFilters() {
+        state.filters.excludedAcadAppts = new Set();
+        state.filters.excludedCourseLevels = new Set();
+        state.filters.excludedCourseTypes = new Set();
+        state.filters.startTermId = getters.earliestTerm.value?.id ?? null;
+        state.filters.endTermId = getters.latestTerm.value?.id ?? null;
+
+        // don't reset the search
+      },
     };
 
     const methods = {
