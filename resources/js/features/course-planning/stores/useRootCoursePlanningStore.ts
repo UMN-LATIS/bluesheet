@@ -54,9 +54,9 @@ export const useRootCoursePlanningStore = defineStore(
     });
 
     const getters = {
-      terms: computed(() => stores.termsStore.terms),
+      terms: computed((): Term[] => stores.termsStore.terms),
 
-      currentTerm: computed(() => stores.termsStore.currentTerm),
+      currentTerm: computed((): Term | null => stores.termsStore.currentTerm),
 
       /**
        * a list of terms for a term select dropdown
@@ -68,8 +68,8 @@ export const useRootCoursePlanningStore = defineStore(
         })),
       ),
 
-      earliestTerm: computed(() => stores.termsStore.earliestTerm),
-      latestTerm: computed(() => stores.termsStore.latestTerm),
+      earliestTerm: computed((): Term | null => stores.termsStore.earliestTerm),
+      latestTerm: computed((): Term | null => stores.termsStore.latestTerm),
       sectionsForActiveGroup: computed((): T.CourseSection[] => {
         if (!state.activeGroupId) {
           return [];
@@ -124,9 +124,10 @@ export const useRootCoursePlanningStore = defineStore(
           return [];
         }
 
-        const emplIds = getters.enrollmentsInVisibleTerms.value.map(
-          (enrollment) => enrollment.emplId,
-        );
+        const emplIds: T.Person["emplid"][] =
+          getters.enrollmentsInVisibleTerms.value.map(
+            (enrollment: T.Enrollment) => enrollment.emplId,
+          );
         return uniq(emplIds)
           .map((emplId) => stores.personStore.getPersonByEmplId(emplId))
           .filter(Boolean) as T.Person[];
@@ -239,6 +240,16 @@ export const useRootCoursePlanningStore = defineStore(
       ),
       allCourseLevels: computed((): T.Course["courseLevel"][] =>
         Object.keys(getters.courseLevelCounts.value),
+      ),
+      canTermBePlannedLookup: computed(
+        (): Record<Term["id"], boolean> =>
+          getters.terms.value.reduce(
+            (acc, term) => ({
+              ...acc,
+              [term.id]: methods.canTermBePlanned(term.id),
+            }),
+            {} as Record<Term["id"], boolean>,
+          ),
       ),
     };
 
