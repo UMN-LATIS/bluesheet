@@ -21,16 +21,6 @@
         :key="person.id"
         :person="person"
       />
-      <tr>
-        <Td></Td>
-        <Td
-          v-if="coursePlanningStore.visiblePeople.length"
-          class="tw-p-8 tw-flex tw-items-center tw-justify-center"
-          colspan="100"
-        >
-          None
-        </Td>
-      </tr>
     </TBody>
   </Table>
   <div v-show="coursePlanningStore.visiblePeople.length === 0">
