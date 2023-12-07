@@ -5,7 +5,7 @@ import * as T from "../coursePlanningTypes";
 import { Group } from "@/types";
 
 interface PersonStoreState {
-  personLookup: Record<T.Person["emplid"], T.Person | undefined>;
+  personLookupByEmpId: Record<T.Person["emplid"], T.Person | undefined>;
   personIdsByGroup: Record<number, T.Person["id"][] | undefined>;
 }
 
@@ -15,12 +15,23 @@ interface PersonStoreState {
  */
 export const usePersonStore = defineStore("person", () => {
   const state = reactive<PersonStoreState>({
-    personLookup: {},
+    personLookupByEmpId: {},
     personIdsByGroup: {},
   });
 
   const getters = {
-    allPeople: computed(() => Object.values(state.personLookup)),
+    allPeople: computed(
+      (): T.Person[] =>
+        Object.values(state.personLookupByEmpId).filter(Boolean) as T.Person[],
+    ),
+    personLookupByUserId: computed((): Record<T.Person["id"], T.Person> => {
+      const lookup: Record<T.Person["id"], T.Person> = {};
+      Object.values(state.personLookupByEmpId).forEach((person) => {
+        if (!person) return;
+        lookup[person.id] = person;
+      });
+      return lookup;
+    }),
 
     /**
      * counts the number of people with a particular academic
@@ -63,11 +74,11 @@ export const usePersonStore = defineStore("person", () => {
 
       // update the person lookup in one fell swoop
       const updatedPersonLookup = {
-        ...state.personLookup,
+        ...state.personLookupByEmpId,
         ...Object.fromEntries(persons.map((person) => [person.emplid, person])),
       };
 
-      state.personLookup = updatedPersonLookup;
+      state.personLookupByEmpId = updatedPersonLookup;
 
       // update personIdsByGroup list
       state.personIdsByGroup[groupId] = persons.map((person) => person.emplid);
@@ -79,7 +90,7 @@ export const usePersonStore = defineStore("person", () => {
      * get a person by id
      */
     getPersonByEmplId(emplId: T.Person["emplid"]): T.Person | null {
-      const person = state.personLookup[emplId] ?? null;
+      const person = state.personLookupByEmpId[emplId] ?? null;
 
       // for debugging
       // if (!person) {
@@ -99,6 +110,9 @@ export const usePersonStore = defineStore("person", () => {
     ): Record<T.Person["academicAppointment"], number> {
       const acadAppts = getters.acadApptCountsByGroup.value[groupId] ?? [];
       return acadAppts;
+    },
+    getPersonByUserId(userId: T.Person["id"]): T.Person | null {
+      return getters.personLookupByUserId.value[userId] ?? null;
     },
   };
 

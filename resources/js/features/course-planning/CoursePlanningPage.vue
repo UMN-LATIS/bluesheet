@@ -27,7 +27,7 @@
               id="toggle-filters"
               :modelValue="isShowingFilters"
               label="Filter Results"
-              description="By date, course, or instructor"
+              description="By date, course, or instructor."
               @update:modelValue="handleToggleFiltersClick"
             />
           </aside>
@@ -59,10 +59,16 @@
         </div>
 
         <PersonTable
-          v-show="['instructors', 'tas'].includes(activeTab)"
-          ref="tableRef"
+          v-if="['instructors', 'tas'].includes(activeTab)"
+          ref="personTableRef"
           :label="personTableLabel"
-          :groupId="props.groupId"
+          :groupId="groupId"
+        />
+
+        <CourseTable
+          v-if="activeTab === 'courses'"
+          label="Courses"
+          :groupId="groupId"
         />
       </div>
       <div
@@ -87,6 +93,7 @@ import Toggle from "@/components/Toggle.vue";
 import Button from "@/components/Button.vue";
 import { FilterIcon } from "@/icons";
 import CheckboxGroup from "@/components/CheckboxGroup.vue";
+import { CourseTable } from "./components/CourseTable";
 
 const props = defineProps<{
   groupId: number;
@@ -142,11 +149,11 @@ function handleTabChange(tab: Tab) {
   coursePlanningStore.setIncludedEnrollmentRoles(["PI", "TA"]);
 }
 
-const tableRef = ref<HTMLElement>();
+const personTableRef = ref<HTMLElement>();
 watch(
-  [isLoadingComplete, tableRef],
+  [isLoadingComplete, personTableRef],
   () => {
-    if (!isLoadingComplete.value || !tableRef.value) return;
+    if (!isLoadingComplete.value || !personTableRef.value) return;
     scrollToCurrentTerm();
   },
   { immediate: true },

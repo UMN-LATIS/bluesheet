@@ -34,7 +34,7 @@
           'tw-line-through': leave.status === 'cancelled',
         }"
       >
-        <span v-if="variant === 'instructor' && person">
+        <span v-if="variant === 'person' && person">
           {{ person.surName }}, {{ person.givenName }}
         </span>
         <span v-else> {{ prettyLeaveType }} Leave </span>
@@ -45,7 +45,7 @@
       class="leave-details tw-flex tw-flex-col tw-gap-2 tw-items-center tw-text-xs tw-normal-case"
     >
       <ul class="tw-text-xs tw-pl-6 tw-list-none tw-m-0">
-        <li v-if="variant === 'instructor'" class="tw-capitalize">
+        <li v-if="variant === 'person'" class="tw-capitalize">
           {{ leave.type }} Leave
         </li>
         <li class="tw-capitalize">
@@ -66,21 +66,24 @@ import { computed, ref } from "vue";
 import dayjs from "dayjs";
 import Chip from "@/components/Chip.vue";
 import { CircleCheckIcon, QuestionIcon, NoIcon, SparklesIcon } from "@/icons";
-import { Person } from "../coursePlanningTypes";
+import { useRootCoursePlanningStore } from "../stores/useRootCoursePlanningStore";
 
 const props = withDefaults(
   defineProps<{
     leave: Leave;
-    person?: Person;
-    variant?: "leaveType" | "instructor";
+    variant?: "leaveType" | "person";
   }>(),
   {
-    instructor: undefined,
     variant: "leaveType",
   },
 );
 
+const coursePlanningStore = useRootCoursePlanningStore();
+
 const isOpen = ref(false);
+const person = computed(() =>
+  coursePlanningStore.getPersonByUserId(props.leave.user_id),
+);
 
 const prettyLeaveType = computed(() => props.leave.type.replace(/_/g, " "));
 const isOnlyPartiallyEligible = computed(() => {
@@ -91,7 +94,7 @@ const isOnlyPartiallyEligible = computed(() => {
   return (
     props.leave.type === leaveTypes.SABBATICAL &&
     props.leave.status === leaveStatuses.ELIGIBLE &&
-    props.instructor?.jobCode === ASST_PROF_JOB_CODE
+    props.person?.jobCode === ASST_PROF_JOB_CODE
   );
 });
 

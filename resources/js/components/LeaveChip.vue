@@ -70,7 +70,7 @@ import { CircleCheckIcon, QuestionIcon, NoIcon, SparklesIcon } from "@/icons";
 const props = withDefaults(
   defineProps<{
     leave: Leave;
-    instructor?: Instructor;
+    instructor?: Instructor | null;
     variant?: "leaveType" | "instructor";
   }>(),
   {

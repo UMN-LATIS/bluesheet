@@ -10,7 +10,7 @@ import { useTermsStore } from "@/stores/useTermsStore";
 import { useLeaveStore } from "./useLeaveStore";
 import { debounce, uniq } from "lodash";
 import { sortByName } from "@/utils";
-import { Group, SelectOption, Term } from "@/types";
+import { Group, Leave, SelectOption, Term } from "@/types";
 
 interface RootCoursePlanningState {
   activeGroupId: Group["id"] | null;
@@ -569,6 +569,8 @@ export const useRootCoursePlanningStore = defineStore(
       //   stores.courseStore.getCourseLevelCountsForGroup,
       getLeavesForPersonInTerm: stores.leaveStore.getLeavesForPersonInTerm,
       getLeavesForPerson: stores.leaveStore.getLeavesForPerson,
+      getLeavesForGroupInTerm: stores.leaveStore.getLeavesForGroupInTerm,
+      getPersonByUserId: stores.personStore.getPersonByUserId,
     };
 
     return {

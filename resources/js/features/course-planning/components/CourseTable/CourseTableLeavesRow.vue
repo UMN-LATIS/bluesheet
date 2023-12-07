@@ -7,23 +7,26 @@
   >
     <Td> Leaves </Td>
     <Td
-      v-for="(leaves, index) in leavesPerTerm"
-      :key="index"
+      v-for="term in coursePlanningStore.terms"
+      v-show="isTermVisible(term.id)"
+      :key="term.id"
       class="term-data-column"
       :class="{
-        'term-data-column--current': currentTerm?.id === terms[index].id,
-        'term-data-column--fall': terms[index].name.includes('Fall'),
+        'term-data-column--current': coursePlanningStore.isCurrentTerm(term.id),
+        'term-data-column--fall': term.name.includes('Fall'),
       }"
     >
       <div class="leaves-container tw-flex tw-flex-col tw-gap-1">
         <LeaveChip
-          v-for="leave in leaves"
+          v-for="leave in coursePlanningStore.getLeavesForGroupInTerm(
+            groupId,
+            term.id,
+          )"
           :key="leave.id"
           :leave="leave"
-          :instructor="leave.instructor"
-          variant="instructor"
+          variant="person"
           :class="{
-            'tw-bg-yellow-100': search.length && false,
+            'tw-bg-yellow-100': false,
           }"
         />
       </div>
@@ -31,23 +34,38 @@
   </tr>
 </template>
 <script setup lang="ts">
-import LeaveChip from "@/components/LeaveChip.vue";
+import LeaveChip from "../LeaveChip.vue";
 import { Td } from "@/components/Table";
-import type { Term, LeaveWithInstructor } from "@/types";
+import type { Term, Group } from "@/types";
+import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
+import { computed } from "vue";
 // import { doesInstructorNameMatchSearchTerm } from "./doesInstructorNameMatchSearchTerm";
 
 withDefaults(
   defineProps<{
-    leavesPerTerm: LeaveWithInstructor[][];
-    terms: Term[];
-    currentTerm: Term | null;
-    sticky: boolean;
-    search: string;
+    groupId: Group["id"];
+    sticky?: boolean;
   }>(),
   {
     sticky: false,
   },
 );
+
+const coursePlanningStore = useRootCoursePlanningStore();
+
+const isTermVisibleLookup = computed(() =>
+  coursePlanningStore.terms.reduce(
+    (acc, term) => ({
+      ...acc,
+      [term.id]: coursePlanningStore.isTermVisible(term.id),
+    }),
+    {} as Record<string, boolean>,
+  ),
+);
+
+function isTermVisible(termId: Term["id"]) {
+  return isTermVisibleLookup.value[termId];
+}
 </script>
 <style scoped>
 .term-data-column.term-data-column--current {

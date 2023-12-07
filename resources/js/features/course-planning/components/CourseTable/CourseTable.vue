@@ -4,13 +4,7 @@
       <ReportTableHeaderRow :label="`Courses`" />
     </template>
     <TBody>
-      <!-- <CourseTableLeavesRow
-        :leavesPerTerm="leavesPerTerm"
-        :terms="terms"
-        :currentTerm="currentTerm"
-        :sticky="false"
-        :search="search"
-      /> -->
+      <CourseTableLeavesRow :groupId="groupId" />
       <!-- <CourseTableCourseRow
         v-for="course in courses"
         :key="course.shortCode"
