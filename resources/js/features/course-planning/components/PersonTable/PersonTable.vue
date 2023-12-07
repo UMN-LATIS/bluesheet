@@ -5,17 +5,18 @@
     :stickyFirstColumn="true"
     :stickyHeader="true"
   >
-    <colgroup v-if="coursePlanningStore.isInPlanningMode">
-      <col class="person-col" />
+    <colgroup>
+      <col />
       <col
+        v-if="coursePlanningStore.isInPlanningMode"
         class="term-col tw-bg-striped"
-        :span="disabledTermCountInPlanningMode"
+        :span="coursePlanningStore.countOfTermsDisabledForPlanning"
       />
     </colgroup>
     <template #thead>
       <ReportTableHeaderRow :label="label" />
     </template>
-    <TBody class="!tw-bg-transparent">
+    <TBody>
       <PersonTableRow
         v-for="person in coursePlanningStore.peopleInActiveGroup"
         :key="person.id"
@@ -43,8 +44,6 @@ defineProps<{
 }>();
 
 const coursePlanningStore = useRootCoursePlanningStore();
-const { countOfTermsDisabledForPlanning: disabledTermCountInPlanningMode } =
-  coursePlanningStore;
 </script>
 <style lang="scss">
 // fix width of cells to prevent them from embiggening

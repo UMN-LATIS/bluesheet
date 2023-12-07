@@ -3,6 +3,14 @@
     <template #thead>
       <ReportTableHeaderRow :label="`Courses`" />
     </template>
+
+    <colgroup v-if="coursePlanningStore.isInPlanningMode">
+      <col class="course-col" />
+      <col
+        class="term-col tw-bg-striped"
+        :span="coursePlanningStore.countOfTermsDisabledForPlanning"
+      />
+    </colgroup>
     <TBody>
       <CourseTableLeavesRow :groupId="groupId" />
       <CourseTableCourseRow
