@@ -70,6 +70,12 @@ export const useRootCoursePlanningStore = defineStore(
 
       earliestTerm: computed((): Term | null => stores.termsStore.earliestTerm),
       latestTerm: computed((): Term | null => stores.termsStore.latestTerm),
+      visibleTerms: computed((): Term[] => {
+        return stores.termsStore.terms.filter((term) =>
+          methods.isTermVisible(term.id),
+        );
+      }),
+
       sectionsForActiveGroup: computed((): T.CourseSection[] => {
         if (!state.activeGroupId) {
           return [];
@@ -251,6 +257,18 @@ export const useRootCoursePlanningStore = defineStore(
             {} as Record<Term["id"], boolean>,
           ),
       ),
+
+      disabledTermCountInPlanningMode: computed((): number => {
+        return getters.visibleTerms.value.reduce((acc, term) => {
+          return methods.canTermBePlanned(term.id) ? acc : acc + 1;
+        }, 0);
+      }),
+
+      visiblePeople: computed((): T.Person[] => {
+        return getters.peopleInVisibleTerms.value.filter(
+          methods.isPersonVisible,
+        );
+      }),
     };
 
     const actions = {

@@ -1,5 +1,6 @@
 <template>
   <Table
+    v-show="coursePlanningStore.visiblePeople.length"
     class="scheduling-report"
     :stickyFirstColumn="true"
     :stickyHeader="true"
@@ -8,10 +9,9 @@
       <col class="person-col" />
       <col
         class="term-col tw-bg-striped"
-        :span="colspanOfDisabledColsInPlanningMode"
+        :span="disabledTermCountInPlanningMode"
       />
     </colgroup>
-
     <template #thead>
       <ReportTableHeaderRow :label="label" />
     </template>
@@ -21,15 +21,31 @@
         :key="person.id"
         :person="person"
       />
+      <tr>
+        <Td></Td>
+        <Td
+          v-if="coursePlanningStore.visiblePeople.length"
+          class="tw-p-8 tw-flex tw-items-center tw-justify-center"
+          colspan="100"
+        >
+          None
+        </Td>
+      </tr>
     </TBody>
   </Table>
+  <div v-show="coursePlanningStore.visiblePeople.length === 0">
+    <div
+      class="tw-flex tw-min-h-[25vh] tw-rounded-md tw-items-center tw-justify-center tw-gap-2 tw-border tw-border-neutral-200 tw-p-4 tw-bg-neutral-100"
+    >
+      <span class="tw-text-neutral-400">None</span>
+    </div>
+  </div>
 </template>
 <script setup lang="ts">
-import { Table, TBody } from "@/components/Table";
+import { Table, TBody, Td } from "@/components/Table";
 import PersonTableRow from "./PersonTableRow.vue";
 import ReportTableHeaderRow from "../ReportTableHeaderRow.vue";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
-import { computed } from "vue";
 
 defineProps<{
   label: string;
@@ -37,15 +53,7 @@ defineProps<{
 }>();
 
 const coursePlanningStore = useRootCoursePlanningStore();
-
-const colspanOfDisabledColsInPlanningMode = computed((): number => {
-  return Object.values(coursePlanningStore.canTermBePlannedLookup).reduce(
-    (acc, canTermBePlanned) => {
-      return canTermBePlanned ? acc : acc + 1;
-    },
-    0,
-  );
-});
+const { disabledTermCountInPlanningMode } = coursePlanningStore;
 </script>
 <style lang="scss">
 // fix width of cells to prevent them from embiggening
