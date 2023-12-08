@@ -1,5 +1,5 @@
 <template>
-  <tr>
+  <tr v-if="isCourseVisible">
     <Td class="course-column">
       <div
         :class="{
@@ -55,6 +55,10 @@ const enrollmentsByTermLookup = computed(
 function getEnrollmentsForTerm(term: Term): T.Enrollment[] {
   return enrollmentsByTermLookup.value[term.id] ?? [];
 }
+
+const isCourseVisible = computed(() => {
+  return coursePlanningStore.isCourseVisible(props.course);
+});
 </script>
 <style scoped>
 .term-data-column.term-data-column--current {

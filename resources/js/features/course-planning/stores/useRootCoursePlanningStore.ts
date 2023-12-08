@@ -572,6 +572,17 @@ export const useRootCoursePlanningStore = defineStore(
         );
       },
 
+      isCourseVisible(course: T.Course) {
+        const isCourseTypeVisible = !state.filters.excludedCourseTypes.has(
+          course.courseType,
+        );
+        const isCourseLevelVisible = !state.filters.excludedCourseLevels.has(
+          course.courseLevel,
+        );
+
+        return isCourseTypeVisible && isCourseLevelVisible;
+      },
+
       isSectionVisible(section: T.CourseSection) {
         const course = stores.courseStore.getCourse(section.courseId);
         if (!course) {
@@ -631,6 +642,7 @@ export const useRootCoursePlanningStore = defineStore(
       getPersonByEmplId: stores.personStore.getPersonByEmplId,
       getCoursesForGroup: stores.courseStore.getCoursesForGroup,
       getSection: stores.courseSectionStore.getSection,
+      getSectionsForCourse: stores.courseSectionStore.getSectionsForCourse,
     };
 
     return {
