@@ -1,7 +1,7 @@
 <template>
   <div>
     <Table
-      v-show="true || coursePlanningStore.visiblePeople.length"
+      v-show="coursePlanningStore.visiblePeople.length"
       class="scheduling-report"
       :stickyFirstColumn="true"
       :stickyHeader="true"
@@ -25,13 +25,13 @@
         />
       </TBody>
     </Table>
-    <!-- <div v-show="coursePlanningStore.visiblePeople.length === 0">
+    <div v-show="coursePlanningStore.visiblePeople.length === 0">
       <div
         class="tw-flex tw-min-h-[25vh] tw-rounded-md tw-items-center tw-justify-center tw-gap-2 tw-border tw-border-neutral-200 tw-p-4 tw-bg-neutral-100"
       >
         <span class="tw-text-neutral-400">None</span>
       </div>
-    </div> -->
+    </div>
   </div>
 </template>
 <script setup lang="ts">
