@@ -96,6 +96,20 @@ class Bandaid {
         }
     }
 
+    /**
+     * Get all academic terms for CLA (undergrad and grad)
+     * at the UMNTC
+     *
+     * @return array<array{
+     *   id: number,
+     *   TERM: number,
+     *   TERM_BEGIN_DT: string, // "2019-01-22"
+     *   TERM_END_DT: string,  // "2019-05-15"
+     *   TERM_DESCRIPTION: string, //"Spring 2019"
+     *   INSTITUTION: string, // "UMNTC"
+     *   ACADEMIC_CAREER: string, // "UGRD"
+     * }>
+     */
     public function getTerms(): array {
         try {
             $result = $this->performRequest('classes/terms/');
@@ -108,7 +122,18 @@ class Bandaid {
     }
 
     /**
-     * Get all academic terms for CLA (undergrad and grad) at the UMNTC
+     * Get all academic terms for CLA (undergrad and grad)
+     * at the UMNTC
+     *
+     * @return \Illuminate\Support\Collection<array{
+     *   id: number,
+     *   TERM: number,
+     *   TERM_BEGIN_DT: string, // "2019-01-22"
+     *   TERM_END_DT: string,  // "2019-05-15"
+     *   TERM_DESCRIPTION: string, //"Spring 2019"
+     *   INSTITUTION: string, // "UMNTC"
+     *   ACADEMIC_CAREER: string, // "UGRD"
+     * }>
      */
     public function getCLATerms(): Collection {
         $allTerms = $this->getTerms();
@@ -123,6 +148,30 @@ class Bandaid {
             })->values();
     }
 
+    /**
+     * Retrieves a list of course details.
+     *
+     * @return array<array{
+     *   id: int,
+     *   TERM: int,
+     *   INSTRUCTOR_EMPLID: int,
+     *   ACADEMIC_ORG: int,
+     *   SUBJECT: string,
+     *   CLASS_SECTION: string,
+     *   INSTRUCTOR_ROLE: string,
+     *   CATALOG_NUMBER: string,
+     *   CLASS_NUMBER: int,
+     *   ACADEMIC_CAREER: string,
+     *   DESCRIPTION: string,
+     *   COMPONENT_CLASS: string,
+     *   ENROLLMENT_CAP: int,
+     *   ENROLLMENT_TOTAL: int,
+     *   WAITLIST_CAP: int,
+     *   WAITLIST_TOTAL: int,
+     *   CANCELLED: int,
+     *   ENROLLMENTS: array
+     * }>
+     */
     public function getDeptClassList(int $deptId): array {
         try {
             $result = $this->performRequest('classes/list/' . $deptId);
