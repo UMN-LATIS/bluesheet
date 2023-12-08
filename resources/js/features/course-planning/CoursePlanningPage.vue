@@ -59,14 +59,14 @@
         </div>
 
         <PersonTable
-          v-if="['instructors', 'tas'].includes(activeTab)"
+          v-if="showPersonTable"
           ref="personTableRef"
           :label="personTableLabel"
           :groupId="groupId"
         />
 
         <CourseTable
-          v-if="activeTab === 'courses'"
+          v-if="showCourseTable"
           label="Courses"
           :groupId="groupId"
         />
@@ -83,7 +83,7 @@
 </template>
 <script setup lang="ts">
 import WideLayout from "@/layouts/WideLayout.vue";
-import { computed, ref, watch, onMounted } from "vue";
+import { computed, ref, watch, onMounted, nextTick } from "vue";
 import { PersonTable } from "./components/PersonTable";
 import { useRootCoursePlanningStore } from "./stores/useRootCoursePlanningStore";
 import CoursePlanningFilters from "./components/CoursePlanningFilters.vue";
@@ -94,6 +94,8 @@ import Button from "@/components/Button.vue";
 import { FilterIcon } from "@/icons";
 import CheckboxGroup from "@/components/CheckboxGroup.vue";
 import { CourseTable } from "./components/CourseTable";
+import { asyncComputed, computedWithControl } from "@vueuse/core";
+import { useDebouncedComputed } from "@/utils/useDebouncedComputed";
 
 const props = defineProps<{
   groupId: number;
@@ -134,19 +136,28 @@ const personTableLabel = computed(() => {
   return "People";
 });
 
+const showPersonTable = useDebouncedComputed(
+  () => activeTab.value === "instructors" || activeTab.value === "tas",
+  [activeTab],
+);
+
+const showCourseTable = useDebouncedComputed(
+  () => activeTab.value === "courses",
+  [activeTab],
+);
+
 function handleTabChange(tab: Tab) {
   activeTab.value = tab.id as typeof activeTab.value;
 
-  // update the planning store's included roles
-  if (activeTab.value === "instructors") {
-    coursePlanningStore.setIncludedEnrollmentRoles(["PI"]);
-    return;
-  }
-  if (activeTab.value === "tas") {
-    coursePlanningStore.setIncludedEnrollmentRoles(["TA"]);
-    return;
-  }
-  coursePlanningStore.setIncludedEnrollmentRoles(["PI", "TA"]);
+  const tabRoleLookup = {
+    instructors: ["PI"],
+    tas: ["TA"],
+    courses: ["PI", "TA"],
+  };
+
+  setTimeout(() => {
+    coursePlanningStore.setIncludedEnrollmentRoles(tabRoleLookup[tab.id]);
+  }, 0);
 }
 
 const personTableRef = ref<HTMLElement>();
