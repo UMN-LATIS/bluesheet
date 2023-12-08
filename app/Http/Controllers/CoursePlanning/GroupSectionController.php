@@ -5,6 +5,7 @@ namespace App\Http\Controllers\CoursePlanning;
 use App\Http\Controllers\Controller;
 use App\Group;
 use App\Http\Resources\CourseSectionResource;
+use App\Http\Resources\EnrollmentResource;
 use Illuminate\Http\Request;
 use App\Library\Bandaid;
 
@@ -24,7 +25,9 @@ class GroupSectionController extends Controller {
             ->filter(
                 // filter out sections with no instructor
                 fn ($classRecord) =>
-                $classRecord->INSTRUCTOR_EMPLID !== null
+                $classRecord->INSTRUCTOR_EMPLID !== null &&
+                    // and people who aren't instructors or TAs
+                    in_array($classRecord->INSTRUCTOR_ROLE, ['PI', 'TA'])
             )->groupBy('CLASS_NUMBER')->map(
                 function ($classRecords) {
                     // combine all "instructors" into one section
@@ -33,18 +36,12 @@ class GroupSectionController extends Controller {
                         'INSTRUCTOR_EMPLID',
                         'INSTRUCTOR_ROLE',
                     ])->first();
-                    $section->ENROLLMENTS = $classRecords->map(
-                        fn ($classRecord) => ([
-                            'id' => join('-', [$classRecord->CLASS_NUMBER, $classRecord->INSTRUCTOR_EMPLID]),
-                            'emplId' => $classRecord->INSTRUCTOR_EMPLID,
-                            'sectionId' => $classRecord->CLASS_NUMBER,
-                            'role' => $classRecord->INSTRUCTOR_ROLE,
-                        ])
-                    )->toArray();
+                    $section->ENROLLMENTS = EnrollmentResource::collection($classRecords);
 
                     return $section;
                 }
             );
+
 
         return CourseSectionResource::collection($sections);
     }
