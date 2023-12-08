@@ -453,11 +453,9 @@ export const useRootCoursePlanningStore = defineStore(
           return true;
         }
 
-        // if there are sections, then make sure none of
-        // them are active or cancelled
-        return !termSections.some((section) =>
-          ["active", "cancelled"].includes(section.publishedStatus),
-        );
+        // if there are sections, then make sure none
+        // are published
+        return !termSections.some((section) => section.isPublished);
       },
 
       getSectionsForEmplIdInTerm(emplId: T.Person["emplid"], termId: number) {

@@ -280,7 +280,6 @@ export interface CourseSection {
   enrollments: Enrollment[];
   isCancelled: boolean;
   isPublished: boolean; // true if from bandaid, false if from app DB
-  publishedStatus: "published" | "unpublished" | "cancelled";
 }
 
 type CourseShortCode = `${Course["subject"]}-${Course["catalogNumber"]}`;

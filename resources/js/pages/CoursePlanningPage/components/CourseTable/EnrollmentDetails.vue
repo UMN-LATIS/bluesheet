@@ -3,7 +3,7 @@
     v-if="isEnrollmentVisible && person && section"
     class="instructor-details tw-truncate"
     :class="{
-      'tw-opacity-50 tw-line-through': section.publishedStatus === 'cancelled',
+      'tw-opacity-50 tw-line-through': section.isCancelled,
       'tw-bg-yellow-100': isPersonHighlighted,
       'tw-rounded-md tw-bg-black/5 tw-p-2 tw-pr-4 tw-mb-2': isOpen,
       'tw-rounded-full': !isOpen,
