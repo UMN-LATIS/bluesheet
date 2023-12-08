@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="person && section"
+    v-if="isEnrollmentVisible && person && section"
     class="instructor-details tw-truncate"
     :class="{
       'tw-opacity-50 tw-line-through': section.status === 'cancelled',
@@ -59,6 +59,7 @@ const props = defineProps<{
 }>();
 
 const coursePlanningStore = useRootCoursePlanningStore();
+const isOpen = ref(false);
 
 const person = computed((): T.Person | null =>
   coursePlanningStore.getPersonByEmplId(props.enrollment.emplId),
@@ -68,6 +69,14 @@ const section = computed((): T.CourseSection | null =>
   coursePlanningStore.getSection(props.enrollment.sectionId),
 );
 
-const isOpen = ref(false);
+const isEnrollmentVisible = computed(() => {
+  if (!person.value || !section.value) {
+    return false;
+  }
+  return (
+    coursePlanningStore.isPersonVisible(person.value) &&
+    coursePlanningStore.isSectionVisible(section.value)
+  );
+});
 </script>
 <style scoped></style>
