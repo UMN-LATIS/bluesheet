@@ -22,16 +22,16 @@
       :section="section"
     />
 
-    <!-- <AddPlannedCourseModal
+    <AddPlannedCourseModal
       v-if="isShowingAddCourse"
-      :terms="groupCourseHistoryStore.allTerms"
-      :courses="groupCourseHistoryStore.allCourses"
-      :instructors="groupCourseHistoryStore.allInstructors"
-      :initialInstructor="instructor"
+      :terms="coursePlanningStore.scheduleableTerms"
+      :courses="coursePlanningStore.courses"
+      :people="coursePlanningStore.people"
+      :initialInstructor="person"
       :initialTerm="term"
       :show="isShowingAddCourse"
       @close="isShowingAddCourse = false"
-    /> -->
+    />
   </div>
 </template>
 <script setup lang="ts">
@@ -67,6 +67,8 @@ const termLeaves = computed(() =>
 const canTermBePlanned = computed(() =>
   coursePlanningStore.canTermBePlanned(props.term.id),
 );
+
+const scheduleableTerms = computed(() => coursePlanningStore.scheduleableTerms);
 
 // const selectedCourse = ref<ComboBoxOption | null>(null);
 

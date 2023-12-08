@@ -25,7 +25,7 @@
         />
         <ComboBox
           id="select-instructor-combobox"
-          v-model="selectedOptions.instructor"
+          v-model="selectedOptions.person"
           label="Instructor"
           :showLabel="true"
           :options="instructorOptions"
@@ -44,20 +44,21 @@
 <script setup lang="ts">
 import Modal from "@/components/Modal.vue";
 import ComboBox, { ComboBoxOption } from "@/components/ComboBox2.vue";
-import { Course, Instructor, Term, TimelessCourse } from "@/types";
+import { Term } from "@/types";
 import { computed, onMounted, reactive } from "vue";
 import Button from "@/components/Button.vue";
 import { useGroupCourseHistoryStore } from "@/stores/useGroupCourseHistoryStore";
 import { getTempId } from "@/utils";
+import * as T from "../coursePlanningTypes";
 
 const props = defineProps<{
   terms: Term[];
-  courses: TimelessCourse[];
-  instructors: Instructor[];
+  courses: T.Course[];
+  people: T.Person[];
   show: boolean;
-  initialInstructor?: Instructor;
+  initialInstructor?: T.Person;
   initialTerm?: Term;
-  initialCourse?: TimelessCourse;
+  initialCourse?: T.Course;
 }>();
 
 const emits = defineEmits<{
@@ -71,51 +72,44 @@ const toTermOption = (t: Term) => ({
   label: t.name,
 });
 
-const toInstructorOption = (i: Instructor) => ({
+const toPersonOption = (i: T.Person) => ({
   id: i.id,
   label: `${i.surName}, ${i.givenName}`,
   secondaryLabel: i.email,
 });
 
-const toTimelessCourseOption = (c: TimelessCourse) => ({
-  id: c.shortCode,
-  label: c.shortCode,
+const toCourseOption = (c: T.Course) => ({
+  id: c.id,
+  label: c.id,
   secondaryLabel: c.title,
 });
 
 const initialSelected = computed(() => ({
-  instructor: props.initialInstructor
-    ? toInstructorOption(props.initialInstructor)
+  person: props.initialInstructor
+    ? toPersonOption(props.initialInstructor)
     : null,
-  course: props.initialCourse
-    ? toTimelessCourseOption(props.initialCourse)
-    : null,
+  course: props.initialCourse ? toCourseOption(props.initialCourse) : null,
   term: props.initialTerm ? toTermOption(props.initialTerm) : null,
 }));
 
 const selectedOptions = reactive<{
-  instructor: ComboBoxOption | null;
+  person: ComboBoxOption | null;
   course: ComboBoxOption | null;
   term: ComboBoxOption | null;
 }>({
-  instructor: initialSelected.value.instructor,
+  person: initialSelected.value.person,
   course: initialSelected.value.course,
   term: initialSelected.value.term,
 });
 
 const termOptions = computed(() => props.terms.map(toTermOption));
 
-const courseOptions = computed(() => props.courses.map(toTimelessCourseOption));
+const courseOptions = computed(() => props.courses.map(toCourseOption));
 
-const instructorOptions = computed(() =>
-  props.instructors.map(toInstructorOption),
-);
+const instructorOptions = computed(() => props.people.map(toPersonOption));
 
 const selectedCourse = computed(() => {
-  return (
-    props.courses.find((c) => c.shortCode === selectedOptions.course?.id) ??
-    null
-  );
+  return props.courses.find((c) => c.id === selectedOptions.course?.id) ?? null;
 });
 
 const selectedTerm = computed(() => {
@@ -123,16 +117,13 @@ const selectedTerm = computed(() => {
 });
 
 const selectedInstructor = computed(() => {
-  return (
-    props.instructors.find((i) => i.id === selectedOptions.instructor?.id) ??
-    null
-  );
+  return props.people.find((i) => i.id === selectedOptions.person?.id) ?? null;
 });
 
 function resetForm() {
   selectedOptions.course = initialSelected.value.course;
   selectedOptions.term = initialSelected.value.term;
-  selectedOptions.instructor = initialSelected.value.instructor;
+  selectedOptions.person = initialSelected.value.person;
 }
 
 function handleCancel() {
@@ -149,11 +140,11 @@ function handleAddTentativeCourse() {
     throw new Error("Missing required fields");
   }
 
-  groupCourseHistoryStore.addPlannedCourseToTerm({
-    course: selectedCourse.value,
-    term: selectedTerm.value,
-    instructor: selectedInstructor.value,
-  });
+  // groupCourseHistoryStore.addPlannedCourseToTerm({
+  //   course: selectedCourse.value,
+  //   term: selectedTerm.value,
+  //   instructor: selectedInstructor.value,
+  // });
 
   console.log("add tentative course", {
     course: selectedCourse.value,

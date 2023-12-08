@@ -55,6 +55,12 @@ export const useRootCoursePlanningStore = defineStore(
 
     const getters = {
       terms: computed((): Term[] => stores.termsStore.terms),
+      courses: computed((): T.Course[] =>
+        stores.courseStore.getCoursesForGroup(state.activeGroupId ?? 0),
+      ),
+      people: computed((): T.Person[] =>
+        stores.personStore.getPeopleInGroup(state.activeGroupId ?? 0),
+      ),
 
       currentTerm: computed((): Term | null => stores.termsStore.currentTerm),
 
@@ -257,6 +263,11 @@ export const useRootCoursePlanningStore = defineStore(
             {} as Record<Term["id"], boolean>,
           ),
       ),
+      scheduleableTerms: computed((): Term[] => {
+        return getters.terms.value.filter((term) =>
+          methods.canTermBePlanned(term.id),
+        );
+      }),
 
       // for colspan
       countOfTermsDisabledForPlanning: computed((): number => {
