@@ -1,5 +1,6 @@
 <template>
   <tr
+    v-if="hasVisibleLeaves"
     class="course-table-leaves-row"
     :class="{
       'course-table-leaves-row--sticky': sticky,
@@ -18,10 +19,8 @@
     >
       <div class="leaves-container tw-flex tw-flex-col tw-gap-1">
         <LeaveChip
-          v-for="leave in coursePlanningStore.getLeavesForGroupInTerm(
-            groupId,
-            term.id,
-          )"
+          v-for="leave in coursePlanningStore.getLeavesInTerm(term.id)"
+          v-show="coursePlanningStore.isPersonVisibleById(leave.user_id)"
           :key="leave.id"
           :leave="leave"
           variant="person"
@@ -47,7 +46,7 @@ withDefaults(
     sticky?: boolean;
   }>(),
   {
-    sticky: false,
+    sticky: true,
   },
 );
 
@@ -66,6 +65,12 @@ const isTermVisibleLookup = computed(() =>
 function isTermVisible(termId: Term["id"]) {
   return isTermVisibleLookup.value[termId];
 }
+
+const hasVisibleLeaves = computed(() => {
+  return coursePlanningStore.leaves.some((leave) =>
+    coursePlanningStore.isPersonVisibleById(leave.user_id),
+  );
+});
 </script>
 <style scoped>
 .term-data-column.term-data-column--current {
@@ -83,7 +88,7 @@ function isTermVisible(termId: Term["id"]) {
 
 .course-table-leaves-row--sticky td:first-child {
   position: sticky;
-  top: 2.5rem;
+  top: 2.8rem;
   left: 0;
   background: #fafafa;
   z-index: 2;
@@ -92,7 +97,7 @@ function isTermVisible(termId: Term["id"]) {
 
 .course-table-leaves-row--sticky td {
   position: sticky;
-  top: 2.5rem;
+  top: 2.8rem;
   z-index: 1;
   background: #fff;
   border-bottom: 2px solid #eee;

@@ -10,7 +10,7 @@ import { useTermsStore } from "@/stores/useTermsStore";
 import { useLeaveStore } from "./useLeaveStore";
 import { debounce, uniq } from "lodash";
 import { sortByName } from "@/utils";
-import { Group, SelectOption, Term } from "@/types";
+import { Group, Leave, SelectOption, Term } from "@/types";
 
 interface RootCoursePlanningState {
   activeGroupId: Group["id"] | null;
@@ -300,6 +300,15 @@ export const useRootCoursePlanningStore = defineStore(
       visiblePeople: computed((): T.Person[] => {
         return getters.peopleInActiveGroup.value.filter(
           (person) => getters.isPersonVisibleLookup.value[person.emplid],
+        );
+      }),
+
+      leaves: computed((): Leave[] => stores.leaveStore.leaves),
+
+      leaveLookupByTermId: computed((): Record<Term["id"], Leave[]> => {
+        if (!state.activeGroupId) return {};
+        return stores.leaveStore.getLeaveLookupByTermForGroup(
+          state.activeGroupId,
         );
       }),
     };
@@ -659,16 +668,32 @@ export const useRootCoursePlanningStore = defineStore(
       isPersonVisible(person: T.Person) {
         return getters.isPersonVisibleLookup.value[person.emplid] ?? false;
       },
+      isPersonVisibleById(userId: T.Person["id"]) {
+        const person = stores.personStore.getPersonByUserId(userId);
+        if (!person) {
+          return false;
+        }
+
+        return methods.isPersonVisible(person);
+      },
       isCurrentTerm: stores.termsStore.isCurrentTerm,
       getGroup: stores.groupStore.getGroup,
       getLeavesForPersonInTerm: stores.leaveStore.getLeavesForPersonInTerm,
       getLeavesForPerson: stores.leaveStore.getLeavesForPerson,
-      getLeavesForGroupInTerm: stores.leaveStore.getLeavesForGroupInTerm,
+      getLeavesInTerm: (termId: Term["id"]) => {
+        if (!state.activeGroupId) {
+          return [];
+        }
+
+        return getters.leaveLookupByTermId.value[termId] ?? [];
+      },
       getPersonByUserId: stores.personStore.getPersonByUserId,
       getPersonByEmplId: stores.personStore.getPersonByEmplId,
       getCoursesForGroup: stores.courseStore.getCoursesForGroup,
       getSection: stores.courseSectionStore.getSection,
       getSectionsForCourse: stores.courseSectionStore.getSectionsForCourse,
+      getLeaveLookupByTermForGroup:
+        stores.leaveStore.getLeaveLookupByTermForGroup,
     };
 
     return {
