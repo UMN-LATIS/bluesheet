@@ -554,8 +554,7 @@ export const useRootCoursePlanningStore = defineStore(
         );
       },
 
-      isSectionMatchingSearch(section: T.CourseSection) {
-        const course = stores.courseStore.getCourse(section.courseId);
+      isCourseMatchingSearch(course: T.Course) {
         if (!course) {
           return false;
         }
@@ -566,6 +565,12 @@ export const useRootCoursePlanningStore = defineStore(
           state.filters.search === "" ||
           courseCode.toLowerCase().includes(state.filters.search.toLowerCase())
         );
+      },
+
+      isSectionMatchingSearch(section: T.CourseSection) {
+        const course = stores.courseStore.getCourse(section.courseId);
+        if (!course) return false;
+        return methods.isCourseMatchingSearch(course);
       },
 
       isTermVisible(termId: Term["id"]) {
@@ -600,7 +605,8 @@ export const useRootCoursePlanningStore = defineStore(
         return (
           isCourseTypeVisible &&
           isCourseLevelVisible &&
-          hasEnrollmentsThatAreVisible
+          hasEnrollmentsThatAreVisible &&
+          methods.isCourseMatchingSearch(course)
         );
       },
 

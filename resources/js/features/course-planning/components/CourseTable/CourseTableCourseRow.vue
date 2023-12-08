@@ -3,7 +3,7 @@
     <Td class="course-column">
       <div
         :class="{
-          'tw-bg-yellow-100': false,
+          'tw-bg-yellow-100': isCourseHighlighted,
         }"
       >
         {{ course.subject }} {{ course.catalogNumber }}
@@ -58,6 +58,13 @@ function getEnrollmentsForTerm(term: Term): T.Enrollment[] {
 
 const isCourseVisible = computed(() => {
   return coursePlanningStore.isCourseVisible(props.course);
+});
+
+const isCourseHighlighted = computed(() => {
+  return (
+    coursePlanningStore.filters.search.length &&
+    coursePlanningStore.isCourseMatchingSearch(props.course)
+  );
 });
 </script>
 <style scoped>

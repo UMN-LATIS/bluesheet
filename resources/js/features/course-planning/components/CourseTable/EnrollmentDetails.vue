@@ -4,7 +4,7 @@
     class="instructor-details tw-truncate"
     :class="{
       'tw-opacity-50 tw-line-through': section.status === 'cancelled',
-      'tw-bg-yellow-100': false,
+      'tw-bg-yellow-100': isPersonHighlighted,
       'tw-rounded-md tw-bg-black/5 tw-p-2 tw-pr-4 tw-mb-2': isOpen,
       'tw-rounded-full': !isOpen,
     }"
@@ -78,5 +78,12 @@ const isEnrollmentVisible = computed(() => {
     coursePlanningStore.isSectionVisible(section.value)
   );
 });
+
+const isPersonHighlighted = computed(
+  () =>
+    coursePlanningStore.filters.search.length &&
+    person.value &&
+    coursePlanningStore.isPersonMatchingSearch(person.value),
+);
 </script>
 <style scoped></style>
