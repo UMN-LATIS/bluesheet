@@ -45,18 +45,14 @@
 import Modal from "@/components/Modal.vue";
 import ComboBox, { ComboBoxOption } from "@/components/ComboBox2.vue";
 import { Term } from "@/types";
-import { computed, onMounted, reactive } from "vue";
+import { computed, reactive } from "vue";
 import Button from "@/components/Button.vue";
-import { useGroupCourseHistoryStore } from "@/stores/useGroupCourseHistoryStore";
-import { getTempId } from "@/utils";
+import { useRootCoursePlanningStore } from "../stores/useRootCoursePlanningStore";
 import * as T from "../coursePlanningTypes";
 
 const props = defineProps<{
-  terms: Term[];
-  courses: T.Course[];
-  people: T.Person[];
   show: boolean;
-  initialInstructor?: T.Person;
+  initialPerson?: T.Person;
   initialTerm?: Term;
   initialCourse?: T.Course;
 }>();
@@ -65,7 +61,11 @@ const emits = defineEmits<{
   (eventName: "close");
 }>();
 
-const groupCourseHistoryStore = useGroupCourseHistoryStore();
+const coursePlanningStore = useRootCoursePlanningStore();
+
+const terms = computed(() => coursePlanningStore.scheduleableTerms);
+const courses = computed(() => coursePlanningStore.courses);
+const people = computed(() => coursePlanningStore.people);
 
 const toTermOption = (t: Term) => ({
   id: t.id,
@@ -85,9 +85,7 @@ const toCourseOption = (c: T.Course) => ({
 });
 
 const initialSelected = computed(() => ({
-  person: props.initialInstructor
-    ? toPersonOption(props.initialInstructor)
-    : null,
+  person: props.initialPerson ? toPersonOption(props.initialPerson) : null,
   course: props.initialCourse ? toCourseOption(props.initialCourse) : null,
   term: props.initialTerm ? toTermOption(props.initialTerm) : null,
 }));
@@ -102,22 +100,22 @@ const selectedOptions = reactive<{
   term: initialSelected.value.term,
 });
 
-const termOptions = computed(() => props.terms.map(toTermOption));
+const termOptions = computed(() => terms.value.map(toTermOption));
 
-const courseOptions = computed(() => props.courses.map(toCourseOption));
+const courseOptions = computed(() => courses.value.map(toCourseOption));
 
-const instructorOptions = computed(() => props.people.map(toPersonOption));
+const instructorOptions = computed(() => people.value.map(toPersonOption));
 
 const selectedCourse = computed(() => {
-  return props.courses.find((c) => c.id === selectedOptions.course?.id) ?? null;
+  return courses.value.find((c) => c.id === selectedOptions.course?.id) ?? null;
 });
 
 const selectedTerm = computed(() => {
-  return props.terms.find((t) => t.id === selectedOptions.term?.id) ?? null;
+  return terms.value.find((t) => t.id === selectedOptions.term?.id) ?? null;
 });
 
 const selectedInstructor = computed(() => {
-  return props.people.find((i) => i.id === selectedOptions.person?.id) ?? null;
+  return people.value.find((i) => i.id === selectedOptions.person?.id) ?? null;
 });
 
 function resetForm() {

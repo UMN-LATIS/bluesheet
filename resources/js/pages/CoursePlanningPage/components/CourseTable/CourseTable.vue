@@ -30,15 +30,13 @@ import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningSt
 import { Group } from "@/types";
 import { computed } from "vue";
 
-const props = defineProps<{
+defineProps<{
   label: string;
   groupId: Group["id"];
 }>();
 
 const coursePlanningStore = useRootCoursePlanningStore();
-const courses = computed(() =>
-  coursePlanningStore.getCoursesForGroup(props.groupId),
-);
+const courses = computed(() => coursePlanningStore.getCourses());
 </script>
 <style scoped>
 .term-data-column.term-data-column--current {

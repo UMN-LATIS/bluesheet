@@ -83,18 +83,14 @@
 </template>
 <script setup lang="ts">
 import WideLayout from "@/layouts/WideLayout.vue";
-import { computed, ref, watch, onMounted, nextTick } from "vue";
+import { computed, ref, watch, onMounted } from "vue";
 import { PersonTable } from "./components/PersonTable";
 import { useRootCoursePlanningStore } from "./stores/useRootCoursePlanningStore";
 import CoursePlanningFilters from "./components/CoursePlanningFilters.vue";
 import Spinner from "@/components/Spinner.vue";
 import Tabs, { type Tab } from "@/components/Tabs.vue";
-import Toggle from "@/components/Toggle.vue";
-import Button from "@/components/Button.vue";
-import { FilterIcon } from "@/icons";
 import CheckboxGroup from "@/components/CheckboxGroup.vue";
 import { CourseTable } from "./components/CourseTable";
-import { asyncComputed, computedWithControl } from "@vueuse/core";
 import { useDebouncedComputed } from "@/utils/useDebouncedComputed";
 
 const props = defineProps<{

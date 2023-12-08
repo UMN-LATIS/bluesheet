@@ -84,14 +84,8 @@
             </ul>
           </li>
           <li v-if="$can('schedule departments') && group.dept_id">
-            <router-link
-              :to="{ name: 'schedulingReport', params: { groupId: group.id } }"
-              >View Scheduling Report</router-link
-            >
-          </li>
-          <li v-if="$can('schedule departments') && group.dept_id">
             <router-link :to="`/course-planning/groups/${group.id}`">
-              Course Planning
+              Scheduling Report
             </router-link>
           </li>
         </ul>

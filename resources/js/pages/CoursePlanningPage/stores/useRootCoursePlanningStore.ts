@@ -706,16 +706,17 @@ export const useRootCoursePlanningStore = defineStore(
       },
       getPersonByUserId: stores.personStore.getPersonByUserId,
       getPersonByEmplId: stores.personStore.getPersonByEmplId,
-      getCoursesForGroup: stores.courseStore.getCoursesForGroup,
       getSection: stores.courseSectionStore.getSection,
       getSectionsForCourse: stores.courseSectionStore.getSectionsForCourse,
       getLeaveLookupByTermForGroup:
         stores.leaveStore.getLeaveLookupByTermForGroup,
+      getCourses: () =>
+        stores.courseStore.getCoursesForGroup(state.activeGroupId ?? 0),
+      getCourse: stores.courseStore.getCourse,
     };
 
     return {
       ...toRefs(state),
-      ...stores,
       ...getters,
       ...actions,
       ...methods,

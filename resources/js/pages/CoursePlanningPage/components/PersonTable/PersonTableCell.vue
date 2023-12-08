@@ -22,12 +22,9 @@
       :section="section"
     />
 
-    <AddPlannedCourseModal
+    <AddTentativeCourseModal
       v-if="isShowingAddCourse"
-      :terms="coursePlanningStore.scheduleableTerms"
-      :courses="coursePlanningStore.courses"
-      :people="coursePlanningStore.people"
-      :initialInstructor="person"
+      :initialPerson="person"
       :initialTerm="term"
       :show="isShowingAddCourse"
       @close="isShowingAddCourse = false"
@@ -36,11 +33,10 @@
 </template>
 <script setup lang="ts">
 import LeaveChip from "../LeaveChip.vue";
-import SectionDetails from "../SectionDetails.vue";
-import { type ComboBoxOption } from "@/components/ComboBox2.vue";
+import SectionDetails from "./SectionDetails.vue";
 import { Term } from "@/types";
 import { ref, computed } from "vue";
-import AddPlannedCourseModal from "../AddPlannedCourseModal.vue";
+import AddTentativeCourseModal from "../AddTentativeSectionModal.vue";
 import { Person } from "../../coursePlanningTypes";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
 
@@ -67,17 +63,5 @@ const termLeaves = computed(() =>
 const canTermBePlanned = computed(() =>
   coursePlanningStore.canTermBePlanned(props.term.id),
 );
-
-const scheduleableTerms = computed(() => coursePlanningStore.scheduleableTerms);
-
-// const selectedCourse = ref<ComboBoxOption | null>(null);
-
-// const selectCourseOptions = computed((): ComboBoxOption[] => {
-//   return groupCourseHistoryStore.allCourses.map((c: TimelessCourse) => ({
-//     id: c.shortCode,
-//     label: c.shortCode,
-//     secondaryLabel: c.title,
-//   }));
-// });
 </script>
 <style scoped></style>

@@ -19,11 +19,10 @@ import FiscalReportPage from "./pages/reports/FiscalReportPage.vue";
 import LastModifiedReportPage from "./pages/reports/LastModifiedReportPage.vue";
 import MissingOfficialReportPage from "./pages/reports/MissingOfficialReportPage.vue";
 import OrgpReportPage from "./pages/reports/OrgpReportPage.vue";
-import SchedulingReportPage from "./pages/reports/SchedulingReport/SchedulingReportPage.vue";
 import GroupAdminsReportPage from "./pages/reports/GroupAdmins.vue";
 import EligibilityReportPage from "./pages/reports/EligibilityReport.vue";
 import { parseIntFromRouteParam as parseIntFromParam } from "@/utils";
-import { coursePlanningRoutes } from "./features/course-planning/coursePlanningRoutes";
+import { coursePlanningRoutes } from "./pages/CoursePlanningPage/coursePlanningRoutes";
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -117,14 +116,6 @@ export const router = createRouter({
       path: "/reports/groupAdmins",
       component: GroupAdminsReportPage,
       props: true,
-    },
-    {
-      name: "schedulingReport",
-      path: "/reports/schedulingReport/:groupId",
-      component: SchedulingReportPage,
-      props: (route) => ({
-        groupId: parseIntFromParam(route.params.groupId),
-      }),
     },
     {
       name: "eligibilityReport",

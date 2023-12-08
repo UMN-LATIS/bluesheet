@@ -43,9 +43,9 @@
 </template>
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import * as T from "../coursePlanningTypes";
+import * as T from "../../coursePlanningTypes";
 import { ChevronDownIcon } from "@/icons";
-import { useRootCoursePlanningStore } from "../stores/useRootCoursePlanningStore";
+import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
 
 const props = defineProps<{
   section: T.CourseSection;
@@ -53,9 +53,7 @@ const props = defineProps<{
 
 const planningStore = useRootCoursePlanningStore();
 
-const course = computed(() =>
-  planningStore.courseStore.getCourse(props.section.courseId),
-);
+const course = computed(() => planningStore.getCourse(props.section.courseId));
 
 const isSectionVisible = computed(() =>
   planningStore.isSectionVisible(props.section),
