@@ -37,7 +37,7 @@ import SectionDetails from "./SectionDetails.vue";
 import { Term } from "@/types";
 import { ref, computed } from "vue";
 import AddTentativeCourseModal from "../AddTentativeSectionModal.vue";
-import { Person } from "../../coursePlanningTypes";
+import { Person } from "@/types";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
 
 const props = defineProps<{

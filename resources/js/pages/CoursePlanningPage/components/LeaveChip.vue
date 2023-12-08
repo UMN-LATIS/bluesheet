@@ -94,7 +94,7 @@ const isOnlyPartiallyEligible = computed(() => {
   return (
     props.leave.type === leaveTypes.SABBATICAL &&
     props.leave.status === leaveStatuses.ELIGIBLE &&
-    props.person?.jobCode === ASST_PROF_JOB_CODE
+    person.value?.jobCode === ASST_PROF_JOB_CODE
   );
 });
 

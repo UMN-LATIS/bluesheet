@@ -1,11 +1,10 @@
 import { defineStore } from "pinia";
 import { reactive, toRefs, computed } from "vue";
 import * as api from "../coursePlanningApi";
-import * as T from "../coursePlanningTypes";
-import { Group } from "@/types";
+import * as T from "@/types";
 interface EnrollmentStoreState {
   enrollmentLookup: Record<T.Enrollment["id"], T.Enrollment | undefined>;
-  enrollmentIdsByGroup: Record<Group["id"], T.Enrollment["id"][] | undefined>;
+  enrollmentIdsByGroup: Record<T.Group["id"], T.Enrollment["id"][] | undefined>;
 }
 
 export const useEnrollmentStore = defineStore("enrollment", () => {
@@ -90,7 +89,7 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
     },
     getEnrollmentsForEmplIdInGroup(
       emplid: T.Enrollment["emplId"],
-      groupId: Group["id"],
+      groupId: T.Group["id"],
     ): T.Enrollment[] {
       const groupEnrollments = methods.getEnrollmentsForGroup(groupId);
       return groupEnrollments.filter((e) => e.emplId === emplid);

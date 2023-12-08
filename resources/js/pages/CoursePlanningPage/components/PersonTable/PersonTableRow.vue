@@ -39,7 +39,7 @@
 <script setup lang="ts">
 import { Td } from "@/components/Table";
 import PersonTableCell from "./PersonTableCell.vue";
-import { Person } from "../../coursePlanningTypes";
+import { Person } from "@/types";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
 import { computed } from "vue";
 import { Term } from "@/types";

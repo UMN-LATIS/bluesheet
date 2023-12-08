@@ -1,8 +1,7 @@
 import { defineStore } from "pinia";
 import { computed, reactive, toRefs } from "vue";
 import * as api from "../coursePlanningApi";
-import * as T from "../coursePlanningTypes";
-import { Group } from "@/types";
+import * as T from "@/types";
 
 interface PersonStoreState {
   personLookupByEmpId: Record<T.Person["emplid"], T.Person | undefined>;
@@ -39,7 +38,7 @@ export const usePersonStore = defineStore("person", () => {
      */
     acadApptCountsByGroup: computed(() => {
       const counts: Record<
-        Group["id"],
+        T.Group["id"],
         Record<T.Person["academicAppointment"], number>
       > = {};
 

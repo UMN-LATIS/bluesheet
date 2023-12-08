@@ -65,53 +65,6 @@ export async function fetchTerms() {
   return res.data;
 }
 
-const toCourse = (rawCourse: T.ApiCourseInstructorRecord): T.Course => ({
-  shortCode: `${rawCourse.subject}-${rawCourse.catalogNumber}`,
-  classNumber: rawCourse.classNumber,
-  term: rawCourse.term,
-  subject: rawCourse.subject,
-  catalogNumber: rawCourse.catalogNumber,
-  classSection: rawCourse.classSection,
-  title: rawCourse.title,
-  enrollmentCap: rawCourse.enrollmentCap,
-  enrollmentTotal: rawCourse.enrollmentTotal,
-  cancelled: rawCourse.cancelled,
-  courseType: rawCourse.courseType,
-  courseLevel: rawCourse.courseLevel,
-  instructors: [],
-});
-
-export async function getGroupCoursesByTerm({
-  groupId,
-  termId,
-  roles,
-}: {
-  groupId: number;
-  termId: number;
-  roles: T.InstructorRole[];
-}) {
-  const res = await axios.get<T.ApiCourseInstructorRecord[]>(
-    `/api/terms/${termId}/groups/${groupId}/courses`,
-    {
-      params: {
-        includeRoles: roles.length ? roles.join(",") : undefined,
-      },
-    },
-  );
-
-  const coursesByClassNumber = new Map<T.Course["classNumber"], T.Course>();
-
-  res.data.forEach((rawCourse) => {
-    const course =
-      coursesByClassNumber.get(rawCourse.classNumber) ?? toCourse(rawCourse);
-    course.instructors.push(rawCourse.instructor);
-
-    coursesByClassNumber.set(rawCourse.classNumber, course);
-  });
-
-  return [...coursesByClassNumber.values()];
-}
-
 export async function fetchGroup(groupId: number) {
   const res = await axios.get<T.Group>(`/api/group/${groupId}`);
   return res.data;
@@ -189,28 +142,28 @@ export async function fetchParentOrganizations() {
   return res.data;
 }
 
-export async function postPlannedCourseForGroup({
-  groupId,
-  course,
-}: {
-  groupId: number;
-  course: Omit<
-    T.ApiPlannedCourse,
-    "id" | "group_id" | "created_at" | "updated_at"
-  >;
-}): Promise<T.ApiPlannedCourse> {
-  const res = await axios.post<T.ApiPlannedCourse>(
-    `/api/group/${groupId}/planned-courses`,
-    course,
-  );
+// export async function postPlannedCourseForGroup({
+//   groupId,
+//   course,
+// }: {
+//   groupId: number;
+//   course: Omit<
+//     T.ApiPlannedCourse,
+//     "id" | "group_id" | "created_at" | "updated_at"
+//   >;
+// }): Promise<T.ApiPlannedCourse> {
+//   const res = await axios.post<T.ApiPlannedCourse>(
+//     `/api/group/${groupId}/planned-courses`,
+//     course,
+//   );
 
-  return res.data;
-}
+//   return res.data;
+// }
 
-export async function fetchPlannedCoursesForGroup(groupId: number) {
-  const res = await axios.get<T.ApiPlannedCourse[]>(
-    `/api/group/${groupId}/planned-courses`,
-  );
+// export async function fetchPlannedCoursesForGroup(groupId: number) {
+//   const res = await axios.get<T.ApiPlannedCourse[]>(
+//     `/api/group/${groupId}/planned-courses`,
+//   );
 
-  return res.data;
-}
+//   return res.data;
+// }

@@ -48,7 +48,7 @@ import { Term } from "@/types";
 import { computed, reactive } from "vue";
 import Button from "@/components/Button.vue";
 import { useRootCoursePlanningStore } from "../stores/useRootCoursePlanningStore";
-import * as T from "../coursePlanningTypes";
+import * as T from "@/types";
 
 const props = defineProps<{
   show: boolean;

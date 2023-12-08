@@ -1,13 +1,5 @@
 import { axios } from "@/utils";
-import * as T from "./coursePlanningTypes";
-import { Leave } from "@/types";
-
-export async function getGroup(groupId: number) {
-  const res = await axios.get<T.ApiGetGroupCoursePlanningResponse>(
-    `/api/course-planning/groups/${groupId}`,
-  );
-  return res.data;
-}
+import * as T from "@/types";
 
 export async function fetchCoursesForGroup(groupId: number) {
   const res = await axios.get<T.Course[]>(
@@ -38,7 +30,7 @@ export async function fetchPeopleForGroup(groupId: number) {
 }
 
 export async function fetchLeavesForGroup(groupId: number) {
-  const res = await axios.get<Leave[]>(
+  const res = await axios.get<T.Leave[]>(
     `/api/course-planning/groups/${groupId}/leaves`,
   );
   return res.data;

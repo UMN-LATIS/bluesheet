@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { computed, reactive, toRefs } from "vue";
 import { Group, Term } from "@/types";
-import * as T from "../coursePlanningTypes";
+import * as T from "@/types";
 import * as api from "../coursePlanningApi";
 
 interface CourseSectionStoreState {

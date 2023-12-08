@@ -1,6 +1,5 @@
 import { defineStore } from "pinia";
 import { computed, reactive, toRefs } from "vue";
-import * as T from "../coursePlanningTypes";
 import { usePersonStore } from "./usePersonStore";
 import { useEnrollmentStore } from "./useEnrollmentStore";
 import { useCourseSectionStore } from "./useCourseSectionStore";
@@ -10,10 +9,10 @@ import { useTermsStore } from "@/stores/useTermsStore";
 import { useLeaveStore } from "./useLeaveStore";
 import { debounce, uniq } from "lodash";
 import { sortByName } from "@/utils";
-import { Group, Leave, SelectOption, Term } from "@/types";
+import * as T from "@/types";
 
 interface RootCoursePlanningState {
-  activeGroupId: Group["id"] | null;
+  activeGroupId: T.Group["id"] | null;
   isInPlanningMode: boolean;
   filters: {
     startTermId: number | null;
@@ -54,7 +53,7 @@ export const useRootCoursePlanningStore = defineStore(
     });
 
     const getters = {
-      terms: computed((): Term[] => stores.termsStore.terms),
+      terms: computed((): T.Term[] => stores.termsStore.terms),
       courses: computed((): T.Course[] =>
         stores.courseStore.getCoursesForGroup(state.activeGroupId ?? 0),
       ),
@@ -62,21 +61,23 @@ export const useRootCoursePlanningStore = defineStore(
         stores.personStore.getPeopleInGroup(state.activeGroupId ?? 0),
       ),
 
-      currentTerm: computed((): Term | null => stores.termsStore.currentTerm),
+      currentTerm: computed((): T.Term | null => stores.termsStore.currentTerm),
 
       /**
        * a list of terms for a term select dropdown
        */
-      termSelectOptions: computed((): SelectOption[] =>
+      termSelectOptions: computed((): T.SelectOption[] =>
         stores.termsStore.terms.map((term) => ({
           text: term.name,
           value: term.id,
         })),
       ),
 
-      earliestTerm: computed((): Term | null => stores.termsStore.earliestTerm),
-      latestTerm: computed((): Term | null => stores.termsStore.latestTerm),
-      visibleTerms: computed((): Term[] => {
+      earliestTerm: computed(
+        (): T.Term | null => stores.termsStore.earliestTerm,
+      ),
+      latestTerm: computed((): T.Term | null => stores.termsStore.latestTerm),
+      visibleTerms: computed((): T.Term[] => {
         return stores.termsStore.terms.filter((term) =>
           methods.isTermVisible(term.id),
         );
@@ -254,16 +255,16 @@ export const useRootCoursePlanningStore = defineStore(
         Object.keys(getters.courseLevelCounts.value),
       ),
       canTermBePlannedLookup: computed(
-        (): Record<Term["id"], boolean> =>
+        (): Record<T.Term["id"], boolean> =>
           getters.terms.value.reduce(
             (acc, term) => ({
               ...acc,
               [term.id]: methods.canTermBePlanned(term.id),
             }),
-            {} as Record<Term["id"], boolean>,
+            {} as Record<T.Term["id"], boolean>,
           ),
       ),
-      scheduleableTerms: computed((): Term[] => {
+      scheduleableTerms: computed((): T.Term[] => {
         return getters.terms.value.filter((term) =>
           methods.canTermBePlanned(term.id),
         );
@@ -314,9 +315,9 @@ export const useRootCoursePlanningStore = defineStore(
         );
       }),
 
-      leaves: computed((): Leave[] => stores.leaveStore.leaves),
+      leaves: computed((): T.Leave[] => stores.leaveStore.leaves),
 
-      leaveLookupByTermId: computed((): Record<Term["id"], Leave[]> => {
+      leaveLookupByTermId: computed((): Record<T.Term["id"], T.Leave[]> => {
         if (!state.activeGroupId) return {};
         return stores.leaveStore.getLeaveLookupByTermForGroup(
           state.activeGroupId,
@@ -341,11 +342,11 @@ export const useRootCoursePlanningStore = defineStore(
         this.setEndTermId(getters.latestTerm.value?.id ?? null);
       },
 
-      setStartTermId(termId: Term["id"] | null) {
+      setStartTermId(termId: T.Term["id"] | null) {
         state.filters.startTermId = termId;
       },
 
-      setEndTermId(termId: Term["id"] | null) {
+      setEndTermId(termId: T.Term["id"] | null) {
         state.filters.endTermId = termId;
       },
 
@@ -444,7 +445,7 @@ export const useRootCoursePlanningStore = defineStore(
           .filter(Boolean) as T.CourseSection[];
       },
 
-      canTermBePlanned(termId: Term["id"]): boolean {
+      canTermBePlanned(termId: T.Term["id"]): boolean {
         const termSections =
           stores.courseSectionStore.getSectionsForTerm(termId);
         if (!termSections) {
@@ -455,7 +456,7 @@ export const useRootCoursePlanningStore = defineStore(
         // if there are sections, then make sure none of
         // them are active or cancelled
         return !termSections.some((section) =>
-          ["active", "cancelled"].includes(section.status),
+          ["active", "cancelled"].includes(section.publishedStatus),
         );
       },
 
@@ -466,11 +467,11 @@ export const useRootCoursePlanningStore = defineStore(
 
       getEnrollmentsInCourseByTerm(
         courseId: T.Course["id"],
-      ): Record<Term["id"], T.Enrollment[]> {
+      ): Record<T.Term["id"], T.Enrollment[]> {
         const sections =
           stores.courseSectionStore.getSectionsForCourse(courseId);
 
-        const enrollmentsByTerm: Record<Term["id"], T.Enrollment[]> = {};
+        const enrollmentsByTerm: Record<T.Term["id"], T.Enrollment[]> = {};
 
         sections.forEach((section) => {
           enrollmentsByTerm[section.termId] = [
@@ -584,7 +585,7 @@ export const useRootCoursePlanningStore = defineStore(
         return methods.isCourseMatchingSearch(course);
       },
 
-      isTermVisible(termId: Term["id"]) {
+      isTermVisible(termId: T.Term["id"]) {
         if (!state.filters.startTermId || !state.filters.endTermId) {
           return true;
         }
@@ -656,11 +657,11 @@ export const useRootCoursePlanningStore = defineStore(
       },
       getPeopleInCourseByTerm(
         courseId: T.Course["id"],
-      ): Record<Term["id"], T.Person[]> {
+      ): Record<T.Term["id"], T.Person[]> {
         const sections =
           stores.courseSectionStore.getSectionsForCourse(courseId);
 
-        const peopleByTerm: Record<Term["id"], T.Person[]> = sections.reduce(
+        const peopleByTerm: Record<T.Term["id"], T.Person[]> = sections.reduce(
           (acc, section) => {
             const enrollments = stores.enrollmentStore.getEnrollmentsForSection(
               section.id,
@@ -677,7 +678,7 @@ export const useRootCoursePlanningStore = defineStore(
               [termId]: people.filter(Boolean) as T.Person[],
             };
           },
-          {} as Record<Term["id"], T.Person[]>,
+          {} as Record<T.Term["id"], T.Person[]>,
         );
 
         return peopleByTerm;
@@ -697,7 +698,7 @@ export const useRootCoursePlanningStore = defineStore(
       getGroup: stores.groupStore.getGroup,
       getLeavesForPersonInTerm: stores.leaveStore.getLeavesForPersonInTerm,
       getLeavesForPerson: stores.leaveStore.getLeavesForPerson,
-      getLeavesInTerm: (termId: Term["id"]) => {
+      getLeavesInTerm: (termId: T.Term["id"]) => {
         if (!state.activeGroupId) {
           return [];
         }

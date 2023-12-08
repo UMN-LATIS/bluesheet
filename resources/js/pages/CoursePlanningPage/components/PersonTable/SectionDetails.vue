@@ -4,7 +4,7 @@
     v-show="isSectionVisible"
     class="course-details tw-px-1"
     :class="{
-      'tw-opacity-50 tw-line-through': section.status === 'cancelled',
+      'tw-opacity-50 tw-line-through': section.publishedStatus === 'cancelled',
       'tw-bg-yellow-100': isSectionHighlighted,
       'tw-rounded-md tw-bg-black/5 tw-pl-2 tw-pt-1 tw-pb-2 tw-pr-4 tw-mb-2':
         isOpen,
@@ -43,7 +43,7 @@
 </template>
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import * as T from "../../coursePlanningTypes";
+import * as T from "@/types";
 import { ChevronDownIcon } from "@/icons";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
 

@@ -1,9 +1,8 @@
 import { defineStore } from "pinia";
 import { computed, reactive, toRefs } from "vue";
-import * as T from "../coursePlanningTypes";
 import * as api from "../coursePlanningApi";
 import { countBy } from "lodash";
-import { Group } from "@/types";
+import * as T from "@/types";
 
 interface CourseStoreState {
   courseLookup: Record<T.Course["id"], T.Course | undefined>;
@@ -21,7 +20,7 @@ export const useCourseStore = defineStore("course", () => {
       (): T.Course[] =>
         Object.values(state.courseLookup).filter(Boolean) as T.Course[],
     ),
-    coursesByGroup: computed((): Record<Group["id"], T.Course[]> => {
+    coursesByGroup: computed((): Record<T.Group["id"], T.Course[]> => {
       return Object.entries(state.courseIdsByGroup).reduce<
         Record<number, T.Course[]>
       >((acc, [groupId, courseIds]) => {

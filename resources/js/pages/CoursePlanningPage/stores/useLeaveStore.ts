@@ -1,12 +1,11 @@
 import { defineStore } from "pinia";
 import { toRefs, reactive, computed } from "vue";
 import * as api from "../coursePlanningApi";
-import { Leave, Group, Term } from "@/types";
-import * as T from "../coursePlanningTypes";
+import * as T from "@/types";
 
 interface LeaveStoreState {
-  leaveLookup: Record<Leave["id"], Leave>;
-  leaveIdsByGroup: Record<Group["id"], Leave["id"][]>;
+  leaveLookup: Record<T.Leave["id"], T.Leave>;
+  leaveIdsByGroup: Record<T.Group["id"], T.Leave["id"][]>;
 }
 
 export const useLeaveStore = defineStore("leave", () => {
@@ -17,7 +16,7 @@ export const useLeaveStore = defineStore("leave", () => {
 
   const getters = {
     leaves: computed(() => Object.values(state.leaveLookup)),
-    leaveLookupByPersonId: computed((): Record<T.Person["id"], Leave[]> => {
+    leaveLookupByPersonId: computed((): Record<T.Person["id"], T.Leave[]> => {
       return Object.values(state.leaveLookup).reduce((acc, leave) => {
         return {
           ...acc,
@@ -25,8 +24,8 @@ export const useLeaveStore = defineStore("leave", () => {
         };
       }, {});
     }),
-    leaveLookupByTermId: computed((): Record<Term["id"], Leave[]> => {
-      const lookup: Record<Term["id"], Leave[]> = {};
+    leaveLookupByTermId: computed((): Record<T.Term["id"], T.Leave[]> => {
+      const lookup: Record<T.Term["id"], T.Leave[]> = {};
       Object.values(state.leaveLookup).forEach((leave) => {
         if (!leave.termIds?.length) return;
 
@@ -38,9 +37,9 @@ export const useLeaveStore = defineStore("leave", () => {
       return lookup;
     }),
 
-    getLeaveLookupByTermForGroup: computed(() => (groupId: Group["id"]) => {
+    getLeaveLookupByTermForGroup: computed(() => (groupId: T.Group["id"]) => {
       const leaves = methods.getLeavesForGroup(groupId);
-      const lookup: Record<Term["id"], Leave[]> = {};
+      const lookup: Record<T.Term["id"], T.Leave[]> = {};
       leaves?.forEach((leave) => {
         if (!leave.termIds?.length) return;
 
@@ -53,7 +52,7 @@ export const useLeaveStore = defineStore("leave", () => {
     }),
 
     getLeavesForGroupInTerm: computed(
-      () => (groupId: Group["id"], termId: Term["id"]) => {
+      () => (groupId: T.Group["id"], termId: T.Term["id"]) => {
         const groupLeaveLookupByTerm =
           getters.getLeaveLookupByTermForGroup.value(groupId);
         return groupLeaveLookupByTerm[termId] ?? [];
@@ -81,18 +80,18 @@ export const useLeaveStore = defineStore("leave", () => {
       return getters.leaveLookupByPersonId.value[personId] ?? [];
     },
 
-    getLeavesForPersonInTerm(personId: T.Person["id"], termId: Term["id"]) {
+    getLeavesForPersonInTerm(personId: T.Person["id"], termId: T.Term["id"]) {
       return getters.leaveLookupByPersonId.value[personId]?.filter(
         (l) => l.termIds?.includes(termId),
       );
     },
-    getLeavesForGroup(groupId: Group["id"]) {
+    getLeavesForGroup(groupId: T.Group["id"]) {
       return state.leaveIdsByGroup[groupId]?.map((id) => state.leaveLookup[id]);
     },
-    getLeavesForTerm(termId: Term["id"]) {
+    getLeavesForTerm(termId: T.Term["id"]) {
       return getters.leaveLookupByTermId.value[termId] ?? [];
     },
-    getLeavesForGroupInTerm(groupId: Group["id"], termId: Term["id"]) {
+    getLeavesForGroupInTerm(groupId: T.Group["id"], termId: T.Term["id"]) {
       const groupLeaveLookupByTerm =
         getters.getLeaveLookupByTermForGroup.value(groupId);
       return groupLeaveLookupByTerm[termId] ?? [];

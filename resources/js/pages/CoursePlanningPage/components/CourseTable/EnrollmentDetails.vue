@@ -3,7 +3,7 @@
     v-if="isEnrollmentVisible && person && section"
     class="instructor-details tw-truncate"
     :class="{
-      'tw-opacity-50 tw-line-through': section.status === 'cancelled',
+      'tw-opacity-50 tw-line-through': section.publishedStatus === 'cancelled',
       'tw-bg-yellow-100': isPersonHighlighted,
       'tw-rounded-md tw-bg-black/5 tw-p-2 tw-pr-4 tw-mb-2': isOpen,
       'tw-rounded-full': !isOpen,
@@ -50,7 +50,7 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
-import * as T from "../../coursePlanningTypes";
+import * as T from "@/types";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
 // import { doesInstructorNameMatchSearchTerm } from "./doesInstructorNameMatchSearchTerm";
 

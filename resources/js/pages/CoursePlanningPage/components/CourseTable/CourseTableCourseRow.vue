@@ -37,7 +37,7 @@ import { Term } from "@/types";
 import EnrollmentDetails from "./EnrollmentDetails.vue";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
 import { storeToRefs } from "pinia";
-import * as T from "../../coursePlanningTypes";
+import * as T from "@/types";
 import { computed } from "vue";
 
 const coursePlanningStore = useRootCoursePlanningStore();
