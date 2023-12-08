@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { computed, reactive, toRefs } from "vue";
 import { Group, Term } from "@/types";
 import * as T from "@/types";
-import * as api from "../coursePlanningApi";
+import * as api from "@/api";
 
 interface CourseSectionStoreState {
   sectionIdsByGroup: Record<Group["id"], T.CourseSection["id"][] | undefined>;

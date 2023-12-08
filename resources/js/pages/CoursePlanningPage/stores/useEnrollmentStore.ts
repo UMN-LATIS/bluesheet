@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { reactive, toRefs, computed } from "vue";
-import * as api from "../coursePlanningApi";
+import * as api from "@/api";
 import * as T from "@/types";
 interface EnrollmentStoreState {
   enrollmentLookup: Record<T.Enrollment["id"], T.Enrollment | undefined>;

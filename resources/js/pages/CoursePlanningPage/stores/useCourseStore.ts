@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { computed, reactive, toRefs } from "vue";
-import * as api from "../coursePlanningApi";
+import * as api from "@/api";
 import { countBy } from "lodash";
 import * as T from "@/types";
 
