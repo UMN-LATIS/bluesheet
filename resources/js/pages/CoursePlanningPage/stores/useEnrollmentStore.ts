@@ -34,6 +34,15 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
         );
       },
     ),
+    getEnrollmentsForGroup: computed(
+      () =>
+        (groupId: number): T.Enrollment[] => {
+          const enrollmentIds = state.enrollmentIdsByGroup[groupId] || [];
+          return enrollmentIds
+            .map((id) => state.enrollmentLookup[id])
+            .filter(Boolean) as T.Enrollment[];
+        },
+    ),
     enrollmentsBySectionId: computed(
       (): Record<T.CourseSection["id"], T.Enrollment[]> => {
         const enrollmentsBySection: Record<
@@ -77,13 +86,6 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
     getEnrollment(id: T.Enrollment["id"]) {
       return state.enrollmentLookup[id] ?? null;
     },
-
-    getEnrollmentsForGroup(groupId: number): T.Enrollment[] {
-      const enrollmentIds = state.enrollmentIdsByGroup[groupId] || [];
-      return enrollmentIds
-        .map((id) => state.enrollmentLookup[id])
-        .filter(Boolean) as T.Enrollment[];
-    },
     getEnrollmentsForEmplId(emplId: T.Enrollment["emplId"]): T.Enrollment[] {
       return getters.enrollmentsByEmplId.value[emplId] || [];
     },
@@ -91,7 +93,7 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
       emplid: T.Enrollment["emplId"],
       groupId: T.Group["id"],
     ): T.Enrollment[] {
-      const groupEnrollments = methods.getEnrollmentsForGroup(groupId);
+      const groupEnrollments = getters.getEnrollmentsForGroup.value(groupId);
       return groupEnrollments.filter((e) => e.emplId === emplid);
     },
     getEnrollmentsForSection(sectionId: T.CourseSection["id"]): T.Enrollment[] {

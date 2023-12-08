@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Library\Bandaid;
 use App\Group;
-
+use App\Http\Resources\EnrollmentResource;
 
 class GroupEnrollmentController extends Controller {
 
@@ -27,19 +27,11 @@ class GroupEnrollmentController extends Controller {
             ->filter(
                 // remove classes without instructors
                 fn ($classRecord) =>
-                $classRecord->INSTRUCTOR_EMPLID !== null
-            )->map(function ($classRecord) {
-                return [
-                    'id' => join('-', [
-                        $classRecord->CLASS_NUMBER,
-                        $classRecord->INSTRUCTOR_EMPLID,
-                    ]),
-                    'sectionId' => $classRecord->CLASS_NUMBER,
-                    'emplId' => $classRecord->INSTRUCTOR_EMPLID,
-                    'role' => $classRecord->INSTRUCTOR_ROLE,
-                ];
-            })->sortBy('sectionId');
+                $classRecord->INSTRUCTOR_EMPLID !== null &&
+                    // and people who aren't instructors or TAs
+                    in_array($classRecord->INSTRUCTOR_ROLE, ['PI', 'TA'])
+            )->sortBy('sectionId');
 
-        return $enrollments->values();
+        return EnrollmentResource::collection($enrollments);
     }
 }
