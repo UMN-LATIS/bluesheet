@@ -8,7 +8,7 @@ use OwenIt\Auditing\Auditable as AuditableTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\PlannedCourse;
+use App\CourseSection;
 
 class Group extends Model implements AuditableContract {
     use AuditableTrait;
@@ -75,8 +75,8 @@ class Group extends Model implements AuditableContract {
         return $this->hasMany("App\Group", "parent_group_id");
     }
 
-    public function plannedCourses(): HasMany {
-        return $this->hasMany(PlannedCourse::class);
+    public function courseSections(): HasMany {
+        return $this->hasMany(CourseSection::class);
     }
 
     public function activeUsers() {

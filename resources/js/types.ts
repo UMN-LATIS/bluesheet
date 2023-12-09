@@ -260,18 +260,16 @@ export interface AcademicDepartment {
   abbreviation: string;
 }
 
-type PublishedSectionId = `published-${NonNullable<
-  CourseSection["classNumber"]
->}`;
+// these courses come from the bandaid api and are all considered published
+export type SISSectionId = `sis-${NonNullable<CourseSection["classNumber"]>}`;
 
-type UnpublishedSectionId = `unpublished-${NonNullable<
-  CourseSection["unpublishedSectionId"]
->}`;
+// these courses come from the app db and are likely unpublished
+export type DbSectionId = `db-${NonNullable<CourseSection["dbSectionId"]>}`;
 
 export interface CourseSection {
-  id: PublishedSectionId | UnpublishedSectionId;
+  id: SISSectionId | DbSectionId;
   classNumber: ApiCourseSectionRecord["classNumber"];
-  unpublishedSectionId: ApiCourseSectionRecord["unpublishedSectionId"];
+  dbSectionId: ApiCourseSectionRecord["dbSectionId"];
   courseId: Course["id"]; // short code like "HIST-1001W"
   termId: Term["id"];
   classSection: string; // "001"
@@ -293,17 +291,10 @@ export interface Course {
   courseLevel: string; //"UGRD" | "GRAD";
 }
 
-// two styles of ids since we can't use classnumber for
-// unpublished sections, as they don't exist in bandaid
-type ApiPublishedSectionId =
-  `published-${ApiCourseSectionRecord["classNumber"]}`;
-type ApiUnpublishedSectionId =
-  `unpublished-${ApiCourseSectionRecord["unpublishedSectionId"]}`;
-
 export interface ApiCourseSectionRecord {
-  id: ApiPublishedSectionId | ApiUnpublishedSectionId;
-  classNumber: number | null; // null if unpublished
-  unpublishedSectionId: number | null; // null if published
+  id: SISSectionId | DbSectionId;
+  classNumber: number | null; // null if from db
+  dbSectionId: number | null; // null if from sis (bandaid)
   termId: number;
   courseId: CourseShortCode; // subject-catalogNumber
   classSection: string; // "001"
@@ -313,16 +304,7 @@ export interface ApiCourseSectionRecord {
   waitlistTotal: number;
   enrollments: Enrollment[];
   isCancelled: boolean;
-  isPublished: boolean; // true if from bandaid, false if from app DB
-  // course: Course;
-  // subject: string; // HIST
-  // catalogNumber: string; // "1001W"
-  // instructorRole: InstructorRole;
-  // title: string; // course name
-  // cancelled: boolean;
-  // courseType: string; // "LEC"
-  // courseLevel: string; //"UGRD" | "GRAD";
-  // instructor: Instructor;
+  isPublished: boolean; // true if from bandaid,
 }
 
 // api response types
@@ -344,19 +326,6 @@ export type LoadState = "idle" | "loading" | "complete" | "error";
 export interface CustomAxiosRequestConfig extends AxiosRequestConfig {
   skipErrorNotifications?: boolean;
 }
-// export interface ApiPlannedCourse {
-//   id: number;
-//   subject: string;
-//   catalog_number: string;
-//   title: string;
-//   course_type: string;
-//   course_level: string;
-//   user_id: number;
-//   term_id: number;
-//   group_id: number;
-//   created_at: string;
-//   updated_at: string;
-// }
 
 export interface SelectOption {
   text: string;

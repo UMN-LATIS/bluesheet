@@ -19,8 +19,11 @@ class GroupSectionController extends Controller {
     public function index(Request $request, Group $group) {
         abort_if($request->user()->cannot('view planned courses'), 403);
 
+        // get all the unpublished sections from our app database
+        $unpublishedSections = $group->courseSections()->where('is_published', false)->with('users')->get();
+
         // each "section" contains a different enrolled instructor
-        $sections = collect($this->bandaid
+        $publishedSections = collect($this->bandaid
             ->getDeptClassList($group->dept_id))
             ->filter(
                 // filter out sections with no instructor
@@ -30,19 +33,18 @@ class GroupSectionController extends Controller {
                     in_array($classRecord->INSTRUCTOR_ROLE, ['PI', 'TA'])
             )->groupBy('CLASS_NUMBER')->map(
                 function ($classRecords) {
-                    // combine all "instructors" into one section
-                    // with a list of enrollments
-                    $section = $classRecords->except([
-                        'INSTRUCTOR_EMPLID',
-                        'INSTRUCTOR_ROLE',
-                    ])->first();
-                    $section->ENROLLMENTS = EnrollmentResource::collection($classRecords);
+                    // use the first record to get the section info
+                    $section = $classRecords->first();
+
+                    // and then append the group to enrollments
+                    $section->ENROLLMENTS = $classRecords;
 
                     return $section;
                 }
             );
 
+        $allGroupSections = $unpublishedSections->concat($publishedSections);
 
-        return CourseSectionResource::collection($sections);
+        return CourseSectionResource::collection($allGroupSections);
     }
 }

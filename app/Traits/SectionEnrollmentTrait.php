@@ -8,13 +8,13 @@ namespace App\Traits;
  */
 trait SectionEnrollmentTrait {
 
-    protected function getIsSectionPublished(): bool {
+    protected function isFromSIS(): bool {
         return (bool) $this->CLASS_NUMBER;
     }
 
     protected function getSectionId() {
-        $prefix = $this->getIsSectionPublished() ? 'published' : 'unpublished';
-        return join('-', [$prefix, $this->CLASS_NUMBER ?? $this->unpublishedSectionId]);
+        $prefix = $this->isFromSIS() ? 'sis' : 'db';
+        return join('-', [$prefix, $this->CLASS_NUMBER ?? $this->id]);
     }
 
     protected function getEnrollmentId() {
