@@ -14,13 +14,11 @@ trait SectionEnrollmentTrait {
 
     protected function getSectionId() {
         $prefix = $this->isFromSIS() ? 'sis' : 'db';
-        return join('-', [$prefix, $this->CLASS_NUMBER ?? $this->id]);
-    }
-
-    protected function getEnrollmentId() {
         return join('-', [
-            $this->getSectionId(),
-            $this->INSTRUCTOR_EMPLID,
+            $prefix,
+            $this->CLASS_NUMBER ??
+                $this->course_section_id ??
+                $this->id
         ]);
     }
 

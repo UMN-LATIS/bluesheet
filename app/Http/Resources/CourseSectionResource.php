@@ -27,10 +27,10 @@ class CourseSectionResource extends JsonResource {
             'enrollmentTotal' => $this->ENROLLMENT_TOTAL,
             'waitlistCap' => $this->WAITLIST_CAP,
             'waitlistTotal' => $this->WAITLIST_TOTAL,
-            'enrollments' => EnrollmentResource::collection($this->ENROLLMENTS),
+
             'isCancelled' => (bool) $this->CANCELLED,
             'isPublished' => true,
-            // 'course' => $this->COURSE,
+            'enrollments' => EnrollmentResource::collection($this->ENROLLMENTS),
         ];
     }
 
@@ -43,8 +43,12 @@ class CourseSectionResource extends JsonResource {
             'termId' => $this->term_id,
             'groupId' => $this->group_id,
             'classSection' => $this->class_section,
-            'isPublished' => $this->is_published,
-            'isCancelled' => $this->is_cancelled,
+            'enrollmentCap' => 0,
+            'enrollmentTotal' => 0,
+            'waitlistCap' => 0,
+            'waitlistTotal' => 0,
+            'isPublished' => $this->is_published ?? false,
+            'isCancelled' => $this->is_cancelled ?? false,
             'enrollments' => EnrollmentResource::collection(
                 $this->enrollments
             ),
@@ -55,5 +59,6 @@ class CourseSectionResource extends JsonResource {
         if ($this->isFromSIS()) {
             return $this->sisSectionToArray($request);
         }
+        return $this->dbSectionToArray($request);
     }
 }

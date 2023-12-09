@@ -10,6 +10,7 @@ import { useLeaveStore } from "./useLeaveStore";
 import { debounce, uniq } from "lodash";
 import { sortByName } from "@/utils";
 import * as T from "@/types";
+import * as api from "@/api";
 
 interface RootCoursePlanningState {
   activeGroupId: T.Group["id"] | null;
@@ -429,6 +430,35 @@ export const useRootCoursePlanningStore = defineStore(
         state.filters.endTermId = getters.latestTerm.value?.id ?? null;
 
         // don't reset the search
+      },
+
+      async createSectionWithEnrollee({
+        course,
+        term,
+        person,
+        role,
+      }: {
+        course: T.Course;
+        term: T.Term;
+        person: T.Person;
+        role: T.EnrollmentRole;
+      }) {
+        if (!state.activeGroupId) {
+          throw new Error("active group id is not set");
+        }
+
+        const section = await api.createCourseSection({
+          course,
+          term,
+          groupId: state.activeGroupId,
+        });
+
+        const enrollment = await api.createEnrollment({
+          person,
+          section,
+          role,
+          groupId: state.activeGroupId,
+        });
       },
     };
 

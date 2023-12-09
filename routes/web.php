@@ -92,8 +92,8 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
     // Course Planning
     Route::prefix('course-planning')->group(function () {
         Route::get('/groups/{group}/courses', [GroupCourseController::class, 'index']);
-        Route::get('/groups/{group}/sections', [GroupSectionController::class, 'index']);
-        Route::get('/groups/{group}/enrollments', [GroupEnrollmentController::class, 'index']);
+        Route::resource('/groups/{group}/sections', GroupSectionController::class);
+        Route::resource('/groups/{group}/enrollments', GroupEnrollmentController::class);
         Route::get('/groups/{group}/people', [GroupPersonController::class, 'index']);
         Route::get('/groups/{group}/leaves', [GroupLeaveController::class, 'index']);
     });

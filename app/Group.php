@@ -79,6 +79,10 @@ class Group extends Model implements AuditableContract {
         return $this->hasMany(CourseSection::class);
     }
 
+    public function enrollments() {
+        return $this->hasManyThrough(Enrollment::class, CourseSection::class);
+    }
+
     public function activeUsers() {
         return $this->activeMembers->pluck('user');
     }

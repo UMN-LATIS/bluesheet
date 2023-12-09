@@ -142,28 +142,71 @@ export async function fetchParentOrganizations() {
   return res.data;
 }
 
-// export async function postPlannedCourseForGroup({
-//   groupId,
-//   course,
-// }: {
-//   groupId: number;
-//   course: Omit<
-//     T.ApiPlannedCourse,
-//     "id" | "group_id" | "created_at" | "updated_at"
-//   >;
-// }): Promise<T.ApiPlannedCourse> {
-//   const res = await axios.post<T.ApiPlannedCourse>(
-//     `/api/group/${groupId}/planned-courses`,
-//     course,
-//   );
+// interface ApiNewCourseEnrollment {
+//   course_id: T.Course["id"];
+//   term_id: T.Term["id"];
+//   emplid: T.Person["emplid"];
+//   role: T.EnrollmentRole;
+//   group_id: T.Group["id"];
+//   class_section?: T.CourseSection["classSection"];
+//   is_published?: T.CourseSection["isPublished"];
+//   is_cancelled?: T.CourseSection["isCancelled"];
+// }
 
+// export async function createCourseEnrollment(
+//   enrollment: ApiNewCourseEnrollment,
+// ): Promise<T.CourseSection> {
+//   const groupId = enrollment.group_id;
+//   const res = await axios.post<T.CourseSection>(
+//     `/api/course-planning/groups/${groupId}/sections`,
+//     enrollment,
+//   );
 //   return res.data;
 // }
 
-// export async function fetchPlannedCoursesForGroup(groupId: number) {
-//   const res = await axios.get<T.ApiPlannedCourse[]>(
-//     `/api/group/${groupId}/planned-courses`,
-//   );
+interface ApiNewCourseSection {
+  course: T.Course;
+  term: T.Term;
+  groupId: T.Group["id"];
+}
 
-//   return res.data;
-// }
+export async function createCourseSection({
+  course,
+  term,
+  groupId,
+}: ApiNewCourseSection) {
+  const res = await axios.post<T.CourseSection>(
+    `/api/course-planning/groups/${groupId}/sections`,
+    {
+      course_id: course.id,
+      term_id: term.id,
+      class_section: "TBD",
+    },
+  );
+  return res.data;
+}
+
+interface NewCourseEnrollment {
+  person: T.Person;
+  role: T.EnrollmentRole;
+  section: T.CourseSection;
+  groupId: T.Group["id"];
+}
+
+export async function createEnrollment({
+  person,
+  role,
+  section,
+  groupId,
+}: NewCourseEnrollment): Promise<T.CourseSection> {
+  console.log;
+  const res = await axios.post<T.CourseSection>(
+    `/api/course-planning/groups/${groupId}/enrollments`,
+    {
+      emplid: person.emplid,
+      role,
+      course_section_id: section.dbSectionId,
+    },
+  );
+  return res.data;
+}

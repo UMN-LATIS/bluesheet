@@ -9,6 +9,13 @@ class EnrollmentResource extends JsonResource {
 
     use SectionEnrollmentTrait;
 
+    protected function getEnrollmentId() {
+        return join('-', [
+            $this->getSectionId(),
+            $this->INSTRUCTOR_EMPLID ?? $this->user->emplid,
+        ]);
+    }
+
     /**
      * Transform the resource into an array.
      *
@@ -28,6 +35,7 @@ class EnrollmentResource extends JsonResource {
     public function dbEnrollmentToArray() {
         return [
             'id' => $this->getEnrollmentId(),
+            'dbId' => $this->id,
             'emplId' => $this->user->emplid,
             'sectionId' => $this->getSectionId(),
             'role' => $this->role,

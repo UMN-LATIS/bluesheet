@@ -138,17 +138,13 @@ function handleAddTentativeCourse() {
     throw new Error("Missing required fields");
   }
 
-  // groupCourseHistoryStore.addPlannedCourseToTerm({
-  //   course: selectedCourse.value,
-  //   term: selectedTerm.value,
-  //   instructor: selectedInstructor.value,
-  // });
-
-  console.log("add tentative course", {
+  coursePlanningStore.createSectionWithEnrollee({
     course: selectedCourse.value,
     term: selectedTerm.value,
-    instructor: selectedInstructor.value,
+    person: selectedInstructor.value,
+    role: "PI",
   });
+
   resetForm();
   emits("close");
 }

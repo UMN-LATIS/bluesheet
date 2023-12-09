@@ -20,10 +20,10 @@ class GroupSectionController extends Controller {
         abort_if($request->user()->cannot('view planned courses'), 403);
 
         // get all the unpublished sections from our app database
-        $unpublishedSections = $group->courseSections()->where('is_published', false)->with('users')->get();
+        $dbSections = $group->courseSections()->with('enrollments')->where('is_published', false)->has('enrollments')->get();
 
         // each "section" contains a different enrolled instructor
-        $publishedSections = collect($this->bandaid
+        $sisSections = collect($this->bandaid
             ->getDeptClassList($group->dept_id))
             ->filter(
                 // filter out sections with no instructor
@@ -43,8 +43,25 @@ class GroupSectionController extends Controller {
                 }
             );
 
-        $allGroupSections = $unpublishedSections->concat($publishedSections);
+        $allGroupSections = $dbSections->concat($sisSections);
 
         return CourseSectionResource::collection($allGroupSections);
+    }
+
+    public function store(Request $request, Group $group) {
+        abort_if($request->user()->cannot('edit planned courses'), 403);
+
+        $validated = $request->validate([
+            'course_id' => 'required|string',
+            'term_id' => 'required|integer',
+            'class_section' => 'string',
+            'is_published' => 'boolean',
+            'is_cancelled' => 'boolean',
+        ]);
+
+        // create new section
+        $section = $group->courseSections()->create($validated);
+
+        return new CourseSectionResource($section);
     }
 }
