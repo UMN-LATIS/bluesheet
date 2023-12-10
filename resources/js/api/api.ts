@@ -198,9 +198,9 @@ export async function createEnrollment({
   role,
   section,
   groupId,
-}: NewCourseEnrollment): Promise<T.CourseSection> {
+}: NewCourseEnrollment): Promise<T.Enrollment> {
   console.log;
-  const res = await axios.post<T.CourseSection>(
+  const res = await axios.post<T.Enrollment>(
     `/api/course-planning/groups/${groupId}/enrollments`,
     {
       emplid: person.emplid,

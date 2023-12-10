@@ -319,6 +319,11 @@
   resolved "https://registry.npmjs.org/@types/sizzle/-/sizzle-2.3.3.tgz"
   integrity sha512-JYM8x9EGF163bEyhdJBpR2QX1R5naCJHC8ucJylJ3w9/CVBaskdQ8WqBf8MmQrd1kRvp/a4TS8HJ+bxzR7ZJYQ==
 
+"@types/sortablejs@^1.15.7":
+  version "1.15.7"
+  resolved "https://registry.yarnpkg.com/@types/sortablejs/-/sortablejs-1.15.7.tgz#11f85e98fce2854708e5c6d6011f7a236d79ae9f"
+  integrity sha512-PvgWCx1Lbgm88FdQ6S7OGvLIjWS66mudKPlfdrWil0TjsO5zmoZmzoKiiwRShs1dwPgrlkr0N4ewuy0/+QUXYQ==
+
 "@types/web-bluetooth@^0.0.17":
   version "0.0.17"
   resolved "https://registry.npmjs.org/@types/web-bluetooth/-/web-bluetooth-0.0.17.tgz"

@@ -82,6 +82,17 @@ export const useCourseSectionStore = defineStore("couseSection", () => {
         (courseSection) => courseSection.id,
       );
     },
+
+    addSectionToGroup(
+      courseSection: T.CourseSection,
+      groupId: T.Group["id"],
+    ): void {
+      state.sectionLookup[courseSection.id] = courseSection;
+      state.sectionIdsByGroup[groupId] = [
+        ...(state.sectionIdsByGroup[groupId] ?? []),
+        courseSection.id,
+      ];
+    },
   };
 
   const methods = {

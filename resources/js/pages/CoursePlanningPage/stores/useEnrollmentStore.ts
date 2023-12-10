@@ -80,6 +80,16 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
         (enrollment) => enrollment.id,
       );
     },
+    addEnrollmentToGroup(
+      enrollment: T.Enrollment,
+      groupId: T.Group["id"],
+    ): void {
+      state.enrollmentLookup[enrollment.id] = enrollment;
+      state.enrollmentIdsByGroup[groupId] = [
+        ...(state.enrollmentIdsByGroup[groupId] ?? []),
+        enrollment.id,
+      ];
+    },
   };
 
   const methods = {

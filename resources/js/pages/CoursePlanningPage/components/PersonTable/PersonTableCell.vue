@@ -27,6 +27,7 @@
         'tw-opacity-50': !isPlannable,
         'tw-bg-neutral-50 tw-rounded tw-p-2 tw-cursor-move': isPlannable,
       }"
+      @change="handleSectionDrop"
     >
       <template #item="{ element: section }">
         <SectionDetails
@@ -54,6 +55,7 @@ import AddTentativeCourseModal from "../AddTentativeSectionModal.vue";
 import { Person } from "@/types";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
 import Draggable from "vuedraggable";
+import type { SortableEvent } from "sortablejs";
 
 const props = defineProps<{
   person: Person;
@@ -81,6 +83,18 @@ const isPlannable = computed(() => {
     coursePlanningStore.canTermBePlanned(props.term.id)
   );
 });
+
+function handleSectionDrop(event: SortableEvent) {
+  // const { newIndex, oldIndex, item } = event;
+  console.log("handleSectionDrop", event);
+  // const section = event.item.element;
+  // coursePlanningStore.moveSectionInSectionGroup(
+  //   section.id,
+  //   props.term.id,
+  //   oldIndex,
+  //   newIndex,
+  // );
+}
 </script>
 <style scoped>
 .ghost {

@@ -452,6 +452,10 @@ export const useRootCoursePlanningStore = defineStore(
           term,
           groupId: state.activeGroupId,
         });
+        stores.courseSectionStore.addSectionToGroup(
+          section,
+          state.activeGroupId,
+        );
 
         const enrollment = await api.createEnrollment({
           person,
@@ -459,6 +463,10 @@ export const useRootCoursePlanningStore = defineStore(
           role,
           groupId: state.activeGroupId,
         });
+        stores.enrollmentStore.addEnrollmentToGroup(
+          enrollment,
+          state.activeGroupId,
+        );
       },
     };
 
