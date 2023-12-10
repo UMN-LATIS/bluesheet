@@ -4,7 +4,7 @@
       class="tw-shadow-sm tw-ring-1 tw-ring-black tw-ring-opacity-5 sm:tw-rounded-lg tw-overflow-auto tw-max-h-[90vh]"
     >
       <table
-        class="better-table tw-min-w-full tw-divide-y tw-divide-gray-300"
+        class="better-table tw-min-w-full tw-divide-y tw-divide-gray-300 tw-h-full"
         :class="{
           'better-table--sticky-header': stickyHeader,
           'better-table--sticky-first-col': stickyFirstColumn,

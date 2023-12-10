@@ -26,7 +26,7 @@
       v-for="term in coursePlanningStore.terms"
       v-show="isTermVisible(term.id)"
       :key="term.id"
-      class="term-data-column tw-group"
+      class="term-data-column tw-group tw-h-full"
       :class="{
         'term-data-column--current': coursePlanningStore.isCurrentTerm(term.id),
         'term-data-column--fall': term.name.includes('Fall'),

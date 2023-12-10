@@ -9,7 +9,7 @@
       'tw-rounded-md tw-bg-black/5 tw-pl-2 tw-pt-1 tw-pb-2 tw-pr-4 tw-mb-2':
         isOpen,
       'tw-rounded-md': !isOpen,
-      'tw-bg-blue-50 tw-shadow-sm tw-py-1': isUnpublished,
+      'tw-bg-blue-50 tw-shadow tw-py-1': isUnpublished,
     }"
   >
     <button
