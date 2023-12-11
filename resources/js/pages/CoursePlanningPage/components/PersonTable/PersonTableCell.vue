@@ -18,7 +18,7 @@
 
     <Draggable
       :disabled="!isPlannable"
-      :list="courseSections"
+      :list="localCourseSections"
       group="sections"
       itemKey="id"
       ghostClass="ghost"
@@ -26,7 +26,7 @@
       :class="{
         'tw-bg-neutral-50 tw-rounded tw-p-2 tw-cursor-move': isPlannable,
       }"
-      @change="handeSectionChange($event, { person, term })"
+      @change="handeSectionChange"
     >
       <template #item="{ element: section }">
         <SectionDetails
@@ -48,7 +48,7 @@
 <script setup lang="ts">
 import LeaveChip from "../LeaveChip.vue";
 import SectionDetails from "./SectionDetails.vue";
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import AddTentativeCourseModal from "../AddTentativeSectionModal.vue";
 import * as T from "@/types";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
@@ -73,6 +73,10 @@ const courseSections = computed(() =>
   ),
 );
 
+// use local course sections to avoid section jumping back
+// to original position while api call is made
+const localCourseSections = ref(courseSections.value);
+
 const isShowingAddCourse = ref(false);
 
 const termLeaves = computed(() =>
@@ -88,31 +92,29 @@ const isPlannable = computed(() => {
 
 async function handeSectionChange(
   event: DraggableChangeEvent<T.CourseSection>,
-  ctx: { person: T.Person; term: T.Term },
 ) {
-  console.log("handleSectionChange", { event, ctx });
+  console.log("handleSectionChange", { event, props });
   const section = getElementFromDraggableEvent(event);
   if (!section) {
     throw new Error("No section found in event");
   }
 
   if (isDraggableAddedEvent(event)) {
-    await coursePlanningStore.updateSection({
+    coursePlanningStore.updateSection({
       ...section,
-      termId: ctx.term.id,
+      termId: props.term.id,
     });
 
-    await coursePlanningStore.createEnrollment({
-      person: ctx.person,
-      section,
+    coursePlanningStore.createEnrollment({
+      person: props.person,
+      section: section,
       role: "PI",
     });
-    return;
   }
 
   if (isDraggableRemovedEvent(event)) {
     const enrollment = coursePlanningStore.getEnrollmentForPersonInSection(
-      ctx.person,
+      props.person,
       section,
     );
 
@@ -120,7 +122,7 @@ async function handeSectionChange(
       throw new Error("No enrollment found for person in section");
     }
 
-    await coursePlanningStore.removeEnrollment(enrollment);
+    coursePlanningStore.removeEnrollment(enrollment);
   }
 }
 </script>
