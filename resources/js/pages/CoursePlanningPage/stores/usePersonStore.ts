@@ -2,10 +2,11 @@ import { defineStore } from "pinia";
 import { computed, reactive, toRefs } from "vue";
 import * as api from "@/api";
 import * as T from "@/types";
+import { countBy, keyBy } from "lodash";
 
 interface PersonStoreState {
+  activeGroupId: T.Group["id"] | null;
   personLookupByEmpId: Record<T.Person["emplid"], T.Person | undefined>;
-  personIdsByGroup: Record<number, T.Person["id"][] | undefined>;
 }
 
 /**
@@ -14,8 +15,8 @@ interface PersonStoreState {
  */
 export const usePersonStore = defineStore("person", () => {
   const state = reactive<PersonStoreState>({
+    activeGroupId: null,
     personLookupByEmpId: {},
-    personIdsByGroup: {},
   });
 
   const getters = {
@@ -23,51 +24,34 @@ export const usePersonStore = defineStore("person", () => {
       (): T.Person[] =>
         Object.values(state.personLookupByEmpId).filter(Boolean) as T.Person[],
     ),
-    personLookupByUserId: computed((): Record<T.Person["id"], T.Person> => {
-      const lookup: Record<T.Person["id"], T.Person> = {};
-      Object.values(state.personLookupByEmpId).forEach((person) => {
-        if (!person) return;
-        lookup[person.id] = person;
-      });
-      return lookup;
+    getPersonByEmplId: computed(
+      () =>
+        (emplId: T.Person["emplid"]): T.Person | null => {
+          return state.personLookupByEmpId[emplId] ?? null;
+        },
+    ),
+    getPersonByUserId: computed(() => {
+      const lookupByUserId: Record<T.Person["id"], T.Person> = keyBy(
+        getters.allPeople.value,
+        "id",
+      );
+
+      return (userId: T.Person["id"]): T.Person | null =>
+        lookupByUserId[userId] ?? null;
     }),
-
-    /**
-     * counts the number of people with a particular academic
-     * appointment for each group
-     */
-    acadApptCountsByGroup: computed(() => {
-      const counts: Record<
-        T.Group["id"],
-        Record<T.Person["academicAppointment"], number>
-      > = {};
-
-      const groupIds = Object.keys(state.personIdsByGroup).map(Number);
-
-      groupIds.forEach((groupId) => {
-        const people = methods.getPeopleInGroup(groupId);
-
-        if (!people) return;
-
-        counts[groupId] = people.reduce(
-          (acc, person) => {
-            if (!acc[person.academicAppointment]) {
-              acc[person.academicAppointment] = 0;
-            }
-
-            acc[person.academicAppointment]++;
-
-            return acc;
-          },
-          {} as Record<T.Person["academicAppointment"], number>,
-        );
-      });
-
-      return counts;
+    acadApptCounts: computed(() => {
+      const acadAppts = getters.allPeople.value.map(
+        (p) => p.academicAppointment,
+      );
+      return countBy(acadAppts);
     }),
   };
 
   const actions = {
+    async init(groupId: T.Group["id"]): Promise<void> {
+      state.activeGroupId = groupId;
+      return actions.fetchPeopleForGroup(groupId);
+    },
     async fetchPeopleForGroup(groupId: number) {
       const persons = await api.fetchPeopleForGroup(groupId);
 
@@ -78,40 +62,6 @@ export const usePersonStore = defineStore("person", () => {
       };
 
       state.personLookupByEmpId = updatedPersonLookup;
-
-      // update personIdsByGroup list
-      state.personIdsByGroup[groupId] = persons.map((person) => person.emplid);
-    },
-  };
-
-  const methods = {
-    /**
-     * get a person by id
-     */
-    getPersonByEmplId(emplId: T.Person["emplid"]): T.Person | null {
-      const person = state.personLookupByEmpId[emplId] ?? null;
-
-      // for debugging
-      // if (!person) {
-      //   console.warn(`No person found with emplId ${emplId}.`);
-      // }
-      return person;
-    },
-    getPeopleInGroup(groupId: number): T.Person[] {
-      const personIds = state.personIdsByGroup[groupId] || [];
-      return personIds
-        .map((id) => this.getPersonByEmplId(id))
-        .filter(Boolean) as T.Person[];
-    },
-
-    getAcadApptCountsForGroup(
-      groupId: number,
-    ): Record<T.Person["academicAppointment"], number> {
-      const acadAppts = getters.acadApptCountsByGroup.value[groupId] ?? [];
-      return acadAppts;
-    },
-    getPersonByUserId(userId: T.Person["id"]): T.Person | null {
-      return getters.personLookupByUserId.value[userId] ?? null;
     },
   };
 
@@ -119,6 +69,5 @@ export const usePersonStore = defineStore("person", () => {
     ...toRefs(state),
     ...getters,
     ...actions,
-    ...methods,
   };
 });

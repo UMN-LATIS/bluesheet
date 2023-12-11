@@ -1,18 +1,18 @@
 import { defineStore } from "pinia";
 import { computed, reactive, toRefs } from "vue";
-import { Group, Term } from "@/types";
 import * as T from "@/types";
 import * as api from "@/api";
+import { keyBy, groupBy } from "lodash";
 
 interface CourseSectionStoreState {
-  sectionIdsByGroup: Record<Group["id"], T.CourseSection["id"][] | undefined>;
+  activeGroupId: T.Group["id"] | null;
   sectionLookup: Record<T.CourseSection["id"], T.CourseSection | undefined>;
 }
 
 export const useCourseSectionStore = defineStore("couseSection", () => {
   const state = reactive<CourseSectionStoreState>({
+    activeGroupId: null,
     sectionLookup: {},
-    sectionIdsByGroup: {},
   });
 
   const getters = {
@@ -20,115 +20,90 @@ export const useCourseSectionStore = defineStore("couseSection", () => {
       (): T.CourseSection[] =>
         Object.values(state.sectionLookup).filter(Boolean) as T.CourseSection[],
     ),
-    sectionsByTermId: computed((): Record<Term["id"], T.CourseSection[]> => {
-      const sectionsByTerm: Record<Term["id"], T.CourseSection[]> = {};
-
-      getters.allSections.value.forEach((section) => {
-        sectionsByTerm[section.termId] = [
-          ...(sectionsByTerm[section.termId] ?? []),
-          section,
-        ];
-      });
-      return sectionsByTerm;
-    }),
-    sectionsByCourseId: computed(
-      (): Record<T.Course["id"], T.CourseSection[]> => {
-        const sectionsByCourse: Record<T.Course["id"], T.CourseSection[]> = {};
-
-        getters.allSections.value.forEach((section) => {
-          sectionsByCourse[section.courseId] = [
-            ...(sectionsByCourse[section.courseId] ?? []),
-            section,
-          ];
-        });
-        return sectionsByCourse;
-      },
-    ),
-    sectionsByGroupId: computed((): Record<Group["id"], T.CourseSection[]> => {
-      const sectionsByGroup: Record<Group["id"], T.CourseSection[]> = {};
-
-      Object.entries(state.sectionIdsByGroup).forEach(
-        ([groupId, sectionIds]) => {
-          if (!sectionIds) return;
-
-          sectionsByGroup[groupId] = sectionIds.map(
-            (sectionId) => state.sectionLookup[sectionId],
-          ) as T.CourseSection[];
-        },
+    getSectionsByTermId: computed(() => {
+      const lookupByTermId = groupBy<T.CourseSection>(
+        getters.allSections.value,
+        "termId",
       );
-      return sectionsByGroup;
+
+      return (termId: T.Term["id"]): T.CourseSection[] =>
+        lookupByTermId[termId] ?? [];
     }),
+    getSectionsByCourseId: computed(() => {
+      const lookup = groupBy<T.CourseSection>(
+        getters.allSections.value,
+        "courseId",
+      );
+      return (courseId: T.Course["id"]): T.CourseSection[] =>
+        lookup[courseId] ?? [];
+    }),
+    getSection: computed(
+      () =>
+        (sectionId: T.CourseSection["id"]): T.CourseSection | null => {
+          return state.sectionLookup[sectionId] ?? null;
+        },
+    ),
   };
 
   const actions = {
-    async fetchCourseSectionsForGroup(groupId: number): Promise<void> {
-      const courseSections = await api.fetchCourseSectionsForGroup(groupId);
-
-      // update the course section lookup in one fell swoop
-      const updatedCourseSectionLookup = {
-        ...state.sectionLookup,
-        ...Object.fromEntries(
-          courseSections.map((courseSection) => [
-            courseSection.id,
-            courseSection,
-          ]),
-        ),
-      };
-
-      state.sectionLookup = updatedCourseSectionLookup;
-
-      // update sectionIdsByGroup list
-      state.sectionIdsByGroup[groupId] = courseSections.map(
-        (courseSection) => courseSection.id,
+    async init(groupId: T.Group["id"]): Promise<void> {
+      state.activeGroupId = groupId;
+      return actions.fetchCourseSections();
+    },
+    async fetchCourseSections(): Promise<void> {
+      if (!state.activeGroupId) {
+        throw new Error("activeGroupId is null");
+      }
+      const courseSections = await api.fetchCourseSectionsForGroup(
+        state.activeGroupId,
       );
+
+      state.sectionLookup = keyBy<T.CourseSection>(courseSections, "id");
     },
 
-    addSectionToGroup(
-      courseSection: T.CourseSection,
-      groupId: T.Group["id"],
-    ): void {
-      state.sectionLookup[courseSection.id] = courseSection;
-      state.sectionIdsByGroup[groupId] = [
-        ...(state.sectionIdsByGroup[groupId] ?? []),
-        courseSection.id,
-      ];
+    async createSection({
+      course,
+      term,
+    }: {
+      course: T.Course;
+      term: T.Term;
+    }): Promise<T.CourseSection> {
+      if (!state.activeGroupId) {
+        throw new Error("active group id is not set");
+      }
+
+      const section = await api.createCourseSectionInGroup({
+        course,
+        term,
+        groupId: state.activeGroupId,
+      });
+      state.sectionLookup[section.id] = section;
+      return section;
     },
-    async updateSectionInGroup(
-      section: T.CourseSection,
-      groupId: T.Group["id"],
-    ): Promise<T.CourseSection> {
-      const updatedSection = await api.updateSectionInGroup(section, groupId);
-      state.sectionLookup[updatedSection.id] = updatedSection;
+    async updateSection(section: T.CourseSection): Promise<T.CourseSection> {
+      if (!state.activeGroupId) {
+        throw new Error("active group id is not set");
+      }
+
+      const updatedSection = await api.updateSectionInGroup(
+        section,
+        state.activeGroupId,
+      );
+      state.sectionLookup[section.id] = updatedSection;
       return updatedSection;
     },
 
-    async removeSectionFromGroup(
-      section: T.CourseSection,
-      groupId: T.Group["id"],
-    ): Promise<void> {
-      await api.removeSectionFromGroup(section, groupId);
+    async removeSection(section: T.CourseSection): Promise<void> {
+      if (!state.activeGroupId) {
+        throw new Error("active group id is not set");
+      }
+
+      await api.removeSectionFromGroup(section, state.activeGroupId);
       delete state.sectionLookup[section.id];
-      state.sectionIdsByGroup[groupId] = state.sectionIdsByGroup[
-        groupId
-      ]?.filter((id) => id !== section.id);
     },
   };
 
-  const methods = {
-    getSection(sectionId: T.CourseSection["id"]): T.CourseSection | null {
-      return state.sectionLookup[sectionId] ?? null;
-    },
-    getSectionsForGroup(groupId: Group["id"]): T.CourseSection[] {
-      return getters.sectionsByGroupId.value[groupId] ?? [];
-    },
-    getSectionsForCourse(courseId: T.Course["id"]): T.CourseSection[] {
-      return getters.sectionsByCourseId.value[courseId] ?? [];
-    },
-
-    getSectionsForTerm(termId: Term["id"]): T.CourseSection[] {
-      return getters.sectionsByTermId.value[termId] ?? [];
-    },
-  };
+  const methods = {};
 
   return {
     ...toRefs(state),

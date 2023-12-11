@@ -1,18 +1,28 @@
 import { defineStore } from "pinia";
 import { computed, reactive, toRefs } from "vue";
 import * as api from "@/api";
-import { countBy } from "lodash";
+import { countBy, debounce, keyBy } from "lodash";
 import * as T from "@/types";
 
 interface CourseStoreState {
+  activeGroupId: number | null;
   courseLookup: Record<T.Course["id"], T.Course | undefined>;
-  courseIdsByGroup: Record<number, T.Course["id"][] | undefined>;
+  filters: {
+    excludedCourseTypes: Set<string>;
+    excludedCourseLevels: Set<string>;
+    search: string;
+  };
 }
 
 export const useCourseStore = defineStore("course", () => {
   const state = reactive<CourseStoreState>({
+    activeGroupId: null,
     courseLookup: {},
-    courseIdsByGroup: {},
+    filters: {
+      excludedCourseTypes: new Set(),
+      excludedCourseLevels: new Set(),
+      search: "",
+    },
   });
 
   const getters = {
@@ -20,64 +30,99 @@ export const useCourseStore = defineStore("course", () => {
       (): T.Course[] =>
         Object.values(state.courseLookup).filter(Boolean) as T.Course[],
     ),
-    coursesByGroup: computed((): Record<T.Group["id"], T.Course[]> => {
-      return Object.entries(state.courseIdsByGroup).reduce<
-        Record<number, T.Course[]>
-      >((acc, [groupId, courseIds]) => {
-        if (!courseIds) {
-          return acc;
-        }
+    courseTypeCounts: computed((): Record<T.Course["courseType"], number> => {
+      const courseTypes = getters.allCourses.value.map((c) => c.courseType);
+      return countBy(courseTypes);
+    }),
+    courseLevelCounts: computed((): Record<T.Course["courseLevel"], number> => {
+      const courseLevels = getters.allCourses.value.map((c) => c.courseLevel);
+      return countBy(courseLevels);
+    }),
+    getCourse: computed(
+      () =>
+        (id: T.Course["id"]): T.Course | null =>
+          state.courseLookup[id] ?? null,
+    ),
+    allCourseTypes: computed((): T.Course["courseType"][] => {
+      return Object.keys(getters.courseTypeCounts.value);
+    }),
+    allCourseLevels: computed((): T.Course["courseLevel"][] => {
+      return Object.keys(getters.courseLevelCounts.value);
+    }),
+    doesCourseMatchSearch: computed(() => (course: T.Course): boolean => {
+      if (!course) {
+        return false;
+      }
 
-        const courses = courseIds.map(
-          (courseId) => state.courseLookup[courseId],
-        );
+      const courseCode = `${course.subject} ${course.catalogNumber}`;
 
-        return {
-          ...acc,
-          [groupId]: courses.filter(Boolean) as T.Course[],
-        };
-      }, {});
+      return (
+        state.filters.search === "" ||
+        courseCode.toLowerCase().includes(state.filters.search.toLowerCase())
+      );
+    }),
+    doesCourseHaveVisibleType: computed(() => (course: T.Course): boolean => {
+      if (!course) {
+        return false;
+      }
+
+      return !state.filters.excludedCourseTypes.has(course.courseType);
+    }),
+    doesCourseHaveVisibleLevel: computed(() => (course: T.Course): boolean => {
+      if (!course) {
+        return false;
+      }
+
+      return !state.filters.excludedCourseLevels.has(course.courseLevel);
     }),
   };
 
   const actions = {
+    init(groupId: T.Group["id"]): Promise<void> {
+      state.activeGroupId = groupId;
+      return actions.fetchCoursesForGroup(groupId);
+    },
+
     async fetchCoursesForGroup(groupId: number): Promise<void> {
       const courses = await api.fetchCoursesForGroup(groupId);
+      state.courseLookup = keyBy<T.Course>(courses, "idasda");
+    },
+    toggleAllCourseTypes() {
+      const areAllExcluded = getters.allCourseTypes.value.every((courseType) =>
+        state.filters.excludedCourseTypes.has(courseType),
+      );
 
-      // update the course lookup in one fell swoop
-      const updatedCourseLookup = {
-        ...state.courseLookup,
-        ...Object.fromEntries(courses.map((course) => [course.id, course])),
-      };
+      if (areAllExcluded) {
+        state.filters.excludedCourseTypes = new Set();
+        return;
+      }
 
-      state.courseLookup = updatedCourseLookup;
-
-      // update courseIdsByGroup list
-      state.courseIdsByGroup[groupId] = courses.map((course) => course.id);
+      state.filters.excludedCourseTypes = new Set(getters.allCourseTypes.value);
     },
 
-    getCourse(id: T.Course["id"]): T.Course | undefined {
-      return state.courseLookup[id];
+    toggleAllCourseLevels() {
+      const areAllExcluded = getters.allCourseLevels.value.every(
+        (courseLevel) => state.filters.excludedCourseLevels.has(courseLevel),
+      );
+
+      if (areAllExcluded) {
+        state.filters.excludedCourseLevels = new Set();
+        return;
+      }
+
+      state.filters.excludedCourseLevels = new Set(
+        getters.allCourseLevels.value,
+      );
     },
 
-    getCoursesForGroup(groupId: number): T.Course[] {
-      return getters.coursesByGroup.value[groupId] || [];
-    },
+    setSearchFilter: debounce((search: string) => {
+      state.filters.search = search;
+    }),
 
-    getCourseTypeCountsForGroup(
-      groupId: number,
-    ): Record<T.Course["courseType"], number> {
-      const courses = actions.getCoursesForGroup(groupId);
-      const courseTypes = courses.map((c) => c.courseType);
-      return countBy(courseTypes);
-    },
-
-    getCourseLevelCountsForGroup(
-      groupId: number,
-    ): Record<T.Course["courseLevel"], number> {
-      const courses = actions.getCoursesForGroup(groupId);
-      const courseLevels = courses.map((c) => c.courseLevel);
-      return countBy(courseLevels);
+    resetFilters() {
+      state.filters.excludedCourseTypes = new Set();
+      state.filters.excludedCourseLevels = new Set();
+      // state.filters.search = "";
     },
   };
 

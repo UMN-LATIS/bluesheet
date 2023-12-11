@@ -2,201 +2,114 @@ import { defineStore } from "pinia";
 import { reactive, toRefs, computed } from "vue";
 import * as api from "@/api";
 import * as T from "@/types";
+import { groupBy, keyBy } from "lodash";
 interface EnrollmentStoreState {
+  activeGroupId: T.Group["id"] | null;
   enrollmentLookup: Record<T.Enrollment["id"], T.Enrollment | undefined>;
-  enrollmentIdsByGroup: Record<T.Group["id"], T.Enrollment["id"][] | undefined>;
 }
 
 export const useEnrollmentStore = defineStore("enrollment", () => {
   const state = reactive<EnrollmentStoreState>({
+    activeGroupId: null,
     enrollmentLookup: {},
-    enrollmentIdsByGroup: {},
   });
 
   const getters = {
     allEnrollments: computed(
-      () =>
+      (): T.Enrollment[] =>
         Object.values(state.enrollmentLookup).filter(Boolean) as T.Enrollment[],
     ),
-    enrollmentsByEmplId: computed(
-      (): Record<T.Person["id"], T.Enrollment[]> => {
-        return getters.allEnrollments.value.reduce(
-          (acc, enrollment) => {
-            const emplId = enrollment.emplid;
-            const previousEnrollmentIds = acc[emplId] || [];
+    getEnrollmentsByEmplId: computed(() => {
+      const lookupByEmplid = groupBy<T.Enrollment>(
+        getters.allEnrollments.value,
+        "emplid",
+      );
+      return (emplid: T.Person["emplid"]): T.Enrollment[] =>
+        lookupByEmplid[emplid] ?? [];
+    }),
+    getEnrollmentsBySectionId: computed(() => {
+      const lookup = groupBy<T.Enrollment>(
+        getters.allEnrollments.value,
+        "sectionId",
+      );
 
-            return {
-              ...acc,
-              [emplId]: [...previousEnrollmentIds, enrollment],
-            };
-          },
-          {} as Record<T.Person["id"], T.Enrollment[]>,
-        );
-      },
-    ),
-    getEnrollmentsForGroup: computed(
+      return (sectionId: T.CourseSection["id"]) => lookup[sectionId] ?? [];
+    }),
+    getEnrollment: computed(
       () =>
-        (groupId: number): T.Enrollment[] => {
-          const enrollmentIds = state.enrollmentIdsByGroup[groupId] || [];
-          return enrollmentIds
-            .map((id) => state.enrollmentLookup[id])
-            .filter(Boolean) as T.Enrollment[];
+        (id: T.Enrollment["id"]): T.Enrollment | null => {
+          return state.enrollmentLookup[id] ?? null;
         },
     ),
-    enrollmentsBySectionId: computed(
-      (): Record<T.CourseSection["id"], T.Enrollment[]> => {
-        const enrollmentsBySection: Record<
-          T.CourseSection["id"],
-          T.Enrollment[]
-        > = {};
 
-        getters.allEnrollments.value.forEach((enrollment) => {
-          enrollmentsBySection[enrollment.sectionId] = [
-            ...(enrollmentsBySection[enrollment.sectionId] ?? []),
-            enrollment,
-          ];
-        });
-        return enrollmentsBySection;
+    getEnrollmentForPersonInSection: computed(
+      (person: T.Person, section: T.CourseSection): T.Enrollment | null => {
+        const sectionEnrollments = getters.getEnrollmentsBySectionId.value(
+          section.id,
+        );
+        return (
+          sectionEnrollments.find((e) => e.emplid === person.emplid) ?? null
+        );
       },
     ),
   };
 
   const actions = {
-    async fetchEnrollmentsForGroup(groupId: number) {
-      const enrollments = await api.fetchEnrollmentsForGroup(groupId);
-
-      // update the enrollment lookup in one fell swoop
-      const updatedEnrollmentLookup = {
-        ...state.enrollmentLookup,
-        ...Object.fromEntries(
-          enrollments.map((enrollment) => [enrollment.id, enrollment]),
-        ),
-      };
-
-      state.enrollmentLookup = updatedEnrollmentLookup;
-
-      // update enrollmentIdsByGroup list
-      state.enrollmentIdsByGroup[groupId] = enrollments.map(
-        (enrollment) => enrollment.id,
-      );
+    async init(groupId: T.Group["id"]): Promise<void> {
+      state.activeGroupId = groupId;
+      return actions.fetchEnrollments();
     },
-    addEnrollmentToGroup(
-      enrollment: T.Enrollment,
-      groupId: T.Group["id"],
-    ): void {
-      state.enrollmentLookup[enrollment.id] = enrollment;
-      state.enrollmentIdsByGroup[groupId] = [
-        ...(state.enrollmentIdsByGroup[groupId] ?? []),
-        enrollment.id,
-      ];
+    async fetchEnrollments() {
+      if (!state.activeGroupId) {
+        throw new Error("activeGroupId is null");
+      }
+      const enrollments = await api.fetchEnrollmentsForGroup(
+        state.activeGroupId,
+      );
+
+      state.enrollmentLookup = keyBy<T.Enrollment>(enrollments, "id");
     },
     async createEnrollment({
       person,
       section,
       role,
-      groupId,
     }: {
       person: T.Person;
       section: T.CourseSection;
       role: T.EnrollmentRole;
-      groupId: T.Group["id"];
     }): Promise<T.Enrollment> {
+      if (!state.activeGroupId) {
+        throw new Error("active group id is not set");
+      }
+
       const enrollment = await api.createEnrollmentInGroup({
         person,
         section,
         role,
-        groupId,
+        groupId: state.activeGroupId,
       });
 
       // update enrollment lookup
       state.enrollmentLookup[enrollment.id] = enrollment;
-
-      // update enrollmentIdsByGroup list
-      state.enrollmentIdsByGroup[groupId] = [
-        ...(state.enrollmentIdsByGroup[groupId] ?? []),
-        enrollment.id,
-      ];
-
       return enrollment;
     },
-    removeEnrollmentFromStore(
-      enrollment: T.Enrollment,
-      groupId: T.Group["id"],
-    ): void {
-      // remove from enrollmentIdsByGroup
-      const enrollmentIds = state.enrollmentIdsByGroup[groupId] || [];
-
-      state.enrollmentIdsByGroup[groupId] = enrollmentIds.filter(
-        (id) => id !== enrollment.id,
-      );
-
-      // remove from enrollmentLookup
+    async removeEnrollment(enrollment: T.Enrollment): Promise<void> {
+      if (!state.activeGroupId) {
+        throw new Error("active group id is not set");
+      }
+      await api.deleteEnrollmentFromGroup(enrollment, state.activeGroupId);
       delete state.enrollmentLookup[enrollment.id];
     },
 
-    async removeEnrollmentFromGroup({
-      enrollment,
-      groupId,
-    }: {
-      enrollment: T.Enrollment;
-      groupId: T.Group["id"];
-    }): Promise<void> {
-      // remove from db
-      await api.deleteEnrollmentFromGroup(enrollment, groupId);
-      actions.removeEnrollmentFromStore(enrollment, groupId);
-    },
-    bulkRemoveEnrollmentsFromGroup(
-      enrollmentIds: T.Enrollment["id"][],
-      groupId: T.Group["id"],
-    ): void {
-      // bulk remove from enrollmentIdsByGroup
-      const currentIdsInGroup = state.enrollmentIdsByGroup[groupId] || [];
-      const newGroupEnrollmentIds = currentIdsInGroup.filter(
-        (id) => !enrollmentIds.includes(id),
-      );
-
-      state.enrollmentIdsByGroup[groupId] = newGroupEnrollmentIds;
-
-      // bulk remove from enrollmentLookup
-      enrollmentIds.forEach((id) => {
-        delete state.enrollmentLookup[id];
-      });
-    },
-
-    removeAllEnrollmentsForSectionFromStore(
+    async removeAllSectionEnrollmentsFromStore(
       sectionId: T.CourseSection["id"],
-      groupId: T.Group["id"],
-    ): void {
-      const enrollments = getters.enrollmentsBySectionId.value[sectionId] || [];
+    ) {
+      const enrollmentsToRemove =
+        getters.getEnrollmentsBySectionId.value(sectionId);
 
-      const idsToRemove = enrollments.map((e) => e.id);
-      actions.bulkRemoveEnrollmentsFromGroup(idsToRemove, groupId);
-    },
-  };
-
-  const methods = {
-    getEnrollment(id: T.Enrollment["id"]) {
-      return state.enrollmentLookup[id] ?? null;
-    },
-    getEnrollmentsForEmplId(emplId: T.Enrollment["emplid"]): T.Enrollment[] {
-      return getters.enrollmentsByEmplId.value[emplId] || [];
-    },
-    getEnrollmentsForEmplIdInGroup(
-      emplid: T.Enrollment["emplid"],
-      groupId: T.Group["id"],
-    ): T.Enrollment[] {
-      const groupEnrollments = getters.getEnrollmentsForGroup.value(groupId);
-      return groupEnrollments.filter((e) => e.emplid === emplid);
-    },
-    getEnrollmentsForSection(sectionId: T.CourseSection["id"]): T.Enrollment[] {
-      return getters.enrollmentsBySectionId.value[sectionId] || [];
-    },
-    getEnrollmentForPersonInSection(
-      person: T.Person,
-      section: T.CourseSection,
-    ): T.Enrollment | null {
-      const enrollments = methods.getEnrollmentsForSection(section.id);
-      return enrollments.find((e) => e.emplid === person.emplid) ?? null;
+      enrollmentsToRemove.forEach((enrollment) => {
+        delete state.enrollmentLookup[enrollment.id];
+      });
     },
   };
 
@@ -204,6 +117,5 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
     ...toRefs(state),
     ...getters,
     ...actions,
-    ...methods,
   };
 });
