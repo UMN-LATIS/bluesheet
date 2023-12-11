@@ -101,6 +101,17 @@ export const useCourseSectionStore = defineStore("couseSection", () => {
       state.sectionLookup[updatedSection.id] = updatedSection;
       return updatedSection;
     },
+
+    async removeSectionFromGroup(
+      section: T.CourseSection,
+      groupId: T.Group["id"],
+    ): Promise<void> {
+      await api.removeSectionFromGroup(section, groupId);
+      delete state.sectionLookup[section.id];
+      state.sectionIdsByGroup[groupId] = state.sectionIdsByGroup[
+        groupId
+      ]?.filter((id) => id !== section.id);
+    },
   };
 
   const methods = {

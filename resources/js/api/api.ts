@@ -216,3 +216,13 @@ export async function updateSectionInGroup(
   );
   return res.data;
 }
+
+export async function removeSectionFromGroup(
+  section: T.CourseSection,
+  groupId: T.Group["id"],
+) {
+  const res = await axios.delete(
+    `/api/course-planning/groups/${groupId}/sections/${section.dbId}`,
+  );
+  return res.data;
+}

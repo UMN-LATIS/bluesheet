@@ -468,6 +468,25 @@ export const useRootCoursePlanningStore = defineStore(
           state.activeGroupId,
         );
       },
+
+      async removeSection(section: T.CourseSection) {
+        if (!state.activeGroupId) {
+          throw new Error("active group id is not set");
+        }
+
+        // locally remove enrollments from the store
+        // no need to use api, since it should cascade delete
+        // when the section is deleted
+        stores.enrollmentStore.removeAllEnrollmentsForSectionFromStore(
+          section.id,
+          state.activeGroupId,
+        );
+
+        await stores.courseSectionStore.removeSectionFromGroup(
+          section,
+          state.activeGroupId,
+        );
+      },
     };
 
     const methods = {

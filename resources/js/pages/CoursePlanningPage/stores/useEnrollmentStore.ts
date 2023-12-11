@@ -145,6 +145,33 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
       await api.deleteEnrollmentFromGroup(enrollment, groupId);
       actions.removeEnrollmentFromStore(enrollment, groupId);
     },
+    bulkRemoveEnrollmentsFromGroup(
+      enrollmentIds: T.Enrollment["id"][],
+      groupId: T.Group["id"],
+    ): void {
+      // bulk remove from enrollmentIdsByGroup
+      const currentIdsInGroup = state.enrollmentIdsByGroup[groupId] || [];
+      const newGroupEnrollmentIds = currentIdsInGroup.filter(
+        (id) => !enrollmentIds.includes(id),
+      );
+
+      state.enrollmentIdsByGroup[groupId] = newGroupEnrollmentIds;
+
+      // bulk remove from enrollmentLookup
+      enrollmentIds.forEach((id) => {
+        delete state.enrollmentLookup[id];
+      });
+    },
+
+    removeAllEnrollmentsForSectionFromStore(
+      sectionId: T.CourseSection["id"],
+      groupId: T.Group["id"],
+    ): void {
+      const enrollments = getters.enrollmentsBySectionId.value[sectionId] || [];
+
+      const idsToRemove = enrollments.map((e) => e.id);
+      actions.bulkRemoveEnrollmentsFromGroup(idsToRemove, groupId);
+    },
   };
 
   const methods = {
