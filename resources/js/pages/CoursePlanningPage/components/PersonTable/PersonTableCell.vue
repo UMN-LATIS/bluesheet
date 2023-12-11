@@ -24,7 +24,6 @@
       ghostClass="ghost"
       class="tw-flex tw-flex-col tw-gap-1 tw-pb-12 tw-flex-1 tw-h-full"
       :class="{
-        'tw-opacity-50': !isPlannable,
         'tw-bg-neutral-50 tw-rounded tw-p-2 tw-cursor-move': isPlannable,
       }"
       @change="handeSectionChange($event, { person, term })"
