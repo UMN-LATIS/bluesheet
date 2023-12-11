@@ -447,7 +447,7 @@ export const useRootCoursePlanningStore = defineStore(
           throw new Error("active group id is not set");
         }
 
-        const section = await api.createCourseSection({
+        const section = await api.createCourseSectionInGroup({
           course,
           term,
           groupId: state.activeGroupId,
@@ -457,7 +457,7 @@ export const useRootCoursePlanningStore = defineStore(
           state.activeGroupId,
         );
 
-        const enrollment = await api.createEnrollment({
+        const enrollment = await api.createEnrollmentInGroup({
           person,
           section,
           role,
@@ -750,6 +750,51 @@ export const useRootCoursePlanningStore = defineStore(
       getCourses: () =>
         stores.courseStore.getCoursesForGroup(state.activeGroupId ?? 0),
       getCourse: stores.courseStore.getCourse,
+      async createEnrollment({
+        person,
+        section,
+        role,
+      }: {
+        person: T.Person;
+        section: T.CourseSection;
+        role: T.EnrollmentRole;
+      }) {
+        if (!state.activeGroupId) {
+          throw new Error("active group id is not set");
+        }
+
+        return stores.enrollmentStore.createEnrollment({
+          person,
+          section,
+          role,
+          groupId: state.activeGroupId,
+        });
+      },
+
+      async removeEnrollment(enrollment: T.Enrollment) {
+        if (!state.activeGroupId) {
+          throw new Error("active group id is not set");
+        }
+
+        stores.enrollmentStore.removeEnrollmentFromGroup({
+          enrollment,
+          groupId: state.activeGroupId,
+        });
+      },
+
+      getEnrollmentsForSection: stores.enrollmentStore.getEnrollmentsForSection,
+      getEnrollmentForPersonInSection:
+        stores.enrollmentStore.getEnrollmentForPersonInSection,
+      updateSection(section: T.CourseSection) {
+        if (!state.activeGroupId) {
+          throw new Error("active group id is not set");
+        }
+
+        return stores.courseSectionStore.updateSectionInGroup(
+          section,
+          state.activeGroupId,
+        );
+      },
     };
 
     return {

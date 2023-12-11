@@ -19,7 +19,7 @@ class CourseSectionResource extends JsonResource {
         return [
             'id' => $this->getSectionId(),
             'classNumber' => $this->CLASS_NUMBER ?? null,
-            'dbSectionId' => null,
+            'dbId' => null,
             'termId' => $this->TERM,
             'courseId' => $this->getCourseId(),
             'classSection' => $this->CLASS_SECTION,
@@ -38,7 +38,7 @@ class CourseSectionResource extends JsonResource {
     public function dbSectionToArray($request) {
         return [
             'id' => $this->getSectionId(),
-            'dbSectionId' => $this->id,
+            'dbId' => $this->id,
             'courseId' => $this->course_id,
             'termId' => $this->term_id,
             'groupId' => $this->group_id,

@@ -93,6 +93,14 @@ export const useCourseSectionStore = defineStore("couseSection", () => {
         courseSection.id,
       ];
     },
+    async updateSectionInGroup(
+      section: T.CourseSection,
+      groupId: T.Group["id"],
+    ): Promise<T.CourseSection> {
+      const updatedSection = await api.updateSectionInGroup(section, groupId);
+      state.sectionLookup[updatedSection.id] = updatedSection;
+      return updatedSection;
+    },
   };
 
   const methods = {

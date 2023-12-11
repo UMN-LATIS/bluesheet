@@ -67,4 +67,12 @@ class GroupEnrollmentController extends Controller {
 
         return new EnrollmentResource($enrollment->load('user'));
     }
+
+    public function destroy(Request $request, Group $group, Enrollment $enrollment) {
+        abort_if($request->user()->cannot('edit planned courses'), 403);
+
+        $enrollment->delete();
+
+        return response()->json(null, 204);
+    }
 }

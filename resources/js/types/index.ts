@@ -1,5 +1,9 @@
 import type { AxiosRequestConfig } from "axios";
-
+import type {
+  DraggableAddedEvent,
+  DraggableChangeEvent,
+  DraggableRemovedEvent,
+} from "vuedraggable";
 export type CSSClass = string | Record<string, boolean> | CSSClass[];
 
 export interface UserLookupItem {
@@ -248,9 +252,10 @@ export interface Person {
  */
 export interface Enrollment {
   id: `${Enrollment["sectionId"]}-${Enrollment["emplid"]}`;
-  role: EnrollmentRole;
+  dbId: number | null;
   emplid: Person["emplid"];
   sectionId: CourseSection["id"];
+  role: EnrollmentRole;
 }
 
 export interface AcademicDepartment {
@@ -264,12 +269,12 @@ export interface AcademicDepartment {
 export type SISSectionId = `sis-${NonNullable<CourseSection["classNumber"]>}`;
 
 // these courses come from the app db and are likely unpublished
-export type DbSectionId = `db-${NonNullable<CourseSection["dbSectionId"]>}`;
+export type DbSectionId = `db-${NonNullable<CourseSection["dbId"]>}`;
 
 export interface CourseSection {
   id: SISSectionId | DbSectionId;
   classNumber: ApiCourseSectionRecord["classNumber"];
-  dbSectionId: ApiCourseSectionRecord["dbSectionId"];
+  dbId: ApiCourseSectionRecord["dbId"];
   courseId: Course["id"]; // short code like "HIST-1001W"
   termId: Term["id"];
   classSection: string; // "001"
@@ -294,7 +299,7 @@ export interface Course {
 export interface ApiCourseSectionRecord {
   id: SISSectionId | DbSectionId;
   classNumber: number | null; // null if from db
-  dbSectionId: number | null; // null if from sis (bandaid)
+  dbId: number | null; // null if from sis (bandaid)
   termId: number;
   courseId: CourseShortCode; // subject-catalogNumber
   classSection: string; // "001"

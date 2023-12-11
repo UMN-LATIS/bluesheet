@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\CoursePlanning;
 
+use App\CourseSection;
 use App\Http\Controllers\Controller;
 use App\Group;
 use App\Http\Resources\CourseSectionResource;
@@ -63,5 +64,31 @@ class GroupSectionController extends Controller {
         $section = $group->courseSections()->create($validated);
 
         return new CourseSectionResource($section);
+    }
+
+    public function update(Request $request, Group $group, CourseSection $section) {
+        abort_if($request->user()->cannot('edit planned courses'), 403);
+
+        $validated = $request->validate([
+            'course_id' => 'string',
+            'term_id' => 'integer',
+            'class_section' => 'string',
+            'enrollment_cap' => 'integer',
+            'enrollment_total' => 'integer',
+            'is_published' => 'boolean',
+            'is_cancelled' => 'boolean',
+        ]);
+
+        $section->update($validated);
+
+        return new CourseSectionResource($section);
+    }
+
+    public function destroy(Request $request, Group $group, CourseSection $section) {
+        abort_if($request->user()->cannot('edit planned courses'), 403);
+
+        $section->delete();
+
+        return response()->json(null, 204);
     }
 }

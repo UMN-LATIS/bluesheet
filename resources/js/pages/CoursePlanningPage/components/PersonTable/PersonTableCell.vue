@@ -27,7 +27,7 @@
         'tw-opacity-50': !isPlannable,
         'tw-bg-neutral-50 tw-rounded tw-p-2 tw-cursor-move': isPlannable,
       }"
-      @change="handleSectionDrop"
+      @change="handeSectionChange($event, { person, term })"
     >
       <template #item="{ element: section }">
         <SectionDetails
@@ -49,17 +49,20 @@
 <script setup lang="ts">
 import LeaveChip from "../LeaveChip.vue";
 import SectionDetails from "./SectionDetails.vue";
-import { Term } from "@/types";
 import { ref, computed } from "vue";
 import AddTentativeCourseModal from "../AddTentativeSectionModal.vue";
-import { Person } from "@/types";
+import * as T from "@/types";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
-import Draggable from "vuedraggable";
-import type { SortableEvent } from "sortablejs";
+import Draggable, { type DraggableChangeEvent } from "vuedraggable";
+import {
+  getElementFromDraggableEvent,
+  isDraggableAddedEvent,
+  isDraggableRemovedEvent,
+} from "@/utils/draggableHelpers";
 
 const props = defineProps<{
-  person: Person;
-  term: Term;
+  person: T.Person;
+  term: T.Term;
 }>();
 
 const coursePlanningStore = useRootCoursePlanningStore();
@@ -84,16 +87,42 @@ const isPlannable = computed(() => {
   );
 });
 
-function handleSectionDrop(event: SortableEvent) {
-  // const { newIndex, oldIndex, item } = event;
-  console.log("handleSectionDrop", event);
-  // const section = event.item.element;
-  // coursePlanningStore.moveSectionInSectionGroup(
-  //   section.id,
-  //   props.term.id,
-  //   oldIndex,
-  //   newIndex,
-  // );
+async function handeSectionChange(
+  event: DraggableChangeEvent<T.CourseSection>,
+  ctx: { person: T.Person; term: T.Term },
+) {
+  console.log("handleSectionChange", { event, ctx });
+  const section = getElementFromDraggableEvent(event);
+  if (!section) {
+    throw new Error("No section found in event");
+  }
+
+  if (isDraggableAddedEvent(event)) {
+    await coursePlanningStore.updateSection({
+      ...section,
+      termId: ctx.term.id,
+    });
+
+    await coursePlanningStore.createEnrollment({
+      person: ctx.person,
+      section,
+      role: "PI",
+    });
+    return;
+  }
+
+  if (isDraggableRemovedEvent(event)) {
+    const enrollment = coursePlanningStore.getEnrollmentForPersonInSection(
+      ctx.person,
+      section,
+    );
+
+    if (!enrollment) {
+      throw new Error("No enrollment found for person in section");
+    }
+
+    await coursePlanningStore.removeEnrollment(enrollment);
+  }
 }
 </script>
 <style scoped>

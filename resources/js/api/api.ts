@@ -142,35 +142,13 @@ export async function fetchParentOrganizations() {
   return res.data;
 }
 
-// interface ApiNewCourseEnrollment {
-//   course_id: T.Course["id"];
-//   term_id: T.Term["id"];
-//   emplid: T.Person["emplid"];
-//   role: T.EnrollmentRole;
-//   group_id: T.Group["id"];
-//   class_section?: T.CourseSection["classSection"];
-//   is_published?: T.CourseSection["isPublished"];
-//   is_cancelled?: T.CourseSection["isCancelled"];
-// }
-
-// export async function createCourseEnrollment(
-//   enrollment: ApiNewCourseEnrollment,
-// ): Promise<T.CourseSection> {
-//   const groupId = enrollment.group_id;
-//   const res = await axios.post<T.CourseSection>(
-//     `/api/course-planning/groups/${groupId}/sections`,
-//     enrollment,
-//   );
-//   return res.data;
-// }
-
 interface ApiNewCourseSection {
   course: T.Course;
   term: T.Term;
   groupId: T.Group["id"];
 }
 
-export async function createCourseSection({
+export async function createCourseSectionInGroup({
   course,
   term,
   groupId,
@@ -193,19 +171,47 @@ interface NewCourseEnrollment {
   groupId: T.Group["id"];
 }
 
-export async function createEnrollment({
+export async function createEnrollmentInGroup({
   person,
   role,
   section,
   groupId,
 }: NewCourseEnrollment): Promise<T.Enrollment> {
-  console.log;
   const res = await axios.post<T.Enrollment>(
     `/api/course-planning/groups/${groupId}/enrollments`,
     {
       emplid: person.emplid,
       role,
-      course_section_id: section.dbSectionId,
+      course_section_id: section.dbId,
+    },
+  );
+  return res.data;
+}
+
+export async function deleteEnrollmentFromGroup(
+  enrollment: T.Enrollment,
+  groupId: T.Group["id"],
+) {
+  const res = await axios.delete(
+    `/api/course-planning/groups/${groupId}/enrollments/${enrollment.dbId}`,
+  );
+  return res.data;
+}
+
+export async function updateSectionInGroup(
+  section: T.CourseSection,
+  groupId: T.Group["id"],
+) {
+  const res = await axios.put<T.CourseSection>(
+    `/api/course-planning/groups/${groupId}/sections/${section.dbId}`,
+    {
+      course_id: section.courseId,
+      term_id: section.termId,
+      class_section: section.classSection,
+      enrollment_cap: section.enrollmentCap,
+      enrollment_total: section.enrollmentTotal,
+      is_cancelled: section.isCancelled,
+      is_published: section.isPublished,
     },
   );
   return res.data;

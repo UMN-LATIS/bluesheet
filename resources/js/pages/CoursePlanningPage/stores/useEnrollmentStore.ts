@@ -90,6 +90,61 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
         enrollment.id,
       ];
     },
+    async createEnrollment({
+      person,
+      section,
+      role,
+      groupId,
+    }: {
+      person: T.Person;
+      section: T.CourseSection;
+      role: T.EnrollmentRole;
+      groupId: T.Group["id"];
+    }): Promise<T.Enrollment> {
+      const enrollment = await api.createEnrollmentInGroup({
+        person,
+        section,
+        role,
+        groupId,
+      });
+
+      // update enrollment lookup
+      state.enrollmentLookup[enrollment.id] = enrollment;
+
+      // update enrollmentIdsByGroup list
+      state.enrollmentIdsByGroup[groupId] = [
+        ...(state.enrollmentIdsByGroup[groupId] ?? []),
+        enrollment.id,
+      ];
+
+      return enrollment;
+    },
+    removeEnrollmentFromStore(
+      enrollment: T.Enrollment,
+      groupId: T.Group["id"],
+    ): void {
+      // remove from enrollmentIdsByGroup
+      const enrollmentIds = state.enrollmentIdsByGroup[groupId] || [];
+
+      state.enrollmentIdsByGroup[groupId] = enrollmentIds.filter(
+        (id) => id !== enrollment.id,
+      );
+
+      // remove from enrollmentLookup
+      delete state.enrollmentLookup[enrollment.id];
+    },
+
+    async removeEnrollmentFromGroup({
+      enrollment,
+      groupId,
+    }: {
+      enrollment: T.Enrollment;
+      groupId: T.Group["id"];
+    }): Promise<void> {
+      // remove from db
+      await api.deleteEnrollmentFromGroup(enrollment, groupId);
+      actions.removeEnrollmentFromStore(enrollment, groupId);
+    },
   };
 
   const methods = {
@@ -108,6 +163,13 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
     },
     getEnrollmentsForSection(sectionId: T.CourseSection["id"]): T.Enrollment[] {
       return getters.enrollmentsBySectionId.value[sectionId] || [];
+    },
+    getEnrollmentForPersonInSection(
+      person: T.Person,
+      section: T.CourseSection,
+    ): T.Enrollment | null {
+      const enrollments = methods.getEnrollmentsForSection(section.id);
+      return enrollments.find((e) => e.emplid === person.emplid) ?? null;
     },
   };
 
