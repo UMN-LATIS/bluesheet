@@ -247,9 +247,9 @@ export interface Person {
  * like "primary instructor" or "teaching assistant"
  */
 export interface Enrollment {
-  id: `${Enrollment["sectionId"]}-${Enrollment["emplId"]}`;
+  id: `${Enrollment["sectionId"]}-${Enrollment["emplid"]}`;
   role: EnrollmentRole;
-  emplId: Person["emplid"];
+  emplid: Person["emplid"];
   sectionId: CourseSection["id"];
 }
 

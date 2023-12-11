@@ -62,7 +62,7 @@ const coursePlanningStore = useRootCoursePlanningStore();
 const isOpen = ref(false);
 
 const person = computed((): T.Person | null =>
-  coursePlanningStore.getPersonByEmplId(props.enrollment.emplId),
+  coursePlanningStore.getPersonByEmplId(props.enrollment.emplid),
 );
 
 const section = computed((): T.CourseSection | null =>

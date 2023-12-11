@@ -26,7 +26,7 @@ class EnrollmentResource extends JsonResource {
         return [
             'id' => $this->getEnrollmentId(),
             'dbId' => null,
-            'emplId' => $this->INSTRUCTOR_EMPLID,
+            'emplid' => $this->INSTRUCTOR_EMPLID,
             'sectionId' => $this->getSectionId(),
             'role' => $this->INSTRUCTOR_ROLE,
         ];
@@ -36,7 +36,7 @@ class EnrollmentResource extends JsonResource {
         return [
             'id' => $this->getEnrollmentId(),
             'dbId' => $this->id,
-            'emplId' => $this->user->emplid,
+            'emplid' => $this->user->emplid,
             'sectionId' => $this->getSectionId(),
             'role' => $this->role,
         ];

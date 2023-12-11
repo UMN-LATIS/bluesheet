@@ -140,7 +140,7 @@ export const useRootCoursePlanningStore = defineStore(
 
         const emplIds: T.Person["emplid"][] =
           getters.enrollmentsInVisibleTerms.value.map(
-            (enrollment: T.Enrollment) => enrollment.emplId,
+            (enrollment: T.Enrollment) => enrollment.emplid,
           );
         return uniq(emplIds)
           .map((emplId) => stores.personStore.getPersonByEmplId(emplId))
@@ -531,7 +531,7 @@ export const useRootCoursePlanningStore = defineStore(
         );
 
         const uniqEmplids = uniq(
-          enrollmentsForGroupWithRole.map((e) => e.emplId),
+          enrollmentsForGroupWithRole.map((e) => e.emplid),
         );
 
         // get the people for these enrollments
@@ -679,7 +679,7 @@ export const useRootCoursePlanningStore = defineStore(
       },
 
       isEnrollmentVisible(enrollment: T.Enrollment) {
-        const person = stores.personStore.getPersonByEmplId(enrollment.emplId);
+        const person = stores.personStore.getPersonByEmplId(enrollment.emplid);
         const section = stores.courseSectionStore.getSection(
           enrollment.sectionId,
         );
@@ -704,7 +704,7 @@ export const useRootCoursePlanningStore = defineStore(
             );
 
             const people = enrollments.map((enrollment) =>
-              stores.personStore.getPersonByEmplId(enrollment.emplId),
+              stores.personStore.getPersonByEmplId(enrollment.emplid),
             );
 
             const termId = section.termId;

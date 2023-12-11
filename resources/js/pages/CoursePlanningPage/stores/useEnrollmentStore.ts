@@ -22,7 +22,7 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
       (): Record<T.Person["id"], T.Enrollment[]> => {
         return getters.allEnrollments.value.reduce(
           (acc, enrollment) => {
-            const emplId = enrollment.emplId;
+            const emplId = enrollment.emplid;
             const previousEnrollmentIds = acc[emplId] || [];
 
             return {
@@ -96,15 +96,15 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
     getEnrollment(id: T.Enrollment["id"]) {
       return state.enrollmentLookup[id] ?? null;
     },
-    getEnrollmentsForEmplId(emplId: T.Enrollment["emplId"]): T.Enrollment[] {
+    getEnrollmentsForEmplId(emplId: T.Enrollment["emplid"]): T.Enrollment[] {
       return getters.enrollmentsByEmplId.value[emplId] || [];
     },
     getEnrollmentsForEmplIdInGroup(
-      emplid: T.Enrollment["emplId"],
+      emplid: T.Enrollment["emplid"],
       groupId: T.Group["id"],
     ): T.Enrollment[] {
       const groupEnrollments = getters.getEnrollmentsForGroup.value(groupId);
-      return groupEnrollments.filter((e) => e.emplId === emplid);
+      return groupEnrollments.filter((e) => e.emplid === emplid);
     },
     getEnrollmentsForSection(sectionId: T.CourseSection["id"]): T.Enrollment[] {
       return getters.enrollmentsBySectionId.value[sectionId] || [];
