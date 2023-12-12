@@ -1,9 +1,4 @@
 import type { AxiosRequestConfig } from "axios";
-import type {
-  DraggableAddedEvent,
-  DraggableChangeEvent,
-  DraggableRemovedEvent,
-} from "vuedraggable";
 export type CSSClass = string | Record<string, boolean> | CSSClass[];
 
 export interface UserLookupItem {
@@ -280,7 +275,6 @@ export interface CourseSection {
   classSection: string; // "001"
   enrollmentCap: number;
   enrollmentTotal: number;
-  enrollments: Enrollment[];
   isCancelled: boolean;
   isPublished: boolean; // true if from bandaid, false if from app DB
 }
