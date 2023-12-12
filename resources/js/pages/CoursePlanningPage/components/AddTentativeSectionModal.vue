@@ -129,7 +129,7 @@ function handleCancel() {
   emits("close");
 }
 
-function handleAddTentativeCourse() {
+async function handleAddTentativeCourse() {
   if (
     !selectedTerm.value ||
     !selectedCourse.value ||
@@ -138,7 +138,7 @@ function handleAddTentativeCourse() {
     throw new Error("Missing required fields");
   }
 
-  coursePlanningStore.createSectionWithEnrollee({
+  await coursePlanningStore.createSectionWithEnrollee({
     course: selectedCourse.value,
     term: selectedTerm.value,
     person: selectedInstructor.value,

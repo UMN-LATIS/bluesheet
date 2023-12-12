@@ -90,7 +90,9 @@ export const useRootCoursePlanningStore = defineStore(
         }
 
         return getters.sectionsWithinVisibleTerms.value
-          .flatMap((section) => section.enrollments)
+          .flatMap((section) =>
+            stores.enrollmentStore.getEnrollmentsBySectionId(section.id),
+          )
           .filter(Boolean) as T.Enrollment[];
       }),
 
@@ -411,11 +413,13 @@ export const useRootCoursePlanningStore = defineStore(
           term,
         });
 
-        stores.enrollmentStore.createEnrollment({
+        const enrollment = await stores.enrollmentStore.createEnrollment({
           person,
           section,
           role,
         });
+
+        return { section, enrollment };
       },
 
       async removeSection(section: T.CourseSection) {
@@ -449,7 +453,7 @@ export const useRootCoursePlanningStore = defineStore(
         sections.forEach((section) => {
           enrollmentsByTerm[section.termId] = [
             ...(enrollmentsByTerm[section.termId] ?? []),
-            ...section.enrollments,
+            ...stores.enrollmentStore.getEnrollmentsBySectionId(section.id),
           ];
         });
 
@@ -558,7 +562,9 @@ export const useRootCoursePlanningStore = defineStore(
         );
 
         const hasEnrollmentsThatAreVisible = sections.some((section) =>
-          section.enrollments.some(methods.isEnrollmentVisible),
+          stores.enrollmentStore
+            .getEnrollmentsBySectionId(section.id)
+            .some(methods.isEnrollmentVisible),
         );
 
         return (

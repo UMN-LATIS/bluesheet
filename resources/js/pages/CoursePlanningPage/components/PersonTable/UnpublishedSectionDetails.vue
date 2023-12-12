@@ -69,8 +69,10 @@ function handleRemove() {
     return;
   }
 
+  const sectionEnrollments =
+    planningStore.enrollmentStore.getEnrollmentsBySectionId(props.section.id);
   // remove section if last enrollment
-  if (props.section.enrollments.length === 1) {
+  if (sectionEnrollments.length === 1) {
     planningStore.removeSection(props.section);
   }
 

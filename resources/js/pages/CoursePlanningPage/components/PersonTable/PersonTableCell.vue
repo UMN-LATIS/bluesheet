@@ -50,7 +50,7 @@
 <script setup lang="ts">
 import LeaveChip from "../LeaveChip.vue";
 import SectionDetails from "./SectionDetails.vue";
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import AddTentativeCourseModal from "../AddTentativeSectionModal.vue";
 import * as T from "@/types";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
@@ -68,16 +68,20 @@ const props = defineProps<{
 
 const coursePlanningStore = useRootCoursePlanningStore();
 
-const courseSections = computed(() =>
-  coursePlanningStore.getSectionsForEmplIdInTerm(
+const courseSections = computed(() => {
+  return coursePlanningStore.getSectionsForEmplIdInTerm(
     props.person.emplid,
     props.term.id,
-  ),
-);
+  );
+});
 
 // use local course sections to avoid section jumping back
 // to original position while api call is made
 const localCourseSections = ref(courseSections.value);
+
+watch(courseSections, () => {
+  localCourseSections.value = courseSections.value;
+});
 
 const isShowingAddCourse = ref(false);
 

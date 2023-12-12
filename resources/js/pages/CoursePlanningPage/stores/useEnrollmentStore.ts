@@ -15,10 +15,11 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
   });
 
   const getters = {
-    allEnrollments: computed(
-      (): T.Enrollment[] =>
-        Object.values(state.enrollmentLookup).filter(Boolean) as T.Enrollment[],
-    ),
+    allEnrollments: computed((): T.Enrollment[] => {
+      return Object.values(state.enrollmentLookup).filter(
+        Boolean,
+      ) as T.Enrollment[];
+    }),
     getEnrollmentsByEmplId: computed(() => {
       const lookupByEmplid = groupBy<T.Enrollment>(
         getters.allEnrollments.value,
