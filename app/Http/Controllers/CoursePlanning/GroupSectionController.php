@@ -38,7 +38,7 @@ class GroupSectionController extends Controller {
                     $section = $classRecords->first();
 
                     // and then append the group to enrollments
-                    $section->ENROLLMENTS = $classRecords;
+                    // $section->ENROLLMENTS = $classRecords;
 
                     return $section;
                 }

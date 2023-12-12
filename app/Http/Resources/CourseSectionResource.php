@@ -30,7 +30,6 @@ class CourseSectionResource extends JsonResource {
 
             'isCancelled' => (bool) $this->CANCELLED,
             'isPublished' => true,
-            'enrollments' => EnrollmentResource::collection($this->ENROLLMENTS),
         ];
     }
 
@@ -49,9 +48,6 @@ class CourseSectionResource extends JsonResource {
             'waitlistTotal' => 0,
             'isPublished' => $this->is_published ?? false,
             'isCancelled' => $this->is_cancelled ?? false,
-            'enrollments' => EnrollmentResource::collection(
-                $this->enrollments
-            ),
         ];
     }
 
