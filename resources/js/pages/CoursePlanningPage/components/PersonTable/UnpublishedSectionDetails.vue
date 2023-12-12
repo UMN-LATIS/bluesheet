@@ -57,26 +57,27 @@ function handleEdit() {
   console.log("edit");
 }
 
-function handleRemove() {
+async function handleRemove() {
   if (!enrollment.value) {
     throw new Error("No enrollment found for section");
   }
-  const confirmed = confirm(
-    `Are you sure you want to remove ${props.course.subject} ${props.course.catalogNumber}?`,
-  );
+  // const confirmed = confirm(
+  //   `Are you sure you want to remove ${props.course.subject} ${props.course.catalogNumber}?`,
+  // );
 
-  if (!confirmed) {
-    return;
-  }
+  // if (!confirmed) {
+  //   return;
+  // }
+
+  await planningStore.enrollmentStore.removeEnrollment(enrollment.value);
 
   const sectionEnrollments =
     planningStore.enrollmentStore.getEnrollmentsBySectionId(props.section.id);
-  // remove section if last enrollment
-  if (sectionEnrollments.length === 1) {
-    planningStore.removeSection(props.section);
-  }
 
-  planningStore.enrollmentStore.removeEnrollment(enrollment.value);
+  // if there are still enrollments in the section, don't remove it
+  if (sectionEnrollments.length) return;
+
+  await planningStore.removeSection(props.section);
 }
 </script>
 <style scoped></style>

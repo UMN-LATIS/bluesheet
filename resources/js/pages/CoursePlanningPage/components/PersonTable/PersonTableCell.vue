@@ -108,7 +108,6 @@ const isPlannable = computed(() => {
 async function handeSectionChange(
   event: DraggableChangeEvent<T.CourseSection>,
 ) {
-  console.log("handleSectionChange", { event, props });
   const section = getElementFromDraggableEvent(event);
   if (!section) {
     throw new Error("No section found in event");

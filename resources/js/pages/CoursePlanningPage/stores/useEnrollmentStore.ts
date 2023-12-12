@@ -108,6 +108,7 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
       if (!state.activeGroupId) {
         throw new Error("active group id is not set");
       }
+
       await api.deleteEnrollmentFromGroup(enrollment, state.activeGroupId);
       delete state.enrollmentLookup[enrollment.id];
     },
