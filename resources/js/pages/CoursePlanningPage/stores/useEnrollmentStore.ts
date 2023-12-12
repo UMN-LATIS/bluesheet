@@ -42,6 +42,15 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
         },
     ),
 
+    getEnrollmentsByRole: computed(() => {
+      const lookup = groupBy<T.Enrollment>(
+        getters.allEnrollments.value,
+        "role",
+      );
+
+      return (role: T.Enrollment["role"]): T.Enrollment[] => lookup[role] ?? [];
+    }),
+
     getEnrollmentForPersonInSection: computed(
       (person: T.Person, section: T.CourseSection): T.Enrollment | null => {
         const sectionEnrollments = getters.getEnrollmentsBySectionId.value(
@@ -101,9 +110,7 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
       delete state.enrollmentLookup[enrollment.id];
     },
 
-    async removeAllSectionEnrollmentsFromStore(
-      sectionId: T.CourseSection["id"],
-    ) {
+    removeAllSectionEnrollmentFromStore(sectionId: T.CourseSection["id"]) {
       const enrollmentsToRemove =
         getters.getEnrollmentsBySectionId.value(sectionId);
 

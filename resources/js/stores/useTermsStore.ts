@@ -7,20 +7,20 @@ import { dayjs } from "@/utils";
 interface TermsStoreState {
   terms: T.Term[];
   loadStatus: T.LoadState;
-  filters: {
-    startTermId: T.Term["id"] | null;
-    endTermId: T.Term["id"] | null;
-  };
+  // filters: {
+  //   startTermId: T.Term["id"] | null;
+  //   endTermId: T.Term["id"] | null;
+  // };
 }
 
 export const useTermsStore = defineStore("terms", () => {
   const state = reactive<TermsStoreState>({
     terms: [],
     loadStatus: "idle",
-    filters: {
-      startTermId: null,
-      endTermId: null,
-    },
+    // filters: {
+    //   startTermId: null,
+    //   endTermId: null,
+    // },
   });
 
   const getters = {
@@ -60,25 +60,25 @@ export const useTermsStore = defineStore("terms", () => {
       })),
     ),
 
-    filteredTerms: computed((): T.Term[] => {
-      let startTermIndex = getters.sortedTerms.value.findIndex((term) => {
-        return term.id === state.filters.startTermId;
-      });
+    // filteredTerms: computed((): T.Term[] => {
+    //   let startTermIndex = getters.sortedTerms.value.findIndex((term) => {
+    //     return term.id === state.filters.startTermId;
+    //   });
 
-      if (startTermIndex === -1) {
-        startTermIndex = 0;
-      }
+    //   if (startTermIndex === -1) {
+    //     startTermIndex = 0;
+    //   }
 
-      let endTermIndex = getters.sortedTerms.value.findIndex((term) => {
-        return term.id === state.filters.endTermId;
-      });
+    //   let endTermIndex = getters.sortedTerms.value.findIndex((term) => {
+    //     return term.id === state.filters.endTermId;
+    //   });
 
-      if (endTermIndex === -1) {
-        endTermIndex = getters.sortedTerms.value.length - 1;
-      }
+    //   if (endTermIndex === -1) {
+    //     endTermIndex = getters.sortedTerms.value.length - 1;
+    //   }
 
-      return getters.sortedTerms.value.slice(startTermIndex, endTermIndex + 1);
-    }),
+    //   return getters.sortedTerms.value.slice(startTermIndex, endTermIndex + 1);
+    // }),
   };
 
   const actions = {

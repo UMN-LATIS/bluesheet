@@ -2,7 +2,8 @@ import { defineStore } from "pinia";
 import { computed, reactive, toRefs } from "vue";
 import * as api from "@/api";
 import * as T from "@/types";
-import { countBy, keyBy } from "lodash";
+import { countBy, groupBy, keyBy } from "lodash";
+import { useEnrollmentStore } from "./useEnrollmentStore";
 
 interface PersonStoreState {
   activeGroupId: T.Group["id"] | null;
@@ -39,12 +40,29 @@ export const usePersonStore = defineStore("person", () => {
       return (userId: T.Person["id"]): T.Person | null =>
         lookupByUserId[userId] ?? null;
     }),
-    acadApptCounts: computed(() => {
-      const acadAppts = getters.allPeople.value.map(
-        (p) => p.academicAppointment,
-      );
-      return countBy(acadAppts);
-    }),
+    getPeopleWithRoles: computed(
+      () =>
+        (roles: T.Enrollment["role"][]): T.Person[] => {
+          const enrollmentStore = useEnrollmentStore();
+
+          const enrollmentWithRoles = roles.flatMap((role) =>
+            enrollmentStore.getEnrollmentsByRole(role),
+          );
+
+          const people = enrollmentWithRoles.map((e) =>
+            getters.getPersonByEmplId.value(e.emplid),
+          );
+          return people.filter(Boolean) as T.Person[];
+        },
+    ),
+    acadApptCounts: computed(
+      (): Record<T.Person["academicAppointment"], number> => {
+        const acadAppts = getters.allPeople.value.map(
+          (p) => p.academicAppointment,
+        );
+        return countBy(acadAppts);
+      },
+    ),
   };
 
   const actions = {
@@ -52,7 +70,7 @@ export const usePersonStore = defineStore("person", () => {
       state.activeGroupId = groupId;
       return actions.fetchPeopleForGroup(groupId);
     },
-    async fetchPeopleForGroup(groupId: number) {
+    async fetchPeopleForGroup(groupId: number): Promise<void> {
       const persons = await api.fetchPeopleForGroup(groupId);
 
       // update the person lookup in one fell swoop

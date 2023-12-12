@@ -3,6 +3,7 @@ import { computed, reactive, toRefs } from "vue";
 import * as T from "@/types";
 import * as api from "@/api";
 import { keyBy, groupBy } from "lodash";
+import { useEnrollmentStore } from "./useEnrollmentStore";
 
 interface CourseSectionStoreState {
   activeGroupId: T.Group["id"] | null;
@@ -21,10 +22,8 @@ export const useCourseSectionStore = defineStore("couseSection", () => {
         Object.values(state.sectionLookup).filter(Boolean) as T.CourseSection[],
     ),
     getSectionsByTermId: computed(() => {
-      const lookupByTermId = groupBy<T.CourseSection>(
-        getters.allSections.value,
-        "termId",
-      );
+      const lookupByTermId: Record<T.Term["id"], T.CourseSection[]> =
+        groupBy<T.CourseSection>(getters.allSections.value, "termId");
 
       return (termId: T.Term["id"]): T.CourseSection[] =>
         lookupByTermId[termId] ?? [];
@@ -37,6 +36,17 @@ export const useCourseSectionStore = defineStore("couseSection", () => {
       return (courseId: T.Course["id"]): T.CourseSection[] =>
         lookup[courseId] ?? [];
     }),
+    getSectionsByEmplId: computed(
+      () =>
+        (emplid: T.Person["emplid"]): T.CourseSection[] => {
+          const enrollmentStore = useEnrollmentStore();
+          const enrollments = enrollmentStore.getEnrollmentsByEmplId(emplid);
+          const sectionIds = enrollments.map((e) => e.sectionId);
+          const sections = sectionIds.map((id) => state.sectionLookup[id]);
+          return sections.filter(Boolean) as T.CourseSection[];
+        },
+    ),
+
     getSection: computed(
       () =>
         (sectionId: T.CourseSection["id"]): T.CourseSection | null => {

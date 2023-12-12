@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { computed, reactive, toRefs } from "vue";
+import { reactive, toRefs } from "vue";
 import type { Group } from "@/types";
 import * as api from "@/api";
 
