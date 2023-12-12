@@ -123,7 +123,12 @@ export const useRootCoursePlanningStore = defineStore(
             return {};
           }
 
-          return countBy(getters.peopleWithIncludedRolesInVisibleTerms.value);
+          const counts = countBy(
+            getters.peopleWithIncludedRolesInVisibleTerms.value,
+            "academicAppointment",
+          );
+
+          return counts;
         },
       ),
       courseTypeCountsForVisibleTerms: computed(
@@ -639,6 +644,7 @@ export const useRootCoursePlanningStore = defineStore(
       ...getters,
       ...actions,
       ...methods,
+      ...stores,
     };
   },
 );

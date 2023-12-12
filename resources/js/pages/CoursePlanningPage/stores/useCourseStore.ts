@@ -85,7 +85,7 @@ export const useCourseStore = defineStore("course", () => {
 
     async fetchCoursesForGroup(groupId: number): Promise<void> {
       const courses = await api.fetchCoursesForGroup(groupId);
-      state.courseLookup = keyBy<T.Course>(courses, "idasda");
+      state.courseLookup = keyBy<T.Course>(courses, "id");
     },
     toggleAllCourseTypes() {
       const areAllExcluded = getters.allCourseTypes.value.every((courseType) =>

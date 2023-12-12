@@ -43,7 +43,10 @@ const props = defineProps<{
 
 const planningStore = useRootCoursePlanningStore();
 const enrollment = computed(() =>
-  planningStore.getEnrollmentForPersonInSection(props.person, props.section),
+  planningStore.enrollmentStore.getEnrollmentForPersonInSection(
+    props.person,
+    props.section,
+  ),
 );
 
 const isInPlanningMode = computed(() => {
@@ -71,7 +74,7 @@ function handleRemove() {
     planningStore.removeSection(props.section);
   }
 
-  planningStore.removeEnrollment(enrollment.value);
+  planningStore.enrollmentStore.removeEnrollment(enrollment.value);
 }
 </script>
 <style scoped></style>

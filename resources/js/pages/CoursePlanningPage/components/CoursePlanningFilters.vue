@@ -105,7 +105,7 @@
           </Button>
         </div>
         <label
-          v-for="[category, count] in sortedAcadAppts"
+          v-for="[category, count] in coursePlanningStore.sortedAcadAppts"
           :key="category"
           class="tw-flex tw-items-center tw-text-sm gap-1"
         >
@@ -113,7 +113,11 @@
             type="checkbox"
             :checked="!filters.excludedAcadAppts.has(category)"
             class="tw-form-checkbox tw-mr-2 tw-border tw-border-neutral-500 tw-rounded"
-            @change="toggleAcadApptFilter(category)"
+            @change="
+              filters.excludedAcadAppts.has(category)
+                ? filters.excludedAcadAppts.delete(category)
+                : filters.excludedAcadAppts.add(category)
+            "
           />
 
           {{ category }}
@@ -124,27 +128,27 @@
   </section>
 </template>
 <script setup lang="ts">
+import { computed } from "vue";
 import SelectGroup from "@/components/SelectGroup.vue";
 import Button from "@/components/Button.vue";
 import { useRootCoursePlanningStore } from "../stores/useRootCoursePlanningStore";
 import { storeToRefs } from "pinia";
+import * as T from "@/types";
 
 const coursePlanningStore = useRootCoursePlanningStore();
 
-const {
-  filters,
-  termSelectOptions,
-  sortedAcadAppts,
-  sortedCourseLevels,
-  sortedCourseTypes,
-} = storeToRefs(coursePlanningStore);
+const { filters, sortedCourseLevels, sortedCourseTypes } =
+  storeToRefs(coursePlanningStore);
 const {
   setStartTermId,
   setEndTermId,
-  toggleAcadApptFilter,
   toggleAllAcadAppts,
   toggleAllCourseLevels,
   toggleAllCourseTypes,
 } = coursePlanningStore;
+
+const termSelectOptions = computed(
+  () => coursePlanningStore.termsStore.termSelectOptions,
+);
 </script>
 <style scoped></style>

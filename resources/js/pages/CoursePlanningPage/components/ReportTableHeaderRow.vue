@@ -9,7 +9,7 @@
       class="tw-whitespace-nowrap term-header-column"
       :class="{
         '!tw-bg-amber-100 !tw-border-amber-300 term-header-column--is-current-term':
-          coursePlanningStore.isCurrentTerm(term.id),
+          coursePlanningStore.termsStore.isCurrentTerm(term.id),
         'term-header-column--is-fall-term': term.name.includes('Fall'),
       }"
     >
@@ -27,6 +27,6 @@ defineProps<{
 }>();
 
 const coursePlanningStore = useRootCoursePlanningStore();
-const terms = computed(() => coursePlanningStore.terms);
+const terms = computed(() => coursePlanningStore.termsStore.terms);
 </script>
 <style scoped></style>

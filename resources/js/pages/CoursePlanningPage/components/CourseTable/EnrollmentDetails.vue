@@ -62,11 +62,11 @@ const coursePlanningStore = useRootCoursePlanningStore();
 const isOpen = ref(false);
 
 const person = computed((): T.Person | null =>
-  coursePlanningStore.getPersonByEmplId(props.enrollment.emplid),
+  coursePlanningStore.personStore.getPersonByEmplId(props.enrollment.emplid),
 );
 
 const section = computed((): T.CourseSection | null =>
-  coursePlanningStore.getSection(props.enrollment.sectionId),
+  coursePlanningStore.courseSectionStore.getSection(props.enrollment.sectionId),
 );
 
 const isEnrollmentVisible = computed(() => {
@@ -74,7 +74,7 @@ const isEnrollmentVisible = computed(() => {
     return false;
   }
   return (
-    coursePlanningStore.isPersonVisible(person.value) &&
+    coursePlanningStore.isPersonVisible(person.value.emplid) &&
     coursePlanningStore.isSectionVisible(section.value)
   );
 });

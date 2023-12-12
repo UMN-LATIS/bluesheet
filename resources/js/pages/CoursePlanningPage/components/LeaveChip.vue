@@ -82,7 +82,7 @@ const coursePlanningStore = useRootCoursePlanningStore();
 
 const isOpen = ref(false);
 const person = computed(() =>
-  coursePlanningStore.getPersonByUserId(props.leave.user_id),
+  coursePlanningStore.personStore.getPersonByUserId(props.leave.user_id),
 );
 
 const prettyLeaveType = computed(() => props.leave.type.replace(/_/g, " "));

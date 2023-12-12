@@ -36,7 +36,7 @@ defineProps<{
 }>();
 
 const coursePlanningStore = useRootCoursePlanningStore();
-const courses = computed(() => coursePlanningStore.getCourses());
+const courses = computed(() => coursePlanningStore.courseStore.allCourses);
 </script>
 <style scoped>
 .term-data-column.term-data-column--current {

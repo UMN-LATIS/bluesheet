@@ -64,8 +64,8 @@ const emits = defineEmits<{
 const coursePlanningStore = useRootCoursePlanningStore();
 
 const terms = computed(() => coursePlanningStore.scheduleableTerms);
-const courses = computed(() => coursePlanningStore.courses);
-const people = computed(() => coursePlanningStore.people);
+const courses = computed(() => coursePlanningStore.courseStore.allCourses);
+const people = computed(() => coursePlanningStore.personStore.allPeople);
 
 const toTermOption = (t: Term) => ({
   id: t.id,

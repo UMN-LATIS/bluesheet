@@ -8,18 +8,21 @@
   >
     <Td> Leaves </Td>
     <Td
-      v-for="term in coursePlanningStore.terms"
+      v-for="term in coursePlanningStore.termsStore.terms"
       v-show="isTermVisible(term.id)"
       :key="term.id"
       class="term-data-column"
       :class="{
-        'term-data-column--current': coursePlanningStore.isCurrentTerm(term.id),
+        'term-data-column--current':
+          coursePlanningStore.termsStore.isCurrentTerm(term.id),
         'term-data-column--fall': term.name.includes('Fall'),
       }"
     >
       <div class="leaves-container tw-flex tw-flex-col tw-gap-1">
         <LeaveChip
-          v-for="leave in coursePlanningStore.getLeavesInTerm(term.id)"
+          v-for="leave in coursePlanningStore.leaveStore.getLeavesByTermId(
+            term.id,
+          )"
           v-show="coursePlanningStore.isPersonVisibleById(leave.user_id)"
           :key="leave.id"
           :leave="leave"
@@ -53,7 +56,7 @@ withDefaults(
 const coursePlanningStore = useRootCoursePlanningStore();
 
 const isTermVisibleLookup = computed(() =>
-  coursePlanningStore.terms.reduce(
+  coursePlanningStore.termsStore.terms.reduce(
     (acc, term) => ({
       ...acc,
       [term.id]: coursePlanningStore.isTermVisible(term.id),
@@ -67,7 +70,7 @@ function isTermVisible(termId: Term["id"]) {
 }
 
 const hasVisibleLeaves = computed(() => {
-  return coursePlanningStore.leaves.some((leave) =>
+  return coursePlanningStore.leaveStore.leaves.some((leave) =>
     coursePlanningStore.isPersonVisibleById(leave.user_id),
   );
 });

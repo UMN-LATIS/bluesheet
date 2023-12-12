@@ -106,9 +106,11 @@ onMounted(async () => {
   isLoadingComplete.value = true;
 });
 
-const group = computed(() => coursePlanningStore.getGroup(props.groupId));
+const group = computed(() =>
+  coursePlanningStore.groupStore.getGroup(props.groupId),
+);
 
-const currentTerm = computed(() => coursePlanningStore.currentTerm);
+const currentTerm = computed(() => coursePlanningStore.termsStore.currentTerm);
 
 const activeTab = ref<"instructors" | "tas" | "courses">("instructors");
 

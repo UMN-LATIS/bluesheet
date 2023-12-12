@@ -52,14 +52,15 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
     }),
 
     getEnrollmentForPersonInSection: computed(
-      (person: T.Person, section: T.CourseSection): T.Enrollment | null => {
-        const sectionEnrollments = getters.getEnrollmentsBySectionId.value(
-          section.id,
-        );
-        return (
-          sectionEnrollments.find((e) => e.emplid === person.emplid) ?? null
-        );
-      },
+      () =>
+        (person: T.Person, section: T.CourseSection): T.Enrollment | null => {
+          const sectionEnrollments = getters.getEnrollmentsBySectionId.value(
+            section.id,
+          );
+          return (
+            sectionEnrollments.find((e) => e.emplid === person.emplid) ?? null
+          );
+        },
     ),
   };
 

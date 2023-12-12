@@ -23,12 +23,13 @@
       </div>
     </Td>
     <Td
-      v-for="term in coursePlanningStore.terms"
+      v-for="term in coursePlanningStore.termsStore.terms"
       v-show="isTermVisible(term.id)"
       :key="term.id"
       class="term-data-column tw-group tw-h-full"
       :class="{
-        'term-data-column--current': coursePlanningStore.isCurrentTerm(term.id),
+        'term-data-column--current':
+          coursePlanningStore.termsStore.isCurrentTerm(term.id),
         'term-data-column--fall': term.name.includes('Fall'),
       }"
     >
@@ -51,7 +52,7 @@ const props = defineProps<{
 const coursePlanningStore = useRootCoursePlanningStore();
 
 const isPersonVisible = computed(() =>
-  coursePlanningStore.isPersonVisible(props.person),
+  coursePlanningStore.isPersonVisible(props.person.emplid),
 );
 
 const isPersonHighlighted = computed(
@@ -61,7 +62,7 @@ const isPersonHighlighted = computed(
 );
 
 const isTermVisibleLookup = computed(() =>
-  coursePlanningStore.terms.reduce(
+  coursePlanningStore.termsStore.terms.reduce(
     (acc, term) => ({
       ...acc,
       [term.id]: coursePlanningStore.isTermVisible(term.id),

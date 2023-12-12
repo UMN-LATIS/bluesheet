@@ -30,7 +30,9 @@ const props = defineProps<{
 
 const planningStore = useRootCoursePlanningStore();
 
-const course = computed(() => planningStore.getCourse(props.section.courseId));
+const course = computed(() =>
+  planningStore.courseStore.getCourse(props.section.courseId),
+);
 
 const isSectionVisible = computed(() =>
   planningStore.isSectionVisible(props.section),

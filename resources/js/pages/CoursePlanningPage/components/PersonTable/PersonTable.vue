@@ -19,7 +19,7 @@
       </template>
       <TBody>
         <PersonTableRow
-          v-for="person in coursePlanningStore.peopleInActiveGroup"
+          v-for="person in coursePlanningStore.personStore.allPeople"
           :key="person.id"
           :person="person"
         />

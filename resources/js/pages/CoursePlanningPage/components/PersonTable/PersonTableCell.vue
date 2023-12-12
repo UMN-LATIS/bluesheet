@@ -8,7 +8,7 @@
       + Add Course
     </button>
     <LeaveChip
-      v-for="leave in termLeaves"
+      v-for="leave in termLeavesForPerson"
       :key="leave.id"
       :leave="leave"
       :person="person"
@@ -50,7 +50,7 @@
 <script setup lang="ts">
 import LeaveChip from "../LeaveChip.vue";
 import SectionDetails from "./SectionDetails.vue";
-import { ref, computed, watch } from "vue";
+import { ref, computed } from "vue";
 import AddTentativeCourseModal from "../AddTentativeSectionModal.vue";
 import * as T from "@/types";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
@@ -81,14 +81,23 @@ const localCourseSections = ref(courseSections.value);
 
 const isShowingAddCourse = ref(false);
 
-const termLeaves = computed(() =>
-  coursePlanningStore.getLeavesForPersonInTerm(props.person.id, props.term.id),
+const termLeavesForPerson = computed(() =>
+  coursePlanningStore.leaveStore
+    .getLeavesByPersonId(props.person.id)
+    .filter((leave) => leave.termIds?.includes(props.term.id)),
 );
+
+const doesTermHavePublishedSections = computed(() => {
+  return (
+    coursePlanningStore.courseSectionStore
+      .getSectionsByTermId(props.term.id)
+      .filter((section) => section.isPublished).length > 0
+  );
+});
 
 const isPlannable = computed(() => {
   return (
-    coursePlanningStore.isInPlanningMode &&
-    coursePlanningStore.canTermBePlanned(props.term.id)
+    coursePlanningStore.isInPlanningMode && !doesTermHavePublishedSections.value
   );
 });
 
@@ -102,12 +111,12 @@ async function handeSectionChange(
   }
 
   if (isDraggableAddedEvent(event)) {
-    coursePlanningStore.updateSection({
+    coursePlanningStore.courseSectionStore.updateSection({
       ...section,
       termId: props.term.id,
     });
 
-    coursePlanningStore.createEnrollment({
+    coursePlanningStore.enrollmentStore.createEnrollment({
       person: props.person,
       section: section,
       role: "PI",
@@ -115,16 +124,17 @@ async function handeSectionChange(
   }
 
   if (isDraggableRemovedEvent(event)) {
-    const enrollment = coursePlanningStore.getEnrollmentForPersonInSection(
-      props.person,
-      section,
-    );
+    const enrollment =
+      coursePlanningStore.enrollmentStore.getEnrollmentForPersonInSection(
+        props.person,
+        section,
+      );
 
     if (!enrollment) {
       throw new Error("No enrollment found for person in section");
     }
 
-    coursePlanningStore.removeEnrollment(enrollment);
+    coursePlanningStore.enrollmentStore.removeEnrollment(enrollment);
   }
 }
 </script>

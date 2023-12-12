@@ -19,7 +19,8 @@
       :key="term.id"
       class="term-data-column"
       :class="{
-        'term-data-column--current': currentTerm?.id === term.id,
+        'term-data-column--current':
+          coursePlanningStore.termsStore.isCurrentTerm(term.id),
         'term-data-column--fall': term.name.includes('Fall'),
       }"
     >
@@ -36,16 +37,15 @@ import { Td } from "@/components/Table";
 import { Term } from "@/types";
 import EnrollmentDetails from "./EnrollmentDetails.vue";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
-import { storeToRefs } from "pinia";
 import * as T from "@/types";
 import { computed } from "vue";
-
-const coursePlanningStore = useRootCoursePlanningStore();
-const { visibleTerms, currentTerm } = storeToRefs(coursePlanningStore);
 
 const props = defineProps<{
   course: T.Course;
 }>();
+
+const coursePlanningStore = useRootCoursePlanningStore();
+const visibleTerms = computed(() => coursePlanningStore.visibleTerms);
 
 const enrollmentsByTermLookup = computed(
   (): Record<Term["id"], T.Enrollment[]> =>
