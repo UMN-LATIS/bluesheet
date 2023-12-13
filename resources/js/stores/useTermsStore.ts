@@ -3,9 +3,10 @@ import * as T from "@/types";
 import { defineStore } from "pinia";
 import * as api from "@/api";
 import { dayjs } from "@/utils";
+import { keyBy } from "lodash";
 
 interface TermsStoreState {
-  terms: T.Term[];
+  termLookup: Record<T.Term["id"], T.Term>;
   loadStatus: T.LoadState;
   // filters: {
   //   startTermId: T.Term["id"] | null;
@@ -15,7 +16,7 @@ interface TermsStoreState {
 
 export const useTermsStore = defineStore("terms", () => {
   const state = reactive<TermsStoreState>({
-    terms: [],
+    termLookup: {},
     loadStatus: "idle",
     // filters: {
     //   startTermId: null,
@@ -24,8 +25,15 @@ export const useTermsStore = defineStore("terms", () => {
   });
 
   const getters = {
+    terms: computed(
+      (): T.Term[] =>
+        Object.values(state.termLookup).filter(Boolean) as T.Term[],
+    ),
+    getTerm: computed(() => (termId: T.Term["id"]): T.Term | null => {
+      return state.termLookup[termId] ?? null;
+    }),
     currentTerm: computed((): T.Term | null => {
-      const currentTerm = state.terms.find((term) => {
+      const currentTerm = getters.terms.value.find((term) => {
         const termStart = dayjs(term.startDate);
         const termEnd = dayjs(term.endDate);
         const today = dayjs();
@@ -34,27 +42,27 @@ export const useTermsStore = defineStore("terms", () => {
       return currentTerm ?? null;
     }),
     sortedTerms: computed((): T.Term[] => {
-      return state.terms.sort((a, b) => {
+      return [...getters.terms.value].sort((a, b) => {
         return dayjs(a.startDate).isBefore(dayjs(b.startDate)) ? -1 : 1;
       });
     }),
     earliestTerm: computed((): T.Term | null => {
-      if (!state.terms.length) return null;
+      if (!getters.terms.value.length) return null;
       return getters.sortedTerms.value[0];
     }),
     latestTerm: computed((): T.Term | null => {
-      if (!state.terms.length) return null;
-      return getters.sortedTerms.value[state.terms.length - 1];
+      if (!getters.terms.value.length) return null;
+      return getters.sortedTerms.value[getters.terms.value.length - 1];
     }),
 
-    hasTerms: computed(() => state.terms.length > 0),
+    hasTerms: computed((): boolean => getters.terms.value.length > 0),
 
-    isCurrentTerm: computed(() => (termId: T.Term["id"]) => {
+    isCurrentTerm: computed(() => (termId: T.Term["id"]): boolean => {
       return getters.currentTerm.value?.id === termId;
     }),
 
     termSelectOptions: computed((): T.SelectOption[] =>
-      state.terms.map((term) => ({
+      getters.terms.value.map((term) => ({
         text: term.name,
         value: term.id,
       })),
@@ -101,10 +109,12 @@ export const useTermsStore = defineStore("terms", () => {
       const allTerms = await api.fetchTerms();
       const MAX_TERM_DATE = dayjs().add(5, "year").format("YYYY-MM-DD");
 
-      state.terms = allTerms.filter((t) => {
+      const termInRange = allTerms.filter((t) => {
         // ignore terms that are super far out
         return dayjs(t.endDate).isSameOrBefore(MAX_TERM_DATE);
       });
+      state.termLookup = keyBy<T.Term>(termInRange, "id");
+      return state.termLookup;
     },
   };
 

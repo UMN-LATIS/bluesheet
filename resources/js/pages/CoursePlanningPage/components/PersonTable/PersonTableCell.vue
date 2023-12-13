@@ -38,12 +38,13 @@
       </template>
     </Draggable>
 
-    <AddTentativeCourseModal
+    <EditDraftSectionModal
       v-if="isShowingAddCourse"
       :initialPerson="person"
       :initialTerm="term"
       :show="isShowingAddCourse"
       @close="isShowingAddCourse = false"
+      @save="handleSaveTentativeCourse"
     />
   </div>
 </template>
@@ -51,7 +52,7 @@
 import LeaveChip from "../LeaveChip.vue";
 import SectionDetails from "./SectionDetails.vue";
 import { ref, computed, watch } from "vue";
-import AddTentativeCourseModal from "../AddTentativeSectionModal.vue";
+import EditDraftSectionModal from "../EditDraftSectionModal.vue";
 import * as T from "@/types";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
 import Draggable, { type DraggableChangeEvent } from "vuedraggable";
@@ -104,6 +105,15 @@ const isPlannable = computed(() => {
     coursePlanningStore.isInPlanningMode && !doesTermHavePublishedSections.value
   );
 });
+
+function handleSaveTentativeCourse({ term, course, person }) {
+  coursePlanningStore.createSectionWithEnrollee({
+    course,
+    term,
+    person,
+    role: "PI",
+  });
+}
 
 async function handeSectionChange(
   event: DraggableChangeEvent<T.CourseSection>,

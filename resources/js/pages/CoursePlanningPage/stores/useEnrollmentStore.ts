@@ -113,6 +113,19 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
       delete state.enrollmentLookup[enrollment.id];
     },
 
+    async updateEnrollment(enrollment: T.Enrollment): Promise<void> {
+      if (!state.activeGroupId) {
+        throw new Error("active group id is not set");
+      }
+
+      const updatedEnrollment = await api.updateEnrollmentInGroup(
+        enrollment,
+        state.activeGroupId,
+      );
+
+      state.enrollmentLookup[updatedEnrollment.id] = updatedEnrollment;
+    },
+
     removeAllSectionEnrollmentFromStore(sectionId: T.CourseSection["id"]) {
       const enrollmentsToRemove =
         getters.getEnrollmentsBySectionId.value(sectionId);

@@ -18,7 +18,7 @@
     <MoreMenu v-if="isInPlanningMode">
       <MoreMenuItem
         class="tw-flex tw-gap-2 tw-items-center"
-        @click="handleEdit"
+        @click="isShowingEditModal = true"
       >
         Edit
       </MoreMenuItem>
@@ -26,6 +26,15 @@
         Remove
       </MoreMenuItem>
     </MoreMenu>
+    <EditDraftSectionModal
+      v-if="isInPlanningMode"
+      :show="isShowingEditModal"
+      :initialPerson="person"
+      :initialTerm="term"
+      :initialCourse="course"
+      @save="handleEditSave"
+      @close="isShowingEditModal = false"
+    />
   </div>
 </template>
 <script setup lang="ts">
@@ -33,7 +42,8 @@ import * as T from "@/types";
 import { DragHandleIcon } from "@/icons";
 import { MoreMenu, MoreMenuItem } from "@/components/MoreMenu";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
-import { computed } from "vue";
+import { computed, ref } from "vue";
+import EditDraftSectionModal from "../EditDraftSectionModal.vue";
 
 const props = defineProps<{
   section: T.CourseSection;
@@ -48,13 +58,48 @@ const enrollment = computed(() =>
     props.section,
   ),
 );
+const term = computed(() =>
+  planningStore.termsStore.getTerm(props.section.termId),
+);
 
 const isInPlanningMode = computed(() => {
   return planningStore.isInPlanningMode && !props.section.isPublished;
 });
 
-function handleEdit() {
-  console.log("edit");
+const isShowingEditModal = ref(false);
+
+function handleEditSave({
+  course,
+  term,
+  person,
+}: {
+  course: T.Course;
+  term: T.Term;
+  person: T.Person;
+}) {
+  const hasSectionChanged =
+    course.id !== props.section.courseId || term.id !== props.section.termId;
+
+  if (hasSectionChanged) {
+    const updatedSection: T.CourseSection = {
+      ...props.section,
+      courseId: course.id,
+      termId: term.id,
+      isPublished: false,
+    };
+
+    planningStore.courseSectionStore.updateSection(updatedSection);
+  }
+
+  const hasEnrollmentChanged =
+    enrollment.value && enrollment.value.emplid !== person.emplid;
+  if (hasEnrollmentChanged) {
+    const updatedEnrollment: T.Enrollment = {
+      ...enrollment.value,
+      emplid: person.emplid,
+    };
+    planningStore.enrollmentStore.updateEnrollment(updatedEnrollment);
+  }
 }
 
 async function handleRemove() {

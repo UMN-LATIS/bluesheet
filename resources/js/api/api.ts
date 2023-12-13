@@ -198,6 +198,33 @@ export async function deleteEnrollmentFromGroup(
   return res.data;
 }
 
+function parseDbIdFromSectionId(sectionId: T.Enrollment["sectionId"]) {
+  // enrollment id is in the form: db-1234
+  const [source, dbId] = sectionId.split("-");
+
+  if (source !== "db") {
+    throw new Error(`Section id ${sectionId} does not have a dbId`);
+  }
+  return dbId;
+}
+
+export async function updateEnrollmentInGroup(
+  enrollment: T.Enrollment,
+  groupId: T.Group["id"],
+) {
+  const sectionDbId = parseDbIdFromSectionId(enrollment.sectionId);
+
+  const res = await axios.put<T.Enrollment>(
+    `/api/course-planning/groups/${groupId}/enrollments/${enrollment.dbId}`,
+    {
+      course_section_id: sectionDbId,
+      emplid: enrollment.emplid,
+      role: enrollment.role,
+    },
+  );
+  return res.data;
+}
+
 export async function updateSectionInGroup(
   section: T.CourseSection,
   groupId: T.Group["id"],

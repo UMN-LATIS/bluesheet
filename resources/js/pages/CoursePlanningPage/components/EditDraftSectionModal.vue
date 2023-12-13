@@ -1,11 +1,11 @@
 <template>
   <Modal
     :show="show"
-    title="Add Tentative Course"
+    :title="`${isEditingSection ? 'Edit' : 'Add'} Class`"
     :closeOnEsc="false"
     @close="$emit('close')"
   >
-    <form @submit.prevent="handleAddTentativeCourse">
+    <form @submit.prevent="handleSubmit">
       <div class="tw-flex tw-flex-col tw-gap-4">
         <ComboBox
           id="select-course-combobox"
@@ -34,7 +34,11 @@
       </div>
       <div class="tw-mt-4 tw-flex tw-items-center tw-justify-end tw-gap-2">
         <Button variant="tertiary" @click="handleCancel"> Cancel </Button>
-        <Button variant="primary" @click="handleAddTentativeCourse">
+        <Button
+          variant="primary"
+          type="submit"
+          :disabled="!isFormValid || !hasFormChanged"
+        >
           Save
         </Button>
       </div>
@@ -53,15 +57,24 @@ import * as T from "@/types";
 const props = defineProps<{
   show: boolean;
   initialPerson?: T.Person;
-  initialTerm?: Term;
+  initialTerm?: Term | null;
   initialCourse?: T.Course;
 }>();
 
 const emits = defineEmits<{
   (eventName: "close");
+  (
+    eventName: "save",
+    selectedOptions: {
+      person: T.Person;
+      course: T.Course;
+      term: T.Term;
+    },
+  );
 }>();
 
 const coursePlanningStore = useRootCoursePlanningStore();
+const isEditingSection = computed(() => !!props.initialCourse);
 
 const terms = computed(() => coursePlanningStore.scheduleableTerms);
 const courses = computed(() => coursePlanningStore.courseStore.allCourses);
@@ -129,20 +142,33 @@ function handleCancel() {
   emits("close");
 }
 
-async function handleAddTentativeCourse() {
+const hasFormChanged = computed(() => {
+  return (
+    selectedInstructor.value?.id !== props.initialPerson?.id ||
+    selectedCourse.value?.id !== props.initialCourse?.id ||
+    selectedTerm.value?.id !== props.initialTerm?.id
+  );
+});
+
+const isFormValid = computed(() => {
+  return (
+    !!selectedInstructor.value && !!selectedCourse.value && !!selectedTerm.value
+  );
+});
+
+function handleSubmit() {
   if (
-    !selectedTerm.value ||
+    !selectedInstructor.value ||
     !selectedCourse.value ||
-    !selectedInstructor.value
+    !selectedTerm.value
   ) {
     throw new Error("Missing required fields");
   }
 
-  await coursePlanningStore.createSectionWithEnrollee({
+  emits("save", {
+    person: selectedInstructor.value,
     course: selectedCourse.value,
     term: selectedTerm.value,
-    person: selectedInstructor.value,
-    role: "PI",
   });
 
   resetForm();

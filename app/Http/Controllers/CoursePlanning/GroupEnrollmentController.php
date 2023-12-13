@@ -68,6 +68,24 @@ class GroupEnrollmentController extends Controller {
         return new EnrollmentResource($enrollment->load('user'));
     }
 
+    public function update(Request $request, Group $group, Enrollment $enrollment) {
+        abort_if($request->user()->cannot('edit planned courses'), 403);
+
+        $validated = $request->validate([
+            'emplid' => 'integer',
+            'role' => 'in:PI,TA',
+        ]);
+
+        $user = User::where('emplid', $validated['emplid'])->firstOrFail();
+
+        $enrollment->update([
+            'user_id' => $user->id,
+            'role' => $validated['role'],
+        ]);
+
+        return new EnrollmentResource($enrollment->load('user'));
+    }
+
     public function destroy(Request $request, Group $group, Enrollment $enrollment) {
         abort_if($request->user()->cannot('edit planned courses'), 403);
 
