@@ -51,7 +51,7 @@
 <script setup lang="ts">
 import LeaveChip from "../LeaveChip.vue";
 import SectionDetails from "./SectionDetails.vue";
-import { ref, computed, watch } from "vue";
+import { ref, computed, onMounted } from "vue";
 import EditDraftSectionModal from "../EditDraftSectionModal.vue";
 import * as T from "@/types";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
@@ -61,7 +61,7 @@ import {
   isDraggableAddedEvent,
   isDraggableRemovedEvent,
 } from "@/utils/draggableHelpers";
-import { debouncedRef, watchDebounced } from "@vueuse/core";
+import { watchDebounced } from "@vueuse/core";
 
 const props = defineProps<{
   person: T.Person;
