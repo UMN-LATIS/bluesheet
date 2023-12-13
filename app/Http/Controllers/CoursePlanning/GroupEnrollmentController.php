@@ -72,13 +72,18 @@ class GroupEnrollmentController extends Controller {
         abort_if($request->user()->cannot('edit planned courses'), 403);
 
         $validated = $request->validate([
-            'emplid' => 'integer',
-            'role' => 'in:PI,TA',
+            'course_section_id' => 'required|exists:course_sections,id',
+            'emplid' => 'required|integer',
+            'role' => 'required|in:PI,TA',
         ]);
 
-        $user = User::where('emplid', $validated['emplid'])->firstOrFail();
+        $user = $group->users()->where('emplid', $validated['emplid'])->firstOrFail();
+
+        // check that the section is part of the group
+        $section = $group->courseSections()->findOrFail($validated['course_section_id']);
 
         $enrollment->update([
+            'course_section_id' => $section->id,
             'user_id' => $user->id,
             'role' => $validated['role'],
         ]);
