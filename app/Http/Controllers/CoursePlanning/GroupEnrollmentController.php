@@ -77,7 +77,7 @@ class GroupEnrollmentController extends Controller {
             'role' => 'required|in:PI,TA',
         ]);
 
-        $user = $group->users()->where('emplid', $validated['emplid'])->firstOrFail();
+        $user = User::where('emplid', $validated['emplid'])->firstOrFail();
 
         // check that the section is part of the group
         $section = $group->courseSections()->findOrFail($validated['course_section_id']);
