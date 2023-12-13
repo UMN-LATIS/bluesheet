@@ -32,6 +32,7 @@
       :initialPerson="person"
       :initialTerm="term"
       :initialCourse="course"
+      :initialRole="initialRole"
       @save="handleEditSave"
       @close="isShowingEditModal = false"
     />
@@ -67,6 +68,22 @@ const isInPlanningMode = computed(() => {
 });
 
 const isShowingEditModal = ref(false);
+
+const initialRole = computed(() => {
+  // if a role is set, use that one
+  if (enrollment.value?.role) {
+    return enrollment.value.role;
+  }
+
+  // if unset, check the filters to see if we're filtering by a single role
+  const enrollmentRoles = planningStore.filters.includedEnrollmentRoles;
+  if (enrollmentRoles.length === 1) {
+    return enrollmentRoles[0];
+  }
+
+  // otherwise, default to Primary Instructor
+  return "PI";
+});
 
 function handleEditSave({
   course,

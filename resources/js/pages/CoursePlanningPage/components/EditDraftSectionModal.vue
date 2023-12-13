@@ -26,9 +26,17 @@
         <ComboBox
           id="select-instructor-combobox"
           v-model="selectedOptions.person"
-          label="Instructor"
+          :label="selectedOptions.role?.label || 'Instructor'"
           :showLabel="true"
           :options="instructorOptions"
+          :required="true"
+        />
+        <ComboBox
+          id="select-role-combobox"
+          v-model="selectedOptions.role"
+          label="Role"
+          :showLabel="true"
+          :options="roleOptions"
           :required="true"
         />
       </div>
@@ -59,6 +67,7 @@ const props = defineProps<{
   initialPerson?: T.Person;
   initialTerm?: Term | null;
   initialCourse?: T.Course;
+  initialRole?: T.EnrollmentRole;
 }>();
 
 const emits = defineEmits<{
@@ -69,6 +78,7 @@ const emits = defineEmits<{
       person: T.Person;
       course: T.Course;
       term: T.Term;
+      role: T.EnrollmentRole;
     },
   );
 }>();
@@ -97,20 +107,34 @@ const toCourseOption = (c: T.Course) => ({
   secondaryLabel: c.title,
 });
 
+const toRoleOption = (r: T.EnrollmentRole) => {
+  const roleLabels = {
+    PI: "Instructor",
+    TA: "Teaching Assistant",
+  };
+  return {
+    id: r,
+    label: roleLabels[r],
+  };
+};
+
 const initialSelected = computed(() => ({
   person: props.initialPerson ? toPersonOption(props.initialPerson) : null,
   course: props.initialCourse ? toCourseOption(props.initialCourse) : null,
   term: props.initialTerm ? toTermOption(props.initialTerm) : null,
+  role: props.initialRole ? toRoleOption(props.initialRole) : null,
 }));
 
 const selectedOptions = reactive<{
   person: ComboBoxOption | null;
   course: ComboBoxOption | null;
   term: ComboBoxOption | null;
+  role: ComboBoxOption | null;
 }>({
-  person: initialSelected.value.person,
-  course: initialSelected.value.course,
-  term: initialSelected.value.term,
+  person: null,
+  course: null,
+  term: null,
+  role: null,
 });
 
 // if the initial values change, the section was likely moved
@@ -120,11 +144,15 @@ watch(
     () => props.initialCourse,
     () => props.initialPerson,
     () => props.initialTerm,
+    () => props.initialRole,
   ],
   () => {
-    selectedOptions.person = initialSelected.value.person;
-    selectedOptions.course = initialSelected.value.course;
-    selectedOptions.term = initialSelected.value.term;
+    Object.keys(selectedOptions).forEach((key) => {
+      selectedOptions[key] = initialSelected.value[key];
+    });
+  },
+  {
+    immediate: true,
   },
 );
 
@@ -133,6 +161,10 @@ const termOptions = computed(() => terms.value.map(toTermOption));
 const courseOptions = computed(() => courses.value.map(toCourseOption));
 
 const instructorOptions = computed(() => people.value.map(toPersonOption));
+const roleOptions = [
+  { id: "PI", label: "Instructor" },
+  { id: "TA", label: "Teaching Assistant" },
+];
 
 const selectedCourse = computed(() => {
   return courses.value.find((c) => c.id === selectedOptions.course?.id) ?? null;
@@ -150,6 +182,7 @@ function resetForm() {
   selectedOptions.course = initialSelected.value.course;
   selectedOptions.term = initialSelected.value.term;
   selectedOptions.person = initialSelected.value.person;
+  selectedOptions.role = initialSelected.value.role;
 }
 
 function handleCancel() {
@@ -161,14 +194,13 @@ const hasFormChanged = computed(() => {
   return (
     selectedInstructor.value?.id !== props.initialPerson?.id ||
     selectedCourse.value?.id !== props.initialCourse?.id ||
-    selectedTerm.value?.id !== props.initialTerm?.id
+    selectedTerm.value?.id !== props.initialTerm?.id ||
+    selectedOptions.role?.id !== props.initialRole
   );
 });
 
 const isFormValid = computed(() => {
-  return (
-    !!selectedInstructor.value && !!selectedCourse.value && !!selectedTerm.value
-  );
+  return Object.values(selectedOptions).every((value) => !!value);
 });
 
 function handleSubmit() {
@@ -184,6 +216,7 @@ function handleSubmit() {
     person: selectedInstructor.value,
     course: selectedCourse.value,
     term: selectedTerm.value,
+    role: selectedOptions.role?.id as T.EnrollmentRole,
   });
 
   resetForm();

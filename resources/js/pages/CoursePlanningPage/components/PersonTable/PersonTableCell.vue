@@ -42,6 +42,7 @@
       v-if="isShowingAddCourse"
       :initialPerson="person"
       :initialTerm="term"
+      :initialRole="initialRole"
       :show="isShowingAddCourse"
       @close="isShowingAddCourse = false"
       @save="handleSaveTentativeCourse"
@@ -109,6 +110,16 @@ const isPlannable = computed(() => {
   return (
     coursePlanningStore.isInPlanningMode && !doesTermHavePublishedSections.value
   );
+});
+const initialRole = computed(() => {
+  // if unset, check the filters to see if we're filtering by a single role
+  const filterRoles = coursePlanningStore.filters.includedEnrollmentRoles;
+  if (filterRoles.length === 1) {
+    return filterRoles[0];
+  }
+
+  // otherwise, default to Primary Instructor
+  return "PI";
 });
 
 function handleSaveTentativeCourse({ term, course, person }) {
