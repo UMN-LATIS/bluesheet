@@ -61,6 +61,7 @@ import {
   isDraggableAddedEvent,
   isDraggableRemovedEvent,
 } from "@/utils/draggableHelpers";
+import { debouncedRef, watchDebounced } from "@vueuse/core";
 
 const props = defineProps<{
   person: T.Person;
@@ -78,11 +79,15 @@ const courseSections = computed(() => {
 
 // use local course sections to avoid section jumping back
 // to original position while api call is made
-const localCourseSections = ref(courseSections.value);
+const localCourseSections = ref<T.CourseSection[]>(courseSections.value);
 
-watch(courseSections, () => {
-  localCourseSections.value = courseSections.value;
-});
+watchDebounced(
+  courseSections,
+  (newCourseSections) => {
+    localCourseSections.value = newCourseSections;
+  },
+  { debounce: 300, maxWait: 1000 },
+);
 
 const isShowingAddCourse = ref(false);
 
