@@ -245,8 +245,14 @@ export interface Person {
  * a person in a course section with a particular role
  * like "primary instructor" or "teaching assistant"
  */
+
+type DBEnrollmentId = `db-${NonNullable<Enrollment["dbId"]>}`;
+type SISEnrollmentId = `sis-${NonNullable<
+  Enrollment["sectionId"]
+>}-${NonNullable<Enrollment["emplid"]>}`;
+
 export interface Enrollment {
-  id: `${Enrollment["sectionId"]}-${Enrollment["emplid"]}`;
+  id: DBEnrollmentId | SISEnrollmentId;
   dbId: number | null;
   emplid: Person["emplid"];
   sectionId: CourseSection["id"];

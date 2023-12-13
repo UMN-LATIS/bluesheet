@@ -123,6 +123,8 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
         state.activeGroupId,
       );
 
+      // remove the old enrollment. The enrollment is keyed by
+
       state.enrollmentLookup[updatedEnrollment.id] = updatedEnrollment;
     },
 
