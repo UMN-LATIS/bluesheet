@@ -1,5 +1,5 @@
 <template>
-  <tr v-show="isPersonVisible" class="instructor-table-row">
+  <tr v-if="isPersonVisible" class="instructor-table-row">
     <Td class="instructor-column">
       <RouterLink :to="`/user/${person.id}`">
         <div
