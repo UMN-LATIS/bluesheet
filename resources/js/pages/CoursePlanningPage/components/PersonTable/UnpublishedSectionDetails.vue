@@ -15,7 +15,7 @@
         {{ course.title }}
       </p>
     </div>
-    <MoreMenu v-if="isInPlanningMode">
+    <MoreMenu v-if="isInPlanningMode" class="tw-not-italic">
       <MoreMenuItem
         class="tw-flex tw-gap-2 tw-items-center"
         @click="isShowingEditModal = true"
