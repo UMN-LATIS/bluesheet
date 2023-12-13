@@ -39,6 +39,21 @@ import { Table, TBody } from "@/components/Table";
 import PersonTableRow from "./PersonTableRow.vue";
 import ReportTableHeaderRow from "../ReportTableHeaderRow.vue";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
+import { onMounted } from "vue";
+
+onMounted(() => {
+  performance.mark("CoursePlanningPage:end");
+  performance.measure(
+    "CoursePlanningPage",
+    "CoursePlanningPage:start",
+    "CoursePlanningPage:end",
+  );
+
+  console.log(
+    "CoursePlanningPage",
+    performance.getEntriesByName("CoursePlanningPage"),
+  );
+});
 
 defineProps<{
   label: string;

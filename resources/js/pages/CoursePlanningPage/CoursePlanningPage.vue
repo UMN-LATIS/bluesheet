@@ -34,7 +34,7 @@
         </div>
 
         <CoursePlanningFilters
-          v-show="isShowingFilters"
+          v-if="isShowingFilters"
           :groupId="props.groupId"
           class="tw-bg-neutral-100 tw-p-4 tw-rounded-md tw-my-4"
         />
@@ -103,6 +103,7 @@ const isShowingFilters = ref(false);
 
 onMounted(async () => {
   await coursePlanningStore.initGroup(props.groupId);
+  performance.mark("CoursePlanningPage:start");
   isLoadingComplete.value = true;
 });
 
