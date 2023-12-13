@@ -49,7 +49,7 @@
 import Modal from "@/components/Modal.vue";
 import ComboBox, { ComboBoxOption } from "@/components/ComboBox2.vue";
 import { Term } from "@/types";
-import { computed, reactive } from "vue";
+import { computed, reactive, watch } from "vue";
 import Button from "@/components/Button.vue";
 import { useRootCoursePlanningStore } from "../stores/useRootCoursePlanningStore";
 import * as T from "@/types";
@@ -112,6 +112,21 @@ const selectedOptions = reactive<{
   course: initialSelected.value.course,
   term: initialSelected.value.term,
 });
+
+// if the initial values change, the section was likely moved
+// so we need to update the selected options
+watch(
+  [
+    () => props.initialCourse,
+    () => props.initialPerson,
+    () => props.initialTerm,
+  ],
+  () => {
+    selectedOptions.person = initialSelected.value.person;
+    selectedOptions.course = initialSelected.value.course;
+    selectedOptions.term = initialSelected.value.term;
+  },
+);
 
 const termOptions = computed(() => terms.value.map(toTermOption));
 
