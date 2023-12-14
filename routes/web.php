@@ -60,7 +60,6 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
 
     Route::resource('group', 'GroupController');
     Route::get('group/{group}/members', 'GroupController@members');
-    Route::resource('group/{group}/planned-courses', 'GroupPlannedCourseController');
 
     Route::post("user/favorite/groups/{group}", "UserController@addFavoriteGroup");
     Route::post("user/favorite/roles/{role}", "UserController@addFavoriteRole");
@@ -88,7 +87,6 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
     Route::put('leaves/{leave}/artifacts/{leaveArtifact}', [LeaveArtifactController::class, 'update']);
     Route::delete('leaves/{leave}/artifacts/{leaveArtifact}', [LeaveArtifactController::class, 'destroy']);
 
-    // Course Planning
     Route::prefix('course-planning')->group(function () {
         Route::get('/groups/{group}/courses', [GroupCourseController::class, 'index']);
         Route::resource('/groups/{group}/sections', GroupSectionController::class);
@@ -96,8 +94,6 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
         Route::get('/groups/{group}/people', [GroupPersonController::class, 'index']);
         Route::get('/groups/{group}/leaves', [GroupLeaveController::class, 'index']);
     });
-
-
 
     // Catchall 404 JSON route
     Route::any('{any}', function () {
