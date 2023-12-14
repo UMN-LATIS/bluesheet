@@ -1,12 +1,5 @@
 <template>
   <div class="tw-flex tw-flex-col tw-gap-1 tw-h-full">
-    <button
-      v-if="isEditable"
-      class="tw-bg-transparent tw-border-1 tw-border-dashed tw-border-black/10 tw-rounded tw-p-2 tw-text-sm tw-text-neutral-400 hover:tw-bg-neutral-900 hover:tw-text-neutral-200 tw-block group-hover:tw-visible tw-leading-none"
-      @click="isShowingAddCourse = true"
-    >
-      + Add Course
-    </button>
     <LeaveChip
       v-for="leave in termLeavesForPerson"
       :key="leave.id"
@@ -22,7 +15,7 @@
       group="sections"
       itemKey="id"
       ghostClass="ghost"
-      class="tw-flex tw-flex-col tw-gap-2 tw-pb-12 tw-flex-1 tw-h-full"
+      class="tw-flex tw-flex-col tw-gap-2 tw-pb-12 tw-flex-1 tw-h-full group"
       :class="{
         'tw-bg-neutral-50 tw-rounded tw-p-2': isEditable,
       }"
@@ -35,6 +28,15 @@
           :isEditable="isEditable"
           :class="{ 'not-draggable': !isPlannable }"
         />
+      </template>
+      <template #footer>
+        <button
+          v-if="isEditable"
+          class="tw-bg-transparent tw-border-1 tw-border-dashed tw-border-black/10 tw-rounded tw-p-2 tw-text-sm tw-text-neutral-400 tw-opacity-0 tw-transition-all tw-flex tw-justify-center tw-items-center hover:tw-border-neutral-600 hover:tw-text-neutral-600 group-hover:tw-opacity-100 tw-leading-none"
+          @click="isShowingAddCourse = true"
+        >
+          + Add Course
+        </button>
       </template>
     </Draggable>
 
