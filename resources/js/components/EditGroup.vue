@@ -300,7 +300,7 @@
 </template>
 
 <script>
-import ComboBox from "./ComboBox2.vue";
+import ComboBox from "./ComboBox.vue";
 import Members from "./Members.vue";
 import Modal from "./Modal.vue";
 import FolderWidget from "./FolderWidget.vue";

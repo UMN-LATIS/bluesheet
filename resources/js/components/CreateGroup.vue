@@ -63,7 +63,7 @@
 <script>
 import Modal from "./Modal.vue";
 import FolderWidget from "./FolderWidget.vue";
-import ComboBox from "./ComboBox2.vue";
+import ComboBox from "./ComboBox.vue";
 
 export default {
   components: {
