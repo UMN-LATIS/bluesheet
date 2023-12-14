@@ -32,16 +32,10 @@ class GroupSectionController extends Controller {
                 $classRecord->INSTRUCTOR_EMPLID !== null &&
                     // and people who aren't instructors or TAs
                     in_array($classRecord->INSTRUCTOR_ROLE, ['PI', 'TA'])
-            )->groupBy('CLASS_NUMBER')->map(
-                function ($classRecords) {
-                    // use the first record to get the section info
-                    $section = $classRecords->first();
-
-                    // and then append the group to enrollments
-                    // $section->ENROLLMENTS = $classRecords;
-
-                    return $section;
-                }
+            )->groupBy('CLASS_NUMBER')
+            ->map(
+                // use the first record to get the section info
+                fn ($classRecords) => $classRecords->first()
             );
 
         $allGroupSections = $dbSections->concat($sisSections);
@@ -70,8 +64,8 @@ class GroupSectionController extends Controller {
         abort_if($request->user()->cannot('edit planned courses'), 403);
 
         $validated = $request->validate([
-            'course_id' => 'string',
-            'term_id' => 'integer',
+            'course_id' => 'required|string',
+            'term_id' => 'required|integer',
             'class_section' => 'string',
             'enrollment_cap' => 'integer',
             'enrollment_total' => 'integer',

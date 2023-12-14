@@ -20,7 +20,6 @@ class PersonResource extends JsonResource {
             'displayName' => $this->displayName,
             'email' => $this->email,
             'title' => $this->title,
-            // 'leaves' => $this->leaves,
             'leaveIds' => $this->leaveIds,
             'academicAppointment' => Utilities::trimWithFallback($this->jobCategory),
             'emplid' => $this->emplid,

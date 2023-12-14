@@ -89,9 +89,8 @@ class UserService {
     }
 
     public function attachInstructorsToCourses(Collection $courses, Collection $employeeList): Collection {
-        // prefetch any instructors that we know about and stuff them in our user cache so we avoid n+1 queries
+        // get unique emplids from courses
         $emplids = $courses->pluck('INSTRUCTOR_EMPLID')->unique()->filter();
-        // $this->loadUsersIntoCache($allInstructorsFromCourses);
 
         $dbUserLookup = $this
             ->findOrCreateManyByEmplId($emplids->toArray())

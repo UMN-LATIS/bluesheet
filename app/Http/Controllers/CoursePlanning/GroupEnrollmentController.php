@@ -22,7 +22,6 @@ class GroupEnrollmentController extends Controller {
     public function index(Request $request, Group $group) {
         abort_if($request->user()->cannot('view planned courses'), 403);
 
-
         $dbEnrollments = $group->enrollments()->with('user:id,emplid')->get();
 
         // each "class" in a class list is the section
