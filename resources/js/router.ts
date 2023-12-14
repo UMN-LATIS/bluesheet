@@ -21,8 +21,8 @@ import MissingOfficialReportPage from "./pages/reports/MissingOfficialReportPage
 import OrgpReportPage from "./pages/reports/OrgpReportPage.vue";
 import GroupAdminsReportPage from "./pages/reports/GroupAdmins.vue";
 import EligibilityReportPage from "./pages/reports/EligibilityReport.vue";
+import CoursePlanningPage from "./pages/CoursePlanningPage/CoursePlanningPage.vue";
 import { parseIntFromRouteParam as parseIntFromParam } from "@/utils";
-import { coursePlanningRoutes } from "./pages/CoursePlanningPage/coursePlanningRoutes";
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -123,13 +123,15 @@ export const router = createRouter({
       component: EligibilityReportPage,
     },
     {
-      path: "/course-planning",
-      children: coursePlanningRoutes,
+      path: "/course-planning/groups/:groupId",
+      component: CoursePlanningPage,
+      props: (route) => ({
+        groupId: parseIntFromParam(route.params.groupId),
+      }),
     },
     {
       path: "/reports/schedulingReport/:groupId",
-      redirect: (to) => `/course-planning/groups/${to.params.groupId}`
-
+      redirect: (to) => `/course-planning/groups/${to.params.groupId}`,
     },
     {
       name: "error",
