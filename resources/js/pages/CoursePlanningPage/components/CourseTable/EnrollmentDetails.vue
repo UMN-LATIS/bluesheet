@@ -52,7 +52,6 @@ import { ref, computed } from "vue";
 import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
 import * as T from "@/types";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
-// import { doesInstructorNameMatchSearchTerm } from "./doesInstructorNameMatchSearchTerm";
 
 const props = defineProps<{
   enrollment: T.Enrollment;

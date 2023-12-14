@@ -52,7 +52,7 @@
 <script setup lang="ts">
 import LeaveChip from "../LeaveChip.vue";
 import SectionDetails from "./SectionDetails.vue";
-import { ref, computed, onMounted } from "vue";
+import { ref, computed } from "vue";
 import EditDraftSectionModal from "../EditDraftSectionModal.vue";
 import * as T from "@/types";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";

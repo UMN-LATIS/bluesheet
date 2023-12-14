@@ -133,7 +133,6 @@ import SelectGroup from "@/components/SelectGroup.vue";
 import Button from "@/components/Button.vue";
 import { useRootCoursePlanningStore } from "../stores/useRootCoursePlanningStore";
 import { storeToRefs } from "pinia";
-import * as T from "@/types";
 
 const coursePlanningStore = useRootCoursePlanningStore();
 

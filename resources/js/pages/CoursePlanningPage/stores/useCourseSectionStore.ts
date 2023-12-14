@@ -113,12 +113,9 @@ export const useCourseSectionStore = defineStore("couseSection", () => {
     },
   };
 
-  const methods = {};
-
   return {
     ...toRefs(state),
     ...getters,
     ...actions,
-    ...methods,
   };
 });

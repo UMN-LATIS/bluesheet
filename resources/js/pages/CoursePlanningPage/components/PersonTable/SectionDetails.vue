@@ -53,29 +53,18 @@ const enrollment = computed(() =>
 );
 
 const isViewable = computed(() => {
-  if (!planningStore.isSectionVisible(props.section)) {
-    return false;
-  }
-
-  if (!enrollment.value) {
-    return false;
-  }
-
-  // if this is a draft enrollment and we're not in planning mode, don't show it
-  if (!props.section.isPublished && !planningStore.isInPlanningMode) {
-    return false;
-  }
-
-  // if this section is not included in the enrollment role filters, don't show it
-  if (
-    !planningStore.filters.includedEnrollmentRoles.includes(
+  return (
+    planningStore.isSectionVisible(props.section) &&
+    enrollment.value &&
+    // show if published
+    (props.section.isPublished ||
+      // or if we're in planning mode and it's a draft section
+      (!props.section.isPublished && planningStore.isInPlanningMode)) &&
+    // and we're not filtering out this enrollment's role
+    planningStore.filters.includedEnrollmentRoles.includes(
       enrollment.value.role,
     )
-  ) {
-    return false;
-  }
-
-  return true;
+  );
 });
 </script>
 <style scoped></style>
