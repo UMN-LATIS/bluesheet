@@ -1,13 +1,13 @@
 <template>
   <div
-    v-if="course && isSectionVisible && isEnrollmentVisible"
+    v-if="course && enrollment && isSectionVisible && isEnrollmentVisible"
     v-show="isSectionVisible"
     :class="{
       'tw-bg-yellow-100': isSectionHighlighted,
     }"
   >
     <UnpublishedSectionDetails
-      v-if="isUnpublished && enrollment"
+      v-if="isUnpublished"
       :section="section"
       :course="course"
       :person="person"
@@ -55,12 +55,25 @@ const enrollment = computed(() =>
 );
 
 const isEnrollmentVisible = computed(() => {
-  return (
-    enrollment.value?.role &&
-    planningStore.filters.includedEnrollmentRoles.includes(
+  if (!enrollment.value) {
+    return false;
+  }
+
+  // if this is a draft enrollment and we're not in planning mode, don't show it
+  if (!props.section.isPublished && !planningStore.isInPlanningMode) {
+    return false;
+  }
+
+  // if this section is not included in the enrollment role filters, don't show it
+  if (
+    !planningStore.filters.includedEnrollmentRoles.includes(
       enrollment.value.role,
     )
-  );
+  ) {
+    return false;
+  }
+
+  return true;
 });
 </script>
 <style scoped></style>
