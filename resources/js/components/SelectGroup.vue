@@ -69,6 +69,8 @@ const props = withDefaults(
     showLabel: true,
     isValid: undefined,
     validator: () => true,
+    selectClass: "",
+    labelClass: "",
   },
 );
 
