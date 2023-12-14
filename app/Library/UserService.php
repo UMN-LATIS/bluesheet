@@ -87,27 +87,4 @@ class UserService {
 
         return $user;
     }
-
-    public function attachInstructorsToCourses(Collection $courses, Collection $employeeList): Collection {
-        // get unique emplids from courses
-        $emplids = $courses->pluck('INSTRUCTOR_EMPLID')->unique()->filter();
-
-        $dbUserLookup = $this
-            ->findOrCreateManyByEmplId($emplids->toArray())
-            ->keyBy('emplid');
-
-        $employeeInfoLookup = $employeeList->keyBy('EMPLID');
-
-        // augment db user info with employee info from bandaid
-        $usersWithJobInfo = $dbUserLookup->map(function ($user) use ($employeeInfoLookup) {
-            return $this->joinDBUserWithEmployeeInfo($user, $employeeInfoLookup[$user->emplid]);
-        });
-
-        // attach instructors to courses
-        $courses->each(function ($course) use ($usersWithJobInfo) {
-            $course->instructor = $usersWithJobInfo[$course->INSTRUCTOR_EMPLID];
-        });
-
-        return $courses;
-    }
 }
