@@ -127,6 +127,11 @@ export const router = createRouter({
       children: coursePlanningRoutes,
     },
     {
+      path: "/reports/schedulingReport/:groupId",
+      redirect: (to) => `/course-planning/groups/${to.params.groupId}`
+
+    },
+    {
       name: "error",
       path: "/error/:errorCode",
       component: ErrorPage,
