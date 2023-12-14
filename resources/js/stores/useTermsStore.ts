@@ -8,20 +8,12 @@ import { keyBy } from "lodash";
 interface TermsStoreState {
   termLookup: Record<T.Term["id"], T.Term>;
   loadStatus: T.LoadState;
-  // filters: {
-  //   startTermId: T.Term["id"] | null;
-  //   endTermId: T.Term["id"] | null;
-  // };
 }
 
 export const useTermsStore = defineStore("terms", () => {
   const state = reactive<TermsStoreState>({
     termLookup: {},
     loadStatus: "idle",
-    // filters: {
-    //   startTermId: null,
-    //   endTermId: null,
-    // },
   });
 
   const getters = {
@@ -67,32 +59,9 @@ export const useTermsStore = defineStore("terms", () => {
         value: term.id,
       })),
     ),
-
-    // filteredTerms: computed((): T.Term[] => {
-    //   let startTermIndex = getters.sortedTerms.value.findIndex((term) => {
-    //     return term.id === state.filters.startTermId;
-    //   });
-
-    //   if (startTermIndex === -1) {
-    //     startTermIndex = 0;
-    //   }
-
-    //   let endTermIndex = getters.sortedTerms.value.findIndex((term) => {
-    //     return term.id === state.filters.endTermId;
-    //   });
-
-    //   if (endTermIndex === -1) {
-    //     endTermIndex = getters.sortedTerms.value.length - 1;
-    //   }
-
-    //   return getters.sortedTerms.value.slice(startTermIndex, endTermIndex + 1);
-    // }),
   };
 
   const actions = {
-    /**
-     * Fetches terms from the API if needed
-     */
     async init() {
       // if we're already loading or loaded, don't do anything
       if (state.loadStatus !== "idle") return;
