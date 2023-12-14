@@ -8,9 +8,9 @@ use RuntimeException;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Collection;
 use Carbon\Carbon;
+use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\Cache;
 use Log;
-
 class Bandaid {
     private $client;
     public function __construct() {
@@ -28,9 +28,10 @@ class Bandaid {
     }
 
     public function performRequest($url) {
-        if ($value = Cache::get($url)) {
+        if($value = Cache::get($url)) {
             return $value;
-        } else {
+        }
+        else {
             $result = $this->client->get($url);
             $value = json_decode($result->getBody());
             Cache::put($url, $value, 600);
@@ -39,12 +40,13 @@ class Bandaid {
     }
 
     public function performPostRequest($url, $body) {
-        if ($value = Cache::get(json_encode($body))) {
+        if($value = Cache::get(json_encode($body))) {
             return $value;
-        } else {
-            $result = $this->client->post($url, ['form_params' => $body]);
+        }
+        else {
+            $result = $this->client->post($url,['form_params' => $body]);
             $value = json_decode($result->getBody());
-            if (!$value) {
+            if(!$value) {
                 return [];
             }
             Cache::put(json_encode($body), $value, 600);
@@ -65,7 +67,7 @@ class Bandaid {
 
     public function getEmployees(array $emplIds): array {
         try {
-            $result = $this->performPostRequest('employment/employees', ["emplids" => $emplIds]);
+            $result = $this->performPostRequest('employment/employees', ["emplids"=>$emplIds]);
             return $result;
         } catch (RequestException $e) {
             $msg = $e->getMessage();
@@ -95,6 +97,7 @@ class Bandaid {
             throw new RuntimeException($errorMessage);
         }
     }
+
 
     /**
      * Get all academic terms for CLA (undergrad and grad)
@@ -194,6 +197,21 @@ class Bandaid {
         }
     }
 
+    /**
+     * Get academic terms which coincide with the given date range
+     *
+     * @param Carbon $startDate
+     * @param Carbon $endDate
+     * @return \Illuminate\Support\Collection<array{
+     *  id: number,
+     *  TERM: number,
+     *  TERM_BEGIN_DT: string, // "2019-01-22"
+     *  TERM_END_DT: string,  // "2019-05-15"
+     *  TERM_DESCRIPTION: string, //"Spring 2019"
+     *  INSTITUTION: string, // "UMNTC"
+     *  ACADEMIC_CAREER: string, // "UGRD"
+     * }>
+     */
     public function getTermsOverlappingDates($startDate, $endDate) {
         $terms = $this->getCLATerms();
         return $terms->filter(function ($term) use ($startDate, $endDate) {
