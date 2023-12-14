@@ -18,6 +18,7 @@
               Settings
             </h2>
             <CheckboxGroup
+              v-if="canViewPlanCourses"
               id="toggle-planning-mode"
               v-model="coursePlanningStore.isInPlanningMode"
               label="Planning Mode"
@@ -92,6 +93,7 @@ import Tabs, { type Tab } from "@/components/Tabs.vue";
 import CheckboxGroup from "@/components/CheckboxGroup.vue";
 import { CourseTable } from "./components/CourseTable";
 import { useDebouncedComputed } from "@/utils/useDebouncedComputed";
+import { $can } from "@/utils";
 
 const props = defineProps<{
   groupId: number;
@@ -107,6 +109,7 @@ onMounted(async () => {
   isLoadingComplete.value = true;
 });
 
+const canViewPlanCourses = computed(() => $can("view planned courses"));
 const group = computed(() =>
   coursePlanningStore.groupStore.getGroup(props.groupId),
 );
