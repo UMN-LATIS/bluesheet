@@ -1,7 +1,6 @@
 <template>
   <div
-    v-if="course && enrollment && isSectionVisible && isEnrollmentVisible"
-    v-show="isSectionVisible"
+    v-if="course && enrollment && isViewable"
     :class="{
       'tw-bg-yellow-100': isSectionHighlighted,
     }"
@@ -12,6 +11,8 @@
       :course="course"
       :person="person"
       :enrollment="enrollment"
+      :isEditable="isEditable"
+      :isViewable="isViewable"
     />
 
     <PublishedSectionDetails v-else :section="section" :course="course" />
@@ -27,16 +28,13 @@ import UnpublishedSectionDetails from "./UnpublishedSectionDetails.vue";
 const props = defineProps<{
   section: T.CourseSection;
   person: T.Person;
+  isEditable: boolean;
 }>();
 
 const planningStore = useRootCoursePlanningStore();
 
 const course = computed(() =>
   planningStore.courseStore.getCourse(props.section.courseId),
-);
-
-const isSectionVisible = computed(() =>
-  planningStore.isSectionVisible(props.section),
 );
 
 const isUnpublished = computed(() => !props.section.isPublished);
@@ -54,7 +52,11 @@ const enrollment = computed(() =>
   ),
 );
 
-const isEnrollmentVisible = computed(() => {
+const isViewable = computed(() => {
+  if (!planningStore.isSectionVisible(props.section)) {
+    return false;
+  }
+
   if (!enrollment.value) {
     return false;
   }

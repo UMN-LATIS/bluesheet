@@ -1,12 +1,12 @@
 <template>
   <div
-    class="tw-bg-neutral-100 tw-py-2 tw-flex tw-gap-1 tw-cursor-move tw-items-top tw-italic"
+    class="tw-bg-neutral-100 tw-py-2 tw-flex tw-gap-1 tw-items-top tw-italic tw-rounded"
     :class="{
-      'tw-cursor-move tw-shadow': isInPlanningMode,
-      'tw-cursor-default tw-px-2': !isInPlanningMode,
+      'tw-cursor-move tw-shadow': isEditable,
+      'tw-cursor-default tw-px-2': !isEditable,
     }"
   >
-    <DragHandleIcon v-if="isInPlanningMode" class="tw-inline-block" />
+    <DragHandleIcon v-if="isEditable" class="tw-inline-block" />
     <div class="tw-flex-1 tw-overflow-hidden">
       <h2 class="tw-text-sm tw-m-0">
         {{ course.subject }} {{ course.catalogNumber }}
@@ -15,7 +15,7 @@
         {{ course.title }}
       </p>
     </div>
-    <MoreMenu v-if="isInPlanningMode" class="tw-not-italic">
+    <MoreMenu v-if="isEditable" class="tw-not-italic">
       <MoreMenuItem
         class="tw-flex tw-gap-2 tw-items-center"
         @click="isShowingEditModal = true"
@@ -27,7 +27,7 @@
       </MoreMenuItem>
     </MoreMenu>
     <EditDraftSectionModal
-      v-if="isInPlanningMode"
+      v-if="isViewable"
       :show="isShowingEditModal"
       :initialPerson="person"
       :initialTerm="term"
@@ -51,16 +51,14 @@ const props = defineProps<{
   course: T.Course;
   person: T.Person;
   enrollment: T.Enrollment;
+  isEditable: boolean;
+  isViewable: boolean;
 }>();
 
 const planningStore = useRootCoursePlanningStore();
 const term = computed(() =>
   planningStore.termsStore.getTerm(props.section.termId),
 );
-
-const isInPlanningMode = computed(() => {
-  return planningStore.isInPlanningMode && !props.section.isPublished;
-});
 
 const isShowingEditModal = ref(false);
 
