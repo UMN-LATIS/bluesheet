@@ -118,9 +118,6 @@ export const useTermsStore = defineStore("terms", () => {
     },
   };
 
-  // initialize the store
-  actions.init();
-
   return {
     ...toRefs(state),
     ...getters,
