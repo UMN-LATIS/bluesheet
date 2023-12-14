@@ -32,7 +32,7 @@
       :initialPerson="person"
       :initialTerm="term"
       :initialCourse="course"
-      :initialRole="initialRole"
+      :initialRole="props.enrollment.role"
       @save="handleEditSave"
       @close="isShowingEditModal = false"
     />
@@ -50,15 +50,10 @@ const props = defineProps<{
   section: T.CourseSection;
   course: T.Course;
   person: T.Person;
+  enrollment: T.Enrollment;
 }>();
 
 const planningStore = useRootCoursePlanningStore();
-const enrollment = computed(() =>
-  planningStore.enrollmentStore.getEnrollmentForPersonInSection(
-    props.person,
-    props.section,
-  ),
-);
 const term = computed(() =>
   planningStore.termsStore.getTerm(props.section.termId),
 );
@@ -69,30 +64,16 @@ const isInPlanningMode = computed(() => {
 
 const isShowingEditModal = ref(false);
 
-const initialRole = computed(() => {
-  // if a role is set, use that one
-  if (enrollment.value?.role) {
-    return enrollment.value.role;
-  }
-
-  // if unset, check the filters to see if we're filtering by a single role
-  const enrollmentRoles = planningStore.filters.includedEnrollmentRoles;
-  if (enrollmentRoles.length === 1) {
-    return enrollmentRoles[0];
-  }
-
-  // otherwise, default to Primary Instructor
-  return "PI";
-});
-
 function handleEditSave({
   course,
   term,
   person,
+  role,
 }: {
   course: T.Course;
   term: T.Term;
   person: T.Person;
+  role: T.EnrollmentRole;
 }) {
   const hasSectionChanged =
     course.id !== props.section.courseId || term.id !== props.section.termId;
@@ -109,29 +90,23 @@ function handleEditSave({
   }
 
   const hasEnrollmentChanged =
-    enrollment.value && enrollment.value.emplid !== person.emplid;
+    props.enrollment.emplid !== person.emplid || props.enrollment.role !== role;
   if (hasEnrollmentChanged) {
     const updatedEnrollment: T.Enrollment = {
-      ...enrollment.value,
+      ...props.enrollment,
       emplid: person.emplid,
+      role,
     };
     planningStore.enrollmentStore.updateEnrollment(updatedEnrollment);
   }
 }
 
 async function handleRemove() {
-  if (!enrollment.value) {
+  if (!props.enrollment) {
     throw new Error("No enrollment found for section");
   }
-  // const confirmed = confirm(
-  //   `Are you sure you want to remove ${props.course.subject} ${props.course.catalogNumber}?`,
-  // );
 
-  // if (!confirmed) {
-  //   return;
-  // }
-
-  await planningStore.enrollmentStore.removeEnrollment(enrollment.value);
+  await planningStore.enrollmentStore.removeEnrollment(props.enrollment);
 
   const sectionEnrollments =
     planningStore.enrollmentStore.getEnrollmentsBySectionId(props.section.id);

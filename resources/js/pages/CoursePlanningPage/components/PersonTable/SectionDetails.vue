@@ -1,16 +1,17 @@
 <template>
   <div
-    v-if="course"
+    v-if="course && isSectionVisible && isEnrollmentVisible"
     v-show="isSectionVisible"
     :class="{
       'tw-bg-yellow-100': isSectionHighlighted,
     }"
   >
     <UnpublishedSectionDetails
-      v-if="isUnpublished"
+      v-if="isUnpublished && enrollment"
       :section="section"
       :course="course"
       :person="person"
+      :enrollment="enrollment"
     />
 
     <PublishedSectionDetails v-else :section="section" :course="course" />
@@ -45,5 +46,21 @@ const isSectionHighlighted = computed(
     planningStore.filters.search.length &&
     planningStore.isSectionMatchingSearch(props.section),
 );
+
+const enrollment = computed(() =>
+  planningStore.enrollmentStore.getEnrollmentForPersonInSection(
+    props.person,
+    props.section,
+  ),
+);
+
+const isEnrollmentVisible = computed(() => {
+  return (
+    enrollment.value?.role &&
+    planningStore.filters.includedEnrollmentRoles.includes(
+      enrollment.value.role,
+    )
+  );
+});
 </script>
 <style scoped></style>

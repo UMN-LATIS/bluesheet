@@ -231,8 +231,6 @@ export async function updateSectionInGroup(
   section: T.CourseSection,
   groupId: T.Group["id"],
 ) {
-  console.log("updateSectionInGroup", { section, groupId });
-
   const res = await axios.put<T.CourseSection>(
     `/api/course-planning/groups/${groupId}/sections/${section.dbId}`,
     {
