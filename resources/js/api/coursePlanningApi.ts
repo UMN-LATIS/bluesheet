@@ -69,8 +69,6 @@ export async function updateEnrollmentInGroup(
 ) {
   const sectionDbId = parseDbIdFromSectionId(enrollment.sectionId);
 
-  console.log("updateEnrollmentInGroup", { enrollment, groupId, sectionDbId });
-
   const res = await axios.put<T.Enrollment>(
     `/api/course-planning/groups/${groupId}/enrollments/${enrollment.dbId}`,
     {
@@ -145,4 +143,3 @@ export async function fetchLeavesForGroup(groupId: number) {
   );
   return res.data;
 }
-

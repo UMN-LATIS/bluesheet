@@ -135,7 +135,6 @@ const initialRole = computed(() => {
 });
 
 function handleSaveTentativeCourse({ term, course, person, role }) {
-  console.log("handleSaveTentativeCourse");
   coursePlanningStore.createSectionWithEnrollee({
     course,
     term,
