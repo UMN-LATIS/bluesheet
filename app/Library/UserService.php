@@ -7,7 +7,6 @@ use Illuminate\Support\Collection;
 use App\Library\Bandaid;
 
 class UserService {
-    private $dbUserCache = [];
     private Bandaid $bandaid;
 
     public function __construct() {
@@ -20,45 +19,37 @@ class UserService {
      * @return Collection<User>
      */
     public function findOrCreateManyByEmplId(array $emplids): Collection {
-        // first filter out any emplids that we already have in the cache
-        $uncachedEmplIds = collect($emplids)->diff(collect($this->dbUserCache)->keys());
+        $uniqueEmplids = collect($emplids)->unique();
 
-        // Bulk fetch uncached users from the DB
-        // eager load leaves
-        User::whereIn('emplid', $uncachedEmplIds)
+        $dbUsers = User::whereIn('emplid', $uniqueEmplids)
             ->with('leaves')
             ->get()
-            ->each(function ($user) {
-                // pluck leave ids
+            ->map(function ($user) {
                 $user->leaveIds = $user->leaves->pluck('id')->toArray();
-
-                // add users to the cache
-                $this->dbUserCache[$user->emplid] = $user;
-            });
+                return $user;
+            })->filter();
 
         // identify users that dont exist in the DB
-        $missingEmplids = collect($emplids)->diff(collect($this->dbUserCache)->keys());
+        $missingEmplids = $uniqueEmplids->diff($dbUsers->pluck('emplid'));
 
         // lookup and created missing users from LDAP
-        $missingEmplids->each(function ($emplid) {
-            $ldapUser = LDAP::lookupUser(str_pad($emplid, 7, 0, STR_PAD_LEFT), 'umnemplid');
-            if (!$ldapUser || !$ldapUser->emplid) return;
+        $newUsers = $missingEmplids
+            ->map(function ($emplid) {
+                $paddedEmplid = str_pad($emplid, 7, 0, STR_PAD_LEFT);
+                $ldapUser = LDAP::lookupUser($paddedEmplid, 'umnemplid');
 
-            // it's possiblee that emplid is null in the db,
-            // but not noull in ldap, so use the umndid as the key
-            // and then update (or create) the user
-            $user = User::updateOrCreate([
-                'umndid' => $ldapUser->umndid,
-            ], $ldapUser->toArray());
+                if (!$ldapUser || !$ldapUser->emplid) return;
 
-            // add the created user to the cache
-            $this->dbUserCache[$emplid] = $user;
-        });
+                // it's possible that emplid is null in the db,
+                // but not not null in ldap, so use the umndid as the key
+                // and then update (or create) the user
+                return User::updateOrCreate([
+                    'umndid' => $ldapUser->umndid,
+                ], $ldapUser->toArray());
+            })->filter();
 
         // return the requested users if they exist
-        return collect($emplids)->unique()->map(function ($emplid) {
-            return $this->dbUserCache[$emplid] ?? null;
-        })->filter();
+        return $dbUsers->concat($newUsers);
     }
 
     public function findOrCreateByEmplId(int $emplid): ?User {
@@ -67,24 +58,24 @@ class UserService {
     }
 
     public function getDeptEmployees(string $deptId): Collection {
-        $employeeInfoLookup = collect($this->bandaid->getEmployeesForDepartment($deptId))->keyBy('EMPLID');
+        $sisDeptEmployees = $this->bandaid->getEmployeesForDepartment($deptId);
 
+        $sisDeptEmployeeLookup = collect($sisDeptEmployees)->keyBy('EMPLID');
 
-        $deptEmplIds = $employeeInfoLookup->keys()->toArray();
+        $deptEmplIds = $sisDeptEmployeeLookup->keys()->toArray();
 
         $users = $this
             ->findOrCreateManyByEmplId($deptEmplIds)
-            ->map(function ($dbUser) use ($employeeInfoLookup) {
-                return $this->joinDBUserWithEmployeeInfo($dbUser, $employeeInfoLookup[$dbUser->emplid]);
+            ->map(function ($user) use ($sisDeptEmployeeLookup) {
+                $sisDeptEmployee = $sisDeptEmployeeLookup[$user->emplid];
+
+                // add the sis employee info to the user
+                $user->jobCategory = $sisDeptEmployee->CATEGORY;
+                $user->jobCode = $sisDeptEmployee?->JOBCODE;
+                return $user;
             });
 
+
         return $users->values();
-    }
-
-    protected function joinDBUserWithEmployeeInfo(User $user, $employeeInfo) {
-        $user->jobCategory = $employeeInfo?->CATEGORY;
-        $user->jobCode = $employeeInfo?->JOBCODE;
-
-        return $user;
     }
 }
