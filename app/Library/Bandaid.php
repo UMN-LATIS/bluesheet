@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\Cache;
 use Log;
+
 class Bandaid {
     private $client;
     public function __construct() {
@@ -28,10 +29,9 @@ class Bandaid {
     }
 
     public function performRequest($url) {
-        if($value = Cache::get($url)) {
+        if ($value = Cache::get($url)) {
             return $value;
-        }
-        else {
+        } else {
             $result = $this->client->get($url);
             $value = json_decode($result->getBody());
             Cache::put($url, $value, 600);
@@ -40,13 +40,12 @@ class Bandaid {
     }
 
     public function performPostRequest($url, $body) {
-        if($value = Cache::get(json_encode($body))) {
+        if ($value = Cache::get(json_encode($body))) {
             return $value;
-        }
-        else {
-            $result = $this->client->post($url,['form_params' => $body]);
+        } else {
+            $result = $this->client->post($url, ['form_params' => $body]);
             $value = json_decode($result->getBody());
-            if(!$value) {
+            if (!$value) {
                 return [];
             }
             Cache::put(json_encode($body), $value, 600);
@@ -67,7 +66,7 @@ class Bandaid {
 
     public function getEmployees(array $emplIds): array {
         try {
-            $result = $this->performPostRequest('employment/employees', ["emplids"=>$emplIds]);
+            $result = $this->performPostRequest('employment/employees', ["emplids" => $emplIds]);
             return $result;
         } catch (RequestException $e) {
             $msg = $e->getMessage();
@@ -76,7 +75,19 @@ class Bandaid {
         }
     }
 
-    public function getEmployeesForDepartment($deptId): array {
+    /**
+     * Get all employees for a department
+     * @param int $deptId
+     * @return array<array{
+     *  ID: int,
+     *  EMPLID: int | null,
+     *  DEPTID: string,
+     *  JOBCODE: string,
+     *  CATEGORY: string,
+     *  JOB_INDICATOR: string,
+     * }>
+     */
+    public function getEmployeesForDepartment(int $deptId): array {
         try {
             $result = $this->performRequest('department/' . $deptId . '/employees');
             return $result;
@@ -104,8 +115,8 @@ class Bandaid {
      * at the UMNTC
      *
      * @return array<array{
-     *   id: number,
-     *   TERM: number,
+     *   id: int,
+     *   TERM: int,
      *   TERM_BEGIN_DT: string, // "2019-01-22"
      *   TERM_END_DT: string,  // "2019-05-15"
      *   TERM_DESCRIPTION: string, //"Spring 2019"
@@ -129,8 +140,8 @@ class Bandaid {
      * at the UMNTC
      *
      * @return \Illuminate\Support\Collection<array{
-     *   id: number,
-     *   TERM: number,
+     *   id: int,
+     *   TERM: int,
      *   TERM_BEGIN_DT: string, // "2019-01-22"
      *   TERM_END_DT: string,  // "2019-05-15"
      *   TERM_DESCRIPTION: string, //"Spring 2019"
@@ -203,8 +214,8 @@ class Bandaid {
      * @param Carbon $startDate
      * @param Carbon $endDate
      * @return \Illuminate\Support\Collection<array{
-     *  id: number,
-     *  TERM: number,
+     *  id: int,
+     *  TERM: int,
      *  TERM_BEGIN_DT: string, // "2019-01-22"
      *  TERM_END_DT: string,  // "2019-05-15"
      *  TERM_DESCRIPTION: string, //"Spring 2019"
