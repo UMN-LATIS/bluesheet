@@ -8,10 +8,10 @@ use App\Library\Bandaid;
 
 class UserService {
     private $dbUserCache = [];
-    private $bandaid;
+    private Bandaid $bandaid;
 
-    public function __construct(Bandaid $bandaid) {
-        $this->bandaid = $bandaid;
+    public function __construct() {
+        $this->bandaid = new Bandaid();
     }
 
     /**
