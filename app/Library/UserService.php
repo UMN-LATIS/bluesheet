@@ -40,12 +40,25 @@ class UserService {
 
                 if (!$ldapUser || !$ldapUser->emplid) return;
 
-                // it's possible that emplid is null in the db,
-                // but not not null in ldap, so use the umndid as the key
-                // and then update (or create) the user
-                return User::updateOrCreate([
-                    'umndid' => $ldapUser->umndid,
-                ], $ldapUser->toArray());
+                return User::updateOrCreate(
+                    // emplid may be null for some users, so we're using
+                    // the using the umndid here since it's guaranteed to be
+                    // unique and not null, then we we can update the emplid
+                    // if the user already exists
+                    ['umndid' => $ldapUser->umndid],
+
+                    // note that updateOrCreate returns the values below and
+                    // not the values from the DB. So if the emplid is a string
+                    // but the DB stores it as an int, it will be returned as a
+                    // string. For this reason, we need to cast the emplid to an
+                    // int below so that it matches the DB. Otherwise when
+                    // we try to match users by emplid user `"0123"` will be
+                    // treated as a different user than `123`.
+                    [
+                        ...$ldapUser->toArray(),
+                        'emplid' => (int) $ldapUser->emplid,
+                    ]
+                );
             })->filter();
 
         // return the requested users if they exist
