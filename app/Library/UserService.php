@@ -36,7 +36,7 @@ class UserService {
         $newUsers = $missingEmplids
             ->map(function ($emplid) {
                 $paddedEmplid = str_pad($emplid, 7, 0, STR_PAD_LEFT);
-                $ldapUser = LDAP::lookupUser($paddedEmplid, 'umnemplid');
+                $ldapUser = LDAP::lookupUserCached($paddedEmplid, 'umnemplid');
 
                 if (!$ldapUser || !$ldapUser->emplid) return;
 
