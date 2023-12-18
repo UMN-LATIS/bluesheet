@@ -9,7 +9,7 @@ class LDAP
     public static function lookupUserCached($lookupValue, $lookupType = "uid") {
         $ldap = cache()->remember(
             "ldap-lookup-$lookupType-$lookupValue",
-            now()->addHours(6),
+            now()->addMinutes(5),
             function () use ($lookupValue, $lookupType) {
                 $data = self::lookupUser($lookupValue, $lookupType);
 
