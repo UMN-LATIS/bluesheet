@@ -15,7 +15,7 @@
       group="sections"
       itemKey="id"
       ghostClass="ghost"
-      class="tw-flex tw-flex-col tw-gap-2 tw-pb-12 tw-flex-1 tw-h-full group"
+      class="tw-flex tw-flex-col tw-gap-1 tw-pb-12 tw-flex-1 tw-h-full group"
       :class="{
         'tw-bg-neutral-50 tw-rounded tw-p-2': arePlannedSectionsEditable,
       }"
@@ -25,8 +25,8 @@
         <SectionDetails
           :section="section"
           :person="person"
-          :isEditable="arePlannedSectionsEditable"
-          :isViewable="arePlannedSectionsViewable"
+          :isUnpublishedEditable="arePlannedSectionsEditable"
+          :isUnpublishedViewable="arePlannedSectionsViewable"
         />
       </template>
       <template #footer>

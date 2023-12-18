@@ -51,8 +51,8 @@ const props = defineProps<{
   course: T.Course;
   person: T.Person;
   enrollment: T.Enrollment;
-  isEditable: boolean;
-  isViewable: boolean;
+  isUnpublishedEditable: boolean;
+  isUnpublishedViewable: boolean;
 }>();
 
 const planningStore = useRootCoursePlanningStore();
