@@ -86,7 +86,11 @@ const emits = defineEmits<{
 const coursePlanningStore = useRootCoursePlanningStore();
 const isEditingSection = computed(() => !!props.initialCourse);
 
-const terms = computed(() => coursePlanningStore.scheduleableTerms);
+const terms = computed(() =>
+  coursePlanningStore.termsStore.terms.filter((t) =>
+    coursePlanningStore.termsStore.isTermPlannable(t.id),
+  ),
+);
 const courses = computed(() => coursePlanningStore.courseStore.allCourses);
 const people = computed(() => coursePlanningStore.personStore.allPeople);
 

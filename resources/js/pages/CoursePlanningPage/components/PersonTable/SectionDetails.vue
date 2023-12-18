@@ -29,6 +29,7 @@ const props = defineProps<{
   section: T.CourseSection;
   person: T.Person;
   isEditable: boolean;
+  isViewable: boolean;
 }>();
 
 const planningStore = useRootCoursePlanningStore();
@@ -51,20 +52,5 @@ const enrollment = computed(() =>
     props.section,
   ),
 );
-
-const isViewable = computed(() => {
-  return (
-    planningStore.isSectionVisible(props.section) &&
-    enrollment.value &&
-    // show if published
-    (props.section.isPublished ||
-      // or if we're in planning mode and it's a draft section
-      (!props.section.isPublished && planningStore.isInPlanningMode)) &&
-    // and we're not filtering out this enrollment's role
-    planningStore.filters.includedEnrollmentRoles.includes(
-      enrollment.value.role,
-    )
-  );
-});
 </script>
 <style scoped></style>
