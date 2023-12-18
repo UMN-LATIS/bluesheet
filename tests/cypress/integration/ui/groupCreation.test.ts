@@ -84,10 +84,19 @@ describe("Groups UI", () => {
     });
 
     it("favorites a group", () => {
+      // check that there are no favorites
+      cy.visit("/");
+      cy.get("[data-cy=favorite-groups-section]").should("not.exist");
+
       cy.visit("/group/1");
       cy.contains("Favorite").click();
+
+      // check that the favorite groups table contains 1 group
       cy.visit("/");
-      cy.contains("Test Group");
+      cy.get("[data-cy=favorite-groups-section] tbody tr").should(
+        "have.length",
+        1,
+      );
     });
   });
 });
