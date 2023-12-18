@@ -1,5 +1,6 @@
 <template>
   <Combobox
+    class="combobox"
     :modelValue="modelValue"
     as="div"
     :nullable="nullable"
@@ -29,11 +30,12 @@
       -->
       <ComboboxButton as="div">
         <ComboboxInput
-          class="tw-w-full tw-rounded tw-border-0 tw-bg-white tw-py-2 tw-pl-3 tw-pr-10 tw-text-neutral-900 tw-ring-1 tw-ring-inset tw-ring-neutral-300 focus:tw-ring-2 focus:tw-ring-inset focus:tw-ring-blue-600 sm:tw-leading-6"
+          class="combobox__input tw-w-full tw-rounded tw-border-0 tw-bg-white tw-py-2 tw-pl-3 tw-pr-10 tw-text-neutral-900 tw-ring-1 tw-ring-inset tw-ring-neutral-300 focus:tw-ring-2 focus:tw-ring-inset focus:tw-ring-blue-600 sm:tw-leading-6"
           :class="inputClass"
           :displayValue="(item) => (item as ComboBoxOption | null)?.label ?? ''"
           :placeholder="placeholder"
           @change="query = $event.target.value"
+          @keydown.enter="handleAddNewOption(query)"
         />
 
         <div
@@ -105,9 +107,9 @@
             <button
               v-if="canAddNewOption"
               type="button"
-              :disabled="!query.length"
-              class="tw-block tw-w-full tw-mt-2 tw-py-2 tw-px-4 tw-border tw-border-transparent tw-rounded tw-shadow-sm tw-text-sm tw-font-medium tw-text-white tw-bg-neutral-700 hover:tw-bg-neutral-900 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-offset-2 focus:tw-ring-blue-500 disabled:tw-opacity-25 hover:disabled:tw-bg-neutral-700 disabled:tw-cursor-not-allowed"
-              @click="handleAddNewOption"
+              :disabled="!query.length || !isNewOption"
+              class="combobox__add-new-option-button tw-block tw-w-full tw-mt-2 tw-py-2 tw-px-4 tw-border tw-border-transparent tw-rounded tw-shadow-sm tw-text-sm tw-font-medium tw-text-white tw-bg-neutral-700 hover:tw-bg-neutral-900 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-offset-2 focus:tw-ring-blue-500 disabled:tw-opacity-25 hover:disabled:tw-bg-neutral-700 disabled:tw-cursor-not-allowed"
+              @click="handleAddNewOption(query)"
             >
               Add New Option
             </button>
@@ -119,7 +121,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref } from "vue";
 import { CheckIcon, ChevronDownIcon } from "@/icons";
 import {
   Combobox,
@@ -165,7 +167,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (eventName: "update:modelValue", value: ComboBoxOption | null);
-  (eventName: "update:options", value: ComboBoxOption[]);
+  (eventName: "addNewOption", value: ComboBoxOption);
 }>();
 
 const query = ref("");
@@ -180,15 +182,11 @@ const filteredOptions = computed(() =>
       }),
 );
 
-// watch(() => props.modelValue, (newValue) => {
-//   selectedOption.value = newValue;
-// });
+const isNewOption = computed(() => {
+  return !props.options.find((option) => option.label === query.value);
+});
 
-// watch(selectedOption, (newValue) => {
-//   emit("update:modelValue", newValue);
-// });
-
-function handleAddNewOption() {
+function handleAddNewOption(newOptionLabel: string) {
   if (!props.canAddNewOption) {
     return;
   }
@@ -196,7 +194,7 @@ function handleAddNewOption() {
   // check that the option is not already in the list
   // if it is, then select it
   const existingOption = props.options.find(
-    (option) => option.label === query.value,
+    (option) => option.label === newOptionLabel,
   );
 
   if (existingOption) {
@@ -205,10 +203,10 @@ function handleAddNewOption() {
   }
 
   // otherwise add it to the list
-  const newOption = {
+  const newOption: ComboBoxOption = {
     label: query.value,
   };
-  emit("update:options", [...props.options, newOption]);
+  emit("addNewOption", newOption);
   emit("update:modelValue", newOption);
 }
 </script>
