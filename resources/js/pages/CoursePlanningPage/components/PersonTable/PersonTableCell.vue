@@ -10,14 +10,14 @@
     </LeaveChip>
 
     <Draggable
-      :disabled="!isEditable"
+      :disabled="!arePlannedSectionsEditable"
       :list="localCourseSections"
       group="sections"
       itemKey="id"
       ghostClass="ghost"
       class="tw-flex tw-flex-col tw-gap-2 tw-pb-12 tw-flex-1 tw-h-full group"
       :class="{
-        'tw-bg-neutral-50 tw-rounded tw-p-2': isEditable,
+        'tw-bg-neutral-50 tw-rounded tw-p-2': arePlannedSectionsEditable,
       }"
       @change="handeSectionChange"
     >
@@ -25,13 +25,13 @@
         <SectionDetails
           :section="section"
           :person="person"
-          :isEditable="isEditable"
-          :class="{ 'not-draggable': !isPlannable }"
+          :isEditable="arePlannedSectionsEditable"
+          :isViewable="arePlannedSectionsViewable"
         />
       </template>
       <template #footer>
         <button
-          v-if="isEditable"
+          v-if="arePlannedSectionsEditable"
           class="tw-bg-transparent tw-border-1 tw-border-dashed tw-border-black/10 tw-rounded tw-p-2 tw-text-sm tw-text-neutral-400 tw-transition-all tw-hidden group-hover:tw-flex tw-justify-center tw-items-center hover:tw-border-neutral-600 hover:tw-text-neutral-600 tw-leading-none"
           @click="isShowingAddCourse = true"
         >
@@ -101,26 +101,16 @@ const termLeavesForPerson = computed(() =>
     .filter((leave) => leave.termIds?.includes(props.term.id)),
 );
 
-const doesTermHavePublishedSections = computed(() => {
-  return (
-    coursePlanningStore.courseSectionStore
-      .getSectionsByTermId(props.term.id)
-      .filter((section) => section.isPublished).length > 0
-  );
-});
-
-const isPlannable = computed(() => {
-  return (
-    coursePlanningStore.isInPlanningMode && !doesTermHavePublishedSections.value
-  );
-});
-
-const isEditable = computed(() => {
+const arePlannedSectionsViewable = computed(() => {
   return (
     coursePlanningStore.isInPlanningMode &&
-    $can("edit planned courses") &&
-    !doesTermHavePublishedSections.value
+    coursePlanningStore.termsStore.isTermPlannable(props.term.id) &&
+    $can("view planned courses")
   );
+});
+
+const arePlannedSectionsEditable = computed(() => {
+  return arePlannedSectionsViewable.value && $can("edit planned courses");
 });
 
 const initialRole = computed(() => {

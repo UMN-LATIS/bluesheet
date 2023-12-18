@@ -210,32 +210,6 @@ export const useRootCoursePlanningStore = defineStore(
       allCourseLevels: computed((): T.Course["courseLevel"][] =>
         Object.keys(getters.courseLevelCounts.value),
       ),
-      isTermSchedulable: computed(() => (termId: T.Term["id"]) => {
-        const termSections =
-          stores.courseSectionStore.getSectionsByTermId(termId);
-
-        if (!termSections) {
-          // if no sections found, then the term can be planned
-          return true;
-        }
-
-        // if there are sections, then make sure none
-        // are published
-        return !termSections.some((section) => section.isPublished);
-      }),
-      scheduleableTerms: computed((): T.Term[] => {
-        return stores.termsStore.sortedTerms.filter((term) =>
-          getters.isTermSchedulable.value(term.id),
-        );
-      }),
-
-      // for colspan
-      countOfTermsDisabledForPlanning: computed((): number => {
-        return getters.visibleTerms.value.filter((term) => {
-          return !getters.isTermSchedulable.value(term.id);
-        }).length;
-      }),
-
       isPersonVisible: computed(() => {
         if (!state.activeGroupId) {
           throw new Error("active group id is not set");
