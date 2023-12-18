@@ -18,6 +18,7 @@
 import "./laravel-commands";
 import "./laravel-routes";
 import "./assertions";
+import "./commands";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace

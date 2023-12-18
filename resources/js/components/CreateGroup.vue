@@ -24,9 +24,13 @@
           v-if="groupTypes"
           id="groupTypes"
           v-model="groupType"
-          v-model:options="groupTypes"
+          :options="groupTypes"
           placeholder="Select..."
           :canAddNewOption="true"
+          :nullable="true"
+          label="Group Type"
+          :showLabel="false"
+          @addNewOption="(newGroupType) => groupTypes.push(newGroupType)"
         />
       </div>
     </div>
@@ -77,7 +81,6 @@ export default {
       groupType: null,
       groupTypes: [],
       parentOrganization: null,
-      newGroupType: "",
     };
   },
   watch: {
@@ -102,15 +105,6 @@ export default {
       });
   },
   methods: {
-    handleAddNewGroupType() {
-      const newOption = {
-        id: this.newGroupType,
-        label: this.newGroupType,
-      };
-      this.groupTypes.push(newOption);
-      this.groupType = newOption;
-      this.newGroupType = "";
-    },
     close: function () {
       this.groupName = null;
       this.$emit("close");

@@ -8,8 +8,10 @@ use RuntimeException;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Collection;
 use Carbon\Carbon;
+use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\Cache;
 use Log;
+
 class Bandaid {
     private $client;
     public function __construct() {
@@ -27,25 +29,23 @@ class Bandaid {
     }
 
     public function performRequest($url) {
-        if($value = Cache::get($url)) {
+        if ($value = Cache::get($url)) {
             return $value;
-        }
-        else {
+        } else {
             $result = $this->client->get($url);
             $value = json_decode($result->getBody());
             Cache::put($url, $value, 600);
             return $value;
         }
     }
-    
+
     public function performPostRequest($url, $body) {
-        if($value = Cache::get(json_encode($body))) {
+        if ($value = Cache::get(json_encode($body))) {
             return $value;
-        }
-        else {
-            $result = $this->client->post($url,['form_params' => $body]);
+        } else {
+            $result = $this->client->post($url, ['form_params' => $body]);
             $value = json_decode($result->getBody());
-            if(!$value) {
+            if (!$value) {
                 return [];
             }
             Cache::put(json_encode($body), $value, 600);
@@ -62,11 +62,11 @@ class Bandaid {
             $errorMessage = 'getUserName Error: ' . $msg;
             throw new RuntimeException($errorMessage);
         }
-    }    
-    
+    }
+
     public function getEmployees(array $emplIds): array {
         try {
-            $result = $this->performPostRequest('employment/employees', ["emplids"=>$emplIds]);
+            $result = $this->performPostRequest('employment/employees', ["emplids" => $emplIds]);
             return $result;
         } catch (RequestException $e) {
             $msg = $e->getMessage();
@@ -74,8 +74,20 @@ class Bandaid {
             throw new RuntimeException($errorMessage);
         }
     }
-    
-    public function getEmployeesForDepartment($deptId): array {
+
+    /**
+     * Get all employees for a department
+     * @param int $deptId
+     * @return array<array{
+     *  ID: int,
+     *  EMPLID: int | null,
+     *  DEPTID: string,
+     *  JOBCODE: string,
+     *  CATEGORY: string,
+     *  JOB_INDICATOR: string,
+     * }>
+     */
+    public function getEmployeesForDepartment(int $deptId): array {
         try {
             $result = $this->performRequest('department/' . $deptId . '/employees');
             return $result;
@@ -97,6 +109,21 @@ class Bandaid {
         }
     }
 
+
+    /**
+     * Get all academic terms for CLA (undergrad and grad)
+     * at the UMNTC
+     *
+     * @return array<array{
+     *   id: int,
+     *   TERM: int,
+     *   TERM_BEGIN_DT: string, // "2019-01-22"
+     *   TERM_END_DT: string,  // "2019-05-15"
+     *   TERM_DESCRIPTION: string, //"Spring 2019"
+     *   INSTITUTION: string, // "UMNTC"
+     *   ACADEMIC_CAREER: string, // "UGRD"
+     * }>
+     */
     public function getTerms(): array {
         try {
             $result = $this->performRequest('classes/terms/');
@@ -109,7 +136,18 @@ class Bandaid {
     }
 
     /**
-     * Get all academic terms for CLA (undergrad and grad) at the UMNTC
+     * Get all academic terms for CLA (undergrad and grad)
+     * at the UMNTC
+     *
+     * @return \Illuminate\Support\Collection<array{
+     *   id: int,
+     *   TERM: int,
+     *   TERM_BEGIN_DT: string, // "2019-01-22"
+     *   TERM_END_DT: string,  // "2019-05-15"
+     *   TERM_DESCRIPTION: string, //"Spring 2019"
+     *   INSTITUTION: string, // "UMNTC"
+     *   ACADEMIC_CAREER: string, // "UGRD"
+     * }>
      */
     public function getCLATerms(): Collection {
         $allTerms = $this->getTerms();
@@ -124,6 +162,41 @@ class Bandaid {
             })->values();
     }
 
+    /**
+     * Retrieves a list of course details.
+     *
+     * @return array<array{
+     *   id: int,
+     *   TERM: int,
+     *   INSTRUCTOR_EMPLID: int,
+     *   ACADEMIC_ORG: int,
+     *   SUBJECT: string,
+     *   CLASS_SECTION: string,
+     *   INSTRUCTOR_ROLE: string,
+     *   CATALOG_NUMBER: string,
+     *   CLASS_NUMBER: int,
+     *   ACADEMIC_CAREER: string,
+     *   DESCRIPTION: string,
+     *   COMPONENT_CLASS: string,
+     *   ENROLLMENT_CAP: int,
+     *   ENROLLMENT_TOTAL: int,
+     *   WAITLIST_CAP: int,
+     *   WAITLIST_TOTAL: int,
+     *   CANCELLED: int,
+     *   ENROLLMENTS: array
+     * }>
+     */
+    public function getDeptClassList(int $deptId): array {
+        try {
+            $result = $this->performRequest('classes/list/' . $deptId);
+            return $result;
+        } catch (RequestException $e) {
+            $msg = $e->getMessage();
+            $errorMessage = 'getDeptCourses Error: ' . $msg;
+            throw new RuntimeException($errorMessage);
+        }
+    }
+
     public function getDeptScheduleForTerm(int $deptId, int $term): array {
         try {
             $result = $this->performRequest('classes/list/' . $deptId . "/" . $term);
@@ -133,5 +206,35 @@ class Bandaid {
             $errorMessage = 'getDepartmentSchedule Error: ' . $msg;
             throw new RuntimeException($errorMessage);
         }
+    }
+
+    /**
+     * Get academic terms which coincide with the given date range
+     *
+     * @param Carbon $startDate
+     * @param Carbon $endDate
+     * @return \Illuminate\Support\Collection<array{
+     *  id: int,
+     *  TERM: int,
+     *  TERM_BEGIN_DT: string, // "2019-01-22"
+     *  TERM_END_DT: string,  // "2019-05-15"
+     *  TERM_DESCRIPTION: string, //"Spring 2019"
+     *  INSTITUTION: string, // "UMNTC"
+     *  ACADEMIC_CAREER: string, // "UGRD"
+     * }>
+     */
+    public function getTermsOverlappingDates($startDate, $endDate) {
+        $terms = $this->getCLATerms();
+        return $terms->filter(function ($term) use ($startDate, $endDate) {
+            $termStartDate = $term->TERM_BEGIN_DT;
+            $termEndDate = $term->TERM_END_DT;
+
+            // is term start or end between the leave start and end dates?
+            $isTermStartInRange = ($startDate <= $termStartDate && $termStartDate <= $endDate);
+
+            $isTermEndInRange = ($startDate <= $termEndDate && $termEndDate <= $endDate);
+
+            return ($isTermStartInRange || $isTermEndInRange);
+        });
     }
 }

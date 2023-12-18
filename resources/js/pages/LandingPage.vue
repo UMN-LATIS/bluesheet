@@ -22,7 +22,11 @@
       <div v-if="userStore.currentUser" class="row mt-5">
         <div v-if="userStore.currentUser.favoriteGroups.length" class="col">
           <h3>Favorite Groups</h3>
-          <Favorites :user="userStore.currentUser" type="group"></Favorites>
+          <Favorites
+            data-cy="favorite-groups-section"
+            :user="userStore.currentUser"
+            type="group"
+          ></Favorites>
         </div>
         <div v-if="userStore.currentUser.favoriteRoles.length" class="col">
           <h3>Favorite Roles</h3>

@@ -10,6 +10,7 @@ import GroupListPage from "./pages/GroupListPage.vue";
 import ReportListPage from "./pages/ReportListPage.vue";
 import RoleListPage from "./pages/RoleListPage.vue";
 import RolePage from "./pages/RolePage.vue";
+import ErrorPage from "./pages/ErrorPage.vue";
 
 // reports
 import CeddLikeReportPage from "./pages/reports/CeddLikeReportPage.vue";
@@ -18,20 +19,10 @@ import FiscalReportPage from "./pages/reports/FiscalReportPage.vue";
 import LastModifiedReportPage from "./pages/reports/LastModifiedReportPage.vue";
 import MissingOfficialReportPage from "./pages/reports/MissingOfficialReportPage.vue";
 import OrgpReportPage from "./pages/reports/OrgpReportPage.vue";
-import SchedulingReportPage from "./pages/reports/SchedulingReport/SchedulingReportPage.vue";
 import GroupAdminsReportPage from "./pages/reports/GroupAdmins.vue";
 import EligibilityReportPage from "./pages/reports/EligibilityReport.vue";
-
-function parseIntFromParam(
-  param: string | string[] | undefined,
-): number | null {
-  if (typeof param !== "string") {
-    return null;
-  }
-
-  const n = Number.parseInt(param);
-  return Number.isNaN(n) ? null : n;
-}
+import CoursePlanningPage from "./pages/CoursePlanningPage/CoursePlanningPage.vue";
+import { parseIntFromRouteParam as parseIntFromParam } from "@/utils";
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -127,17 +118,37 @@ export const router = createRouter({
       props: true,
     },
     {
-      name: "schedulingReport",
-      path: "/reports/schedulingReport/:groupId",
-      component: SchedulingReportPage,
+      name: "eligibilityReport",
+      path: "/reports/eligibilityReport",
+      component: EligibilityReportPage,
+    },
+    {
+      path: "/course-planning/groups/:groupId",
+      component: CoursePlanningPage,
       props: (route) => ({
         groupId: parseIntFromParam(route.params.groupId),
       }),
     },
     {
-      name: "eligibilityReport",
-      path: "/reports/eligibilityReport",
-      component: EligibilityReportPage,
+      path: "/reports/schedulingReport/:groupId",
+      redirect: (to) => `/course-planning/groups/${to.params.groupId}`,
+    },
+    {
+      name: "error",
+      path: "/error/:errorCode",
+      component: ErrorPage,
+      props: (route) => ({
+        errorCode: parseIntFromParam(route.params.errorCode),
+      }),
+    },
+
+    {
+      name: "catchall",
+      path: "/:pathMatch(.*)",
+      component: ErrorPage,
+      props: () => ({
+        errorCode: 404,
+      }),
     },
   ],
 });

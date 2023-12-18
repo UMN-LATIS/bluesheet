@@ -19,7 +19,9 @@
         'notification--success tw-border-l-green-400': type === 'success',
       }"
     >
-      <div class="notification__icon tw-rounded-full tw-p-2 tw--mt-1">
+      <div
+        class="notification__icon tw-rounded-full tw-flex tw-w-8 tw-h-8 tw-items-center tw-justify-center"
+      >
         <WarningIcon v-if="type === 'warning'" />
         <InfoIcon v-if="type === 'info'" />
         <CircleCheckIcon v-if="type === 'success'" />

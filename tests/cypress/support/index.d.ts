@@ -106,5 +106,18 @@ declare namespace Cypress {
      * Get a user by their username (umndid).
      */
     getUserByUsername(umndid: string): Chainable<any>;
+
+    /**
+     * Add a role to a user.
+     */
+    addRoleToUser(roleName: string, umndid: string): Chainable<void>;
+
+    /**
+     * Give a permission to a user.
+     */
+    givePermissionToUser(
+      permissionName: string,
+      umndid: string,
+    ): Chainable<void>;
   }
 }

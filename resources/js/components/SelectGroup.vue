@@ -43,18 +43,13 @@
 
 <script lang="ts" setup>
 import { ref, computed } from "vue";
-import { CSSClass } from "@/types";
-
-export interface OptionType {
-  value: string | number;
-  text: string;
-}
+import { CSSClass, SelectOption } from "@/types";
 
 const props = withDefaults(
   defineProps<{
     modelValue: string | number;
     label: string;
-    options: OptionType[];
+    options: SelectOption[];
     helpText?: string;
     isValid?: boolean;
     validator?: (value: unknown) => boolean;
@@ -74,6 +69,8 @@ const props = withDefaults(
     showLabel: true,
     isValid: undefined,
     validator: () => true,
+    selectClass: "",
+    labelClass: "",
   },
 );
 

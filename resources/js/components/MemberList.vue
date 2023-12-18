@@ -31,7 +31,9 @@
             v-model="member.role"
             :options="roles"
             :canAddNewOption="true"
-            @update:options="$emit('update:roles', $event)"
+            @addNewOption="
+              (newRole) => $emit('update:roles', [...roles, newRole])
+            "
           />
         </td>
       </template>

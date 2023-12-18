@@ -1,102 +1,140 @@
 <template>
-  <div
-    ref="comboboxContainerRef"
+  <Combobox
     class="combobox"
-    :class="{
-      'combobox--is-open': isComboboxOpen,
-    }"
-    role="combobox"
-    @keydown.enter="handleEnterKey"
-    @keydown.down.prevent="handleArrowKeyNav"
-    @keydown.up.prevent="handleArrowKeyNav"
+    :modelValue="modelValue"
+    as="div"
+    :nullable="nullable"
+    @update:modelValue="(opt) => $emit('update:modelValue', opt)"
   >
-    <div class="combobox__input-group">
-      <input
-        v-bind="$attrs"
-        ref="inputRef"
-        :value="filterText"
-        :class="inputClass"
-        class="combobox__input"
-        :aria-controls="comboboxResultsId"
-        autocomplete="off"
-        @input="handleInput"
-        @focus="isComboboxOpen = true"
-      />
-      <button
-        v-if="showClearButton && filterText.length && isComboboxOpen"
-        class="combobox__clear-button"
-        @click="handleClear"
-      >
-        <CircleXIcon />
-      </button>
+    <ComboboxLabel
+      v-if="label"
+      :class="[
+        'tw-block tw-text-xs tw-uppercase tw-text-neutral-500 tw-my-0',
+        {
+          'tw-sr-only': !showLabel,
+          'tw-mb-1': showLabel,
+        },
+        labelClass,
+      ]"
+    >
+      <Label is="div" :required="required">
+        {{ label }}
+      </Label>
+    </ComboboxLabel>
+    <div class="tw-relative">
+      <!--
+        wrap <ComboboxInput> with <ComboboxButton> so
+        that the options automatically open when the input
+        is focused
+        see: https://github.com/tailwindlabs/headlessui/discussions/1236
+      -->
+      <ComboboxButton as="div">
+        <ComboboxInput
+          class="combobox__input tw-w-full tw-rounded tw-border-0 tw-bg-white tw-py-2 tw-pl-3 tw-pr-10 tw-text-neutral-900 tw-ring-1 tw-ring-inset tw-ring-neutral-300 focus:tw-ring-2 focus:tw-ring-inset focus:tw-ring-blue-600 sm:tw-leading-6"
+          :class="inputClass"
+          :displayValue="(item) => (item as ComboBoxOption | null)?.label ?? ''"
+          :placeholder="placeholder"
+          @change="query = $event.target.value"
+          @keydown.enter="handleAddNewOption(query)"
+        />
 
-      <button
-        class="combobox__toggle-button"
-        @click="isComboboxOpen = !isComboboxOpen"
-      >
-        <ChevronDownIcon class="chevron-icon" />
-      </button>
-    </div>
-
-    <Transition name="fade-slide">
-      <div
-        v-if="isComboboxOpen"
-        :id="comboboxResultsId"
-        class="combobox__results"
-      >
-        <div v-if="!filteredOptions.length" class="combobox__no-items">
-          <span>No results found</span>
-        </div>
-        <div class="p-1">
-          <button
-            v-if="shouldShowAddNewOptionButton"
-            class="add-new-option-button"
-            type="button"
-            :disabled="!filterText.length"
-            @click="handleAddNewOption"
-          >
-            Add New Option
-          </button>
-        </div>
-
-        <slot name="prepend" />
-        <button
-          v-for="option in filteredOptions"
-          :key="option.id ?? option.label"
-          ref="optionRefs"
-          class="combobox__item"
-          :class="{
-            'combobox__item--is-selected': isOptionSelected(option),
-          }"
-          type="button"
-          @click="handleSelectOption(option)"
+        <div
+          class="tw-absolute tw-inset-y-0 tw-right-0 tw-flex tw-items-center tw-rounded-r-md tw-px-2 focus:tw-outline-none tw-bg-transparent tw-border-none"
         >
-          <span class="sr-only">Selected</span>
-          <CheckIcon
-            v-if="isOptionSelected(option)"
-            class="combobox__check-icon"
+          <ChevronDownIcon
+            class="tw-h-5 tw-w-5 tw-text-neutral-400"
+            aria-hidden="true"
           />
-          <span class="combobox__name">{{ option.label }}</span>
-          <span v-if="option.secondaryLabel" class="combobox__id">
-            ({{ option.secondaryLabel }})
-          </span>
-        </button>
+        </div>
+      </ComboboxButton>
+      <Transition name="fade-slide">
+        <ComboboxOptions
+          class="tw-absolute tw-z-10 tw-mt-1 tw-max-h-60 tw-w-full tw-overflow-auto tw-rounded-md tw-bg-white tw-py-1 tw-text-base tw-shadow-lg tw-ring-1 tw-ring-black tw-ring-opacity-5 focus:tw-outline-none sm:tw-text-sm tw-pl-0"
+        >
+          <ComboboxOption
+            v-for="option in filteredOptions"
+            :key="option.id || option.label"
+            v-slot="{ active, selected }"
+            :value="option"
+            as="template"
+          >
+            <li
+              :class="[
+                'tw-relative tw-cursor-default tw-select-none tw-py-2 tw-pl-8 tw-pr-4 tw-list-none',
+                active ? 'tw-bg-blue-600 tw-text-white' : 'tw-text-neutral-900',
+                selected && !active && 'tw-bg-blue-100',
+              ]"
+            >
+              <div class="tw-flex tw-flex-col">
+                <div
+                  :class="[
+                    'tw-block tw-truncate',
+                    selected && 'tw-font-semibold',
+                  ]"
+                >
+                  {{ option.label }}
+                </div>
+                <div
+                  v-if="option.secondaryLabel"
+                  :class="[
+                    'tw-text-xs tw-truncate',
+                    active ? 'tw-text-white/75' : 'tw-text-neutral-400',
+                    selected && 'tw-font-semibold',
+                  ]"
+                >
+                  {{ option.secondaryLabel }}
+                </div>
+              </div>
 
-        <slot name="append" />
-      </div>
-    </Transition>
-  </div>
+              <span
+                v-if="selected"
+                :class="[
+                  'tw-absolute tw-inset-y-0 tw-left-0 tw-flex tw-items-center tw-pl-1.5',
+                  active ? 'tw-text-white' : 'tw-text-blue-600',
+                ]"
+              >
+                <CheckIcon class="tw-h-5 tw-w-5" aria-hidden="true" />
+              </span>
+            </li>
+          </ComboboxOption>
+          <div class="tw-mx-4 tw-my-2 tw-flex tw-flex-col tw-gap-2">
+            <div
+              v-if="!filteredOptions.length"
+              class="tw-text-center tw-italic tw-text-neutral-500"
+            >
+              No results found
+            </div>
+            <button
+              v-if="canAddNewOption"
+              type="button"
+              :disabled="!query.length || !isNewOption"
+              class="combobox__add-new-option-button tw-block tw-w-full tw-mt-2 tw-py-2 tw-px-4 tw-border tw-border-transparent tw-rounded tw-shadow-sm tw-text-sm tw-font-medium tw-text-white tw-bg-neutral-700 hover:tw-bg-neutral-900 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-offset-2 focus:tw-ring-blue-500 disabled:tw-opacity-25 hover:disabled:tw-bg-neutral-700 disabled:tw-cursor-not-allowed"
+              @click="handleAddNewOption(query)"
+            >
+              Add New Option
+            </button>
+          </div>
+        </ComboboxOptions>
+      </Transition>
+    </div>
+  </Combobox>
 </template>
-<script setup lang="ts">
-import { ref, computed, watch } from "vue";
-import { onClickOutside } from "@vueuse/core";
-import { CSSClass } from "@/types";
-import Fuse from "fuse.js";
-import CircleXIcon from "@/icons/CircleXIcon.vue";
-import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
-import CheckIcon from "@/icons/CheckIcon.vue";
 
-interface Option {
+<script setup lang="ts">
+import { computed, ref } from "vue";
+import { CheckIcon, ChevronDownIcon } from "@/icons";
+import {
+  Combobox,
+  ComboboxButton,
+  ComboboxInput,
+  ComboboxLabel,
+  ComboboxOption,
+  ComboboxOptions,
+} from "@headlessui/vue";
+import { CSSClass } from "@/types";
+import Label from "./Label.vue";
+
+export interface ComboBoxOption {
   id?: string | number; // new options might have an undefined id
   label: string;
   secondaryLabel?: string;
@@ -104,37 +142,51 @@ interface Option {
 
 const props = withDefaults(
   defineProps<{
-    modelValue: Option | null;
-    options: Option[];
+    label?: string;
+    options: ComboBoxOption[];
+    modelValue: ComboBoxOption | null;
+    labelClass?: CSSClass;
     inputClass?: CSSClass;
-    showClearButton?: boolean;
+    showLabel?: boolean;
+    required?: boolean;
     canAddNewOption?: boolean;
+    nullable?: boolean; // can be cleared after selected
+    placeholder?: string;
   }>(),
   {
-    showClearButton: false,
+    label: "",
+    labelClass: "",
     inputClass: "",
+    showLabel: true,
+    required: false,
     canAddNewOption: false,
+    nullable: false,
+    placeholder: "",
   },
 );
 
 const emit = defineEmits<{
-  (eventName: "update:modelValue", value: Option | null);
-  (eventName: "update:options", value: Option[]): void;
+  (eventName: "update:modelValue", value: ComboBoxOption | null);
+  (eventName: "addNewOption", value: ComboBoxOption);
 }>();
 
-const comboboxResultsId = `comboboxDropdownList-${Date.now()}`;
+const query = ref("");
+const filteredOptions = computed(() =>
+  query.value === ""
+    ? props.options
+    : props.options.filter((opt) => {
+        return (
+          opt.label.toLowerCase().includes(query.value.toLowerCase()) ||
+          opt.secondaryLabel?.toLowerCase().includes(query.value.toLowerCase())
+        );
+      }),
+);
 
-const comboboxContainerRef = ref<HTMLDivElement>();
-const inputRef = ref<HTMLInputElement>();
+const isNewOption = computed(() => {
+  return !props.options.find((option) => option.label === query.value);
+});
 
-// for tracking option elements for focus management
-// with up/down arrow keys
-const optionRefs = ref<HTMLElement[]>([]);
-
-const filterText = ref(props.modelValue?.label ?? "");
-const isComboboxOpen = ref(false);
-
-function handleAddNewOption() {
+function handleAddNewOption(newOptionLabel: string) {
   if (!props.canAddNewOption) {
     return;
   }
@@ -142,295 +194,19 @@ function handleAddNewOption() {
   // check that the option is not already in the list
   // if it is, then select it
   const existingOption = props.options.find(
-    (option) => option.label === filterText.value,
+    (option) => option.label === newOptionLabel,
   );
 
   if (existingOption) {
-    return handleSelectOption(existingOption);
-  }
-
-  // otherwise add it to the list
-  const newOption = {
-    label: filterText.value,
-  };
-  emit("update:options", [...props.options, newOption]);
-  handleSelectOption(newOption);
-}
-
-function isOptionSelected(option: Option) {
-  if (!props.modelValue) {
-    return false;
-  }
-
-  if (props.modelValue.id) {
-    return props.modelValue.id === option.id;
-  }
-
-  return props.modelValue.label === option.label;
-}
-
-const filteredOptions = computed(() => {
-  const sortedOptions = [...props.options].sort((a, b) =>
-    a.label.localeCompare(b.label),
-  );
-
-  // if the selected option matches the filter text
-  // then we want to show all the options
-  const filterTextMatchesSelectedOption = props.modelValue
-    ? props.modelValue.label
-        .toLowerCase()
-        .includes(filterText.value.toLowerCase())
-    : false;
-  if (!filterText.value || filterTextMatchesSelectedOption) {
-    return sortedOptions;
-  }
-
-  return fuzzySearch(sortedOptions, filterText.value);
-});
-
-const shouldShowAddNewOptionButton = computed(() => {
-  return (
-    props.canAddNewOption && // can add new options
-    filterText.value.length && // there is text in the input
-    // and there are no exact matching labels
-    !props.options.map((o) => o.label).includes(filterText.value)
-  );
-});
-
-function fuzzySearch(options: Option[], query: string) {
-  const fuse = new Fuse(options, {
-    keys: ["label", "secondaryLabel"],
-    threshold: 0.3,
-  });
-
-  return fuse.search(query).map((result) => result.item);
-}
-
-function handleInput(event: Event) {
-  filterText.value = (event.target as HTMLInputElement).value;
-}
-
-function handleSelectOption(option: Option) {
-  emit("update:modelValue", option);
-  isComboboxOpen.value = false;
-  inputRef.value?.blur();
-}
-
-function handleClear() {
-  filterText.value = "";
-  emit("update:modelValue", null);
-  inputRef.value?.focus();
-}
-
-onClickOutside(comboboxContainerRef, () => {
-  isComboboxOpen.value = false;
-});
-
-watch(
-  () => props.modelValue,
-  () => {
-    if (!props.modelValue) {
-      filterText.value = "";
-      return;
-    }
-
-    const selectedOption = getOption(props.modelValue);
-    filterText.value = selectedOption?.label ?? "";
-  },
-);
-
-function getOption(option: Partial<Option>): Option | null {
-  if (option.id) {
-    return props.options.find((opt) => opt.id === option.id) ?? null;
-  }
-  return props.options.find((opt) => opt.label === option.label) ?? null;
-}
-
-function handleArrowKeyNav(event: KeyboardEvent) {
-  event.preventDefault();
-  const direction = event.key === "ArrowDown" ? 1 : -1; // Determine the direction
-  const activeElementIndex = optionRefs.value.indexOf(
-    document.activeElement as HTMLElement,
-  ); // Get current active element
-  const nextElementIndex = activeElementIndex + direction;
-
-  // if the next element is out of bounds, focus the input
-  if (nextElementIndex >= optionRefs.value.length || nextElementIndex < 0) {
-    inputRef.value?.focus();
+    emit("update:modelValue", existingOption);
     return;
   }
 
-  // Focus the next element
-  optionRefs.value[nextElementIndex]?.focus();
-}
-
-function handleEnterKey(event: KeyboardEvent) {
-  event.preventDefault();
-
-  const activeElementIndex = optionRefs.value.indexOf(
-    document.activeElement as HTMLElement,
-  );
-  const activeOption = filteredOptions.value[activeElementIndex];
-
-  // if there's an active option, select it
-  if (activeOption) {
-    return handleSelectOption(activeOption);
-  }
-
-  // if there's no active option and the filter is empty
-  // clear the selected option
-  if (!filterText.value) {
-    return handleClear();
-  }
-
-  // if there's no active option and we can add new options
-  // then add the filter text as a new option
-  if (props.canAddNewOption) {
-    return handleAddNewOption();
-  }
+  // otherwise add it to the list
+  const newOption: ComboBoxOption = {
+    label: query.value,
+  };
+  emit("addNewOption", newOption);
+  emit("update:modelValue", newOption);
 }
 </script>
-<style scoped>
-.combobox {
-  position: relative;
-}
-
-.combobox__input-group {
-  display: flex;
-  align-items: center;
-  border: 1px solid #ccc;
-  border-radius: 0.25rem;
-}
-
-.combobox__input-group:focus-within {
-  border: 1px solid #a1cbef;
-  box-shadow: 0 0 0 0.2rem rgba(52, 144, 220, 0.25);
-}
-
-.combobox__clear-button {
-  border: 0;
-  height: 2rem;
-  width: 2rem;
-  background: transparent;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  color: #ccc;
-}
-
-.combobox__input {
-  border: none;
-  background: transparent;
-  display: block;
-  width: 100%;
-  border: none;
-  flex: 1;
-  padding: 0.5rem 0.75rem;
-  padding-right: 0;
-}
-.combobox__input:focus {
-  outline: none;
-}
-
-.combobox__no-items {
-  padding: 0.5rem;
-  text-align: center;
-  color: #999;
-  font-size: 0.875rem;
-}
-
-.combobox__results {
-  border: 1px solid #ccc;
-  border-radius: 0.25rem;
-  position: absolute;
-  top: 100%;
-  width: 100%;
-  max-height: 20rem;
-  overflow-y: auto;
-  z-index: 10;
-  background: white;
-  margin-top: 0.25rem;
-  box-shadow:
-    0 1px 3px 0 rgb(0 0 0 / 0.1),
-    0 1px 2px -1px rgb(0 0 0 / 0.1);
-  flex-direction: column;
-  display: flex;
-}
-
-.combobox__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.combobox__item {
-  background: transparent;
-  padding: 0.33rem 0.5rem;
-  border: 0;
-  display: flex;
-  text-align: left;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.5rem;
-  padding-left: 2rem;
-}
-
-.combobox__item.combobox__item--is-selected,
-.combobox__item.combobox__item--is-selected:is(:hover, :focus) {
-  background: #d5ecff;
-  padding-left: 0.5rem;
-}
-
-.combobox__item:is(:hover, :focus) {
-  background: #f5f5f5;
-  cursor: pointer;
-}
-
-.combobox__name {
-  flex: 1;
-}
-.combobox__id {
-  color: #999;
-  font-size: 0.875rem;
-}
-
-.combobox__toggle-button {
-  background: transparent;
-  border: 0;
-  transition: transform 0.15s cubic-bezier(1, 0.5, 0.8, 1);
-}
-
-.combobox--is-open .combobox__toggle-button {
-  transform: rotate(180deg);
-}
-
-.other-option-group {
-  display: flex;
-  margin: 0.5rem;
-  padding-top: 0;
-  border: 1px solid #ddd;
-  border-radius: 0.25rem;
-}
-
-.other-option-group input {
-  flex: 1;
-  background: #f3f3f3;
-  border: 0;
-  padding: 0.5rem 0.75rem;
-  border-top-left-radius: 0.25rem;
-  border-bottom-left-radius: 0.25rem;
-}
-
-.add-new-option-button {
-  background: #111;
-  border: none;
-  border-radius: 0.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ddd;
-  width: 100%;
-  padding: 0.25rem 0.5rem;
-}
-</style>

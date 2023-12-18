@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
     <Transition name="modal">
-      <div v-show="show" class="modal-mask" @mousedown="$emit('close')">
+      <div v-if="show" class="modal-mask" @mousedown="$emit('close')">
         <div class="modal-container" @mousedown.stop>
           <div v-if="title" class="modal-header">
             <h5 class="modal-title">{{ title }}</h5>
@@ -29,10 +29,17 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from "vue";
 
-const props = defineProps<{
-  title?: string;
-  show: boolean;
-}>();
+const props = withDefaults(
+  defineProps<{
+    title?: string;
+    show: boolean;
+    closeOnEsc?: boolean;
+  }>(),
+  {
+    title: "",
+    closeOnEsc: true,
+  },
+);
 
 const emit = defineEmits<{
   (eventName: "close");
@@ -45,11 +52,15 @@ function closeModalOnEsc(event: KeyboardEvent) {
 }
 
 onMounted(() => {
-  document.addEventListener("keydown", closeModalOnEsc);
+  if (props.closeOnEsc) {
+    document.addEventListener("keydown", closeModalOnEsc);
+  }
 });
 
 onUnmounted(() => {
-  document.removeEventListener("keydown", closeModalOnEsc);
+  if (props.closeOnEsc) {
+    document.removeEventListener("keydown", closeModalOnEsc);
+  }
 });
 </script>
 

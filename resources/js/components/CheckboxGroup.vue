@@ -17,16 +17,20 @@
       />
     </div>
     <div class="tw-ml-2 tw-text-sm tw-leading-6">
-      <label :for="id" class="tw-font-semibold tw-text-neutral-900 tw-m-0">
-        {{ label }}
-      </label>
-      <p
-        v-if="description"
-        :id="`${id}-description`"
-        class="tw-text-neutral-500 tw-text-sm"
-      >
-        {{ description }}
-      </p>
+      <slot name="label">
+        <label :for="id" class="tw-font-semibold tw-text-neutral-900 tw-m-0">
+          {{ label }}
+        </label>
+      </slot>
+      <slot name="description">
+        <p
+          v-if="description"
+          :id="`${id}-description`"
+          class="tw-text-neutral-500 tw-text-sm"
+        >
+          {{ description }}
+        </p>
+      </slot>
     </div>
   </div>
 </template>

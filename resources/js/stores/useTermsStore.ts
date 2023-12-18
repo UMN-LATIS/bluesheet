@@ -1,18 +1,31 @@
-import { computed, ref } from "vue";
-import { LoadState, Term } from "@/types";
+import { computed, toRefs, reactive } from "vue";
+import * as T from "@/types";
 import { defineStore } from "pinia";
 import * as api from "@/api";
 import { dayjs } from "@/utils";
+import { keyBy } from "lodash";
+
+interface TermsStoreState {
+  termLookup: Record<T.Term["id"], T.Term>;
+  loadStatus: T.LoadState;
+}
 
 export const useTermsStore = defineStore("terms", () => {
-  const state = {
-    terms: ref<Term[]>([]),
-    loadStatus: ref<LoadState>("idle"),
-  };
+  const state = reactive<TermsStoreState>({
+    termLookup: {},
+    loadStatus: "idle",
+  });
 
   const getters = {
-    currentTerm: computed((): Term | null => {
-      const currentTerm = state.terms.value.find((term) => {
+    terms: computed(
+      (): T.Term[] =>
+        Object.values(state.termLookup).filter(Boolean) as T.Term[],
+    ),
+    getTerm: computed(() => (termId: T.Term["id"]): T.Term | null => {
+      return state.termLookup[termId] ?? null;
+    }),
+    currentTerm: computed((): T.Term | null => {
+      const currentTerm = getters.terms.value.find((term) => {
         const termStart = dayjs(term.startDate);
         const termEnd = dayjs(term.endDate);
         const today = dayjs();
@@ -20,37 +33,62 @@ export const useTermsStore = defineStore("terms", () => {
       });
       return currentTerm ?? null;
     }),
+    sortedTerms: computed((): T.Term[] => {
+      return [...getters.terms.value].sort((a, b) => {
+        return dayjs(a.startDate).isBefore(dayjs(b.startDate)) ? -1 : 1;
+      });
+    }),
+    earliestTerm: computed((): T.Term | null => {
+      if (!getters.terms.value.length) return null;
+      return getters.sortedTerms.value[0];
+    }),
+    latestTerm: computed((): T.Term | null => {
+      if (!getters.terms.value.length) return null;
+      return getters.sortedTerms.value[getters.terms.value.length - 1];
+    }),
+
+    hasTerms: computed((): boolean => getters.terms.value.length > 0),
+
+    isCurrentTerm: computed(() => (termId: T.Term["id"]): boolean => {
+      return getters.currentTerm.value?.id === termId;
+    }),
+
+    termSelectOptions: computed((): T.SelectOption[] =>
+      getters.terms.value.map((term) => ({
+        text: term.name,
+        value: term.id,
+      })),
+    ),
   };
 
   const actions = {
     async init() {
       // if we're already loading or loaded, don't do anything
-      if (state.loadStatus.value !== "idle") return;
+      if (state.loadStatus !== "idle") return;
 
       try {
         await actions.fetchTerms();
-        state.loadStatus.value = "complete";
+        state.loadStatus = "complete";
       } catch (e) {
-        state.loadStatus.value = "error";
+        state.loadStatus = "error";
         throw new Error(`Failed to load terms: ${e}`);
       }
     },
     async fetchTerms() {
-      const allTerms = await api.getTerms();
-      const MAX_TERM_DATE = dayjs().add(3, "year").format("YYYY-MM-DD");
+      const allTerms = await api.fetchTerms();
+      const MAX_TERM_DATE = dayjs().add(5, "year").format("YYYY-MM-DD");
 
-      state.terms.value = allTerms.filter((t) => {
+      const termInRange = allTerms.filter((t) => {
         // ignore terms that are super far out
         return dayjs(t.endDate).isSameOrBefore(MAX_TERM_DATE);
       });
+      state.termLookup = keyBy<T.Term>(termInRange, "id");
+      return state.termLookup;
     },
   };
 
-  // initialize the store
-  actions.init();
-
   return {
-    ...state,
+    ...toRefs(state),
     ...getters,
     ...actions,
   };

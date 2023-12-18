@@ -53,9 +53,12 @@
                 v-if="groupTypes"
                 id="groupTypes"
                 v-model="localGroup.group_type"
-                v-model:options="groupTypes"
+                :options="groupTypes"
                 placeholder="Select..."
                 :canAddNewOption="true"
+                label="Group Type"
+                :showLabel="false"
+                @addNewOption="(newGroupType) => groupTypes.push(newGroupType)"
               />
             </div>
           </div>
@@ -77,6 +80,8 @@
                 :modelValue="parentGroup"
                 :options="groups"
                 placeholder="Select..."
+                label="Parent Group"
+                :showLabel="false"
                 @update:modelValue="handleUpdateParentGroup"
               />
             </div>
@@ -267,7 +272,9 @@
             v-model="newRole"
             :options="filteredRoles"
             :canAddNewOption="true"
-            @update:options="(updatedRoles) => (roles = updatedRoles)"
+            label="Role"
+            :showLabel="false"
+            @addNewOption="(newOption) => roles.push(newOption)"
           />
         </div>
         <div class="col-sm-3">
@@ -299,7 +306,7 @@ import Members from "./Members.vue";
 import Modal from "./Modal.vue";
 import FolderWidget from "./FolderWidget.vue";
 import PersonSearch from "./PersonSearch.vue";
-import { dayjs, axios } from "@/utils";
+import { dayjs, axios, getTempId, isTempId } from "@/utils";
 
 export default {
   components: {

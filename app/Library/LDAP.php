@@ -6,6 +6,22 @@ namespace App\Library;
 class LDAP
 {
 
+    public static function lookupUserCached($lookupValue, $lookupType = "uid") {
+        $ldap = cache()->remember(
+            "ldap-lookup-$lookupType-$lookupValue",
+            now()->addHours(6),
+            function () use ($lookupValue, $lookupType) {
+                $data = self::lookupUser($lookupValue, $lookupType);
+
+                // this is a workaround so that null values can be cached
+                // if we return null directly, Laravel will interpret that
+                // as a cache miss
+                return ['data' => $data];
+            }
+        );
+        return $ldap['data'];
+    }
+
 	public static function lookupUser($lookupValue, $lookupType="uid", $existingUser =null) {
 		$connect = LDAP::getConnection();
         if(!$connect) {
@@ -29,7 +45,7 @@ class LDAP
                 $foundUser->assignRole("basic user");
                 $foundUser->assignRole("view user");
             }
-            
+
             $foundUser->umndid = isset($info[0]["umndid"])?$info[0]["umndid"][0]:"";
             $foundUser->surname = isset($info[0]["sn"])?$info[0]["sn"][0]:"";
             $foundUser->givenname = isset($info[0]["givenname"])?$info[0]["givenname"][0]:"";
@@ -44,7 +60,7 @@ class LDAP
             break;
         }
 
-        
+
         return $foundUser;
 	}
 
@@ -57,11 +73,11 @@ class LDAP
         $filter = "(" . $lookupType . "=" . $lookupValue . ")";
         $search = ldap_search([$connect], $base_dn, $filter, [], 0, 10)
         or exit(">>Unable to search ldap server<<");
-        
+
         $returnArray = [];
 
         foreach($search as $readItem) {
-            
+
             $info = ldap_get_entries($connect, $readItem);
             if($info["count"] == 0) {
                 break;
@@ -73,8 +89,8 @@ class LDAP
                 if(isset($entry["umndisplaymail"][0])) {
                     $returnArray[] = ["full_name"=>$entry["displayname"][0], "mail"=>$entry["umndisplaymail"][0], "uid"=>$entry['uid'][0], "umndid"=>$entry["umndid"][0]];
                 }
-                
-                
+
+
             }
         }
         return $returnArray;

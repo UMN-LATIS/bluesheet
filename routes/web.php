@@ -12,6 +12,12 @@
 */
 
 use App\Http\Controllers\LeaveArtifactController;
+use App\Http\Controllers\TermController;
+use App\Http\Controllers\CoursePlanning\GroupSectionController;
+use App\Http\Controllers\CoursePlanning\GroupEnrollmentController;
+use App\Http\Controllers\CoursePlanning\GroupPersonController;
+use App\Http\Controllers\CoursePlanning\GroupLeaveController;
+use App\Http\Controllers\CoursePlanning\GroupCourseController;
 
 Route::impersonate();
 
@@ -62,8 +68,7 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
 
     Route::get('lookup/department/{deptId?}', 'LookupController@departmentInfo');
 
-    Route::get('terms', 'SchedulingController@getTerms');
-    Route::get('terms/{termId}/groups/{group}/courses', 'SchedulingController@getDeptCoursesForTerm');
+    Route::get('terms', [TermController::class, 'index']);
     Route::get('eligibility/{type}', 'UserController@eligibility');
 
     // Laravel thinks the singular of `leaves` is `leaf`
@@ -81,6 +86,14 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
     Route::post('leaves/{leave}/artifacts', [LeaveArtifactController::class, 'store']);
     Route::put('leaves/{leave}/artifacts/{leaveArtifact}', [LeaveArtifactController::class, 'update']);
     Route::delete('leaves/{leave}/artifacts/{leaveArtifact}', [LeaveArtifactController::class, 'destroy']);
+
+    Route::prefix('course-planning')->group(function () {
+        Route::get('/groups/{group}/courses', [GroupCourseController::class, 'index']);
+        Route::resource('/groups/{group}/sections', GroupSectionController::class);
+        Route::resource('/groups/{group}/enrollments', GroupEnrollmentController::class);
+        Route::get('/groups/{group}/people', [GroupPersonController::class, 'index']);
+        Route::get('/groups/{group}/leaves', [GroupLeaveController::class, 'index']);
+    });
 
     // Catchall 404 JSON route
     Route::any('{any}', function () {

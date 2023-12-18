@@ -60,61 +60,9 @@ export async function updateUserLeaves(userId: number, leaves: T.Leave[]) {
   return res.data;
 }
 
-let getTermsCache = [] as T.Term[];
-export async function getTerms() {
-  if (getTermsCache.length) {
-    return getTermsCache;
-  }
+export async function fetchTerms() {
   const res = await axios.get<T.Term[]>(`/api/terms`);
-  getTermsCache = res.data;
   return res.data;
-}
-
-const toCourse = (rawCourse: T.ApiCourseInstructorRecord): T.Course => ({
-  shortCode: `${rawCourse.subject}-${rawCourse.catalogNumber}`,
-  classNumber: rawCourse.classNumber,
-  term: rawCourse.term,
-  subject: rawCourse.subject,
-  catalogNumber: rawCourse.catalogNumber,
-  classSection: rawCourse.classSection,
-  title: rawCourse.title,
-  enrollmentCap: rawCourse.enrollmentCap,
-  enrollmentTotal: rawCourse.enrollmentTotal,
-  cancelled: rawCourse.cancelled,
-  courseType: rawCourse.courseType,
-  courseLevel: rawCourse.courseLevel,
-  instructors: [],
-});
-
-export async function getGroupCoursesByTerm({
-  groupId,
-  termId,
-  roles,
-}: {
-  groupId: number;
-  termId: number;
-  roles: T.InstructorRole[];
-}) {
-  const res = await axios.get<T.ApiCourseInstructorRecord[]>(
-    `/api/terms/${termId}/groups/${groupId}/courses`,
-    {
-      params: {
-        includeRoles: roles.length ? roles.join(",") : undefined,
-      },
-    },
-  );
-
-  const coursesByClassNumber = new Map<T.Course["classNumber"], T.Course>();
-
-  res.data.forEach((rawCourse) => {
-    const course =
-      coursesByClassNumber.get(rawCourse.classNumber) ?? toCourse(rawCourse);
-    course.instructors.push(rawCourse.instructor);
-
-    coursesByClassNumber.set(rawCourse.classNumber, course);
-  });
-
-  return [...coursesByClassNumber.values()];
 }
 
 export async function fetchGroup(groupId: number) {

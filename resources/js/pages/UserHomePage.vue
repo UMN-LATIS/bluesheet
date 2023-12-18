@@ -8,7 +8,10 @@
         class="tw-flex tw-justify-between tw-flex-wrap tw-gap-4 tw-items-baseline"
       >
         <ViewUser :user="user" />
-        <aside v-if="user && isCurrentUser" class="tw-max-w-xs">
+        <aside
+          v-if="user && isCurrentUser"
+          class="tw-max-w-xs tw-bg-neutral-100 tw-p-4 tw-rounded-md tw-w-full"
+        >
           <h2
             class="tw-inline-block tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-mb-4"
           >
