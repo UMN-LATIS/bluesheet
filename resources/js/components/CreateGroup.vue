@@ -23,13 +23,15 @@
         <ComboBox
           v-if="groupTypes"
           id="groupTypes"
-          v-model="groupType"
-          v-model:options="groupTypes"
+          :modelValue="groupType"
+          :options="groupTypes"
           placeholder="Select..."
           :canAddNewOption="true"
           :nullable="true"
           label="Group Type"
           :showLabel="false"
+          @update:modelValue="groupType = $event"
+          @addNewOption="handleAddNewGroupType"
         />
       </div>
     </div>
@@ -64,6 +66,8 @@
 import Modal from "./Modal.vue";
 import FolderWidget from "./FolderWidget.vue";
 import ComboBox from "./ComboBox.vue";
+import { getTempId, isTempId } from "@/utils";
+import { nextTick } from "vue";
 
 export default {
   components: {
@@ -80,7 +84,6 @@ export default {
       groupType: null,
       groupTypes: [],
       parentOrganization: null,
-      newGroupType: "",
     };
   },
   watch: {
@@ -105,14 +108,19 @@ export default {
       });
   },
   methods: {
-    handleAddNewGroupType() {
+    handleAddNewGroupType({ label }) {
       const newOption = {
-        id: this.newGroupType,
-        label: this.newGroupType,
+        id: getTempId(),
+        label,
       };
-      this.groupTypes.push(newOption);
-      this.groupType = newOption;
-      this.newGroupType = "";
+      this.groupTypes = [...this.groupTypes, newOption];
+
+      // need to wait for combobox options to update
+      // before setting the new option as the selected
+      // otherwise the checkmark will not show
+      nextTick(() => {
+        this.groupType = newOption;
+      });
     },
     close: function () {
       this.groupName = null;
@@ -136,7 +144,10 @@ export default {
       axios
         .post("/api/group", {
           groupName: this.groupName,
-          groupType: this.groupType,
+          groupType: {
+            id: isTempId(this.groupType.id) ? null : this.groupType.id,
+            label: this.groupType.label,
+          },
           parentOrganization: this.parentOrganization,
         })
         .then((res) => {
