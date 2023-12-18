@@ -25,7 +25,7 @@ describe("Groups UI", () => {
       cy.visit("/");
       cy.get(".app-header").contains("Create Group").click();
       cy.get("#groupName").type("Test Group");
-      cy.get("#groupTypes").type("Committee{enter}");
+      cy.get("#groupTypes input").type("Committee{enter}");
       cy.get("#parentOrganization").select("CLA");
       cy.get(".btn").contains("Create Group").click();
       cy.contains("Test Group");
@@ -54,7 +54,7 @@ describe("Groups UI", () => {
       cy.contains("Edit Group").click();
       cy.contains("Add Member").click();
       cy.get("#internetId").type("admin");
-      cy.get(".combobox__input-group > #roles").type("Member{enter}");
+      cy.get("#roles input").type("Member{enter}");
       cy.get(".modal-container").contains("Add Member").click();
       cy.contains("McAdmin");
       cy.contains("Save").click();
