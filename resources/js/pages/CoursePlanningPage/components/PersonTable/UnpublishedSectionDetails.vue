@@ -1,12 +1,13 @@
 <template>
   <div
+    v-if="isUnpublishedViewable"
     class="tw-bg-neutral-100 tw-py-2 tw-flex tw-gap-1 tw-items-top tw-italic tw-rounded"
     :class="{
-      'tw-cursor-move tw-shadow': isEditable,
-      'tw-cursor-default tw-px-2': !isEditable,
+      'tw-cursor-move tw-shadow': isUnpublishedEditable,
+      'tw-cursor-default tw-px-2': !isUnpublishedEditable,
     }"
   >
-    <DragHandleIcon v-if="isEditable" class="tw-inline-block" />
+    <DragHandleIcon v-if="isUnpublishedEditable" class="tw-inline-block" />
     <div class="tw-flex-1 tw-overflow-hidden">
       <h2 class="tw-text-sm tw-m-0">
         {{ course.subject }} {{ course.catalogNumber }}
@@ -15,7 +16,7 @@
         {{ course.title }}
       </p>
     </div>
-    <MoreMenu v-if="isEditable" class="tw-not-italic">
+    <MoreMenu v-if="isUnpublishedEditable" class="tw-not-italic">
       <MoreMenuItem
         class="tw-flex tw-gap-2 tw-items-center"
         @click="isShowingEditModal = true"
@@ -27,7 +28,6 @@
       </MoreMenuItem>
     </MoreMenu>
     <EditDraftSectionModal
-      v-if="isViewable"
       :show="isShowingEditModal"
       :initialPerson="person"
       :initialTerm="term"
