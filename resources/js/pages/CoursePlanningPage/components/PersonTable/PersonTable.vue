@@ -20,9 +20,9 @@
           }"
         />
       </colgroup>
-      <template #thead>
+      <THead>
         <ReportTableHeaderRow :label="label" />
-      </template>
+      </THead>
       <TBody>
         <PersonTableRow
           v-for="person in coursePlanningStore.personStore.allPeople"
@@ -41,7 +41,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { Table, TBody } from "@/components/Table";
+import { Table, TBody, THead } from "@/components/Table";
 import PersonTableRow from "./PersonTableRow.vue";
 import ReportTableHeaderRow from "../ReportTableHeaderRow.vue";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";

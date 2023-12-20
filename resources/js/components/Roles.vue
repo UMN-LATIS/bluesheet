@@ -15,49 +15,51 @@
       </div>
     </div>
     <Table name="Roles">
-      <template #thead>
+      <THead>
         <tr>
           <Th>Group</Th>
           <Th>Role</Th>
           <Th>From</Th>
           <Th>Until</Th>
         </tr>
-      </template>
-      <tr v-if="!filteredList.length">
-        <Td
-          class="tw-text-center !tw-p-6 tw-italic tw-text-neutral-500"
-          colspan="4"
-        >
-          No Roles
-        </Td>
-      </tr>
-      <tr v-for="(membership, index) in filteredList" :key="index">
-        <Td>
-          <router-link
-            v-if="membership.group.id"
-            :to="{ name: 'group', params: { groupId: membership.group.id } }"
-            ><GroupTitle :group="membership.group"
-          /></router-link>
-          <span v-if="!membership.group.id"
-            ><GroupTitle :group="membership.group"
-          /></span>
-        </Td>
-        <Td>{{ membership.role.label }}</Td>
-        <Td>
-          {{
-            membership.start_date
-              ? dayjs(membership.start_date).format("MMM D, YYYY")
-              : ""
-          }}
-        </Td>
-        <Td>
-          {{
-            membership.end_date
-              ? dayjs(membership.end_date).format("MMM D, YYYY")
-              : ""
-          }}
-        </Td>
-      </tr>
+      </THead>
+      <TBody>
+        <tr v-if="!filteredList.length">
+          <Td
+            class="tw-text-center !tw-p-6 tw-italic tw-text-neutral-500"
+            colspan="4"
+          >
+            No Roles
+          </Td>
+        </tr>
+        <tr v-for="(membership, index) in filteredList" :key="index">
+          <Td>
+            <router-link
+              v-if="membership.group.id"
+              :to="{ name: 'group', params: { groupId: membership.group.id } }"
+              ><GroupTitle :group="membership.group"
+            /></router-link>
+            <span v-if="!membership.group.id"
+              ><GroupTitle :group="membership.group"
+            /></span>
+          </Td>
+          <Td>{{ membership.role.label }}</Td>
+          <Td>
+            {{
+              membership.start_date
+                ? dayjs(membership.start_date).format("MMM D, YYYY")
+                : ""
+            }}
+          </Td>
+          <Td>
+            {{
+              membership.end_date
+                ? dayjs(membership.end_date).format("MMM D, YYYY")
+                : ""
+            }}
+          </Td>
+        </tr>
+      </TBody>
     </Table>
   </div>
 </template>
@@ -66,7 +68,7 @@
 import { ref, computed } from "vue";
 import GroupTitle from "../components/GroupTitle.vue";
 import { dayjs } from "@/utils";
-import { Table, Td, Th } from "@/components/Table";
+import { Table, Td, Th, THead, TBody } from "@/components/Table";
 import { Membership } from "@/types";
 import CheckboxGroup from "./CheckboxGroup.vue";
 

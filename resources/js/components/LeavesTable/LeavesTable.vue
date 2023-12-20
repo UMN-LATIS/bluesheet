@@ -24,7 +24,7 @@
     </div>
 
     <Table>
-      <template #thead>
+      <THead>
         <tr>
           <Th>
             <span class="tw-sr-only">Actions</span>
@@ -36,20 +36,22 @@
           <Th>End Date</Th>
           <Th v-if="$can('edit leaves')"></Th>
         </tr>
-      </template>
-      <tr v-if="!sortedAndFilteredLeaves.length">
-        <Td
-          :colspan="$can('edit leaves') ? 6 : 5"
-          class="tw-text-center !tw-p-6 tw-italic tw-text-neutral-500"
-        >
-          No Leaves
-        </Td>
-      </tr>
-      <LeaveTableRow
-        v-for="leave in sortedAndFilteredLeaves"
-        :key="leave.id"
-        :leave="leave"
-      />
+      </THead>
+      <TBody>
+        <tr v-if="!sortedAndFilteredLeaves.length">
+          <Td
+            :colspan="$can('edit leaves') ? 6 : 5"
+            class="tw-text-center !tw-p-6 tw-italic tw-text-neutral-500"
+          >
+            No Leaves
+          </Td>
+        </tr>
+        <LeaveTableRow
+          v-for="leave in sortedAndFilteredLeaves"
+          :key="leave.id"
+          :leave="leave"
+        />
+      </TBody>
     </Table>
   </div>
 </template>
@@ -59,7 +61,7 @@ import { computed, ref } from "vue";
 import { dayjs, $can, isTempId } from "@/utils";
 import { Leave } from "@/types";
 import Button from "@/components/Button.vue";
-import { Table, Th, Td } from "@/components/Table";
+import { Table, Th, Td, THead, TBody } from "@/components/Table";
 import CheckboxGroup from "@/components/CheckboxGroup.vue";
 import LeaveTableRow from "./LeaveTableRow.vue";
 import { useUserStore } from "@/stores/useUserStore";

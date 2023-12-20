@@ -10,14 +10,7 @@
           'better-table--sticky-first-col': stickyFirstColumn,
         }"
       >
-        <thead class="tw-bg-gray-50">
-          <slot name="thead" />
-        </thead>
-
         <slot />
-        <tfoot>
-          <slot name="tfoot" />
-        </tfoot>
       </table>
     </div>
   </div>
