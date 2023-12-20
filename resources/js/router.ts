@@ -134,6 +134,10 @@ export const router = createRouter({
       redirect: (to) => `/course-planning/groups/${to.params.groupId}`,
     },
     {
+      path: "/test/dragdrop",
+      component: () => import("./pages/TestDragDropPage.vue"),
+    },
+    {
       name: "error",
       path: "/error/:errorCode",
       component: ErrorPage,
