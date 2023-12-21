@@ -38,9 +38,11 @@ const props = withDefaults(
   defineProps<{
     id: DragListId;
     list: ItemType[];
+    meta?: Record<string, unknown>;
     disabled?: boolean;
   }>(),
   {
+    meta: undefined,
     disabled: false,
   },
 );

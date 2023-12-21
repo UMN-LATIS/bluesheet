@@ -18,7 +18,7 @@
     />
 
     <DragDrop
-      :id="`person-${person.id}-term-${term.id}`"
+      :id="`emplid.${person.emplid}-termid.${term.id}`"
       :list="localUnpublishedSections"
       :disabled="!arePlannedSectionsEditable"
       class="tw-flex tw-flex-col tw-gap-1 tw-pb-12 tw-flex-1 tw-h-full group"
@@ -134,17 +134,31 @@ function handleSaveTentativeCourse({ term, course, person, role }) {
   });
 }
 
+function getPreviousPersonFromEvent(
+  event: DropEvent<T.CourseSection>,
+): T.Person | null {
+  // use the source list id to get the person id
+  const personInfo = (event.sourceListId as string).split("-")[0];
+  const personEmplidStr = personInfo.split(".")[1];
+  const personEmplid = Number.parseInt(personEmplidStr);
+
+  // then use the person id to get the person
+  return coursePlanningStore.personStore.getPersonByEmplId(personEmplid);
+}
+
 async function handeSectionChange(event: DropEvent<T.CourseSection>) {
   const previousSection = event.item;
+  const previousPerson = getPreviousPersonFromEvent(event);
 
-  const updatedSection: T.CourseSection = {
-    ...previousSection,
-    termId: props.term.id,
-  };
+  if (!previousPerson) {
+    throw new Error(
+      `Could not find person for section ${previousSection.id} in event ${event}`,
+    );
+  }
 
   const previousEnrollment =
     coursePlanningStore.enrollmentStore.getEnrollmentForPersonInSection(
-      props.person,
+      previousPerson,
       previousSection,
     );
 
@@ -154,13 +168,18 @@ async function handeSectionChange(event: DropEvent<T.CourseSection>) {
     );
   }
 
-  coursePlanningStore.courseSectionStore.updateSection(updatedSection);
+  const updatedSection: T.CourseSection = {
+    ...previousSection,
+    termId: props.term.id,
+  };
 
+  coursePlanningStore.courseSectionStore.updateSection(updatedSection);
   coursePlanningStore.enrollmentStore.createEnrollment({
     person: props.person,
     section: updatedSection,
     role: initialRole.value,
   });
+
   coursePlanningStore.enrollmentStore.removeEnrollment(previousEnrollment);
 }
 </script>
