@@ -3,6 +3,7 @@ import { reactive, toRefs, computed } from "vue";
 import * as api from "@/api";
 import * as T from "@/types";
 import { groupBy, keyBy } from "lodash";
+import { getTempId } from "@/utils";
 interface EnrollmentStoreState {
   activeGroupId: T.Group["id"] | null;
   enrollmentLookup: Record<T.Enrollment["id"], T.Enrollment | undefined>;
@@ -93,24 +94,47 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
         throw new Error("active group id is not set");
       }
 
-      const enrollment = await api.createEnrollmentInGroup({
-        person,
-        section,
+      // optimistic update
+      const tempId = getTempId();
+      const tempEnrollment: T.Enrollment = {
+        id: `db-${tempId}`,
+        dbId: tempId,
+        emplid: person.emplid,
+        sectionId: section.id,
         role,
-        groupId: state.activeGroupId,
-      });
+      };
+      state.enrollmentLookup[tempEnrollment.id] = tempEnrollment;
 
-      // update enrollment lookup
-      state.enrollmentLookup[enrollment.id] = enrollment;
-      return enrollment;
+      try {
+        const enrollment = await api.createEnrollmentInGroup({
+          person,
+          section,
+          role,
+          groupId: state.activeGroupId,
+        });
+
+        // update enrollment lookup
+        state.enrollmentLookup[enrollment.id] = enrollment;
+        delete state.enrollmentLookup[tempEnrollment.id];
+        return enrollment;
+      } catch (e) {
+        delete state.enrollmentLookup[tempEnrollment.id];
+        throw e;
+      }
     },
     async removeEnrollment(enrollment: T.Enrollment): Promise<void> {
       if (!state.activeGroupId) {
         throw new Error("active group id is not set");
       }
-
-      await api.deleteEnrollmentFromGroup(enrollment, state.activeGroupId);
+      const existingEnrollment = state.enrollmentLookup[enrollment.id];
       delete state.enrollmentLookup[enrollment.id];
+
+      try {
+        await api.deleteEnrollmentFromGroup(enrollment, state.activeGroupId);
+      } catch (e) {
+        state.enrollmentLookup[enrollment.id] = existingEnrollment;
+        throw e;
+      }
     },
 
     async updateEnrollment(enrollment: T.Enrollment): Promise<void> {
@@ -118,14 +142,21 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
         throw new Error("active group id is not set");
       }
 
-      const updatedEnrollment = await api.updateEnrollmentInGroup(
-        enrollment,
-        state.activeGroupId,
-      );
+      // optimistic update
+      const existingEnrollment = state.enrollmentLookup[enrollment.id];
+      state.enrollmentLookup[enrollment.id] = enrollment;
 
-      // remove the old enrollment. The enrollment is keyed by
-
-      state.enrollmentLookup[updatedEnrollment.id] = updatedEnrollment;
+      try {
+        const updatedEnrollment = await api.updateEnrollmentInGroup(
+          enrollment,
+          state.activeGroupId,
+        );
+        delete state.enrollmentLookup[enrollment.id];
+        state.enrollmentLookup[updatedEnrollment.id] = updatedEnrollment;
+      } catch (e) {
+        state.enrollmentLookup[enrollment.id] = existingEnrollment;
+        throw e;
+      }
     },
 
     removeAllSectionEnrollmentFromStore(sectionId: T.CourseSection["id"]) {
