@@ -22,6 +22,7 @@ import OrgpReportPage from "./pages/reports/OrgpReportPage.vue";
 import GroupAdminsReportPage from "./pages/reports/GroupAdmins.vue";
 import EligibilityReportPage from "./pages/reports/EligibilityReport.vue";
 import CoursePlanningPage from "./pages/CoursePlanningPage/CoursePlanningPage.vue";
+import TestDragDropPage from "./pages/TestDragDropPage.vue";
 import { parseIntFromRouteParam as parseIntFromParam } from "@/utils";
 
 export const router = createRouter({
@@ -135,7 +136,7 @@ export const router = createRouter({
     },
     {
       path: "/test/dragdrop",
-      component: () => import("./pages/TestDragDropPage.vue"),
+      component: TestDragDropPage,
     },
     {
       name: "error",
