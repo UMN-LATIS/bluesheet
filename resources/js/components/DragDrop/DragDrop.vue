@@ -3,8 +3,8 @@
     ref="dragDropWrapperRef"
     class="dragdrop tw-p-2 tw-min-h-[10rem] tw-w-full tw-rounded"
     :class="{
-      'dragdrop--is-dragging tw-bg-neutral-100': isDroppable,
-      'tw-bg-neutral-50': !disabled,
+      'dragdrop--is-droppable tw-bg-neutral-100': isDraggedOverDropZone,
+      'tw-bg-neutral-50': !disabled && !isDraggedOverDropZone,
     }"
     @dragover.prevent
     @dragenter="handleDragEnter"
@@ -56,8 +56,8 @@ onMounted(() => {
   dragDropStore.register(props.id, props.list);
 });
 
-const isDroppable = computed(() => {
-  return dragDropStore.targetListId === props.id && !props.disabled;
+const isDraggedOverDropZone = computed(() => {
+  return dragDropStore.targetListId === props.id;
 });
 
 function isItemBeingDragged(item: DragListItem) {

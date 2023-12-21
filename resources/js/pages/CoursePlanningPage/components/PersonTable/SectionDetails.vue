@@ -25,12 +25,18 @@ import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningSt
 import PublishedSectionDetails from "./PublishedSectionDetails.vue";
 import UnpublishedSectionDetails from "./UnpublishedSectionDetails.vue";
 
-const props = defineProps<{
-  section: T.CourseSection;
-  person: T.Person;
-  isUnpublishedEditable: boolean;
-  isUnpublishedViewable: boolean;
-}>();
+const props = withDefaults(
+  defineProps<{
+    section: T.CourseSection;
+    person: T.Person;
+    isUnpublishedEditable?: boolean;
+    isUnpublishedViewable?: boolean;
+  }>(),
+  {
+    isUnpublishedEditable: false,
+    isUnpublishedViewable: false,
+  },
+);
 
 const planningStore = useRootCoursePlanningStore();
 
