@@ -19,10 +19,11 @@
 
     <DragDrop
       :id="`emplid.${person.emplid}-termid.${term.id}`"
-      :list="localUnpublishedSections"
+      group="person-table"
+      :list="unpublishedSections"
       :disabled="!arePlannedSectionsEditable"
       class="tw-flex tw-flex-col tw-gap-1 tw-pb-12 tw-flex-1 tw-h-full group"
-      @drop="handeSectionChange"
+      @drop="handleSectionChange"
     >
       <template #item="{ element: section }">
         <SectionDetails
@@ -61,7 +62,6 @@ import { ref, computed } from "vue";
 import EditDraftSectionModal from "../EditDraftSectionModal.vue";
 import * as T from "@/types";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
-import { watchDebounced } from "@vueuse/core";
 import { $can } from "@/utils";
 import { DragDrop } from "@/components/DragDrop";
 import { DropEvent } from "@/types";
@@ -87,12 +87,6 @@ const publishedSections = computed(() => {
 const unpublishedSections = computed(() => {
   return courseSections.value.filter((section) => !section.isPublished);
 });
-
-// use local course sections to avoid section jumping back
-// to original position while api call is made
-const localUnpublishedSections = ref<T.CourseSection[]>(
-  unpublishedSections.value,
-);
 
 const isShowingAddCourse = ref(false);
 
@@ -146,7 +140,7 @@ function getPreviousPersonFromEvent(
   return coursePlanningStore.personStore.getPersonByEmplId(personEmplid);
 }
 
-async function handeSectionChange(event: DropEvent<T.CourseSection>) {
+async function handleSectionChange(event: DropEvent<T.CourseSection>) {
   const previousSection = event.item;
   const previousPerson = getPreviousPersonFromEvent(event);
 

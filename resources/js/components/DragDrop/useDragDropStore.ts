@@ -1,78 +1,62 @@
+import { computed, reactive, toRefs, UnwrapRef } from "vue";
 import { defineStore } from "pinia";
-import { DragListItem, DragListId } from "@/types";
+import { DragListId } from "@/types";
 
-export const useDragDropStore = defineStore("dragDrop", {
-  state: () => ({
-    dragLists: {} as Record<DragListId, DragListItem[]>,
-    activeItemId: null as DragListItem["id"] | null,
-    sourceListId: null as DragListId | null,
-    targetListId: null as DragListId | null,
-  }),
-  getters: {
-    isDragging(state): boolean {
-      return state.activeItemId !== null;
-    },
-    sourceItemIndex(state): number {
-      if (!state.activeItemId || !state.sourceListId) {
-        return -1;
-      }
+interface DragDropState<ItemType> {
+  activeItem: ItemType | null;
+  sourceListId: DragListId | null;
+  targetListId: DragListId | null;
+}
 
-      const sourceList = state.dragLists[state.sourceListId];
-      return sourceList.findIndex((item) => item.id === state.activeItemId);
-    },
-    activeItem(state): DragListItem | null {
-      if (!state.activeItemId || !state.sourceListId) {
-        return null;
-      }
+const groupStores = new Map<string, ReturnType<typeof useDragDropStore>>();
 
-      const sourceList = state.dragLists[state.sourceListId];
-      return sourceList.find((item) => item.id === state.activeItemId) || null;
-    },
-  },
-  actions: {
-    register(listId: DragListId, list: DragListItem[]) {
-      this.dragLists[listId] = list;
-    },
-    startDragging({
-      itemId,
-      listId,
-    }: {
-      itemId: DragListItem["id"];
-      listId: DragListId;
-    }) {
-      this.activeItemId = itemId;
-      this.sourceListId = listId;
-      this.targetListId = listId;
-    },
-    stopDragging() {
-      this.activeItemId = null;
-      this.sourceListId = null;
-      this.targetListId = null;
-    },
-    setTargetDragListId(targetDragListId: DragListId | null) {
-      this.targetListId = targetDragListId;
-    },
-    moveActiveItem({
-      item,
-      sourceListId,
-      targetListId,
-    }: {
-      item: DragListItem;
-      sourceListId: DragListId;
-      targetListId: DragListId;
-    }) {
-      const sourceList = this.dragLists[sourceListId];
-      const targetList = this.dragLists[targetListId];
+// wrap defineStore with a function so that we can use a generic item type
+// and namespace dragdrop stores
+export const useDragDropStore = <ItemType>(groupName: string) => {
+  if (groupStores.has(groupName)) {
+    const store = groupStores.get(groupName);
+    return store();
+  }
 
-      const sourceItemIndex = sourceList.findIndex(
-        (listItem) => item.id === listItem.id,
-      );
+  const store = defineStore(`${groupName}-dragDrop`, () => {
+    const state = reactive<DragDropState<ItemType>>({
+      activeItem: null as ItemType | null,
+      sourceListId: null as DragListId | null,
+      targetListId: null as DragListId | null,
+    });
 
-      // remove item from old list
-      sourceList.splice(sourceItemIndex, 1)[0];
+    const getters = {
+      isDragging: computed((): boolean => {
+        return state.activeItem !== null;
+      }),
+    };
 
-      // add to new list
-      targetList.push(item);
-    },
-  },
-});
+    const actions = {
+      startDragging({
+        item,
+        sourceListId,
+      }: {
+        item: ItemType;
+        sourceListId: DragListId;
+      }) {
+        state.activeItem = item as UnwrapRef<ItemType>;
+        state.sourceListId = sourceListId;
+        state.targetListId = sourceListId;
+      },
+      stopDragging() {
+        state.activeItem = null;
+        state.sourceListId = null;
+        state.targetListId = null;
+      },
+    };
+
+    return {
+      ...toRefs(state),
+      ...getters,
+      ...actions,
+    };
+  });
+
+  groupStores.set(groupName, store);
+  return store();
+};

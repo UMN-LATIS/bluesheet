@@ -29,20 +29,19 @@
     <slot name="footer" />
   </div>
 </template>
-<script setup lang="ts" generic="ItemType extends DragListItem">
-import { ref, onMounted, computed } from "vue";
+<script setup lang="ts" generic="ItemType extends { id: string | number; }">
+import { ref, computed } from "vue";
 import { useDragDropStore } from "./useDragDropStore";
 import type { DragListItem, DragListId, DropEvent } from "@/types";
 
 const props = withDefaults(
   defineProps<{
     id: DragListId;
+    group: string;
     list: ItemType[];
-    meta?: Record<string, unknown>;
     disabled?: boolean;
   }>(),
   {
-    meta: undefined,
     disabled: false,
   },
 );
@@ -51,12 +50,8 @@ const emit = defineEmits<{
   (eventName: "drop", componentEvent: DropEvent<ItemType>): void;
 }>();
 
-const dragDropStore = useDragDropStore();
+const dragDropStore = useDragDropStore<ItemType>(props.group);
 const dragDropWrapperRef = ref<HTMLElement | null>(null);
-
-onMounted(() => {
-  dragDropStore.register(props.id, props.list);
-});
 
 const isDraggedOverDropZone = computed(() => {
   return dragDropStore.targetListId === props.id;
@@ -65,23 +60,20 @@ const isDraggedOverDropZone = computed(() => {
 function isItemBeingDragged(item: DragListItem) {
   return (
     dragDropStore.sourceListId === props.id &&
-    dragDropStore.activeItemId === item.id
+    dragDropStore.activeItem?.id === item.id
   );
 }
 
 function handleDragStart(item: DragListItem, event: DragEvent) {
   dragDropStore.startDragging({
-    listId: props.id,
-    itemId: item.id,
+    sourceListId: props.id,
+    item,
   });
 
-  if (!event.dataTransfer) {
-    // maybe a mobile device?
-    console.warn("event.dataTransfer is null");
-    return;
+  // maybe null if a mobile device?
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = "move";
   }
-
-  event.dataTransfer.effectAllowed = "move";
 }
 
 function handleDragEnd() {
@@ -98,7 +90,7 @@ function handleDragEnter() {
 
   // this is the first enter into the zone
   if (dragEnterCount.value === 1) {
-    dragDropStore.setTargetDragListId(props.id);
+    dragDropStore.targetListId = props.id;
   }
 }
 
@@ -107,37 +99,27 @@ function handleDragLeave() {
 
   // this is the last leave of the zone
   if (dragEnterCount.value === 0) {
-    dragDropStore.setTargetDragListId(null);
+    dragDropStore.targetListId = null;
   }
 }
 
 function handleDrop(event: DragEvent) {
   event.preventDefault();
-
-  if (!event.dataTransfer) {
-    // maybe a mobile device?
-    console.warn("event.dataTransfer is null");
-    return;
-  }
-
-  const activeItem = dragDropStore.activeItem as ItemType;
   if (
-    !activeItem ||
+    !dragDropStore.activeItem ||
     !dragDropStore.sourceListId ||
     !dragDropStore.targetListId
   ) {
     throw new Error("No active item found");
   }
 
-  const dropEvent: DropEvent<ItemType> = {
-    item: activeItem,
+  emit("drop", {
+    item: dragDropStore.activeItem as ItemType,
     sourceListId: dragDropStore.sourceListId,
     targetListId: dragDropStore.targetListId,
-  };
+  });
 
-  emit("drop", dropEvent);
-
-  dragDropStore.moveActiveItem(dropEvent);
+  dragDropStore.stopDragging();
   dragEnterCount.value = 0;
 }
 </script>
