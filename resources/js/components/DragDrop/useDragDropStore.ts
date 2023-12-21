@@ -9,7 +9,6 @@ export type DragListId = string | number;
 
 export const useDragDropStore = defineStore("dragDrop", {
   state: () => ({
-    nextDragListId: 0,
     dragLists: {} as Record<DragListId, DragListItem[]>,
     activeItemId: null as DragListItem["id"] | null,
     sourceListId: null as DragListId | null,

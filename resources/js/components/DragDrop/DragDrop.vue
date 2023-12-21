@@ -25,9 +25,11 @@
     >
       <slot name="item" :element="item" />
     </div>
+
+    <slot name="footer" />
   </div>
 </template>
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends DragListItem">
 import { ref, onMounted, computed } from "vue";
 import {
   useDragDropStore,
@@ -37,7 +39,7 @@ import {
 
 const props = defineProps<{
   id: DragListId;
-  list: DragListItem[];
+  list: T[];
 }>();
 
 const dragDropStore = useDragDropStore();

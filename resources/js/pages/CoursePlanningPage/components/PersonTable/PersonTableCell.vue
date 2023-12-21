@@ -9,7 +9,35 @@
       {{ leave.description }} ({{ leave.type }})
     </LeaveChip>
 
-    <Draggable
+    <DragDrop
+      id="`person-${person.id}-term-${term.id}`"
+      :list="localCourseSections"
+      class="tw-flex tw-flex-col tw-gap-1 tw-pb-12 tw-flex-1 tw-h-full group"
+      :class="{
+        'tw-bg-neutral-50 tw-rounded tw-p-2': arePlannedSectionsEditable,
+      }"
+      @change="handeSectionChange"
+    >
+      <template #item="{ element: section }">
+        <SectionDetails
+          :section="section"
+          :person="person"
+          :isUnpublishedEditable="arePlannedSectionsEditable"
+          :isUnpublishedViewable="arePlannedSectionsViewable"
+        />
+      </template>
+      <!-- <template #footer>
+        <button
+          v-if="arePlannedSectionsEditable"
+          class="tw-bg-transparent tw-border-1 tw-border-dashed tw-border-black/10 tw-rounded tw-p-2 tw-text-sm tw-text-neutral-400 tw-transition-all tw-hidden group-hover:tw-flex tw-justify-center tw-items-center hover:tw-border-neutral-600 hover:tw-text-neutral-600 tw-leading-none"
+          @click="isShowingAddCourse = true"
+        >
+          + Add Course
+        </button>
+      </template> -->
+    </DragDrop>
+
+    <!-- <Draggable
       :disabled="!arePlannedSectionsEditable"
       :list="localCourseSections"
       group="sections"
@@ -38,7 +66,7 @@
           + Add Course
         </button>
       </template>
-    </Draggable>
+    </Draggable> -->
 
     <EditDraftSectionModal
       v-if="isShowingAddCourse"
@@ -66,6 +94,7 @@ import {
 } from "@/utils/draggableHelpers";
 import { watchDebounced } from "@vueuse/core";
 import { $can } from "@/utils";
+import { DragDrop } from "@/components/DragDrop";
 
 const props = defineProps<{
   person: T.Person;
