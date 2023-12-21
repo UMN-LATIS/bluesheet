@@ -1,11 +1,5 @@
 import { defineStore } from "pinia";
-
-export interface DragListItem {
-  id: number | string;
-  [key: string]: unknown;
-}
-
-export type DragListId = string | number;
+import { DragListItem, DragListId } from "@/types";
 
 export const useDragDropStore = defineStore("dragDrop", {
   state: () => ({
@@ -26,6 +20,14 @@ export const useDragDropStore = defineStore("dragDrop", {
       const sourceList = state.dragLists[state.sourceListId];
       return sourceList.findIndex((item) => item.id === state.activeItemId);
     },
+    activeItem(state): DragListItem | null {
+      if (!state.activeItemId || !state.sourceListId) {
+        return null;
+      }
+
+      const sourceList = state.dragLists[state.sourceListId];
+      return sourceList.find((item) => item.id === state.activeItemId) || null;
+    },
   },
   actions: {
     register(listId: DragListId, list: DragListItem[]) {
@@ -43,7 +45,6 @@ export const useDragDropStore = defineStore("dragDrop", {
       this.targetListId = listId;
     },
     stopDragging() {
-      console.log("stopDragging");
       this.activeItemId = null;
       this.sourceListId = null;
       this.targetListId = null;
@@ -51,21 +52,24 @@ export const useDragDropStore = defineStore("dragDrop", {
     setTargetDragListId(targetDragListId: DragListId | null) {
       this.targetListId = targetDragListId;
     },
-    moveItem() {
-      if (
-        !this.activeItemId ||
-        !this.sourceListId ||
-        !this.targetListId ||
-        this.sourceItemIndex < 0
-      ) {
-        throw new Error("Invalid state");
-      }
+    moveActiveItem({
+      item,
+      sourceListId,
+      targetListId,
+    }: {
+      item: DragListItem;
+      sourceListId: DragListId;
+      targetListId: DragListId;
+    }) {
+      const sourceList = this.dragLists[sourceListId];
+      const targetList = this.dragLists[targetListId];
 
-      const sourceList = this.dragLists[this.sourceListId];
-      const targetList = this.dragLists[this.targetListId];
+      const sourceItemIndex = sourceList.findIndex(
+        (listItem) => item.id === listItem.id,
+      );
 
       // remove item from old list
-      const item = sourceList.splice(this.sourceItemIndex, 1)[0];
+      sourceList.splice(sourceItemIndex, 1)[0];
 
       // add to new list
       targetList.push(item);

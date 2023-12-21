@@ -3,8 +3,8 @@
     ref="dragDropWrapperRef"
     class="dragdrop tw-p-2 tw-min-h-[10rem] tw-w-full tw-rounded"
     :class="{
-      'dragdrop--is-dragging tw-bg-neutral-200': isDroppable,
-      'tw-bg-neutral-50': !isDroppable,
+      'dragdrop--is-dragging tw-bg-neutral-100': isDroppable,
+      'tw-bg-neutral-50': !disabled,
     }"
     @dragover.prevent
     @dragenter="handleDragEnter"
@@ -14,7 +14,7 @@
     <div
       v-for="item in list"
       :key="item.id"
-      :draggable="true"
+      :draggable="!disabled"
       class="dragdrop-listitem tw-cursor-move"
       :class="{
         'dragdrop-listitem--is-dragging tw-opacity-50':
@@ -29,17 +29,24 @@
     <slot name="footer" />
   </div>
 </template>
-<script setup lang="ts" generic="T extends DragListItem">
+<script setup lang="ts" generic="ItemType extends DragListItem">
 import { ref, onMounted, computed } from "vue";
-import {
-  useDragDropStore,
-  type DragListId,
-  type DragListItem,
-} from "./useDragDropStore";
+import { useDragDropStore } from "./useDragDropStore";
+import type { DragListItem, DragListId, DropEvent } from "@/types";
 
-const props = defineProps<{
-  id: DragListId;
-  list: T[];
+const props = withDefaults(
+  defineProps<{
+    id: DragListId;
+    list: ItemType[];
+    disabled?: boolean;
+  }>(),
+  {
+    disabled: false,
+  },
+);
+
+const emit = defineEmits<{
+  (eventName: "drop", componentEvent: DropEvent<ItemType>): void;
 }>();
 
 const dragDropStore = useDragDropStore();
@@ -50,7 +57,7 @@ onMounted(() => {
 });
 
 const isDroppable = computed(() => {
-  return dragDropStore.targetListId === props.id;
+  return dragDropStore.targetListId === props.id && !props.disabled;
 });
 
 function isItemBeingDragged(item: DragListItem) {
@@ -111,15 +118,24 @@ function handleDrop(event: DragEvent) {
     return;
   }
 
-  const sourceDragListId = dragDropStore.sourceListId;
-  const draggedItemId = dragDropStore.activeItemId;
-  const targetDragListId = dragDropStore.targetListId;
-
-  if (!sourceDragListId || !draggedItemId || !targetDragListId) {
-    throw new Error("Invalid drag and drop state");
+  const activeItem = dragDropStore.activeItem as ItemType;
+  if (
+    !activeItem ||
+    !dragDropStore.sourceListId ||
+    !dragDropStore.targetListId
+  ) {
+    throw new Error("No active item found");
   }
 
-  dragDropStore.moveItem();
+  const dropEvent: DropEvent<ItemType> = {
+    item: activeItem,
+    sourceListId: dragDropStore.sourceListId,
+    targetListId: dragDropStore.targetListId,
+  };
+
+  emit("drop", dropEvent);
+
+  dragDropStore.moveActiveItem(dropEvent);
   dragEnterCount.value = 0;
 }
 </script>

@@ -10,13 +10,11 @@
     </LeaveChip>
 
     <DragDrop
-      id="`person-${person.id}-term-${term.id}`"
+      :id="`person-${person.id}-term-${term.id}`"
       :list="localCourseSections"
+      :disabled="!arePlannedSectionsEditable"
       class="tw-flex tw-flex-col tw-gap-1 tw-pb-12 tw-flex-1 tw-h-full group"
-      :class="{
-        'tw-bg-neutral-50 tw-rounded tw-p-2': arePlannedSectionsEditable,
-      }"
-      @change="handeSectionChange"
+      @drop="handeSectionChange"
     >
       <template #item="{ element: section }">
         <SectionDetails
@@ -26,7 +24,7 @@
           :isUnpublishedViewable="arePlannedSectionsViewable"
         />
       </template>
-      <!-- <template #footer>
+      <template #footer>
         <button
           v-if="arePlannedSectionsEditable"
           class="tw-bg-transparent tw-border-1 tw-border-dashed tw-border-black/10 tw-rounded tw-p-2 tw-text-sm tw-text-neutral-400 tw-transition-all tw-hidden group-hover:tw-flex tw-justify-center tw-items-center hover:tw-border-neutral-600 hover:tw-text-neutral-600 tw-leading-none"
@@ -34,7 +32,7 @@
         >
           + Add Course
         </button>
-      </template> -->
+      </template>
     </DragDrop>
 
     <!-- <Draggable
@@ -86,15 +84,10 @@ import { ref, computed } from "vue";
 import EditDraftSectionModal from "../EditDraftSectionModal.vue";
 import * as T from "@/types";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
-import Draggable, { type DraggableChangeEvent } from "vuedraggable";
-import {
-  getElementFromDraggableEvent,
-  isDraggableAddedEvent,
-  isDraggableRemovedEvent,
-} from "@/utils/draggableHelpers";
 import { watchDebounced } from "@vueuse/core";
 import { $can } from "@/utils";
 import { DragDrop } from "@/components/DragDrop";
+import { DropEvent } from "@/types";
 
 const props = defineProps<{
   person: T.Person;
@@ -162,40 +155,34 @@ function handleSaveTentativeCourse({ term, course, person, role }) {
   });
 }
 
-async function handeSectionChange(
-  event: DraggableChangeEvent<T.CourseSection>,
-) {
-  const section = getElementFromDraggableEvent(event);
-  if (!section) {
-    throw new Error("No section found in event");
+async function handeSectionChange(event: DropEvent<T.CourseSection>) {
+  const previousSection = event.item;
+
+  const updatedSection: T.CourseSection = {
+    ...previousSection,
+    termId: props.term.id,
+  };
+
+  const previousEnrollment =
+    coursePlanningStore.enrollmentStore.getEnrollmentForPersonInSection(
+      props.person,
+      previousSection,
+    );
+
+  if (!previousEnrollment) {
+    throw new Error(
+      `Could not find enrollment for person ${props.person.id} in section ${previousSection.id}`,
+    );
   }
 
-  if (isDraggableAddedEvent(event)) {
-    coursePlanningStore.courseSectionStore.updateSection({
-      ...section,
-      termId: props.term.id,
-    });
+  coursePlanningStore.courseSectionStore.updateSection(updatedSection);
 
-    coursePlanningStore.enrollmentStore.createEnrollment({
-      person: props.person,
-      section: section,
-      role: "PI",
-    });
-  }
-
-  if (isDraggableRemovedEvent(event)) {
-    const enrollment =
-      coursePlanningStore.enrollmentStore.getEnrollmentForPersonInSection(
-        props.person,
-        section,
-      );
-
-    if (!enrollment) {
-      throw new Error("No enrollment found for person in section");
-    }
-
-    coursePlanningStore.enrollmentStore.removeEnrollment(enrollment);
-  }
+  coursePlanningStore.enrollmentStore.createEnrollment({
+    person: props.person,
+    section: updatedSection,
+    role: initialRole.value,
+  });
+  coursePlanningStore.enrollmentStore.removeEnrollment(previousEnrollment);
 }
 </script>
 <style scoped>
