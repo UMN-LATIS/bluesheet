@@ -1,10 +1,11 @@
 <template>
   <div
-    v-if="isUnpublishedViewable"
+    v-if="isUnpublishedViewable && course && enrollment"
     class="tw-bg-neutral-100 tw-py-2 tw-flex tw-gap-1 tw-items-top tw-italic tw-rounded"
     :class="{
       'tw-cursor-move tw-shadow': isUnpublishedEditable,
       'tw-cursor-default tw-px-2': !isUnpublishedEditable,
+      'tw-bg-yellow-100': isSectionHighlighted,
     }"
   >
     <DragHandleIcon v-if="isUnpublishedEditable" class="tw-inline-block" />
@@ -32,7 +33,7 @@
       :initialPerson="person"
       :initialTerm="term"
       :initialCourse="course"
-      :initialRole="props.enrollment.role"
+      :initialRole="enrollment.role"
       @save="handleEditSave"
       @close="isShowingEditModal = false"
     />
@@ -45,22 +46,46 @@ import { MoreMenu, MoreMenuItem } from "@/components/MoreMenu";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
 import { computed, ref } from "vue";
 import EditDraftSectionModal from "../EditDraftSectionModal.vue";
+import { $can } from "@/utils";
 
 const props = defineProps<{
   section: T.CourseSection;
-  course: T.Course;
   person: T.Person;
-  enrollment: T.Enrollment;
-  isUnpublishedEditable: boolean;
-  isUnpublishedViewable: boolean;
 }>();
 
 const planningStore = useRootCoursePlanningStore();
 const term = computed(() =>
   planningStore.termsStore.getTerm(props.section.termId),
 );
+const course = computed(() =>
+  planningStore.courseStore.getCourse(props.section.courseId),
+);
+const enrollment = computed(() =>
+  planningStore.enrollmentStore.getEnrollmentForPersonInSection(
+    props.person,
+    props.section,
+  ),
+);
+
+const isUnpublishedViewable = computed(() => {
+  return (
+    planningStore.isInPlanningMode &&
+    planningStore.termsStore.isTermPlannable(props.section.termId) &&
+    $can("view planned courses")
+  );
+});
+
+const isUnpublishedEditable = computed(() => {
+  return isUnpublishedViewable.value && $can("edit planned courses");
+});
 
 const isShowingEditModal = ref(false);
+
+const isSectionHighlighted = computed(
+  () =>
+    planningStore.filters.search.length &&
+    planningStore.isSectionMatchingSearch(props.section),
+);
 
 function handleEditSave({
   course,
@@ -87,11 +112,15 @@ function handleEditSave({
     planningStore.courseSectionStore.updateSection(updatedSection);
   }
 
+  if (!enrollment.value) {
+    throw new Error("No enrollment found for section");
+  }
+
   const hasEnrollmentChanged =
-    props.enrollment.emplid !== person.emplid || props.enrollment.role !== role;
+    enrollment.value.emplid !== person.emplid || enrollment.value.role !== role;
   if (hasEnrollmentChanged) {
     const updatedEnrollment: T.Enrollment = {
-      ...props.enrollment,
+      ...enrollment.value,
       emplid: person.emplid,
       role,
     };
@@ -100,11 +129,11 @@ function handleEditSave({
 }
 
 async function handleRemove() {
-  if (!props.enrollment) {
+  if (!enrollment.value) {
     throw new Error("No enrollment found for section");
   }
 
-  await planningStore.enrollmentStore.removeEnrollment(props.enrollment);
+  await planningStore.enrollmentStore.removeEnrollment(enrollment.value);
 
   const sectionEnrollments =
     planningStore.enrollmentStore.getEnrollmentsBySectionId(props.section.id);

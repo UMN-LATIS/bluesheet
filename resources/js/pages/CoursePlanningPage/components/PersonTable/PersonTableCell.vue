@@ -10,11 +10,11 @@
     </LeaveChip>
 
     <!-- published sections -->
-    <SectionDetails
+    <PublishedSectionDetails
       v-for="section in publishedSections"
       :key="section.id"
       :section="section"
-      :person="person"
+      class="tw-pointer-events-none"
     />
 
     <DragDrop
@@ -26,12 +26,7 @@
       @drop="handleSectionChange"
     >
       <template #item="{ element: section }">
-        <SectionDetails
-          :section="section"
-          :person="person"
-          :isUnpublishedEditable="arePlannedSectionsEditable"
-          :isUnpublishedViewable="arePlannedSectionsViewable"
-        />
+        <UnpublishedSectionDetails :section="section" :person="person" />
       </template>
       <template #footer>
         <button
@@ -57,7 +52,6 @@
 </template>
 <script setup lang="ts">
 import LeaveChip from "../LeaveChip.vue";
-import SectionDetails from "./SectionDetails.vue";
 import { ref, computed } from "vue";
 import EditDraftSectionModal from "../EditDraftSectionModal.vue";
 import * as T from "@/types";
@@ -65,6 +59,8 @@ import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningSt
 import { $can } from "@/utils";
 import { DragDrop } from "@/components/DragDrop";
 import { DropEvent } from "@/types";
+import PublishedSectionDetails from "./PublishedSectionDetails.vue";
+import UnpublishedSectionDetails from "./UnpublishedSectionDetails.vue";
 
 const props = defineProps<{
   person: T.Person;

@@ -15,11 +15,8 @@
         @click="isOpen = !isOpen"
       >
         <span class="tw-sr-only">Show More</span>
-        <ChevronDownIcon
-          :class="{
-            'tw-transform -tw-rotate-90': !isOpen,
-          }"
-        />
+        <ChevronDownIcon v-if="isOpen" />
+        <ChevronRightIcon v-else />
       </button>
       <div>
         <RouterLink :to="`/user/${person.id}`">
@@ -52,6 +49,7 @@ import { ref, computed } from "vue";
 import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
 import * as T from "@/types";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
+import { ChevronRightIcon } from "@/icons";
 
 const props = defineProps<{
   enrollment: T.Enrollment;
