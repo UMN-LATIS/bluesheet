@@ -14,7 +14,6 @@
       v-for="section in publishedSections"
       :key="section.id"
       :section="section"
-      class="tw-pointer-events-none"
     />
 
     <DragDrop

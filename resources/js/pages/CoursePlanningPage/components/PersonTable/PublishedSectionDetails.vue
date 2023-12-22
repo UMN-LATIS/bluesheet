@@ -7,24 +7,24 @@
     }"
   >
     <div>
-      <div
-        class="tw-border-none tw-bg-transparent tw-text-neutral-900 tw-rounded-full tw-p-1 tw-flex tw-items-center tw-justify-center tw-gap-2"
+      <button
+        class="tw-border-none tw-bg-transparent tw-text-neutral-900 tw-rounded-full tw-p-1 tw-flex tw-items-center tw-justify-center tw-gap-1"
         @click="isOpen = !isOpen"
       >
         <span class="tw-sr-only">Show More</span>
-        <ChevronDownIcon v-if="isOpen" />
-        <ChevronRightIcon v-else />
+        <ChevronDownIcon v-if="isOpen" class="!tw-w-4 !tw-h-4" />
+        <ChevronRightIcon v-else class="!tw-w-4 !tw-h-4" />
         <div>
           {{ course.subject }} {{ course.catalogNumber }}
           <span class="tw-text-xs tw-text-neutral-500 tw-ml-1">
             {{ section.enrollmentTotal }}/{{ section.enrollmentCap }}
           </span>
         </div>
-      </div>
+      </button>
 
       <div
         v-if="isOpen"
-        class="tw-flex tw-flex-col tw-pl-7 tw-gap-1 tw-text-xs tw-text-neutral-500"
+        class="tw-flex tw-flex-col tw-pl-6 tw-gap-1 tw-text-xs tw-text-neutral-500"
       >
         <div class="tw-font-semibold tw-truncate">
           {{ course.title }}
