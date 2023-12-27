@@ -3,15 +3,15 @@
     ref="dragDropWrapperRef"
     class="dragdrop tw-p-2 tw-min-h-[10rem] tw-w-full tw-rounded tw-relative"
     :class="{
-      'dragdrop--is-droppable tw-bg-neutral-100': isDraggedOverDropZone,
-      'tw-bg-neutral-50': !disabled && !isDraggedOverDropZone,
+      'dragdrop--is-droppable tw-bg-neutral-100': isTargetList,
+      'tw-bg-neutral-50': !disabled && !isTargetList,
     }"
     @dragover.prevent
     @dragenter="handleDragEnter"
     @dragleave="handleDragLeave"
     @drop.prevent="handleDrop"
   >
-    <TransitionGroup name="list">
+    <TransitionGroup name="fade">
       <div
         v-for="item in list"
         :key="item.id"
@@ -55,10 +55,6 @@ const emit = defineEmits<{
 const dragDropStore = useDragDropStore<ItemType>(props.group);
 const dragDropWrapperRef = ref<HTMLElement | null>(null);
 
-const isDraggedOverDropZone = computed(() => {
-  return dragDropStore.targetListId === props.id;
-});
-
 const isItemBeingDragged = computed(() => (item: DragListItem) => {
   return dragDropStore.activeItem?.id === item.id;
 });
@@ -76,6 +72,7 @@ function handleDragStart(item: DragListItem, event: DragEvent) {
 }
 
 function handleDragEnd() {
+  dragEnterCount.value = 0;
   dragDropStore.stopDragging();
 }
 
@@ -97,20 +94,35 @@ function handleDragLeave() {
   dragEnterCount.value--;
 
   // this is the last leave of the zone
-  if (dragEnterCount.value === 0) {
+  // NOTE: we only clear the target list id only when it
+  // matches this list's id, otherwise we could wind up with
+  // a race condition where another component is setting the
+  // new target list id BEFORE we clear the old target list id
+  // leading to a null target list id
+  // this seems worse in Safari, maybe because of laggier
+  // dragenter/dragleave events?
+  if (dragEnterCount.value === 0 && dragDropStore.targetListId === props.id) {
     dragDropStore.targetListId = null;
   }
 }
 
+const isTargetList = computed(() => {
+  return dragDropStore.targetListId === props.id;
+});
+
 function handleDrop() {
   dragEnterCount.value = 0;
 
-  if (
-    !dragDropStore.activeItem ||
-    !dragDropStore.sourceListId ||
-    !dragDropStore.targetListId
-  ) {
+  if (!dragDropStore.activeItem) {
     throw new Error("No active item found");
+  }
+
+  if (!dragDropStore.sourceListId) {
+    throw new Error("No source list id found");
+  }
+
+  if (!dragDropStore.targetListId) {
+    throw new Error("No target list id found");
   }
 
   // if we're dropping into the same list, do nothing
@@ -125,22 +137,4 @@ function handleDrop() {
   });
 }
 </script>
-<style lang="scss">
-.list-move, /* apply transition to moving elements */
-.list-enter-active,
-.list-leave-active {
-  transition: all 0.25s ease;
-}
-
-.list-enter-from,
-.list-leave-to {
-  opacity: 0;
-  transform: translateX(1rem);
-}
-
-/* ensure leaving items are taken out of layout flow so that moving
-   animations can be calculated correctly. */
-.list-leave-active {
-  position: absolute;
-}
-</style>
+<style scoped></style>
