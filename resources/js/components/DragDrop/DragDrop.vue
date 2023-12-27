@@ -1,7 +1,7 @@
 <template>
   <div
     ref="dragDropWrapperRef"
-    class="dragdrop tw-p-2 tw-min-h-[10rem] tw-w-full tw-rounded"
+    class="dragdrop tw-p-2 tw-min-h-[10rem] tw-w-full tw-rounded tw-relative"
     :class="{
       'dragdrop--is-droppable tw-bg-neutral-100': isDraggedOverDropZone,
       'tw-bg-neutral-50': !disabled && !isDraggedOverDropZone,
@@ -11,20 +11,22 @@
     @dragleave="handleDragLeave"
     @drop.prevent="handleDrop"
   >
-    <div
-      v-for="item in list"
-      :key="item.id"
-      :draggable="!disabled"
-      class="dragdrop-listitem tw-cursor-move"
-      :class="{
-        'dragdrop-listitem--is-dragging tw-opacity-50':
-          isItemBeingDragged(item),
-      }"
-      @dragstart="handleDragStart(item, $event)"
-      @dragend="handleDragEnd"
-    >
-      <slot name="item" :element="item" />
-    </div>
+    <TransitionGroup name="list">
+      <div
+        v-for="item in list"
+        :key="item.id"
+        :draggable="!disabled"
+        class="dragdrop-listitem tw-cursor-move"
+        :class="{
+          'dragdrop-listitem--is-dragging tw-opacity-50':
+            isItemBeingDragged(item),
+        }"
+        @dragstart="handleDragStart(item, $event)"
+        @dragend="handleDragEnd"
+      >
+        <slot name="item" :element="item" />
+      </div>
+    </TransitionGroup>
 
     <slot name="footer" />
   </div>
@@ -57,12 +59,9 @@ const isDraggedOverDropZone = computed(() => {
   return dragDropStore.targetListId === props.id;
 });
 
-function isItemBeingDragged(item: DragListItem) {
-  return (
-    dragDropStore.sourceListId === props.id &&
-    dragDropStore.activeItem?.id === item.id
-  );
-}
+const isItemBeingDragged = computed(() => (item: DragListItem) => {
+  return dragDropStore.activeItem?.id === item.id;
+});
 
 function handleDragStart(item: DragListItem, event: DragEvent) {
   dragDropStore.startDragging({
@@ -114,6 +113,11 @@ function handleDrop() {
     throw new Error("No active item found");
   }
 
+  // if we're dropping into the same list, do nothing
+  if (dragDropStore.sourceListId === dragDropStore.targetListId) {
+    return;
+  }
+
   emit("drop", {
     item: dragDropStore.activeItem as ItemType,
     sourceListId: dragDropStore.sourceListId,
@@ -121,4 +125,22 @@ function handleDrop() {
   });
 }
 </script>
-<style lang="scss"></style>
+<style lang="scss">
+.list-move, /* apply transition to moving elements */
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.25s ease;
+}
+
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(1rem);
+}
+
+/* ensure leaving items are taken out of layout flow so that moving
+   animations can be calculated correctly. */
+.list-leave-active {
+  position: absolute;
+}
+</style>
