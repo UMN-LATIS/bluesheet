@@ -9,7 +9,7 @@
     @dragover.prevent
     @dragenter="handleDragEnter"
     @dragleave="handleDragLeave"
-    @drop="handleDrop"
+    @drop.prevent="handleDrop"
   >
     <div
       v-for="item in list"
@@ -103,8 +103,9 @@ function handleDragLeave() {
   }
 }
 
-function handleDrop(event: DragEvent) {
-  event.preventDefault();
+function handleDrop() {
+  dragEnterCount.value = 0;
+
   if (
     !dragDropStore.activeItem ||
     !dragDropStore.sourceListId ||
@@ -118,9 +119,6 @@ function handleDrop(event: DragEvent) {
     sourceListId: dragDropStore.sourceListId,
     targetListId: dragDropStore.targetListId,
   });
-
-  dragDropStore.stopDragging();
-  dragEnterCount.value = 0;
 }
 </script>
 <style lang="scss"></style>
