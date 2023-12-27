@@ -95,21 +95,12 @@ export const useCourseSectionStore = defineStore("couseSection", () => {
         throw new Error("active group id is not set");
       }
 
-      // optimistic update
-      const previousSection = state.sectionLookup[section.id];
-      state.sectionLookup[section.id] = section;
-
-      try {
-        const updatedSection = await api.updateSectionInGroup(
-          section,
-          state.activeGroupId,
-        );
-        state.sectionLookup[section.id] = updatedSection;
-        return updatedSection;
-      } catch (e) {
-        state.sectionLookup[section.id] = previousSection;
-        throw e;
-      }
+      const updatedSection = await api.updateSectionInGroup(
+        section,
+        state.activeGroupId,
+      );
+      state.sectionLookup[section.id] = updatedSection;
+      return updatedSection;
     },
 
     async removeSection(section: T.CourseSection): Promise<void> {

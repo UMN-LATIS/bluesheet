@@ -157,19 +157,17 @@ async function handleSectionChange(event: DropEvent<T.CourseSection>) {
     );
   }
 
-  const updatedSection: T.CourseSection = {
-    ...previousSection,
-    termId: props.term.id,
-  };
+  const updatedSection =
+    await coursePlanningStore.courseSectionStore.updateSection({
+      ...previousSection,
+      termId: props.term.id,
+    });
 
-  coursePlanningStore.courseSectionStore.updateSection(updatedSection);
-  coursePlanningStore.enrollmentStore.createEnrollment({
-    person: props.person,
-    section: updatedSection,
-    role: initialRole.value,
+  coursePlanningStore.enrollmentStore.updateEnrollment({
+    ...previousEnrollment,
+    sectionId: updatedSection.id,
+    emplid: props.person.emplid,
   });
-
-  coursePlanningStore.enrollmentStore.removeEnrollment(previousEnrollment);
 }
 </script>
 <style scoped>
