@@ -157,16 +157,26 @@ async function handleSectionChange(event: DropEvent<T.CourseSection>) {
     );
   }
 
-  const updatedSection =
-    await coursePlanningStore.courseSectionStore.updateSection({
-      ...previousSection,
-      termId: props.term.id,
-    });
+  // first remove previous enrollment from store so that
+  // sections don't jump around while the API call is in flight
+  await coursePlanningStore.enrollmentStore.removeEnrollment(
+    previousEnrollment,
+  );
 
-  coursePlanningStore.enrollmentStore.updateEnrollment({
-    ...previousEnrollment,
-    sectionId: updatedSection.id,
-    emplid: props.person.emplid,
+  // update section with new term if needed
+  const updatedSection =
+    previousSection.termId !== props.term.id
+      ? await coursePlanningStore.courseSectionStore.updateSection({
+          ...previousSection,
+          termId: props.term.id,
+        })
+      : previousSection;
+
+  // now that the section has been updated, create a new enrollment
+  await coursePlanningStore.enrollmentStore.createEnrollment({
+    person: props.person,
+    role: previousEnrollment.role,
+    section: updatedSection,
   });
 }
 </script>
