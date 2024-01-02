@@ -336,3 +336,16 @@ export interface SelectOption {
   text: string;
   value: string | number;
 }
+
+export interface DropEvent<U> {
+  item: U;
+  sourceListId: DragListId;
+  targetListId: DragListId;
+}
+
+export interface DragListItem {
+  id: number | string;
+  [key: string]: unknown;
+}
+
+export type DragListId = string | number;

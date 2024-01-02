@@ -1,16 +1,8 @@
 <template>
   <Table :stickyHeader="true" :stickyFirstColumn="true">
-    <template #thead>
+    <THead>
       <ReportTableHeaderRow :label="`Courses`" />
-    </template>
-
-    <colgroup v-if="coursePlanningStore.isInPlanningMode">
-      <col class="course-col" />
-      <col
-        class="term-col tw-bg-striped"
-        :span="coursePlanningStore.countOfTermsDisabledForPlanning"
-      />
-    </colgroup>
+    </THead>
     <TBody>
       <CourseTableLeavesRow :groupId="groupId" />
       <CourseTableCourseRow
@@ -22,7 +14,7 @@
   </Table>
 </template>
 <script setup lang="ts">
-import { Table, TBody } from "@/components/Table";
+import { Table, TBody, THead } from "@/components/Table";
 import CourseTableCourseRow from "./CourseTableCourseRow.vue";
 import CourseTableLeavesRow from "./CourseTableLeavesRow.vue";
 import ReportTableHeaderRow from "../ReportTableHeaderRow.vue";

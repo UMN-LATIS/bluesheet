@@ -9,25 +9,23 @@
       {{ leave.description }} ({{ leave.type }})
     </LeaveChip>
 
-    <Draggable
+    <!-- published sections -->
+    <PublishedSectionDetails
+      v-for="section in publishedSections"
+      :key="section.id"
+      :section="section"
+    />
+
+    <DragDrop
+      :id="`emplid.${person.emplid}-termid.${term.id}`"
+      group="person-table"
+      :list="unpublishedSections"
       :disabled="!arePlannedSectionsEditable"
-      :list="localCourseSections"
-      group="sections"
-      itemKey="id"
-      ghostClass="ghost"
       class="tw-flex tw-flex-col tw-gap-1 tw-pb-12 tw-flex-1 tw-h-full group"
-      :class="{
-        'tw-bg-neutral-50 tw-rounded tw-p-2': arePlannedSectionsEditable,
-      }"
-      @change="handeSectionChange"
+      @drop="handleSectionChange"
     >
       <template #item="{ element: section }">
-        <SectionDetails
-          :section="section"
-          :person="person"
-          :isUnpublishedEditable="arePlannedSectionsEditable"
-          :isUnpublishedViewable="arePlannedSectionsViewable"
-        />
+        <UnpublishedSectionDetails :section="section" :person="person" />
       </template>
       <template #footer>
         <button
@@ -38,7 +36,7 @@
           + Add Course
         </button>
       </template>
-    </Draggable>
+    </DragDrop>
 
     <EditDraftSectionModal
       v-if="isShowingAddCourse"
@@ -53,19 +51,15 @@
 </template>
 <script setup lang="ts">
 import LeaveChip from "../LeaveChip.vue";
-import SectionDetails from "./SectionDetails.vue";
 import { ref, computed } from "vue";
 import EditDraftSectionModal from "../EditDraftSectionModal.vue";
 import * as T from "@/types";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
-import Draggable, { type DraggableChangeEvent } from "vuedraggable";
-import {
-  getElementFromDraggableEvent,
-  isDraggableAddedEvent,
-  isDraggableRemovedEvent,
-} from "@/utils/draggableHelpers";
-import { watchDebounced } from "@vueuse/core";
 import { $can } from "@/utils";
+import { DragDrop } from "@/components/DragDrop";
+import { DropEvent } from "@/types";
+import PublishedSectionDetails from "./PublishedSectionDetails.vue";
+import UnpublishedSectionDetails from "./UnpublishedSectionDetails.vue";
 
 const props = defineProps<{
   person: T.Person;
@@ -81,17 +75,13 @@ const courseSections = computed(() => {
   );
 });
 
-// use local course sections to avoid section jumping back
-// to original position while api call is made
-const localCourseSections = ref<T.CourseSection[]>(courseSections.value);
+const publishedSections = computed(() => {
+  return courseSections.value.filter((section) => section.isPublished);
+});
 
-watchDebounced(
-  courseSections,
-  (newCourseSections) => {
-    localCourseSections.value = newCourseSections;
-  },
-  { debounce: 300, maxWait: 1000 },
-);
+const unpublishedSections = computed(() => {
+  return courseSections.value.filter((section) => !section.isPublished);
+});
 
 const isShowingAddCourse = ref(false);
 
@@ -133,40 +123,61 @@ function handleSaveTentativeCourse({ term, course, person, role }) {
   });
 }
 
-async function handeSectionChange(
-  event: DraggableChangeEvent<T.CourseSection>,
-) {
-  const section = getElementFromDraggableEvent(event);
-  if (!section) {
-    throw new Error("No section found in event");
+function getPreviousPersonFromEvent(
+  event: DropEvent<T.CourseSection>,
+): T.Person | null {
+  // use the source list id to get the person id
+  const personInfo = (event.sourceListId as string).split("-")[0];
+  const personEmplidStr = personInfo.split(".")[1];
+  const personEmplid = Number.parseInt(personEmplidStr);
+
+  // then use the person id to get the person
+  return coursePlanningStore.personStore.getPersonByEmplId(personEmplid);
+}
+
+async function handleSectionChange(event: DropEvent<T.CourseSection>) {
+  const previousSection = event.item;
+  const previousPerson = getPreviousPersonFromEvent(event);
+
+  if (!previousPerson) {
+    throw new Error(
+      `Could not find person for section ${previousSection.id} in event ${event}`,
+    );
   }
 
-  if (isDraggableAddedEvent(event)) {
-    coursePlanningStore.courseSectionStore.updateSection({
-      ...section,
-      termId: props.term.id,
-    });
+  const previousEnrollment =
+    coursePlanningStore.enrollmentStore.getEnrollmentForPersonInSection(
+      previousPerson,
+      previousSection,
+    );
 
-    coursePlanningStore.enrollmentStore.createEnrollment({
-      person: props.person,
-      section: section,
-      role: "PI",
-    });
+  if (!previousEnrollment) {
+    throw new Error(
+      `Could not find enrollment for person ${props.person.id} in section ${previousSection.id}`,
+    );
   }
 
-  if (isDraggableRemovedEvent(event)) {
-    const enrollment =
-      coursePlanningStore.enrollmentStore.getEnrollmentForPersonInSection(
-        props.person,
-        section,
-      );
+  // first remove previous enrollment from store so that
+  // sections don't jump around while the API call is in flight
+  await coursePlanningStore.enrollmentStore.removeEnrollment(
+    previousEnrollment,
+  );
 
-    if (!enrollment) {
-      throw new Error("No enrollment found for person in section");
-    }
+  // update section with new term if needed
+  const updatedSection =
+    previousSection.termId !== props.term.id
+      ? await coursePlanningStore.courseSectionStore.updateSection({
+          ...previousSection,
+          termId: props.term.id,
+        })
+      : previousSection;
 
-    coursePlanningStore.enrollmentStore.removeEnrollment(enrollment);
-  }
+  // now that the section has been updated, create a new enrollment
+  await coursePlanningStore.enrollmentStore.createEnrollment({
+    person: props.person,
+    role: previousEnrollment.role,
+    section: updatedSection,
+  });
 }
 </script>
 <style scoped>

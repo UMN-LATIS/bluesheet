@@ -16,12 +16,8 @@
         class="tw-border-none tw-text-neutral-900 tw-bg-neutral-100 hover:tw-bg-neutral-200 tw-rounded-full tw-transition tw-duration-300 tw-inline-flex tw-items-center tw-justify-center tw-w-8 tw-h-8"
         @click="isShowingDetails = !isShowingDetails"
       >
-        <ChevronDownIcon
-          class="tw-w-6 tw-h-6"
-          :class="{
-            'tw-transform -tw-rotate-90': !isShowingDetails,
-          }"
-        />
+        <ChevronDownIcon v-if="isShowingDetails" class="tw-w-6 tw-h-6" />
+        <ChevronRightIcon v-else class="tw-w-6 tw-h-6" />
         <span class="tw-sr-only">
           {{ isShowingDetails ? "Hide" : "Show" }} Details
         </span>
@@ -161,7 +157,7 @@ import SelectGroup from "@/components/SelectGroup.vue";
 import { Td } from "@/components/Table";
 import Chip from "@/components/Chip.vue";
 import { isEqual } from "lodash";
-import { ChevronDownIcon } from "@/icons";
+import { ChevronDownIcon, ChevronRightIcon } from "@/icons";
 import LeaveArtifacts from "./LeaveArtifacts.vue";
 import SmallButton from "./SmallButton.vue";
 import { useUserStore } from "@/stores/useUserStore";

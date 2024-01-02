@@ -92,7 +92,6 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
       if (!state.activeGroupId) {
         throw new Error("active group id is not set");
       }
-
       const enrollment = await api.createEnrollmentInGroup({
         person,
         section,
@@ -108,7 +107,6 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
       if (!state.activeGroupId) {
         throw new Error("active group id is not set");
       }
-
       await api.deleteEnrollmentFromGroup(enrollment, state.activeGroupId);
       delete state.enrollmentLookup[enrollment.id];
     },
@@ -122,9 +120,7 @@ export const useEnrollmentStore = defineStore("enrollment", () => {
         enrollment,
         state.activeGroupId,
       );
-
-      // remove the old enrollment. The enrollment is keyed by
-
+      delete state.enrollmentLookup[enrollment.id];
       state.enrollmentLookup[updatedEnrollment.id] = updatedEnrollment;
     },
 
