@@ -24,7 +24,7 @@
         'term-data-column--fall': term.name.includes('Fall'),
       }"
     >
-      <EnrollmentDetails
+      <CourseTableCell
         v-for="enrollment in getEnrollmentsForTerm(term)"
         :key="enrollment.id"
         :enrollment="enrollment"
@@ -35,7 +35,7 @@
 <script setup lang="ts">
 import { Td } from "@/components/Table";
 import { Term } from "@/types";
-import EnrollmentDetails from "./EnrollmentDetails.vue";
+import CourseTableCell from "./CourseTableCell.vue";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
 import * as T from "@/types";
 import { computed } from "vue";

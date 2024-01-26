@@ -40,7 +40,7 @@
       <span v-if="person.sslApplyEligible">✦ SSL Apply Eligible </span>
       <span v-if="person.sslEligible">✦ SSL Eligible</span>
       <span v-if="person.midcareerEligible">✦ Midcareer Eligible</span>
-      <span>Section {{}}</span>
+      <span>Section {{ section.classSection }}</span>
     </div>
   </div>
 </template>
