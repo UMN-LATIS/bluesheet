@@ -1,5 +1,19 @@
 <template>
   <Table :stickyHeader="true" :stickyFirstColumn="true">
+    <colgroup>
+      <col />
+      <col
+        v-for="term in coursePlanningStore.termsStore.terms"
+        v-show="coursePlanningStore.isTermVisible(term.id)"
+        :key="term.id"
+        class="term-col"
+        :class="{
+          'tw-bg-striped':
+            coursePlanningStore.isInPlanningMode &&
+            !coursePlanningStore.termsStore.isTermPlannable(term.id),
+        }"
+      />
+    </colgroup>
     <THead>
       <ReportTableHeaderRow :label="`Courses`" />
     </THead>
