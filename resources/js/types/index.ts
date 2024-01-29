@@ -228,8 +228,7 @@ export const enrollmentRoleMap = {
   TA: "teaching assistant",
 } as const;
 
-export type EnrollmentRole =
-  (typeof enrollmentRoleMap)[keyof typeof enrollmentRoleMap];
+export type EnrollmentRole = keyof typeof enrollmentRoleMap;
 
 export interface Person {
   id: number;
