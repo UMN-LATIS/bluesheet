@@ -24,17 +24,12 @@
         'term-data-column--fall': term.name.includes('Fall'),
       }"
     >
-      <CourseTableCell
-        v-for="enrollment in getEnrollmentsForTerm(term)"
-        :key="enrollment.id"
-        :enrollment="enrollment"
-      />
+      <CourseTableCell :course="course" :term="term" />
     </Td>
   </tr>
 </template>
 <script setup lang="ts">
 import { Td } from "@/components/Table";
-import { Term } from "@/types";
 import CourseTableCell from "./CourseTableCell.vue";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
 import * as T from "@/types";
@@ -47,14 +42,14 @@ const props = defineProps<{
 const coursePlanningStore = useRootCoursePlanningStore();
 const visibleTerms = computed(() => coursePlanningStore.visibleTerms);
 
-const enrollmentsByTermLookup = computed(
-  (): Record<Term["id"], T.Enrollment[]> =>
-    coursePlanningStore.getEnrollmentsInCourseByTerm(props.course.id),
-);
+// const enrollmentsByTermLookup = computed(
+//   (): Record<Term["id"], T.Enrollment[]> =>
+//     coursePlanningStore.getEnrollmentsInCourseByTerm(props.course.id),
+// );
 
-function getEnrollmentsForTerm(term: Term): T.Enrollment[] {
-  return enrollmentsByTermLookup.value[term.id] ?? [];
-}
+// function getEnrollmentsForTerm(term: Term): T.Enrollment[] {
+//   return enrollmentsByTermLookup.value[term.id] ?? [];
+// }
 
 const isCourseVisible = computed(() => {
   return coursePlanningStore.isCourseVisible(props.course);

@@ -1,47 +1,16 @@
 <template>
-  <div
-    v-if="isEnrollmentVisible && person && section"
-    class="instructor-details tw-truncate"
-    :class="{
-      'tw-opacity-50 tw-line-through': section.isCancelled,
-      'tw-bg-yellow-100': isPersonHighlighted,
-      'tw-rounded-md tw-bg-black/5 tw-p-2 tw-pr-4 tw-mb-2': isOpen,
-      'tw-rounded-full': !isOpen,
-    }"
-  >
-    <div class="tw-flex tw-items-center tw-gap-1">
-      <button
-        class="tw-border-none tw-bg-transparent tw-text-neutral-500 tw-rounded-full tw-p-1 tw-flex tw-items-center tw-justify-center"
-        @click="isOpen = !isOpen"
-      >
-        <span class="tw-sr-only">Show More</span>
-        <ChevronDownIcon v-if="isOpen" />
-        <ChevronRightIcon v-else />
-      </button>
-      <div>
-        <RouterLink :to="`/user/${person.id}`">
-          {{ person.surName }}, {{ person.givenName }}
-        </RouterLink>
-        <span class="tw-text-xs tw-text-neutral-500 tw-ml-1">
-          {{ section.enrollmentTotal }}/{{ section.enrollmentCap }}
-        </span>
-      </div>
-    </div>
+  <div>
+    <EnrollmentInPublishedSection
+      v-for="enrollment in enrollmentsInPublishedSection"
+      :key="enrollment.id"
+      :enrollment="enrollment"
+    />
 
-    <div
-      v-show="isOpen"
-      class="tw-text-xs tw-text-neutral-500 tw-flex tw-flex-col tw-pl-7 tw-gap-1"
-    >
-      <span>
-        {{ person.title }}
-        {{ person.jobCode ? `(${person.jobCode})` : "" }}
-      </span>
-      <span>{{ person.emplid }}</span>
-      <span v-if="person.sslApplyEligible">✦ SSL Apply Eligible </span>
-      <span v-if="person.sslEligible">✦ SSL Eligible</span>
-      <span v-if="person.midcareerEligible">✦ Midcareer Eligible</span>
-      <span>Section {{ section.classSection }}</span>
-    </div>
+    <EnrollmentInUnpublishedSection
+      v-for="enrollment in enrollmentsInUnpublishedSection"
+      :key="enrollment.id"
+      :enrollment="enrollment"
+    />
   </div>
 </template>
 <script setup lang="ts">
@@ -50,37 +19,41 @@ import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
 import * as T from "@/types";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
 import { ChevronRightIcon } from "@/icons";
+import EnrollmentInPublishedSection from "./EnrollmentInPublishedSection.vue";
+import EnrollmentInUnpublishedSection from "./EnrollmentInUnpublishedSection.vue";
+import { partition } from "lodash";
 
 const props = defineProps<{
-  enrollment: T.Enrollment;
+  course: T.Course;
+  term: T.Term;
 }>();
 
 const coursePlanningStore = useRootCoursePlanningStore();
-const isOpen = ref(false);
 
-const person = computed((): T.Person | null =>
-  coursePlanningStore.personStore.getPersonByEmplId(props.enrollment.emplid),
+const enrollmentsInCourseByTermLookup = computed(
+  (): Record<T.Term["id"], T.Enrollment[]> =>
+    coursePlanningStore.getEnrollmentsInCourseByTerm(props.course.id),
 );
 
-const section = computed((): T.CourseSection | null =>
-  coursePlanningStore.courseSectionStore.getSection(props.enrollment.sectionId),
-);
-
-const isEnrollmentVisible = computed(() => {
-  if (!person.value || !section.value) {
-    return false;
-  }
-  return (
-    coursePlanningStore.isPersonVisible(person.value.emplid) &&
-    coursePlanningStore.isSectionVisible(section.value)
-  );
+const courseEnrollmentsThisTerm = computed(() => {
+  return enrollmentsInCourseByTermLookup.value[props.term.id] ?? [];
 });
 
-const isPersonHighlighted = computed(
-  () =>
-    coursePlanningStore.filters.search.length &&
-    person.value &&
-    coursePlanningStore.isPersonMatchingSearch(person.value),
-);
+const partitionedEnrollments = computed(() => {
+  return partition(courseEnrollmentsThisTerm.value, (enrollment) => {
+    const section = coursePlanningStore.courseSectionStore.getSection(
+      enrollment.sectionId,
+    );
+    return section?.isPublished;
+  });
+});
+
+const enrollmentsInPublishedSection = computed(() => {
+  return partitionedEnrollments.value[0];
+});
+
+const enrollmentsInUnpublishedSection = computed(() => {
+  return partitionedEnrollments.value[1];
+});
 </script>
 <style scoped></style>
