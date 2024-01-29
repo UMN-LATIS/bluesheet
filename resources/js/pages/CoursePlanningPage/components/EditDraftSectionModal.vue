@@ -64,10 +64,10 @@ import * as T from "@/types";
 
 const props = defineProps<{
   show: boolean;
-  initialPerson?: T.Person;
+  initialPerson?: T.Person | null;
   initialTerm?: Term | null;
-  initialCourse?: T.Course;
-  initialRole?: T.EnrollmentRole;
+  initialCourse?: T.Course | null;
+  initialRole?: T.EnrollmentRole | null;
 }>();
 
 const emits = defineEmits<{

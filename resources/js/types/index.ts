@@ -223,7 +223,13 @@ export interface Term {
 
 export type TermCode = "FA" | "SP" | "SU";
 
-export type EnrollmentRole = "PI" | "TA";
+export const enrollmentRoleMap = {
+  PI: "primary instructor",
+  TA: "teaching assistant",
+} as const;
+
+export type EnrollmentRole =
+  (typeof enrollmentRoleMap)[keyof typeof enrollmentRoleMap];
 
 export interface Person {
   id: number;
@@ -322,9 +328,7 @@ export interface ApiUserLookupResponse {
 }
 
 // used for api requests via Bandaid
-export type InstructorRole =
-  | "PI" // primary instuctor
-  | "TA"; // teaching assistant
+export type InstructorRole = EnrollmentRole;
 
 export type LoadState = "idle" | "loading" | "complete" | "error";
 
