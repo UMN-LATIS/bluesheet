@@ -290,6 +290,10 @@ export interface CourseSection {
   isPublished: boolean; // true if from bandaid, false if from app DB
 }
 
+export interface CourseSectionWithEnrollments extends CourseSection {
+  enrollments: Enrollment[];
+}
+
 type CourseShortCode = `${Course["subject"]}-${Course["catalogNumber"]}`;
 
 export interface Course {

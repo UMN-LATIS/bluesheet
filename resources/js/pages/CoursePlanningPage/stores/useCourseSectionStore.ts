@@ -53,6 +53,24 @@ export const useCourseSectionStore = defineStore("couseSection", () => {
           return state.sectionLookup[sectionId] ?? null;
         },
     ),
+    getSectionWithEnrollments: computed(
+      () =>
+        (
+          sectionId: T.CourseSection["id"],
+        ): T.CourseSectionWithEnrollments | null => {
+          const section = getters.getSection.value(sectionId);
+          if (!section) {
+            return null;
+          }
+          const enrollmentStore = useEnrollmentStore();
+          const enrollments =
+            enrollmentStore.getEnrollmentsBySectionId(sectionId);
+          return {
+            ...section,
+            enrollments,
+          };
+        },
+    ),
   };
 
   const actions = {

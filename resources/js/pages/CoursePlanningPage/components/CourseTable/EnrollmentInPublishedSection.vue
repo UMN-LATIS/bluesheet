@@ -15,8 +15,8 @@
         @click="isOpen = !isOpen"
       >
         <span class="tw-sr-only">Show More</span>
-        <ChevronDownIcon v-if="isOpen" />
-        <ChevronRightIcon v-else />
+        <ChevronDownIcon v-if="isOpen" class="!tw-w-4 !tw-h-4" />
+        <ChevronRightIcon v-else class="!tw-w-4 !tw-h-4" />
       </button>
       <div>
         <RouterLink :to="`/user/${person.id}`">

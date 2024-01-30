@@ -10,7 +10,6 @@
       <h2 class="tw-text-sm tw-m-0">
         {{ person?.givenName }} {{ person?.surName ?? "Unknown" }}
       </h2>
-      <p class="tw-text-xs tw-m-0">{{ person?.emplid }}</p>
 
       <p class="tw-text-xs tw-m-0">
         {{ prettyEnrollmentRole }}
@@ -28,11 +27,10 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, h, ref } from "vue";
+import { computed, ref } from "vue";
 import * as T from "@/types";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
 import DraggableCard from "@/components/DraggableCard.vue";
-import { capitalize } from "lodash";
 import { $can } from "@/utils";
 import EditDraftSectionModal from "../EditDraftSectionModal.vue";
 
@@ -46,11 +44,8 @@ const person = computed((): T.Person | null =>
   planningStore.personStore.getPersonByEmplId(props.enrollment.emplid),
 );
 
-const prettyEnrollmentRole = computed(() =>
-  T.enrollmentRoleMap[props.enrollment.role]
-    .split(" ")
-    .map(capitalize)
-    .join(" "),
+const prettyEnrollmentRole = computed(
+  () => T.enrollmentRoleMap[props.enrollment.role],
 );
 
 const section = computed((): T.CourseSection | null =>
