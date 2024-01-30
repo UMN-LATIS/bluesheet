@@ -1,11 +1,11 @@
 import { computed, reactive, toRefs, UnwrapRef } from "vue";
 import { defineStore } from "pinia";
 import { DragListId } from "@/types";
-
 interface DragDropState<ItemType> {
   activeItem: ItemType | null;
   sourceListId: DragListId | null;
   targetListId: DragListId | null;
+  listMeta: Record<DragListId, Record<string, unknown> | undefined>;
 }
 
 const groupStores = new Map<string, ReturnType<typeof useDragDropStore>>();
@@ -23,12 +23,18 @@ export const useDragDropStore = <ItemType>(groupName: string) => {
       activeItem: null as ItemType | null,
       sourceListId: null as DragListId | null,
       targetListId: null as DragListId | null,
+      listMeta: {},
     });
 
     const getters = {
       isDragging: computed((): boolean => {
         return state.activeItem !== null;
       }),
+      getListMeta: computed(
+        () =>
+          (listId: DragListId): Record<string, unknown> =>
+            state.listMeta[listId] ?? {},
+      ),
     };
 
     const actions = {
@@ -47,6 +53,9 @@ export const useDragDropStore = <ItemType>(groupName: string) => {
         state.activeItem = null;
         state.sourceListId = null;
         state.targetListId = null;
+      },
+      setListMeta(listId: DragListId, meta: Record<string, unknown>) {
+        state.listMeta[listId] = meta;
       },
     };
 

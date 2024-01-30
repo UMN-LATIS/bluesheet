@@ -32,7 +32,7 @@
   </div>
 </template>
 <script setup lang="ts" generic="ItemType extends { id: string | number; }">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { useDragDropStore } from "./useDragDropStore";
 import type { DragListItem, DragListId, DropEvent } from "@/types";
 
@@ -42,9 +42,13 @@ const props = withDefaults(
     group: string;
     list: ItemType[];
     disabled?: boolean;
+    // used to store arbitrary data about the list
+    // like the term id and course id for the course table
+    meta?: Record<string, unknown>;
   }>(),
   {
     disabled: false,
+    meta: undefined,
   },
 );
 
@@ -54,6 +58,14 @@ const emit = defineEmits<{
 
 const dragDropStore = useDragDropStore<ItemType>(props.group);
 const dragDropWrapperRef = ref<HTMLElement | null>(null);
+
+watch(
+  () => props.meta,
+  () => {
+    dragDropStore.setListMeta(props.id, props.meta);
+  },
+  { immediate: true },
+);
 
 const isItemBeingDragged = computed(() => (item: DragListItem) => {
   return dragDropStore.activeItem?.id === item.id;
@@ -134,6 +146,8 @@ function handleDrop() {
     item: dragDropStore.activeItem as ItemType,
     sourceListId: dragDropStore.sourceListId,
     targetListId: dragDropStore.targetListId,
+    sourceListMeta: dragDropStore.getListMeta(dragDropStore.sourceListId),
+    targetListMeta: dragDropStore.getListMeta(dragDropStore.targetListId),
   });
 }
 </script>
