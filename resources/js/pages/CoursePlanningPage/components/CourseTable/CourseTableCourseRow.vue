@@ -1,5 +1,5 @@
 <template>
-  <tr v-if="isCourseVisible">
+  <tr v-if="isCourseVisible" class="course-table-row">
     <Td class="course-column">
       <div
         :class="{
@@ -63,8 +63,12 @@ const isCourseHighlighted = computed(() => {
 });
 </script>
 <style scoped>
+.term-data-column {
+  border-left: 1px solid #f3f3f3;
+}
+
 .term-data-column.term-data-column--current {
-  background: #fffcf0;
+  background: rgb(255 248 220 / 68%);
   border-top: 1px solid #fde68a;
 }
 
@@ -74,5 +78,8 @@ const isCourseHighlighted = computed(() => {
 
 .term-data-column.term-data-column--fall {
   border-left: 2px solid #f3f3f3;
+}
+.course-table-row:hover .instructor-column {
+  background-color: #f3f3f3;
 }
 </style>
