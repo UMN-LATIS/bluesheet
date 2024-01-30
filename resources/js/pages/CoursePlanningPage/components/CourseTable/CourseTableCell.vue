@@ -80,17 +80,6 @@ const arePlannedSectionsEditable = computed(() => {
   return arePlannedSectionsViewable.value && $can("edit planned courses");
 });
 
-// function getPreviousCourseFromEvent(
-//   event: DropEvent<T.Enrollment>,
-// ): T.Course | null {
-//   // use the source list id to get the person id
-//   const courseInfo = (event.sourceListId as string).split("-")[0];
-//   const courseId = courseInfo.split(".")[1] as T.Course["id"];
-
-//   // then use the person id to get the person
-//   return coursePlanningStore.courseStore.getCourse(courseId);
-// }
-
 interface CourseTableDragDropMeta extends T.DragDropMeta {
   course: T.Course;
   term: T.Term;
@@ -99,36 +88,12 @@ interface CourseTableDragDropMeta extends T.DragDropMeta {
 type CourseTableDropEvent = DropEvent<T.Enrollment, CourseTableDragDropMeta>;
 
 async function handleEnrollmentChange(event: CourseTableDropEvent) {
-  console.log("handleEnrollmentChange", event);
-
-  // since sections can have multiple enrollments
-  // (e.g. assigned TA's)
-  // and the user may not intend to move ALL of them
-  // to the new course/term, it's probably best
-  // to just create a new section to hold this enrollment
-  // leaving the old section intact
-  // then remove the old section if it's empty
-
   const targetCourse = event.targetListMeta.course;
   const targetTerm = event.targetListMeta.term;
   const enrollment = event.item;
   const originalSectionId = event.item.sectionId;
 
-  // create a new section for the new course and term
-  const newSection = await coursePlanningStore.courseSectionStore.createSection(
-    {
-      course: targetCourse,
-      term: targetTerm,
-    },
-  );
-
-  // move the enrollment to the new section
-  await coursePlanningStore.enrollmentStore.updateEnrollment({
-    ...enrollment,
-    sectionId: newSection.id,
-  });
-
-  // now get the previous section and enrollments
+  // get the previous section and enrollments
   const prevSection =
     coursePlanningStore.courseSectionStore.getSectionWithEnrollments(
       originalSectionId,
@@ -140,11 +105,33 @@ async function handleEnrollmentChange(event: CourseTableDropEvent) {
     );
   }
 
-  // if there are no more enrollments in the previous section
-  // we can delete it
-  if (prevSection.enrollments.length === 0) {
-    await coursePlanningStore.courseSectionStore.removeSection(prevSection);
+  // if there's only one enrollment in the section
+  // we can just move the section to the new course/term
+  if (prevSection.enrollments.length === 1) {
+    await coursePlanningStore.courseSectionStore.updateSection({
+      ...prevSection,
+      courseId: targetCourse.id,
+      termId: targetTerm.id,
+    });
+
+    return;
   }
+
+  // otherwise, to avoid moving other enrollments (e.g. TA's)
+  // at the same time - which might not be intended -
+  // let's create a new section to hold this enrollment
+  const newSection = await coursePlanningStore.courseSectionStore.createSection(
+    {
+      course: targetCourse,
+      term: targetTerm,
+    },
+  );
+
+  // and move this enrollment to the new section
+  await coursePlanningStore.enrollmentStore.updateEnrollment({
+    ...enrollment,
+    sectionId: newSection.id,
+  });
 }
 </script>
 <style scoped></style>
