@@ -17,6 +17,7 @@
     />
 
     <DragDrop
+      v-if="arePlannedSectionsViewable"
       :id="`emplid.${person.emplid}-termid.${term.id}`"
       group="person-table"
       :list="unpublishedSections"

@@ -7,6 +7,7 @@
     />
 
     <DragDrop
+      v-if="arePlannedSectionsViewable"
       :id="`courseid.${course.id}_termid.${term.id}`"
       group="course-table"
       :list="enrollmentsInUnpublishedSection"
