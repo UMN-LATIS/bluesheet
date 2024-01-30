@@ -224,7 +224,7 @@ export interface Term {
 export type TermCode = "FA" | "SP" | "SU";
 
 export const enrollmentRoleMap = {
-  PI: "Primary Instructor",
+  PI: "Instructor", // Primary Instructor
   TA: "Teaching Assistant",
 } as const;
 

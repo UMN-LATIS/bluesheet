@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="tw-h-full">
     <EnrollmentInPublishedSection
       v-for="enrollment in enrollmentsInPublishedSection"
       :key="enrollment.id"
@@ -12,7 +12,7 @@
       group="course-table"
       :list="enrollmentsInUnpublishedSection"
       :disabled="!arePlannedSectionsEditable"
-      class="tw-flex tw-flex-col tw-gap-1 tw-pb-12 tw-flex-1 tw-h-full group"
+      class="tw-flex tw-flex-col tw-gap-1 tw-pb-12 tw-flex-1 tw-h-full tw-group"
       :meta="{
         course,
         term,
@@ -22,11 +22,29 @@
       <template #item="{ element: enrollment }">
         <EnrollmentInUnpublishedSection :enrollment="enrollment" />
       </template>
+      <template #footer>
+        <button
+          v-if="arePlannedSectionsEditable"
+          class="tw-bg-transparent tw-border-1 tw-border-dashed tw-border-black/10 tw-rounded tw-p-2 tw-text-sm tw-text-neutral-400 tw-transition-all tw-hidden group-hover:tw-flex tw-justify-center tw-items-center hover:tw-border-neutral-600 hover:tw-text-neutral-600 tw-leading-none"
+          @click="isShowingEditModal = true"
+        >
+          + Add Instructor
+        </button>
+      </template>
     </DragDrop>
+    <EditDraftSectionModal
+      v-if="isShowingEditModal"
+      :initialCourse="course"
+      :initialTerm="term"
+      initialRole="PI"
+      :show="isShowingEditModal"
+      @close="isShowingEditModal = false"
+      @save="coursePlanningStore.createSectionWithEnrollee"
+    />
   </div>
 </template>
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import * as T from "@/types";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
 import EnrollmentInPublishedSection from "./EnrollmentInPublishedSection.vue";
@@ -35,6 +53,7 @@ import { partition } from "lodash";
 import { DragDrop } from "@/components/DragDrop";
 import { $can } from "@/utils";
 import { DropEvent } from "@/types";
+import EditDraftSectionModal from "../EditDraftSectionModal.vue";
 
 const props = defineProps<{
   course: T.Course;
@@ -42,6 +61,7 @@ const props = defineProps<{
 }>();
 
 const coursePlanningStore = useRootCoursePlanningStore();
+const isShowingEditModal = ref(false);
 
 const enrollmentsInCourseByTermLookup = computed(
   (): Record<T.Term["id"], T.Enrollment[]> =>
@@ -135,4 +155,13 @@ async function handleEnrollmentChange(event: CourseTableDropEvent) {
   });
 }
 </script>
-<style scoped></style>
+<style scoped>
+.ghost {
+  opacity: 0.5;
+  background: #c8ebfb;
+}
+
+.not-draggable {
+  cursor: no-drop;
+}
+</style>

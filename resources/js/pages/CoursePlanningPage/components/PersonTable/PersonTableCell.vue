@@ -22,7 +22,7 @@
       group="person-table"
       :list="unpublishedSections"
       :disabled="!arePlannedSectionsEditable"
-      class="tw-flex tw-flex-col tw-gap-1 tw-pb-12 tw-flex-1 tw-h-full group"
+      class="tw-flex tw-flex-col tw-gap-1 tw-pb-12 tw-flex-1 tw-h-full tw-group"
       :meta="{ person, term }"
       @drop="handleSectionChange"
     >
@@ -33,7 +33,7 @@
         <button
           v-if="arePlannedSectionsEditable"
           class="tw-bg-transparent tw-border-1 tw-border-dashed tw-border-black/10 tw-rounded tw-p-2 tw-text-sm tw-text-neutral-400 tw-transition-all tw-hidden group-hover:tw-flex tw-justify-center tw-items-center hover:tw-border-neutral-600 hover:tw-text-neutral-600 tw-leading-none"
-          @click="isShowingAddCourse = true"
+          @click="isShowingEditModal = true"
         >
           + Add Course
         </button>
@@ -41,13 +41,13 @@
     </DragDrop>
 
     <EditDraftSectionModal
-      v-if="isShowingAddCourse"
+      v-if="isShowingEditModal"
       :initialPerson="person"
       :initialTerm="term"
       :initialRole="initialRole"
-      :show="isShowingAddCourse"
-      @close="isShowingAddCourse = false"
-      @save="handleSaveTentativeCourse"
+      :show="isShowingEditModal"
+      @close="isShowingEditModal = false"
+      @save="coursePlanningStore.createSectionWithEnrollee"
     />
   </div>
 </template>
@@ -85,7 +85,7 @@ const unpublishedSections = computed(() => {
   return courseSections.value.filter((section) => !section.isPublished);
 });
 
-const isShowingAddCourse = ref(false);
+const isShowingEditModal = ref(false);
 
 const termLeavesForPerson = computed(() =>
   coursePlanningStore.leaveStore
@@ -115,15 +115,6 @@ const initialRole = computed(() => {
   // otherwise, default to Primary Instructor
   return "PI";
 });
-
-function handleSaveTentativeCourse({ term, course, person, role }) {
-  coursePlanningStore.createSectionWithEnrollee({
-    course,
-    term,
-    person,
-    role,
-  });
-}
 
 interface PersonTableDragDropMeta extends T.DragDropMeta {
   person: T.Person;
