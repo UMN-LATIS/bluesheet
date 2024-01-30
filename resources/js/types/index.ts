@@ -224,8 +224,8 @@ export interface Term {
 export type TermCode = "FA" | "SP" | "SU";
 
 export const enrollmentRoleMap = {
-  PI: "primary instructor",
-  TA: "teaching assistant",
+  PI: "Primary Instructor",
+  TA: "Teaching Assistant",
 } as const;
 
 export type EnrollmentRole = keyof typeof enrollmentRoleMap;
@@ -340,10 +340,17 @@ export interface SelectOption {
   value: string | number;
 }
 
-export interface DropEvent<U> {
-  item: U;
+export type DragDropMeta = Record<string, unknown>;
+
+export interface DropEvent<
+  ItemType,
+  MetaDataType extends DragDropMeta = DragDropMeta,
+> {
+  item: ItemType;
   sourceListId: DragListId;
   targetListId: DragListId;
+  sourceListMeta: MetaDataType;
+  targetListMeta: MetaDataType;
 }
 
 export interface DragListItem {

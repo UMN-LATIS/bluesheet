@@ -31,10 +31,19 @@
     <slot name="footer" />
   </div>
 </template>
-<script setup lang="ts" generic="ItemType extends { id: string | number; }">
+<script
+  setup
+  lang="ts"
+  generic="ItemType extends { id: string | number; }, MetaType extends DragDropMeta = DragDropMeta"
+>
 import { ref, computed, watch } from "vue";
 import { useDragDropStore } from "./useDragDropStore";
-import type { DragListItem, DragListId, DropEvent } from "@/types";
+import type {
+  DragListItem,
+  DragListId,
+  DropEvent,
+  DragDropMeta,
+} from "@/types";
 
 const props = withDefaults(
   defineProps<{
@@ -44,7 +53,7 @@ const props = withDefaults(
     disabled?: boolean;
     // used to store arbitrary data about the list
     // like the term id and course id for the course table
-    meta?: Record<string, unknown>;
+    meta?: MetaType;
   }>(),
   {
     disabled: false,
@@ -53,7 +62,7 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-  (eventName: "drop", componentEvent: DropEvent<ItemType>): void;
+  (eventName: "drop", componentEvent: DropEvent<ItemType, MetaType>): void;
 }>();
 
 const dragDropStore = useDragDropStore<ItemType>(props.group);

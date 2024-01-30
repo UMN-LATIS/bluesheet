@@ -22,6 +22,7 @@
       :list="unpublishedSections"
       :disabled="!arePlannedSectionsEditable"
       class="tw-flex tw-flex-col tw-gap-1 tw-pb-12 tw-flex-1 tw-h-full group"
+      :meta="{ person, term }"
       @drop="handleSectionChange"
     >
       <template #item="{ element: section }">
@@ -123,19 +124,20 @@ function handleSaveTentativeCourse({ term, course, person, role }) {
   });
 }
 
-function getPreviousPersonFromEvent(
-  event: DropEvent<T.CourseSection>,
-): T.Person | null {
-  // use the source list id to get the person id
-  const personInfo = (event.sourceListId as string).split("-")[0];
-  const personEmplidStr = personInfo.split(".")[1];
-  const personEmplid = Number.parseInt(personEmplidStr);
-
-  // then use the person id to get the person
-  return coursePlanningStore.personStore.getPersonByEmplId(personEmplid);
+interface PersonTableDragDropMeta extends T.DragDropMeta {
+  person: T.Person;
+  term: T.Term;
 }
 
-async function handleSectionChange(event: DropEvent<T.CourseSection>) {
+type PersonTableDropEvent = DropEvent<T.CourseSection, PersonTableDragDropMeta>;
+
+function getPreviousPersonFromEvent(
+  event: PersonTableDropEvent,
+): T.Person | null {
+  return event.sourceListMeta.person as T.Person | null;
+}
+
+async function handleSectionChange(event: PersonTableDropEvent) {
   const previousSection = event.item;
   const previousPerson = getPreviousPersonFromEvent(event);
 

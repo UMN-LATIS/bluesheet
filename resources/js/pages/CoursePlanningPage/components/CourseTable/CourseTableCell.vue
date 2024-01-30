@@ -7,11 +7,15 @@
     />
 
     <DragDrop
-      :id="`courseid.${course.id}-termid.${term.id}`"
+      :id="`courseid.${course.id}_termid.${term.id}`"
       group="course-table"
       :list="enrollmentsInUnpublishedSection"
       :disabled="!arePlannedSectionsEditable"
       class="tw-flex tw-flex-col tw-gap-1 tw-pb-12 tw-flex-1 tw-h-full group"
+      :meta="{
+        course,
+        term,
+      }"
       @drop="handleEnrollmentChange"
     >
       <template #item="{ element: enrollment }">
@@ -87,7 +91,14 @@ const arePlannedSectionsEditable = computed(() => {
 //   return coursePlanningStore.courseStore.getCourse(courseId);
 // }
 
-async function handleEnrollmentChange(event: DropEvent<T.Enrollment>) {
+interface CourseTableDragDropMeta extends T.DragDropMeta {
+  course: T.Course;
+  term: T.Term;
+}
+
+type CourseTableDropEvent = DropEvent<T.Enrollment, CourseTableDragDropMeta>;
+
+async function handleEnrollmentChange(event: CourseTableDropEvent) {
   console.log("handleEnrollmentChange", event);
 }
 </script>
