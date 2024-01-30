@@ -1,5 +1,23 @@
 <template>
-  <Table :stickyHeader="true" :stickyFirstColumn="true">
+  <Table
+    :stickyHeader="true"
+    :stickyFirstColumn="true"
+    class="scheduling-report"
+  >
+    <colgroup>
+      <col />
+      <col
+        v-for="term in coursePlanningStore.termsStore.terms"
+        v-show="coursePlanningStore.isTermVisible(term.id)"
+        :key="term.id"
+        class="term-col"
+        :class="{
+          'tw-bg-striped':
+            coursePlanningStore.isInPlanningMode &&
+            !coursePlanningStore.termsStore.isTermPlannable(term.id),
+        }"
+      />
+    </colgroup>
     <THead>
       <ReportTableHeaderRow :label="`Courses`" />
     </THead>
@@ -30,7 +48,7 @@ defineProps<{
 const coursePlanningStore = useRootCoursePlanningStore();
 const courses = computed(() => coursePlanningStore.courseStore.allCourses);
 </script>
-<style scoped>
+<style scoped lang="scss">
 .term-data-column.term-data-column--current {
   background: #fffcf0;
   border-top: 1px solid #fde68a;
@@ -42,5 +60,13 @@ const courses = computed(() => coursePlanningStore.courseStore.allCourses);
 
 .term-data-column.term-data-column--fall {
   border-left: 2px solid #f3f3f3;
+}
+
+// fix width of cells to prevent them from embiggening
+// when a collapseable item is expanded
+.scheduling-report td,
+.scheduling-report th {
+  min-width: 16rem;
+  max-width: 16rem;
 }
 </style>

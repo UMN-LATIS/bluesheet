@@ -15,8 +15,8 @@
         @click="isOpen = !isOpen"
       >
         <span class="tw-sr-only">Show More</span>
-        <ChevronDownIcon v-if="isOpen" />
-        <ChevronRightIcon v-else />
+        <ChevronDownIcon v-if="isOpen" class="!tw-w-4 !tw-h-4" />
+        <ChevronRightIcon v-else class="!tw-w-4 !tw-h-4" />
       </button>
       <div>
         <RouterLink :to="`/user/${person.id}`">
@@ -40,7 +40,7 @@
       <span v-if="person.sslApplyEligible">✦ SSL Apply Eligible </span>
       <span v-if="person.sslEligible">✦ SSL Eligible</span>
       <span v-if="person.midcareerEligible">✦ Midcareer Eligible</span>
-      <span>Section {{}}</span>
+      <span>Section {{ section.classSection }}</span>
     </div>
   </div>
 </template>

@@ -31,10 +31,19 @@
     <slot name="footer" />
   </div>
 </template>
-<script setup lang="ts" generic="ItemType extends { id: string | number; }">
-import { ref, computed } from "vue";
+<script
+  setup
+  lang="ts"
+  generic="ItemType extends { id: string | number; }, MetaType extends DragDropMeta = DragDropMeta"
+>
+import { ref, computed, watch } from "vue";
 import { useDragDropStore } from "./useDragDropStore";
-import type { DragListItem, DragListId, DropEvent } from "@/types";
+import type {
+  DragListItem,
+  DragListId,
+  DropEvent,
+  DragDropMeta,
+} from "@/types";
 
 const props = withDefaults(
   defineProps<{
@@ -42,18 +51,30 @@ const props = withDefaults(
     group: string;
     list: ItemType[];
     disabled?: boolean;
+    // used to store arbitrary data about the list
+    // like the term id and course id for the course table
+    meta?: MetaType;
   }>(),
   {
     disabled: false,
+    meta: undefined,
   },
 );
 
 const emit = defineEmits<{
-  (eventName: "drop", componentEvent: DropEvent<ItemType>): void;
+  (eventName: "drop", componentEvent: DropEvent<ItemType, MetaType>): void;
 }>();
 
 const dragDropStore = useDragDropStore<ItemType>(props.group);
 const dragDropWrapperRef = ref<HTMLElement | null>(null);
+
+watch(
+  () => props.meta,
+  () => {
+    dragDropStore.setListMeta(props.id, props.meta);
+  },
+  { immediate: true },
+);
 
 const isItemBeingDragged = computed(() => (item: DragListItem) => {
   return dragDropStore.activeItem?.id === item.id;
@@ -134,6 +155,8 @@ function handleDrop() {
     item: dragDropStore.activeItem as ItemType,
     sourceListId: dragDropStore.sourceListId,
     targetListId: dragDropStore.targetListId,
+    sourceListMeta: dragDropStore.getListMeta(dragDropStore.sourceListId),
+    targetListMeta: dragDropStore.getListMeta(dragDropStore.targetListId),
   });
 }
 </script>

@@ -223,7 +223,12 @@ export interface Term {
 
 export type TermCode = "FA" | "SP" | "SU";
 
-export type EnrollmentRole = "PI" | "TA";
+export const enrollmentRoleMap = {
+  PI: "Instructor", // Primary Instructor
+  TA: "Teaching Assistant",
+} as const;
+
+export type EnrollmentRole = keyof typeof enrollmentRoleMap;
 
 export interface Person {
   id: number;
@@ -285,6 +290,10 @@ export interface CourseSection {
   isPublished: boolean; // true if from bandaid, false if from app DB
 }
 
+export interface CourseSectionWithEnrollments extends CourseSection {
+  enrollments: Enrollment[];
+}
+
 type CourseShortCode = `${Course["subject"]}-${Course["catalogNumber"]}`;
 
 export interface Course {
@@ -322,9 +331,7 @@ export interface ApiUserLookupResponse {
 }
 
 // used for api requests via Bandaid
-export type InstructorRole =
-  | "PI" // primary instuctor
-  | "TA"; // teaching assistant
+export type InstructorRole = EnrollmentRole;
 
 export type LoadState = "idle" | "loading" | "complete" | "error";
 
@@ -337,10 +344,17 @@ export interface SelectOption {
   value: string | number;
 }
 
-export interface DropEvent<U> {
-  item: U;
+export type DragDropMeta = Record<string, unknown>;
+
+export interface DropEvent<
+  ItemType,
+  MetaDataType extends DragDropMeta = DragDropMeta,
+> {
+  item: ItemType;
   sourceListId: DragListId;
   targetListId: DragListId;
+  sourceListMeta: MetaDataType;
+  targetListMeta: MetaDataType;
 }
 
 export interface DragListItem {

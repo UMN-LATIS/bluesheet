@@ -1,5 +1,5 @@
 <template>
-  <tr v-if="isCourseVisible">
+  <tr v-if="isCourseVisible" class="course-table-row">
     <Td class="course-column">
       <div
         :class="{
@@ -24,18 +24,13 @@
         'term-data-column--fall': term.name.includes('Fall'),
       }"
     >
-      <EnrollmentDetails
-        v-for="enrollment in getEnrollmentsForTerm(term)"
-        :key="enrollment.id"
-        :enrollment="enrollment"
-      />
+      <CourseTableCell :course="course" :term="term" />
     </Td>
   </tr>
 </template>
 <script setup lang="ts">
 import { Td } from "@/components/Table";
-import { Term } from "@/types";
-import EnrollmentDetails from "./EnrollmentDetails.vue";
+import CourseTableCell from "./CourseTableCell.vue";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
 import * as T from "@/types";
 import { computed } from "vue";
@@ -47,14 +42,14 @@ const props = defineProps<{
 const coursePlanningStore = useRootCoursePlanningStore();
 const visibleTerms = computed(() => coursePlanningStore.visibleTerms);
 
-const enrollmentsByTermLookup = computed(
-  (): Record<Term["id"], T.Enrollment[]> =>
-    coursePlanningStore.getEnrollmentsInCourseByTerm(props.course.id),
-);
+// const enrollmentsByTermLookup = computed(
+//   (): Record<Term["id"], T.Enrollment[]> =>
+//     coursePlanningStore.getEnrollmentsInCourseByTerm(props.course.id),
+// );
 
-function getEnrollmentsForTerm(term: Term): T.Enrollment[] {
-  return enrollmentsByTermLookup.value[term.id] ?? [];
-}
+// function getEnrollmentsForTerm(term: Term): T.Enrollment[] {
+//   return enrollmentsByTermLookup.value[term.id] ?? [];
+// }
 
 const isCourseVisible = computed(() => {
   return coursePlanningStore.isCourseVisible(props.course);
@@ -68,8 +63,12 @@ const isCourseHighlighted = computed(() => {
 });
 </script>
 <style scoped>
+.term-data-column {
+  border-left: 1px solid #f3f3f3;
+}
+
 .term-data-column.term-data-column--current {
-  background: #fffcf0;
+  background: rgb(255 248 220 / 68%);
   border-top: 1px solid #fde68a;
 }
 
@@ -79,5 +78,8 @@ const isCourseHighlighted = computed(() => {
 
 .term-data-column.term-data-column--fall {
   border-left: 2px solid #f3f3f3;
+}
+.course-table-row:hover .instructor-column {
+  background-color: #f3f3f3;
 }
 </style>
