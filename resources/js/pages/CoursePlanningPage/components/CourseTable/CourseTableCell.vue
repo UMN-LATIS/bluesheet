@@ -6,22 +6,30 @@
       :enrollment="enrollment"
     />
 
-    <EnrollmentInUnpublishedSection
-      v-for="enrollment in enrollmentsInUnpublishedSection"
-      :key="enrollment.id"
-      :enrollment="enrollment"
-    />
+    <DragDrop
+      :id="`courseid.${course.id}-termid.${term.id}`"
+      group="course-table"
+      :list="enrollmentsInUnpublishedSection"
+      :disabled="!arePlannedSectionsEditable"
+      class="tw-flex tw-flex-col tw-gap-1 tw-pb-12 tw-flex-1 tw-h-full group"
+      @drop="handleEnrollmentChange"
+    >
+      <template #item="{ element: enrollment }">
+        <EnrollmentInUnpublishedSection :enrollment="enrollment" />
+      </template>
+    </DragDrop>
   </div>
 </template>
 <script setup lang="ts">
-import { ref, computed } from "vue";
-import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
+import { computed } from "vue";
 import * as T from "@/types";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
-import { ChevronRightIcon } from "@/icons";
 import EnrollmentInPublishedSection from "./EnrollmentInPublishedSection.vue";
 import EnrollmentInUnpublishedSection from "./EnrollmentInUnpublishedSection.vue";
 import { partition } from "lodash";
+import { DragDrop } from "@/components/DragDrop";
+import { $can } from "@/utils";
+import { DropEvent } from "@/types";
 
 const props = defineProps<{
   course: T.Course;
@@ -55,5 +63,32 @@ const enrollmentsInPublishedSection = computed(() => {
 const enrollmentsInUnpublishedSection = computed(() => {
   return partitionedEnrollments.value[1];
 });
+
+const arePlannedSectionsViewable = computed(() => {
+  return (
+    coursePlanningStore.isInPlanningMode &&
+    coursePlanningStore.termsStore.isTermPlannable(props.term.id) &&
+    $can("view planned courses")
+  );
+});
+
+const arePlannedSectionsEditable = computed(() => {
+  return arePlannedSectionsViewable.value && $can("edit planned courses");
+});
+
+// function getPreviousCourseFromEvent(
+//   event: DropEvent<T.Enrollment>,
+// ): T.Course | null {
+//   // use the source list id to get the person id
+//   const courseInfo = (event.sourceListId as string).split("-")[0];
+//   const courseId = courseInfo.split(".")[1] as T.Course["id"];
+
+//   // then use the person id to get the person
+//   return coursePlanningStore.courseStore.getCourse(courseId);
+// }
+
+async function handleEnrollmentChange(event: DropEvent<T.Enrollment>) {
+  console.log("handleEnrollmentChange", event);
+}
 </script>
 <style scoped></style>
