@@ -276,6 +276,7 @@ import Modal from "./Modal.vue";
 import { dayjs, $can } from "@/utils";
 import { PropType } from "vue";
 import { Group, MemberRole, Membership } from "@/types";
+import { get as getValueAtPath } from "lodash";
 
 type SortableField =
   | "user.surname"
@@ -436,11 +437,12 @@ export default defineComponent({
     },
     sortedList() {
       return [...this.compositeList].sort((a, b) => {
-        let modifier = 1;
-        if (this.currentSortDir === "desc") modifier = -1;
+        const modifier = this.currentSortDir === "desc" ? -1 : 1;
 
-        const aCurrentSort = a?.[this.currentSort] || " ";
-        const bCurrentSort = b?.[this.currentSort] || " ";
+        // this.currentSort is a path to a field on the membership object
+        // e.g. "user.surname". Use `get` from lodash to get the value
+        const aCurrentSort = getValueAtPath(a, this.currentSort) || " ";
+        const bCurrentSort = getValueAtPath(b, this.currentSort) || " ";
 
         if (aCurrentSort < bCurrentSort) return -1 * modifier;
         if (aCurrentSort > bCurrentSort) return 1 * modifier;
