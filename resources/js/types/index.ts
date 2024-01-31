@@ -94,6 +94,10 @@ export interface MemberRole {
   updated_at: ISODateTime | null; // why null?
   deleted_at?: ISODateTime | null;
   official_role_category_id: number;
+  official_role_category?: {
+    id: number;
+    category: string; // "College" or "Unit"
+  };
   official_group_type: GroupType[];
   members?: Membership[];
 }
@@ -106,7 +110,7 @@ export interface ParentOrganization {
   child_organizations_recursive: ParentOrganization[];
 }
 
-export interface Group {
+export interface BaseGroup {
   id: number;
   user_can_edit: boolean; // current user can edit
   group_title: string | null; // "Anthropology";
@@ -117,13 +121,14 @@ export interface Group {
   private_group: 0 | 1;
   parent_group_id: number | null;
   parent_group: Group | null;
-  child_groups?: ChildGroup[]; // how deep will this go?
+  child_groups?: ChildGroup[];
+
+  include_child_groups?: boolean; // should child groups be included in the member list?
   google_group: string | null;
-  show_unit: 0 | 1;
+  show_unit?: 0 | 1;
   secret_hash: string;
   parent_organization: ParentOrganization;
   parent_organization_id: number;
-  active: 0 | 1;
   artifacts: GroupArtifact[];
   notes: string | null;
   members: Membership[];
@@ -132,24 +137,13 @@ export interface Group {
   deleted_at?: ISODateTime | null;
 }
 
-export interface ChildGroup {
-  id: number;
-  group_title: string;
-  group_type_id: number;
-  private_group: 0 | 1;
+export interface Group extends BaseGroup {
+  active: 0 | 1;
+}
+
+// TODO: unify `active` and `active_group` into a single field
+export interface ChildGroup extends BaseGroup {
   active_group: 0 | 1;
-  start_date: ISODate | null;
-  end_date: ISODate | null;
-  created_at: ISODateTime;
-  updated_at: ISODateTime;
-  deleted_at: ISODateTime | null;
-  parent_organization_id: number; // can this be null?
-  google_group: string | null;
-  show_unit: 0 | 1;
-  parent_group_id: number;
-  abbreviation: string | null;
-  dept_id: string | null;
-  notes: string | null;
 }
 
 export interface Artifact {

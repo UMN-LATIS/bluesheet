@@ -103,10 +103,10 @@
       :members="group.members"
       :group="group"
       :editing="false"
-      :show_unit="group.show_unit"
+      :show_unit="Boolean(group.show_unit)"
       :roles="rolesRelatedToGroup"
       viewType="group"
-      :downloadTitle="group.group_title"
+      :downloadTitle="group.group_title ?? 'Unnamed Group'"
     ></Members>
 
     <router-link

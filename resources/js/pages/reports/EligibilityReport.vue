@@ -87,7 +87,7 @@
 <script>
 import SortableLink from "@/components/SortableLink.vue";
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
-import { axios } from "@/utils";
+import { axios, sortByValueAtPath } from "@/utils";
 import DownloadCSV from "@/components/DownloadCSV.vue";
 import { $can } from "@/utils";
 
@@ -117,19 +117,9 @@ export default {
       });
     },
     sortedList: function () {
-      return [...this.userList].sort((a, b) => {
-        let modifier = 1;
-        if (this.currentSortDir === "desc") modifier = -1;
-
-        const aCurrentSort = a?.[this.currentSort] || " ";
-        const bCurrentSort = b?.[this.currentSort] || " ";
-
-        if (aCurrentSort.toLowerCase() < bCurrentSort.toLowerCase())
-          return -1 * modifier;
-        if (aCurrentSort.toLowerCase() > bCurrentSort.toLowerCase())
-          return 1 * modifier;
-        return 0;
-      });
+      return [...this.userList].sort(
+        sortByValueAtPath(this.currentSort, this.currentSortDir),
+      );
     },
   },
   watch: {
