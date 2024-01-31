@@ -54,7 +54,7 @@
           <th>
             <SortableLink
               sortLabel="Accountant"
-              sortElement="accountant"
+              sortElement="accountant.0.user.displayName"
               :currentSort="currentSort"
               :currentSortDir="currentSortDir"
               @sort="sort"
@@ -63,7 +63,7 @@
           <th>
             <SortableLink
               sortLabel="Finance Manager"
-              sortElement="financeManager"
+              sortElement="financeManager.0.user.displayName"
               :currentSort="currentSort"
               :currentSortDir="currentSortDir"
               @sort="sort"
@@ -72,7 +72,7 @@
           <th>
             <SortableLink
               sortLabel="Payroll Specialist"
-              sortElement="payrollSpecialist"
+              sortElement="payrollSpecialist.0.user.displayName"
               :currentSort="currentSort"
               :currentSortDir="currentSortDir"
               @sort="sort"
@@ -117,6 +117,8 @@ import UserWithLink from "@/components/UserWithLink.vue";
 import SortableLink from "@/components/SortableLink.vue";
 import { dayjs } from "@/utils";
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
+import { get as getValueAtPath, uniqBy } from "lodash";
+import { sortByValueAtPath } from "@/utils/sortByValueAtPath";
 
 export default {
   components: {
@@ -155,36 +157,14 @@ export default {
         outputObject.accountant = members.filter((m) => m.role.id == 11);
         listByDepartment.push(outputObject);
       }
-      return listByDepartment;
+
+      // dedupe
+      return uniqBy(listByDepartment, "dept_id");
     },
-    sortedListByDepartment: function () {
-      return [...this.listByDepartment].sort((a, b) => {
-        let modifier = 1;
-        if (this.currentSortDir === "desc") modifier = -1;
-
-        a = a?.[this.currentSort] || " ";
-        b = b?.[this.currentSort] || " ";
-
-        if (typeof a === "string") {
-          a = a.toLowerCase();
-        } else {
-          if (a[0] && a[0].user && a[0].user.displayName) {
-            a = a[0].user.displayName.toLowerCase();
-          }
-        }
-
-        if (typeof b === "string") {
-          b = b.toLowerCase();
-        } else {
-          if (b[0] && b[0].user && b[0].user.displayName) {
-            b = b[0].user.displayName.toLowerCase();
-          }
-        }
-
-        if (a < b) return -1 * modifier;
-        if (a > b) return 1 * modifier;
-        return 0;
-      });
+    sortedListByDepartment() {
+      return [...this.listByDepartment].sort(
+        sortByValueAtPath(this.currentSort, this.currentSortDir),
+      );
     },
   },
   async mounted() {
