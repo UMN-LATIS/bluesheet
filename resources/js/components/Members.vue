@@ -28,7 +28,7 @@
             class="form-control"
             :value="emailList"
             rows="10"
-            @click="$event.target.select()"
+            @click="($event.target as HTMLTextAreaElement).select()"
           ></textarea>
         </div>
       </div>
@@ -266,15 +266,32 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent } from "vue";
 import SortableLink from "./SortableLink.vue";
 import DownloadCSV from "./DownloadCSV.vue";
 import MemberList from "./MemberList.vue";
 import Gantt from "./Gantt.vue";
 import Modal from "./Modal.vue";
 import { dayjs, $can } from "@/utils";
+import { PropType } from "vue";
+import { Group, MemberRole, Membership } from "@/types";
 
-export default {
+type SortableField =
+  | "user.surname"
+  | "user.ou"
+  | "role.label"
+  | "group.group_title"
+  | "notes"
+  | "start_date"
+  | "end_date"
+  | "role.official_group_type";
+
+interface MembershipWithMaybeChildGroupTitle extends Membership {
+  child_group_title?: string | null;
+}
+
+export default defineComponent({
   components: {
     SortableLink,
     DownloadCSV,
@@ -282,44 +299,75 @@ export default {
     Gantt,
     Modal,
   },
-  props: [
-    "members",
-    "group",
-    "editing",
-    "roles",
-    "show_unit",
-    "groupType",
-    "viewType",
-    "downloadTitle",
-  ],
-  emits: ["update:members"],
+  props: {
+    members: {
+      type: Array as PropType<Membership[]>,
+      required: true,
+    },
+    group: {
+      type: Object as PropType<Group>,
+      default: null,
+    },
+    editing: {
+      type: Boolean,
+      required: true,
+    },
+    roles: {
+      type: Array as PropType<MemberRole[]>,
+      required: true,
+    },
+    // eslint-disable-next-line vue/prop-name-casing
+    show_unit: {
+      type: Boolean,
+      required: true,
+    },
+    groupType: {
+      type: String,
+      required: true,
+    },
+    viewType: {
+      type: String,
+      required: true,
+    },
+    downloadTitle: {
+      type: String,
+      required: true,
+    },
+  },
+  emits: {
+    "update:members": (payload: Membership[]) => Array.isArray(payload),
+    "update:roles": (payload: MemberRole[]) => Array.isArray(payload),
+  },
   data() {
     return {
       includePreviousMembers: false,
-      currentSortDir: "asc",
-      currentSort: "user.surname",
+      currentSortDir: "asc" as "asc" | "desc",
+      currentSort: "user.surname" as SortableField,
       showSearch: false,
-      searchValue: null,
+      searchValue: "",
       showGantt: false,
       showEmailList: false,
       filterList: false,
     };
   },
   computed: {
-    officialRoles: function () {
+    officialRoles() {
       return this.roles.filter((r) =>
         r.official_group_type
           ? r.official_group_type.map((gt) => gt.label).includes(this.groupType)
           : false,
       );
     },
-    officialRoleCategories: function () {
-      var allOfficialRoles = this.officialRoles
-        ? this.officialRoles.map((r) => r.official_role_category.category)
-        : [];
+    officialRoleCategories(): string[] {
+      if (!this.officialRoles) return [];
+
+      const allOfficialRoles = this.officialRoles
+        .map((r) => r.official_role_category?.category)
+        .filter(Boolean) as string[];
+
       return [...new Set(allOfficialRoles)];
     },
-    unfilledRoles: function () {
+    unfilledRoles() {
       return this.officialRoles.filter(
         (r) =>
           !this.filteredList
@@ -327,7 +375,7 @@ export default {
             .includes(r.id),
       );
     },
-    lowestValue: function () {
+    lowestValue() {
       if (this.filteredList.length > 0) {
         return this.filteredList
           .map((m) => dayjs(m.start_date).unix())
@@ -335,76 +383,71 @@ export default {
       }
       return 0;
     },
-    highestValue: function () {
-      var maxDate = null;
-      if (this.filteredList.length > 0) {
-        maxDate = this.filteredList
-          .map((m) => dayjs(m.end_date ? m.end_date : dayjs()).unix())
-          .reduce((a, b) => Math.max(a, b));
+    highestValue() {
+      if (!this.filteredList.length) {
+        return null;
       }
-      return maxDate;
+      return this.filteredList
+        .map((m) => dayjs(m.end_date ? m.end_date : dayjs()).unix())
+        .reduce((a, b) => Math.max(a, b));
     },
-    filteredList: function () {
-      return this.sortedList.filter(
-        function (membership) {
-          if (
-            this.includePreviousMembers ||
-            membership.end_date == null ||
-            dayjs(membership.end_date).isAfter(dayjs())
-          ) {
-            var searchTerm = null;
-            if (this.searchValue) {
-              searchTerm = this.searchValue.toLowerCase();
-            }
-
-            if (
-              searchTerm === null ||
-              membership.user.displayName.toLowerCase().includes(searchTerm) ||
-              membership.user.email.includes(searchTerm) ||
-              membership.role.label.toLowerCase().includes(searchTerm) ||
-              membership.user.ou.toLowerCase().includes(searchTerm)
-            ) {
-              return membership;
-            }
+    filteredList() {
+      return this.sortedList.filter((membership) => {
+        if (
+          this.includePreviousMembers ||
+          membership.end_date == null ||
+          dayjs(membership.end_date).isAfter(dayjs())
+        ) {
+          var searchTerm = null as string | null;
+          if (this.searchValue) {
+            searchTerm = this.searchValue.toLowerCase();
           }
-        }.bind(this),
-      );
+
+          if (
+            searchTerm === null ||
+            membership.user.displayName.toLowerCase().includes(searchTerm) ||
+            membership.user.email?.includes(searchTerm) ||
+            membership.role.label.toLowerCase().includes(searchTerm) ||
+            membership.user.ou?.toLowerCase().includes(searchTerm)
+          ) {
+            return membership;
+          }
+        }
+      });
     },
-    compositeList: function () {
-      if (
-        this.group &&
-        this.group.include_child_groups &&
-        this.group.child_groups
-      ) {
-        return this.members.concat(
-          this.group.child_groups.flatMap((child) =>
-            child.members
-              ? child.members.map((m) => {
-                  m.child_group_title = child.group_title;
-                  return m;
-                })
-              : false,
-          ),
-        );
+    compositeList(): MembershipWithMaybeChildGroupTitle[] {
+      if (!this.group) return [];
+
+      if (!this.group.include_child_groups || !this.group.child_groups) {
+        return this.members;
       }
-      return this.members;
-    },
-    sortedList: function () {
-      return [...this.compositeList].sort(
-        function (a, b) {
-          let modifier = 1;
-          if (this.currentSortDir === "desc") modifier = -1;
 
-          const aCurrentSort = a?.[this.currentSort] || " ";
-          const bCurrentSort = b?.[this.currentSort] || " ";
-
-          if (aCurrentSort < bCurrentSort) return -1 * modifier;
-          if (aCurrentSort > bCurrentSort) return 1 * modifier;
-          return 0;
-        }.bind(this),
-      );
+      const childMembers = this.group.child_groups.flatMap((child) => {
+        if (!child.members) return [];
+        return child.members.map(
+          (m): MembershipWithMaybeChildGroupTitle => ({
+            ...m,
+            // augment membership info with child group title
+            child_group_title: child.group_title ?? null,
+          }),
+        );
+      });
+      return this.members.concat(childMembers).filter(Boolean);
     },
-    emailList: function () {
+    sortedList() {
+      return [...this.compositeList].sort((a, b) => {
+        let modifier = 1;
+        if (this.currentSortDir === "desc") modifier = -1;
+
+        const aCurrentSort = a?.[this.currentSort] || " ";
+        const bCurrentSort = b?.[this.currentSort] || " ";
+
+        if (aCurrentSort < bCurrentSort) return -1 * modifier;
+        if (aCurrentSort > bCurrentSort) return 1 * modifier;
+        return 0;
+      });
+    },
+    emailList() {
       let targetList = this.filteredList;
 
       if (this.filterList) {
@@ -462,7 +505,7 @@ export default {
     $can,
     rolesForOfficialCategory: function (category) {
       return this.unfilledRoles.filter(
-        (r) => r.official_role_category.category == category,
+        (r) => r.official_role_category?.category == category,
       );
     },
     sort: function (s) {
@@ -474,7 +517,7 @@ export default {
       }
       this.currentSort = s;
     },
-    removeMember: function (removeMember, index) {
+    removeMember(removeMember) {
       if (!removeMember.id) {
         // this was an accidental record, just split it
         this.$emit(
@@ -507,7 +550,7 @@ export default {
       }
     },
   },
-};
+});
 </script>
 
 <style>
