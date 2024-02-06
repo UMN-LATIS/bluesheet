@@ -54,11 +54,6 @@ task('assets:generate', function() {
 // [Optional] if deploy fails automatically unlock.
 after('deploy:failed', 'deploy:unlock');
 
-task('deploy:fetch', function () {
-    run('cd {{release_path}} && git fetch');
-});
-before('deploy:update_code', 'deploy:fetch');
-
 after('deploy:update_code', 'deploy:git:submodules');
 task('deploy:git:submodules', function () {
     $git = get('bin/git');
