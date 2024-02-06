@@ -22,11 +22,9 @@ class Leave extends Model implements Auditable {
         "description",
     ];
 
-    // The attributes that should be mutated to dates.
-    protected $dates = [
-        'start_date',
-        'end_date',
-        'deleted_at',
+    public $casts = [
+        'start_date' => 'datetime',
+        'end_date' => 'datetime',
     ];
 
     protected $hidden = [

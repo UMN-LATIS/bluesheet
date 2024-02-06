@@ -24,12 +24,6 @@ class User extends Authenticatable implements Auditable {
 
     public $timestamps = true;
 
-    /**
-     * The attributes that should be mutated to dates.
-     *
-     * @var array
-     */
-    protected $dates = ['deleted_at'];
     protected $casts = [
         'send_email_reminders' => 'boolean',
         'notify_of_favorite_changes' => 'boolean',
