@@ -18,8 +18,8 @@ class Membership extends JsonResource {
             "id" => $this->id,
             "user" => $this->user,
             "role" => $this->role,
-            "start_date" => $this->start_date ? $this->start_date->format('Y-m-d') : null,
-            "end_date" => $this->end_date ? $this->end_date->format('Y-m-d') : null,
+            "start_date" => $this->start_date ?? null,
+            "end_date" => $this->end_date ?? null,
             "admin" => $this->admin,
             "notes" => $this->notes
         ];
