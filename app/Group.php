@@ -19,7 +19,9 @@ class Group extends Model implements AuditableContract {
 
     protected $casts = [
         'include_child_groups' => 'boolean',
-        'show_unit' => 'boolean'
+        'show_unit' => 'boolean',
+        'start_date' => 'datetime',
+        'end_date' => 'datetime'
     ];
 
     protected $fillable = [
@@ -33,13 +35,6 @@ class Group extends Model implements AuditableContract {
         'dept_id',
         'include_child_groups'
     ];
-
-    /**
-     * The attributes that should be mutated to dates.
-     *
-     * @var array
-     */
-    protected $dates = ['deleted_at', 'start_date', 'end_date'];
 
     public function parentOrganization() {
         return $this->belongsTo("App\ParentOrganization");

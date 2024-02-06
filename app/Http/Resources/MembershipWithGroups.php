@@ -11,31 +11,29 @@ use Auth;
  * but the only way to pass a parameter seems to involve doing horrible things
  */
 
-class MembershipWithGroups extends JsonResource
-{
+class MembershipWithGroups extends JsonResource {
     /**
      * Transform the resource collection into an array.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request)
-    {
+    public function toArray($request) {
         $group = $this->group;
-        if($group->private_group && Auth::user()->id !== $this->user_id && !Auth::user()->can('group admin')) {
+        if ($group->private_group && Auth::user()->id !== $this->user_id && !Auth::user()->can('group admin')) {
             $group->group_title = "Private Group";
             $group->id = null;
         }
 
         return [
-            "id"=>$this->id,
-            "user"=>$this->user,
-            "group"=>$this->group,
-            "role"=>$this->role,
-            "start_date"=>$this->start_date?$this->start_date->format('Y-m-d'):null,
-            "end_date"=>$this->end_date?$this->end_date->format('Y-m-d'):null,
-            "admin"=>$this->admin,
-            "notes"=>$this->notes
+            "id" => $this->id,
+            "user" => $this->user,
+            "group" => $this->group,
+            "role" => $this->role,
+            "start_date" => $this->start_date ?? null,
+            "end_date" => $this->end_date ?? null,
+            "admin" => $this->admin,
+            "notes" => $this->notes
         ];
     }
 }
