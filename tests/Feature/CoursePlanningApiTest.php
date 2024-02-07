@@ -111,23 +111,28 @@ describe('GET /api/groups/:groupId/sections', function () {
         ]);
     });
 
-    todo('requires user to have read privileges');
+    it('requires user to have read privileges', function () {
+        actingAs($this->basicUser);
+
+        $res = get("/api/course-planning/groups/{$this->group->id}/sections");
+        expect($res->status())->toBe(403);
+    });
 });
 
-describe('POST /api/groups/:groupId/sections', function () {
-    todo('creates a new unofficial section for an official SIS course');
-    todo('creates a new unofficial section for an unofficial course');
-    todo('requires the user to have edit privileges');
-});
+// describe('POST /api/groups/:groupId/sections', function () {
+//     todo('creates a new unofficial section for an official SIS course');
+//     todo('creates a new unofficial section for an unofficial course');
+//     todo('requires the user to have edit privileges');
+// });
 
-describe('PUT /api/groups/:groupId/sections/:sectionId', function () {
-    todo('updates an existing unofficial section');
-    todo('rejects updates for official sections');
-    todo('requires user to have edit privileges');
-});
+// describe('PUT /api/groups/:groupId/sections/:sectionId', function () {
+//     todo('updates an existing unofficial section');
+//     todo('rejects updates for official sections');
+//     todo('requires user to have edit privileges');
+// });
 
-describe('DELETE /api/groups/:groupId/sections/:sectionId', function () {
-    todo('deletes an unofficial section');
-    todo('does not delete OFFICIAL sections');
-    todo('requires user to have edit privileges');
-});
+// describe('DELETE /api/groups/:groupId/sections/:sectionId', function () {
+//     todo('deletes an unofficial section');
+//     todo('does not delete OFFICIAL sections');
+//     todo('requires user to have edit privileges');
+// });
