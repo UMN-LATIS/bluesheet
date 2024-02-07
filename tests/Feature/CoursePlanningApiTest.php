@@ -1,5 +1,6 @@
 <?php
 
+use App\CourseSection;
 use App\Group;
 use Database\Seeders\TestDatabaseSeeder;
 use App\Library\Bandaid;
@@ -81,7 +82,34 @@ describe('GET /api/groups/:groupId/sections', function () {
         ]);
     });
 
-    todo('includes unofficial sections in local db');
+    it('includes unofficial sections in local db', function () {
+        // add an unofficial section to the local db
+        $section = CourseSection::factory()->create([
+            'group_id' => $this->group->id,
+            'course_id' => 'TEST-1234',
+        ]);
+
+        // get a list of sections for this group
+        actingAs($this->admin);
+        $res = get("/api/course-planning/groups/{$this->group->id}/sections");
+
+        // expect that the unofficial section is included
+        $sectionFromApi = collect($res->json())->firstWhere('courseId', $section->course_id);
+        expect($sectionFromApi)->toEqual([
+            'id' => "db-{$section->id}",
+            'dbId' => $section->id,
+            'groupId' => $section->group_id,
+            'courseId' => $section->course_id,
+            'termId' => $section->term_id,
+            'classSection' => $section->class_section,
+            'enrollmentCap' => 0,
+            'enrollmentTotal' => 0,
+            'waitlistCap' => 0,
+            'waitlistTotal' => 0,
+            'isCancelled' => false,
+            'isPublished' => false,
+        ]);
+    });
 
     todo('requires user to have read privileges');
 });
