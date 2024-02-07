@@ -143,3 +143,20 @@ export async function fetchLeavesForGroup(groupId: number) {
   );
   return res.data;
 }
+
+export async function addUnofficialCourseToGroup(
+  groupId: number,
+  course: T.Course,
+) {
+  const res = await axios.post<T.Course>(
+    `/api/course-planning/groups/${groupId}/courses`,
+    {
+      title: course.title,
+      subject: course.subject,
+      catalog_number: course.catalogNumber,
+      type: course.courseType,
+      level: course.courseLevel,
+    },
+  );
+  return res.data;
+}
