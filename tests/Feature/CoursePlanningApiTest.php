@@ -35,7 +35,9 @@ describe("GET /api/course-planning/groups/:groupId/courses", function () {
 
         $json = $res->json();
         expect($json)->not()->toBeEmpty();
-        expect($json[0])->toEqual([
+        $courseFromApi = collect($json)->firstWhere('id', 'AFRO-1021');
+
+        expect($courseFromApi)->toMatchArray([
             'id' => 'AFRO-1021',
             'title' => 'Introduction to Africa',
             'subject' =>  'AFRO',
@@ -45,7 +47,33 @@ describe("GET /api/course-planning/groups/:groupId/courses", function () {
         ]);
     });
 
-    todo('includes unofficial courses in local db', function () {
+    it('includes unofficial courses in local db', function () {
+        // add an unofficial course to the local db
+        $course = $this->group->courses()->create([
+            'subject' => 'TEST',
+            'catalog_number' => '1234',
+            'title' => 'Test Course',
+            'type' => 'LEC',
+            'level' => 'UGRD',
+        ]);
+
+        // get a list of courses for that group
+        actingAs($this->admin);
+        $res = getJson("/api/course-planning/groups/{$this->group->id}/courses");
+
+        // expect that the unofficial course is included
+        $courseFromApi = collect($res->json())->firstWhere('id', $course->courseCode);
+
+
+        expect($courseFromApi)->not()->toBeNull();
+        expect($courseFromApi)->toMatchArray([
+            'id' => $course->courseCode,
+            'title' => $course->title,
+            'subject' => $course->subject,
+            'catalogNumber' => $course->catalog_number,
+            'courseType' => $course->type,
+            'courseLevel' => $course->level,
+        ]);
     });
 
     it('requires user to have read privileges', function () {

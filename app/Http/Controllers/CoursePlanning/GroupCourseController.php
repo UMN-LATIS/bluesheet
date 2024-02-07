@@ -7,7 +7,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Library\Bandaid;
 use App\Group;
-use App\Http\Resources\CourseResource;
+use App\Http\Resources\SISCourseResource;
+use App\Http\Resources\LocalCourseResource;
 
 class GroupCourseController extends Controller {
 
@@ -20,7 +21,9 @@ class GroupCourseController extends Controller {
     public function index(Request $request, Group $group) {
         abort_if($request->user()->cannot('view planned courses'), 403);
 
-        $courses = collect($this->bandaid
+        $localCourses = $group->courses;
+
+        $sisCourses = collect($this->bandaid
             ->getDeptClassList($group->dept_id))
             ->map(function ($classRecord) {
                 $shortCode = join('-', [
@@ -32,7 +35,10 @@ class GroupCourseController extends Controller {
             })
             ->unique('shortCode')->sortBy('shortCode');
 
-        return CourseResource::collection($courses);
+        $normedSisCourses = SISCourseResource::collection($sisCourses);
+        $normedLocalCourses = LocalCourseResource::collection($localCourses);
+
+        return $normedSisCourses->concat($normedLocalCourses);
     }
 
     public function store(Request $request, Group $group) {

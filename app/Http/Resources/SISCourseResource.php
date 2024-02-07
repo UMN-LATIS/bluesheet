@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Resources\Json\JsonResource;
 use App\Library\Utilities;
 
-class CourseResource extends JsonResource {
+class SISCourseResource extends JsonResource {
     /**
      * Transform the resource into an array.
      *
