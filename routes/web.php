@@ -41,6 +41,13 @@ if (config('shibboleth.emulate_idp')) {
     });
 }
 
+// Route::get('/api/bandaid/getTerms', function () {
+//     $bandaid = new \App\Library\Bandaid();
+//     $terms = $bandaid->getTerms();
+//     return response()->json($terms);
+// });
+
+
 
 Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
 
@@ -104,7 +111,6 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
 // routes with hash to allow unauthenticated loads
 Route::get('/api/group/{group}/{hash}', 'GroupController@show');
 Route::get('/api/group/{group}/members/{hash}', 'GroupController@members');
-
 
 // Route::resource('users', 'Admin\\UsersController');
 Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'permission:edit users']], function () {

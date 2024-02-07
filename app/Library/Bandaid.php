@@ -32,7 +32,7 @@ class Bandaid {
 
         $response = Http::withHeaders($this->headers)->get($this->baseUri . $url);
 
-        $value = json_decode($response->body());
+        $value = $response->json() ?? [];
         Cache::put($url, $value, 600);
         return $value;
     }
@@ -48,7 +48,7 @@ class Bandaid {
                 ['form_params' => $body]
             );
 
-        $value = json_decode($response->body()) ?? [];
+        $value = $response->json() ?? [];
         Cache::put(json_encode($body), $value, 600);
         return $value;
     }
@@ -56,7 +56,7 @@ class Bandaid {
     public function getDepartments(array $deptIds): array {
         try {
             $result = $this->cachedGet(
-                'department/?' . urldecode(http_build_query(["deptId" => $deptIds]))
+                '/department/?' . urldecode(http_build_query(["deptId" => $deptIds]))
             );
             return $result;
         } catch (RequestException $e) {
@@ -69,7 +69,7 @@ class Bandaid {
     public function getEmployees(array $emplIds): array {
         try {
             $result = $this->cachedPost(
-                'employment/employees',
+                '/employment/employees',
                 ["emplids" => $emplIds]
             );
             return $result;
@@ -94,7 +94,7 @@ class Bandaid {
      */
     public function getEmployeesForDepartment(int $deptId): array {
         try {
-            $result = $this->cachedGet('department/' . $deptId . '/employees');
+            $result = $this->cachedGet('/department/' . $deptId . '/employees');
             return $result;
         } catch (RequestException $e) {
             $msg = $e->getMessage();
@@ -105,7 +105,7 @@ class Bandaid {
 
     public function getLeavesForEmployee($emplId): array {
         try {
-            $result = $this->cachedGet('employment/leaves/' . $emplId);
+            $result = $this->cachedGet('/employment/leaves/' . $emplId);
             return $result;
         } catch (RequestException $e) {
             $msg = $e->getMessage();
@@ -131,7 +131,7 @@ class Bandaid {
      */
     public function getTerms(): array {
         try {
-            $result = $this->cachedGet('classes/terms/');
+            $result = $this->cachedGet('/classes/terms/');
             return $result;
         } catch (RequestException $e) {
             $msg = $e->getMessage();
@@ -193,7 +193,7 @@ class Bandaid {
      */
     public function getDeptClassList(int $deptId): array {
         try {
-            $result = $this->cachedGet('classes/list/' . $deptId);
+            $result = $this->cachedGet('/classes/list/' . $deptId);
             return $result;
         } catch (RequestException $e) {
             $msg = $e->getMessage();
@@ -204,7 +204,7 @@ class Bandaid {
 
     public function getDeptScheduleForTerm(int $deptId, int $term): array {
         try {
-            $result = $this->cachedGet('classes/list/' . $deptId . "/" . $term);
+            $result = $this->cachedGet('/classes/list/' . $deptId . "/" . $term);
             return $result;
         } catch (RequestException $e) {
             $msg = $e->getMessage();

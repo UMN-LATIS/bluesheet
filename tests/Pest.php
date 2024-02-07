@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Facades\Http;
+
 /*
 |--------------------------------------------------------------------------
 | Test Case
@@ -13,7 +15,7 @@
 
 uses(
     Tests\TestCase::class,
-    // Illuminate\Foundation\Testing\RefreshDatabase::class,
+    Illuminate\Foundation\Testing\RefreshDatabase::class,
 )->in('Feature');
 
 /*
@@ -42,7 +44,33 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
-{
-    // ..
+function fixture(string $filename): array {
+    $file = file_get_contents(
+        filename: base_path("tests/Fixtures/$filename"),
+    );
+
+    if (!$file) {
+        throw new InvalidArgumentException(
+            message: "Cannot find fixture: [$filename] at tests/Fixtures/$filename",
+        );
+    }
+
+    return json_decode(
+        json: $file,
+        associative: true,
+    );
+}
+
+
+function setupMockBandaidApiResponses() {
+    $BANDAID_API = config('bandaid.baseUri');
+    $termsJson = fixture("Bandaid/mockGetTerms.json");
+
+    Http::fake([
+        "{$BANDAID_API}/classes/terms*" =>
+        Http::response(
+            $termsJson,
+            200
+        )
+    ]);
 }
