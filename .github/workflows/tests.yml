@@ -40,7 +40,7 @@ jobs:
       - run: docker-compose exec -T app chmod -R 777 storage
 
       - name: Run integration tests with Pest
-        run: ./vendor/bin/pest
+        run: docker-compose exec -T app ./vendor/bin/pest
 
       - name: Run E2E tests with Cypress
         uses: cypress-io/github-action@v5
