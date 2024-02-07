@@ -41,14 +41,6 @@ if (config('shibboleth.emulate_idp')) {
     });
 }
 
-// Route::get('/api/bandaid/getTerms', function () {
-//     $bandaid = new \App\Library\Bandaid();
-//     $terms = $bandaid->getTerms();
-//     return response()->json($terms);
-// });
-
-
-
 Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
 
     Route::get('autocompleter/user', 'AutocompleteController@userAutocompleter');
