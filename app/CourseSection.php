@@ -20,6 +20,11 @@ class CourseSection extends Model {
         'is_cancelled',
     ];
 
+    protected $casts = [
+        'is_published' => 'boolean',
+        'is_cancelled' => 'boolean',
+    ];
+
     public function group() {
         return $this->belongsTo(Group::class);
     }
