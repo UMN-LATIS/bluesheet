@@ -12,23 +12,25 @@ use function Pest\Laravel\get;
 beforeEach(function () {
     // permit exceptions to stop the test
     // for easier debugging
-    $this->withoutExceptionHandling();
-
-    $this->seed(TestDatabaseSeeder::class);
+    // $this->withoutExceptionHandling();
     setupMockBandaidApiResponses();
 
-    $admin = User::where('umndid', 'admin')->first();
-    actingAs($admin);
+    $this->seed(TestDatabaseSeeder::class);
+
+    // create a group for our tests
+    $this->group = Group::factory()->create();
+
+    // act as admin for tests
+    $this->admin = User::where('umndid', 'admin')->first();
+    $this->basicUser = User::where('umndid', 'basic_user')->first();
 });
 
 describe("GET /api/course-planning/groups/:groupId/courses", function () {
     it('gets a list of courses from the SIS class records', function () {
-        // create a group
-        $group = Group::factory()->create();
+        actingAs($this->admin);
 
         // get a list of courses for that group
-        $res = get("/api/course-planning/groups/{$group->id}/courses");
-
+        $res = get("/api/course-planning/groups/{$this->group->id}/courses");
         expect($res->status())->toBe(200);
 
         $json = $res->json();
@@ -43,16 +45,41 @@ describe("GET /api/course-planning/groups/:groupId/courses", function () {
         ]);
     });
 
-    todo('get courses included particular roles');
-
     todo('includes unofficial courses in local db', function () {
     });
 
-    todo('requires user to have read privileges');
+    it('requires user to have read privileges', function () {
+        actingAs($this->basicUser);
+
+        // get a list of courses for that group
+        $res = get("/api/course-planning/groups/{$this->group->id}/courses");
+        expect($res->status())->toBe(403);
+    });
 });
 
 describe('GET /api/groups/:groupId/sections', function () {
-    todo('gets a list of sections from SIS class records');
+    it('gets a list of sections from SIS class records', function () {
+        actingAs($this->admin);
+
+        $res = get("/api/course-planning/groups/{$this->group->id}/sections");
+
+        expect($res->status())->toBe(200);
+        expect($res->json())->not()->toBeEmpty();
+        expect($res->json()[0])->toEqual([
+            'id' => 'sis-87153',
+            'courseId' => 'AFRO-3654',
+            'classNumber' => 87153,
+            'dbId' => null,
+            'termId' => 1195,
+            'classSection' => '001',
+            'enrollmentCap' => 25,
+            'enrollmentTotal' => 0,
+            'waitlistCap' => 0,
+            'waitlistTotal' => 0,
+            'isCancelled' => true,
+            'isPublished' => true,
+        ]);
+    });
 
     todo('includes unofficial sections in local db');
 
