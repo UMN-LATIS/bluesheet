@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
 
 /*
@@ -45,8 +46,17 @@ expect()->extend('toBeOne', function () {
 */
 
 function fixture(string $filename): array {
+    $cwd = getcwd();
+    $path = $cwd . "/tests/Fixtures/$filename";
+
+    if (!file_exists($path)) {
+        throw new InvalidArgumentException(
+            "File at path [$path] does not exist."
+        );
+    }
+
     $file = file_get_contents(
-        filename: base_path("tests/Fixtures/$filename"),
+        filename: $path,
     );
 
     if (!$file) {
@@ -61,16 +71,19 @@ function fixture(string $filename): array {
     );
 }
 
+function mockResponse(string $filename, int $status = 200) {
+    $fixture = fixture($filename);
+    return Http::response($fixture, $status);
+}
 
 function setupMockBandaidApiResponses() {
     $BANDAID_API = config('bandaid.baseUri');
-    $termsJson = fixture("Bandaid/mockGetTerms.json");
 
-    Http::fake([
-        "{$BANDAID_API}/classes/terms*" =>
-        Http::response(
-            $termsJson,
-            200
-        )
-    ]);
+    $fakedResponses = [
+        "{$BANDAID_API}/classes/terms*" => mockResponse("Bandaid/mockGetTerms.json"),
+        "{$BANDAID_API}/classes/list*" => mockResponse("Bandaid/mockGetDeptClassList.json"),
+        "{$BANDAID_API}/department/*/employees" => mockResponse("Bandaid/mockGetEmployeesForDept.json"),
+    ];
+
+    Http::fake($fakedResponses);
 }

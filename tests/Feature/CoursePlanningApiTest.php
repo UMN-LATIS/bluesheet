@@ -1,9 +1,7 @@
 <?php
 
-use App\User;
 use Database\Seeders\TestDatabaseSeeder;
 use App\Library\Bandaid;
-use Illuminate\Support\Facades\Http;
 
 describe('Course Planning API', function () {
     beforeEach(function () {
