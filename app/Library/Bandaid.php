@@ -32,7 +32,8 @@ class Bandaid {
 
         $response = Http::withHeaders($this->headers)->get($this->baseUri . $url);
 
-        $value = $response->json() ?? [];
+        $value = json_decode($response->body());
+
         Cache::put($url, $value, 600);
         return $value;
     }
@@ -48,7 +49,7 @@ class Bandaid {
                 ['form_params' => $body]
             );
 
-        $value = $response->json() ?? [];
+        $value = json_decode($response->body());
         Cache::put(json_encode($body), $value, 600);
         return $value;
     }
