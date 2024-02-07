@@ -7,8 +7,7 @@ use App\Library\Bandaid;
 use App\User;
 use Illuminate\Support\Facades\Http;
 
-use function Pest\Laravel\actingAs;
-use function Pest\Laravel\get;
+use function Pest\Laravel\{actingAs, get, post};
 
 beforeEach(function () {
     // permit exceptions to stop the test
@@ -56,6 +55,40 @@ describe("GET /api/course-planning/groups/:groupId/courses", function () {
         $res = get("/api/course-planning/groups/{$this->group->id}/courses");
         expect($res->status())->toBe(403);
     });
+});
+
+describe('POST /api/groups/:groupId/courses', function () {
+    it('adds unofficial courses to the local db', function () {
+        actingAs($this->admin);
+
+        // get a list of courses for that group
+        $res = post("/api/course-planning/groups/{$this->group->id}/courses", [
+            'title' => 'Test Course',
+            'subject' => 'TEST',
+            'catalog_number' => '1234',
+            'type' => 'LEC',
+            'level' => 'UGRD',
+        ]);
+        expect($res->status())->toBe(201);
+
+        // expect that the course was added to the local db
+        $course = $this->group
+            ->courses
+            ->where('subject', 'TEST')
+            ->where('catalog_number', '1234')
+            ->first();
+
+        expect($course->toArray())->toMatchArray([
+            'group_id' => $this->group->id,
+            'subject' => 'TEST',
+            'catalog_number' => '1234',
+            'title' => 'Test Course',
+            'type' => 'LEC',
+            'level' => 'UGRD',
+        ]);
+    });
+
+    todo('validates input');
 });
 
 describe('GET /api/groups/:groupId/sections', function () {

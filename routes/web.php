@@ -95,7 +95,7 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
     Route::delete('leaves/{leave}/artifacts/{leaveArtifact}', [LeaveArtifactController::class, 'destroy']);
 
     Route::prefix('course-planning')->group(function () {
-        Route::get('/groups/{group}/courses', [GroupCourseController::class, 'index']);
+        Route::resource('/groups/{group}/courses', GroupCourseController::class);
         Route::resource('/groups/{group}/sections', GroupSectionController::class);
         Route::resource('/groups/{group}/enrollments', GroupEnrollmentController::class);
         Route::get('/groups/{group}/people', [GroupPersonController::class, 'index']);

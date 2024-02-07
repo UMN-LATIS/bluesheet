@@ -99,4 +99,8 @@ class Group extends Model implements AuditableContract {
     public function getHashAttribute() {
         return substr(sha1($this->id . config("app.key")), 0, 10);
     }
+
+    public function courses() {
+        return $this->hasMany(Course::class);
+    }
 }

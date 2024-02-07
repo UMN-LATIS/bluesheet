@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\CoursePlanning;
 
+use App\Course;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Library\Bandaid;
@@ -32,5 +33,20 @@ class GroupCourseController extends Controller {
             ->unique('shortCode')->sortBy('shortCode');
 
         return CourseResource::collection($courses);
+    }
+
+    public function store(Request $request, Group $group) {
+        abort_if($request->user()->cannot('plan courses'), 403);
+
+        $course = Course::create([
+            'group_id' => $group->id,
+            'subject' => $request->input('subject'),
+            'catalog_number' => $request->input('catalog_number'),
+            'title' => $request->input('title'),
+            'type' => $request->input('type'),
+            'level' => $request->input('level'),
+        ]);
+
+        return response()->json($course, 201);
     }
 }
