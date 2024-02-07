@@ -36,7 +36,7 @@ class GroupCourseController extends Controller {
     }
 
     public function store(Request $request, Group $group) {
-        abort_if($request->user()->cannot('plan courses'), 403);
+        abort_if($request->user()->cannot('edit planned courses'), 403);
 
         $course = Course::create([
             'group_id' => $group->id,

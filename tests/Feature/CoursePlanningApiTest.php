@@ -88,6 +88,29 @@ describe('POST /api/groups/:groupId/courses', function () {
         ]);
     });
 
+    it('prevents users without edit permissions from adding courses', function () {
+        actingAs($this->basicUser);
+
+        // get a list of courses for that group
+        $res = post("/api/course-planning/groups/{$this->group->id}/courses", [
+            'title' => 'Test Course',
+            'subject' => 'TEST',
+            'catalog_number' => '1234',
+            'type' => 'LEC',
+            'level' => 'UGRD',
+        ]);
+        expect($res->status())->toBe(403);
+
+        // expect that the course was not added to the local db
+        $course = $this->group
+            ->courses
+            ->where('subject', 'TEST')
+            ->where('catalog_number', '1234')
+            ->first();
+
+        expect($course)->toBeNull();
+    });
+
     todo('validates input');
 });
 
