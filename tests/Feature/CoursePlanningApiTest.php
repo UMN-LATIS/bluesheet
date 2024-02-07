@@ -140,10 +140,35 @@ describe('POST /api/groups/:groupId/courses', function () {
         'level must be a string' => ['level', 123, 'The level must be a string.'],
     ]);
 
-    todo('converts subject to uppercase');
-    todo('converts catalog_number to uppercase');
-    todo('converts type to uppercase');
-    todo('converts level to uppercase');
+    it('converts everything but title to uppercase', function () {
+        actingAs($this->admin);
+
+        $res = postJson("/api/course-planning/groups/{$this->group->id}/courses", [
+            'title' => 'Test Course',
+            'subject' => 'test',
+            'catalog_number' => '1234w',
+            'type' => 'lec',
+            'level' => 'ugrd',
+        ]);
+
+        expect($res->status())->toBe(201);
+
+        // expect that the course was added to the local db
+        $course = $this->group
+            ->courses
+            ->where('subject', 'TEST')
+            ->where('catalog_number', '1234W')
+            ->first();
+
+        expect($course->toArray())->toMatchArray([
+            'group_id' => $this->group->id,
+            'subject' => 'TEST',
+            'catalog_number' => '1234W',
+            'title' => 'Test Course',
+            'type' => 'LEC',
+            'level' => 'UGRD',
+        ]);
+    });
 });
 
 describe('GET /api/groups/:groupId/sections', function () {

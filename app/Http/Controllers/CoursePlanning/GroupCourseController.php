@@ -47,7 +47,11 @@ class GroupCourseController extends Controller {
         ]);
 
         $course = Course::create([
-            ...$validated,
+            'title' => $validated['title'],
+            'subject' => strtoupper($validated['subject']),
+            'catalog_number' => strtoupper($validated['catalog_number']),
+            'type' => strtoupper($validated['type']),
+            'level' => strtoupper($validated['level']),
             'group_id' => $group->id,
         ]);
 
