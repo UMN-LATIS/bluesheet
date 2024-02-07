@@ -38,13 +38,17 @@ class GroupCourseController extends Controller {
     public function store(Request $request, Group $group) {
         abort_if($request->user()->cannot('edit planned courses'), 403);
 
+        $validated = $request->validate([
+            'subject' => 'required|string',
+            'catalog_number' => 'required|string',
+            'title' => 'required|string',
+            'type' => 'required|string',
+            'level' => 'required|string',
+        ]);
+
         $course = Course::create([
+            ...$validated,
             'group_id' => $group->id,
-            'subject' => $request->input('subject'),
-            'catalog_number' => $request->input('catalog_number'),
-            'title' => $request->input('title'),
-            'type' => $request->input('type'),
-            'level' => $request->input('level'),
         ]);
 
         return response()->json($course, 201);

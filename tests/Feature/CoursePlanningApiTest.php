@@ -7,7 +7,7 @@ use App\Library\Bandaid;
 use App\User;
 use Illuminate\Support\Facades\Http;
 
-use function Pest\Laravel\{actingAs, get, post};
+use function Pest\Laravel\{actingAs, getJson, postJson};
 
 beforeEach(function () {
     // permit exceptions to stop the test
@@ -30,7 +30,7 @@ describe("GET /api/course-planning/groups/:groupId/courses", function () {
         actingAs($this->admin);
 
         // get a list of courses for that group
-        $res = get("/api/course-planning/groups/{$this->group->id}/courses");
+        $res = getJson("/api/course-planning/groups/{$this->group->id}/courses");
         expect($res->status())->toBe(200);
 
         $json = $res->json();
@@ -52,7 +52,7 @@ describe("GET /api/course-planning/groups/:groupId/courses", function () {
         actingAs($this->basicUser);
 
         // get a list of courses for that group
-        $res = get("/api/course-planning/groups/{$this->group->id}/courses");
+        $res = getJson("/api/course-planning/groups/{$this->group->id}/courses");
         expect($res->status())->toBe(403);
     });
 });
@@ -62,7 +62,7 @@ describe('POST /api/groups/:groupId/courses', function () {
         actingAs($this->admin);
 
         // get a list of courses for that group
-        $res = post("/api/course-planning/groups/{$this->group->id}/courses", [
+        $res = postJson("/api/course-planning/groups/{$this->group->id}/courses", [
             'title' => 'Test Course',
             'subject' => 'TEST',
             'catalog_number' => '1234',
@@ -92,7 +92,7 @@ describe('POST /api/groups/:groupId/courses', function () {
         actingAs($this->basicUser);
 
         // get a list of courses for that group
-        $res = post("/api/course-planning/groups/{$this->group->id}/courses", [
+        $res = postJson("/api/course-planning/groups/{$this->group->id}/courses", [
             'title' => 'Test Course',
             'subject' => 'TEST',
             'catalog_number' => '1234',
@@ -111,14 +111,46 @@ describe('POST /api/groups/:groupId/courses', function () {
         expect($course)->toBeNull();
     });
 
-    todo('validates input');
+    it('validates course fields', function ($field, $value, $expectedError) {
+        actingAs($this->admin);
+
+        $data = [
+            'title' => 'Test Course',
+            'subject' => 'TEST',
+            'catalog_number' => '1234',
+            'type' => 'LEC',
+            'level' => 'UGRD',
+        ];
+
+        // Override the specific field with the value from the dataset
+        $data[$field] = $value;
+
+        $res = postJson("/api/course-planning/groups/{$this->group->id}/courses", $data);
+
+        expect($res->status())->toBe(422);
+        $json = $res->json();
+        $errorMessage = $json['errors'][$field][0];
+        expect($errorMessage)->toEqual($expectedError);
+    })->with([
+        // test cases
+        'subject must be a string' => ['subject', 1234, 'The subject must be a string.'],
+        'catalog_number must be a string' => ['catalog_number', 123, 'The catalog number must be a string.'],
+        'title must be a string' => ['title', 123, 'The title must be a string.'],
+        'type must be a string' => ['type', 123, 'The type must be a string.'],
+        'level must be a string' => ['level', 123, 'The level must be a string.'],
+    ]);
+
+    todo('converts subject to uppercase');
+    todo('converts catalog_number to uppercase');
+    todo('converts type to uppercase');
+    todo('converts level to uppercase');
 });
 
 describe('GET /api/groups/:groupId/sections', function () {
     it('gets a list of sections from SIS class records', function () {
         actingAs($this->admin);
 
-        $res = get("/api/course-planning/groups/{$this->group->id}/sections");
+        $res = getJson("/api/course-planning/groups/{$this->group->id}/sections");
 
         expect($res->status())->toBe(200);
         expect($res->json())->not()->toBeEmpty();
@@ -147,7 +179,7 @@ describe('GET /api/groups/:groupId/sections', function () {
 
         // get a list of sections for this group
         actingAs($this->admin);
-        $res = get("/api/course-planning/groups/{$this->group->id}/sections");
+        $res = getJson("/api/course-planning/groups/{$this->group->id}/sections");
 
         // expect that the unofficial section is included
         $sectionFromApi = collect($res->json())->firstWhere('courseId', $section->course_id);
@@ -170,7 +202,7 @@ describe('GET /api/groups/:groupId/sections', function () {
     it('requires user to have read privileges', function () {
         actingAs($this->basicUser);
 
-        $res = get("/api/course-planning/groups/{$this->group->id}/sections");
+        $res = getJson("/api/course-planning/groups/{$this->group->id}/sections");
         expect($res->status())->toBe(403);
     });
 });
