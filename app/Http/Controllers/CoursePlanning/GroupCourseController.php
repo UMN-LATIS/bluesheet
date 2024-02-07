@@ -26,14 +26,13 @@ class GroupCourseController extends Controller {
         $sisCourses = collect($this->bandaid
             ->getDeptClassList($group->dept_id))
             ->map(function ($classRecord) {
-                $shortCode = join('-', [
+                $classRecord->courseCode = join('-', [
                     $classRecord->SUBJECT, $classRecord->CATALOG_NUMBER,
                 ]);
 
-                $classRecord->shortCode = $shortCode;
                 return $classRecord;
             })
-            ->unique('shortCode')->sortBy('shortCode');
+            ->unique('courseCode')->sortBy('courseCode');
 
         $normedSisCourses = SISCourseResource::collection($sisCourses);
         $normedLocalCourses = LocalCourseResource::collection($localCourses);

@@ -14,12 +14,14 @@ class SISCourseResource extends JsonResource {
      */
     public function toArray($request) {
         return [
-            'id' => $this->shortCode,
+            'id' => $this->courseCode,
             'subject' => $this->SUBJECT, // "HIST"
             'catalogNumber' => $this->CATALOG_NUMBER, // "1001W"
             'title' => $this->DESCRIPTION,
             'courseType' => Utilities::trimWithFallback($this->COMPONENT_CLASS), // "LEC"
             "courseLevel" => Utilities::trimWithFallback($this->ACADEMIC_CAREER), // "UGRD"
+            "courseCode" => $this->courseCode, // "HIST-1001W
+            'source' => 'sis',
         ];
     }
 }
