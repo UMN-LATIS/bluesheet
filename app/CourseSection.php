@@ -5,6 +5,9 @@ namespace App;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @mixin IdeHelperCourseSection
+ */
 class CourseSection extends Model {
     use HasFactory;
 

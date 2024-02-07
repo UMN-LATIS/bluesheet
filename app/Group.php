@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\CourseSection;
 
+/**
+ * @mixin IdeHelperGroup
+ */
 class Group extends Model implements AuditableContract {
     use AuditableTrait;
     use SoftDeletes;
