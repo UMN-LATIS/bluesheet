@@ -60,6 +60,6 @@ class GroupCourseController extends Controller {
             'group_id' => $group->id,
         ]);
 
-        return response()->json($course, 201);
+        return new LocalCourseResource($course);
     }
 }
