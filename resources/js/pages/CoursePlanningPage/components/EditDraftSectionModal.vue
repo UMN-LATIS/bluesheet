@@ -8,13 +8,72 @@
     <form @submit.prevent="handleSubmit">
       <div class="tw-flex tw-flex-col tw-gap-4">
         <ComboBox
+          v-if="!isAddingAsNewCourse"
           id="select-course-combobox"
           v-model="selectedOptions.course"
           :options="courseOptions"
           label="Course"
           :showLabel="true"
           :required="true"
+          :canAddNewOption="true"
+          @addNewOption="isAddingAsNewCourse = true"
         />
+        <fieldset
+          v-if="isAddingAsNewCourse"
+          class="tw-border-neutral-300 tw-bg-neutral-100 tw-flex tw-flex-col tw-gap-4 tw-p-4 tw-rounded-md"
+        >
+          <div
+            class="tw-flex tw-justify-between tw-items-center tw-border-0 tw-border-b tw-border-neutral-200 tw-border-solid"
+          >
+            <legend class="tw-text-base tw-font-bold tw-m-0">
+              Add New Course Option ✨
+            </legend>
+          </div>
+          <div class="tw-flex tw-gap-4">
+            <InputGroup
+              id="new-course-subject"
+              class="tw-w-1/2"
+              label="Subject"
+              :required="true"
+              placeholder="ANTH, HIST, etc."
+              :modelValue="newCourse.subject"
+              @update:modelValue="
+                (str: string) => (newCourse.subject = str.toUpperCase())
+              "
+            />
+            <InputGroup
+              id="new-course-catalog-number"
+              class="tw-w-1/2"
+              label="Catalog Number"
+              :required="true"
+              placeholder="1001, 2002W, etc."
+              :modelValue="newCourse.catalogNumber"
+              @update:modelValue="
+                (str: string) => (newCourse.catalogNumber = str.toUpperCase())
+              "
+            />
+          </div>
+          <InputGroup
+            id="new-course-title"
+            v-model="newCourse.title"
+            label="Title"
+            :required="true"
+            placeholder="Europe and the World, etc."
+          />
+
+          <div class="tw-flex tw-justify-end tw-items-center">
+            <Button variant="tertiary" @click="handleCancelAddNewCourseOption"
+              >Cancel</Button
+            >
+            <Button
+              variant="secondary"
+              :disabled="!isFormValidForAddingNewCourseOption"
+              @click="handleSaveNewCourseOption"
+              >Add Option</Button
+            >
+          </div>
+        </fieldset>
+
         <ComboBox
           id="select-term-combobox"
           v-model="selectedOptions.term"
@@ -57,10 +116,11 @@
 import Modal from "@/components/Modal.vue";
 import ComboBox, { ComboBoxOption } from "@/components/ComboBox.vue";
 import { Term } from "@/types";
-import { computed, reactive, watch } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import Button from "@/components/Button.vue";
 import { useRootCoursePlanningStore } from "../stores/useRootCoursePlanningStore";
 import * as T from "@/types";
+import InputGroup from "@/components/InputGroup.vue";
 
 const props = defineProps<{
   show: boolean;
@@ -225,6 +285,43 @@ function handleSubmit() {
 
   resetForm();
   emits("close");
+}
+
+const isAddingAsNewCourse = ref(false);
+const newCourse = reactive<Omit<T.Course, "id">>({
+  subject: "",
+  catalogNumber: "",
+  title: "",
+  courseType: "TBD",
+  courseLevel: "TBD",
+});
+const isFormValidForAddingNewCourseOption = computed(() => {
+  return !!newCourse.subject && !!newCourse.catalogNumber && !!newCourse.title;
+});
+
+function handleCancelAddNewCourseOption() {
+  isAddingAsNewCourse.value = false;
+  newCourse.subject = "";
+  newCourse.catalogNumber = "";
+  newCourse.title = "";
+}
+
+function handleSaveNewCourseOption() {
+  if (!newCourse.subject || !newCourse.catalogNumber || !newCourse.title) {
+    throw new Error("Missing required fields");
+  }
+
+  const newCourseOption: T.Course = {
+    id: `${newCourse.subject}-${newCourse.catalogNumber}`,
+    ...newCourse,
+  };
+
+  coursePlanningStore.courseStore.addCourse(newCourseOption);
+  selectedOptions.course = toCourseOption(newCourseOption);
+  isAddingAsNewCourse.value = false;
+  newCourse.subject = "";
+  newCourse.catalogNumber = "";
+  newCourse.title = "";
 }
 </script>
 <style scoped></style>
