@@ -1,8 +1,7 @@
 <template>
   <DefaultLayout>
     <p>
-      This list combines the following data. Clicking the "show email list"
-      button will give you a de-duplicated set of email addresses.
+      This list combines the following data.
     </p>
     <ul>
       <li>
