@@ -12,7 +12,10 @@
         "
       />
     </td>
-    <td>{{ member.user.displayName }}</td>
+    <td class="tw-leading-tight">
+      <p class="tw-m-0">{{ member.user.displayName }}</p>
+      <small class="tw-text-xs tw-text-neutral-500">{{ member.role.label }}</small>
+    </td>
     <td colspan="6">
       <div
         v-tooltip.top-center="toolTipText"
