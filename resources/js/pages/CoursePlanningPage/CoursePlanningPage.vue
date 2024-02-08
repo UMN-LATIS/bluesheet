@@ -7,7 +7,7 @@
         >
           <header>
             <h1>{{ group?.group_title }}</h1>
-            <h2 class="tw-text-3xl">Scheduling Report</h2>
+            <h2 class="tw-text-3xl">Faculty Leaves Planning Report</h2>
           </header>
           <aside
             class="tw-max-w-xs tw-bg-neutral-100 tw-p-4 tw-rounded-md tw-w-full"

@@ -64,7 +64,7 @@ Stop the application: `sail down`.
 
 ## Local Development with Bandaid
 
-Some features of BlueSheet require access to [Bandaid](https://github.com/UMN-LATIS/Bandaid) API (e.g. the Scheduling Report).
+Some features of BlueSheet require access to [Bandaid](https://github.com/UMN-LATIS/Bandaid) API (e.g. the Faculty Leaves Planning Report page).
 
 To connect to Bandaid for local development:
 

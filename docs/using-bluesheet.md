@@ -118,8 +118,8 @@ The description field allows you to add additional context for the leave - for e
 
 ![Viewing Leaves](./leaves.png)
 
-## Scheduling Report ##
+## Faculty Leaves Planning Report
 
-Group administrators can use the "scheduling report" to quickly get a sense of how leaves and other scheduling issues might impact course planning. The "scheduling report" link is attached to any academic department in BlueSheet. If you don't see the scheduling report and believe you should have access, [contact support](mailto:latistecharch@umn.edu).
+Group administrators can use the Faculty Leaves Planning Report to quickly get a sense of how leaves and other scheduling issues might impact course planning. The Faculty Leaves Planning Report link is attached to any academic department in BlueSheet. If you don't see the report and believe you should have access, [contact support](mailto:latistecharch@umn.edu).
 
-The scheduling report displays a grid of semesters and instructors, with entries for courses taught and leave data. Courses in the future are generally only available for one or two semesters. 
+The Faculty Leaves Planning Report displays a grid of semesters and instructors, with entries for courses taught and leave data. Courses in the future are generally only available for one or two semesters. 
