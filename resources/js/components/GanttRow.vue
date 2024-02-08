@@ -12,7 +12,10 @@
         "
       />
     </td>
-    <td>{{ member.user.displayName }}</td>
+    <td class="tw-leading-tight">
+      <p class="tw-m-0">{{ member.user.displayName }}</p>
+      <small class="tw-text-xs tw-text-neutral-500">{{ member.role.label }}</small>
+    </td>
     <td colspan="6">
       <div
         v-tooltip.top-center="toolTipText"
@@ -26,13 +29,35 @@
 <script lang="ts">
 import $ from "jquery";
 import { dayjs } from "@/utils";
+import { PropType } from "vue";
+import { Membership } from "@/types";
 
 $(function () {
   $("[data-toggle='tooltip']").tooltip();
 });
 export default {
-  // eslint-disable-next-line vue/require-prop-types
-  props: ["member", "mindate", "maxdate", "showUnit", "filterList"],
+  props: {
+    member: {
+      type: Object as PropType<Membership>,
+      required: true,
+    },
+    mindate: {
+      type: Number,
+      required: true,
+    },
+    maxdate: {
+      type: Number,
+      required: true,
+    },
+    showUnit: {
+      type: Boolean,
+      default: true,
+    },
+    filterList: {
+      type: Boolean,
+      default: false,
+    },
+  },
   emits: ["update:member"],
   data() {
     return {};
