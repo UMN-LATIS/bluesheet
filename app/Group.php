@@ -8,8 +8,10 @@ use OwenIt\Auditing\Auditable as AuditableTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\CourseSection;
 
+/**
+ * @mixin IdeHelperGroup
+ */
 class Group extends Model implements AuditableContract {
     use AuditableTrait;
     use SoftDeletes;
@@ -95,5 +97,9 @@ class Group extends Model implements AuditableContract {
 
     public function getHashAttribute() {
         return substr(sha1($this->id . config("app.key")), 0, 10);
+    }
+
+    public function courses() {
+        return $this->hasMany(Course::class);
     }
 }

@@ -124,6 +124,40 @@ export const useCourseStore = defineStore("course", () => {
       state.filters.excludedCourseLevels = new Set();
       // state.filters.search = "";
     },
+
+    async addCourse(course: T.Course) {
+      if (!state.activeGroupId) {
+        throw new Error("No active group");
+      }
+
+      state.courseLookup = {
+        ...state.courseLookup,
+        [course.id]: course,
+      };
+
+      try {
+        const courseFromApi = await api.addUnofficialCourseToGroup(
+          state.activeGroupId,
+          course,
+        );
+
+        // update with the course from the API
+        state.courseLookup = {
+          ...state.courseLookup,
+          [course.id]: courseFromApi,
+        };
+      } catch (e) {
+        // rollback
+        state.courseLookup = {
+          ...state.courseLookup,
+          [course.id]: undefined,
+        };
+
+        throw new Error(
+          `Failed to create new unofficial course ${course.id}: ${e}`,
+        );
+      }
+    },
   };
 
   return {

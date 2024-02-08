@@ -21,7 +21,7 @@ class GroupSectionController extends Controller {
         abort_if($request->user()->cannot('view planned courses'), 403);
 
         // get all the unpublished sections from our app database
-        $dbSections = $group->courseSections()->with('enrollments')->where('is_published', false)->has('enrollments')->get();
+        $dbSections = $group->courseSections()->with('enrollments')->where('is_published', false)->get();
 
         // each "section" contains a different enrolled instructor
         $sisSections = collect($this->bandaid

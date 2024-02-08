@@ -1,8 +1,8 @@
 <template>
   <div class="form-group tw-mb-0">
-    <label
+    <Label
       :for="inputId"
-      class="tw-uppercase tw-text-neutral-500 tw-font-bold tw-text-xs tw-tracking-wider tw-mb-1 tw-block"
+      :required="true"
       :class="[
         {
           'sr-only': !showLabel,
@@ -11,14 +11,13 @@
       ]"
     >
       {{ label }}
-      <span v-if="required" class="tw-text-red-600">*</span>
-    </label>
+    </Label>
     <input
       :id="inputId"
       :type="type"
       :value="modelValue"
       :placeholder="placeholder"
-      class="form-control tw-text-sm tw-bg-transparent tw-border"
+      class="form-control tw-text-sm tw-bg-transparent tw-border placeholder:tw-text-neutral-400 placeholder:tw-italic"
       :class="[
         {
           'is-invalid': !isValidComputed,
@@ -38,6 +37,7 @@
 <script lang="ts" setup>
 import { ref, computed } from "vue";
 import { CSSClass } from "@/types";
+import Label from "./Label.vue";
 
 const props = withDefaults(
   defineProps<{

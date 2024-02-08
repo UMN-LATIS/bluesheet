@@ -4,6 +4,9 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @mixin IdeHelperRole
+ */
 class Role extends Model
 {
     public $timestamps = true;

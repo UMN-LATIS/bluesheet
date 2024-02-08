@@ -41,7 +41,6 @@ if (config('shibboleth.emulate_idp')) {
     });
 }
 
-
 Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
 
     Route::get('autocompleter/user', 'AutocompleteController@userAutocompleter');
@@ -88,7 +87,7 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
     Route::delete('leaves/{leave}/artifacts/{leaveArtifact}', [LeaveArtifactController::class, 'destroy']);
 
     Route::prefix('course-planning')->group(function () {
-        Route::get('/groups/{group}/courses', [GroupCourseController::class, 'index']);
+        Route::resource('/groups/{group}/courses', GroupCourseController::class);
         Route::resource('/groups/{group}/sections', GroupSectionController::class);
         Route::resource('/groups/{group}/enrollments', GroupEnrollmentController::class);
         Route::get('/groups/{group}/people', [GroupPersonController::class, 'index']);
@@ -104,7 +103,6 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
 // routes with hash to allow unauthenticated loads
 Route::get('/api/group/{group}/{hash}', 'GroupController@show');
 Route::get('/api/group/{group}/members/{hash}', 'GroupController@members');
-
 
 // Route::resource('users', 'Admin\\UsersController');
 Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'permission:edit users']], function () {

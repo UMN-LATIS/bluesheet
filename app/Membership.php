@@ -7,6 +7,9 @@ use OwenIt\Auditing\Contracts\Auditable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 
+/**
+ * @mixin IdeHelperMembership
+ */
 class Membership extends Model implements Auditable
 {
     use \OwenIt\Auditing\Auditable;

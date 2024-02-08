@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\CoursePlanning;
 
+use App\Course;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Library\Bandaid;
 use App\Group;
-use App\Http\Resources\CourseResource;
+use App\Http\Resources\SISCourseResource;
+use App\Http\Resources\LocalCourseResource;
 
 class GroupCourseController extends Controller {
 
@@ -19,18 +21,45 @@ class GroupCourseController extends Controller {
     public function index(Request $request, Group $group) {
         abort_if($request->user()->cannot('view planned courses'), 403);
 
-        $courses = collect($this->bandaid
+        $localCourses = $group->courses;
+
+        $sisCourses = collect($this->bandaid
             ->getDeptClassList($group->dept_id))
             ->map(function ($classRecord) {
-                $shortCode = join('-', [
+                $classRecord->courseCode = join('-', [
                     $classRecord->SUBJECT, $classRecord->CATALOG_NUMBER,
                 ]);
 
-                $classRecord->shortCode = $shortCode;
                 return $classRecord;
             })
-            ->unique('shortCode')->sortBy('shortCode');
+            ->unique('courseCode')->sortBy('courseCode');
 
-        return CourseResource::collection($courses);
+        $normedSisCourses = SISCourseResource::collection($sisCourses);
+        $normedLocalCourses = LocalCourseResource::collection($localCourses);
+
+        return $normedSisCourses->concat($normedLocalCourses);
+    }
+
+    public function store(Request $request, Group $group) {
+        abort_if($request->user()->cannot('edit planned courses'), 403);
+
+        $validated = $request->validate([
+            'subject' => 'required|string',
+            'catalog_number' => 'required|string',
+            'title' => 'required|string',
+            'type' => 'required|string',
+            'level' => 'required|string',
+        ]);
+
+        $course = Course::create([
+            'title' => $validated['title'],
+            'subject' => strtoupper($validated['subject']),
+            'catalog_number' => strtoupper($validated['catalog_number']),
+            'type' => strtoupper($validated['type']),
+            'level' => strtoupper($validated['level']),
+            'group_id' => $group->id,
+        ]);
+
+        return new LocalCourseResource($course);
     }
 }

@@ -1,0 +1,47 @@
+[
+  {
+    "id": 11,
+    "TERM": 1195,
+    "TERM_BEGIN_DT": "2019-05-20",
+    "TERM_END_DT": "2019-08-16",
+    "TERM_DESCRIPTION": "Summer 2019",
+    "INSTITUTION": "UMNTC",
+    "ACADEMIC_CAREER": "UGRD"
+  },
+  {
+    "id": 19,
+    "TERM": 1199,
+    "TERM_BEGIN_DT": "2019-09-03",
+    "TERM_END_DT": "2019-12-19",
+    "TERM_DESCRIPTION": "Fall 2019",
+    "INSTITUTION": "UMNTC",
+    "ACADEMIC_CAREER": "UGRD"
+  },
+  {
+    "id": 32,
+    "TERM": 1203,
+    "TERM_BEGIN_DT": "2020-01-21",
+    "TERM_END_DT": "2020-05-13",
+    "TERM_DESCRIPTION": "Spring 2020",
+    "INSTITUTION": "UMNTC",
+    "ACADEMIC_CAREER": "UGRD"
+  },
+  {
+    "id": 41,
+    "TERM": 1205,
+    "TERM_BEGIN_DT": "2020-05-18",
+    "TERM_END_DT": "2020-08-14",
+    "TERM_DESCRIPTION": "Summer 2020",
+    "INSTITUTION": "UMNTC",
+    "ACADEMIC_CAREER": "UGRD"
+  },
+  {
+    "id": 62,
+    "TERM": 1209,
+    "TERM_BEGIN_DT": "2020-09-08",
+    "TERM_END_DT": "2020-12-23",
+    "TERM_DESCRIPTION": "Fall 2020",
+    "INSTITUTION": "UMNTC",
+    "ACADEMIC_CAREER": "UGRD"
+  }
+]

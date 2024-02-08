@@ -5,6 +5,9 @@ namespace App;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @mixin IdeHelperCourseSection
+ */
 class CourseSection extends Model {
     use HasFactory;
 
@@ -15,6 +18,11 @@ class CourseSection extends Model {
         'class_section',
         'is_published',
         'is_cancelled',
+    ];
+
+    protected $casts = [
+        'is_published' => 'boolean',
+        'is_cancelled' => 'boolean',
     ];
 
     public function group() {

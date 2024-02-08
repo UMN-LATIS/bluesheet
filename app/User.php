@@ -13,6 +13,9 @@ use Spatie\Permission\Models\Permission;
 use Laravel\Sanctum\HasApiTokens;
 use App\Leave;
 
+/**
+ * @mixin IdeHelperUser
+ */
 class User extends Authenticatable implements Auditable {
     use HasFactory;
     use \OwenIt\Auditing\Auditable;
