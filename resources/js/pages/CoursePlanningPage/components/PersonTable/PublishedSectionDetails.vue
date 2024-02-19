@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="course"
+    v-if="course && isSectionVisible"
     class="course-details tw-px-1 tw-flex tw-items-center"
     :class="{
       'tw-bg-yellow-100': isSectionHighlighted,
@@ -50,6 +50,10 @@ const planningStore = useRootCoursePlanningStore();
 const course = computed(() =>
   planningStore.courseStore.getCourse(props.section.courseId),
 );
+
+const isSectionVisible = computed(() => {
+  return planningStore.isSectionVisible(props.section);
+});
 
 const isOpen = ref(false);
 
