@@ -2,8 +2,9 @@ import { defineStore } from "pinia";
 import { computed, reactive, toRefs } from "vue";
 import * as api from "@/api";
 import * as T from "@/types";
-import { countBy, groupBy, keyBy } from "lodash";
+import { countBy, keyBy } from "lodash";
 import { useEnrollmentStore } from "./useEnrollmentStore";
+import { sortByName } from "@/utils";
 
 interface PersonStoreState {
   activeGroupId: T.Group["id"] | null;
@@ -21,10 +22,12 @@ export const usePersonStore = defineStore("person", () => {
   });
 
   const getters = {
-    allPeople: computed(
-      (): T.Person[] =>
-        Object.values(state.personLookupByEmpId).filter(Boolean) as T.Person[],
-    ),
+    allPeople: computed((): T.Person[] => {
+      const people = Object.values(state.personLookupByEmpId).filter(
+        Boolean,
+      ) as T.Person[];
+      return people.sort(sortByName);
+    }),
     getPersonByEmplId: computed(
       () =>
         (emplId: T.Person["emplid"]): T.Person | null => {
