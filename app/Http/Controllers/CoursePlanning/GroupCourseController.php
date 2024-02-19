@@ -20,10 +20,7 @@ class GroupCourseController extends Controller {
     public function index(Request $request, Group $group) {
         abort_if($request->user()->cannot('view planned courses'), 403);
 
-        $localCourses = $group->courses->map(function ($course) {
-            $course->source = 'local';
-            return $course;
-        });
+        $localCourses = $group->courses;
 
         $sisCourses = collect($this->bandaid
             ->getDeptClassList($group->dept_id))

@@ -33,4 +33,10 @@ class Course extends Model {
     public function group() {
         return $this->belongsTo(Group::class);
     }
+
+    public function getSourceAttribute() {
+        // courses could be persisted locally or in the sis
+        // anything returned from our local database is considered 'local'
+        return 'local';
+    }
 }
