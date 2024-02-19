@@ -7,8 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Library\Bandaid;
 use App\Group;
-use App\Http\Resources\SISCourseResource;
-use App\Http\Resources\LocalCourseResource;
+use App\Http\Resources\CourseResource;
 
 class GroupCourseController extends Controller {
 
@@ -21,23 +20,25 @@ class GroupCourseController extends Controller {
     public function index(Request $request, Group $group) {
         abort_if($request->user()->cannot('view planned courses'), 403);
 
-        $localCourses = $group->courses;
+        $localCourses = $group->courses->map(function ($course) {
+            $course->source = 'local';
+            return $course;
+        });
 
         $sisCourses = collect($this->bandaid
             ->getDeptClassList($group->dept_id))
             ->map(function ($classRecord) {
+                $classRecord->source = 'sis';
                 $classRecord->courseCode = join('-', [
-                    $classRecord->SUBJECT, $classRecord->CATALOG_NUMBER,
+                    $classRecord->SUBJECT,
+                    $classRecord->CATALOG_NUMBER,
                 ]);
-
                 return $classRecord;
             })
-            ->unique('courseCode')->sortBy('courseCode');
+            ->unique('courseCode')
+            ->sortBy('courseCode');
 
-        $normedSisCourses = SISCourseResource::collection($sisCourses);
-        $normedLocalCourses = LocalCourseResource::collection($localCourses);
-
-        return $normedSisCourses->concat($normedLocalCourses);
+        return CourseResource::collection($localCourses->concat($sisCourses));
     }
 
     public function store(Request $request, Group $group) {
@@ -60,6 +61,6 @@ class GroupCourseController extends Controller {
             'group_id' => $group->id,
         ]);
 
-        return new LocalCourseResource($course);
+        return new CourseResource($course);
     }
 }
