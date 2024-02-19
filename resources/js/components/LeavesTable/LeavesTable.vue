@@ -37,21 +37,19 @@
           <Th v-if="$can('edit leaves')"></Th>
         </tr>
       </THead>
-      <TBody>
-        <tr v-if="!sortedAndFilteredLeaves.length">
-          <Td
-            :colspan="$can('edit leaves') ? 6 : 5"
-            class="tw-text-center !tw-p-6 tw-italic tw-text-neutral-500"
-          >
-            No Leaves
-          </Td>
-        </tr>
-        <LeaveTableRow
-          v-for="leave in sortedAndFilteredLeaves"
-          :key="leave.id"
-          :leave="leave"
-        />
-      </TBody>
+      <tr v-if="!sortedAndFilteredLeaves.length">
+        <Td
+          :colspan="$can('edit leaves') ? 6 : 5"
+          class="tw-text-center !tw-p-6 tw-italic tw-text-neutral-500"
+        >
+          No Leaves
+        </Td>
+      </tr>
+      <LeaveTableRow
+        v-for="leave in sortedAndFilteredLeaves"
+        :key="leave.id"
+        :leave="leave"
+      />
     </Table>
   </div>
 </template>
@@ -61,7 +59,7 @@ import { computed, ref } from "vue";
 import { dayjs, $can, isTempId } from "@/utils";
 import { Leave } from "@/types";
 import Button from "@/components/Button.vue";
-import { Table, Th, Td, THead, TBody } from "@/components/Table";
+import { Table, Th, Td, THead } from "@/components/Table";
 import CheckboxGroup from "@/components/CheckboxGroup.vue";
 import LeaveTableRow from "./LeaveTableRow.vue";
 import { useUserStore } from "@/stores/useUserStore";
