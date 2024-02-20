@@ -1,17 +1,25 @@
 <template>
   <div
     v-if="isUnpublishedViewable && course && enrollment"
-    class="tw-bg-neutral-100 tw-py-2 tw-flex tw-gap-1 tw-items-top tw-italic tw-rounded"
+    class="tw-bg-white tw-py-2 tw-flex tw-gap-1 tw-items-top tw-italic tw-rounded tw-border tw-border-neutral-400"
     :class="{
       'tw-cursor-move tw-shadow': isUnpublishedEditable,
       'tw-cursor-default tw-px-2': !isUnpublishedEditable,
       'tw-bg-yellow-100': isSectionHighlighted,
+      '!tw-border-dashed !tw-border-neutral-400 !tw-bg-neutral-100':
+        isLocalCourse,
     }"
   >
     <DragHandleIcon v-if="isUnpublishedEditable" class="tw-inline-block" />
     <div class="tw-flex-1 tw-overflow-hidden">
       <h2 class="tw-text-sm tw-m-0">
         {{ course.subject }} {{ course.catalogNumber }}
+        <span
+          v-if="isLocalCourse"
+          class="tw-italic tw-text-xs tw-text-neutral-500"
+        >
+          (Draft Course)
+        </span>
       </h2>
       <p class="tw-text-xs tw-m-0">
         {{ course.title }}
@@ -60,6 +68,11 @@ const term = computed(() =>
 const course = computed(() =>
   planningStore.courseStore.getCourse(props.section.courseId),
 );
+
+// new unofficial course that only exists in our local db, doesn't
+// show up in the SIS
+const isLocalCourse = computed(() => course.value?.source === "local" ?? false);
+
 const enrollment = computed(() =>
   planningStore.enrollmentStore.getEnrollmentForPersonInSection(
     props.person,
