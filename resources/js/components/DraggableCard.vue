@@ -1,6 +1,6 @@
 <template>
   <div
-    class="tw-bg-neutral-100 tw-py-2 tw-flex tw-gap-1 tw-items-top tw-italic tw-rounded"
+    class="tw-bg-white tw-py-2 tw-flex tw-gap-1 tw-items-top tw-italic tw-rounded"
     :class="{
       'tw-cursor-move tw-shadow': isDraggable,
       'tw-cursor-default tw-px-2': !isDraggable,

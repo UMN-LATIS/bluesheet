@@ -4,6 +4,9 @@
       v-if="isUnpublishedViewable"
       :isDraggable="isUnpublishedEditable"
       :isEditable="isUnpublishedEditable"
+      :class="{
+        '!tw-bg-neutral-100': isLocalCourse,
+      }"
       @click:remove="handleRemove"
       @click:edit="isShowingEditModal = true"
     >
@@ -60,6 +63,10 @@ const course = computed(() =>
     ? planningStore.courseStore.getCourse(section.value.courseId)
     : null,
 );
+
+const isLocalCourse = computed(() => {
+  return course.value?.source === "local";
+});
 
 const isUnpublishedViewable = computed((): boolean => {
   return (
