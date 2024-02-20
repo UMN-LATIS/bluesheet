@@ -524,6 +524,12 @@ export const useRootCoursePlanningStore = defineStore(
       },
 
       isCourseVisible(course: T.Course) {
+        // if we're not in planning mode, and this is a local course, then
+        // we should not show it
+        if (!state.isInPlanningMode && course.source === "local") {
+          return false;
+        }
+
         const isCourseTypeVisible = !state.filters.excludedCourseTypes.has(
           course.courseType,
         );
