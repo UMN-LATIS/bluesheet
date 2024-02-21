@@ -5,7 +5,7 @@
       :isDraggable="isUnpublishedEditable"
       :isEditable="isUnpublishedEditable"
       :class="{
-        '!tw-bg-neutral-100': isLocalCourse,
+        '!tw-bg-neutral-100': isDraftCourse,
       }"
       @click:remove="handleRemove"
       @click:edit="isShowingEditModal = true"
@@ -64,7 +64,7 @@ const course = computed(() =>
     : null,
 );
 
-const isLocalCourse = computed(() => {
+const isDraftCourse = computed(() => {
   return course.value?.source === "local";
 });
 

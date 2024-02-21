@@ -5,6 +5,7 @@
       :isEditable="isUnpublishedEditable"
       :class="{
         'tw-bg-yellow-100': isSectionHighlighted,
+        '!tw-border-dashed !tw-border-neutral-400': isDraftCourse,
       }"
       @click:remove="handleRemove"
       @click:edit="isShowingEditModal = true"
@@ -12,7 +13,7 @@
       <h2 class="tw-text-sm tw-m-0">
         {{ course.subject }} {{ course.catalogNumber }}
         <span
-          v-if="isLocalCourse"
+          v-if="isDraftCourse"
           class="tw-italic tw-text-xs tw-text-neutral-500"
         >
           (Draft Course)
@@ -56,7 +57,7 @@ const course = computed(() =>
 
 // new unofficial course that only exists in our local db, doesn't
 // show up in the SIS
-const isLocalCourse = computed(() => course.value?.source === "local" ?? false);
+const isDraftCourse = computed(() => course.value?.source === "local" ?? false);
 
 const enrollment = computed(() =>
   planningStore.enrollmentStore.getEnrollmentForPersonInSection(
