@@ -294,6 +294,7 @@ const newCourse = reactive<Omit<T.Course, "id">>({
   title: "",
   courseType: "TBD",
   courseLevel: "TBD",
+  source: "local",
 });
 const isFormValidForAddingNewCourseOption = computed(() => {
   return !!newCourse.subject && !!newCourse.catalogNumber && !!newCourse.title;
