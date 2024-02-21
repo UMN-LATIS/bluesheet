@@ -167,7 +167,7 @@ const toPersonOption = (i: T.Person) => ({
 
 const toCourseOption = (c: T.Course) => ({
   id: c.id,
-  label: c.id,
+  label: c.source === "local" ? `${c.id} (Draft)` : c.id,
   secondaryLabel: c.title,
 });
 
