@@ -8,7 +8,6 @@
 /storage/debugbar
 /vendor
 .env
-.phpunit.result.cache
 Homestead.json
 Homestead.yaml
 npm-debug.log
@@ -17,3 +16,5 @@ yarn-error.log
 .DS_Store
 docs/.vuepress/dist
 
+# ignore phpunit caches
+.phpunit.*

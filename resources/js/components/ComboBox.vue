@@ -107,7 +107,7 @@
             <button
               v-if="canAddNewOption"
               type="button"
-              :disabled="!query.length || !isNewOption"
+              :disabled="!isNewOption"
               class="combobox__add-new-option-button tw-block tw-w-full tw-mt-2 tw-py-2 tw-px-4 tw-border tw-border-transparent tw-rounded tw-shadow-sm tw-text-sm tw-font-medium tw-text-white tw-bg-neutral-700 hover:tw-bg-neutral-900 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-offset-2 focus:tw-ring-blue-500 disabled:tw-opacity-25 hover:disabled:tw-bg-neutral-700 disabled:tw-cursor-not-allowed"
               @click="handleAddNewOption(query)"
             >

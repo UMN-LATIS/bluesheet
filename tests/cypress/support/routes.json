@@ -121,49 +121,14 @@
       "POST"
     ]
   },
-  "dusk.login": {
-    "name": "dusk.login",
+  "sanctum.csrf-cookie": {
+    "name": "sanctum.csrf-cookie",
     "domain": null,
-    "action": "Laravel\\Dusk\\Http\\Controllers\\UserController@login",
-    "uri": "_dusk/login/{userId}/{guard?}",
+    "action": "Laravel\\Sanctum\\Http\\Controllers\\CsrfCookieController@show",
+    "uri": "sanctum/csrf-cookie",
     "method": [
       "GET",
       "HEAD"
-    ]
-  },
-  "dusk.logout": {
-    "name": "dusk.logout",
-    "domain": null,
-    "action": "Laravel\\Dusk\\Http\\Controllers\\UserController@logout",
-    "uri": "_dusk/logout/{guard?}",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
-  },
-  "dusk.user": {
-    "name": "dusk.user",
-    "domain": null,
-    "action": "Laravel\\Dusk\\Http\\Controllers\\UserController@user",
-    "uri": "_dusk/user/{guard?}",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
-  },
-  "": {
-    "name": null,
-    "domain": null,
-    "action": "App\\Http\\Controllers\\HomeController@index",
-    "uri": "{all}",
-    "method": [
-      "GET",
-      "HEAD",
-      "POST",
-      "PUT",
-      "PATCH",
-      "DELETE",
-      "OPTIONS"
     ]
   },
   "shibboleth-login": {
@@ -184,6 +149,21 @@
     "method": [
       "GET",
       "HEAD"
+    ]
+  },
+  "": {
+    "name": null,
+    "domain": null,
+    "action": "App\\Http\\Controllers\\HomeController@index",
+    "uri": "{all}",
+    "method": [
+      "GET",
+      "HEAD",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS"
     ]
   },
   "impersonate": {
@@ -352,70 +332,138 @@
       "DELETE"
     ]
   },
-  "planned-courses.index": {
-    "name": "planned-courses.index",
+  "sections.index": {
+    "name": "sections.index",
     "domain": null,
-    "action": "App\\Http\\Controllers\\GroupPlannedCourseController@index",
-    "uri": "api/group/{group}/planned-courses",
+    "action": "App\\Http\\Controllers\\CoursePlanning\\GroupSectionController@index",
+    "uri": "api/course-planning/groups/{group}/sections",
     "method": [
       "GET",
       "HEAD"
     ]
   },
-  "planned-courses.create": {
-    "name": "planned-courses.create",
+  "sections.create": {
+    "name": "sections.create",
     "domain": null,
-    "action": "App\\Http\\Controllers\\GroupPlannedCourseController@create",
-    "uri": "api/group/{group}/planned-courses/create",
+    "action": "App\\Http\\Controllers\\CoursePlanning\\GroupSectionController@create",
+    "uri": "api/course-planning/groups/{group}/sections/create",
     "method": [
       "GET",
       "HEAD"
     ]
   },
-  "planned-courses.store": {
-    "name": "planned-courses.store",
+  "sections.store": {
+    "name": "sections.store",
     "domain": null,
-    "action": "App\\Http\\Controllers\\GroupPlannedCourseController@store",
-    "uri": "api/group/{group}/planned-courses",
+    "action": "App\\Http\\Controllers\\CoursePlanning\\GroupSectionController@store",
+    "uri": "api/course-planning/groups/{group}/sections",
     "method": [
       "POST"
     ]
   },
-  "planned-courses.show": {
-    "name": "planned-courses.show",
+  "sections.show": {
+    "name": "sections.show",
     "domain": null,
-    "action": "App\\Http\\Controllers\\GroupPlannedCourseController@show",
-    "uri": "api/group/{group}/planned-courses/{planned_course}",
+    "action": "App\\Http\\Controllers\\CoursePlanning\\GroupSectionController@show",
+    "uri": "api/course-planning/groups/{group}/sections/{section}",
     "method": [
       "GET",
       "HEAD"
     ]
   },
-  "planned-courses.edit": {
-    "name": "planned-courses.edit",
+  "sections.edit": {
+    "name": "sections.edit",
     "domain": null,
-    "action": "App\\Http\\Controllers\\GroupPlannedCourseController@edit",
-    "uri": "api/group/{group}/planned-courses/{planned_course}/edit",
+    "action": "App\\Http\\Controllers\\CoursePlanning\\GroupSectionController@edit",
+    "uri": "api/course-planning/groups/{group}/sections/{section}/edit",
     "method": [
       "GET",
       "HEAD"
     ]
   },
-  "planned-courses.update": {
-    "name": "planned-courses.update",
+  "sections.update": {
+    "name": "sections.update",
     "domain": null,
-    "action": "App\\Http\\Controllers\\GroupPlannedCourseController@update",
-    "uri": "api/group/{group}/planned-courses/{planned_course}",
+    "action": "App\\Http\\Controllers\\CoursePlanning\\GroupSectionController@update",
+    "uri": "api/course-planning/groups/{group}/sections/{section}",
     "method": [
       "PUT",
       "PATCH"
     ]
   },
-  "planned-courses.destroy": {
-    "name": "planned-courses.destroy",
+  "sections.destroy": {
+    "name": "sections.destroy",
     "domain": null,
-    "action": "App\\Http\\Controllers\\GroupPlannedCourseController@destroy",
-    "uri": "api/group/{group}/planned-courses/{planned_course}",
+    "action": "App\\Http\\Controllers\\CoursePlanning\\GroupSectionController@destroy",
+    "uri": "api/course-planning/groups/{group}/sections/{section}",
+    "method": [
+      "DELETE"
+    ]
+  },
+  "enrollments.index": {
+    "name": "enrollments.index",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\CoursePlanning\\GroupEnrollmentController@index",
+    "uri": "api/course-planning/groups/{group}/enrollments",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "enrollments.create": {
+    "name": "enrollments.create",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\CoursePlanning\\GroupEnrollmentController@create",
+    "uri": "api/course-planning/groups/{group}/enrollments/create",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "enrollments.store": {
+    "name": "enrollments.store",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\CoursePlanning\\GroupEnrollmentController@store",
+    "uri": "api/course-planning/groups/{group}/enrollments",
+    "method": [
+      "POST"
+    ]
+  },
+  "enrollments.show": {
+    "name": "enrollments.show",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\CoursePlanning\\GroupEnrollmentController@show",
+    "uri": "api/course-planning/groups/{group}/enrollments/{enrollment}",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "enrollments.edit": {
+    "name": "enrollments.edit",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\CoursePlanning\\GroupEnrollmentController@edit",
+    "uri": "api/course-planning/groups/{group}/enrollments/{enrollment}/edit",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "enrollments.update": {
+    "name": "enrollments.update",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\CoursePlanning\\GroupEnrollmentController@update",
+    "uri": "api/course-planning/groups/{group}/enrollments/{enrollment}",
+    "method": [
+      "PUT",
+      "PATCH"
+    ]
+  },
+  "enrollments.destroy": {
+    "name": "enrollments.destroy",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\CoursePlanning\\GroupEnrollmentController@destroy",
+    "uri": "api/course-planning/groups/{group}/enrollments/{enrollment}",
     "method": [
       "DELETE"
     ]

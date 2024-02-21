@@ -5,6 +5,9 @@ namespace App;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @mixin IdeHelperLeaveArtifact
+ */
 class LeaveArtifact extends Model {
     use HasFactory;
 

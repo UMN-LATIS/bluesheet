@@ -2,60 +2,63 @@
 
 namespace App\Library;
 
-use GuzzleHttp\Client;
-use Exception;
 use RuntimeException;
-use GuzzleHttp\Exception\RequestException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Collection;
 use Carbon\Carbon;
-use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\Cache;
-use Log;
+use Illuminate\Support\Facades\Http;
 
 class Bandaid {
-    private $client;
-    public function __construct() {
+    private $baseUri;
+    private $headers;
 
+    public function __construct() {
         if (!config('bandaid.key')) {
             throw new \Exception('A CDL Token must be Specified');
         }
 
-        $this->client = new Client([
-            'headers' => [
-                'Authorization' => 'Bearer ' . config('bandaid.key'),
-            ],
-            'base_uri' => 'https://cla-bandaid-prd-web.oit.umn.edu/api/',
-        ]);
+        $this->headers = [
+            'Authorization' => 'Bearer ' . config('bandaid.key'),
+        ];
+
+        $this->baseUri = config('bandaid.baseUri');
     }
 
-    public function performRequest($url) {
+    public function cachedGet($url) {
         if ($value = Cache::get($url)) {
             return $value;
-        } else {
-            $result = $this->client->get($url);
-            $value = json_decode($result->getBody());
-            Cache::put($url, $value, 600);
-            return $value;
         }
+
+        $response = Http::withHeaders($this->headers)->get($this->baseUri . $url);
+
+        $value = json_decode($response->body());
+
+        Cache::put($url, $value, 600);
+        return $value;
     }
 
-    public function performPostRequest($url, $body) {
+    public function cachedPost($url, $body) {
         if ($value = Cache::get(json_encode($body))) {
             return $value;
-        } else {
-            $result = $this->client->post($url, ['form_params' => $body]);
-            $value = json_decode($result->getBody());
-            if (!$value) {
-                return [];
-            }
-            Cache::put(json_encode($body), $value, 600);
-            return $value;
         }
+
+        $response = Http::withHeaders($this->headers)
+            ->post(
+                $this->baseUri . $url,
+                ['form_params' => $body]
+            );
+
+        $value = json_decode($response->body());
+        Cache::put(json_encode($body), $value, 600);
+        return $value;
     }
 
     public function getDepartments(array $deptIds): array {
         try {
-            $result = $this->performRequest('department/?' . urldecode(http_build_query(["deptId" => $deptIds])));
+            $result = $this->cachedGet(
+                '/department/?' . urldecode(http_build_query(["deptId" => $deptIds]))
+            );
             return $result;
         } catch (RequestException $e) {
             $msg = $e->getMessage();
@@ -66,7 +69,10 @@ class Bandaid {
 
     public function getEmployees(array $emplIds): array {
         try {
-            $result = $this->performPostRequest('employment/employees', ["emplids" => $emplIds]);
+            $result = $this->cachedPost(
+                '/employment/employees',
+                ["emplids" => $emplIds]
+            );
             return $result;
         } catch (RequestException $e) {
             $msg = $e->getMessage();
@@ -89,7 +95,7 @@ class Bandaid {
      */
     public function getEmployeesForDepartment(int $deptId): array {
         try {
-            $result = $this->performRequest('department/' . $deptId . '/employees');
+            $result = $this->cachedGet('/department/' . $deptId . '/employees');
             return $result;
         } catch (RequestException $e) {
             $msg = $e->getMessage();
@@ -100,7 +106,7 @@ class Bandaid {
 
     public function getLeavesForEmployee($emplId): array {
         try {
-            $result = $this->performRequest('employment/leaves/' . $emplId);
+            $result = $this->cachedGet('/employment/leaves/' . $emplId);
             return $result;
         } catch (RequestException $e) {
             $msg = $e->getMessage();
@@ -126,7 +132,7 @@ class Bandaid {
      */
     public function getTerms(): array {
         try {
-            $result = $this->performRequest('classes/terms/');
+            $result = $this->cachedGet('/classes/terms/');
             return $result;
         } catch (RequestException $e) {
             $msg = $e->getMessage();
@@ -188,7 +194,7 @@ class Bandaid {
      */
     public function getDeptClassList(int $deptId): array {
         try {
-            $result = $this->performRequest('classes/list/' . $deptId);
+            $result = $this->cachedGet('/classes/list/' . $deptId);
             return $result;
         } catch (RequestException $e) {
             $msg = $e->getMessage();
@@ -199,7 +205,7 @@ class Bandaid {
 
     public function getDeptScheduleForTerm(int $deptId, int $term): array {
         try {
-            $result = $this->performRequest('classes/list/' . $deptId . "/" . $term);
+            $result = $this->cachedGet('/classes/list/' . $deptId . "/" . $term);
             return $result;
         } catch (RequestException $e) {
             $msg = $e->getMessage();

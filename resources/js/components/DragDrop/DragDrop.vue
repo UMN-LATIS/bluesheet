@@ -3,8 +3,8 @@
     ref="dragDropWrapperRef"
     class="dragdrop tw-p-2 tw-min-h-[10rem] tw-w-full tw-rounded tw-relative"
     :class="{
-      'dragdrop--is-droppable tw-bg-neutral-100': isTargetList,
-      'tw-bg-neutral-50': !disabled && !isTargetList,
+      'dragdrop--is-droppable tw-bg-black/20': isTargetList,
+      'tw-bg-neutral-500/5': !disabled && !isTargetList,
     }"
     @dragover.prevent
     @dragenter="handleDragEnter"

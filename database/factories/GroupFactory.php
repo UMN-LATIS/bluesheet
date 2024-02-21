@@ -27,7 +27,7 @@ class GroupFactory extends Factory {
             'start_date' => null,
             'end_date' => null,
             'notes' => $this->faker->paragraph(),
-            'parent_organization_id' => 1, // 'CLA'
+            'parent_organization_id' => ParentOrganization::factory(),
             'google_group' => null,
             'show_unit' => $this->faker->boolean(),
             'parent_group_id' => null,

@@ -1,36 +1,31 @@
 <template>
-  <div
-    v-if="isUnpublishedViewable && course && enrollment"
-    class="tw-bg-neutral-100 tw-py-2 tw-flex tw-gap-1 tw-items-top tw-italic tw-rounded"
-    :class="{
-      'tw-cursor-move tw-shadow': isUnpublishedEditable,
-      'tw-cursor-default tw-px-2': !isUnpublishedEditable,
-      'tw-bg-yellow-100': isSectionHighlighted,
-    }"
-  >
-    <DragHandleIcon v-if="isUnpublishedEditable" class="tw-inline-block" />
-    <div class="tw-flex-1 tw-overflow-hidden">
+  <div v-if="isUnpublishedViewable && course && enrollment">
+    <DraggableCard
+      :isDraggable="isUnpublishedEditable"
+      :isEditable="isUnpublishedEditable"
+      :class="{
+        'tw-bg-yellow-100': isSectionHighlighted,
+        '!tw-border-dashed !tw-border-neutral-400': isDraftCourse,
+      }"
+      @click:remove="handleRemove"
+      @click:edit="isShowingEditModal = true"
+    >
       <h2 class="tw-text-sm tw-m-0">
         {{ course.subject }} {{ course.catalogNumber }}
+        <span
+          v-if="isDraftCourse"
+          class="tw-italic tw-text-xs tw-text-neutral-500"
+        >
+          (Draft Course)
+        </span>
       </h2>
       <p class="tw-text-xs tw-m-0">
         {{ course.title }}
       </p>
-    </div>
-    <MoreMenu v-if="isUnpublishedEditable" class="tw-not-italic">
-      <MoreMenuItem
-        class="tw-flex tw-gap-2 tw-items-center"
-        @click="isShowingEditModal = true"
-      >
-        Edit
-      </MoreMenuItem>
-      <MoreMenuItem class="tw-text-red-600" @click="handleRemove">
-        Remove
-      </MoreMenuItem>
-    </MoreMenu>
+    </DraggableCard>
     <EditDraftSectionModal
       :show="isShowingEditModal"
-      :initialPerson="person"
+      :initialPerson="props.person"
       :initialTerm="term"
       :initialCourse="course"
       :initialRole="enrollment.role"
@@ -41,12 +36,11 @@
 </template>
 <script setup lang="ts">
 import * as T from "@/types";
-import { DragHandleIcon } from "@/icons";
-import { MoreMenu, MoreMenuItem } from "@/components/MoreMenu";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
 import { computed, ref } from "vue";
-import EditDraftSectionModal from "../EditDraftSectionModal.vue";
 import { $can } from "@/utils";
+import DraggableCard from "@/components/DraggableCard.vue";
+import EditDraftSectionModal from "../EditDraftSectionModal.vue";
 
 const props = defineProps<{
   section: T.CourseSection;
@@ -60,6 +54,11 @@ const term = computed(() =>
 const course = computed(() =>
   planningStore.courseStore.getCourse(props.section.courseId),
 );
+
+// new unofficial course that only exists in our local db, doesn't
+// show up in the SIS
+const isDraftCourse = computed(() => course.value?.source === "local" ?? false);
+
 const enrollment = computed(() =>
   planningStore.enrollmentStore.getEnrollmentForPersonInSection(
     props.person,
