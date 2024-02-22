@@ -292,6 +292,7 @@ export type CourseShortCode = `${Course["subject"]}-${Course["catalogNumber"]}`;
 
 export interface Course {
   id: CourseShortCode; // subject-catalogNumber
+  courseCode: CourseShortCode;
   subject: string; // HIST
   catalogNumber: string; // "1001W"
   title: string; // course name
