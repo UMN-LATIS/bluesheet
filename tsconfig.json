@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "rootDir": ".",
     "target": "esnext",
     "module": "esnext",
     // this enables stricter inference for data properties on `this`
