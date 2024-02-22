@@ -278,10 +278,13 @@ export interface CourseSection {
   courseId: Course["id"]; // short code like "HIST-1001W"
   termId: Term["id"];
   classSection: string; // "001"
+  waitlistCap: number;
+  waitlistTotal: number;
   enrollmentCap: number;
   enrollmentTotal: number;
   isCancelled: boolean;
   isPublished: boolean; // true if from bandaid, false if from app DB
+  groupId: Group["id"];
 }
 
 export interface CourseSectionWithEnrollments extends CourseSection {
