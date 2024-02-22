@@ -1,7 +1,12 @@
 <template>
   <div>
+    <Button variant="tertiary" @click="downloadAsSpreadsheet">
+      Download
+    </Button>
+
     <Table
       v-show="coursePlanningStore.visiblePeople.length"
+      ref="personTableContainer"
       class="scheduling-report"
       :stickyFirstColumn="true"
       :stickyHeader="true"
@@ -41,11 +46,13 @@
   </div>
 </template>
 <script setup lang="ts">
-import { Table, TBody, THead } from "@/components/Table";
+import { Table, TBody, THead, TableType } from "@/components/Table";
 import PersonTableRow from "./PersonTableRow.vue";
 import ReportTableHeaderRow from "../ReportTableHeaderRow.vue";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
-import { onMounted } from "vue";
+import { onMounted, ref, computed } from "vue";
+import Button from "@/components/Button.vue";
+import { utils, writeFileXLSX } from 'xlsx';
 
 onMounted(() => {
   performance.mark("CoursePlanningPage:end");
@@ -67,6 +74,18 @@ defineProps<{
 }>();
 
 const coursePlanningStore = useRootCoursePlanningStore();
+
+const personTableContainer = ref<TableType | null>(null);
+
+function downloadAsSpreadsheet() {
+  if (!personTableContainer.value) {
+    throw new Error('personTableContainer is not defined');
+  }
+  const tableEl = personTableContainer.value.getTableElement();
+
+  const wb = utils.table_to_book(tableEl);
+  writeFileXLSX(wb, "SheetJSVueHTML.xlsx");
+}
 </script>
 <style lang="scss">
 // fix width of cells to prevent them from embiggening

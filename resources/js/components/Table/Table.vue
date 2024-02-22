@@ -4,6 +4,7 @@
       class="tw-shadow-sm tw-ring-1 tw-ring-black tw-ring-opacity-5 sm:tw-rounded-lg tw-overflow-auto tw-max-h-[90vh]"
     >
       <table
+        ref="tableElement"
         class="better-table tw-min-w-full tw-divide-y tw-divide-gray-300 tw-h-full"
         :class="{
           'better-table--sticky-header': stickyHeader,
@@ -16,6 +17,8 @@
   </div>
 </template>
 <script setup lang="ts">
+import { ref } from 'vue';
+
 withDefaults(
   defineProps<{
     stickyHeader?: boolean;
@@ -26,6 +29,20 @@ withDefaults(
     stickyFirstColumn: false,
   },
 );
+
+const tableElement = ref<HTMLTableElement | null>(null);
+
+export interface Exposed {
+  getTableElement: () => HTMLTableElement | null;
+}
+
+function getTableElement() {
+  return tableElement.value;
+}
+
+defineExpose<Exposed>({
+  getTableElement,
+});
 </script>
 <style>
 .better-table.better-table--sticky-header tbody tr {

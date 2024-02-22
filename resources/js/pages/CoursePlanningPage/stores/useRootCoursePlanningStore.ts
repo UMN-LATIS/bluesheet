@@ -5,7 +5,7 @@ import { useEnrollmentStore } from "./useEnrollmentStore";
 import { useCourseSectionStore } from "./useCourseSectionStore";
 import { useCourseStore } from "./useCourseStore";
 import { useGroupStore } from "@/stores/useGroupStore";
-import { useTermsStore } from "@/stores/useTermsStore";
+import { useTermStore } from "@/stores/useTermStore";
 import { useLeaveStore } from "./useLeaveStore";
 import { countBy, debounce, uniq } from "lodash";
 import * as T from "@/types";
@@ -32,7 +32,7 @@ export const useRootCoursePlanningStore = defineStore(
       enrollmentStore: useEnrollmentStore(),
       courseStore: useCourseStore(),
       groupStore: useGroupStore(),
-      termsStore: useTermsStore(),
+      termsStore: useTermStore(),
       courseSectionStore: useCourseSectionStore(),
       leaveStore: useLeaveStore(),
     };

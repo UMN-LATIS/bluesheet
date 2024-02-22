@@ -10,7 +10,7 @@ interface TermsStoreState {
   loadStatus: T.LoadState;
 }
 
-export const useTermsStore = defineStore("terms", () => {
+export const useTermStore = defineStore("terms", () => {
   const state = reactive<TermsStoreState>({
     termLookup: {},
     loadStatus: "idle",

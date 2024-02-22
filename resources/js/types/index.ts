@@ -288,7 +288,7 @@ export interface CourseSectionWithEnrollments extends CourseSection {
   enrollments: Enrollment[];
 }
 
-type CourseShortCode = `${Course["subject"]}-${Course["catalogNumber"]}`;
+export type CourseShortCode = `${Course["subject"]}-${Course["catalogNumber"]}`;
 
 export interface Course {
   id: CourseShortCode; // subject-catalogNumber
