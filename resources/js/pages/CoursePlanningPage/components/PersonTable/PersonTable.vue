@@ -81,10 +81,12 @@ const coursePlanningStore = useRootCoursePlanningStore();
 const personTableContainer = ref<TableType | null>(null);
 
 function downloadAsSpreadsheet() {
-  const personTableData = usePersonTableData();
-  const ws = utils.json_to_sheet(personTableData.spreadsheetJson.value);
   const wb = utils.book_new();
-  utils.book_append_sheet(wb, ws, "People");
+  const { instructorSpreadsheetRows, taSpreadsheetRows } = usePersonTableData();
+  const instructorSheet = utils.json_to_sheet(instructorSpreadsheetRows.value);
+  const taSheet = utils.json_to_sheet(taSpreadsheetRows.value);
+  utils.book_append_sheet(wb, instructorSheet, "Instructors");
+  utils.book_append_sheet(wb, taSheet, "TAs");
   writeFileXLSX(wb, "LeavePlanningReport.xlsx");
 }
 </script>

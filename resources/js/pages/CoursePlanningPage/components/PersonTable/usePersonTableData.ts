@@ -1,8 +1,7 @@
 import * as T from "@/types";
 import * as stores from "../../stores";
-import { computed, capitalize } from "vue";
+import { computed, capitalize, ref } from "vue";
 import { sortByName } from "@/utils";
-import { filter } from "lodash";
 
 export interface PersonTableTermRecord {
   term: T.Term;
@@ -113,10 +112,10 @@ const filterRecordForEnrollmentRole =
     );
   };
 
-const filterRowForEnrollmentsOrLeaves = (row: PersonTableRow) => {
+const filterRowForAtLeastOneEnrollment = (row: PersonTableRow) => {
   const termRecords = row.slice(1) as PersonTableTermRecord[];
   return termRecords.some((termRecord) => {
-    return termRecord.enrollments.length > 0 || termRecord.leaves.length > 0;
+    return termRecord.enrollments.length > 0;
   });
 };
 
@@ -200,7 +199,7 @@ export function getTableRows({
   });
 
   // remove rows with no enrollments or leaves
-  return rows.filter(filterRowForEnrollmentsOrLeaves);
+  return rows.filter(filterRowForAtLeastOneEnrollment);
 }
 
 export function toSpreadsheetRow(row: PersonTableRow) {
@@ -234,34 +233,54 @@ export function usePersonTableData() {
   const leaveStore = stores.useLeaveStore();
   const filterStore = stores.useRootCoursePlanningStore();
 
-  const rows = computed(() => {
+  const lookups = {
+    personLookup: personStore.personLookupByEmpId as Record<
+      T.Person["emplid"],
+      T.Person
+    >,
+    termLookup: termStore.termLookup as Record<T.Term["id"], T.Term>,
+    courseLookup: courseStore.courseLookup as Record<T.Course["id"], T.Course>,
+    sectionLookup: sectionStore.sectionLookup as Record<
+      T.CourseSection["id"],
+      T.CourseSection
+    >,
+    enrollmentLookup: enrollmentStore.enrollmentLookup as Record<
+      T.Enrollment["id"],
+      T.Enrollment
+    >,
+    leaveLookup: leaveStore.leaveLookup as Record<T.Leave["id"], T.Leave>,
+  };
+
+  const instructorRows = computed(() => {
     return getTableRows({
-      personLookup: personStore.personLookupByEmpId as Record<
-        T.Person["emplid"],
-        T.Person
-      >,
-      termLookup: termStore.termLookup,
-      courseLookup: courseStore.courseLookup as Record<
-        T.Course["id"],
-        T.Course
-      >,
-      sectionLookup: sectionStore.sectionLookup as Record<
-        T.CourseSection["id"],
-        T.CourseSection
-      >,
-      enrollmentLookup: enrollmentStore.enrollmentLookup as Record<
-        T.Enrollment["id"],
-        T.Enrollment
-      >,
-      leaveLookup: leaveStore.leaveLookup,
-      filters: filterStore.filters,
+      ...lookups,
+      filters: {
+        ...filterStore.filters,
+        excludedEnrollmentRoles: new Set(["TA"]),
+      },
     });
   });
 
-  const spreadsheetJson = computed(() => rows.value.map(toSpreadsheetRow));
+  const taRows = computed(() => {
+    return getTableRows({
+      ...lookups,
+      filters: {
+        ...filterStore.filters,
+        excludedEnrollmentRoles: new Set(["PI"]),
+      },
+    });
+  });
+
+  const instructorSpreadsheetRows = computed(() =>
+    instructorRows.value.map(toSpreadsheetRow),
+  );
+
+  const taSpreadsheetRows = computed(() => taRows.value.map(toSpreadsheetRow));
 
   return {
-    rows,
-    spreadsheetJson,
+    instructorRows,
+    taRows,
+    instructorSpreadsheetRows,
+    taSpreadsheetRows,
   };
 }

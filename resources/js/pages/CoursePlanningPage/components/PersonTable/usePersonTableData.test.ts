@@ -189,7 +189,7 @@ describe("usePersonTableData", () => {
     `);
   });
 
-  it("excludes people with no enrollments or leaves", () => {
+  it("excludes people with no enrollments", () => {
     const lookups = createMockLookups();
     const rows = getTableRows(lookups);
 
@@ -202,12 +202,6 @@ describe("usePersonTableData", () => {
       (enrollment) => enrollment.emplid !== personToExclude.emplid,
     );
     lookups.enrollmentLookup = keyBy(excludedEnrollments, "id");
-
-    // remove all leaves for '12345'
-    const excludedLeaves = Object.values(lookups.leaveLookup).filter(
-      (leave) => leave.user_id !== personToExclude.id,
-    );
-    lookups.leaveLookup = keyBy(excludedLeaves, "id");
 
     const updatedRows = getTableRows(lookups);
     expect(updatedRows.length).toBe(1);
