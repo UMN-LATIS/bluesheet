@@ -130,4 +130,40 @@ describe("usePersonTableData", () => {
 
     expect(firstEntry.givenName).not.toBe("Kate");
   });
+
+  it("filters by term range", () => {
+    const lookups = createMockLookups();
+    const originalRows = getTableRows(lookups);
+    expect(toSpreadsheetRow(originalRows[0])).toMatchInlineSnapshot(`
+      {
+        "Fall 2021": "AFRO-1009",
+        "Spring 2022": "",
+        "academicAppointment": "Faculty",
+        "givenName": "Kate",
+        "id": 12346,
+        "surName": "Libby",
+      }
+    `);
+
+    const filters = {
+      // only Spring 2022
+      startTermId: 2,
+      endTermId: null,
+    };
+
+    const rows = getTableRows({
+      ...lookups,
+      filters,
+    });
+
+    expect(toSpreadsheetRow(rows[0])).toMatchInlineSnapshot(`
+      {
+        "Spring 2022": "",
+        "academicAppointment": "Faculty",
+        "givenName": "Kate",
+        "id": 12346,
+        "surName": "Libby",
+      }
+    `);
+  });
 });

@@ -19,6 +19,14 @@ export interface JoinedEnrollmentRecord {
 
 export type PersonTableRow = [T.Person, ...PersonTableTermRecord[]];
 
+interface TableFilters {
+  excludedCourseLevels?: Set<string>;
+  excludedCourseTypes?: Set<string>;
+  excludedAcadAppts?: Set<string>;
+  startTermId?: number | null;
+  endTermId?: number | null;
+}
+
 function joinEnrollmentRecord({
   enrollment,
   courseLookup,
@@ -82,12 +90,6 @@ function getEnrollmentsForPersonInTerm({
   });
 }
 
-interface TableFilters {
-  excludedCourseLevels?: Set<string>;
-  excludedCourseTypes?: Set<string>;
-  excludedAcadAppts?: Set<string>;
-}
-
 const filterRecordForCourseLevel =
   (filters?: TableFilters) => (record: JoinedEnrollmentRecord) =>
     !(filters?.excludedCourseLevels?.has(record.course.courseLevel) ?? false);
@@ -117,17 +119,21 @@ export function getTableRows({
   const sortedTerms = Object.values(termLookup).sort((a, b) => a.id - b.id);
 
   const filteredPeople = sortedPeople.filter((person) => {
-    if (!filters?.excludedAcadAppts) return true;
-
-    const shouldBeExcluded = filters.excludedAcadAppts.has(
-      person.academicAppointment,
+    return !(
+      filters?.excludedAcadAppts?.has(person.academicAppointment) ?? false
     );
+  });
 
-    return !shouldBeExcluded;
+  const filteredTerms = sortedTerms.filter((term) => {
+    const isBeforeStartTerm =
+      filters?.startTermId && term.id < filters.startTermId;
+    const isAfterEndTerm = filters?.endTermId && term.id > filters.endTermId;
+
+    return !isBeforeStartTerm && !isAfterEndTerm;
   });
 
   return filteredPeople.map((person) => {
-    const termRecords = Object.values(sortedTerms).map((term) => {
+    const termRecords = Object.values(filteredTerms).map((term) => {
       const personEnrollmentsInTerm = getEnrollmentsForPersonInTerm({
         person,
         term,
