@@ -85,7 +85,7 @@ const sectionLookup: Record<T.CourseSection["id"], T.CourseSection> = {
     enrollmentTotal: 16,
     waitlistCap: 0,
     waitlistTotal: 0,
-    isPublished: false,
+    isPublished: true,
     isCancelled: false,
   },
   "sis-40": {
@@ -100,7 +100,7 @@ const sectionLookup: Record<T.CourseSection["id"], T.CourseSection> = {
     enrollmentTotal: 16,
     waitlistCap: 0,
     waitlistTotal: 0,
-    isPublished: false,
+    isPublished: true,
     isCancelled: false,
   },
 };

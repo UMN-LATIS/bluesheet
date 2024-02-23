@@ -25,6 +25,7 @@ interface TableFilters {
   excludedAcadAppts?: Set<string>;
   startTermId?: number | null;
   endTermId?: number | null;
+  inPlanningMode?: boolean;
 }
 
 function joinEnrollmentRecord({
@@ -98,6 +99,11 @@ const filterRecordForCourseType =
   (filters?: TableFilters) => (record: JoinedEnrollmentRecord) =>
     !(filters?.excludedCourseTypes?.has(record.course.courseType) ?? false);
 
+const filterRecordForPlanningMode =
+  (filters?: TableFilters) => (record: JoinedEnrollmentRecord) => {
+    return filters?.inPlanningMode || record.section.isPublished;
+  };
+
 export function getTableRows({
   personLookup,
   termLookup,
@@ -154,6 +160,7 @@ export function getTableRows({
         [
           filterRecordForCourseLevel(filters),
           filterRecordForCourseType(filters),
+          filterRecordForPlanningMode(filters),
         ].every((filter) => filter(record));
 
       const filteredEnrollmentRecords =

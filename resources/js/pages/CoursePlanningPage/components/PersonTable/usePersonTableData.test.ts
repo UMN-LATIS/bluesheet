@@ -1,3 +1,4 @@
+import * as T from "@/types";
 import { getTableRows, toSpreadsheetRow } from "./usePersonTableData";
 import { createMockLookups } from "../../stores/createMockLookups";
 
@@ -158,6 +159,44 @@ describe("usePersonTableData", () => {
 
     expect(toSpreadsheetRow(rows[0])).toMatchInlineSnapshot(`
       {
+        "Spring 2022": "",
+        "academicAppointment": "Faculty",
+        "givenName": "Kate",
+        "id": 12346,
+        "surName": "Libby",
+      }
+    `);
+  });
+
+  it('excludes draft courses unless "Planning Mode" is enabled', () => {
+    const lookups = createMockLookups();
+
+    // add a draft section
+    const plannedSection: T.CourseSection = {
+      ...lookups.sectionLookup["AFRO-1011"],
+      id: "db-555",
+      dbId: 555,
+      classNumber: null,
+      courseId: "AFRO-1011",
+      termId: 2,
+      isPublished: false,
+    };
+
+    const enrollmentInPlannedSection: T.Enrollment = {
+      id: "db-444",
+      dbId: 444,
+      sectionId: "db-555",
+      emplid: 12346,
+      role: "PI",
+    };
+
+    lookups.sectionLookup["db-555"] = plannedSection;
+    lookups.enrollmentLookup["db-444"] = enrollmentInPlannedSection;
+
+    const rows = getTableRows(lookups);
+    expect(toSpreadsheetRow(rows[0])).toMatchInlineSnapshot(`
+      {
+        "Fall 2021": "AFRO-1009",
         "Spring 2022": "",
         "academicAppointment": "Faculty",
         "givenName": "Kate",
