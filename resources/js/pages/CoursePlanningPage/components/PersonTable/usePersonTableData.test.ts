@@ -1,7 +1,7 @@
 import * as T from "@/types";
 import { getTableRows, toSpreadsheetRow } from "./usePersonTableData";
 import { createMockLookups } from "../../stores/createMockLookups";
-import { keyBy } from "lodash";
+import { first, keyBy, update } from "lodash";
 
 describe("usePersonTableData", () => {
   it("gets person table rows", () => {
@@ -213,5 +213,31 @@ describe("usePersonTableData", () => {
     expect(updatedRows.length).toBe(1);
     const firstEntry = toSpreadsheetRow(updatedRows[0]);
     expect(firstEntry.id).not.toBe(12345);
+  });
+
+  it("filters by enrolled role", () => {
+    const lookups = createMockLookups();
+    const rows = getTableRows(lookups);
+
+    // change the role of one of the enrollments
+    const firstEnrollment = Object.values(lookups.enrollmentLookup)[0];
+    firstEnrollment.role = "TA";
+
+    // before we set the filter, expect that this enrollment is in the table
+    expect(JSON.stringify(rows)).toContain("TA");
+    expect(JSON.stringify(rows)).toContain(firstEnrollment.id);
+
+    // now set the filter to exclude TAs
+    const filters = {
+      excludedEnrollmentRoles: new Set<T.EnrollmentRole>(["TA"]),
+    };
+
+    const updatedRows = getTableRows({
+      ...lookups,
+      filters,
+    });
+
+    expect(JSON.stringify(updatedRows)).not.toContain("TA");
+    expect(JSON.stringify(updatedRows)).not.toContain(firstEnrollment.id);
   });
 });

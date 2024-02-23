@@ -2,6 +2,7 @@ import * as T from "@/types";
 import * as stores from "../../stores";
 import { computed, capitalize } from "vue";
 import { sortByName } from "@/utils";
+import { filter } from "lodash";
 
 export interface PersonTableTermRecord {
   term: T.Term;
@@ -23,6 +24,7 @@ interface TableFilters {
   excludedCourseLevels?: Set<string>;
   excludedCourseTypes?: Set<string>;
   excludedAcadAppts?: Set<string>;
+  excludedEnrollmentRoles?: Set<T.EnrollmentRole>;
   startTermId?: number | null;
   endTermId?: number | null;
   inPlanningMode?: boolean;
@@ -104,6 +106,13 @@ const filterRecordForPlanningMode =
     return filters?.inPlanningMode || record.section.isPublished;
   };
 
+const filterRecordForEnrollmentRole =
+  (filters?: TableFilters) => (record: JoinedEnrollmentRecord) => {
+    return !(
+      filters?.excludedEnrollmentRoles?.has(record.enrollment.role) ?? false
+    );
+  };
+
 const filterRowForEnrollmentsOrLeaves = (row: PersonTableRow) => {
   const termRecords = row.slice(1) as PersonTableTermRecord[];
   return termRecords.some((termRecord) => {
@@ -168,6 +177,7 @@ export function getTableRows({
           filterRecordForCourseLevel(filters),
           filterRecordForCourseType(filters),
           filterRecordForPlanningMode(filters),
+          filterRecordForEnrollmentRole(filters),
         ].every((filter) => filter(record));
 
       const filteredEnrollmentRecords =
