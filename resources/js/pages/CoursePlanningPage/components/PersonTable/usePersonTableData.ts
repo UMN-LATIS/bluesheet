@@ -257,6 +257,7 @@ export function usePersonTableData() {
       filters: {
         ...planningStore.filters,
         excludedEnrollmentRoles: new Set(["TA"]),
+        inPlanningMode: planningStore.isInPlanningMode,
       },
     });
   });
