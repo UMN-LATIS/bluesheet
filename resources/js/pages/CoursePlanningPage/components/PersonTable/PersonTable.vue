@@ -1,8 +1,10 @@
 <template>
   <div>
-    <Button variant="tertiary" @click="downloadAsSpreadsheet">
-      Download
-    </Button>
+    <div class="tw-flex tw-justify-end tw-items-center tw-py-2">
+      <Button variant="tertiary" @click="downloadAsSpreadsheet">
+        Download XLSX
+      </Button>
+    </div>
 
     <Table
       v-show="coursePlanningStore.visiblePeople.length"
@@ -50,7 +52,7 @@ import { Table, TBody, THead, TableType } from "@/components/Table";
 import PersonTableRow from "./PersonTableRow.vue";
 import ReportTableHeaderRow from "../ReportTableHeaderRow.vue";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
-import { onMounted, ref, computed } from "vue";
+import { onMounted, ref } from "vue";
 import Button from "@/components/Button.vue";
 import { utils, writeFileXLSX } from "xlsx";
 import { usePersonTableData } from "./usePersonTableData";

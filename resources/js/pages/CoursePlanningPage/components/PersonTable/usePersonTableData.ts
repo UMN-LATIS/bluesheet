@@ -82,6 +82,19 @@ function getEnrollmentsForPersonInTerm({
   });
 }
 
+interface TableFilters {
+  excludedCourseLevels?: Set<string>;
+  excludedCourseTypes?: Set<string>;
+}
+
+const filterRecordForCourseLevel =
+  (filters?: TableFilters) => (record: JoinedEnrollmentRecord) =>
+    !(filters?.excludedCourseLevels?.has(record.course.courseLevel) ?? false);
+
+const filterRecordForCourseType =
+  (filters?: TableFilters) => (record: JoinedEnrollmentRecord) =>
+    !(filters?.excludedCourseTypes?.has(record.course.courseType) ?? false);
+
 export function getTableRows({
   personLookup,
   termLookup,
@@ -89,6 +102,7 @@ export function getTableRows({
   sectionLookup,
   enrollmentLookup,
   leaveLookup,
+  filters,
 }: {
   personLookup: Record<T.Person["emplid"], T.Person>;
   termLookup: Record<T.Term["id"], T.Term>;
@@ -96,6 +110,7 @@ export function getTableRows({
   sectionLookup: Record<T.CourseSection["id"], T.CourseSection>;
   enrollmentLookup: Record<T.Enrollment["id"], T.Enrollment>;
   leaveLookup: Record<T.Leave["id"], T.Leave>;
+  filters?: TableFilters;
 }): PersonTableRow[] {
   const sortedPeople = Object.values(personLookup).sort(sortByName);
   const sortedTerms = Object.values(termLookup).sort((a, b) => a.id - b.id);
@@ -118,6 +133,15 @@ export function getTableRows({
         }),
       );
 
+      const allFiltersPass = (record: JoinedEnrollmentRecord) =>
+        [
+          filterRecordForCourseLevel(filters),
+          filterRecordForCourseType(filters),
+        ].every((filter) => filter(record));
+
+      const filteredEnrollmentRecords =
+        personEnrollmentsInTerm.filter(allFiltersPass);
+
       const personLeavesInTerm = getLeavesForPersonInTerm(
         leaveLookup,
         person,
@@ -126,7 +150,7 @@ export function getTableRows({
 
       return {
         term,
-        enrollments: personEnrollmentsInTerm,
+        enrollments: filteredEnrollmentRecords,
         leaves: personLeavesInTerm,
       };
     });

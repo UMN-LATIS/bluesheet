@@ -1,9 +1,5 @@
 import * as T from "@/types";
-import {
-  getTableRows,
-  toSpreadsheetRow,
-  type PersonTableRow,
-} from "./usePersonTableData";
+import { getTableRows, toSpreadsheetRow } from "./usePersonTableData";
 
 const termLookup: Record<T.Term["id"], T.Term> = {
   1: {
@@ -160,16 +156,18 @@ const leaveLookup: Record<T.Leave["id"], T.Leave> = {
   },
 };
 
+const lookups = {
+  personLookup,
+  termLookup,
+  courseLookup,
+  sectionLookup,
+  enrollmentLookup,
+  leaveLookup,
+};
+
 describe("usePersonTableData", () => {
   it("gets person table rows", () => {
-    const personTableData = getTableRows({
-      personLookup,
-      termLookup,
-      courseLookup,
-      sectionLookup,
-      enrollmentLookup,
-      leaveLookup,
-    });
+    const personTableData = getTableRows(lookups);
 
     expect(personTableData).toMatchSnapshot();
   });
@@ -187,6 +185,78 @@ describe("usePersonTableData", () => {
     expect(toSpreadsheetRow(rows[0])).toMatchInlineSnapshot(`
       {
         "Fall 2021": "AFRO-1009",
+        "Spring 2022": "",
+        "givenName": "Kate",
+        "id": 12346,
+        "surName": "Libby",
+      }
+    `);
+  });
+
+  it("filters for course level", () => {
+    // change the course level of one of the courses
+    courseLookup["AFRO-1009"].courseLevel = "GRD";
+
+    const originalRows = getTableRows(lookups);
+
+    // expect that we can find some rows with AFRO-1009
+    expect(toSpreadsheetRow(originalRows[0])).toMatchInlineSnapshot(`
+      {
+        "Fall 2021": "AFRO-1009",
+        "Spring 2022": "",
+        "givenName": "Kate",
+        "id": 12346,
+        "surName": "Libby",
+      }
+    `);
+
+    const filters = {
+      excludedCourseLevels: new Set(["GRD"]),
+    };
+
+    const rows = getTableRows({
+      ...lookups,
+      filters,
+    });
+
+    // expect that AFRO-1009 is not in any spreadsheet row
+    expect(toSpreadsheetRow(rows[0])).toMatchInlineSnapshot(`
+      {
+        "Fall 2021": "",
+        "Spring 2022": "",
+        "givenName": "Kate",
+        "id": 12346,
+        "surName": "Libby",
+      }
+    `);
+  });
+
+  it("filters for course type", () => {
+    courseLookup["AFRO-1009"].courseType = "DIS";
+
+    const originalRows = getTableRows(lookups);
+    expect(toSpreadsheetRow(originalRows[0])).toMatchInlineSnapshot(`
+      {
+        "Fall 2021": "AFRO-1009",
+        "Spring 2022": "",
+        "givenName": "Kate",
+        "id": 12346,
+        "surName": "Libby",
+      }
+    `);
+
+    const filters = {
+      excludedCourseTypes: new Set(["DIS"]),
+    };
+
+    const rows = getTableRows({
+      ...lookups,
+      filters,
+    });
+
+    expect(toSpreadsheetRow(rows[0])).toMatchInlineSnapshot(`
+      {
+        "Fall 2021": "",
         "Spring 2022": "",
         "givenName": "Kate",
         "id": 12346,
