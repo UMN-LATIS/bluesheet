@@ -85,6 +85,7 @@ function getEnrollmentsForPersonInTerm({
 interface TableFilters {
   excludedCourseLevels?: Set<string>;
   excludedCourseTypes?: Set<string>;
+  excludedAcadAppts?: Set<string>;
 }
 
 const filterRecordForCourseLevel =
@@ -115,7 +116,17 @@ export function getTableRows({
   const sortedPeople = Object.values(personLookup).sort(sortByName);
   const sortedTerms = Object.values(termLookup).sort((a, b) => a.id - b.id);
 
-  return sortedPeople.map((person) => {
+  const filteredPeople = sortedPeople.filter((person) => {
+    if (!filters?.excludedAcadAppts) return true;
+
+    const shouldBeExcluded = filters.excludedAcadAppts.has(
+      person.academicAppointment,
+    );
+
+    return !shouldBeExcluded;
+  });
+
+  return filteredPeople.map((person) => {
     const termRecords = Object.values(sortedTerms).map((term) => {
       const personEnrollmentsInTerm = getEnrollmentsForPersonInTerm({
         person,
@@ -166,6 +177,7 @@ export function toSpreadsheetRow(row: PersonTableRow) {
     id: person.emplid,
     surName: person.surName,
     givenName: person.givenName,
+    academicAppointment: person.academicAppointment,
     ...termRecords.reduce((acc, termRecord) => {
       return {
         ...acc,
