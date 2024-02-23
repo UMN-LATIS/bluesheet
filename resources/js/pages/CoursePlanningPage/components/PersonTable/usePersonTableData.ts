@@ -231,7 +231,7 @@ export function usePersonTableData() {
   const sectionStore = stores.useCourseSectionStore();
   const enrollmentStore = stores.useEnrollmentStore();
   const leaveStore = stores.useLeaveStore();
-  const filterStore = stores.useRootCoursePlanningStore();
+  const planningStore = stores.useRootCoursePlanningStore();
 
   const lookups = {
     personLookup: personStore.personLookupByEmpId as Record<
@@ -255,7 +255,7 @@ export function usePersonTableData() {
     return getTableRows({
       ...lookups,
       filters: {
-        ...filterStore.filters,
+        ...planningStore.filters,
         excludedEnrollmentRoles: new Set(["TA"]),
       },
     });
@@ -265,8 +265,9 @@ export function usePersonTableData() {
     return getTableRows({
       ...lookups,
       filters: {
-        ...filterStore.filters,
+        ...planningStore.filters,
         excludedEnrollmentRoles: new Set(["PI"]),
+        inPlanningMode: planningStore.isInPlanningMode,
       },
     });
   });
