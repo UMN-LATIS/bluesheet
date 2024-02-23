@@ -43,7 +43,7 @@ jobs:
         run: docker-compose exec -T app ./vendor/bin/pest
 
       - name: Run unit tests with Jest
-        run: yarn test
+        run: yarn test:unit
 
       - name: Run E2E tests with Cypress
         uses: cypress-io/github-action@v5
