@@ -1,14 +1,12 @@
 import * as T from "@/types";
+import * as stores from "../../stores";
+import { computed, capitalize } from "vue";
+import { sortByName } from "@/utils";
+
 export interface PersonTableTermRecord {
   term: T.Term;
   enrollments: JoinedEnrollmentRecord[];
   leaves: T.Leave[];
-}
-
-export interface PersonTableRecord {
-  id: T.Person["emplid"];
-  person: T.Person;
-  termRecords: PersonTableTermRecord[];
 }
 
 export interface JoinedEnrollmentRecord {
@@ -18,6 +16,8 @@ export interface JoinedEnrollmentRecord {
   course: T.Course;
   term: T.Term;
 }
+
+export type PersonTableRow = [T.Person, ...PersonTableTermRecord[]];
 
 function joinEnrollmentRecord({
   enrollment,
@@ -82,7 +82,7 @@ function getEnrollmentsForPersonInTerm({
   });
 }
 
-export function toPersonTableData({
+export function getTableRows({
   personLookup,
   termLookup,
   courseLookup,
@@ -96,11 +96,11 @@ export function toPersonTableData({
   sectionLookup: Record<T.CourseSection["id"], T.CourseSection>;
   enrollmentLookup: Record<T.Enrollment["id"], T.Enrollment>;
   leaveLookup: Record<T.Leave["id"], T.Leave>;
-}): PersonTableRecord[] {
-  const allPeople = Object.values(personLookup);
-  const sortedTerms = Object.values(termLookup).sort((a, b) => b.id - a.id);
+}): PersonTableRow[] {
+  const sortedPeople = Object.values(personLookup).sort(sortByName);
+  const sortedTerms = Object.values(termLookup).sort((a, b) => a.id - b.id);
 
-  return allPeople.map((person) => {
+  return sortedPeople.map((person) => {
     const termRecords = Object.values(sortedTerms).map((term) => {
       const personEnrollmentsInTerm = getEnrollmentsForPersonInTerm({
         person,
@@ -118,7 +118,7 @@ export function toPersonTableData({
         }),
       );
 
-      const personeLeavesInTerm = getLeavesForPersonInTerm(
+      const personLeavesInTerm = getLeavesForPersonInTerm(
         leaveLookup,
         person,
         term,
@@ -127,14 +127,70 @@ export function toPersonTableData({
       return {
         term,
         enrollments: personEnrollmentsInTerm,
-        leaves: personeLeavesInTerm,
+        leaves: personLeavesInTerm,
       };
     });
 
-    return {
-      id: person.emplid,
-      person,
-      termRecords,
-    };
+    return [person, ...termRecords];
   });
+}
+
+export function toSpreadsheetRow(row: PersonTableRow) {
+  const [person, ...termRecords] = row;
+
+  return {
+    id: person.emplid,
+    surName: person.surName,
+    givenName: person.givenName,
+    ...termRecords.reduce((acc, termRecord) => {
+      return {
+        ...acc,
+        [termRecord.term.name]: [
+          ...termRecord.leaves.map((leave) =>
+            capitalize(`${leave.type} Leave (${leave.status})`),
+          ),
+          ...termRecord.enrollments.map((enrollment) => enrollment.course.id),
+        ].join(", "),
+      };
+    }, {}),
+  };
+}
+
+export function usePersonTableData() {
+  const personStore = stores.usePersonStore();
+  const termStore = stores.useTermStore();
+  const courseStore = stores.useCourseStore();
+  const sectionStore = stores.useCourseSectionStore();
+  const enrollmentStore = stores.useEnrollmentStore();
+  const leaveStore = stores.useLeaveStore();
+
+  const rows = computed(() => {
+    return getTableRows({
+      personLookup: personStore.personLookupByEmpId as Record<
+        T.Person["emplid"],
+        T.Person
+      >,
+      termLookup: termStore.termLookup,
+      courseLookup: courseStore.courseLookup as Record<
+        T.Course["id"],
+        T.Course
+      >,
+      sectionLookup: sectionStore.sectionLookup as Record<
+        T.CourseSection["id"],
+        T.CourseSection
+      >,
+      enrollmentLookup: enrollmentStore.enrollmentLookup as Record<
+        T.Enrollment["id"],
+        T.Enrollment
+      >,
+      leaveLookup: leaveStore.leaveLookup,
+    });
+  });
+
+  const spreadsheetJson = computed(() => rows.value.map(toSpreadsheetRow));
+
+  return {
+    rows,
+    spreadsheetJson,
+  };
 }

@@ -52,7 +52,8 @@ import ReportTableHeaderRow from "../ReportTableHeaderRow.vue";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
 import { onMounted, ref, computed } from "vue";
 import Button from "@/components/Button.vue";
-import { utils, writeFileXLSX } from 'xlsx';
+import { utils, writeFileXLSX } from "xlsx";
+import { usePersonTableData } from "./usePersonTableData";
 
 onMounted(() => {
   performance.mark("CoursePlanningPage:end");
@@ -78,13 +79,11 @@ const coursePlanningStore = useRootCoursePlanningStore();
 const personTableContainer = ref<TableType | null>(null);
 
 function downloadAsSpreadsheet() {
-  if (!personTableContainer.value) {
-    throw new Error('personTableContainer is not defined');
-  }
-  const tableEl = personTableContainer.value.getTableElement();
-
-  const wb = utils.table_to_book(tableEl);
-  writeFileXLSX(wb, "SheetJSVueHTML.xlsx");
+  const personTableData = usePersonTableData();
+  const ws = utils.json_to_sheet(personTableData.spreadsheetJson.value);
+  const wb = utils.book_new();
+  utils.book_append_sheet(wb, ws, "People");
+  writeFileXLSX(wb, "LeavePlanningReport.xlsx");
 }
 </script>
 <style lang="scss">

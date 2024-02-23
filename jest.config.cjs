@@ -1,5 +1,5 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
-export default {
+module.exports = {
   testEnvironment: "jsdom",
   testMatch: [
     "**/resources/js/**/__tests__/**/*.?(m)[jt]s?(x)",
@@ -10,4 +10,5 @@ export default {
     "^@/(.*)$": "<rootDir>/resources/js/$1",
     "^lodash-es$": "lodash",
   },
+  prettierPath: require.resolve("prettier-2"),
 };
