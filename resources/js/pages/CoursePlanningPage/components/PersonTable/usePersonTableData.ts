@@ -222,6 +222,7 @@ export function usePersonTableData() {
   const sectionStore = stores.useCourseSectionStore();
   const enrollmentStore = stores.useEnrollmentStore();
   const leaveStore = stores.useLeaveStore();
+  const filterStore = stores.useRootCoursePlanningStore();
 
   const rows = computed(() => {
     return getTableRows({
@@ -243,6 +244,7 @@ export function usePersonTableData() {
         T.Enrollment
       >,
       leaveLookup: leaveStore.leaveLookup,
+      filters: filterStore.filters,
     });
   });
 
