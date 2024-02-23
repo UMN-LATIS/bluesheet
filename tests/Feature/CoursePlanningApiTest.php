@@ -249,6 +249,7 @@ describe('GET /api/groups/:groupId/sections', function () {
             'waitlistTotal' => 0,
             'isCancelled' => false,
             'isPublished' => false,
+            'classNumber' => null,
         ]);
     });
 
