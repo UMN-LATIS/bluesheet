@@ -1,6 +1,7 @@
 import * as T from "@/types";
 import { getTableRows, toSpreadsheetRow } from "./usePersonTableData";
 import { createMockLookups } from "../../stores/createMockLookups";
+import { keyBy } from "lodash";
 
 describe("usePersonTableData", () => {
   it("gets person table rows", () => {
@@ -53,16 +54,7 @@ describe("usePersonTableData", () => {
     });
 
     // expect that AFRO-1009 is not in any spreadsheet row
-    expect(toSpreadsheetRow(rows[0])).toMatchInlineSnapshot(`
-      {
-        "Fall 2021": "",
-        "Spring 2022": "",
-        "academicAppointment": "Faculty",
-        "givenName": "Kate",
-        "id": 12346,
-        "surName": "Libby",
-      }
-    `);
+    expect(JSON.stringify(rows)).not.toContain("AFRO-1009");
   });
 
   it("filters for course type", () => {
@@ -90,16 +82,7 @@ describe("usePersonTableData", () => {
       filters,
     });
 
-    expect(toSpreadsheetRow(rows[0])).toMatchInlineSnapshot(`
-      {
-        "Fall 2021": "",
-        "Spring 2022": "",
-        "academicAppointment": "Faculty",
-        "givenName": "Kate",
-        "id": 12346,
-        "surName": "Libby",
-      }
-    `);
+    expect(JSON.stringify(rows)).not.toContain("AFRO-1009");
   });
 
   it("filters for Employee Appointment", () => {
@@ -147,9 +130,9 @@ describe("usePersonTableData", () => {
     `);
 
     const filters = {
-      // only Spring 2022
-      startTermId: 2,
-      endTermId: null,
+      // only Fall 2021
+      startTermId: null,
+      endTermId: 1,
     };
 
     const rows = getTableRows({
@@ -159,7 +142,7 @@ describe("usePersonTableData", () => {
 
     expect(toSpreadsheetRow(rows[0])).toMatchInlineSnapshot(`
       {
-        "Spring 2022": "",
+        "Fall 2021": "AFRO-1009",
         "academicAppointment": "Faculty",
         "givenName": "Kate",
         "id": 12346,
@@ -204,5 +187,31 @@ describe("usePersonTableData", () => {
         "surName": "Libby",
       }
     `);
+  });
+
+  it("excludes people with no enrollments or leaves", () => {
+    const lookups = createMockLookups();
+    const rows = getTableRows(lookups);
+
+    expect(rows.length).toBe(2);
+
+    const personToExclude = lookups.personLookup[12345];
+
+    // remove all enrollments for '12345'
+    const excludedEnrollments = Object.values(lookups.enrollmentLookup).filter(
+      (enrollment) => enrollment.emplid !== personToExclude.emplid,
+    );
+    lookups.enrollmentLookup = keyBy(excludedEnrollments, "id");
+
+    // remove all leaves for '12345'
+    const excludedLeaves = Object.values(lookups.leaveLookup).filter(
+      (leave) => leave.user_id !== personToExclude.id,
+    );
+    lookups.leaveLookup = keyBy(excludedLeaves, "id");
+
+    const updatedRows = getTableRows(lookups);
+    expect(updatedRows.length).toBe(1);
+    const firstEntry = toSpreadsheetRow(updatedRows[0]);
+    expect(firstEntry.id).not.toBe(12345);
   });
 });

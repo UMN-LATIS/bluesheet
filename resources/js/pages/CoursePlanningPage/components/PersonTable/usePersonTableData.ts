@@ -104,6 +104,13 @@ const filterRecordForPlanningMode =
     return filters?.inPlanningMode || record.section.isPublished;
   };
 
+const filterRowForEnrollmentsOrLeaves = (row: PersonTableRow) => {
+  const termRecords = row.slice(1) as PersonTableTermRecord[];
+  return termRecords.some((termRecord) => {
+    return termRecord.enrollments.length > 0 || termRecord.leaves.length > 0;
+  });
+};
+
 export function getTableRows({
   personLookup,
   termLookup,
@@ -138,7 +145,7 @@ export function getTableRows({
     return !isBeforeStartTerm && !isAfterEndTerm;
   });
 
-  return filteredPeople.map((person) => {
+  const rows: PersonTableRow[] = filteredPeople.map((person) => {
     const termRecords = Object.values(filteredTerms).map((term) => {
       const personEnrollmentsInTerm = getEnrollmentsForPersonInTerm({
         person,
@@ -181,6 +188,9 @@ export function getTableRows({
 
     return [person, ...termRecords];
   });
+
+  // remove rows with no enrollments or leaves
+  return rows.filter(filterRowForEnrollmentsOrLeaves);
 }
 
 export function toSpreadsheetRow(row: PersonTableRow) {
