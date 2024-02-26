@@ -1,7 +1,7 @@
 import * as T from "@/types";
 import { getTableRows, toSpreadsheetRow } from "./usePersonTableData";
 import { createMockLookups } from "../../stores/createMockLookups";
-import { first, keyBy, update } from "lodash";
+import { keyBy } from "lodash";
 
 describe("usePersonTableData", () => {
   it("gets person table rows", () => {
