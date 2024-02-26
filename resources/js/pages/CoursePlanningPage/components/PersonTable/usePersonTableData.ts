@@ -1,6 +1,6 @@
 import * as T from "@/types";
 import * as stores from "../../stores";
-import { computed, capitalize, ref } from "vue";
+import { computed, capitalize } from "vue";
 import { sortByName } from "@/utils";
 
 export interface PersonTableTermRecord {

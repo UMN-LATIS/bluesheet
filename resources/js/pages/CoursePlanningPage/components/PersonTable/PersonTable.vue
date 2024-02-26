@@ -1,11 +1,5 @@
 <template>
   <div>
-    <div class="tw-flex tw-justify-end tw-items-center tw-py-2">
-      <Button variant="tertiary" @click="downloadAsSpreadsheet">
-        Download XLSX
-      </Button>
-    </div>
-
     <Table
       v-show="coursePlanningStore.visiblePeople.length"
       ref="personTableContainer"
@@ -53,8 +47,6 @@ import PersonTableRow from "./PersonTableRow.vue";
 import ReportTableHeaderRow from "../ReportTableHeaderRow.vue";
 import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
 import { onMounted, ref } from "vue";
-import Button from "@/components/Button.vue";
-import { utils, writeFileXLSX } from "xlsx";
 import { usePersonTableData } from "./usePersonTableData";
 
 onMounted(() => {
@@ -79,16 +71,6 @@ defineProps<{
 const coursePlanningStore = useRootCoursePlanningStore();
 
 const personTableContainer = ref<TableType | null>(null);
-
-function downloadAsSpreadsheet() {
-  const wb = utils.book_new();
-  const { instructorSpreadsheetRows, taSpreadsheetRows } = usePersonTableData();
-  const instructorSheet = utils.json_to_sheet(instructorSpreadsheetRows.value);
-  const taSheet = utils.json_to_sheet(taSpreadsheetRows.value);
-  utils.book_append_sheet(wb, instructorSheet, "Instructors");
-  utils.book_append_sheet(wb, taSheet, "TAs");
-  writeFileXLSX(wb, "LeavePlanningReport.xlsx");
-}
 </script>
 <style lang="scss">
 // fix width of cells to prevent them from embiggening

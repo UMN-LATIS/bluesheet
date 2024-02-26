@@ -44,19 +44,35 @@
         >
           <Tabs class="tw-mb-2" :tabs="tabs" @change="handleTabChange" />
 
-          <label
-            class="tw-border tw-border-umn-neutral-200 tw-max-w-xs tw-w-full tw-rounded-md !tw-block !tw-mb-0"
-          >
-            <span class="sr-only"
-              >Filter by instructor name or course number</span
-            >
-            <input
-              v-model="searchInputRaw"
-              placeholder="Search table"
-              :showLabel="false"
-              class="tw-w-full tw-border-none tw-rounded-none tw-px-4 tw-py-2 tw-bg-transparent tw-text-sm"
+          <div class="tw-flex tw-gap-2">
+            <DownloadSpreadsheetButton
+              :filename="spreadsheetDownloadFilename"
+              :sheetData="[
+                {
+                  sheetName: 'Instructors',
+                  data: instructorSpreadsheetRows,
+                },
+                {
+                  sheetName: 'TAs',
+                  data: taSpreadsheetRows,
+                },
+              ]"
             />
-          </label>
+
+            <label
+              class="tw-border tw-border-umn-neutral-200 tw-max-w-xs tw-w-full tw-rounded-md !tw-block !tw-mb-0"
+            >
+              <span class="sr-only"
+                >Filter by instructor name or course number</span
+              >
+              <input
+                v-model="searchInputRaw"
+                placeholder="Search table"
+                :showLabel="false"
+                class="tw-w-full tw-border-none tw-rounded-none tw-px-4 tw-py-2 tw-bg-transparent tw-text-sm"
+              />
+            </label>
+          </div>
         </div>
 
         <PersonTable
@@ -94,6 +110,8 @@ import CheckboxGroup from "@/components/CheckboxGroup.vue";
 import { CourseTable } from "./components/CourseTable";
 import { useDebouncedComputed } from "@/utils/useDebouncedComputed";
 import { $can } from "@/utils";
+import DownloadSpreadsheetButton from "@/components/DownloadSpreadsheetButton.vue";
+import { usePersonTableData } from "./components/PersonTable/usePersonTableData";
 
 const props = defineProps<{
   groupId: number;
@@ -203,5 +221,16 @@ function scrollToCurrentTerm() {
     inline: "center",
   });
 }
+
+const { instructorSpreadsheetRows, taSpreadsheetRows } = usePersonTableData();
+
+const spreadsheetDownloadFilename = computed(() => {
+  const prettyDate = new Date().toISOString().split("T")[0];
+  const groupName = group.value?.group_title
+    ?.split(" ")
+    .join("")
+    .replace(/[^a-zA-Z0-9-]/g, "");
+  return `leavePlanningReport_${groupName}_${prettyDate}.xlsx`;
+});
 </script>
 <style scoped></style>
