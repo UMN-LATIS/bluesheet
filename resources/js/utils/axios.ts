@@ -3,21 +3,30 @@ import { ApiError } from "@/api";
 import { useErrorStore } from "@/stores/useErrorStore";
 import { CustomAxiosRequestConfig } from "@/types";
 
-const token = document.head.querySelector(
-  'meta[name="csrf-token"]',
-) as HTMLMetaElement | null;
-
-if (!token) {
-  console.error(
-    "CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token",
-  );
-}
-
 const axiosInstance = axios.create({
   headers: {
     "X-Requested-With": "XMLHttpRequest",
-    "X-CSRF-TOKEN": token ? token.content : undefined,
   },
+});
+
+// Request interceptor to set the CSRF token
+axiosInstance.interceptors.request.use((config: CustomAxiosRequestConfig) => {
+  const tokenElement = document.head.querySelector(
+    'meta[name="csrf-token"]',
+  ) as HTMLMetaElement | null;
+
+  if (tokenElement) {
+    config.headers = {
+      ...config.headers,
+      "X-CSRF-TOKEN": tokenElement.content,
+    };
+  } else {
+    console.error(
+      "CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token",
+    );
+  }
+
+  return config;
 });
 
 // this interceptor is used to catch errors from the API
