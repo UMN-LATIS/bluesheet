@@ -5,3 +5,4 @@ export { sortByName } from "./sortByName";
 export { getTempId, isTempId } from "./tempIdHelpers";
 export { parseIntFromRouteParam } from "./parseIntFromRouteParam";
 export { sortByValueAtPath } from "./sortByValueAtPath";
+export { getJoinedEnrollmentRecord } from "./getJoinedEnrollmentRecord";

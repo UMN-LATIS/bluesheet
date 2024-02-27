@@ -362,3 +362,30 @@ export interface DragListItem {
 }
 
 export type DragListId = string | number;
+
+export interface CoursePlanningTableFilters {
+  excludedCourseLevels?: Set<string>;
+  excludedCourseTypes?: Set<string>;
+  excludedAcadAppts?: Set<string>;
+  excludedEnrollmentRoles?: Set<EnrollmentRole>;
+  startTermId?: number | null;
+  endTermId?: number | null;
+  inPlanningMode?: boolean;
+}
+
+export interface JoinedEnrollmentRecord {
+  person: Person;
+  enrollment: Enrollment;
+  section: CourseSection;
+  course: Course;
+  term: Term;
+}
+
+export interface CoursePlanningLookups {
+  personLookup: Record<Person["emplid"], Person>;
+  termLookup: Record<Term["id"], Term>;
+  courseLookup: Record<Course["id"], Course>;
+  sectionLookup: Record<CourseSection["id"], CourseSection>;
+  enrollmentLookup: Record<Enrollment["id"], Enrollment>;
+  leaveLookup: Record<Leave["id"], Leave>;
+}

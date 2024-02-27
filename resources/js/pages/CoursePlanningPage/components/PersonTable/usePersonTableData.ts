@@ -1,64 +1,15 @@
 import * as T from "@/types";
 import * as stores from "../../stores";
 import { computed, capitalize } from "vue";
-import { sortByName } from "@/utils";
+import { sortByName, getJoinedEnrollmentRecord } from "@/utils";
 
 export interface PersonTableTermRecord {
   term: T.Term;
-  enrollments: JoinedEnrollmentRecord[];
+  enrollments: T.JoinedEnrollmentRecord[];
   leaves: T.Leave[];
 }
 
-export interface JoinedEnrollmentRecord {
-  person: T.Person;
-  enrollment: T.Enrollment;
-  section: T.CourseSection;
-  course: T.Course;
-  term: T.Term;
-}
-
 export type PersonTableRow = [T.Person, ...PersonTableTermRecord[]];
-
-interface TableFilters {
-  excludedCourseLevels?: Set<string>;
-  excludedCourseTypes?: Set<string>;
-  excludedAcadAppts?: Set<string>;
-  excludedEnrollmentRoles?: Set<T.EnrollmentRole>;
-  startTermId?: number | null;
-  endTermId?: number | null;
-  inPlanningMode?: boolean;
-}
-
-function joinEnrollmentRecord({
-  enrollment,
-  courseLookup,
-  sectionLookup,
-  termLookup,
-  personLookup,
-}: {
-  enrollment: T.Enrollment;
-  courseLookup: Record<T.Course["id"], T.Course>;
-  sectionLookup: Record<T.CourseSection["id"], T.CourseSection>;
-  termLookup: Record<T.Term["id"], T.Term>;
-  personLookup: Record<T.Person["emplid"], T.Person>;
-}): JoinedEnrollmentRecord {
-  const section = sectionLookup[enrollment.sectionId];
-  const course = courseLookup[section.courseId];
-  const term = termLookup[section.termId];
-  const person = personLookup[enrollment.emplid];
-
-  if (!section || !course || !term || !person) {
-    throw new Error("Missing data for enrollment record");
-  }
-
-  return {
-    person,
-    enrollment,
-    section,
-    course,
-    term,
-  };
-}
 
 function getLeavesForPersonInTerm(
   leaveLookup: Record<T.Leave["id"], T.Leave>,
@@ -93,20 +44,24 @@ function getEnrollmentsForPersonInTerm({
 }
 
 const filterRecordForCourseLevel =
-  (filters?: TableFilters) => (record: JoinedEnrollmentRecord) =>
+  (filters?: T.CoursePlanningTableFilters) =>
+  (record: T.JoinedEnrollmentRecord) =>
     !(filters?.excludedCourseLevels?.has(record.course.courseLevel) ?? false);
 
 const filterRecordForCourseType =
-  (filters?: TableFilters) => (record: JoinedEnrollmentRecord) =>
+  (filters?: T.CoursePlanningTableFilters) =>
+  (record: T.JoinedEnrollmentRecord) =>
     !(filters?.excludedCourseTypes?.has(record.course.courseType) ?? false);
 
 const filterRecordForPlanningMode =
-  (filters?: TableFilters) => (record: JoinedEnrollmentRecord) => {
+  (filters?: T.CoursePlanningTableFilters) =>
+  (record: T.JoinedEnrollmentRecord) => {
     return filters?.inPlanningMode || record.section.isPublished;
   };
 
 const filterRecordForEnrollmentRole =
-  (filters?: TableFilters) => (record: JoinedEnrollmentRecord) => {
+  (filters?: T.CoursePlanningTableFilters) =>
+  (record: T.JoinedEnrollmentRecord) => {
     return !(
       filters?.excludedEnrollmentRoles?.has(record.enrollment.role) ?? false
     );
@@ -134,7 +89,7 @@ export function getTableRows({
   sectionLookup: Record<T.CourseSection["id"], T.CourseSection>;
   enrollmentLookup: Record<T.Enrollment["id"], T.Enrollment>;
   leaveLookup: Record<T.Leave["id"], T.Leave>;
-  filters?: TableFilters;
+  filters?: T.CoursePlanningTableFilters;
 }): PersonTableRow[] {
   const sortedPeople = Object.values(personLookup).sort(sortByName);
   const sortedTerms = Object.values(termLookup).sort((a, b) => a.id - b.id);
@@ -162,7 +117,7 @@ export function getTableRows({
         sectionLookup,
       }).map((enrollment) =>
         // join with other data
-        joinEnrollmentRecord({
+        getJoinedEnrollmentRecord({
           enrollment,
           courseLookup,
           sectionLookup,
@@ -171,7 +126,7 @@ export function getTableRows({
         }),
       );
 
-      const allFiltersPass = (record: JoinedEnrollmentRecord) =>
+      const allFiltersPass = (record: T.JoinedEnrollmentRecord) =>
         [
           filterRecordForCourseLevel(filters),
           filterRecordForCourseType(filters),
