@@ -24,7 +24,21 @@ export const useLeaveStore = defineStore("leave", () => {
         lookupByUserId[personId] ?? [];
     }),
     getLeavesByTermId: computed(() => {
-      const lookupByTermId = groupBy<T.Leave>(getters.leaves.value, "termId");
+      const lookupByTermId: Record<T.Term["id"], T.Leave[]> = {};
+
+      getters.leaves.value.forEach((leave) => {
+        if (!leave?.termIds) {
+          return;
+        }
+
+        leave.termIds.forEach((termId) => {
+          if (!lookupByTermId[termId]) {
+            lookupByTermId[termId] = [];
+          }
+
+          lookupByTermId[termId].push(leave);
+        });
+      });
 
       return (termId: T.Term["id"]): T.Leave[] => lookupByTermId[termId] ?? [];
     }),
