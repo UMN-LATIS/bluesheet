@@ -363,7 +363,7 @@ export interface DragListItem {
 
 export type DragListId = string | number;
 
-export interface CoursePlanningTableFilters {
+export interface CoursePlanningFilters {
   excludedCourseLevels?: Set<string>;
   excludedCourseTypes?: Set<string>;
   excludedAcadAppts?: Set<string>;
@@ -389,3 +389,26 @@ export interface CoursePlanningLookups {
   enrollmentLookup: Record<Enrollment["id"], Enrollment>;
   leaveLookup: Record<Leave["id"], Leave>;
 }
+
+export interface PersonTableTermRecord {
+  term: Term;
+  enrollments: JoinedEnrollmentRecord[];
+  leaves: Leave[];
+}
+
+export type PersonTableRow = [Person, ...PersonTableTermRecord[]];
+
+export interface TermLeaves {
+  term: Term;
+  leaves: Leave[];
+}
+
+export type LeaveRow = ["leaves", ...TermLeaves[]];
+
+// TODO: make this the same shape as PersonTableTermRecord
+export interface CourseTableTermRecord {
+  term: Term;
+  joinedEnrollments: JoinedEnrollmentRecord[];
+}
+
+export type CourseTableRow = [Course, ...CourseTableTermRecord[]];

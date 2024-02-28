@@ -5,7 +5,7 @@ import * as T from "@/types";
 import { groupBy, keyBy } from "lodash";
 interface EnrollmentStoreState {
   activeGroupId: T.Group["id"] | null;
-  enrollmentLookup: Record<T.Enrollment["id"], T.Enrollment | undefined>;
+  enrollmentLookup: Record<T.Enrollment["id"], T.Enrollment>;
 }
 
 export const useEnrollmentStore = defineStore("enrollment", () => {

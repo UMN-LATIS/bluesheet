@@ -50,20 +50,13 @@ export function getEnrollmentsForCourseInTerm({
     });
 }
 
-export interface TermLeaves {
-  term: T.Term;
-  leaves: T.Leave[];
-}
-
-export type LeaveRow = ["leaves", ...TermLeaves[]];
-
 export function getLeavesRow({
   lookups,
   filters,
 }: {
   lookups: T.CoursePlanningLookups;
-  filters?: T.CoursePlanningTableFilters;
-}): LeaveRow {
+  filters?: T.CoursePlanningFilters;
+}): T.LeaveRow {
   const termLeaves = Object.values(lookups.termLookup).map((term) => {
     const leaves = getLeavesInTerm({ leaveLookup: lookups.leaveLookup, term });
     return { term, leaves };
@@ -83,7 +76,7 @@ export function getCourseRows({
   filters,
 }: {
   lookups: T.CoursePlanningLookups;
-  filters?: T.CoursePlanningTableFilters;
+  filters?: T.CoursePlanningFilters;
 }): CourseTableRow[] {
   const courses = Object.values(lookups.courseLookup);
 

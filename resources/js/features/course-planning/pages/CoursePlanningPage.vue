@@ -101,17 +101,17 @@
 <script setup lang="ts">
 import WideLayout from "@/layouts/WideLayout.vue";
 import { computed, ref, watch, onMounted } from "vue";
-import { PersonTable } from "./components/PersonTable";
-import { useRootCoursePlanningStore } from "./stores/useRootCoursePlanningStore";
-import CoursePlanningFilters from "./components/CoursePlanningFilters.vue";
+import { PersonTable } from "../components/PersonTable";
+import { useRootCoursePlanningStore } from "../stores/useRootCoursePlanningStore";
+import CoursePlanningFilters from "../components/CoursePlanningFilters.vue";
 import Spinner from "@/components/Spinner.vue";
 import Tabs, { type Tab } from "@/components/Tabs.vue";
 import CheckboxGroup from "@/components/CheckboxGroup.vue";
-import { CourseTable } from "./components/CourseTable";
+import { CourseTable } from "../components/CourseTable";
 import { useDebouncedComputed } from "@/utils/useDebouncedComputed";
 import { $can } from "@/utils";
 import DownloadSpreadsheetButton from "@/components/DownloadSpreadsheetButton.vue";
-import { usePersonTableData } from "./components/PersonTable/usePersonTableData";
+import { usePersonTableData } from "../components/PersonTable/usePersonTableData";
 
 const props = defineProps<{
   groupId: number;

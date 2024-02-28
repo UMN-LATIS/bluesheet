@@ -43,25 +43,21 @@ function getEnrollmentsForPersonInTerm({
   });
 }
 
-const filterRecordForCourseLevel =
-  (filters?: T.CoursePlanningTableFilters) =>
-  (record: T.JoinedEnrollmentRecord) =>
+const makeFilterForCourseLevel =
+  (filters?: T.CoursePlanningFilters) => (record: T.JoinedEnrollmentRecord) =>
     !(filters?.excludedCourseLevels?.has(record.course.courseLevel) ?? false);
 
-const filterRecordForCourseType =
-  (filters?: T.CoursePlanningTableFilters) =>
-  (record: T.JoinedEnrollmentRecord) =>
+const makeFilterForCourseType =
+  (filters?: T.CoursePlanningFilters) => (record: T.JoinedEnrollmentRecord) =>
     !(filters?.excludedCourseTypes?.has(record.course.courseType) ?? false);
 
-const filterRecordForPlanningMode =
-  (filters?: T.CoursePlanningTableFilters) =>
-  (record: T.JoinedEnrollmentRecord) => {
+const makeFilterForPlanningMode =
+  (filters?: T.CoursePlanningFilters) => (record: T.JoinedEnrollmentRecord) => {
     return filters?.inPlanningMode || record.section.isPublished;
   };
 
-const filterRecordForEnrollmentRole =
-  (filters?: T.CoursePlanningTableFilters) =>
-  (record: T.JoinedEnrollmentRecord) => {
+const makeFilterForEnrollmentRole =
+  (filters?: T.CoursePlanningFilters) => (record: T.JoinedEnrollmentRecord) => {
     return !(
       filters?.excludedEnrollmentRoles?.has(record.enrollment.role) ?? false
     );
@@ -89,7 +85,7 @@ export function getTableRows({
   sectionLookup: Record<T.CourseSection["id"], T.CourseSection>;
   enrollmentLookup: Record<T.Enrollment["id"], T.Enrollment>;
   leaveLookup: Record<T.Leave["id"], T.Leave>;
-  filters?: T.CoursePlanningTableFilters;
+  filters?: T.CoursePlanningFilters;
 }): PersonTableRow[] {
   const sortedPeople = Object.values(personLookup).sort(sortByName);
   const sortedTerms = Object.values(termLookup).sort((a, b) => a.id - b.id);
@@ -128,10 +124,10 @@ export function getTableRows({
 
       const allFiltersPass = (record: T.JoinedEnrollmentRecord) =>
         [
-          filterRecordForCourseLevel(filters),
-          filterRecordForCourseType(filters),
-          filterRecordForPlanningMode(filters),
-          filterRecordForEnrollmentRole(filters),
+          makeFilterForCourseLevel(filters),
+          makeFilterForCourseType(filters),
+          makeFilterForPlanningMode(filters),
+          makeFilterForEnrollmentRole(filters),
         ].every((filter) => filter(record));
 
       const filteredEnrollmentRecords =

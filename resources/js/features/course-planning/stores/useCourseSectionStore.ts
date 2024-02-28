@@ -7,7 +7,7 @@ import { useEnrollmentStore } from "./useEnrollmentStore";
 
 interface CourseSectionStoreState {
   activeGroupId: T.Group["id"] | null;
-  sectionLookup: Record<T.CourseSection["id"], T.CourseSection | undefined>;
+  sectionLookup: Record<T.CourseSection["id"], T.CourseSection>;
 }
 
 export const useCourseSectionStore = defineStore("couseSection", () => {

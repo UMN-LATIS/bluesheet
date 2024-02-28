@@ -6,7 +6,7 @@ import * as T from "@/types";
 
 interface CourseStoreState {
   activeGroupId: number | null;
-  courseLookup: Record<T.Course["id"], T.Course | undefined>;
+  courseLookup: Record<T.Course["id"], T.Course>;
   filters: {
     excludedCourseTypes: Set<string>;
     excludedCourseLevels: Set<string>;

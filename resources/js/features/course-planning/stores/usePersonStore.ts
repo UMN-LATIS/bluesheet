@@ -8,13 +8,9 @@ import { sortByName } from "@/utils";
 
 interface PersonStoreState {
   activeGroupId: T.Group["id"] | null;
-  personLookupByEmpId: Record<T.Person["emplid"], T.Person | undefined>;
+  personLookupByEmpId: Record<T.Person["emplid"], T.Person>;
 }
 
-/**
- * a person is a user who is enrolled in a course section
- * TODO: merge with useUserStore
- */
 export const usePersonStore = defineStore("person", () => {
   const state = reactive<PersonStoreState>({
     activeGroupId: null,
