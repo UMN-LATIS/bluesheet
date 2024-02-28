@@ -9,14 +9,14 @@ import {
   makeFilterForEnrollmentRole,
   makeFilterForPlanningMode,
   personTableRowHasAtLeaveOneEnrollment,
-} from "./coursePlanningFilters";
+} from "./makeCoursePlanningFilters";
 
 export function getPersonTableRows({
   lookups,
   filters,
 }: {
   lookups: T.CoursePlanningLookups;
-  filters?: T.CoursePlanningFilters;
+  filters: T.CoursePlanningFilters;
 }): T.PersonTableRow[] {
   const sortedPeople = Object.values(lookups.personLookup).sort(sortByName);
   const sortedTerms = Object.values(lookups.termLookup).sort(

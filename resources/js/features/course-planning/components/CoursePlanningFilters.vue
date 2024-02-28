@@ -131,10 +131,10 @@
 import { computed } from "vue";
 import SelectGroup from "@/components/SelectGroup.vue";
 import Button from "@/components/Button.vue";
-import { useRootCoursePlanningStore } from "../stores/useRootCoursePlanningStore";
+import { useCoursePlanningStore } from "../stores/useCoursePlanningStore";
 import { storeToRefs } from "pinia";
 
-const coursePlanningStore = useRootCoursePlanningStore();
+const coursePlanningStore = useCoursePlanningStore();
 
 const { filters, sortedCourseLevels, sortedCourseTypes } =
   storeToRefs(coursePlanningStore);

@@ -1,7 +1,8 @@
 import * as T from "@/types";
-import { getCourseTableRows } from "./getCourseTableRows";
 
-export function toCourseSpreadsheetRow(row: T.CourseTableRow) {
+export function toCourseSpreadsheetRowRecord(
+  row: T.CourseTableRow,
+): T.CourseSpreadsheetRowRecord {
   const [course, ...termRecords] = row;
   return {
     id: course.id,
@@ -20,15 +21,4 @@ export function toCourseSpreadsheetRow(row: T.CourseTableRow) {
       };
     }, {}),
   };
-}
-
-export function getCourseSpreadsheetRows({
-  lookups,
-  filters,
-}: {
-  lookups: T.CoursePlanningLookups;
-  filters?: T.CoursePlanningFilters;
-}) {
-  const courseRows = getCourseTableRows({ lookups, filters });
-  return courseRows.map(toCourseSpreadsheetRow);
 }

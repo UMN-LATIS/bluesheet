@@ -364,13 +364,14 @@ export interface DragListItem {
 export type DragListId = string | number;
 
 export interface CoursePlanningFilters {
-  excludedCourseLevels?: Set<string>;
-  excludedCourseTypes?: Set<string>;
-  excludedAcadAppts?: Set<string>;
-  excludedEnrollmentRoles?: Set<EnrollmentRole>;
-  startTermId?: number | null;
-  endTermId?: number | null;
-  inPlanningMode?: boolean;
+  startTermId: number | null;
+  endTermId: number | null;
+  excludedCourseLevels: Set<string>;
+  excludedCourseTypes: Set<string>;
+  excludedAcadAppts: Set<string>;
+  includedEnrollmentRoles: Set<EnrollmentRole>;
+  search: string;
+  inPlanningMode: boolean;
 }
 
 export interface JoinedEnrollmentRecord {
@@ -398,6 +399,14 @@ export interface PersonTableTermRecord {
 
 export type PersonTableRow = [Person, ...PersonTableTermRecord[]];
 
+export interface PersonSpreadsheetRowRecord {
+  id: string; // emplid
+  surName: Person["surName"];
+  givenName: Person["givenName"];
+  academicAppointment: Person["academicAppointment"];
+  [termName: string]: string; // concatenated list of leaves and enrollments
+}
+
 export interface TermLeaves {
   term: Term;
   leaves: Leave[];
@@ -412,3 +421,11 @@ export interface CourseTableTermRecord {
 }
 
 export type CourseTableRow = [Course, ...CourseTableTermRecord[]];
+
+export interface CourseSpreadsheetRowRecord {
+  id: string; // course id
+  title: string;
+  courseLevel: string;
+  courseType: string;
+  [termName: string]: string; // concatenated list of people
+}

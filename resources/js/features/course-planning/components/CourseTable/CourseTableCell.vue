@@ -46,7 +46,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import * as T from "@/types";
-import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
+import { useCoursePlanningStore } from "../../stores/useCoursePlanningStore";
 import EnrollmentInPublishedSection from "./EnrollmentInPublishedSection.vue";
 import EnrollmentInUnpublishedSection from "./EnrollmentInUnpublishedSection.vue";
 import { partition } from "lodash";
@@ -60,7 +60,7 @@ const props = defineProps<{
   term: T.Term;
 }>();
 
-const coursePlanningStore = useRootCoursePlanningStore();
+const coursePlanningStore = useCoursePlanningStore();
 const isShowingEditModal = ref(false);
 
 const enrollmentsInCourseByTermLookup = computed(
@@ -91,7 +91,7 @@ const enrollmentsInUnpublishedSection = computed(() => {
 
 const arePlannedSectionsViewable = computed(() => {
   return (
-    coursePlanningStore.isInPlanningMode &&
+    coursePlanningStore.filters.inPlanningMode &&
     coursePlanningStore.termsStore.isTermPlannable(props.term.id) &&
     $can("view planned courses")
   );

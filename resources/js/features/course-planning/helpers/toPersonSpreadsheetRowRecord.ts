@@ -1,12 +1,13 @@
 import * as T from "@/types";
 import { capitalize } from "vue";
-import { getPersonTableRows } from "./getPersonTableRows";
 
-export function toSpreadsheetRow(row: T.PersonTableRow) {
+export function toPersonSpreadsheetRowRecord(
+  row: T.PersonTableRow,
+): T.PersonSpreadsheetRowRecord {
   const [person, ...termRecords] = row;
 
   return {
-    id: person.emplid,
+    id: String(person.emplid),
     surName: person.surName,
     givenName: person.givenName,
     academicAppointment: person.academicAppointment,
@@ -22,19 +23,4 @@ export function toSpreadsheetRow(row: T.PersonTableRow) {
       };
     }, {}),
   };
-}
-
-export function getPersonSpreadsheetRows({
-  lookups,
-  filters,
-}: {
-  lookups: T.CoursePlanningLookups;
-  filters?: T.CoursePlanningFilters;
-}) {
-  const rows = getPersonTableRows({
-    lookups,
-    filters,
-  });
-
-  return rows.map(toSpreadsheetRow);
 }

@@ -10,7 +10,7 @@ export function getJoinedEnrollmentRecord({
   const section = lookups.sectionLookup[enrollment.sectionId];
   const course = lookups.courseLookup[section.courseId];
   const term = lookups.termLookup[section.termId];
-  const person = lookups.personLookup[enrollment.emplid];
+  const person = lookups.personLookup[enrollment.emplid] ?? null;
 
   if (!section || !course || !term || !person) {
     throw new Error("Missing data for enrollment record");

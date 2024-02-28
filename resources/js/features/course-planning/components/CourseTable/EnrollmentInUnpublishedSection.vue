@@ -32,7 +32,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import * as T from "@/types";
-import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
+import { useCoursePlanningStore } from "../../stores/useCoursePlanningStore";
 import DraggableCard from "@/components/DraggableCard.vue";
 import { $can } from "@/utils";
 import EditDraftSectionModal from "../EditDraftSectionModal.vue";
@@ -41,7 +41,7 @@ const props = defineProps<{
   enrollment: T.Enrollment;
 }>();
 
-const planningStore = useRootCoursePlanningStore();
+const planningStore = useCoursePlanningStore();
 
 const person = computed((): T.Person | null =>
   planningStore.personStore.getPersonByEmplId(props.enrollment.emplid),
@@ -71,7 +71,7 @@ const isDraftCourse = computed(() => {
 const isUnpublishedViewable = computed((): boolean => {
   return (
     !!section.value &&
-    planningStore.isInPlanningMode &&
+    planningStore.filters.inPlanningMode &&
     planningStore.termsStore.isTermPlannable(section.value.termId) &&
     $can("view planned courses")
   );

@@ -20,7 +20,7 @@
             <CheckboxGroup
               v-if="canViewPlanCourses"
               id="toggle-planning-mode"
-              v-model="coursePlanningStore.isInPlanningMode"
+              v-model="coursePlanningStore.filters.inPlanningMode"
               label="Planning Mode"
               description="Add/remove tentative courses."
             />
@@ -50,11 +50,15 @@
               :sheetData="[
                 {
                   sheetName: 'Instructors',
-                  data: instructorSpreadsheetRows,
+                  data: coursePlanningStore.instructorSpreadsheetRows,
                 },
                 {
                   sheetName: 'TAs',
-                  data: taSpreadsheetRows,
+                  data: coursePlanningStore.taSpreadsheetRows,
+                },
+                {
+                  sheetName: 'Courses',
+                  data: coursePlanningStore.courseSpreadsheetRows,
                 },
               ]"
             />
@@ -102,7 +106,7 @@
 import WideLayout from "@/layouts/WideLayout.vue";
 import { computed, ref, watch, onMounted } from "vue";
 import { PersonTable } from "../components/PersonTable";
-import { useRootCoursePlanningStore } from "../stores/useRootCoursePlanningStore";
+import { useCoursePlanningStore } from "../stores/useCoursePlanningStore";
 import CoursePlanningFilters from "../components/CoursePlanningFilters.vue";
 import Spinner from "@/components/Spinner.vue";
 import Tabs, { type Tab } from "@/components/Tabs.vue";
@@ -111,13 +115,12 @@ import { CourseTable } from "../components/CourseTable";
 import { useDebouncedComputed } from "@/utils/useDebouncedComputed";
 import { $can } from "@/utils";
 import DownloadSpreadsheetButton from "@/components/DownloadSpreadsheetButton.vue";
-import { usePersonTableData } from "../components/PersonTable/usePersonTableData";
 
 const props = defineProps<{
   groupId: number;
 }>();
 
-const coursePlanningStore = useRootCoursePlanningStore();
+const coursePlanningStore = useCoursePlanningStore();
 const isLoadingComplete = ref(false);
 const isShowingFilters = ref(false);
 
@@ -221,8 +224,6 @@ function scrollToCurrentTerm() {
     inline: "center",
   });
 }
-
-const { instructorSpreadsheetRows, taSpreadsheetRows } = usePersonTableData();
 
 const spreadsheetDownloadFilename = computed(() => {
   const prettyDate = new Date().toISOString().split("T")[0];

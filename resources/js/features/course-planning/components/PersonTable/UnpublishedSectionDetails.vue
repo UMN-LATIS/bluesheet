@@ -36,7 +36,7 @@
 </template>
 <script setup lang="ts">
 import * as T from "@/types";
-import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
+import { useCoursePlanningStore } from "../../stores/useCoursePlanningStore";
 import { computed, ref } from "vue";
 import { $can } from "@/utils";
 import DraggableCard from "@/components/DraggableCard.vue";
@@ -47,7 +47,7 @@ const props = defineProps<{
   person: T.Person;
 }>();
 
-const planningStore = useRootCoursePlanningStore();
+const planningStore = useCoursePlanningStore();
 const term = computed(() =>
   planningStore.termsStore.getTerm(props.section.termId),
 );
@@ -68,7 +68,7 @@ const enrollment = computed(() =>
 
 const isUnpublishedViewable = computed(() => {
   return (
-    planningStore.isInPlanningMode &&
+    planningStore.filters.inPlanningMode &&
     planningStore.termsStore.isTermPlannable(props.section.termId) &&
     $can("view planned courses")
   );

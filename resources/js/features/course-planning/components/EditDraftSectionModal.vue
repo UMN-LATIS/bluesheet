@@ -118,7 +118,7 @@ import ComboBox, { ComboBoxOption } from "@/components/ComboBox.vue";
 import { Term } from "@/types";
 import { computed, reactive, ref, watch } from "vue";
 import Button from "@/components/Button.vue";
-import { useRootCoursePlanningStore } from "../stores/useRootCoursePlanningStore";
+import { useCoursePlanningStore } from "../stores/useCoursePlanningStore";
 import * as T from "@/types";
 import InputGroup from "@/components/InputGroup.vue";
 
@@ -143,7 +143,7 @@ const emits = defineEmits<{
   );
 }>();
 
-const coursePlanningStore = useRootCoursePlanningStore();
+const coursePlanningStore = useCoursePlanningStore();
 const isEditingSection = computed(() => !!props.initialCourse);
 
 const terms = computed(() =>
@@ -288,7 +288,7 @@ function handleSubmit() {
 }
 
 const isAddingAsNewCourse = ref(false);
-const newCourse = reactive<Omit<T.Course, "id">>({
+const newCourse = reactive<Omit<T.Course, "id" | "courseCode">>({
   subject: "",
   catalogNumber: "",
   title: "",
@@ -312,8 +312,11 @@ function handleSaveNewCourseOption() {
     throw new Error("Missing required fields");
   }
 
+  const newCourseShortCode: T.CourseShortCode = `${newCourse.subject}-${newCourse.catalogNumber}`;
+
   const newCourseOption: T.Course = {
-    id: `${newCourse.subject}-${newCourse.catalogNumber}`,
+    id: newCourseShortCode,
+    courseCode: newCourseShortCode,
     ...newCourse,
   };
 

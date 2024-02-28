@@ -48,14 +48,14 @@
 import { ref, computed } from "vue";
 import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
 import * as T from "@/types";
-import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
+import { useCoursePlanningStore } from "../../stores/useCoursePlanningStore";
 import { ChevronRightIcon } from "@/icons";
 
 const props = defineProps<{
   enrollment: T.Enrollment;
 }>();
 
-const coursePlanningStore = useRootCoursePlanningStore();
+const coursePlanningStore = useCoursePlanningStore();
 const isOpen = ref(false);
 
 const person = computed((): T.Person | null =>

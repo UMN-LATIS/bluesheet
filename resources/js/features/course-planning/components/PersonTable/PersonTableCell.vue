@@ -56,7 +56,7 @@ import LeaveChip from "../LeaveChip.vue";
 import { ref, computed } from "vue";
 import EditDraftSectionModal from "../EditDraftSectionModal.vue";
 import * as T from "@/types";
-import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
+import { useCoursePlanningStore } from "../../stores/useCoursePlanningStore";
 import { $can } from "@/utils";
 import { DragDrop } from "@/components/DragDrop";
 import { DropEvent } from "@/types";
@@ -68,7 +68,7 @@ const props = defineProps<{
   term: T.Term;
 }>();
 
-const coursePlanningStore = useRootCoursePlanningStore();
+const coursePlanningStore = useCoursePlanningStore();
 
 const courseSections = computed(() => {
   return coursePlanningStore.getSectionsForEmplIdInTerm(
@@ -95,7 +95,7 @@ const termLeavesForPerson = computed(() =>
 
 const arePlannedSectionsViewable = computed(() => {
   return (
-    coursePlanningStore.isInPlanningMode &&
+    coursePlanningStore.filters.inPlanningMode &&
     coursePlanningStore.termsStore.isTermPlannable(props.term.id) &&
     $can("view planned courses")
   );
@@ -108,7 +108,7 @@ const arePlannedSectionsEditable = computed(() => {
 const initialRole = computed(() => {
   // if unset, check the filters to see if we're filtering by a single role
   const filterRoles = coursePlanningStore.filters.includedEnrollmentRoles;
-  if (filterRoles.length === 1) {
+  if (filterRoles.size === 1) {
     return filterRoles[0];
   }
 

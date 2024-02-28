@@ -39,13 +39,13 @@
 import { ref, computed } from "vue";
 import * as T from "@/types";
 import { ChevronDownIcon, ChevronRightIcon } from "@/icons";
-import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
+import { useCoursePlanningStore } from "../../stores/useCoursePlanningStore";
 
 const props = defineProps<{
   section: T.CourseSection;
 }>();
 
-const planningStore = useRootCoursePlanningStore();
+const planningStore = useCoursePlanningStore();
 
 const course = computed(() =>
   planningStore.courseStore.getCourse(props.section.courseId),

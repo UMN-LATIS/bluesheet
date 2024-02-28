@@ -66,7 +66,7 @@ import { computed, ref } from "vue";
 import dayjs from "dayjs";
 import Chip from "@/components/Chip.vue";
 import { CircleCheckIcon, QuestionIcon, NoIcon, SparklesIcon } from "@/icons";
-import { useRootCoursePlanningStore } from "../stores/useRootCoursePlanningStore";
+import { useCoursePlanningStore } from "../stores/useCoursePlanningStore";
 
 const props = withDefaults(
   defineProps<{
@@ -78,7 +78,7 @@ const props = withDefaults(
   },
 );
 
-const coursePlanningStore = useRootCoursePlanningStore();
+const coursePlanningStore = useCoursePlanningStore();
 
 const isOpen = ref(false);
 const person = computed(() =>

@@ -20,13 +20,13 @@
 <script setup lang="ts">
 import { Th } from "@/components/Table";
 import { computed } from "vue";
-import { useRootCoursePlanningStore } from "../stores/useRootCoursePlanningStore";
+import { useCoursePlanningStore } from "../stores/useCoursePlanningStore";
 
 defineProps<{
   label: string;
 }>();
 
-const coursePlanningStore = useRootCoursePlanningStore();
+const coursePlanningStore = useCoursePlanningStore();
 const terms = computed(() => coursePlanningStore.termsStore.terms);
 </script>
 <style scoped></style>

@@ -16,7 +16,7 @@
           class="term-col"
           :class="{
             'tw-bg-striped':
-              coursePlanningStore.isInPlanningMode &&
+              coursePlanningStore.filters.inPlanningMode &&
               !coursePlanningStore.termsStore.isTermPlannable(term.id),
           }"
         />
@@ -45,9 +45,8 @@
 import { Table, TBody, THead, TableType } from "@/components/Table";
 import PersonTableRow from "./PersonTableRow.vue";
 import ReportTableHeaderRow from "../ReportTableHeaderRow.vue";
-import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
+import { useCoursePlanningStore } from "../../stores/useCoursePlanningStore";
 import { onMounted, ref } from "vue";
-import { usePersonTableData } from "./usePersonTableData";
 
 onMounted(() => {
   performance.mark("CoursePlanningPage:end");
@@ -68,7 +67,7 @@ defineProps<{
   groupId: number;
 }>();
 
-const coursePlanningStore = useRootCoursePlanningStore();
+const coursePlanningStore = useCoursePlanningStore();
 
 const personTableContainer = ref<TableType | null>(null);
 </script>

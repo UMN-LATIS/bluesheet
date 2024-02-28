@@ -48,7 +48,7 @@
 <script setup lang="ts">
 import { Td } from "@/components/Table";
 import CourseTableCell from "./CourseTableCell.vue";
-import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
+import { useCoursePlanningStore } from "../../stores/useCoursePlanningStore";
 import * as T from "@/types";
 import { computed } from "vue";
 
@@ -56,7 +56,7 @@ const props = defineProps<{
   course: T.Course;
 }>();
 
-const coursePlanningStore = useRootCoursePlanningStore();
+const coursePlanningStore = useCoursePlanningStore();
 const visibleTerms = computed(() => coursePlanningStore.visibleTerms);
 
 const isCourseVisible = computed(() => {

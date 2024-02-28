@@ -13,7 +13,7 @@
         class="term-col"
         :class="{
           'tw-bg-striped':
-            coursePlanningStore.isInPlanningMode &&
+            coursePlanningStore.filters.inPlanningMode &&
             !coursePlanningStore.termsStore.isTermPlannable(term.id),
         }"
       />
@@ -36,7 +36,7 @@ import { Table, TBody, THead } from "@/components/Table";
 import CourseTableCourseRow from "./CourseTableCourseRow.vue";
 import CourseTableLeavesRow from "./CourseTableLeavesRow.vue";
 import ReportTableHeaderRow from "../ReportTableHeaderRow.vue";
-import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
+import { useCoursePlanningStore } from "../../stores/useCoursePlanningStore";
 import { Group } from "@/types";
 import { computed } from "vue";
 
@@ -45,7 +45,7 @@ defineProps<{
   groupId: Group["id"];
 }>();
 
-const coursePlanningStore = useRootCoursePlanningStore();
+const coursePlanningStore = useCoursePlanningStore();
 const courses = computed(() => coursePlanningStore.courseStore.allCourses);
 </script>
 <style scoped lang="scss">

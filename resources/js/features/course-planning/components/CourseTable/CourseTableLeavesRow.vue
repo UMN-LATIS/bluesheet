@@ -36,7 +36,7 @@
 import LeaveChip from "../LeaveChip.vue";
 import { Td } from "@/components/Table";
 import type { Term, Group } from "@/types";
-import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
+import { useCoursePlanningStore } from "../../stores/useCoursePlanningStore";
 import { computed } from "vue";
 // import { doesInstructorNameMatchSearchTerm } from "./doesInstructorNameMatchSearchTerm";
 
@@ -50,7 +50,7 @@ withDefaults(
   },
 );
 
-const coursePlanningStore = useRootCoursePlanningStore();
+const coursePlanningStore = useCoursePlanningStore();
 const getLeavesByTermId = computed(
   () => coursePlanningStore.leaveStore.getLeavesByTermId,
 );

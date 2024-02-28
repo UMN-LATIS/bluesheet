@@ -41,7 +41,7 @@
 import { Td } from "@/components/Table";
 import PersonTableCell from "./PersonTableCell.vue";
 import { Person } from "@/types";
-import { useRootCoursePlanningStore } from "../../stores/useRootCoursePlanningStore";
+import { useCoursePlanningStore } from "../../stores/useCoursePlanningStore";
 import { computed } from "vue";
 import { Term } from "@/types";
 
@@ -49,7 +49,7 @@ const props = defineProps<{
   person: Person;
 }>();
 
-const coursePlanningStore = useRootCoursePlanningStore();
+const coursePlanningStore = useCoursePlanningStore();
 
 const isPersonVisible = computed(() =>
   coursePlanningStore.isPersonVisible(props.person.emplid),
