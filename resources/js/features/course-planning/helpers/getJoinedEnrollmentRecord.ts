@@ -17,6 +17,7 @@ export function getJoinedEnrollmentRecord({
   }
 
   return {
+    id: enrollment.id,
     person,
     enrollment,
     section,

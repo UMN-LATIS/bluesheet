@@ -378,6 +378,7 @@ export interface CoursePlanningFilters {
 }
 
 export interface JoinedEnrollmentRecord {
+  id: Enrollment["id"];
   person: Person;
   enrollment: Enrollment;
   section: CourseSection;
