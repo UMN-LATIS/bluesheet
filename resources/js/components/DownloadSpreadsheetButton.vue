@@ -20,6 +20,7 @@
   </Button>
 </template>
 <script setup lang="ts">
+import * as T from "@/types";
 import { useErrorStore } from "@/stores/useErrorStore";
 import Button from "./Button.vue";
 import { DownloadIcon } from "@/icons";
@@ -29,16 +30,9 @@ import { utils, writeFileXLSX } from "xlsx";
 import Spinner from "./Spinner.vue";
 import { CheckIcon, CircleXIcon } from "@/icons";
 
-type SpreadsheetRecords = Record<string, string | number>[];
-
-export interface SheetData {
-  sheetName: string;
-  data: SpreadsheetRecords | (() => Promise<SpreadsheetRecords>);
-}
-
 const props = defineProps<{
   filename: string;
-  sheetData: SheetData[];
+  sheetData: T.SpreadsheetData[];
 }>();
 
 const downloadStatus = ref<LoadState>("idle");

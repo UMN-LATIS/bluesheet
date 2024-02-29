@@ -66,6 +66,6 @@ declare global {
   }
 }
 
-window.axios = axiosInstance;
+self.axios = axiosInstance;
 
 export default axiosInstance;

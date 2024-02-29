@@ -50,23 +50,16 @@
               :sheetData="[
                 {
                   sheetName: 'Instructors',
-                  data: async () =>
-                    coursePlanningStore.getPersonSpreadsheetRecordsForRole(
-                      'PI',
-                    ),
+                  data: () => getInstructorSpreadsheetFromWorker(),
                 },
-                {
-                  sheetName: 'TAs',
-                  data: async () =>
-                    coursePlanningStore.getPersonSpreadsheetRecordsForRole(
-                      'TA',
-                    ),
-                },
-                {
-                  sheetName: 'Courses',
-                  data: async () =>
-                    coursePlanningStore.getCourseSpreadsheetRecords(),
-                },
+                // {
+                //   sheetName: 'TAs',
+                //   data: () => getTASpreadsheetFromWorker(),
+                // },
+                // {
+                //   sheetName: 'Courses',
+                //   data: () => getCourseSpreadsheetFromWorker(),
+                // },
               ]"
             />
 
@@ -110,8 +103,9 @@
   </WideLayout>
 </template>
 <script setup lang="ts">
+import * as T from "@/types";
 import WideLayout from "@/layouts/WideLayout.vue";
-import { computed, ref, watch, onMounted } from "vue";
+import { computed, ref, watch, onMounted, onUnmounted, nextTick } from "vue";
 import { PersonTable } from "../components/PersonTable";
 import { useCoursePlanningStore } from "../stores/useCoursePlanningStore";
 import CoursePlanningFilters from "../components/CoursePlanningFilters.vue";
@@ -122,6 +116,15 @@ import { CourseTable } from "../components/CourseTable";
 import { useDebouncedComputed } from "@/utils/useDebouncedComputed";
 import { $can } from "@/utils";
 import DownloadSpreadsheetButton from "@/components/DownloadSpreadsheetButton.vue";
+import {
+  type WorkerMessage,
+  MESSAGE_TYPES,
+} from "../workers/coursePlanningWorker";
+import coursePlanningWorkerURL from "../workers/coursePlanningWorker?worker&url";
+import { useWebWorkerFn } from "@vueuse/core";
+import { getPersonSpreadsheetRecords } from "../helpers/getPersonSpreadsheetRecords";
+import { deserializeCoursePlanningFilters } from "../helpers/serializedCoursePlanningFilters";
+import { cloneDeep } from "lodash";
 
 const props = defineProps<{
   groupId: number;
@@ -240,5 +243,112 @@ const spreadsheetDownloadFilename = computed(() => {
     .replace(/[^a-zA-Z0-9-]/g, "");
   return `leavePlanningReport_${groupName}_${prettyDate}.xlsx`;
 });
+
+interface SerializableFilters {
+  startTermId: number | null;
+  endTermId: number | null;
+  excludedCourseLevels: string[];
+  excludedCourseTypes: string[];
+  excludedAcadAppts: string[];
+  includedEnrollmentRoles: T.EnrollmentRole[];
+  search: string;
+  inPlanningMode: boolean;
+}
+
+function serializeFilters(
+  filters: T.CoursePlanningFilters,
+): SerializableFilters {
+  return {
+    startTermId: filters.startTermId,
+    endTermId: filters.endTermId,
+    excludedCourseLevels: Array.from(filters.excludedCourseLevels),
+    excludedCourseTypes: Array.from(filters.excludedCourseTypes),
+    excludedAcadAppts: Array.from(filters.excludedAcadAppts),
+    includedEnrollmentRoles: Array.from(filters.includedEnrollmentRoles),
+    search: filters.search,
+    inPlanningMode: filters.inPlanningMode,
+  };
+}
+
+// const getInstructorSpreadsheet = ({
+//   lookups,
+//   serializedFilters,
+// }: {
+//   lookups: T.CoursePlanningLookups;
+//   serializedFilters: T.SerializedCoursePlanningFilters;
+// }) => {
+//   const filters = deserializeCoursePlanningFilters(serializedFilters);
+//   return getPersonSpreadsheetRecords({
+//     lookups,
+//     filters: {
+//       ...filters,
+//       includedEnrollmentRoles: new Set(["PI"]),
+//     },
+//   });
+// };
+
+// const { workerFn } = useWebWorkerFn(getInstructorSpreadsheet);
+
+const js = `import ${JSON.stringify(
+  new URL(coursePlanningWorkerURL, import.meta.url),
+)}`;
+const blob = new Blob([js], { type: "application/javascript" });
+function createWorkaroundWorker({ name }: { name?: string } = {}) {
+  const objURL = URL.createObjectURL(blob);
+  const worker = new Worker(objURL, { type: "module", name });
+  worker.addEventListener("error", (e) => {
+    URL.revokeObjectURL(objURL);
+  });
+  return worker;
+}
+
+// function handleWorkerResponse(event: MessageEvent<WorkerMessage>) {
+//   const { payload, error, type } = event.data;
+//   if (type === MESSAGE_TYPES.INSTRUCTOR_TABLE_FAILURE) {
+//     console.error(error);
+//   }
+
+//   if (type === MESSAGE_TYPES.INSTRUCTOR_TABLE_SUCCESS) {
+//     console.log(payload);
+//   }
+// }
+
+function getInstructorSpreadsheetFromWorker(): Promise<
+  T.PersonSpreadsheetRowRecord[]
+> {
+  return new Promise((resolve, reject) => {
+    const lookups = cloneDeep(coursePlanningStore.getCoursePlanningLookups());
+    const filters = coursePlanningStore.filters;
+    const serializedFilters = serializeFilters(filters);
+    const worker = createWorkaroundWorker();
+
+    // TODO: cleanup listeners
+    worker.addEventListener(
+      "message",
+      (event: MessageEvent<WorkerMessage<T.PersonSpreadsheetRowRecord[]>>) => {
+        const { payload, error, type } = event.data;
+        if (type === MESSAGE_TYPES.INSTRUCTOR_TABLE_FAILURE) {
+          console.error(error);
+          worker.terminate();
+          return reject(error);
+        }
+
+        if (type === MESSAGE_TYPES.INSTRUCTOR_TABLE_SUCCESS) {
+          console.log({ payload });
+          worker.terminate();
+          return resolve(payload ?? []);
+        }
+      },
+    );
+
+    worker.postMessage({
+      type: MESSAGE_TYPES.INSTRUCTOR_TABLE_REQUEST,
+      payload: {
+        lookups,
+        serializedFilters,
+      },
+    });
+  });
+}
 </script>
 <style scoped></style>

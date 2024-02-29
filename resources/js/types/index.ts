@@ -377,6 +377,17 @@ export interface CoursePlanningFilters {
   inPlanningMode: boolean;
 }
 
+export interface SerializedCoursePlanningFilters {
+  startTermId: number | null;
+  endTermId: number | null;
+  excludedCourseLevels: string[];
+  excludedCourseTypes: string[];
+  excludedAcadAppts: string[];
+  includedEnrollmentRoles: EnrollmentRole[];
+  search: string;
+  inPlanningMode: boolean;
+}
+
 export interface JoinedEnrollmentRecord {
   id: Enrollment["id"];
   person: Person;
@@ -433,4 +444,11 @@ export interface CourseSpreadsheetRowRecord {
   courseLevel: string;
   courseType: string;
   [termName: string]: string; // concatenated list of people
+}
+
+export type SpreadsheetRecords = Record<string, string | number>[];
+
+export interface SpreadsheetData {
+  sheetName: string;
+  data: SpreadsheetRecords | (() => Promise<SpreadsheetRecords>);
 }
