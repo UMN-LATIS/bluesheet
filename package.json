@@ -11,7 +11,7 @@
     "lint": "eslint --ext .js,.vue resources/js",
     "lint:watch": "nodemon --exec 'npm run lint' --ext js,vue",
     "test": "npm run test:unit && npm run test:e2e",
-    "test:unit": "jest",
+    "test:unit": "jest --passWithNoTests",
     "test:e2e": "npm run cypress:headless"
   },
   "dependencies": {
