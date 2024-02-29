@@ -239,11 +239,7 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
         stores.leaveStore.init(groupId),
       ]);
 
-      const earliestTerm = stores.termsStore.earliestTerm;
-      const latestTerm = stores.termsStore.latestTerm;
-
-      this.setStartTermId(earliestTerm?.id ?? null);
-      this.setEndTermId(latestTerm?.id ?? null);
+      this.resetFilters();
     },
 
     setStartTermId(termId: T.Term["id"] | null) {
