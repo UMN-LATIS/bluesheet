@@ -9,11 +9,8 @@ import { useTermStore } from "@/stores/useTermStore";
 import { useLeaveStore } from "./useLeaveStore";
 import { countBy, debounce, uniq } from "lodash";
 import * as T from "@/types";
-import { getCourseTableRows } from "../helpers/getCourseTableRows";
-import { getPersonTableRows } from "../helpers/getPersonTableRows";
-import { toCourseSpreadsheetRowRecord } from "../helpers/toCourseSpreadsheetRowRecord";
-import { toPersonSpreadsheetRowRecord } from "../helpers/toPersonSpreadsheetRowRecord";
-import { getTermsWithLeaves } from "../helpers/getTermsWithLeaves";
+import { getCourseSpreadsheetRecords } from "../helpers/getCourseSpreadsheetRecords";
+import { getPersonSpreadsheetRecords } from "../helpers/getPersonSpreadsheetRecords";
 
 interface CoursePlanningStoreState {
   activeGroupId: T.Group["id"] | null;
@@ -240,110 +237,6 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
       return stores.personStore.allPeople.filter((person) =>
         getters.isPersonVisible.value(person.emplid),
       );
-    }),
-    coursePlanningLookups: computed(
-      (): T.CoursePlanningLookups => ({
-        courseLookup: stores.courseStore.courseLookup,
-        termLookup: stores.termsStore.termLookup,
-        leaveLookup: stores.leaveStore.leaveLookup,
-        sectionLookup: stores.courseSectionStore.sectionLookup,
-        enrollmentLookup: stores.enrollmentStore.enrollmentLookup,
-        personLookup: stores.personStore.personLookupByEmpId,
-      }),
-    ),
-    courseTableRows: computed((): T.CourseTableRow[] => {
-      if (!state.activeGroupId) {
-        return [];
-      }
-
-      return getCourseTableRows({
-        lookups: getters.coursePlanningLookups.value,
-      });
-    }),
-
-    personTableRows: computed((): T.PersonTableRow[] => {
-      if (!state.activeGroupId) {
-        return [];
-      }
-
-      return getPersonTableRows({
-        lookups: getters.coursePlanningLookups.value,
-        filters: state.filters,
-      });
-    }),
-    instructorTableRows: computed((): T.PersonTableRow[] => {
-      if (!state.activeGroupId) {
-        return [];
-      }
-
-      const lookups = {};
-
-      return getPersonTableRows({
-        lookups: getters.coursePlanningLookups.value,
-        filters: {
-          ...state.filters,
-          includedEnrollmentRoles: new Set(["PI"]),
-        },
-      });
-    }),
-    taTableRows: computed((): T.PersonTableRow[] => {
-      if (!state.activeGroupId) {
-        return [];
-      }
-
-      return getPersonTableRows({
-        lookups: getters.coursePlanningLookups.value,
-        filters: {
-          ...state.filters,
-          includedEnrollmentRoles: new Set(["TA"]),
-        },
-      });
-    }),
-    instructorSpreadsheetRows: computed((): T.PersonSpreadsheetRowRecord[] => {
-      if (!state.activeGroupId) {
-        return [];
-      }
-
-      return getters.instructorTableRows.value.map(
-        toPersonSpreadsheetRowRecord,
-      );
-    }),
-
-    taSpreadsheetRows: computed((): T.PersonSpreadsheetRowRecord[] => {
-      if (!state.activeGroupId) {
-        return [];
-      }
-
-      return getters.taTableRows.value.map(toPersonSpreadsheetRowRecord);
-    }),
-
-    courseSpreadsheetRows: computed((): T.CourseSpreadsheetRowRecord[] => {
-      if (!state.activeGroupId) {
-        return [];
-      }
-
-      const termLeaves = getTermsWithLeaves({
-        lookups: getters.coursePlanningLookups.value,
-        filters: state.filters,
-      });
-
-      const leavesRecord: T.CourseSpreadsheetRowRecord = {
-        id: "leaves",
-        title: "Leaves",
-        courseLevel: "",
-        courseType: "",
-        ...termLeaves.reduce((acc, { term, leaves }) => {
-          return {
-            ...acc,
-            [term.name]: leaves.map((leave) => leave.type).join(", "),
-          };
-        }, {}),
-      };
-
-      const courseRecords: T.CourseSpreadsheetRowRecord[] =
-        getters.courseTableRows.value.map(toCourseSpreadsheetRowRecord);
-
-      return [leavesRecord, ...courseRecords];
     }),
   };
 
@@ -708,6 +601,46 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
       }
 
       return getters.isPersonVisible.value(person.emplid);
+    },
+
+    getCoursePlanningLookups(): T.CoursePlanningLookups {
+      return {
+        personLookup: stores.personStore.personLookupByEmpId,
+        courseLookup: stores.courseStore.courseLookup,
+        sectionLookup: stores.courseSectionStore.sectionLookup,
+        enrollmentLookup: stores.enrollmentStore.enrollmentLookup,
+        termLookup: stores.termsStore.termLookup,
+        leaveLookup: stores.leaveStore.leaveLookup,
+      };
+    },
+
+    getCoursePlanningFilters(): T.CoursePlanningFilters {
+      return state.filters;
+    },
+
+    getCourseSpreadsheetRecords(): T.CourseSpreadsheetRowRecord[] {
+      const lookups = methods.getCoursePlanningLookups();
+      const filters = methods.getCoursePlanningFilters();
+
+      return getCourseSpreadsheetRecords({
+        lookups,
+        filters,
+      });
+    },
+
+    getPersonSpreadsheetRecordsForRole(
+      role: T.EnrollmentRole,
+    ): T.PersonSpreadsheetRowRecord[] {
+      const lookups = methods.getCoursePlanningLookups();
+      const filters = methods.getCoursePlanningFilters();
+
+      return getPersonSpreadsheetRecords({
+        lookups,
+        filters: {
+          ...filters,
+          includedEnrollmentRoles: new Set([role]),
+        },
+      });
     },
   };
 

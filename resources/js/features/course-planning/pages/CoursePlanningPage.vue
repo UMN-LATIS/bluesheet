@@ -50,15 +50,22 @@
               :sheetData="[
                 {
                   sheetName: 'Instructors',
-                  data: coursePlanningStore.instructorSpreadsheetRows,
+                  data: async () =>
+                    coursePlanningStore.getPersonSpreadsheetRecordsForRole(
+                      'PI',
+                    ),
                 },
                 {
                   sheetName: 'TAs',
-                  data: coursePlanningStore.taSpreadsheetRows,
+                  data: async () =>
+                    coursePlanningStore.getPersonSpreadsheetRecordsForRole(
+                      'TA',
+                    ),
                 },
                 {
                   sheetName: 'Courses',
-                  data: coursePlanningStore.courseSpreadsheetRows,
+                  data: async () =>
+                    coursePlanningStore.getCourseSpreadsheetRecords(),
                 },
               ]"
             />

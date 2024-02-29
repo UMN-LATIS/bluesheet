@@ -1,0 +1,37 @@
+import * as T from "@/types";
+import { getTermsWithLeaves } from "./getTermsWithLeaves";
+import { getCourseTableRows } from "./getCourseTableRows";
+import { toCourseSpreadsheetRowRecord } from "./toCourseSpreadsheetRowRecord";
+
+export function getCourseSpreadsheetRecords({
+  lookups,
+  filters,
+}: {
+  lookups: T.CoursePlanningLookups;
+  filters: T.CoursePlanningFilters;
+}) {
+  const termLeaves = getTermsWithLeaves({
+    lookups,
+    filters,
+  });
+
+  const leavesRecord: T.CourseSpreadsheetRowRecord = {
+    id: "leaves",
+    title: "Leaves",
+    courseLevel: "",
+    courseType: "",
+    ...termLeaves.reduce((acc, { term, leaves }) => {
+      return {
+        ...acc,
+        [term.name]: leaves.map((leave) => leave.type).join(", "),
+      };
+    }, {}),
+  };
+
+  const courseRecords: T.CourseSpreadsheetRowRecord[] = getCourseTableRows({
+    lookups,
+    filters,
+  }).map(toCourseSpreadsheetRowRecord);
+
+  return [leavesRecord, ...courseRecords];
+}
