@@ -7,10 +7,11 @@ import { useCourseStore } from "./useCourseStore";
 import { useGroupStore } from "@/stores/useGroupStore";
 import { useTermStore } from "@/stores/useTermStore";
 import { useLeaveStore } from "./useLeaveStore";
-import { countBy, debounce, uniq } from "lodash";
+import { countBy, debounce, filter, uniq } from "lodash";
 import * as T from "@/types";
 import { getCourseSpreadsheetRecords } from "../helpers/getCourseSpreadsheetRecords";
 import { getPersonSpreadsheetRecords } from "../helpers/getPersonSpreadsheetRecords";
+import { filterTermByStartAndEndTerm } from "../helpers/coursePlanningFilters";
 
 interface CoursePlanningStoreState {
   activeGroupId: T.Group["id"] | null;
@@ -44,24 +45,9 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
 
   const getters = {
     visibleTerms: computed((): T.Term[] => {
-      const sortedTerms = stores.termsStore.sortedTerms;
-      let startTermIndex = sortedTerms.findIndex((term) => {
-        return term.id === state.filters.startTermId;
-      });
-
-      if (startTermIndex === -1) {
-        startTermIndex = 0;
-      }
-
-      let endTermIndex = stores.termsStore.sortedTerms.findIndex((term) => {
-        return term.id === state.filters.endTermId;
-      });
-
-      if (endTermIndex === -1) {
-        endTermIndex = sortedTerms.length - 1;
-      }
-
-      return sortedTerms.slice(startTermIndex, endTermIndex + 1);
+      return stores.termsStore.sortedTerms.filter(
+        filterTermByStartAndEndTerm(state.filters),
+      );
     }),
     sectionsWithinVisibleTerms: computed((): T.CourseSection[] => {
       return stores.courseSectionStore.allSections.filter((section) =>
