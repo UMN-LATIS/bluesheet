@@ -4,12 +4,11 @@ import { getLeavesForPersonInTerm } from "./getLeavesForPersonInTerm";
 import { getEnrollmentsForPersonInTerm } from "./getEnrollmentsForPersonInTerm";
 import { getJoinedEnrollmentRecord } from "./getJoinedEnrollmentRecord";
 import {
-  makeFilterForCourseLevel,
-  makeFilterForCourseType,
-  makeFilterForEnrollmentRole,
-  makeFilterForPlanningMode,
-  personTableRowHasAtLeaveOneEnrollment,
-} from "./makeCoursePlanningFilters";
+  allEnrollmentFiltersPass,
+  filterPersonByAcadAppt,
+  filterPersonTableRowForAtLeastOneEnrollment,
+  filterTermByStartAndEndTerm,
+} from "./coursePlanningFilters";
 
 export function getPersonTableRows({
   lookups,
@@ -25,44 +24,28 @@ export function getPersonTableRows({
     (a, b) => a.id - b.id,
   );
 
-  const filteredPeople = sortedPeople.filter((person) => {
-    return !(
-      filters?.excludedAcadAppts?.has(person.academicAppointment) ?? false
-    );
-  });
+  const filteredPeople = sortedPeople.filter(filterPersonByAcadAppt(filters));
 
-  const filteredTerms = sortedTerms.filter((term) => {
-    const isBeforeStartTerm =
-      filters?.startTermId && term.id < filters.startTermId;
-    const isAfterEndTerm = filters?.endTermId && term.id > filters.endTermId;
-
-    return !isBeforeStartTerm && !isAfterEndTerm;
-  });
+  const filteredTerms = sortedTerms.filter(
+    filterTermByStartAndEndTerm(filters),
+  );
 
   const rows: T.PersonTableRow[] = filteredPeople.map((person) => {
-    const termRecords = Object.values(filteredTerms).map((term) => {
-      const personEnrollmentsInTerm = getEnrollmentsForPersonInTerm({
+    const termRecords = filteredTerms.map((term) => {
+      const filteredEnrollmentRecords = getEnrollmentsForPersonInTerm({
         person,
         term,
         lookups,
-      }).map((enrollment) =>
+      })
         // join with other data
-        getJoinedEnrollmentRecord({
-          enrollment,
-          lookups,
-        }),
-      );
-
-      const allFiltersPass = (record: T.JoinedEnrollmentRecord) =>
-        [
-          makeFilterForCourseLevel(filters),
-          makeFilterForCourseType(filters),
-          makeFilterForPlanningMode(filters),
-          makeFilterForEnrollmentRole(filters),
-        ].every((filter) => filter(record));
-
-      const filteredEnrollmentRecords =
-        personEnrollmentsInTerm.filter(allFiltersPass);
+        .map((enrollment) =>
+          getJoinedEnrollmentRecord({
+            enrollment,
+            lookups,
+          }),
+        )
+        // exclude records that don't pass all filters
+        .filter(allEnrollmentFiltersPass(filters));
 
       const personLeavesInTerm = getLeavesForPersonInTerm({
         person,
@@ -81,5 +64,5 @@ export function getPersonTableRows({
   });
 
   // remove rows with no enrollments or leaves
-  return rows.filter(personTableRowHasAtLeaveOneEnrollment);
+  return rows.filter(filterPersonTableRowForAtLeastOneEnrollment);
 }

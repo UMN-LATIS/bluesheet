@@ -1,5 +1,5 @@
 import * as T from "@/types";
-import { getTermsWithLeaves } from "./getTermsWithLeaves";
+import { getListOfTermLeaves } from "./getListOfTermLeaves";
 import { getCourseTableRows } from "./getCourseTableRows";
 import { toCourseSpreadsheetRowRecord } from "./toCourseSpreadsheetRowRecord";
 import { capitalize } from "lodash";
@@ -11,7 +11,7 @@ export function getCourseSpreadsheetRecords({
   lookups: T.CoursePlanningLookups;
   filters: T.CoursePlanningFilters;
 }) {
-  const termLeaves = getTermsWithLeaves({
+  const termLeaves = getListOfTermLeaves({
     lookups,
     filters,
   });
