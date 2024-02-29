@@ -10,6 +10,7 @@
     <template v-else-if="downloadStatus === 'loading'">
       <Spinner class="tw-w-5 tw-h-5 tw-text-blue-500" />
       <span class="tw-sr-only">Loading</span>
+      {{ Math.round(progress * 100) }}%
     </template>
     <template v-else-if="downloadStatus === 'complete'">
       <CheckIcon /> <span class="tw-sr-only">Complete</span>
@@ -29,6 +30,7 @@ import { nextTick, ref } from "vue";
 import { utils, writeFileXLSX } from "xlsx";
 import Spinner from "./Spinner.vue";
 import { CheckIcon, CircleXIcon } from "@/icons";
+import { useSimulatedProgress } from "@/features/course-planning/helpers/useSimulatedProgress";
 
 const props = defineProps<{
   filename: string;
@@ -38,13 +40,16 @@ const props = defineProps<{
 const downloadStatus = ref<LoadState>("idle");
 
 const errorStore = useErrorStore();
+const { progress, simulateUpTo } = useSimulatedProgress();
 
 async function downloadSpreadsheet(): Promise<void> {
-  console.log("downloadSpreadsheet");
   const wb = utils.book_new();
   for (const sheet of props.sheetData) {
     if (typeof sheet.data === "function") {
+      const complete = simulateUpTo(1 / props.sheetData.length);
       sheet.data = await sheet.data();
+      complete();
+      console.log(`sheet complete: ${sheet.sheetName}`);
     }
     const ws = utils.json_to_sheet(sheet.data);
     utils.book_append_sheet(wb, ws, sheet.sheetName);
