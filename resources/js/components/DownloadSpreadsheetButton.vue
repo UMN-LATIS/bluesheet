@@ -49,7 +49,6 @@ async function downloadSpreadsheet(): Promise<void> {
       const complete = simulateUpTo(1 / props.sheetData.length);
       sheet.data = await sheet.data();
       complete();
-      console.log(`sheet complete: ${sheet.sheetName}`);
     }
     const ws = utils.json_to_sheet(sheet.data);
     utils.book_append_sheet(wb, ws, sheet.sheetName);
