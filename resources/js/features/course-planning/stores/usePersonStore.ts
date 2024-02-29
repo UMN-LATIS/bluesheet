@@ -41,8 +41,11 @@ export const usePersonStore = defineStore("person", () => {
 
     getPersonByUserId: computed(
       () =>
-        (userId: T.Person["id"]): T.Person | null =>
-          getters.personLookupByUserId[userId] ?? null,
+        (userId: T.Person["id"]): T.Person | null => {
+          const lookup = getters.personLookupByUserId.value;
+          const person = lookup[userId] ?? null;
+          return person;
+        },
     ),
     getPeopleWithRoles: computed(
       () =>
