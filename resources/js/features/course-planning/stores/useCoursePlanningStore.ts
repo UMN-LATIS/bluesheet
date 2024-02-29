@@ -605,7 +605,8 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
 
     getCoursePlanningLookups(): T.CoursePlanningLookups {
       return {
-        personLookup: stores.personStore.personLookupByEmpId,
+        personLookupByEmplid: stores.personStore.personLookupByEmpId,
+        personLookupByUserId: stores.personStore.personLookupByUserId,
         courseLookup: stores.courseStore.courseLookup,
         sectionLookup: stores.courseSectionStore.sectionLookup,
         enrollmentLookup: stores.enrollmentStore.enrollmentLookup,

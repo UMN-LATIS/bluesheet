@@ -4,10 +4,20 @@ export function getLeavesInTerm({
   lookups,
   term,
 }: {
-  lookups: Pick<T.CoursePlanningLookups, "leaveLookup">;
+  lookups: Pick<
+    T.CoursePlanningLookups,
+    "leaveLookup" | "personLookupByUserId"
+  >;
   term: T.Term;
-}) {
-  return Object.values(lookups.leaveLookup).filter(
+}): T.LeaveWithPerson[] {
+  const leaves = Object.values(lookups.leaveLookup).filter(
     (leave) => leave.termIds?.includes(term.id),
   );
+
+  const leavesWithPerson: T.LeaveWithPerson[] = leaves.map((leave) => {
+    const person = lookups.personLookupByUserId[leave.user_id];
+    return { ...leave, person };
+  });
+
+  return leavesWithPerson;
 }

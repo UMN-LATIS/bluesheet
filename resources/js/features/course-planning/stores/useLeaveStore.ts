@@ -17,7 +17,7 @@ export const useLeaveStore = defineStore("leave", () => {
 
   const getters = {
     leaves: computed((): T.Leave[] => Object.values(state.leaveLookup)),
-    getLeavesByPersonId: computed(() => {
+    getLeavesByUserId: computed(() => {
       const lookupByUserId = groupBy(getters.leaves.value, "user_id");
 
       return (personId: T.Person["id"]): T.Leave[] =>

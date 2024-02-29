@@ -2,6 +2,7 @@ import * as T from "@/types";
 import { getTermsWithLeaves } from "./getTermsWithLeaves";
 import { getCourseTableRows } from "./getCourseTableRows";
 import { toCourseSpreadsheetRowRecord } from "./toCourseSpreadsheetRowRecord";
+import { capitalize } from "lodash";
 
 export function getCourseSpreadsheetRecords({
   lookups,
@@ -18,12 +19,19 @@ export function getCourseSpreadsheetRecords({
   const leavesRecord: T.CourseSpreadsheetRowRecord = {
     id: "leaves",
     title: "Leaves",
-    courseLevel: "",
-    courseType: "",
+    courseLevel: "-",
+    courseType: "-",
     ...termLeaves.reduce((acc, { term, leaves }) => {
       return {
         ...acc,
-        [term.name]: leaves.map((leave) => leave.type).join(", "),
+        [term.name]: leaves
+          .map(
+            (leave) =>
+              `${leave.person.displayName} (${
+                leave.person.emplid
+              }) - ${capitalize(leave.type)} Leave`,
+          )
+          .join(", "),
       };
     }, {}),
   };

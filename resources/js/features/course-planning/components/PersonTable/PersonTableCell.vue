@@ -89,7 +89,7 @@ const isShowingEditModal = ref(false);
 
 const termLeavesForPerson = computed(() =>
   coursePlanningStore.leaveStore
-    .getLeavesByPersonId(props.person.id)
+    .getLeavesByUserId(props.person.id)
     .filter((leave) => leave.termIds?.includes(props.term.id)),
 );
 

@@ -30,15 +30,20 @@ export const usePersonStore = defineStore("person", () => {
           return state.personLookupByEmpId[emplId] ?? null;
         },
     ),
-    getPersonByUserId: computed(() => {
+    personLookupByUserId: computed((): Record<T.Person["id"], T.Person> => {
       const lookupByUserId: Record<T.Person["id"], T.Person> = keyBy(
         getters.allPeople.value,
         "id",
       );
 
-      return (userId: T.Person["id"]): T.Person | null =>
-        lookupByUserId[userId] ?? null;
+      return lookupByUserId;
     }),
+
+    getPersonByUserId: computed(
+      () =>
+        (userId: T.Person["id"]): T.Person | null =>
+          getters.personLookupByUserId[userId] ?? null,
+    ),
     getPeopleWithRoles: computed(
       () =>
         (roles: T.Enrollment["role"][]): T.Person[] => {

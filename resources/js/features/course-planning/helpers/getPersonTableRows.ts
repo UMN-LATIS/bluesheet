@@ -18,7 +18,9 @@ export function getPersonTableRows({
   lookups: T.CoursePlanningLookups;
   filters: T.CoursePlanningFilters;
 }): T.PersonTableRow[] {
-  const sortedPeople = Object.values(lookups.personLookup).sort(sortByName);
+  const sortedPeople = Object.values(lookups.personLookupByEmplid).sort(
+    sortByName,
+  );
   const sortedTerms = Object.values(lookups.termLookup).sort(
     (a, b) => a.id - b.id,
   );

@@ -184,7 +184,7 @@ export type LeaveStatus = (typeof leaveStatuses)[keyof typeof leaveStatuses];
 
 export interface Leave {
   id: number;
-  user_id: number;
+  user_id: User["id"];
   description: string;
   type: LeaveType;
   status: LeaveStatus;
@@ -197,6 +197,9 @@ export interface Leave {
   deleted_at?: ISODateTime | null;
 }
 
+export interface LeaveWithPerson extends Leave {
+  person: Person;
+}
 export interface NewLeave {
   id?: string | number;
   user_id: number;
@@ -225,7 +228,7 @@ export const enrollmentRoleMap = {
 export type EnrollmentRole = keyof typeof enrollmentRoleMap;
 
 export interface Person {
-  id: number;
+  id: User["id"];
   emplid: number;
   title: string;
   jobCode: string;
@@ -383,7 +386,8 @@ export interface JoinedEnrollmentRecord {
 }
 
 export interface CoursePlanningLookups {
-  personLookup: Record<Person["emplid"], Person>;
+  personLookupByEmplid: Record<Person["emplid"], Person>;
+  personLookupByUserId: Record<Person["id"], Person>;
   termLookup: Record<Term["id"], Term>;
   courseLookup: Record<Course["id"], Course>;
   sectionLookup: Record<CourseSection["id"], CourseSection>;
@@ -409,7 +413,7 @@ export interface PersonSpreadsheetRowRecord {
 
 export interface TermLeaves {
   term: Term;
-  leaves: Leave[];
+  leaves: LeaveWithPerson[];
 }
 
 export type LeaveRow = ["leaves", ...TermLeaves[]];
