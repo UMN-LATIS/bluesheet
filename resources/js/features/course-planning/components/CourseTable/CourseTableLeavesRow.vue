@@ -1,14 +1,13 @@
 <template>
   <tr
-    v-if="hasVisibleLeaves"
     class="course-table-leaves-row"
     :class="{
       'course-table-leaves-row--sticky': sticky,
     }"
   >
-    <Td> Leaves </Td>
+    <Td>Leaves</Td>
     <Td
-      v-for="term in coursePlanningStore.visibleTerms"
+      v-for="{ term, leaves } in termLeaves"
       :key="term.id"
       class="term-data-column"
       :class="{
@@ -19,8 +18,7 @@
     >
       <div class="leaves-container tw-flex tw-flex-col tw-gap-1">
         <LeaveChip
-          v-for="leave in getLeavesByTermId(term.id)"
-          v-show="coursePlanningStore.isPersonVisibleById(leave.user_id)"
+          v-for="leave in leaves"
           :key="leave.id"
           :leave="leave"
           variant="person"
@@ -35,10 +33,10 @@
 <script setup lang="ts">
 import LeaveChip from "../LeaveChip.vue";
 import { Td } from "@/components/Table";
-import type { Term, Group } from "@/types";
+import type { Group } from "@/types";
 import { useCoursePlanningStore } from "../../stores/useCoursePlanningStore";
 import { computed } from "vue";
-// import { doesInstructorNameMatchSearchTerm } from "./doesInstructorNameMatchSearchTerm";
+import { getListOfTermLeaves } from "../../helpers/getListOfTermLeaves";
 
 withDefaults(
   defineProps<{
@@ -51,14 +49,15 @@ withDefaults(
 );
 
 const coursePlanningStore = useCoursePlanningStore();
-const getLeavesByTermId = computed(
-  () => coursePlanningStore.leaveStore.getLeavesByTermId,
-);
 
-const hasVisibleLeaves = computed(() => {
-  return coursePlanningStore.leaveStore.leaves.some((leave) =>
-    coursePlanningStore.isPersonVisibleById(leave.user_id),
-  );
+const termLeaves = computed(() => {
+  const lookups = coursePlanningStore.getCoursePlanningLookups();
+  const filters = coursePlanningStore.getCoursePlanningFilters();
+
+  return getListOfTermLeaves({
+    lookups,
+    filters,
+  });
 });
 </script>
 <style scoped>
