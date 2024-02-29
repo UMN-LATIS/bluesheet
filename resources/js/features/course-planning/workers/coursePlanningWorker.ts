@@ -1,24 +1,8 @@
 import * as T from "@/types";
-import { getPersonTableRows } from "../helpers/getPersonTableRows";
-import { getCourseTableRows } from "../helpers/getCourseTableRows";
-import { getListOfTermLeaves } from "../helpers/getListOfTermLeaves";
+import { getPersonSpreadsheetRecords } from "../helpers/getPersonSpreadsheetRecords";
 import { deserializeCoursePlanningFilters } from "../helpers/serializedCoursePlanningFilters";
-
-export const MESSAGE_TYPES = {
-  INSTRUCTOR_TABLE_REQUEST: "INSTRUCTOR_TABLE_REQUEST",
-  INSTRUCTOR_TABLE_SUCCESS: "INSTRUCTOR_TABLE_SUCCESS",
-  INSTRUCTOR_TABLE_FAILURE: "INSTRUCTOR_TABLE_FAILURE",
-  TA_TABLE_REQUEST: "TA_TABLE_REQUEST",
-  TA_TABLE_SUCCESS: "TA_TABLE_SUCCESS",
-  TA_TABLE_FAILURE: "TA_TABLE_FAILURE",
-  COURSES_TABLE_REQUEST: "COURSES_TABLE_REQUEST",
-  COURSES_TABLE_SUCCESS: "COURSES_TABLE_SUCCESS",
-  COURSES_TABLE_FAILURE: "COURSES_TABLE_FAILURE",
-  LIST_OF_TERM_LEAVES_REQUEST: "LIST_OF_TERM_LEAVES_REQUEST",
-  LIST_OF_TERM_LEAVES_SUCCESS: "LIST_OF_TERM_LEAVES_SUCCESS",
-  LIST_OF_TERM_LEAVES_FAILURE: "LIST_OF_TERM_LEAVES_FAILURE",
-  INVALID_MESSAGE_TYPE: "INVALID_MESSAGE_TYPE",
-} as const;
+import * as MESSAGE_TYPES from "./messageTypes";
+import { getCourseSpreadsheetRecords } from "../helpers/getCourseSpreadsheetRecords";
 
 export interface CoursePlanningData {
   lookups: T.CoursePlanningLookups;
@@ -31,13 +15,13 @@ export interface WorkerMessage<TPayload = unknown, TError = string> {
   error?: TError;
 }
 
-const messageHandlers = {
-  [MESSAGE_TYPES.INSTRUCTOR_TABLE_REQUEST]: ({
+const requestHandlers = {
+  [MESSAGE_TYPES.INSTRUCTOR_SPREADSHEET_REQUEST]: ({
     lookups,
     serializedFilters,
   }: CoursePlanningData) => {
     const filters = deserializeCoursePlanningFilters(serializedFilters);
-    return getPersonTableRows({
+    return getPersonSpreadsheetRecords({
       lookups,
       filters: {
         ...filters,
@@ -46,30 +30,26 @@ const messageHandlers = {
     });
   },
 
-  // [MESSAGE_TYPES.TA_TABLE_REQUEST]: ({
-  //   lookups,
-  //   filters,
-  // }: CoursePlanningData) => {
-  //   return getPersonTableRows({
-  //     lookups,
-  //     filters: {
-  //       ...filters,
-  //       includedEnrollmentRoles: new Set(["TA"]),
-  //     },
-  //   });
-  // },
-  // [MESSAGE_TYPES.COURSES_TABLE_REQUEST]: ({
-  //   lookups,
-  //   filters,
-  // }: CoursePlanningData) => {
-  //   return getCourseTableRows({ lookups, filters });
-  // },
-  // [MESSAGE_TYPES.LIST_OF_TERM_LEAVES_REQUEST]: ({
-  //   lookups,
-  //   filters,
-  // }: CoursePlanningData) => {
-  //   return getListOfTermLeaves({ lookups, filters });
-  // },
+  [MESSAGE_TYPES.TA_SPREADSHEET_REQUEST]: ({
+    lookups,
+    serializedFilters,
+  }: CoursePlanningData) => {
+    const filters = deserializeCoursePlanningFilters(serializedFilters);
+    return getPersonSpreadsheetRecords({
+      lookups,
+      filters: {
+        ...filters,
+        includedEnrollmentRoles: new Set(["TA"]),
+      },
+    });
+  },
+  [MESSAGE_TYPES.COURSES_SPREADSHEET_REQUEST]: ({
+    lookups,
+    serializedFilters,
+  }: CoursePlanningData) => {
+    const filters = deserializeCoursePlanningFilters(serializedFilters);
+    return getCourseSpreadsheetRecords({ lookups, filters });
+  },
 };
 
 function getFailureMessageType(
@@ -93,9 +73,9 @@ function getSuccessMessageType(
 self.addEventListener("message", async (event: MessageEvent<WorkerMessage>) => {
   const { type, payload } = event.data;
 
-  const messageHandler = messageHandlers[type];
+  const requestHandler = requestHandlers[type];
 
-  if (!messageHandler) {
+  if (!requestHandler) {
     self.postMessage({
       type: MESSAGE_TYPES.INVALID_MESSAGE_TYPE,
       error: `Unknown message type: ${type}`,
@@ -104,7 +84,7 @@ self.addEventListener("message", async (event: MessageEvent<WorkerMessage>) => {
   }
 
   try {
-    const response = await messageHandler(payload);
+    const response = await requestHandler(payload);
     self.postMessage({
       type: getSuccessMessageType(type),
       payload: response,

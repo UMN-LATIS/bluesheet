@@ -40,6 +40,7 @@ const downloadStatus = ref<LoadState>("idle");
 const errorStore = useErrorStore();
 
 async function downloadSpreadsheet(): Promise<void> {
+  console.log("downloadSpreadsheet");
   const wb = utils.book_new();
   for (const sheet of props.sheetData) {
     if (typeof sheet.data === "function") {
