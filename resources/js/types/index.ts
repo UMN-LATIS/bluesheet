@@ -184,7 +184,7 @@ export type LeaveStatus = (typeof leaveStatuses)[keyof typeof leaveStatuses];
 
 export interface Leave {
   id: number;
-  user_id: number;
+  user_id: User["id"];
   description: string;
   type: LeaveType;
   status: LeaveStatus;
@@ -197,6 +197,9 @@ export interface Leave {
   deleted_at?: ISODateTime | null;
 }
 
+export interface LeaveWithPerson extends Leave {
+  person: Person;
+}
 export interface NewLeave {
   id?: string | number;
   user_id: number;
@@ -225,7 +228,7 @@ export const enrollmentRoleMap = {
 export type EnrollmentRole = keyof typeof enrollmentRoleMap;
 
 export interface Person {
-  id: number;
+  id: User["id"];
   emplid: number;
   title: string;
   jobCode: string;
@@ -278,20 +281,24 @@ export interface CourseSection {
   courseId: Course["id"]; // short code like "HIST-1001W"
   termId: Term["id"];
   classSection: string; // "001"
+  waitlistCap: number;
+  waitlistTotal: number;
   enrollmentCap: number;
   enrollmentTotal: number;
   isCancelled: boolean;
   isPublished: boolean; // true if from bandaid, false if from app DB
+  groupId: Group["id"];
 }
 
 export interface CourseSectionWithEnrollments extends CourseSection {
   enrollments: Enrollment[];
 }
 
-type CourseShortCode = `${Course["subject"]}-${Course["catalogNumber"]}`;
+export type CourseShortCode = `${Course["subject"]}-${Course["catalogNumber"]}`;
 
 export interface Course {
   id: CourseShortCode; // subject-catalogNumber
+  courseCode: CourseShortCode;
   subject: string; // HIST
   catalogNumber: string; // "1001W"
   title: string; // course name
@@ -358,3 +365,90 @@ export interface DragListItem {
 }
 
 export type DragListId = string | number;
+
+export interface CoursePlanningFilters {
+  startTermId: number | null;
+  endTermId: number | null;
+  excludedCourseLevels: Set<string>;
+  excludedCourseTypes: Set<string>;
+  excludedAcadAppts: Set<string>;
+  includedEnrollmentRoles: Set<EnrollmentRole>;
+  search: string;
+  inPlanningMode: boolean;
+}
+
+export interface SerializedCoursePlanningFilters {
+  startTermId: number | null;
+  endTermId: number | null;
+  excludedCourseLevels: string[];
+  excludedCourseTypes: string[];
+  excludedAcadAppts: string[];
+  includedEnrollmentRoles: EnrollmentRole[];
+  search: string;
+  inPlanningMode: boolean;
+}
+
+export interface JoinedEnrollmentRecord {
+  id: Enrollment["id"];
+  person: Person;
+  enrollment: Enrollment;
+  section: CourseSection;
+  course: Course;
+  term: Term;
+}
+
+export interface CoursePlanningLookups {
+  personLookupByEmplid: Record<Person["emplid"], Person>;
+  personLookupByUserId: Record<Person["id"], Person>;
+  termLookup: Record<Term["id"], Term>;
+  courseLookup: Record<Course["id"], Course>;
+  sectionLookup: Record<CourseSection["id"], CourseSection>;
+  enrollmentLookup: Record<Enrollment["id"], Enrollment>;
+  leaveLookup: Record<Leave["id"], Leave>;
+}
+
+export interface PersonTableTermRecord {
+  term: Term;
+  enrollments: JoinedEnrollmentRecord[];
+  leaves: Leave[];
+}
+
+export type PersonTableRow = [Person, ...PersonTableTermRecord[]];
+
+export interface PersonSpreadsheetRowRecord {
+  id: string; // emplid
+  surName: Person["surName"];
+  givenName: Person["givenName"];
+  academicAppointment: Person["academicAppointment"];
+  [termName: string]: string; // concatenated list of leaves and enrollments
+}
+
+export interface TermLeaves {
+  term: Term;
+  leaves: LeaveWithPerson[];
+}
+
+export type LeaveRow = ["leaves", ...TermLeaves[]];
+
+// TODO: make this the same shape as PersonTableTermRecord
+export interface CourseTableTermRecord {
+  term: Term;
+  joinedEnrollments: JoinedEnrollmentRecord[];
+}
+
+export type CourseTableRow = [Course, ...CourseTableTermRecord[]];
+
+export interface CourseSpreadsheetRowRecord {
+  id: string; // course id
+  title: string;
+  courseLevel: string;
+  courseType: string;
+  [termName: string]: string; // concatenated list of people
+}
+
+export type SpreadsheetRecords = Record<string, string | number>[];
+
+export interface SpreadsheetData {
+  sheetName: string;
+  data: SpreadsheetRecords | (() => Promise<SpreadsheetRecords>);
+}

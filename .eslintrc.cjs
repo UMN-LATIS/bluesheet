@@ -23,6 +23,7 @@ module.exports = {
   rules: {
     "no-unused-vars": "off",
     "@typescript-eslint/no-unused-vars": "warn",
+    "@typescript-eslint/no-empty-function": "warn",
     "vue/multi-word-component-names": "off",
     "vue/attribute-hyphenation": ["error", "never"],
     "vue/v-on-event-hyphenation": ["error", "never"],

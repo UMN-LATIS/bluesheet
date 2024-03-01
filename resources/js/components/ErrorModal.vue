@@ -7,7 +7,6 @@
       >
         <Notification
           :title="errorTitle"
-          :message="error.name"
           type="danger"
           :isDismissable="true"
           class="tw-w-full tw-max-w-md tw-border-none max-h-[80vh] !overflow-auto"
@@ -60,6 +59,10 @@ const messages: Record<number | string, string> = {
 };
 
 const message = computed(() => {
+  if (typeof error.value === "string") {
+    return error.value;
+  }
+
   if (!(error.value instanceof ApiError)) {
     return error.value?.message || "An unknown error occurred.";
   }
