@@ -34,10 +34,13 @@ class ImportLeaves extends Command
         $this->bandaid = new \App\Library\Bandaid();
         $allDepartments = \App\Group::whereNotNull("dept_id")->get();
         foreach ($allDepartments as $department) {
-            $employees = collect($this->bandaid->getEmployeesForDepartment($department->dept_id))->pluck("EMPLID");
-            foreach($employees as $employee) {
-                $this->importLeavesForEmplId($employee);
+            if($department->dept_id && is_numeric($department->dept_id)) {
+                $employees = collect($this->bandaid->getEmployeesForDepartment($department->dept_id))->pluck("EMPLID");
+                foreach($employees as $employee) {
+                    $this->importLeavesForEmplId($employee);
+                }
             }
+            
         }
         return Command::SUCCESS;
     }
