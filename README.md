@@ -86,3 +86,29 @@ To connect to Bandaid for local development:
 ```sh
 ./vendor/bin/dep deploy <environment name>
 ```
+
+## Documentation
+
+BlueSheet documentation is in the `docs` folder, and published at <https://umn-latis.github.io/bluesheet/>. It uses [VitePress](https://vitepress.vuejs.org/) for static site generation.
+
+To develop locally:
+
+```sh
+cd docs
+yarn install
+yarn docs:dev
+```
+
+Building the documentation:
+
+```sh
+cd docs
+yarn docs:build
+```
+
+and publishing:
+
+```sh
+cd docs
+yarn docs:publish
+```
