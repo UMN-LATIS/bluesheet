@@ -14,7 +14,8 @@ npm-debug.log
 yarn-error.log
 .phpintel
 .DS_Store
-docs/.vuepress/dist
+docs/.vitepress/dist
+docs/.vitepress/cache
 
 # ignore phpunit caches
 .phpunit.*

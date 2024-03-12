@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../node_modules/@umn-latis/vitepress-theme-umn/src/index.ts"],
-  "sourcesContent": ["import DefaultTheme from \"vitepress/theme\";\nimport UMNLayout from \"./UMNLayout.vue\";\nimport \"./cla-vue-template/src/index.css\";\nimport \"./main.css\";\n\nexport default {\n  ...DefaultTheme,\n  Layout: UMNLayout,\n};\n"],
-  "mappings": ";AAAA,OAAO,kBAAkB;AACzB,OAAO,eAAe;AACtB,OAAO;AACP,OAAO;AAEP,IAAO,cAAQ;AAAA,EACb,GAAG;AAAA,EACH,QAAQ;AACV;",
-  "names": []
-}
