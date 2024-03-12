@@ -6,7 +6,6 @@
     "cypress": "cypress open --env failOnSnapshotDiff=false",
     "cypress:headless": "cypress run --browser chrome",
     "dev": "vite",
-    "docs:build": "cd docs; vuepress build",
     "format": "prettier --write \"./**/*.{js,vue,ts,json,css,scss,md}\"",
     "lint": "eslint --ext .js,.vue resources/js",
     "lint:watch": "nodemon --exec 'npm run lint' --ext js,vue",

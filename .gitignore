@@ -1,4 +1,4 @@
-/node_modules
+node_modules
 /public/hot
 /public/storage
 /public/js
@@ -14,7 +14,9 @@ npm-debug.log
 yarn-error.log
 .phpintel
 .DS_Store
-docs/.vuepress/dist
+dist
+cache
+.temp
 
 # ignore phpunit caches
 .phpunit.*

@@ -5,6 +5,14 @@ export default defineConfig({
   title: "BlueSheet Help",
   base: "/bluesheet/",
   lastUpdated: true,
+  appearance: false, // force light mode. UMN header looks bad in dark mode
+  vite: {
+    // building the theme will fail without this. Vitepress wants
+    // cla-vue-template to be ssr compatible, but it isn't.
+    ssr: {
+      noExternal: ["@umn-latis/cla-vue-template"],
+    },
+  },
   themeConfig: {
     sidebar:[ {
       text: 'Reference',
@@ -26,10 +34,8 @@ export default defineConfig({
       message: "Released under the MIT License.",
       copyright: "Copyright © 2019-present Evan You",
     },
-    // algolia: {
-    //   appId: "",
-    //   apiKey: "",
-    //   indexName: "",
-    // },
+    search: {
+      provider: "local",
+    },
   },
 });
