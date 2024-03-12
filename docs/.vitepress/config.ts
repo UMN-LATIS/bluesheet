@@ -5,6 +5,7 @@ export default defineConfig({
   title: "BlueSheet Help",
   base: "/bluesheet/",
   lastUpdated: true,
+  appearance: false, // force light mode. UMN header looks bad in dark mode
   themeConfig: {
     sidebar:[ {
       text: 'Reference',
