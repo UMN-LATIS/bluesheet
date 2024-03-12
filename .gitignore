@@ -1,4 +1,4 @@
-/node_modules
+node_modules
 /public/hot
 /public/storage
 /public/js
@@ -14,8 +14,9 @@ npm-debug.log
 yarn-error.log
 .phpintel
 .DS_Store
-docs/.vitepress/dist
-docs/.vitepress/cache
+dist
+cache
+.temp
 
 # ignore phpunit caches
 .phpunit.*
