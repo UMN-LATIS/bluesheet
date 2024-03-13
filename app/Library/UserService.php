@@ -29,16 +29,24 @@ class UserService {
                 return $user;
             })->filter();
 
-        // identify users that dont exist in the DB
+        // find emplids that don't exist in the DB
         $missingEmplids = $uniqueEmplids->diff($dbUsers->pluck('emplid'));
 
+        // we'll use this to look up fallback names info from Bandaid
+        $emplidsNotInLDAP = [];
+
         // lookup and created missing users from LDAP
-        $newUsers = $missingEmplids
-            ->map(function ($emplid) {
+        $newUsersFromLDAPInfo = $missingEmplids
+            ->map(function ($emplid) use (&$emplidsNotInLDAP) {
                 $paddedEmplid = str_pad($emplid, 7, 0, STR_PAD_LEFT);
                 $ldapUser = LDAP::lookupUserCached($paddedEmplid, 'umnemplid');
 
-                if (!$ldapUser || !$ldapUser->emplid) return;
+                if (!$ldapUser || !$ldapUser->emplid) {
+                    // add the $emplid to the list of users not found in LDAP
+                    // so we can look up fallback names info from Bandaid
+                    $emplidsNotInLDAP[] = $emplid;
+                    return null;
+                };
 
                 return User::updateOrCreate(
                     // emplid may be null for some users, so we're using
@@ -61,8 +69,29 @@ class UserService {
                 );
             })->filter();
 
+        // now we handle emplids that aren't found in LDAP
+        // getting as much info as possible from bandaid
+        $newUsersFromBandaidInfo = $this->bandaid
+            ->getNames($emplidsNotInLDAP)
+            ->map(function ($bandaidUser) {
+                return User::updateOrCreate(
+                    ['umndid' => $bandaidUser->INTERNET_ID],
+                    [
+                        'givenname' => $bandaidUser->FIRST_NAME,
+                        'surname' => $bandaidUser->LAST_NAME,
+                        'displayName' => $bandaidUser->NAME,
+                        'umndid' => $bandaidUser->INTERNET_ID,
+                        'email' => $bandaidUser->INTERNET_ID . '@umn.edu',
+                        'emplid' => (int) $bandaidUser->EMPLID,
+                    ]
+                );
+            })
+            ->filter();
+
         // return the requested users if they exist
-        return $dbUsers->concat($newUsers);
+        return $dbUsers
+            ->concat($newUsersFromLDAPInfo)
+            ->concat($newUsersFromBandaidInfo);
     }
 
     public function findOrCreateByEmplId(int $emplid): ?User {
@@ -71,23 +100,29 @@ class UserService {
     }
 
     public function getDeptEmployees(string $deptId): Collection {
-        $sisDeptEmployees = $this->bandaid->getEmployeesForDepartment($deptId);
+        $deptCourses = $this->bandaid->getDeptClassList($deptId);
+        $allDeptEmplids = collect($deptCourses)
+            ->pluck('INSTRUCTOR_EMPLID')
+            ->unique()
+            ->filter()
+            ->values()
+            ->toArray();
 
-        $sisDeptEmployeeLookup = collect($sisDeptEmployees)->keyBy('EMPLID');
+        // get employee info from bandaid for job code and category
+        // note: only active employees will have a job code
+        $activeDeptEmployees = $this->bandaid->getEmployees($allDeptEmplids);
 
-        $deptEmplIds = $sisDeptEmployeeLookup->keys()->toArray();
+        $activeDeptEmployeeLookup = collect($activeDeptEmployees)->keyBy('EMPLID');
 
         $users = $this
-            ->findOrCreateManyByEmplId($deptEmplIds)
-            ->map(function ($user) use ($sisDeptEmployeeLookup) {
-                $sisDeptEmployee = $sisDeptEmployeeLookup[$user->emplid];
+            ->findOrCreateManyByEmplId($allDeptEmplids)
+            ->map(function ($user) use ($activeDeptEmployeeLookup) {
+                $activeDeptEmployee = $activeDeptEmployeeLookup->get($user->emplid) ?? null;
 
-                // add the sis employee info to the user
-                $user->jobCategory = $sisDeptEmployee->CATEGORY;
-                $user->jobCode = $sisDeptEmployee?->JOBCODE;
+                $user->jobCategory = $activeDeptEmployee?->CATEGORY ?? null;
+                $user->jobCode = $activeDeptEmployee?->JOBCODE ?? null;
                 return $user;
             });
-
 
         return $users->values();
     }
