@@ -115,9 +115,9 @@ return array(
         // fillable user model attribute => server variable
         'email'       => 'eppn',
         'umndid' => 'umnDID',
-        'surname' => 'surname',
-        'givenname' => 'givenName',
-        'displayname' => 'displayName',
+        // 'surname' => 'surname',
+        // 'givenname' => 'givenName',
+        // 'displayname' => 'displayName',
     ],
 
     /*
