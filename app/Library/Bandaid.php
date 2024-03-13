@@ -46,7 +46,7 @@ class Bandaid {
         $response = Http::withHeaders($this->headers)
             ->post(
                 $this->baseUri . $url,
-                ['form_params' => $body]
+                $body
             );
 
         $value = json_decode($response->body());
