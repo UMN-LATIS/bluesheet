@@ -417,9 +417,8 @@ export default defineComponent({
       });
     },
     compositeList(): MembershipWithMaybeChildGroupTitle[] {
-      if (!this.group) return [];
 
-      if (!this.group.include_child_groups || !this.group.child_groups) {
+      if (!this.group || !this.group.include_child_groups || !this.group.child_groups) {
         return this.members;
       }
 
