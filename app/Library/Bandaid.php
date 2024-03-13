@@ -243,4 +243,30 @@ class Bandaid {
             return ($isTermStartInRange || $isTermEndInRange);
         });
     }
+
+    /**
+     * This gets name info for a list of emplids. This can be used
+     * as a fallback when a user is not found in LDAP.
+     *
+     * @param int[] $emplids
+     * @return Collection<array{
+     * id: int,
+     * EMPLID: int,
+     * NAME: string,
+     * FIRST_NAME: string,
+     * LAST_NAME: string,
+     * MIDDLE_NAME: string,
+     * INTERNET_ID: string,
+     * }>
+     */
+    public function getNames(array $emplids): Collection {
+        try {
+            $result = $this->cachedPost('/names', ["emplids" => $emplids]);
+            return collect($result);
+        } catch (RequestException $e) {
+            $msg = $e->getMessage();
+            $errorMessage = 'getEmployees Error: ' . $msg;
+            throw new RuntimeException($errorMessage);
+        }
+    }
 }
