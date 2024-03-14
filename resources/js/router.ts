@@ -21,7 +21,7 @@ import MissingOfficialReportPage from "./pages/reports/MissingOfficialReportPage
 import OrgpReportPage from "./pages/reports/OrgpReportPage.vue";
 import GroupAdminsReportPage from "./pages/reports/GroupAdmins.vue";
 import EligibilityReportPage from "./pages/reports/EligibilityReport.vue";
-import LeavesPlanningReportPage from "./pages/reports/LeaveCountReport.vue";
+import LeaveCountReportPage from "./pages/reports/LeaveCountReportPage.vue";
 import CoursePlanningPage from "./features/course-planning/pages/CoursePlanningPage.vue";
 import { parseIntFromRouteParam as parseIntFromParam } from "@/utils";
 
@@ -125,8 +125,8 @@ export const router = createRouter({
     },
     {
       name: "leavesPlanningReport",
-      path: "/reports/leavesPlanningReport",
-      component: LeavesPlanningReportPage,
+      path: "/reports/leaveCounts",
+      component: LeaveCountReportPage,
     },
     {
       path: "/course-planning/groups/:groupId",

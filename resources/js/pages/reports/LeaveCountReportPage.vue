@@ -5,7 +5,7 @@
     >
       Report
     </p>
-    <h1 class="tw-mt-0">Leave Counts</h1>
+    <h1 class="tw-mt-0">Leaves</h1>
 
     <p>Count of leaves planned for each department within a given semester.</p>
 
