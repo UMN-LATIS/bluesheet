@@ -68,12 +68,15 @@ class Bandaid {
     }
 
     public function getEmployees(array $emplIds): array {
+        if (empty($emplIds)) {
+            return [];
+        }
         try {
             $result = $this->cachedPost(
                 '/employment/employees',
                 ["emplids" => $emplIds]
             );
-            return $result;
+            return $result ?? [];
         } catch (RequestException $e) {
             $msg = $e->getMessage();
             $errorMessage = 'getEmployees Error: ' . $msg;
