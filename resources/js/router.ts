@@ -21,7 +21,7 @@ import MissingOfficialReportPage from "./pages/reports/MissingOfficialReportPage
 import OrgpReportPage from "./pages/reports/OrgpReportPage.vue";
 import GroupAdminsReportPage from "./pages/reports/GroupAdmins.vue";
 import EligibilityReportPage from "./pages/reports/EligibilityReport.vue";
-import LeavesPlanningReportPage from "./pages/reports/LeavesPlanningReportPage.vue";
+import LeavesPlanningReportPage from "./pages/reports/LeavesPlanningReport/LeavesPlanningReportPage.vue";
 import CoursePlanningPage from "./features/course-planning/pages/CoursePlanningPage.vue";
 import { parseIntFromRouteParam as parseIntFromParam } from "@/utils";
 
