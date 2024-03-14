@@ -2,10 +2,12 @@
 
 namespace App;
 
+use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use OwenIt\Auditing\Contracts\Auditable;
+use Illuminate\Support\Carbon;
 
 /**
  * @mixin IdeHelperLeave
@@ -107,5 +109,27 @@ class Leave extends Model implements Auditable {
 
     public function getEndDateAttribute($value) {
         return \Carbon\Carbon::parse($value)->format('Y-m-d');
+    }
+
+    /**
+     *  Does this leave fall within the given term?
+     *
+     * @param Object<{
+     *   id: int,
+     *   TERM: int,
+     *   TERM_BEGIN_DT: string, // "2019-01-22"
+     *   TERM_END_DT: string,  // "2019-05-15"
+     *   TERM_DESCRIPTION: string, //"Spring 2019"
+     *   INSTITUTION: string, // "UMNTC"
+     *   ACADEMIC_CAREER: string, // "UGRD"
+     * }> $term
+     * @return bool
+     */
+    public function doesLeaveFallInTerm($term) {
+        $termStart = Carbon::parse($term->TERM_BEGIN_DT);
+        $leaveStart = Carbon::parse($this->start_date);
+        $leaveEnd = Carbon::parse($this->end_date);
+
+        return $termStart->isBetween($leaveStart, $leaveEnd);
     }
 }
