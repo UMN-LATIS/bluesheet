@@ -5,6 +5,7 @@ namespace App\Library;
 use App\User;
 use Illuminate\Support\Collection;
 use App\Library\Bandaid;
+use Illuminate\Support\Facades\Cache;
 
 class UserService {
     private Bandaid $bandaid;
@@ -19,6 +20,10 @@ class UserService {
      * @return Collection<User>
      */
     public function findOrCreateManyByEmplId(array $emplids): Collection {
+        if (empty($emplids)) {
+            return collect();
+        }
+
         $uniqueEmplids = collect($emplids)->unique();
 
         $dbUsers = User::whereIn('emplid', $uniqueEmplids)
@@ -100,6 +105,12 @@ class UserService {
     }
 
     public function getDeptInstructors(string $deptId): Collection {
+        $cacheKey = 'deptInstructors-' . $deptId;
+        $cachedInstructors = Cache::get($cacheKey);
+        if ($cachedInstructors) {
+            return $cachedInstructors;
+        }
+
         $deptCourses = $this->bandaid->getDeptClassList($deptId);
         $allDeptEmplids = collect($deptCourses)
             ->pluck('INSTRUCTOR_EMPLID')
@@ -114,7 +125,7 @@ class UserService {
 
         $activeDeptEmployeeLookup = collect($activeDeptEmployees)->keyBy('EMPLID');
 
-        $users = $this
+        $instructors = $this
             ->findOrCreateManyByEmplId($allDeptEmplids)
             ->map(function ($user) use ($activeDeptEmployeeLookup) {
                 $activeDeptEmployee = $activeDeptEmployeeLookup->get($user->emplid) ?? null;
@@ -122,8 +133,11 @@ class UserService {
                 $user->jobCategory = $activeDeptEmployee?->CATEGORY ?? null;
                 $user->jobCode = $activeDeptEmployee?->JOBCODE ?? null;
                 return $user;
-            });
+            })
+            ->values();
 
-        return $users->values();
+        Cache::put($cacheKey, $instructors, now()->addMinutes(10));
+
+        return $instructors;
     }
 }
