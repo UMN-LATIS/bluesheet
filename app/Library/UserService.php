@@ -99,7 +99,7 @@ class UserService {
         return $users->first();
     }
 
-    public function getDeptEmployees(string $deptId): Collection {
+    public function getDeptInstructors(string $deptId): Collection {
         $deptCourses = $this->bandaid->getDeptClassList($deptId);
         $allDeptEmplids = collect($deptCourses)
             ->pluck('INSTRUCTOR_EMPLID')
