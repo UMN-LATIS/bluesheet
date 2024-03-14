@@ -64,6 +64,11 @@
             >Eligibility Report
           </router-link>
         </li>
+        <li v-if="$can('view eligibility')" class="list-group-item">
+          <router-link :to="{ name: 'leavesPlanningReport' }" class="nav-link">
+            Leaves Planning Report
+          </router-link>
+        </li>
       </ul>
       <p>
         Got an idea for a report?
@@ -78,5 +83,5 @@ import DefaultLayout from "@/layouts/DefaultLayout.vue";
 import { $can } from "@/utils";
 import { usePageTitle } from "@/utils/usePageTitle";
 
-usePageTitle('Reports');
+usePageTitle("Reports");
 </script>
