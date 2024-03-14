@@ -1,6 +1,11 @@
 <template>
   <DefaultLayout>
-    <h1>Leaves Planning Report</h1>
+    <p
+      class="tw-uppercase tw-text-sm tw-leading-relaxed tw-text-neutral-500 tw-m-0 tw-font-medium"
+    >
+      Report
+    </p>
+    <h1 class="tw-mt-0">Leave Counts</h1>
 
     <p>Count of leaves planned for each department within a given semester.</p>
 
@@ -14,7 +19,7 @@
         </Tr>
       </THead>
       <TBody>
-        <Tr v-for="row in leavePlanningReportRows" :key="row.department">
+        <Tr v-for="row in leaveCountReportRows" :key="row.department">
           <Td>{{ row.department }}</Td>
           <Td v-for="data in row.termData" :key="data.term">{{
             data.leavesCount
@@ -29,43 +34,22 @@ import DefaultLayout from "@/layouts/DefaultLayout.vue";
 import { Table, THead, TBody, Tr, Th, Td } from "@/components/Table";
 import { ref, onMounted, computed } from "vue";
 import * as T from "@/types";
-import { times } from "lodash";
+import * as api from "@/api";
 
-interface LeavePlanningReportRow {
-  department: string;
-  termData: {
-    term: string;
-    leavesCount: number;
-  }[];
-}
+// TODO: add permissions for if user can view this report
 
-const leavePlanningReportRows = ref<LeavePlanningReportRow[]>([]);
-
-function createMockRow(deptName: string): LeavePlanningReportRow {
-  return {
-    department: deptName,
-    termData: [
-      {
-        term: "Fall 2019",
-        leavesCount: 10,
-      },
-      {
-        term: "Spring 2020",
-        leavesCount: 9,
-      },
-    ],
-  };
-}
+const leaveCountReportRows = ref<T.LeaveCountReportRow[]>([]);
 
 const termLabels = computed(() => {
-  const firstRow = leavePlanningReportRows.value[0];
+  if (leaveCountReportRows.value.length === 0) {
+    return [];
+  }
+  const firstRow = leaveCountReportRows.value[0];
   return firstRow?.termData.map((data) => data.term) ?? [];
 });
 
-onMounted(() => {
-  leavePlanningReportRows.value = times(10, (i) =>
-    createMockRow(`Department ${i + 1}`),
-  );
+onMounted(async () => {
+  leaveCountReportRows.value = await api.getDeptLeaveCountReportRows();
 });
 </script>
 <style scoped></style>
