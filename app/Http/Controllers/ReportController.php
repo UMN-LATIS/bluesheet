@@ -30,15 +30,24 @@ class ReportController extends Controller {
         foreach ($terms->all() as $term) {
             // initialize the given term's collection
             $termName = $term->TERM_DESCRIPTION;
-            $leavesByTerm[$termName] = [];
+            $termLeaves = [];
 
             // loop through the leaves and add them if they fall in the term
             // reminder: a leave can span multiple terms
             foreach ($leaves->all() as $leave) {
                 if ($leave->doesLeaveFallInTerm($term)) {
-                    $leavesByTerm[$termName][] = $leave;
+                    $termLeaves[] = $leave;
                 }
             }
+
+            $leavesByTerm[] = [
+                "term" => $termName,
+                "leaveCount" => count($termLeaves),
+
+                // NOTE: maybe we want to include the raw
+                // list of leaves for client side aggregations?
+                // "leaves" => $termLeaves,
+            ];
         }
         return $leavesByTerm;
     }
@@ -84,13 +93,20 @@ class ReportController extends Controller {
             $deptLeaves = $userService
                 ->getDeptInstructors($group->dept_id)
                 ->flatMap(fn ($instructor) => $instructor->leaves);
+
             $leavesByTerm = self::groupLeavesByTerm(
                 $deptLeaves,
                 $terms
             );
 
             $reportRows[] = [
-                "group" => $group,
+                "group" => [
+                    "id" => $group->id,
+                    "name" => $group->group_title,
+                    "dept_id" => $group->dept_id,
+                    "abbreviation" => $group->abbreviation,
+
+                ],
                 "leavesByTerm" => $leavesByTerm
             ];
         }

@@ -454,9 +454,15 @@ export interface SpreadsheetData {
 }
 
 export interface LeaveCountReportRow {
-  department: string;
-  termData: {
+  group: {
+    id: number;
+    name: string;
+    dept_id: string;
+    abbreviation: string;
+  };
+  leavesbyTerm: {
     term: string;
     leavesCount: number;
+    // leaves: Leave[];
   }[];
 }
