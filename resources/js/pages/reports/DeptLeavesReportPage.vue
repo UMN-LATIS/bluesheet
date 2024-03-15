@@ -5,9 +5,7 @@
     >
       Report
     </p>
-    <h1 class="tw-mt-0">Leaves</h1>
-
-    <p>Count of leaves planned for each department within a given semester.</p>
+    <h1 class="tw-mt-0 tw-mb-8">Department Leaves</h1>
 
     <div
       v-if="loadStatus === 'loading'"
