@@ -9,7 +9,15 @@
 
     <p>Count of leaves planned for each department within a given semester.</p>
 
-    <ProgressSpinner v-if="loadStatus === 'loading'" :progress="progress" />
+    <div
+      v-if="loadStatus === 'loading'"
+      class="tw-p-8 tw-flex-col tw-justify-center tw-items-center tw-text-center tw-bg-neutral-50 tw-text-neutral-400"
+    >
+      <p class="tw-text-neutral-400 tw-text-sm">
+        Generating Report... this could take a minute
+      </p>
+      <ProgressSpinner :progress="progress" />
+    </div>
 
     <Table v-else :stickyHeader="true" :stickyFirstColumn="true">
       <THead>
