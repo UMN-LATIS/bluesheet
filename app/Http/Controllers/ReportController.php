@@ -13,6 +13,23 @@ use Illuminate\Support\Collection;
 
 class ReportController extends Controller {
 
+    private static function countLeavesByStatus(Collection $leaves) {
+        $leavesByStatus = [
+            Leave::STATUS_CONFIRMED => 0,
+            Leave::STATUS_PENDING => 0,
+            Leave::STATUS_ELIGIBLE => 0,
+            Leave::STATUS_CANCELLED => 0,
+            'all' => $leaves->count(),
+        ];
+
+        foreach ($leaves as $leave) {
+            $leavesByStatus[$leave->status]++;
+        }
+
+        return $leavesByStatus;
+    }
+
+
     /**
      * Get the report of leaves within a department, grouped by term
      *
@@ -42,7 +59,7 @@ class ReportController extends Controller {
 
             $leavesByTerm[] = [
                 "term" => $termName,
-                "leaveCount" => count($termLeaves),
+                "leaveCountByStatus" => self::countLeavesByStatus(collect($termLeaves)),
 
                 // NOTE: maybe we want to include the raw
                 // list of leaves for client side aggregations?

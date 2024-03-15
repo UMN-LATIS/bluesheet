@@ -462,7 +462,6 @@ export interface DeptLeavesReportRow {
   };
   leavesByTerm: {
     term: string;
-    leaveCount: number;
-    // leaves: Leave[];
+    leaveCountByStatus: Record<LeaveStatus, number> & { all: number };
   }[];
 }
