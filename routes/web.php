@@ -18,6 +18,7 @@ use App\Http\Controllers\CoursePlanning\GroupEnrollmentController;
 use App\Http\Controllers\CoursePlanning\GroupPersonController;
 use App\Http\Controllers\CoursePlanning\GroupLeaveController;
 use App\Http\Controllers\CoursePlanning\GroupCourseController;
+use App\Http\Controllers\ReportController;
 
 Route::impersonate();
 
@@ -78,6 +79,8 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
     Route::delete('leaves/{leave}', 'LeaveController@destroy');
     Route::get('users/{user}/leaves', 'UserLeaveController@index');
     Route::put('users/{user}/leaves', 'UserLeaveController@update');
+
+    Route::get('reports/deptLeavesReport', [ReportController::class, 'deptLeavesReport']);
 
     // Leave Artifacts
     Route::get('leaves/{leave}/artifacts', [LeaveArtifactController::class, 'index']);
