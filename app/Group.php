@@ -102,11 +102,4 @@ class Group extends Model implements AuditableContract {
     public function courses() {
         return $this->hasMany(Course::class);
     }
-
-    /**
-     * Get the leaves for all group members
-     */
-    public function leaves() {
-        return $this->through('users')->has('leaves');
-    }
 }

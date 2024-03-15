@@ -78,7 +78,6 @@ const termLabels = computed(() => {
     return [];
   }
   const firstRow = leaveCountReportRows.value[0];
-  console.log(firstRow);
   return firstRow?.leavesByTerm.map((data) => data.term) ?? [];
 });
 
