@@ -8,9 +8,7 @@
       <DownloadIcon /> <span class="tw-sr-only">Download</span>
     </template>
     <template v-else-if="downloadStatus === 'loading'">
-      <Spinner class="tw-w-5 tw-h-5 tw-text-blue-500" />
-      <span class="tw-sr-only">Loading</span>
-      {{ Math.round(progress * 100) }}%
+      <ProgressSpinner :progress="progress" />
     </template>
     <template v-else-if="downloadStatus === 'complete'">
       <CheckIcon /> <span class="tw-sr-only">Complete</span>
@@ -28,9 +26,9 @@ import { DownloadIcon } from "@/icons";
 import { LoadState } from "@/types";
 import { nextTick, ref } from "vue";
 import { utils, writeFileXLSX } from "xlsx";
-import Spinner from "./Spinner.vue";
 import { CheckIcon, CircleXIcon } from "@/icons";
-import { useSimulatedProgress } from "@/features/course-planning/helpers/useSimulatedProgress";
+import { useSimulatedProgress } from "@/utils/useSimulatedProgress";
+import ProgressSpinner from "./ProgressSpinner.vue";
 
 const props = defineProps<{
   filename: string;
@@ -87,3 +85,4 @@ async function handleDownloadClick(): Promise<void> {
 }
 </script>
 <style scoped></style>
+@/utils/useSimulatedProgress

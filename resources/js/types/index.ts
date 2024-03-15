@@ -453,16 +453,16 @@ export interface SpreadsheetData {
   data: SpreadsheetRecords | (() => Promise<SpreadsheetRecords>);
 }
 
-export interface LeaveCountReportRow {
+export interface DeptLeavesReportRow {
   group: {
     id: number;
     name: string;
     dept_id: string;
     abbreviation: string;
   };
-  leavesbyTerm: {
+  leavesByTerm: {
     term: string;
-    leavesCount: number;
+    leaveCount: number;
     // leaves: Leave[];
   }[];
 }

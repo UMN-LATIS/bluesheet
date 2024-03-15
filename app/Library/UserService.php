@@ -111,6 +111,7 @@ class UserService {
             return $cachedInstructors;
         }
 
+        \Debugbar::startMeasure('getDeptInstructors');
         $deptCourses = $this->bandaid->getDeptClassList($deptId);
         $allDeptEmplids = collect($deptCourses)
             ->pluck('INSTRUCTOR_EMPLID')
@@ -118,13 +119,21 @@ class UserService {
             ->filter()
             ->values()
             ->toArray();
+        \Debugbar::stopMeasure('getDeptInstructors');
+
+        \Debugbar::startMeasure('getEmployees');
 
         // get employee info from bandaid for job code and category
         // note: only active employees will have a job code
         $activeDeptEmployees = $this->bandaid->getEmployees($allDeptEmplids);
 
-        $activeDeptEmployeeLookup = collect($activeDeptEmployees)->keyBy('EMPLID');
+        \Debugbar::stopMeasure('getEmployees');
 
+        \Debugbar::startMeasure('keyByEmplid');
+        $activeDeptEmployeeLookup = collect($activeDeptEmployees)->keyBy('EMPLID');
+        \Debugbar::stopMeasure('keyByEmplid');
+
+        \Debugbar::startMeasure('findOrCreateManyByEmplId');
         $instructors = $this
             ->findOrCreateManyByEmplId($allDeptEmplids)
             ->map(function ($user) use ($activeDeptEmployeeLookup) {
@@ -135,6 +144,7 @@ class UserService {
                 return $user;
             })
             ->values();
+        \Debugbar::stopMeasure('findOrCreateManyByEmplId');
 
         Cache::put($cacheKey, $instructors, now()->addMinutes(10));
 

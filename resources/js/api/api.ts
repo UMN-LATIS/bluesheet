@@ -142,9 +142,9 @@ export async function fetchParentOrganizations() {
   return res.data;
 }
 
-export async function getDeptLeaveCountReportRows() {
-  const res = await axios.get<T.LeaveCountReportRow[]>(
-    `/api/reports/dept-leave-count`,
+export async function getDeptLeavesReport() {
+  const res = await axios.get<T.DeptLeavesReportRow[]>(
+    `/api/reports/deptLeavesReport`,
   );
 
   return res.data;

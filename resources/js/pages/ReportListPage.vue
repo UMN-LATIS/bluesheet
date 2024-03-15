@@ -65,8 +65,8 @@
           </router-link>
         </li>
         <li v-if="$can('view eligibility')" class="list-group-item">
-          <router-link :to="{ name: 'leavesPlanningReport' }" class="nav-link">
-            Leave Counts by Department
+          <router-link :to="{ name: 'deptLeavesReport' }" class="nav-link">
+            Department Leaves Report
           </router-link>
         </li>
       </ul>
