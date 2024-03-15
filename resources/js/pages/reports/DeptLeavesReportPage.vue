@@ -26,10 +26,27 @@
             {{ row.group.name }}
           </Th>
           <Td v-for="data in row.leavesByTerm" :key="data.term">
-            <span v-if="data.leaveCount === 0" class="tw-text-neutral-400">
+            <span
+              v-if="data.leaveCountByStatus.all === 0"
+              class="tw-text-neutral-400"
+            >
               -
             </span>
-            <span v-else>{{ data.leaveCount }}</span>
+            <div
+              v-for="[status, count] in Object.entries(
+                data.leaveCountByStatus,
+              ).filter(([status, count]) => count > 0 && status !== 'all')"
+              :key="status"
+              class="tw-flex tw-items-baseline tw-gap-1 tw-justify-between tw-text-xs tw-my-1"
+            >
+              <span class="tw-uppercase tw-text-xs tw-text-neutral-400">{{
+                status
+              }}</span>
+              <span
+                class="tw-block tw-px-2 tw-rounded-full tw-bg-neutral-100 tw-text-neutral-900"
+                >{{ count }}</span
+              >
+            </div>
           </Td>
         </Tr>
       </TBody>
@@ -69,4 +86,3 @@ onMounted(async () => {
 });
 </script>
 <style scoped></style>
-@/utils/useSimulatedProgress
