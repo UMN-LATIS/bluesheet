@@ -65,7 +65,11 @@
           </router-link>
         </li>
         <li v-if="$can('view eligibility')" class="list-group-item">
-          <router-link :to="{ name: 'deptLeavesReport' }" class="nav-link">
+          <router-link
+            v-if="$can('view leaves')"
+            :to="{ name: 'deptLeavesReport' }"
+            class="nav-link"
+          >
             Department Leaves Report
           </router-link>
         </li>

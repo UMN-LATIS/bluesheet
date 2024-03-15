@@ -1,5 +1,5 @@
 <template>
-  <WideLayout>
+  <WideLayout v-if="$can('view leaves')">
     <p
       class="tw-uppercase tw-text-sm tw-leading-relaxed tw-text-neutral-500 tw-m-0 tw-font-medium"
     >
@@ -61,6 +61,7 @@ import * as api from "@/api";
 import ProgressSpinner from "@/components/ProgressSpinner.vue";
 import { useSimulatedProgress } from "@/utils/useSimulatedProgress";
 import WideLayout from "@/layouts/WideLayout.vue";
+import { $can } from "@/utils";
 
 // TODO: add permissions for if user can view this report
 
