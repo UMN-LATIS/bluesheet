@@ -84,7 +84,10 @@ class ReportController extends Controller {
      *    }[]
      * }>
      */
-    public function deptLeavesReport(Bandaid $bandaid, UserService  $userService): JsonResponse {
+    public function deptLeavesReport(Request $request, Bandaid $bandaid, UserService  $userService): JsonResponse {
+        // TODO: should this be a different permission?
+        abort_if($request->user()->cannot('view leaves'), 403);
+
         $bandaid = new Bandaid();
         $userService = new UserService();
 
