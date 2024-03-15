@@ -16,7 +16,7 @@ return array(
     'idp_login'     => '/Shibboleth.sso/Login',
     'idp_logout'    => '/Shibboleth.sso/Logout?return=https%3a%2f%2flogin.umn.edu%2fidp%2fLogoutUMN',
     'authenticated' => '/',
-    'authfield'     => 'umndid',
+    'authfield'     => 'emplid',
     /*
     |--------------------------------------------------------------------------
     | Emulate an IdP
@@ -115,6 +115,7 @@ return array(
         // fillable user model attribute => server variable
         'email'       => 'eppn',
         'umndid' => 'umnDID',
+        'emplid' => 'umnEmplId',
         // 'surname' => 'surname',
         // 'givenname' => 'givenName',
         // 'displayname' => 'displayName',
