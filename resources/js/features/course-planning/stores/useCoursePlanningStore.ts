@@ -546,14 +546,11 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
         course.courseLevel,
       );
 
-      const doesSectionHaveMinEnrollment =
-        methods.doesSectionHaveMinEnrollment(section);
-
       return (
         isSectionTermVisible &&
         isCourseTypeVisible &&
         isCourseLevelVisible &&
-        doesSectionHaveMinEnrollment
+        methods.doesSectionHaveMinEnrollment(section)
       );
     },
 
