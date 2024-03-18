@@ -39,6 +39,7 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
       excludedCourseLevels: new Set(),
       excludedAcadAppts: new Set(),
       includedEnrollmentRoles: new Set(["PI"]),
+      minSectionEnrollment: 0,
       search: "",
     },
   });
