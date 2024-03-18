@@ -1,4 +1,5 @@
 <?php
+
 namespace Deployer;
 // require 'contrib/laravel.php';
 require 'contrib/yarn.php';
@@ -23,33 +24,32 @@ $prodHost = 'cla-groups-prd.oit.umn.edu';
 $phpPath = '/opt/remi/php81/root/usr/bin/php';
 
 host('dev')
-  ->set('hostname', $devHost)
-  ->set('remote_user', 'swadm')
-  ->set('labels', ['stage' => 'development'])
-  // ->identityFile()
-  ->set('bin/php', $phpPath)
-  ->set('deploy_path', '/swadm/var/www/html/');
+    ->set('hostname', $devHost)
+    ->set('remote_user', 'swadm')
+    ->set('labels', ['stage' => 'development'])
+    // ->identityFile()
+    ->set('bin/php', $phpPath)
+    ->set('deploy_path', '/swadm/var/www/html/');
 
 host('stage')
-  ->set('hostname', $tstHost)
-  ->set('remote_user', 'swadm')
-  ->set('labels', ['stage' => 'stage'])
-  // ->identityFile()
-  ->set('bin/php', $phpPath)
-  ->set('deploy_path', '/swadm/var/www/html/');
+    ->set('hostname', $tstHost)
+    ->set('remote_user', 'swadm')
+    ->set('labels', ['stage' => 'stage'])
+    // ->identityFile()
+    ->set('bin/php', $phpPath)
+    ->set('deploy_path', '/swadm/var/www/html/');
 
 host('prod')
-  ->set('hostname', $prodHost)
-  ->set('remote_user', 'swadm')
-  ->set('labels', ['stage' => 'production'])
-  ->set('bin/php', $phpPath)
-  ->set('deploy_path', '/swadm/var/www/html/');
+    ->set('hostname', $prodHost)
+    ->set('remote_user', 'swadm')
+    ->set('labels', ['stage' => 'production'])
+    ->set('bin/php', $phpPath)
+    ->set('deploy_path', '/swadm/var/www/html/');
 
-task('assets:generate', function() {
-  cd('{{release_path}}');
-  run('yarn build');
+task('assets:generate', function () {
+    cd('{{release_path}}');
+    run('yarn build');
 })->desc('Assets generation');
-
 
 // [Optional] if deploy fails automatically unlock.
 after('deploy:failed', 'deploy:unlock');
@@ -68,3 +68,6 @@ before('deploy:symlink', 'artisan:migrate');
 after('deploy:update_code', 'yarn:install');
 after('yarn:install', 'assets:generate');
 after('artisan:migrate', 'artisan:queue:restart');
+
+// clear any cached bandaid or ldap info
+before('artisan:config:cache', 'artisan:cache:clear');
