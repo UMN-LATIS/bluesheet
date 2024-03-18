@@ -33,6 +33,7 @@
       <InputGroup
         v-if="isEditing"
         v-model="localLeave.description"
+        :required="true"
         label="description"
         :showLabel="false"
         :validator="isNotEmptyString"
@@ -80,6 +81,7 @@
       <InputGroup
         v-if="isEditing"
         v-model="localLeave.start_date"
+        :required="true"
         label="start date"
         :showLabel="false"
         type="date"
@@ -101,6 +103,7 @@
         v-if="isEditing"
         v-model="localLeave.end_date"
         label="start date"
+        :required="true"
         :showLabel="false"
         type="date"
         :validator="

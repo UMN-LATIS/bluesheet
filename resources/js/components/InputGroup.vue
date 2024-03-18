@@ -2,7 +2,7 @@
   <div class="form-group tw-mb-0">
     <Label
       :for="inputId"
-      :required="true"
+      :required="required"
       :class="[
         {
           'sr-only': !showLabel,
