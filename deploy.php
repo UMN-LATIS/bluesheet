@@ -68,3 +68,6 @@ before('deploy:symlink', 'artisan:migrate');
 after('deploy:update_code', 'yarn:install');
 after('yarn:install', 'assets:generate');
 after('artisan:migrate', 'artisan:queue:restart');
+
+// clear any cached data, like cached instructor info,
+before('artisan:config:cache', 'artisan:cache:clear');
