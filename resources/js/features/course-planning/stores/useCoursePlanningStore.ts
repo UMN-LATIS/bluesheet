@@ -39,7 +39,7 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
       excludedCourseLevels: new Set(),
       excludedAcadAppts: new Set(),
       includedEnrollmentRoles: new Set(["PI"]),
-      minSectionEnrollment: 0,
+      minSectionEnrollment: "",
       search: "",
     },
   });
@@ -322,6 +322,7 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
       state.filters.excludedAcadAppts = new Set();
       state.filters.excludedCourseLevels = new Set();
       state.filters.excludedCourseTypes = new Set();
+      state.filters.minSectionEnrollment = "";
 
       const earliestTerm = stores.termsStore.earliestTerm;
       const latestTerm = stores.termsStore.latestTerm;
@@ -471,6 +472,16 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
       if (!course) return false;
       return methods.isCourseMatchingSearch(course);
     },
+    doesSectionHaveMinEnrollment(section: T.CourseSection) {
+      const minEnrollmentInt = Number.parseInt(
+        state.filters.minSectionEnrollment,
+      );
+
+      if (Number.isNaN(minEnrollmentInt)) {
+        return true;
+      }
+      return section.enrollmentTotal >= minEnrollmentInt;
+    },
 
     isTermVisible(termId: T.Term["id"]) {
       if (!state.filters.startTermId || !state.filters.endTermId) {
@@ -531,8 +542,14 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
         course.courseLevel,
       );
 
+      const doesSectionHaveMinEnrollment =
+        methods.doesSectionHaveMinEnrollment(section);
+
       return (
-        isSectionTermVisible && isCourseTypeVisible && isCourseLevelVisible
+        isSectionTermVisible &&
+        isCourseTypeVisible &&
+        isCourseLevelVisible &&
+        doesSectionHaveMinEnrollment
       );
     },
 

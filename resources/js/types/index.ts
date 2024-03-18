@@ -372,7 +372,7 @@ export interface CoursePlanningFilters {
   excludedCourseLevels: Set<string>;
   excludedCourseTypes: Set<string>;
   excludedAcadAppts: Set<string>;
-  minSectionEnrollment: number;
+  minSectionEnrollment: string;
   includedEnrollmentRoles: Set<EnrollmentRole>;
   search: string;
   inPlanningMode: boolean;
