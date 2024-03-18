@@ -133,28 +133,26 @@
           </legend>
         </div>
         <InputGroup
-          :modelValue="String(filters.minSectionEnrollment)"
+          v-model="minSectionEnrollmentRaw"
           label="Minimum Enrollment"
           type="number"
           placeholder="0"
           class="tw-w-20"
           :required="false"
           :showLabel="false"
-          @update:modelValue="
-            filters.minSectionEnrollment = Number.parseInt($event)
-          "
         />
       </fieldset>
     </div>
   </section>
 </template>
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 import SelectGroup from "@/components/SelectGroup.vue";
 import Button from "@/components/Button.vue";
 import { useCoursePlanningStore } from "../stores/useCoursePlanningStore";
 import { storeToRefs } from "pinia";
 import InputGroup from "@/components/InputGroup.vue";
+import { debounce } from "lodash";
 
 const coursePlanningStore = useCoursePlanningStore();
 
@@ -170,6 +168,15 @@ const {
 
 const termSelectOptions = computed(
   () => coursePlanningStore.termsStore.termSelectOptions,
+);
+
+const minSectionEnrollmentRaw = ref("");
+
+watch(
+  minSectionEnrollmentRaw,
+  debounce((value) => {
+    coursePlanningStore.setMinSectionEnrollment(value);
+  }, 500),
 );
 </script>
 <style scoped></style>
