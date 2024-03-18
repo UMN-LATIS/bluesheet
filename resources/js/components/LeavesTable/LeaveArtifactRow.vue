@@ -5,6 +5,7 @@
       <Td colspan="3">
         <InputGroup
           v-model="localArtifact.label"
+          :required="true"
           label="Label"
           placeholder="Artifact Label"
           :showLabel="false"
@@ -15,6 +16,7 @@
       <Td colspan="2">
         <InputGroup
           v-model="localArtifact.target"
+          :required="true"
           label="URL"
           :showLabel="false"
           placeholder="Artifact URL"
