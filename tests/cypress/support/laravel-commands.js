@@ -28,7 +28,7 @@ Cypress.Commands.add("login", (umndidOrAttrs) => {
 
       Cypress.log({
         name: "login",
-        message: { umndidOrAttrs },
+        message: attributes,
         consoleProps: () => ({ user: body }),
       });
     })

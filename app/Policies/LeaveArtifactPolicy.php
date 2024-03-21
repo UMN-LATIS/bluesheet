@@ -30,7 +30,7 @@ class LeaveArtifactPolicy {
 
         // a group manager should be able to view the leaves
         // of any member of their group
-        if ($currentUser->managesGroupWithMember( $leaveArtifact->leave->user)) {
+        if ($currentUser->managesGroupWithMember($leaveArtifact->leave->user)) {
             return true;
         }
 
@@ -61,7 +61,7 @@ class LeaveArtifactPolicy {
 
         // a group manager should be able to edit the leaves
         // of any member of their group
-        if ($currentUser->managesGroupWithMember( $leaveArtifact->leave->user)) {
+        if ($currentUser->managesGroupWithMember($leaveArtifact->leave->user)) {
             return true;
         }
 

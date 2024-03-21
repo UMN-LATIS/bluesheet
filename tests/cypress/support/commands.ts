@@ -74,26 +74,14 @@ Cypress.Commands.add(
 );
 
 Cypress.Commands.add(
-  "setMembershipProp",
-  ({
-    umndid,
-    groupName,
-    prop,
-    value,
-  }: {
-    umndid: string;
-    groupName: string;
-    prop: string;
-    value: unknown;
-  }) => {
+  "promoteUserToGroupManager",
+  ({ userId, groupId }: { userId: number; groupId: number }) => {
     return cy.php(`
-    $user = App\\User::where('umndid', '${umndid}')->firstOrFail();
-    $membership = App\\Membership
-      ->where('user_id',$user->id)
-      ->where('group_id', ${groupName})
-      ->firstOrFail();
-    $membership->${prop} = ${value};
-    $membership->save();
+    App\\Membership::where("user_id", ${userId})
+    ->where("group_id", ${groupId})
+    ->update([
+      'admin' => true,
+    ]);
   `);
   },
 );

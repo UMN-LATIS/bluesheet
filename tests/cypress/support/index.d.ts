@@ -136,16 +136,12 @@ declare namespace Cypress {
       roleName: string;
     }): Chainable<any>;
 
-    setMembershipProp({
-      umndid,
-      groupName,
-      prop,
-      value,
+    promoteUserToGroupManager({
+      userId,
+      groupId,
     }: {
-      umndid: string;
-      groupName: string;
-      prop: string;
-      value: unknown;
+      userId: number;
+      groupId: number;
     }): Chainable<any>;
   }
 }

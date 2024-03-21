@@ -92,32 +92,31 @@ describe("DELETE /api/leaves/:leaveId/artifacts/:artifactId", () => {
   });
 
   context("as a group member with `admin` flag", () => {
-    let currentUser;
     let groupAdminMembership;
 
     beforeEach(() => {
-          cy.create({
+      cy.create({
+        model: "App\\Membership",
+        attributes: {
+          user_id: validLeave.user_id,
+        },
+      })
+        .then((leaveUserMembership) => {
+          // add a test user to the group
+          return cy.create({
             model: "App\\Membership",
             attributes: {
-              user_id: validLeave.user_id,
+              group_id: leaveUserMembership.group_id,
+              admin: true,
             },
-          }).then((leaveUserMembership) => {
-            // add a test user to the group
-            return cy.create({
-              model: "App\\Membership",
-              attributes: {
-                group_id: leaveUserMembership.group_id,
-                admin: true,
-              },
-            });
-          }).then((membership) => {
-            groupAdminMembership = membership;
           });
+        })
+        .then((membership) => {
+          groupAdminMembership = membership;
+        });
     });
 
     it("delete an artifact of another group member", () => {
-
-
       cy.login({
         id: groupAdminMembership.user_id,
       });

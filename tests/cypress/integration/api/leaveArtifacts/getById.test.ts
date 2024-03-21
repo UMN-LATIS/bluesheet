@@ -43,39 +43,85 @@ describe("GET /api/leaves/:leaveId/artifacts/:artifactId", () => {
       });
   });
 
-  context("as an unauthenticated user", () => {
-    it("returns a 401", () => {
-      api
-        .get(`/api/leaves/${leaveId}/artifacts/${artifactId}`, {
-          failOnStatusCode: false,
-        })
-        .its("status")
-        .should("eq", 401);
-    });
+  it("returns a 401 when unauthenticated", () => {
+    api
+      .get(`/api/leaves/${leaveId}/artifacts/${artifactId}`, {
+        failOnStatusCode: false,
+      })
+      .its("status")
+      .should("eq", 401);
   });
 
-  context("as a user that cannot view leaves", () => {
-    beforeEach(() => {
-      cy.login("basic_user");
-    });
+  it("does not permit a regualr user to view leaves", () => {
+    cy.login("view_user");
 
-    it('does not permit a "basic_user" to view leaves', () => {
-      api
-        .get(`/api/leaves/${leaveId}/artifacts/${artifactId}`, {
-          failOnStatusCode: false,
+    api
+      .get(`/api/leaves/${leaveId}/artifacts/${artifactId}`, {
+        failOnStatusCode: false,
+      })
+      .then((response) => {
+        expect(response.status).to.eq(403);
+      });
+  });
+
+  it("lets a user with `view leaves` permission view an artifact", () => {
+    // give some regular user permission to view leaves
+    cy.givePermissionToUser("view leaves", "view_user");
+    cy.login("view_user");
+
+    api
+      .get(`/api/leaves/${leaveId}/artifacts/${artifactId}`)
+      .then((response) => {
+        expect(response.status).to.eq(200);
+        const artifact = response.body;
+        expect(artifact).to.have.keys([
+          "id",
+          "leave_id",
+          "leave", // will be included because we're checking the leave owner in the policy
+          "label",
+          "target",
+          "created_at",
+          "updated_at",
+        ]);
+        expect(artifact.label).to.eq(validArtifact.label);
+        expect(artifact.target).to.eq(validArtifact.target);
+      });
+  });
+
+  context("as a fellow group member", () => {
+    let groupAdminMembership;
+
+    beforeEach(() => {
+      cy.create({
+        model: "App\\Membership",
+        attributes: {
+          user_id: validLeave.user_id,
+        },
+      })
+        .then((leaveUserMembership) => {
+          // add a test user to the group
+          return cy.create({
+            model: "App\\Membership",
+            attributes: {
+              group_id: leaveUserMembership.group_id,
+            },
+          });
         })
-        .then((response) => {
-          expect(response.status).to.eq(403);
+        .then((membership) => {
+          groupAdminMembership = membership;
+
+          cy.login({
+            id: groupAdminMembership.user_id,
+          });
         });
     });
-  });
 
-  context("as a user that can view leaves", () => {
-    beforeEach(() => {
-      cy.login("group_admin");
-    });
+    it("permits an admin to get a leave artifact", () => {
+      cy.promoteUserToGroupManager({
+        userId: groupAdminMembership.user_id,
+        groupId: groupAdminMembership.group_id,
+      });
 
-    it('lets a "group_admin" view an artifact', () => {
       api
         .get(`/api/leaves/${leaveId}/artifacts/${artifactId}`)
         .then((response) => {
@@ -84,6 +130,7 @@ describe("GET /api/leaves/:leaveId/artifacts/:artifactId", () => {
           expect(artifact).to.have.keys([
             "id",
             "leave_id",
+            "leave", // will be included because we're checking the leave owner in the policy
             "label",
             "target",
             "created_at",
@@ -91,6 +138,16 @@ describe("GET /api/leaves/:leaveId/artifacts/:artifactId", () => {
           ]);
           expect(artifact.label).to.eq(validArtifact.label);
           expect(artifact.target).to.eq(validArtifact.target);
+        });
+    });
+
+    it("does not permit a regular group member to get a leave artifact", () => {
+      api
+        .get(`/api/leaves/${leaveId}/artifacts/${artifactId}`, {
+          failOnStatusCode: false,
+        })
+        .then((response) => {
+          expect(response.status).to.eq(403);
         });
     });
   });
