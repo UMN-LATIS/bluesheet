@@ -120,5 +120,27 @@ declare namespace Cypress {
       permissionName: string,
       umndid: string,
     ): Chainable<void>;
+
+    createMembership({
+      umndid,
+      groupName,
+      roleName,
+    }: {
+      umndid: string;
+      groupName: string;
+      roleName: string;
+    }): Chainable<any>;
+
+    setMembershipProp({
+      umndid,
+      groupName,
+      prop,
+      value,
+    }: {
+      umndid: string;
+      groupName: string;
+      prop: string;
+      value: unknown;
+    }): Chainable<any>;
   }
 }

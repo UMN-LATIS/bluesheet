@@ -17,7 +17,7 @@ class LeaveArtifactController extends Controller {
     }
 
     public function show(Request $request, Leave $leave, LeaveArtifact $leaveArtifact) {
-        abort_if($request->user()->cannot('view leaves') && $leave->user_id !== Auth::user()->id, 403);
+        abort_if(!$request->user()->can('delete', $leaveArtifact), 403);
 
         return $leaveArtifact;
     }
@@ -51,7 +51,7 @@ class LeaveArtifactController extends Controller {
     }
 
     public function destroy(Request $request, Leave $leave, LeaveArtifact $leaveArtifact) {
-        abort_if($request->user()->cannot('edit leaves'), 403);
+        abort_if(!$request->user()->can('delete', $leaveArtifact), 403);
 
         $leaveArtifact->delete();
 
