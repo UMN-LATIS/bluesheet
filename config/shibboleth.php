@@ -40,7 +40,7 @@ return array(
             'sn'          => 'User',
             'eppn'        => 'admin@umn.edu',
             'umnDID'      => 'admin',
-            'umnEmplId'      => '2328381',
+            'umnEmplId'      => '1111111',
         ),
         'staff' => array(
             'uid'         => 'staff',
@@ -50,6 +50,7 @@ return array(
             'sn'          => 'User',
             'eppn'        => 'staff@umn.edu',
             'umnDID'      => 'staff',
+            'umnEmplId'      => '1111112',
         ),
         'user'  => array(
             'uid'         => 'user',
@@ -59,6 +60,7 @@ return array(
             'sn'          => 'User',
             'mail'        => 'user@umn.edu',
             'umnDID'      => 'user',
+            'umnEmplId'      => '1111113',
         ),
 
         // users for testing roles
@@ -70,6 +72,7 @@ return array(
             'sn' => 'User',
             'mail' => 'basic_user@umn.edu',
             'umnDID' => 'basic_user',
+            'umnEmplId'      => '1111114',
         ],
         'view_user' => [
             'uid' => 'view_user',
@@ -79,6 +82,7 @@ return array(
             'sn' => 'User',
             'mail' => 'view_user@umn.edu',
             'umnDID' => 'view_user',
+            'umnEmplId'      => '1111115',
         ],
         'group_admin' => [
             'uid' => 'group_admin',
@@ -88,6 +92,7 @@ return array(
             'sn' => 'Admin',
             'mail' => 'group_admin@umn.edu',
             'umnDID' => 'group_admin',
+            'umnEmplId'      => '1111116',
         ],
         'site_admin' => [
             'uid' => 'site_admin',
@@ -97,6 +102,7 @@ return array(
             'sn' => 'Admin',
             'mail' => 'site_admin@umn.edu',
             'umnDID' => 'site_admin',
+            'umnEmplId'      => '1111117',
         ]
     ),
 

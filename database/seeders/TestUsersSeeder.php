@@ -19,6 +19,7 @@ class TestUsersSeeder extends Seeder {
             'displayname' => 'Admin User',
             'email' => 'admin@umn.edu',
             'umndid' => 'admin',
+            'emplid' => '1111111'
         ])->create();
         $admin->assignRole('super admin');
 
@@ -28,6 +29,7 @@ class TestUsersSeeder extends Seeder {
             'displayname' => 'Basic User',
             'email' => 'basic_user@umn.edu',
             'umndid' => 'basic_user',
+            'emplid' => '1111114'
         ])->create();
         $basicUser->assignRole('basic user');
 
@@ -37,6 +39,7 @@ class TestUsersSeeder extends Seeder {
             'displayname' => 'View User',
             'email' => 'view_user@umn.edu',
             'umndid' => 'view_user',
+            'emplid' => '1111115',
         ])->create();
         $viewUser->assignRole('view user');
 
@@ -46,6 +49,7 @@ class TestUsersSeeder extends Seeder {
             'displayname' => 'Group Admin',
             'email' => 'group_admin@umn.edu',
             'umndid' => 'group_admin',
+            'emplid' => '1111116',
         ])->create();
         $groupAdmin->assignRole('group admin');
 
@@ -55,6 +59,7 @@ class TestUsersSeeder extends Seeder {
             'displayname' => 'Site Admin',
             'email' => 'site_admin@umn.edu',
             'umndid' => 'site_admin',
+            'emplid' => '1111117',
         ])->create();
         $siteAdmin->assignRole('site admin');
     }
