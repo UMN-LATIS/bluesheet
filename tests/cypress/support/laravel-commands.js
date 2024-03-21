@@ -7,7 +7,9 @@
  *          cy.login({ name: 'JohnDoe' });
  *          cy.login({ attributes: { name: 'JohnDoe' }, state: 'guest', load: ['comments] });
  */
-Cypress.Commands.add("login", (umndid) => {
+Cypress.Commands.add("login", (umndidOrAttrs) => {
+  const attributes = typeof umndidOrAttrs === "string" ? { umndid: umndidOrAttrs } : umndidOrAttrs;
+
   return cy
     .csrfToken()
     .then((token) => {
@@ -15,9 +17,7 @@ Cypress.Commands.add("login", (umndid) => {
         method: "POST",
         url: "/__cypress__/login",
         body: {
-          attributes: {
-            umndid,
-          },
+          attributes,
           _token: token,
         },
         log: false,
@@ -28,7 +28,7 @@ Cypress.Commands.add("login", (umndid) => {
 
       Cypress.log({
         name: "login",
-        message: { umndid },
+        message: { umndidOrAttrs },
         consoleProps: () => ({ user: body }),
       });
     })

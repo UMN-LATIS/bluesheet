@@ -28,6 +28,10 @@ Cypress.Commands.add("getUserByUsername", (umndid: string) => {
   return cy.php(`App\\User::where('umndid', '${umndid}')->firstOrFail()`);
 });
 
+Cypress.Commands.add("getUser", (userId: number) => {
+  return cy.php(`App\\User::findOrFail(${userId});`);
+});
+
 Cypress.Commands.add("addRoleToUser", (roleName: string, umndid: string) => {
   return cy.php(`
     $roleId = App\\Role::where('name', '${roleName}')->firstOrFail()->id;

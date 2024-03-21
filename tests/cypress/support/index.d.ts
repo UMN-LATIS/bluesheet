@@ -10,7 +10,7 @@ declare namespace Cypress {
      * cy.login()
      * cy.login({ id: 1 })
      */
-    login(umndid: string): Chainable<any>;
+    login(umndidOrAttributes: string | object): Chainable<any>;
 
     /**
      * Log out the current user.
@@ -102,6 +102,11 @@ declare namespace Cypress {
      * cy.php('App\\User::count()')
      */
     php(command: string): Chainable<any>;
+
+    /**
+     * Get a user by their userId.
+     */
+    getUser(userId: number): Chainable<any>;
 
     /**
      * Get a user by their username (umndid).
