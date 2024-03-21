@@ -84,16 +84,6 @@ return array(
             'umnDID' => 'view_user',
             'umnEmplId'      => '1111115',
         ],
-        'group_admin' => [
-            'uid' => 'group_admin',
-            'displayName' => 'Group Admin',
-            'givenName' => 'Group',
-            'surname' => 'Admin',
-            'sn' => 'Admin',
-            'mail' => 'group_admin@umn.edu',
-            'umnDID' => 'group_admin',
-            'umnEmplId'      => '1111116',
-        ],
         'site_admin' => [
             'uid' => 'site_admin',
             'displayName' => 'Site Admin',
