@@ -17,7 +17,6 @@ Cypress.Commands.add("login", (umndid) => {
         body: {
           attributes: {
             umndid,
-            email: `${umndid}@umn.edu`,
           },
           _token: token,
         },
