@@ -1,45 +1,27 @@
 import api from "../../../support/api";
 
-const validLeave = {
-  description: "New leave",
-  start_date: "2021-01-01",
-  end_date: "2021-01-02",
-  status: "pending",
-  type: "development",
-  user_id: 1,
-};
-
-const validArtifact = {
-  label: "New artifact",
-  target: "https://example.com",
-};
-
 describe("DELETE /api/leaves/:leaveId/artifacts/:artifactId", () => {
   let leaveId;
   let artifactId;
+  let validLeave;
 
   beforeEach(() => {
     cy.refreshDatabase();
     cy.seed();
 
-    cy.login("admin");
-
-    api
-      .post("/api/leaves", validLeave)
-      .then((response) => {
-        leaveId = response.body.id;
-        return leaveId;
+    cy.create("App\\Leave")
+      .then((createdLeave) => {
+        leaveId = createdLeave.id;
+        validLeave = createdLeave;
+        return cy.create({
+          model: "App\\LeaveArtifact",
+          attributes: {
+            leave_id: leaveId,
+          },
+        });
       })
-      .then((leaveId) => {
-        return api
-          .post(`/api/leaves/${leaveId}/artifacts`, validArtifact)
-          .then((response) => {
-            artifactId = response.body.id;
-            return artifactId;
-          });
-      })
-      .then(() => {
-        cy.logout();
+      .then((createdArtifact) => {
+        artifactId = createdArtifact.id;
       });
   });
 
@@ -134,5 +116,19 @@ describe("DELETE /api/leaves/:leaveId/artifacts/:artifactId", () => {
           expect(response.status).to.eq(404);
         });
     });
+  });
+
+  it("does not permit a member to delete their own leave", () => {
+    cy.login({
+      id: validLeave.user_id,
+    });
+
+    api
+      .delete(`/api/leaves/${leaveId}/artifacts/${artifactId}`, {
+        failOnStatusCode: false,
+      })
+      .then((response) => {
+        expect(response.status).to.eq(403);
+      });
   });
 });

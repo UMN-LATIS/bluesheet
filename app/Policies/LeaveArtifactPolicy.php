@@ -15,7 +15,6 @@ class LeaveArtifactPolicy {
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool {
-        \Log::debug("viewAny policy method called");
         return false;
     }
 
