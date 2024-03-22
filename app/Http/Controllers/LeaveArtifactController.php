@@ -34,7 +34,7 @@ class LeaveArtifactController extends Controller {
     }
 
     public function update(Request $request, Leave $leave, LeaveArtifact $leaveArtifact) {
-        abort_if($request->user()->cannot('edit leaves'), 403);
+        $this->authorize('update', $leaveArtifact);
 
         $validated = $request->validate([
             'label' => 'required|string',

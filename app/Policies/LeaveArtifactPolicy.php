@@ -76,6 +76,14 @@ class LeaveArtifactPolicy {
      * Determine whether the user can update the model.
      */
     public function update(User $user, LeaveArtifact $leaveArtifact): bool {
+        if ($user->can('edit leaves')) {
+            return true;
+        }
+
+        if ($user->managesGroupWithMember($leaveArtifact->leave->user)) {
+            return true;
+        }
+
         return false;
     }
 
