@@ -130,4 +130,23 @@ describe("GET /api/leaves/:leaveId/artifacts/:artifactId", () => {
         });
     });
   });
+
+  it("includes permission information in the response", () => {
+    cy.login({ id: expectedLeave.user_id });
+
+    api
+      .get(`/api/leaves/${leaveId}/artifacts/${artifactId}`)
+      .then((response) => {
+        expect(response.status).to.eq(200);
+        const artifact = response.body;
+        expect(artifact.currentUserCan).to.deep.eq({
+          // a user can view their own artifacts
+          // but not update or delete them
+          viewAny: true,
+          view: true,
+          update: false,
+          delete: false,
+        });
+      });
+  });
 });
