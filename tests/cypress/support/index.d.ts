@@ -121,7 +121,7 @@ declare namespace Cypress {
     /**
      * Give a permission to a user.
      */
-    givePermissionToUser(
+    addPermissionToUser(
       permissionName: string,
       umndid: string,
     ): Chainable<void>;

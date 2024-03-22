@@ -41,7 +41,7 @@ Cypress.Commands.add("addRoleToUser", (roleName: string, umndid: string) => {
 });
 
 Cypress.Commands.add(
-  "givePermissionToUser",
+  "addPermissionToUser",
   (permissionName: string, umndid: string) => {
     return cy.php(`
     App\\User::where('umndid', '${umndid}')->firstOrFail()->givePermissionTo('${permissionName}');

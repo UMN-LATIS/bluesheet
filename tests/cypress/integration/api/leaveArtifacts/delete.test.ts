@@ -56,7 +56,7 @@ describe("DELETE /api/leaves/:leaveId/artifacts/:artifactId", () => {
     cy.login("edit_user");
 
     // give the user permission to edit leaves
-    cy.givePermissionToUser("edit leaves", "edit_user");
+    cy.addPermissionToUser("edit leaves", "edit_user");
 
     api
       .delete(`/api/leaves/${leaveId}/artifacts/${artifactId}`)

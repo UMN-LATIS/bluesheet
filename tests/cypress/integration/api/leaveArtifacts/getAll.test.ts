@@ -60,7 +60,7 @@ describe("GET /api/leaves/:leaveId/artifacts", () => {
 
   it("lets a user with `view leaves` permission view all artifacts", () => {
     // give some regular user permission to view leaves
-    cy.givePermissionToUser("view leaves", "view_user");
+    cy.addPermissionToUser("view leaves", "view_user");
     cy.login("view_user");
 
     api.get(`/api/leaves/${leave.id}/artifacts`).then((response) => {
