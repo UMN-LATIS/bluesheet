@@ -31,80 +31,34 @@ return array(
      */
 
     'emulate_idp'       => env('SHIB_EMULATE', false),
-    'emulate_idp_users' => array(
-        'admin' => array(
-            'uid'         => 'admin',
-            'displayName' => 'Admin User',
-            'givenName'   => 'Admin',
-            'surname'   => 'McAdmin',
-            'sn'          => 'User',
+    'emulate_idp_users' => [
+        // name info is populated via populateUser middleware
+        'admin' => [
             'eppn'        => 'admin@umn.edu',
             'umnDID'      => 'admin',
             'umnEmplId'      => '1111111',
-        ),
-        'staff' => array(
-            'uid'         => 'staff',
-            'displayName' => 'Staff User',
-            'givenName'   => 'Staff',
-            'surName'   => 'McStaff',
-            'sn'          => 'User',
-            'eppn'        => 'staff@umn.edu',
-            'umnDID'      => 'staff',
-            'umnEmplId'      => '1111112',
-        ),
-        'user'  => array(
-            'uid'         => 'user',
-            'displayName' => 'User User',
-            'givenName'   => 'User',
-            'surname'   => 'McUser',
-            'sn'          => 'User',
-            'mail'        => 'user@umn.edu',
-            'umnDID'      => 'user',
-            'umnEmplId'      => '1111113',
-        ),
-
-        // users for testing roles
+        ],
         'basic_user' => [
-            'uid' => 'basic_user',
-            'displayName' => 'Basic User',
-            'givenName' => 'Basic',
-            'surname' => 'User',
-            'sn' => 'User',
-            'mail' => 'basic_user@umn.edu',
+            'eppn' => 'basic_user@umn.edu',
             'umnDID' => 'basic_user',
             'umnEmplId'      => '1111114',
         ],
         'view_user' => [
-            'uid' => 'view_user',
-            'displayName' => 'View User',
-            'givenName' => 'View',
-            'surname' => 'User',
-            'sn' => 'User',
-            'mail' => 'view_user@umn.edu',
+            'eppn' => 'view_user@umn.edu',
             'umnDID' => 'view_user',
             'umnEmplId'      => '1111115',
         ],
         'group_admin' => [
-            'uid' => 'group_admin',
-            'displayName' => 'Group Admin',
-            'givenName' => 'Group',
-            'surname' => 'Admin',
-            'sn' => 'Admin',
-            'mail' => 'group_admin@umn.edu',
+            'eppn' => 'group_admin@umn.edu',
             'umnDID' => 'group_admin',
             'umnEmplId'      => '1111116',
         ],
         'site_admin' => [
-            'uid' => 'site_admin',
-            'displayName' => 'Site Admin',
-            'givenName' => 'Site',
-            'surname' => 'Admin',
-            'sn' => 'Admin',
-            'mail' => 'site_admin@umn.edu',
+            'eppn' => 'site_admin@umn.edu',
             'umnDID' => 'site_admin',
             'umnEmplId'      => '1111117',
         ]
-    ),
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -122,9 +76,6 @@ return array(
         'email'       => 'eppn',
         'umndid' => 'umnDID',
         'emplid' => 'umnEmplId',
-        // 'surname' => 'surname',
-        // 'givenname' => 'givenName',
-        // 'displayname' => 'displayName',
     ],
 
     /*
