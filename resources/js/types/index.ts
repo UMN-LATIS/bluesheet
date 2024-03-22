@@ -384,6 +384,7 @@ export interface SerializedCoursePlanningFilters {
   excludedCourseLevels: string[];
   excludedCourseTypes: string[];
   excludedAcadAppts: string[];
+  minSectionEnrollment: number;
   includedEnrollmentRoles: EnrollmentRole[];
   search: string;
   inPlanningMode: boolean;
