@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\LeaveArtifact;
 use App\User;
+use App\Leave;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
 
@@ -14,7 +15,22 @@ class LeaveArtifactPolicy {
     /**
      * Determine whether the user can view any models.
      */
-    public function viewAny(User $user): bool {
+    public function viewAny(User $user, Leave $leave): bool {
+        if ($leave->user_id === $user->id) {
+            return true;
+        }
+
+        // users with explicit `view leaves` permission can see all leaves
+        if ($user->can('view leaves')) {
+            return true;
+        }
+
+        // a group manager should be able to view the leaves
+        // of any member of their group
+        if ($user->managesGroupWithMember($leave->user)) {
+            return true;
+        }
+
         return false;
     }
 

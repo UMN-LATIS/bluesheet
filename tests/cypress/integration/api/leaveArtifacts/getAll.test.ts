@@ -50,7 +50,6 @@ describe("GET /api/leaves/:leaveId/artifacts", () => {
       expect(artifacts[0]).to.have.keys([
         "id",
         "leave_id",
-        "leave", // will be included because we're checking the leave owner in the policy
         "label",
         "target",
         "created_at",
@@ -99,7 +98,7 @@ describe("GET /api/leaves/:leaveId/artifacts", () => {
         });
     });
 
-    it("permits an admin to view all artifacts for a given leave", () => {
+    it("permits a group manager to view leave artifacts of group member", () => {
       cy.promoteUserToGroupManager({
         userId: groupAdminMembership.user_id,
         groupId: groupAdminMembership.group_id,

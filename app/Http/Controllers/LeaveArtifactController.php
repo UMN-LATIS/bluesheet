@@ -11,7 +11,7 @@ use Auth;
 
 class LeaveArtifactController extends Controller {
     public function index(Request $request, Leave $leave) {
-        $this->authorize('viewAny', LeaveArtifact::class);
+        $this->authorize('viewAny', [LeaveArtifact::class, $leave]);
 
         return $leave->artifacts;
     }
