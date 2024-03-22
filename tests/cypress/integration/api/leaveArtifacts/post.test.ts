@@ -1,69 +1,149 @@
 import * as api from "../../../support/api";
 
-const validLeave = {
-  description: "New leave",
-  start_date: "2021-01-01",
-  end_date: "2021-01-02",
-  status: "pending",
-  type: "development",
-  user_id: 1,
-};
-
 const validArtifact = {
   label: "New artifact",
   target: "https://example.com",
 };
 
 describe("POST /api/leaves/:leaveId/artifacts", () => {
-  let leaveId;
+  let leave;
 
   beforeEach(() => {
     cy.refreshDatabase();
     cy.seed();
 
-    cy.login("admin");
-
-    api.post("/api/leaves", validLeave).then((response) => {
-      leaveId = response.body.id;
-      cy.logout();
+    cy.create("App\\Leave").then((createdLeave) => {
+      leave = createdLeave;
     });
   });
 
-  context("as an unauthenticated user", () => {
-    it("returns a 401", () => {
-      api
-        .post(`/api/leaves/${leaveId}/artifacts`, validArtifact, {
-          failOnStatusCode: false,
-        })
-        .its("status")
-        .should("eq", 401);
-    });
+  it("returns a 401 if unauthenticated", () => {
+    api
+      .post(`/api/leaves/${leave.id}/artifacts`, validArtifact, {
+        failOnStatusCode: false,
+      })
+      .its("status")
+      .should("eq", 401);
   });
 
-  context("as a user that can view leaves", () => {
-    beforeEach(() => {
-      cy.login("view_user");
-    });
+  it("does not permit a default user to create an artifact", () => {
+    cy.login("user");
 
-    it('does not permit a "view_user" to create an artifact', () => {
+    api
+      .post(`/api/leaves/${leave.id}/artifacts`, validArtifact, {
+        failOnStatusCode: false,
+      })
+      .then((response) => {
+        expect(response.status).to.eq(403);
+      });
+  });
+
+  it("does not permit a user with `view leaves` permission to create an artifact", () => {
+    cy.login("user");
+
+    cy.addPermissionToUser("view leaves", "user");
+
+    api
+      .post(`/api/leaves/${leave.id}/artifacts`, validArtifact, {
+        failOnStatusCode: false,
+      })
+      .then((response) => {
+        expect(response.status).to.eq(403);
+      });
+  });
+
+  it("does not let a default user create their own leave artifact", () => {
+    // login as leave owner
+    cy.login({ id: leave.user_id });
+
+    api
+      .post(`/api/leaves/${leave.id}/artifacts`, validArtifact, {
+        failOnStatusCode: false,
+      })
+      .then((response) => {
+        expect(response.status).to.eq(403);
+      });
+  });
+
+  it("lets a user with `edit leaves` permission to create an artifact", () => {
+    cy.login("user");
+
+    cy.addPermissionToUser("edit leaves", "user");
+
+    api
+      .post(`/api/leaves/${leave.id}/artifacts`, validArtifact)
+      .then((response) => {
+        expect(response.status).to.eq(201);
+        const artifact = response.body;
+        expect(artifact).to.have.keys([
+          "id",
+          "leave_id",
+          "label",
+          "target",
+          "created_at",
+          "updated_at",
+        ]);
+      });
+  });
+
+  it("fails if any required field is missing", () => {
+    cy.login("user");
+    cy.addPermissionToUser("edit leaves", "user");
+
+    const fields = Object.keys(validArtifact);
+
+    fields.forEach((field) => {
+      const artifact = { ...validArtifact, [field]: null };
+
       api
-        .post(`/api/leaves/${leaveId}/artifacts`, validArtifact, {
+        .post(`/api/leaves/${leave.id}/artifacts`, artifact, {
           failOnStatusCode: false,
         })
         .then((response) => {
-          expect(response.status).to.eq(403);
+          expect(response.status).to.eq(422);
+          expect(response.body.errors[field][0]).to.eq(
+            `The ${field.replace("_", " ")} field is required.`,
+          );
         });
     });
   });
 
-  context("as a user that can edit leaves", () => {
+  context("as a fellow group member", () => {
+    let testUserMembership = null;
+
     beforeEach(() => {
-      cy.login("group_admin");
+      cy.create({
+        model: "App\\Membership",
+        attributes: {
+          user_id: leave.user_id,
+        },
+      })
+        .then((leaveUserMembership) => {
+          // add a test user to the group
+          return cy.create({
+            model: "App\\Membership",
+            attributes: {
+              group_id: leaveUserMembership.group_id,
+            },
+          });
+        })
+        .then((membership) => {
+          testUserMembership = membership;
+
+          cy.login({
+            id: testUserMembership.user_id,
+          });
+        });
     });
 
-    it('lets a "group_admin" create an artifact', () => {
+    it("lets a group manager create a leave artifact for a member of their group", () => {
+      cy.promoteUserToGroupManager({
+        userId: testUserMembership.user_id,
+        groupId: testUserMembership.group_id,
+      });
+
       api
-        .post(`/api/leaves/${leaveId}/artifacts`, validArtifact)
+        .post(`/api/leaves/${leave.id}/artifacts`, validArtifact)
         .then((response) => {
           expect(response.status).to.eq(201);
           const artifact = response.body;
@@ -78,23 +158,14 @@ describe("POST /api/leaves/:leaveId/artifacts", () => {
         });
     });
 
-    it("fails if any required field is missing", () => {
-      const fields = Object.keys(validArtifact);
-
-      fields.forEach((field) => {
-        const artifact = { ...validArtifact, [field]: null };
-
-        api
-          .post(`/api/leaves/${leaveId}/artifacts`, artifact, {
-            failOnStatusCode: false,
-          })
-          .then((response) => {
-            expect(response.status).to.eq(422);
-            expect(response.body.errors[field][0]).to.eq(
-              `The ${field.replace("_", " ")} field is required.`,
-            );
-          });
-      });
+    it("does not let a group member (non-manager) create a leave artifact for another member of that group", () => {
+      api
+        .post(`/api/leaves/${leave.id}/artifacts`, validArtifact, {
+          failOnStatusCode: false,
+        })
+        .then((response) => {
+          expect(response.status).to.eq(403);
+        });
     });
   });
 });

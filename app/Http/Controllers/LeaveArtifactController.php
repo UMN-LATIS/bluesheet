@@ -10,20 +10,20 @@ use Auth;
 
 
 class LeaveArtifactController extends Controller {
-    public function index(Request $request, Leave $leave) {
+    public function index(Leave $leave) {
         $this->authorize('viewAny', [LeaveArtifact::class, $leave]);
 
         return $leave->artifacts;
     }
 
-    public function show(Request $request, Leave $leave, LeaveArtifact $leaveArtifact) {
-        abort_if($request->user()->cannot('view', $leaveArtifact), 403);
+    public function show(Leave $leave, LeaveArtifact $leaveArtifact) {
+        $this->authorize('view', $leaveArtifact);
 
         return $leaveArtifact;
     }
 
     public function store(Request $request, Leave $leave) {
-        abort_if($request->user()->cannot('edit leaves'), 403);
+        $this->authorize('create', [LeaveArtifact::class, $leave]);
 
         $validated = $request->validate([
             'label' => 'required|string',
