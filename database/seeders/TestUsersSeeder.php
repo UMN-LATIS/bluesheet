@@ -43,6 +43,16 @@ class TestUsersSeeder extends Seeder {
         ])->create();
         $viewUser->assignRole('view user');
 
+        $groupAdmin = User::factory([
+            'givenname' => 'Group',
+            'surname' => 'Admin',
+            'displayname' => 'Group Admin',
+            'email' => 'group_admin@umn.edu',
+            'umndid' => 'group_admin',
+            'emplid' => '1111116',
+        ])->create();
+        $groupAdmin->assignRole('group admin');
+
         $siteAdmin = User::factory([
             'givenname' => 'Site',
             'surname' => 'Admin',
