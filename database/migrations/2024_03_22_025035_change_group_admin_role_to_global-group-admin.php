@@ -12,6 +12,7 @@ return new class extends Migration {
     public function up(): void {
 
         PermissionRole::where('name', 'group admin')->update(['name' => 'global group admin']);
+        app()->make(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
     }
 
     /**
@@ -19,5 +20,6 @@ return new class extends Migration {
      */
     public function down(): void {
         PermissionRole::where('name', 'global group admin')->update(['name' => 'group admin']);
+        app()->make(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
     }
 };
