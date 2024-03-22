@@ -11,7 +11,7 @@ use Auth;
 
 class LeaveArtifactController extends Controller {
     public function index(Request $request, Leave $leave) {
-        abort_if($request->user()->cannot('view leaves') && $leave->user_id !== Auth::user()->id, 403);
+        $this->authorize('viewAny', LeaveArtifact::class);
 
         return $leave->artifacts;
     }
