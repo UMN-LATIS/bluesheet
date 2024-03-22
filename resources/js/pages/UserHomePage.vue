@@ -37,7 +37,7 @@
       <Roles id="v-step-4" :memberships="memberships" class="tw-mt-12"></Roles>
 
       <LeavesTable
-        v-if="user && user.leaves"
+        v-if="$can('view leaves') || isCurrentUser || $can('edit leaves')"
         :leaves="user.leaves"
         :userId="user.id"
         class="tw-mt-12"
@@ -56,6 +56,7 @@ import CheckboxGroup from "@/components/CheckboxGroup.vue";
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
 import { usePageTitle } from "@/utils/usePageTitle";
 import { useUserStore } from "@/stores/useUserStore";
+import { $can } from "@/utils";
 
 const props = defineProps<{
   userId: number | null;

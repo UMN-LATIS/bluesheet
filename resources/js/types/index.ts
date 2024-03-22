@@ -324,7 +324,10 @@ export interface ApiCourseSectionRecord {
 }
 
 // api response types
-export type ApiUserResponse = User;
+export interface ApiUserResponse extends BaseUser {
+  leaves?: Leave[];
+}
+
 export type ApiGroupMembersReponse = Membership[];
 export type ApiGroupRolesResponse = MemberRole[];
 export type ApiGroupResponse = Group;
