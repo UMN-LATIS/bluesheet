@@ -51,7 +51,7 @@ class TestUsersSeeder extends Seeder {
             'umndid' => 'group_admin',
             'emplid' => '1111116',
         ])->create();
-        $groupAdmin->assignRole('group admin');
+        $groupAdmin->assignRole('global group admin');
 
         $siteAdmin = User::factory([
             'givenname' => 'Site',
