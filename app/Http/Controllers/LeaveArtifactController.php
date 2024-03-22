@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\LeaveArtifactResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\LeaveArtifact;
@@ -19,7 +20,7 @@ class LeaveArtifactController extends Controller {
     public function show(Leave $leave, LeaveArtifact $leaveArtifact) {
         $this->authorize('view', $leaveArtifact);
 
-        return $leaveArtifact;
+        return LeaveArtifactResource::make($leaveArtifact);
     }
 
     public function store(Request $request, Leave $leave) {
