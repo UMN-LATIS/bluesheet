@@ -12,12 +12,18 @@ export async function lookupUsers(query: string): Promise<T.UserLookupItem[]> {
 
 export async function fetchUser(userId: number): Promise<T.User> {
   const res = await axios.get<T.ApiUserResponse>(`/api/user/${userId}`);
-  return res.data;
+  return {
+    ...res.data,
+    leaves: res.data.leaves ?? [],
+  };
 }
 
-export async function updateUser(user: T.User) {
-  const res = await axios.put<T.User>(`/api/user/${user.id}`, user);
-  return res.data;
+export async function updateUser(user: T.User): Promise<T.User> {
+  const res = await axios.put<T.ApiUserResponse>(`/api/user/${user.id}`, user);
+  return {
+    ...res.data,
+    leaves: res.data.leaves ?? [],
+  };
 }
 
 export async function createLeave(leave: T.NewLeave) {
