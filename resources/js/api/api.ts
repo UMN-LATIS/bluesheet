@@ -59,13 +59,6 @@ export async function getUserLeaves(userId: number): Promise<T.Leave[]> {
   return res.data;
 }
 
-export async function updateUserLeaves(userId: number, leaves: T.Leave[]) {
-  const res = await axios.put<T.Leave[]>(`/api/users/${userId}/leaves`, {
-    leaves,
-  });
-  return res.data;
-}
-
 export async function fetchTerms() {
   const res = await axios.get<T.Term[]>(`/api/terms`);
   return res.data;
