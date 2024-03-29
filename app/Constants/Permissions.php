@@ -6,19 +6,19 @@ namespace App\Constants;
  * This contains the constants for various permissions used in this app.
  */
 
-enum Permissions: string {
-    case VIEW_OWN_GROUPS = 'view own groups';
-    case VIEW_GROUPS = 'view groups';
-    case VIEW_PRIVATE_GROUPS = 'view private groups';
-    case VIEW_USERS = 'view users';
-    case CREATE_GROUPS = 'create groups';
-    case EDIT_GROUPS = 'edit groups';
-    case EDIT_USERS = 'edit users';
-    case VIEW_REPORTS = 'view reports';
-    case VIEW_ALL_LEAVES = 'view leaves';
-    case EDIT_LEAVES = 'edit leaves';
-    case SCHEDULE_DEPARTMENTS = 'schedule departments';
-    case VIEW_ELIGIBILITY = 'view eligibility';
-    case VIEW_PLANNED_COURSES = 'view planned courses';
-    case EDIT_PLANNED_COURSES = 'edit planned courses';
+class Permissions {
+    const VIEW_OWN_GROUPS = 'view own groups';
+    const VIEW_GROUPS = 'view groups';
+    const VIEW_PRIVATE_GROUPS = 'view private groups';
+    const VIEW_USERS = 'view users';
+    const CREATE_GROUPS = 'create groups';
+    const EDIT_GROUPS = 'edit groups';
+    const EDIT_USERS = 'edit users';
+    const VIEW_REPORTS = 'view reports';
+    const VIEW_ALL_LEAVES = 'view leaves';
+    const EDIT_LEAVES = 'edit leaves';
+    const SCHEDULE_DEPARTMENTS = 'schedule departments';
+    const VIEW_ELIGIBILITY = 'view eligibility';
+    const VIEW_PLANNED_COURSES = 'view planned courses';
+    const EDIT_PLANNED_COURSES = 'edit planned courses';
 }
