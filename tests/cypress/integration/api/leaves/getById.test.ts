@@ -185,6 +185,14 @@ describe("GET /api/leaves/:id", () => {
         });
     });
 
-    it("does not permit users to view leaves for non-members");
+    it("does not permit users to view leaves for non-members", () => {
+      cy.login({ id: fellowGroupMembership.user_id });
+
+      api
+        .get(`/api/leaves/${leave.id}`, { failOnStatusCode: false })
+        .then((response) => {
+          expect(response.status).to.eq(403);
+        });
+    });
   });
 });
