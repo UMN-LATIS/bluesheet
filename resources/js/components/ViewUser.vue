@@ -39,7 +39,7 @@
           />
         </a>
       </dd>
-      <template v-if="$can('view leaves') && hasLeaveEligibility">
+      <template v-if="$can(UserPermissions.VIEW_LEAVES) && hasLeaveEligibility">
         <dt>Eligiblity</dt>
         <dd>
           <div v-if="user.ssl_eligible" class="chiclet">
@@ -63,6 +63,7 @@ import Button from "./Button.vue";
 import { $can } from "@/utils";
 import { User } from "@/types";
 import { ExternalLinkIcon } from "@/icons";
+import { UserPermissions } from "@/types";
 
 const props = defineProps<{
   user: User;

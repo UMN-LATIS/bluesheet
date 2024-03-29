@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use App\Constants\Permissions;
 
 class ReportController extends Controller {
 
@@ -86,7 +87,7 @@ class ReportController extends Controller {
      */
     public function deptLeavesReport(Request $request, Bandaid $bandaid, UserService  $userService): JsonResponse {
         // TODO: should this be a different permission?
-        abort_if($request->user()->cannot('view leaves'), 403);
+        abort_if($request->user()->cannot(Permissions::VIEW_LEAVES), 403);
 
         $bandaid = new Bandaid();
         $userService = new UserService();

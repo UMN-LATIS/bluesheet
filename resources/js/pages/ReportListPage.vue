@@ -66,7 +66,7 @@
         </li>
         <li v-if="$can('view eligibility')" class="list-group-item">
           <router-link
-            v-if="$can('view leaves')"
+            v-if="$can(UserPermissions.VIEW_LEAVES)"
             :to="{ name: 'deptLeavesReport' }"
             class="nav-link"
           >
@@ -84,6 +84,7 @@
 
 <script setup>
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
+import { UserPermissions } from "@/types";
 import { $can } from "@/utils";
 import { usePageTitle } from "@/utils/usePageTitle";
 

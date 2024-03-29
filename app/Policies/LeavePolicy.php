@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Constants\Permissions;
 use App\Leave;
 use App\User;
 
@@ -57,7 +58,7 @@ class LeavePolicy {
      * Determine whether the current user can view all leaves of another user.
      */
     public function viewUserLeaves(User $currentUser, User $leaveOwner): bool {
-        if ($currentUser->can('view leaves')) {
+        if ($currentUser->can(Permissions::VIEW_LEAVES)) {
             return true;
         }
 

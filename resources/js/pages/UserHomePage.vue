@@ -37,7 +37,11 @@
       <Roles id="v-step-4" :memberships="memberships" class="tw-mt-12"></Roles>
 
       <LeavesTable
-        v-if="$can('view leaves') || isCurrentUser || $can('edit leaves')"
+        v-if="
+          $can(UserPermissions.VIEW_LEAVES) ||
+          isCurrentUser ||
+          $can(UserPermissions.EDIT_LEAVES)
+        "
         :leaves="user.leaves"
         :userId="user.id"
         class="tw-mt-12"
@@ -57,6 +61,7 @@ import DefaultLayout from "@/layouts/DefaultLayout.vue";
 import { usePageTitle } from "@/utils/usePageTitle";
 import { useUserStore } from "@/stores/useUserStore";
 import { $can } from "@/utils";
+import { UserPermissions } from "@/types";
 
 const props = defineProps<{
   userId: number | null;

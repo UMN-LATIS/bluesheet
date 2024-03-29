@@ -1,3 +1,4 @@
+import { UserPermissions } from "@/types";
 import * as api from "../../../support/api";
 
 const validArtifact = {
@@ -41,7 +42,7 @@ describe("POST /api/leaves/:leaveId/artifacts", () => {
   it("does not permit a user with `view leaves` permission to create an artifact", () => {
     cy.login("user");
 
-    cy.addPermissionToUser("view leaves", "user");
+    cy.addPermissionToUser(UserPermissions.VIEW_LEAVES, "user");
 
     api
       .post(`/api/leaves/${leave.id}/artifacts`, validArtifact, {

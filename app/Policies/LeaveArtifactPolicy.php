@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Constants\Permissions;
 use App\LeaveArtifact;
 use App\User;
 use App\Leave;
@@ -21,7 +22,7 @@ class LeaveArtifactPolicy {
         }
 
         // users with explicit `view leaves` permission can see all leaves
-        if ($user->can('view leaves')) {
+        if ($user->can(Permissions::VIEW_LEAVES)) {
             return true;
         }
 
@@ -44,7 +45,7 @@ class LeaveArtifactPolicy {
         }
 
         // users with explicit `view leaves` permission can see all leaves
-        if ($currentUser->can('view leaves')) {
+        if ($currentUser->can(Permissions::VIEW_LEAVES)) {
             return true;
         }
 

@@ -1,5 +1,5 @@
 <template>
-  <WideLayout v-if="$can('view leaves')">
+  <WideLayout v-if="$can(T.UserPermissions.VIEW_LEAVES)">
     <p
       class="tw-uppercase tw-text-sm tw-leading-relaxed tw-text-neutral-500 tw-m-0 tw-font-medium"
     >
