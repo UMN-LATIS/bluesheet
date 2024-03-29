@@ -37,8 +37,12 @@ class LeavePolicy {
     /**
      * Determine whether the user can create models.
      */
-    public function create(User $user): bool {
+    public function create(User $user, User $leaveOwner): bool {
         if ($user->can(Permissions::EDIT_ANY_LEAVES)) {
+            return true;
+        }
+
+        if ($user->managesGroupWithMember($leaveOwner)) {
             return true;
         }
 

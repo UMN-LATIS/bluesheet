@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Leave;
+use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\Response;
-use Auth;
 
 class LeaveController extends Controller {
     /**
@@ -16,8 +16,6 @@ class LeaveController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request) {
-        $this->authorize('create', Leave::class);
-
         $validated = $request->validate([
             'user_id' => 'required|integer|exists:users,id',
             'description' => 'required|string|max:255',
@@ -26,6 +24,11 @@ class LeaveController extends Controller {
             'status' => ['required', Rule::in(Leave::STATUSES)],
             'type' => ['required', Rule::in(Leave::TYPES)],
         ]);
+
+        $leaveOwner = User::find($validated['user_id']);
+
+        $this->authorize('create', [Leave::class, $leaveOwner]);
+
 
         $leave = Leave::create($validated);
         return $leave->load('user');
