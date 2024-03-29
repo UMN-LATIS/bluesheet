@@ -40,7 +40,7 @@ return array(
             'sn'          => 'User',
             'eppn'        => 'admin@umn.edu',
             'umnDID'      => 'admin',
-            'umnEmplId'      => '1111111',
+            'umnEmplId'      => '2328381',
         ),
         'staff' => array(
             'uid'         => 'staff',
