@@ -15,7 +15,7 @@ enum Permissions: string {
     case EDIT_GROUPS = 'edit groups';
     case EDIT_USERS = 'edit users';
     case VIEW_REPORTS = 'view reports';
-    case VIEW_LEAVES = 'view leaves';
+    case VIEW_ALL_LEAVES = 'view leaves';
     case EDIT_LEAVES = 'edit leaves';
     case SCHEDULE_DEPARTMENTS = 'schedule departments';
     case VIEW_ELIGIBILITY = 'view eligibility';

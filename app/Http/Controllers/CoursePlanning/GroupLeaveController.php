@@ -21,7 +21,7 @@ class GroupLeaveController extends Controller {
 
 
     public function index(Request $request, Group $group) {
-        abort_if($request->user()->cannot(Permissions::VIEW_LEAVES), 403);
+        abort_if($request->user()->cannot(Permissions::VIEW_ALL_LEAVES), 403);
 
         $employees = $this->userService->getDeptInstructors($group->dept_id);
 

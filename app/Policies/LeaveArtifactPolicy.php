@@ -22,7 +22,7 @@ class LeaveArtifactPolicy {
         }
 
         // users with explicit `view leaves` permission can see all leaves
-        if ($user->can(Permissions::VIEW_LEAVES)) {
+        if ($user->can(Permissions::VIEW_ALL_LEAVES)) {
             return true;
         }
 
@@ -45,7 +45,7 @@ class LeaveArtifactPolicy {
         }
 
         // users with explicit `view leaves` permission can see all leaves
-        if ($currentUser->can(Permissions::VIEW_LEAVES)) {
+        if ($currentUser->can(Permissions::VIEW_ALL_LEAVES)) {
             return true;
         }
 

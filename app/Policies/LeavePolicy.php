@@ -58,7 +58,7 @@ class LeavePolicy {
      * Determine whether the current user can view all leaves of another user.
      */
     public function viewUserLeaves(User $currentUser, User $leaveOwner): bool {
-        if ($currentUser->can(Permissions::VIEW_LEAVES)) {
+        if ($currentUser->can(Permissions::VIEW_ALL_LEAVES)) {
             return true;
         }
 

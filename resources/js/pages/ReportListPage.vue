@@ -66,7 +66,7 @@
         </li>
         <li v-if="$can('view eligibility')" class="list-group-item">
           <router-link
-            v-if="$can(UserPermissions.VIEW_LEAVES)"
+            v-if="$can(UserPermissions.VIEW_ALL_LEAVES)"
             :to="{ name: 'deptLeavesReport' }"
             class="nav-link"
           >

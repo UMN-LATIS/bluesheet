@@ -23,7 +23,7 @@ export const UserPermissions = {
   VIEW_PRIVATE_GROUPS: "view private groups",
   VIEW_USERS: "view users",
   VIEW_REPORTS: "view reports",
-  VIEW_LEAVES: "view leaves",
+  VIEW_ALL_LEAVES: "view leaves",
   VIEW_ELIGIBILITY: "view eligibility",
   VIEW_PLANNED_COURSES: "view planned courses",
 } as const;

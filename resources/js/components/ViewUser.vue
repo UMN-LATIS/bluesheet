@@ -39,7 +39,9 @@
           />
         </a>
       </dd>
-      <template v-if="$can(UserPermissions.VIEW_LEAVES) && hasLeaveEligibility">
+      <template
+        v-if="$can(UserPermissions.VIEW_ALL_LEAVES) && hasLeaveEligibility"
+      >
         <dt>Eligiblity</dt>
         <dd>
           <div v-if="user.ssl_eligible" class="chiclet">
