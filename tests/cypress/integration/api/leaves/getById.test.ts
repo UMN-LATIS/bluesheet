@@ -185,7 +185,7 @@ describe("GET /api/leaves/:id", () => {
         });
     });
 
-    it("does not permit users to view leaves for non-members", () => {
+    it("does not permit a non-managing member to view leaves of other members", () => {
       cy.login({ id: fellowGroupMembership.user_id });
 
       api

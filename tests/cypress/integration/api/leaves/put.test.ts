@@ -237,7 +237,97 @@ describe("PUT /api/leaves/:id", () => {
     });
   });
 
-  it("lets a group manager update a group member's leave", () => {});
+  context("as a fellow group member", () => {
+    let fellowGroupMembership;
+    let leave;
 
-  it("does not permit a group manager to update a non-group member's leave", () => {});
+    beforeEach(() => {
+      // create a new leave
+      // which will also create the leaveOwner user
+      cy.create("App\\Leave")
+        .then((createdLeave) => {
+          leave = createdLeave;
+
+          // create a new membership for the leave owner
+          // which will also create the group for our test
+          return cy.create({
+            model: "App\\Membership",
+            attributes: {
+              user_id: leave.user_id,
+            },
+          });
+        })
+        .then((leaveUserMembership) => {
+          // create another membership within the group
+          // which will also create a fellow group member
+          // which we can promote to a group manager when
+          // we want
+          return cy.create({
+            model: "App\\Membership",
+            attributes: {
+              group_id: leaveUserMembership.group_id,
+            },
+          });
+        })
+        .then((membership) => {
+          fellowGroupMembership = membership;
+
+          cy.login({
+            id: fellowGroupMembership.user_id,
+          });
+        });
+    });
+
+    it("lets a group manager update any member's leave", () => {
+      // promote the follow group member to a group manager
+      cy.promoteUserToGroupManager({
+        userId: fellowGroupMembership.user_id,
+        groupId: fellowGroupMembership.group_id,
+      })
+        .then(() => {
+          // then login as the group manager and check we can view the leave
+          cy.login({ id: fellowGroupMembership.user_id });
+        })
+        .then(() => {
+          return api.put(`/api/leaves/${leave.id}`, {
+            ...leave,
+            description: "Updated Leave",
+          });
+        })
+        .then((response) => {
+          expect(response.status).to.eq(200);
+          const returnedLeave = response.body;
+          expect(returnedLeave).to.have.keys([
+            "id",
+            "user_id",
+            "description",
+            "start_date",
+            "end_date",
+            "type",
+            "status",
+            "user",
+            "artifacts",
+            "created_at",
+            "updated_at",
+          ]);
+        });
+    });
+
+    it("does not permit non-managers to update leaves for other group members", () => {
+      cy.login({ id: fellowGroupMembership.user_id });
+
+      api
+        .put(
+          `/api/leaves/${leave.id}`,
+          {
+            ...leave,
+            description: "Updated Leave",
+          },
+          { failOnStatusCode: false },
+        )
+        .then((response) => {
+          expect(response.status).to.eq(403);
+        });
+    });
+  });
 });

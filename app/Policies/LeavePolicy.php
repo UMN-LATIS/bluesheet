@@ -57,6 +57,10 @@ class LeavePolicy {
             return true;
         }
 
+        if ($user->managesGroupWithMember($leave->user)) {
+            return true;
+        }
+
         return false;
     }
 
