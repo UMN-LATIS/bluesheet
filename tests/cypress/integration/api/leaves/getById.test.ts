@@ -1,3 +1,4 @@
+import { UserPermissions } from "../../../../../resources/js/types";
 import * as api from "../../../support/api";
 
 describe("GET /api/leaves/:id", () => {
@@ -6,65 +7,49 @@ describe("GET /api/leaves/:id", () => {
     cy.seed();
   });
 
-  context("as an unauthenticated user", () => {
-    it("returns a 401", () => {
-      api
-        .get("/api/leaves/1", { failOnStatusCode: false })
-        .its("status")
-        .should("eq", 401);
+  it("returns a 401 for unauthenticated users", () => {
+    api
+      .get("/api/leaves/1", { failOnStatusCode: false })
+      .its("status")
+      .should("eq", 401);
+  });
+
+  it("does not permit a user to view another's leave", () => {
+    cy.login("basic_user");
+    api.get("/api/leaves/1", { failOnStatusCode: false }).then((response) => {
+      expect(response.status).to.eq(403);
     });
   });
 
-  context("as a basic user", () => {
-    it('does not permit a "basic_user" to view a leave', () => {
-      cy.login("basic_user");
-      api.get("/api/leaves/1", { failOnStatusCode: false }).then((response) => {
-        expect(response.status).to.eq(403);
-      });
-    });
+  it("lets a user view their own leave", () => {
+    let leave;
 
-    it('lets a "basic_user" view their own leave', () => {
-      let leaveId: number | null = null;
-      let basicUserId: number | null = null;
-
-      // create a new leave for the basic user
-      cy.php(`App\\User::where('umndid', 'basic_user')->firstOrFail()->id`)
-        .then((id) => {
-          basicUserId = parseInt(id);
-          return api.post("/api/leaves", {
-            user_id: basicUserId,
-            description: "test",
-            start_date: "2021-01-01",
-            end_date: "2021-01-02",
-            type: "sabbatical",
-            status: "pending",
-          });
-        })
-        .then((response) => {
-          leaveId = response.body.id;
-          cy.logout();
-        })
-        .then(() => {
-          // login as the basic user and check we can view it
-          cy.login("basic_user");
-          api.get(`/api/leaves/${leaveId}`).then((response) => {
-            expect(response.status).to.eq(200);
-            expect(response.body).to.have.keys([
-              "id",
-              "user_id",
-              "description",
-              "start_date",
-              "end_date",
-              "type",
-              "status",
-              "user",
-              "artifacts",
-              "created_at",
-              "updated_at",
-            ]);
-          });
+    // create a new leave for the basic user
+    cy.create("App\\Leave")
+      .then((createdLeave) => {
+        leave = createdLeave;
+        cy.logout();
+      })
+      .then(() => {
+        // login as the basic user and check we can view it
+        cy.login({ id: leave.user_id });
+        api.get(`/api/leaves/${leave.id}`).then((response) => {
+          expect(response.status).to.eq(200);
+          expect(response.body).to.have.keys([
+            "id",
+            "user_id",
+            "description",
+            "start_date",
+            "end_date",
+            "type",
+            "status",
+            "user",
+            "artifacts",
+            "created_at",
+            "updated_at",
+          ]);
         });
-    });
+      });
   });
 
   context("as admin user", () => {
@@ -97,6 +82,33 @@ describe("GET /api/leaves/:id", () => {
         .then((response) => {
           expect(response.status).to.eq(404);
         });
+    });
+  });
+
+  context('as a user with "view any leaves" permission', () => {
+    beforeEach(() => {
+      cy.addPermissionToUser(UserPermissions.VIEW_ANY_LEAVES, "basic_user");
+    });
+
+    it("lets a user get another user leave", () => {
+      cy.login("basic_user");
+
+      api.get("/api/leaves/1").then((response) => {
+        expect(response.status).to.eq(200);
+        expect(response.body).to.have.keys([
+          "id",
+          "user_id",
+          "description",
+          "start_date",
+          "end_date",
+          "type",
+          "status",
+          "user",
+          "artifacts",
+          "created_at",
+          "updated_at",
+        ]);
+      });
     });
   });
 });
