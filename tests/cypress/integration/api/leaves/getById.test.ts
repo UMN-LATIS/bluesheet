@@ -194,5 +194,24 @@ describe("GET /api/leaves/:id", () => {
           expect(response.status).to.eq(403);
         });
     });
+
+    it("does not permit a group manager to get leaves of other groups", () => {
+      cy.promoteUserToGroupManager({
+        userId: fellowGroupMembership.user_id,
+        groupId: fellowGroupMembership.group_id,
+      }).then(() => {
+        cy.login({ id: fellowGroupMembership.user_id });
+
+        cy.create("App\\Leave").then((createdLeave) => {
+          api
+            .get(`/api/leaves/${createdLeave.id}`, {
+              failOnStatusCode: false,
+            })
+            .then((response) => {
+              expect(response.status).to.eq(403);
+            });
+        });
+      });
+    });
   });
 });
