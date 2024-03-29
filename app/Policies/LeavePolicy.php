@@ -54,6 +54,10 @@ class LeavePolicy {
      * Determine whether the user can delete the model.
      */
     public function delete(User $user, Leave $leave): bool {
+        if ($user->can(Permissions::EDIT_ANY_LEAVES)) {
+            return true;
+        }
+
         return false;
     }
 

@@ -1,5 +1,5 @@
 import * as api from "../../../support/api";
-import { UserPermissions } from "@/types";
+import { UserPermissions } from "../../../../../resources/js/types";
 
 const validArtifact = {
   label: "New artifact",

@@ -1,5 +1,5 @@
 import api from "../../../support/api";
-import { UserPermissions } from "@/types";
+import { UserPermissions } from "../../../../../resources/js/types";
 
 describe("DELETE /api/leaves/:leaveId/artifacts/:artifactId", () => {
   let leaveId;

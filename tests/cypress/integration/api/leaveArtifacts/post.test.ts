@@ -1,4 +1,4 @@
-import { UserPermissions } from "@/types";
+import { UserPermissions } from "../../../../../resources/js/types";
 import * as api from "../../../support/api";
 
 const validArtifact = {

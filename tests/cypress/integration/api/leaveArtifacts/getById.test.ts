@@ -1,4 +1,4 @@
-import { UserPermissions } from "@/types";
+import { UserPermissions } from "../../../../../resources/js/types";
 import * as api from "../../../support/api";
 
 describe("GET /api/leaves/:leaveId/artifacts/:artifactId", () => {
@@ -64,7 +64,7 @@ describe("GET /api/leaves/:leaveId/artifacts/:artifactId", () => {
 
   it("lets a user with `view leaves` permission view an artifact", () => {
     // give some regular user permission to view leaves
-    cy.addPermissionToUser(UserPermissions.VIEW_ALL_LEAVES, "view_user");
+    cy.addPermissionToUser(UserPermissions.VIEW_ANY_LEAVES, "view_user");
     cy.login("view_user");
 
     api

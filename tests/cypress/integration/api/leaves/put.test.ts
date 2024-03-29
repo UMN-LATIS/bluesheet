@@ -9,21 +9,6 @@ const validLeave = {
   user_id: 1,
 };
 
-function hasExpectedLeaveShape(leave) {
-  return expect(leave).to.have.keys([
-    "id",
-    "user_id",
-    "description",
-    "start_date",
-    "end_date",
-    "type",
-    "status",
-    "user",
-    "created_at",
-    "updated_at",
-  ]);
-}
-
 describe("PUT /api/leaves/:id", () => {
   let leaveId;
   beforeEach(() => {

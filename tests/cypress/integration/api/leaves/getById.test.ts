@@ -28,7 +28,6 @@ describe("GET /api/leaves/:id", () => {
       let basicUserId: number | null = null;
 
       // create a new leave for the basic user
-      cy.login("admin");
       cy.php(`App\\User::where('umndid', 'basic_user')->firstOrFail()->id`)
         .then((id) => {
           basicUserId = parseInt(id);
