@@ -78,7 +78,6 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
     Route::put('leaves/{leave}', 'LeaveController@update');
     Route::delete('leaves/{leave}', 'LeaveController@destroy');
     Route::get('users/{leaveOwner}/leaves', 'UserLeaveController@index');
-    Route::put('users/{leaveOwner}/leaves', 'UserLeaveController@update');
 
     Route::get('reports/deptLeavesReport', [ReportController::class, 'deptLeavesReport']);
 
