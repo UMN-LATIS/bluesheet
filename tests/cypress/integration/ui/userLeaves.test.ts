@@ -17,7 +17,7 @@ describe("User leaves", () => {
 
   context("as a user that can view leaves", () => {
     beforeEach(() => {
-      cy.login("group_admin");
+      cy.login("global_group_admin");
     });
 
     it("displays the user's leaves", () => {
@@ -35,7 +35,7 @@ describe("User leaves", () => {
 
   context("as a user that can create new leaves", () => {
     beforeEach(() => {
-      cy.login("group_admin");
+      cy.login("global_group_admin");
     });
 
     it("creates a new leave", () => {

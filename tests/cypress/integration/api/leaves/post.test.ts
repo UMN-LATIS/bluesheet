@@ -42,7 +42,7 @@ describe("POST /api/leaves", () => {
     });
   });
 
-  const canEditLeaves = ["group_admin", "site_admin", "admin"];
+  const canEditLeaves = ["global_group_admin", "site_admin", "admin"];
   canEditLeaves.forEach((role) => {
     context(`as a user with '${role}' role`, () => {
       beforeEach(() => {
@@ -72,7 +72,7 @@ describe("POST /api/leaves", () => {
 
   context("as leave editor", () => {
     beforeEach(() => {
-      cy.login("group_admin");
+      cy.login("global_group_admin");
     });
     it("fails if any required field is missing", () => {
       const fields = Object.keys(validLeave);

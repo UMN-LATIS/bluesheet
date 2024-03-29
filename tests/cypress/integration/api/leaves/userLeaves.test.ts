@@ -20,7 +20,7 @@ describe("GET /api/user/:id/leaves", () => {
       .then(() => cy.logout());
   });
 
-  const canViewLeaves = ["group_admin", "site_admin", "admin"];
+  const canViewLeaves = ["global_group_admin", "site_admin", "admin"];
   canViewLeaves.forEach((role) => {
     it(`permits a ${role} to view leaves for other users`, () => {
       cy.login(role);
@@ -73,7 +73,7 @@ describe("GET /api/user/:id/leaves", () => {
   });
 
   it("does not permit users to view leaves for non-existent users", () => {
-    cy.login("group_admin");
+    cy.login("global_group_admin");
     api
       .get("/api/users/999/leaves", { failOnStatusCode: false })
       .then((response) => {

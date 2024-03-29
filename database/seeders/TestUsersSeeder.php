@@ -44,11 +44,11 @@ class TestUsersSeeder extends Seeder {
         $viewUser->assignRole('view user');
 
         $groupAdmin = User::factory([
-            'givenname' => 'Group',
-            'surname' => 'Admin',
-            'displayname' => 'Group Admin',
-            'email' => 'group_admin@umn.edu',
-            'umndid' => 'group_admin',
+            'givenname' => 'Global',
+            'surname' => 'Group Admin',
+            'displayname' => 'Global Group Admin',
+            'email' => 'global_group_admin@umn.edu',
+            'umndid' => 'global_group_admin',
             'emplid' => '1111116',
         ])->create();
         $groupAdmin->assignRole('global group admin');
