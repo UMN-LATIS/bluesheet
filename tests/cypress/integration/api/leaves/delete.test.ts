@@ -67,4 +67,7 @@ describe("DELETE /api/leaves/:id", () => {
         expect(response.status).to.eq(403);
       });
   });
+
+  it("permits a group manager to delete a member's leave", () => {});
+  it("does not permit a group manager to delete a non-member's leave", () => {});
 });

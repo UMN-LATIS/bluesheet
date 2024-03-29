@@ -25,6 +25,12 @@ class LeavePolicy {
             return true;
         }
 
+        // a group manager should be able to view the leaves
+        // of other members of their group
+        if ($user->managesGroupWithMember($leave->user)) {
+            return true;
+        }
+
         return false;
     }
 

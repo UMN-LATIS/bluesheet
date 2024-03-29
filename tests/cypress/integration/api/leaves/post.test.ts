@@ -173,4 +173,8 @@ describe("POST /api/leaves", () => {
       });
     });
   });
+
+  it("lets a group manager create a leave for a group member", () => {});
+
+  it("does not permit users to create leaves for non-members", () => {});
 });

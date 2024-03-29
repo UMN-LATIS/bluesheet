@@ -80,4 +80,8 @@ describe("GET /api/user/:id/leaves", () => {
         expect(response.status).to.eq(404);
       });
   });
+
+  it("lets a group manager get any member's leaves", () => {});
+
+  it("does not let a group manager get leaves for a non-member", () => {});
 });

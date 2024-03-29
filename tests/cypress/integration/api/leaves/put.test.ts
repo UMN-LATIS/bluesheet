@@ -236,4 +236,8 @@ describe("PUT /api/leaves/:id", () => {
       });
     });
   });
+
+  it("lets a group manager update a group member's leave", () => {});
+
+  it("does not permit a group manager to update a non-group member's leave", () => {});
 });
