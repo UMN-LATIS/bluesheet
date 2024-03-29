@@ -15,7 +15,7 @@ class UserLeaveController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function index(User $leaveOwner) {
-        $this->authorize('viewAny', [Leave::class, $leaveOwner]);
+        $this->authorize('viewUserLeaves', [Leave::class, $leaveOwner]);
 
         return Leave::where('user_id', $leaveOwner->id)->get();
     }

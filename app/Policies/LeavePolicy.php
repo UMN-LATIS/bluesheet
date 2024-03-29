@@ -4,21 +4,10 @@ namespace App\Policies;
 
 use App\Leave;
 use App\User;
-use Illuminate\Auth\Access\Response;
 
 class LeavePolicy {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $currentUser, User $leaveOwner): bool {
-        if ($currentUser->can('view leaves')) {
-            return true;
-        }
 
-        if ($leaveOwner->id === $currentUser->id) {
-            return true;
-        }
-
+    public function viewAny(User $user): bool {
         return false;
     }
 
@@ -61,6 +50,21 @@ class LeavePolicy {
      * Determine whether the user can permanently delete the model.
      */
     public function forceDelete(User $user, Leave $leave): bool {
+        return false;
+    }
+
+    /**
+     * Determine whether the current user can view all leaves of another user.
+     */
+    public function viewUserLeaves(User $currentUser, User $leaveOwner): bool {
+        if ($currentUser->can('view leaves')) {
+            return true;
+        }
+
+        if ($leaveOwner->id === $currentUser->id) {
+            return true;
+        }
+
         return false;
     }
 }
