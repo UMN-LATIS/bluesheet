@@ -14,14 +14,13 @@ class UserLeaveController extends Controller {
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(User $user) {
-        $currentUser = Auth::user();
-        abort_if($currentUser->cannot('view leaves') && $currentUser->id !== $user->id, 403);
+    public function index(User $leaveOwner) {
+        $this->authorize('viewAny', [Leave::class, $leaveOwner]);
 
-        return Leave::where('user_id', $user->id)->get();
+        return Leave::where('user_id', $leaveOwner->id)->get();
     }
 
-    public function update(User $user) {
+    public function update(User $leaveOwner) {
         $currentUser = Auth::user();
         abort_if($currentUser->cannot('edit leaves'), 403);
 
@@ -40,7 +39,7 @@ class UserLeaveController extends Controller {
         $leaveIdsToKeep = [];
 
         foreach ($validatedLeaves['leaves'] as $leaveData) {
-            abort_if($leaveData['user_id'] !== $user->id, 422);
+            abort_if($leaveData['user_id'] !== $leaveOwner->id, 422);
 
             // If there's an ID, try to update the leave
             if (isset($leaveData['id'])) {
@@ -58,11 +57,11 @@ class UserLeaveController extends Controller {
         }
 
         // Soft delete leaves not in the request
-        Leave::where('user_id', $user->id)
+        Leave::where('user_id', $leaveOwner->id)
             ->whereNotIn('id', $leaveIdsToKeep)
             ->delete();
 
-        $updatedLeaves = Leave::where('user_id', $user->id)->get();
+        $updatedLeaves = Leave::where('user_id', $leaveOwner->id)->get();
         return response()->json($updatedLeaves, 200);
     }
 }
