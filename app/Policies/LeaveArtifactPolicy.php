@@ -22,7 +22,7 @@ class LeaveArtifactPolicy {
         }
 
         // users with explicit `view leaves` permission can see all leaves
-        if ($user->can(Permissions::VIEW_ALL_LEAVES)) {
+        if ($user->can(Permissions::VIEW_ANY_LEAVES)) {
             return true;
         }
 
@@ -45,7 +45,7 @@ class LeaveArtifactPolicy {
         }
 
         // users with explicit `view leaves` permission can see all leaves
-        if ($currentUser->can(Permissions::VIEW_ALL_LEAVES)) {
+        if ($currentUser->can(Permissions::VIEW_ANY_LEAVES)) {
             return true;
         }
 
@@ -62,7 +62,7 @@ class LeaveArtifactPolicy {
      * Determine whether the user can create models.
      */
     public function create(User $user, Leave $leave): bool {
-        if ($user->can('edit leaves')) {
+        if ($user->can(Permissions::EDIT_ANY_LEAVES)) {
             return true;
         }
 
@@ -77,7 +77,7 @@ class LeaveArtifactPolicy {
      * Determine whether the user can update the model.
      */
     public function update(User $user, LeaveArtifact $leaveArtifact): bool {
-        if ($user->can('edit leaves')) {
+        if ($user->can(Permissions::EDIT_ANY_LEAVES)) {
             return true;
         }
 
@@ -92,7 +92,7 @@ class LeaveArtifactPolicy {
      * Determine whether the user can delete the model.
      */
     public function delete(User $currentUser, LeaveArtifact $leaveArtifact): bool {
-        if ($currentUser->can('edit leaves')) {
+        if ($currentUser->can(Permissions::EDIT_ANY_LEAVES)) {
             return true;
         }
 

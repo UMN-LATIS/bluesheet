@@ -12,7 +12,7 @@
           v-model="showPastLeaves"
           label="Show Past Leaves"
         />
-        <template v-if="$can('edit leaves')">
+        <template v-if="$can(UserPermissions.EDIT_ANY_LEAVES)">
           <Button
             variant="secondary"
             @click="userStore.addLeaveForUser(userId)"
@@ -34,12 +34,12 @@
           <Th>Status</Th>
           <Th>Start Date</Th>
           <Th>End Date</Th>
-          <Th v-if="$can('edit leaves')"></Th>
+          <Th v-if="$can(UserPermissions.EDIT_ANY_LEAVES)"></Th>
         </tr>
       </THead>
       <tr v-if="!sortedAndFilteredLeaves.length">
         <Td
-          :colspan="$can('edit leaves') ? 6 : 5"
+          :colspan="$can(UserPermissions.EDIT_ANY_LEAVES) ? 6 : 5"
           class="tw-text-center !tw-p-6 tw-italic tw-text-neutral-500"
         >
           No Leaves
@@ -57,7 +57,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { dayjs, $can, isTempId } from "@/utils";
-import { Leave } from "@/types";
+import { Leave, UserPermissions } from "@/types";
 import Button from "@/components/Button.vue";
 import { Table, Th, Td, THead } from "@/components/Table";
 import CheckboxGroup from "@/components/CheckboxGroup.vue";

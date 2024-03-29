@@ -1,4 +1,5 @@
 import * as api from "../../../support/api";
+import { UserPermissions } from "@/types";
 
 const validArtifact = {
   label: "New artifact",
@@ -63,7 +64,7 @@ describe("PUT /api/leaves/:leaveId/artifacts/:artifactId", () => {
   it("lets a user with `edit leaves` permission update an artifact", () => {
     cy.login("user");
 
-    cy.addPermissionToUser("edit leaves", "user");
+    cy.addPermissionToUser(UserPermissions.EDIT_ANY_LEAVES, "user");
     api
       .put(`/api/leaves/${validLeave.id}/artifacts/${artifactId}`, {
         label: "Updated artifact",
@@ -87,7 +88,7 @@ describe("PUT /api/leaves/:leaveId/artifacts/:artifactId", () => {
 
   it("fails if any required field is missing", () => {
     cy.login("user");
-    cy.addPermissionToUser("edit leaves", "user");
+    cy.addPermissionToUser(UserPermissions.EDIT_ANY_LEAVES, "user");
 
     const fields = Object.keys(validArtifact);
 

@@ -113,7 +113,7 @@
       />
       <span v-else>{{ dayjs(leave.end_date).format("MMM D, YYYY") }}</span>
     </Td>
-    <Td v-if="$can('edit leaves')">
+    <Td v-if="$can(UserPermissions.EDIT_ANY_LEAVES)">
       <div class="tw-flex tw-gap-1 tw-justify-end tw-items-center">
         <template v-if="isEditing">
           <SmallButton @click="handleCancelEditLeave">Cancel</SmallButton>
@@ -154,7 +154,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, reactive } from "vue";
 import { dayjs, $can, isTempId } from "@/utils";
-import { Leave, leaveStatuses, leaveTypes } from "@/types";
+import { Leave, leaveStatuses, leaveTypes, UserPermissions } from "@/types";
 import InputGroup from "@/components/InputGroup.vue";
 import SelectGroup from "@/components/SelectGroup.vue";
 import { Td } from "@/components/Table";

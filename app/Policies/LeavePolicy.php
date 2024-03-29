@@ -16,6 +16,15 @@ class LeavePolicy {
      * Determine whether the user can view the model.
      */
     public function view(User $user, Leave $leave): bool {
+        if ($user->can(Permissions::VIEW_ANY_LEAVES)) {
+            return true;
+        }
+
+        // a user can view their own leaves
+        if ($leave->user_id === $user->id) {
+            return true;
+        }
+
         return false;
     }
 
@@ -23,6 +32,10 @@ class LeavePolicy {
      * Determine whether the user can create models.
      */
     public function create(User $user): bool {
+        if ($user->can(Permissions::EDIT_ANY_LEAVES)) {
+            return true;
+        }
+
         return false;
     }
 
@@ -30,6 +43,10 @@ class LeavePolicy {
      * Determine whether the user can update the model.
      */
     public function update(User $user, Leave $leave): bool {
+        if ($user->can(Permissions::EDIT_ANY_LEAVES)) {
+            return true;
+        }
+
         return false;
     }
 
@@ -58,7 +75,7 @@ class LeavePolicy {
      * Determine whether the current user can view all leaves of another user.
      */
     public function viewUserLeaves(User $currentUser, User $leaveOwner): bool {
-        if ($currentUser->can(Permissions::VIEW_ALL_LEAVES)) {
+        if ($currentUser->can(Permissions::VIEW_ANY_LEAVES)) {
             return true;
         }
 

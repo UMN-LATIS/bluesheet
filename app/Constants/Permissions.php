@@ -15,8 +15,8 @@ class Permissions {
     const EDIT_GROUPS = 'edit groups';
     const EDIT_USERS = 'edit users';
     const VIEW_REPORTS = 'view reports';
-    const VIEW_ALL_LEAVES = 'view leaves';
-    const EDIT_LEAVES = 'edit leaves';
+    const VIEW_ANY_LEAVES = 'view leaves';
+    const EDIT_ANY_LEAVES = 'edit leaves';
     const SCHEDULE_DEPARTMENTS = 'schedule departments';
     const VIEW_ELIGIBILITY = 'view eligibility';
     const VIEW_PLANNED_COURSES = 'view planned courses';

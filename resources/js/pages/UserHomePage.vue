@@ -38,9 +38,9 @@
 
       <LeavesTable
         v-if="
-          $can(UserPermissions.VIEW_ALL_LEAVES) ||
+          $can(UserPermissions.VIEW_ANY_LEAVES) ||
           isCurrentUser ||
-          $can(UserPermissions.EDIT_LEAVES)
+          $can(UserPermissions.EDIT_ANY_LEAVES)
         "
         :leaves="user.leaves"
         :userId="user.id"

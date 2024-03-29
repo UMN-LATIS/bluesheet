@@ -35,7 +35,7 @@ class User extends JsonResource {
             'deptid' => $this->deptid ?? null,
             'dept_name' => $this->dept_name ?? null,
             'leaves' => $this->when(
-                $request->user()->hasPermissionTo(Permissions::VIEW_ALL_LEAVES) || $request->user()->id == $this->id,
+                $request->user()->hasPermissionTo(Permissions::VIEW_ANY_LEAVES) || $request->user()->id == $this->id,
                 $this->leaves
             )
         ];

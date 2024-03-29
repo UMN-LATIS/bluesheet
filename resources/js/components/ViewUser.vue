@@ -40,7 +40,7 @@
         </a>
       </dd>
       <template
-        v-if="$can(UserPermissions.VIEW_ALL_LEAVES) && hasLeaveEligibility"
+        v-if="$can(UserPermissions.VIEW_ANY_LEAVES) && hasLeaveEligibility"
       >
         <dt>Eligiblity</dt>
         <dd>

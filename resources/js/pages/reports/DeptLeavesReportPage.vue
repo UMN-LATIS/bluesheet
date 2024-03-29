@@ -1,5 +1,5 @@
 <template>
-  <WideLayout v-if="$can(T.UserPermissions.VIEW_ALL_LEAVES)">
+  <WideLayout v-if="$can(T.UserPermissions.VIEW_ANY_LEAVES)">
     <p
       class="tw-uppercase tw-text-sm tw-leading-relaxed tw-text-neutral-500 tw-m-0 tw-font-medium"
     >

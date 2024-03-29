@@ -1,7 +1,11 @@
 <template>
   <tr data-cy="leaveArtifactRow">
     <Td></Td>
-    <template v-if="$can('edit leaves') && (isEditing || isNewArtifact)">
+    <template
+      v-if="
+        $can(UserPermissions.EDIT_ANY_LEAVES) && (isEditing || isNewArtifact)
+      "
+    >
       <Td colspan="3">
         <InputGroup
           v-model="localArtifact.label"
@@ -62,7 +66,7 @@
       <Td class="tw-text-sm">
         {{ dayjs(artifact.updated_at).format("MMM D, YYYY") }}
       </Td>
-      <Td v-if="$can('edit leaves')">
+      <Td v-if="$can(UserPermissions.EDIT_ANY_LEAVES)">
         <div class="tw-flex tw-gap-1 tw-px-2 tw-justify-end tw-items-center">
           <SmallButton data-cy="artifactEditButton" @click="isEditing = true"
             >Edit</SmallButton
@@ -79,7 +83,7 @@
   </tr>
 </template>
 <script setup lang="ts">
-import { Leave, LeaveArtifact } from "@/types";
+import { Leave, LeaveArtifact, UserPermissions } from "@/types";
 import { ref, reactive, computed, watch } from "vue";
 import { isTempId, dayjs, $can } from "@/utils";
 import InputGroup from "@/components/InputGroup.vue";

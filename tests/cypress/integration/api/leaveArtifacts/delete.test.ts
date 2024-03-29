@@ -1,4 +1,5 @@
 import api from "../../../support/api";
+import { UserPermissions } from "@/types";
 
 describe("DELETE /api/leaves/:leaveId/artifacts/:artifactId", () => {
   let leaveId;
@@ -56,7 +57,7 @@ describe("DELETE /api/leaves/:leaveId/artifacts/:artifactId", () => {
     cy.login("edit_user");
 
     // give the user permission to edit leaves
-    cy.addPermissionToUser("edit leaves", "edit_user");
+    cy.addPermissionToUser(UserPermissions.EDIT_ANY_LEAVES, "edit_user");
 
     api
       .delete(`/api/leaves/${leaveId}/artifacts/${artifactId}`)

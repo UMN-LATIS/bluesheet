@@ -3,12 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Leave;
-use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\Response;
 use Auth;
-use Illuminate\Support\Arr;
 
 class LeaveController extends Controller {
     /**
@@ -18,7 +16,7 @@ class LeaveController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request) {
-        abort_if($request->user()->cannot('edit leaves'), 403);
+        $this->authorize('create', Leave::class);
 
         $validated = $request->validate([
             'user_id' => 'required|integer|exists:users,id',
@@ -40,8 +38,7 @@ class LeaveController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function show(Leave $leave) {
-        $currentUser = Auth::user();
-        abort_if($currentUser->cannot('view leave') && $leave->user_id !== $currentUser->id, 403);
+        $this->authorize('view', $leave);
 
         return $leave->load(['user', 'artifacts']);
     }
@@ -54,7 +51,7 @@ class LeaveController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, Leave $leave) {
-        abort_if($request->user()->cannot('edit leaves'), 403);
+        $this->authorize('update', $leave);
 
         $validated = $request->validate([
             'user_id' => 'required|integer|exists:users,id',
@@ -77,7 +74,7 @@ class LeaveController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function destroy(Request $request, Leave $leave) {
-        abort_if($request->user()->cannot('edit leaves'), 403);
+        $this->authorize('delete', $leave);
 
         $leave->delete();
         return response()->json(null, Response::HTTP_NO_CONTENT);
