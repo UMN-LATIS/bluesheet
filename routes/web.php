@@ -73,6 +73,7 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
 
     // Laravel thinks the singular of `leaves` is `leaf`
     // so instead of using a resource, just define the routes
+    Route::get('leaves', 'LeaveController@index');
     Route::post('leaves', 'LeaveController@store');
     Route::get('leaves/{leave}', 'LeaveController@show');
     Route::put('leaves/{leave}', 'LeaveController@update');
