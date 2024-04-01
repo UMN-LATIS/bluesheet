@@ -19,7 +19,7 @@ class TestUsersSeeder extends Seeder {
             'displayname' => 'Admin User',
             'email' => 'admin@umn.edu',
             'umndid' => 'admin',
-            'emplid' => '1111111'
+            'emplid' => '2328381'
         ])->create();
         $admin->assignRole('super admin');
 
