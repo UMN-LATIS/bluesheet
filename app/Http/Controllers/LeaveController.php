@@ -42,7 +42,28 @@ class LeaveController extends Controller {
                 return $leave['terms']->isNotEmpty();
             });
 
-        return LeaveResource::collection($leavesWithTerms);
+        return [
+            // need to manually add links and meta
+            // since we'll transforming the original query results to include
+            // term data from Bandaid
+            'links' => [
+                'first' => $leaves->url(1),
+                'last' => $leaves->url($leaves->lastPage()),
+                'prev' => $leaves->previousPageUrl(),
+                'next' => $leaves->nextPageUrl(),
+            ],
+            'meta' => [
+                'current_page' => $leaves->currentPage(),
+                'from' => $leaves->firstItem(),
+                'last_page' => $leaves->lastPage(),
+                'path' => $leaves->path(),
+                'per_page' => $leaves->perPage(),
+                'to' => $leaves->lastItem(),
+                'total' => $leaves->total(),
+            ],
+            'data' => LeaveResource::collection($leavesWithTerms),
+
+        ];
     }
 
 
