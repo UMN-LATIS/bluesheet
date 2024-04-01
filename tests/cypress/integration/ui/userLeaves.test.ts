@@ -137,4 +137,77 @@ describe("User leaves", () => {
       cy.contains("Add Leave").should("not.exist");
     });
   });
+
+  context("as a fellow group member", () => {
+    let fellowGroupMembership;
+    let leave;
+
+    beforeEach(() => {
+      // create a new leave
+      // which will also create the leaveOwner user
+      cy.create("App\\Leave")
+        .then((createdLeave) => {
+          leave = createdLeave;
+
+          // create a new membership for the leave owner
+          // which will also create the group for our test
+          return cy.create({
+            model: "App\\Membership",
+            attributes: {
+              user_id: leave.user_id,
+            },
+          });
+        })
+        .then((leaveUserMembership) => {
+          // create another membership within the group
+          // which will also create a fellow group member
+          // which we can promote to a group manager when
+          // we want
+          return cy.create({
+            model: "App\\Membership",
+            attributes: {
+              group_id: leaveUserMembership.group_id,
+            },
+          });
+        })
+        .then((membership) => {
+          fellowGroupMembership = membership;
+
+          cy.login({
+            id: fellowGroupMembership.user_id,
+          });
+        });
+    });
+
+    it("does not show leaves if the user is not a group manager", () => {
+      cy.visit(`/user/${leave.user_id}`);
+      cy.get("[data-cy=leavesSection]").should("not.exist");
+    });
+
+    context(
+      "that is a group manager (has the `admin` flag set for the group)",
+      () => {
+        beforeEach(() => {
+          // promote the follow group member to a group manager
+          cy.promoteUserToGroupManager({
+            userId: fellowGroupMembership.user_id,
+            groupId: fellowGroupMembership.group_id,
+          });
+        });
+
+        it.only("permits a group manager to see a fellow group member's leaves", () => {
+          cy.visit(`/user/${leave.user_id}`);
+          cy.get("[data-cy=leavesSection]").should("exist");
+        });
+
+        it(
+          "allows a group manager to create a leave for a fellow group member",
+        );
+        it("allows a group manager to edit a leave for a fellow group member");
+        it(
+          "allows a group manager to delete a leave for a fellow group member",
+        );
+      },
+    );
+  });
 });
