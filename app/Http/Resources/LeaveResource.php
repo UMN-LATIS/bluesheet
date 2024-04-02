@@ -19,6 +19,7 @@ class LeaveResource extends JsonResource {
             'end_date' => $this->end_date,
             'status' => $this->status,
             'type' => $this->type,
+            'user_id' => $this->user_id,
             'user' => $this->whenLoaded('user', [
                 'id' => $this->user->id,
                 'givenname' => $this->user->givenname,
