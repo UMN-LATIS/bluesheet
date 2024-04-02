@@ -202,8 +202,43 @@ describe("User leaves", () => {
         });
 
         it("allows a group manager to create a leave for a fellow group member", () => {
+          const startDate = dayjs().add(30, "day");
+          const endDate = dayjs().add(60, "day");
+
           cy.visit(`/user/${leave.user_id}`);
           cy.contains("Add Leave").click();
+
+          cy.get('[data-cy="leavesSection"] .is-new-leave')
+            .first()
+            .within(() => {
+              cy.get("[data-cy=leaveDescription] input").type(
+                "{selectall}Test Leave",
+              );
+              cy.get("[data-cy=leaveStartDate] input").type(
+                startDate.format("YYYY-MM-DD"),
+              );
+              cy.get("[data-cy=leaveEndDate] input").type(
+                endDate.format("YYYY-MM-DD"),
+              );
+              cy.get("[data-cy=leaveType] select").select("Development");
+              cy.get("[data-cy=leaveStatus] select").select("Confirmed");
+              cy.contains("Save").click();
+            });
+
+          // check that the leave was added
+          cy.get("[data-cy=leaveRow]").should("have.length", 3);
+          cy.contains("Test Leave")
+            .closest("tr")
+            .within(() => {
+              cy.get("[data-cy=leaveStartDate]").contains(
+                startDate.format("MMM D, YYYY"),
+              );
+              cy.get("[data-cy=leaveEndDate]").contains(
+                endDate.format("MMM D, YYYY"),
+              );
+              cy.get("[data-cy=leaveType]").contains("Development");
+              cy.get("[data-cy=leaveStatus]").contains("confirmed");
+            });
         });
         it("allows a group manager to edit a leave for a fellow group member");
         it(
