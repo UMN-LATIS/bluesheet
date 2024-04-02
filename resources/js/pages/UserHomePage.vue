@@ -56,8 +56,6 @@ import CheckboxGroup from "@/components/CheckboxGroup.vue";
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
 import { usePageTitle } from "@/utils/usePageTitle";
 import { useUserStore } from "@/stores/useUserStore";
-import { $can } from "@/utils";
-import { UserPermissions } from "@/types";
 
 const props = defineProps<{
   userId: number | null;

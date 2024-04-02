@@ -47,7 +47,7 @@ describe("User leaves", () => {
       // verify that only 2 leaves exist
       cy.get("[data-cy=leaveRow]").should("have.length", 2);
 
-      cy.wait(300);
+      // cy.wait(300);
 
       // add a leave
       cy.contains("Add Leave").click();

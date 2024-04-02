@@ -12,7 +12,7 @@
           v-model="showPastLeaves"
           label="Show Past Leaves"
         />
-        <template v-if="$can(UserPermissions.EDIT_ANY_LEAVES)">
+        <template v-if="canCreateLeavesForUser">
           <Button
             variant="secondary"
             @click="userStore.addLeaveForUser(userId)"
@@ -55,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { dayjs, $can, isTempId } from "@/utils";
 import { Leave, UserPermissions } from "@/types";
 import Button from "@/components/Button.vue";
@@ -63,6 +63,7 @@ import { Table, Th, Td, THead } from "@/components/Table";
 import CheckboxGroup from "@/components/CheckboxGroup.vue";
 import LeaveTableRow from "./LeaveTableRow.vue";
 import { useUserStore } from "@/stores/useUserStore";
+import { usePermissionsStore } from "@/stores/usePermissionsStore";
 
 const props = defineProps<{
   userId: number;
@@ -70,7 +71,18 @@ const props = defineProps<{
 }>();
 
 const userStore = useUserStore();
+const permissionsStore = usePermissionsStore();
 const showPastLeaves = ref(false);
+const canCreateLeavesForUser = ref(false);
+
+watch(
+  () => props.userId,
+  async () => {
+    canCreateLeavesForUser.value =
+      await permissionsStore.canCreateLeavesForUser(props.userId);
+  },
+  { immediate: true },
+);
 
 const sortByStartDateDescending = (a, b) => {
   if (dayjs(a.start_date).isBefore(dayjs(b.start_date))) return 1;

@@ -23,13 +23,22 @@ export const usePermissionsStore = defineStore("permissions", () => {
       return state.globalPermissions.includes(globalPermission);
     },
 
-    async canViewAnyUserLeavesFor(
+    async canViewAnyLeavesForUser(
       leaveOwnerId: T.User["id"],
     ): Promise<boolean> {
       const userLeavePermissions = await api.getPermissionsForUserLeaves(
         leaveOwnerId,
       );
+
       return userLeavePermissions.viewAny;
+    },
+
+    async canCreateLeavesForUser(leaveOwnerId: T.User["id"]): Promise<boolean> {
+      const userLeavePermissions = await api.getPermissionsForUserLeaves(
+        leaveOwnerId,
+      );
+
+      return userLeavePermissions.create;
     },
   };
 

@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Leave;
 use App\User;
 
-class LeavesPermissionController extends Controller {
+class LeavePermissionController extends Controller {
     function show(Request $request, Leave $leave) {
         abort_if(!Auth::user(), 401);
 
