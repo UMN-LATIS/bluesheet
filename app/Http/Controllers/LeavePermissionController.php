@@ -22,8 +22,8 @@ class LeavePermissionController extends Controller {
         abort_if(!Auth::user(), 401);
 
         return [
-            'viewAny' => Auth::user()->can('viewAnyUserLeaves', [Leave::class, $leaveOwner]),
-            'create' => Auth::user()->can('createUserLeaves', [Leave::class, $leaveOwner]),
+            'viewAny' => Auth::user()->can('viewAnyLeavesForUser', [Leave::class, $leaveOwner]),
+            'create' => Auth::user()->can('createLeavesForUser', [Leave::class, $leaveOwner]),
         ];
     }
 }

@@ -54,7 +54,7 @@ class UserController extends Controller {
         $relationsToLoad = ['memberships', 'memberships.group', 'memberships.role', 'favoriteGroups', 'favoriteRoles'];
 
         // only load leaves if the user has permission to view them
-        if (Auth::user()->can('viewAnyUserLeaves', [Leave::class, $user])) {
+        if (Auth::user()->can('viewAnyLeavesForUser', [Leave::class, $user])) {
             $relationsToLoad[] = 'leaves';
             $relationsToLoad[] = 'leaves.artifacts';
         }
