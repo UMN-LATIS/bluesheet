@@ -3,14 +3,49 @@
 namespace App\Http\Controllers;
 
 use App\Leave;
-use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\Response;
 use Auth;
-use Illuminate\Support\Arr;
+use App\Http\Resources\LeaveResource;
+use App\Library\Bandaid;
 
 class LeaveController extends Controller {
+    protected $bandaid;
+    protected $userService;
+
+    public function __construct(Bandaid $bandaid) {
+        $this->bandaid = $bandaid;
+    }
+
+
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index(Request $request) {
+        $this->authorize('viewAny', Leave::class);
+
+        $leaves = Leave::with('user')->get();
+
+        // append term data
+        $leavesWithTerms = $leaves
+            ->map(function ($leave) {
+                $leave->terms = $this->bandaid->getTermsOverlappingDates($leave->start_date, $leave->end_date);
+
+                return $leave;
+            })
+            ->filter(function ($leave) {
+                // if terms are empty then the leave
+                // can be ignored
+                return $leave['terms']->isNotEmpty();
+            });
+
+        return LeaveResource::collection($leavesWithTerms);
+    }
+
+
     /**
      * Store a newly created resource in storage.
      *
