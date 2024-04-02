@@ -37,7 +37,7 @@
       <Roles id="v-step-4" :memberships="memberships" class="tw-mt-12"></Roles>
 
       <LeavesTable
-        v-if="user.leaves"
+        v-if="canViewLeaves"
         :leaves="user.leaves"
         :userId="user.id"
         class="tw-mt-12"
@@ -56,12 +56,14 @@ import CheckboxGroup from "@/components/CheckboxGroup.vue";
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
 import { usePageTitle } from "@/utils/usePageTitle";
 import { useUserStore } from "@/stores/useUserStore";
+import { usePermissionsStore } from "@/stores/usePermissionsStore";
 
 const props = defineProps<{
   userId: number | null;
 }>();
 
 const userStore = useUserStore();
+const permissionsStore = usePermissionsStore();
 
 const user = computed(() => {
   return props.userId
@@ -71,6 +73,23 @@ const user = computed(() => {
 
 const error = ref<string | null>(null);
 const isCurrentUser = computed(() => props.userId === null);
+
+const canViewLeaves = ref(isCurrentUser.value);
+
+watch(
+  () => props.userId,
+  async () => {
+    if (props.userId === null) {
+      canViewLeaves.value = true;
+      return;
+    }
+
+    canViewLeaves.value = await permissionsStore.canViewAnyLeavesForUser(
+      props.userId,
+    );
+  },
+  { immediate: true },
+);
 
 watch(
   () => props.userId,
