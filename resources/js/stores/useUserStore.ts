@@ -1,6 +1,5 @@
-import { toRefs } from "@vueuse/core";
 import { defineStore } from "pinia";
-import { computed, reactive } from "vue";
+import { computed, reactive, toRefs } from "vue";
 import * as api from "@/api";
 import {
   leaveTypes,
@@ -10,14 +9,12 @@ import {
   type MemberRole,
   type NormalizedUser,
   type User,
-  type UserPermission,
   type LeaveArtifact,
 } from "@/types";
 import { dayjs, getTempId, isTempId } from "@/utils";
 
 interface UserStoreState {
   currentUserId: User["id"] | null;
-  currentUserPermissions: UserPermission[];
   userLookup: Record<User["id"], NormalizedUser | undefined>;
   leaveLookup: Record<Leave["id"], Leave | undefined>;
 }
@@ -68,7 +65,6 @@ export const useUserStore = defineStore("user", () => {
     currentUserId: null,
     userLookup: {},
     leaveLookup: {},
-    currentUserPermissions: window.Permissions,
   });
 
   const getters = {

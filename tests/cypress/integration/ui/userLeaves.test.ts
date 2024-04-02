@@ -195,15 +195,16 @@ describe("User leaves", () => {
           });
         });
 
-        it.only("permits a group manager to see a fellow group member's leaves", () => {
+        it("permits a group manager to see a fellow group member's leaves", () => {
           cy.visit(`/user/${leave.user_id}`);
           cy.get("[data-cy=leavesSection]").should("exist");
           cy.get("[data-cy=leaveRow]").should("have.length", 1);
         });
 
-        it(
-          "allows a group manager to create a leave for a fellow group member",
-        );
+        it("allows a group manager to create a leave for a fellow group member", () => {
+          cy.visit(`/user/${leave.user_id}`);
+          cy.contains("Add Leave").click();
+        });
         it("allows a group manager to edit a leave for a fellow group member");
         it(
           "allows a group manager to delete a leave for a fellow group member",
