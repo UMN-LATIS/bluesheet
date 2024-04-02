@@ -59,11 +59,8 @@ describe("GET /api/remote/leaves", function () {
 
         expect($res->status())->toBe(200);
 
-        $json = $res->json();
-        // check that meta and links are present
-        expect($json)->toHaveKeys(['meta', 'links', 'data']);
+        $data = $res->json();
 
-        $data = $json['data'];
         expect($data)->not()->toBeEmpty();
 
         $leave = collect($data)->first();
