@@ -37,12 +37,8 @@ class LeavePolicy {
     /**
      * Determine whether the user can create models.
      */
-    public function create(User $user, User $leaveOwner): bool {
+    public function create(User $user): bool {
         if ($user->can(Permissions::EDIT_ANY_LEAVES)) {
-            return true;
-        }
-
-        if ($user->managesGroupWithMember($leaveOwner)) {
             return true;
         }
 
@@ -94,14 +90,31 @@ class LeavePolicy {
     }
 
     /**
-     * Determine whether the current user can view all leaves of another user.
+     * Determine whether the current user can view all leaves
+     * of another user.
      */
-    public function viewUserLeaves(User $currentUser, User $leaveOwner): bool {
+    public function viewAnyUserLeaves(User $currentUser, User $leaveOwner): bool {
         if ($currentUser->can(Permissions::VIEW_ANY_LEAVES)) {
             return true;
         }
 
         if ($leaveOwner->id === $currentUser->id) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Determine whether the current user can create leaves
+     * for another user.
+     */
+    public function createUserLeaves(User $currentUser, User $leaveOwner): bool {
+        if ($currentUser->can(Permissions::EDIT_ANY_LEAVES)) {
+            return true;
+        }
+
+        if ($currentUser->managesGroupWithMember($leaveOwner)) {
             return true;
         }
 

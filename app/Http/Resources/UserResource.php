@@ -7,7 +7,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use App\Http\Resources\MembershipWithGroups as MembershipWithGroups;
 
 
-class User extends JsonResource {
+class UserResource extends JsonResource {
     /**
      * Transform the resource into an array.
      *
@@ -34,10 +34,7 @@ class User extends JsonResource {
             'ssl_apply_eligible' => $this->ssl_apply_eligible,
             'deptid' => $this->deptid ?? null,
             'dept_name' => $this->dept_name ?? null,
-            'leaves' => $this->when(
-                $request->user()->hasPermissionTo(Permissions::VIEW_ANY_LEAVES) || $request->user()->id == $this->id,
-                $this->leaves
-            )
+            'leaves' => $this->leaves,
         ];
     }
 }

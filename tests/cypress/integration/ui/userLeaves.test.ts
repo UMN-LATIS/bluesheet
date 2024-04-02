@@ -198,6 +198,7 @@ describe("User leaves", () => {
         it.only("permits a group manager to see a fellow group member's leaves", () => {
           cy.visit(`/user/${leave.user_id}`);
           cy.get("[data-cy=leavesSection]").should("exist");
+          cy.get("[data-cy=leaveRow]").should("have.length", 1);
         });
 
         it(

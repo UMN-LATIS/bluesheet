@@ -470,3 +470,14 @@ export interface DeptLeavesReportRow {
     leaveCountByStatus: Record<LeaveStatus, number> & { all: number };
   }[];
 }
+
+export interface ApiResourcePermissions {
+  viewAny: boolean;
+  create: boolean;
+}
+
+export interface ApiResourceItemPermissions {
+  view: boolean;
+  update: boolean;
+  delete: boolean;
+}

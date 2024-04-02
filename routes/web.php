@@ -88,6 +88,11 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
     Route::put('leaves/{leave}/artifacts/{leaveArtifact}', [LeaveArtifactController::class, 'update']);
     Route::delete('leaves/{leave}/artifacts/{leaveArtifact}', [LeaveArtifactController::class, 'destroy']);
 
+    Route::prefix('permissions')->group(function () {
+        Route::get('leaves/{leave}', 'LeavePermissionController@show');
+        Route::get('users/{leaveOwner}/leaves', 'LeavePermissionController@userLeaves');
+    });
+
     Route::prefix('course-planning')->group(function () {
         Route::resource('/groups/{group}/courses', GroupCourseController::class);
         Route::resource('/groups/{group}/sections', GroupSectionController::class);

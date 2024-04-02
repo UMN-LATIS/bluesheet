@@ -37,11 +37,7 @@
       <Roles id="v-step-4" :memberships="memberships" class="tw-mt-12"></Roles>
 
       <LeavesTable
-        v-if="
-          $can(UserPermissions.VIEW_ANY_LEAVES) ||
-          isCurrentUser ||
-          $can(UserPermissions.EDIT_ANY_LEAVES)
-        "
+        v-if="user.leaves"
         :leaves="user.leaves"
         :userId="user.id"
         class="tw-mt-12"
