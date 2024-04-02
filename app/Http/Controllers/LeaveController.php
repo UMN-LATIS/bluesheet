@@ -27,10 +27,10 @@ class LeaveController extends Controller {
     public function index(Request $request) {
         $this->authorize('viewAny', Leave::class);
 
-        $leaves = Leave::with('user')->paginate(500);
+        $leaves = Leave::with('user')->get();
 
         // append term data
-        $leavesWithTerms = collect($leaves->items())
+        $leavesWithTerms = $leaves
             ->map(function ($leave) {
                 $leave->terms = $this->bandaid->getTermsOverlappingDates($leave->start_date, $leave->end_date);
 
@@ -42,28 +42,7 @@ class LeaveController extends Controller {
                 return $leave['terms']->isNotEmpty();
             });
 
-        return [
-            // need to manually add links and meta
-            // since we'll transforming the original query results to include
-            // term data from Bandaid
-            'links' => [
-                'first' => $leaves->url(1),
-                'last' => $leaves->url($leaves->lastPage()),
-                'prev' => $leaves->previousPageUrl(),
-                'next' => $leaves->nextPageUrl(),
-            ],
-            'meta' => [
-                'current_page' => $leaves->currentPage(),
-                'from' => $leaves->firstItem(),
-                'last_page' => $leaves->lastPage(),
-                'path' => $leaves->path(),
-                'per_page' => $leaves->perPage(),
-                'to' => $leaves->lastItem(),
-                'total' => $leaves->total(),
-            ],
-            'data' => LeaveResource::collection($leavesWithTerms),
-
-        ];
+        return LeaveResource::collection($leavesWithTerms);
     }
 
 
