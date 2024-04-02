@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Auth;
 use DB;
 use App\Http\Resources\UserResource;
+use App\Leave;
 use App\Library\LDAP as LDAP;
 use \App\Library\Bandaid;
 
@@ -53,7 +54,7 @@ class UserController extends Controller {
         $relationsToLoad = ['memberships', 'memberships.group', 'memberships.role', 'favoriteGroups', 'favoriteRoles'];
 
         // only load leaves if the user has permission to view them
-        if (Auth::user()->can('viewAnyUserLeaves')) {
+        if (Auth::user()->can('viewAnyUserLeaves', [Leave::class, $user])) {
             $relationsToLoad[] = 'leaves';
             $relationsToLoad[] = 'leaves.artifacts';
         }

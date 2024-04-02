@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use App\Constants\Permissions;
 use Illuminate\Http\Resources\Json\JsonResource;
 use App\Http\Resources\MembershipWithGroups as MembershipWithGroups;
-
+use Illuminate\Http\Request;
 
 class UserResource extends JsonResource {
     /**
@@ -14,7 +14,7 @@ class UserResource extends JsonResource {
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request) {
+    public function toArray(Request $request) {
         return [
             'id' => $this->id,
             'givenname' => $this->givenname,
@@ -34,7 +34,7 @@ class UserResource extends JsonResource {
             'ssl_apply_eligible' => $this->ssl_apply_eligible,
             'deptid' => $this->deptid ?? null,
             'dept_name' => $this->dept_name ?? null,
-            'leaves' => $this->leaves,
+            'leaves' => LeaveResource::collection($this->whenLoaded('leaves')),
         ];
     }
 }

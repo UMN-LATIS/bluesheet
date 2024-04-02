@@ -195,6 +195,7 @@ export interface Leave {
   created_at: ISODateTime;
   updated_at: ISODateTime;
   deleted_at?: ISODateTime | null;
+  canCurrentUser?: ApiResourceItemPermissions;
 }
 
 export interface LeaveWithPerson extends Leave {
@@ -477,7 +478,6 @@ export interface ApiResourcePermissions {
 }
 
 export interface ApiResourceItemPermissions {
-  view: boolean;
   update: boolean;
   delete: boolean;
 }
