@@ -13,6 +13,11 @@ describe("User leaves", () => {
       method: "POST",
       url: "/api/leaves",
     }).as("apiCreateLeave");
+
+    cy.intercept({
+      method: "GET",
+      url: "/api/permissions/**",
+    }).as("apiPermissions");
   });
 
   context("as a user that can view leaves", () => {
@@ -197,6 +202,9 @@ describe("User leaves", () => {
 
         it("permits a group manager to see a fellow group member's leaves", () => {
           cy.visit(`/user/${leave.user_id}`);
+
+          cy.wait("@apiPermissions");
+
           cy.get("[data-cy=leavesSection]").should("exist");
           cy.get("[data-cy=leaveRow]").should("have.length", 1);
         });
