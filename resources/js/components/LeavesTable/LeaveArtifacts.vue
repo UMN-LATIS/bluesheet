@@ -8,7 +8,7 @@
       <Th colspan="3"> Artifacts for {{ leave.description }} </Th>
       <Th>Created</Th>
       <Th>Updated</Th>
-      <Th v-if="$can(UserPermissions.EDIT_ANY_LEAVES)">
+      <Th v-if="canModifyLeave">
         <span class="tw-sr-only">Actions</span>
       </Th>
     </tr>
@@ -19,7 +19,7 @@
       :artifact="artifact"
       :leave="leave"
     />
-    <tr v-if="$can(UserPermissions.EDIT_ANY_LEAVES)">
+    <tr v-if="canModifyLeave">
       <Td></Td>
       <Td colspan="8">
         <Button
@@ -33,18 +33,24 @@
   </tbody>
 </template>
 <script setup lang="ts">
-import { Leave, UserPermissions } from "@/types";
+import { Leave } from "@/types";
 import LeaveArtifactRow from "./LeaveArtifactRow.vue";
-import { $can } from "@/utils";
 import { Th, Td } from "../Table";
 import Button from "../Button.vue";
 import { useUserStore } from "@/stores/useUserStore";
+import { computed } from "vue";
 
-defineProps<{
+const props = defineProps<{
   leave: Leave;
 }>();
 
 const userStore = useUserStore();
+const canModifyLeave = computed(
+  () =>
+    props.leave.canCurrentUser?.update ||
+    props.leave.canCurrentUser?.delete ||
+    false,
+);
 </script>
 <style scoped>
 .leave-artifacts th:not(:first-child) {

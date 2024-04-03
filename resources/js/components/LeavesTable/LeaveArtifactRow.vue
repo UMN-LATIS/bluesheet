@@ -1,11 +1,7 @@
 <template>
   <tr data-cy="leaveArtifactRow">
     <Td></Td>
-    <template
-      v-if="
-        $can(UserPermissions.EDIT_ANY_LEAVES) && (isEditing || isNewArtifact)
-      "
-    >
+    <template v-if="canModifyLeave && (isEditing || isNewArtifact)">
       <Td colspan="3">
         <InputGroup
           v-model="localArtifact.label"
@@ -53,11 +49,9 @@
         >
           {{ localArtifact.label }}
         </a>
-        <div v-else>
-          <div>{{ localArtifact.label }}</div>
-          <div class="tw-text-neutral-500 tw-text-xs">
-            {{ localArtifact.target }}
-          </div>
+        <div v-else>{{ localArtifact.label }}</div>
+        <div class="tw-text-neutral-500 tw-text-xs">
+          {{ localArtifact.target }}
         </div>
       </Td>
       <Td class="tw-text-sm">
@@ -66,7 +60,7 @@
       <Td class="tw-text-sm">
         {{ dayjs(artifact.updated_at).format("MMM D, YYYY") }}
       </Td>
-      <Td v-if="$can(UserPermissions.EDIT_ANY_LEAVES)">
+      <Td v-if="canModifyLeave">
         <div class="tw-flex tw-gap-1 tw-px-2 tw-justify-end tw-items-center">
           <SmallButton data-cy="artifactEditButton" @click="isEditing = true"
             >Edit</SmallButton
@@ -83,9 +77,9 @@
   </tr>
 </template>
 <script setup lang="ts">
-import { Leave, LeaveArtifact, UserPermissions } from "@/types";
+import { Leave, LeaveArtifact } from "@/types";
 import { ref, reactive, computed, watch } from "vue";
-import { isTempId, dayjs, $can } from "@/utils";
+import { isTempId, dayjs } from "@/utils";
 import InputGroup from "@/components/InputGroup.vue";
 import SmallButton from "./SmallButton.vue";
 import { Td } from "@/components/Table";
@@ -105,6 +99,12 @@ const localArtifact = reactive({
 
 const isNewArtifact = computed(() => isTempId(props.artifact.id));
 const isEditing = ref(isNewArtifact.value);
+const canModifyLeave = computed(
+  () =>
+    props.leave.canCurrentUser?.update ||
+    props.leave.canCurrentUser?.delete ||
+    false,
+);
 
 const hasValidUrl = computed(() => {
   try {
