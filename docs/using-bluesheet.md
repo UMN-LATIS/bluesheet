@@ -108,7 +108,7 @@ BlueSheet also automatically imports information about eligibility for sabbatica
 
 ### Adding and Editing Leaves
 
-Users with administrative permissions in BlueSheet can add and edit additional leaves within any user record. Begin by finding a user by clicking `User Lookup` in the navigation bar. The "Leaves" section is at the bottom of their profile page. 
+Users with BlueSheet Manager permissions can add and edit additional leaves within a group member's user record. Begin by finding a user by clicking `User Lookup` in the navigation bar. The "Leaves" section is at the bottom of their profile page. 
 
 Any current or future leaves will be displayed by default. The "Show past leaves" checkbox enables you to view historical leave data. 
 

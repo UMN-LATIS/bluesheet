@@ -4,7 +4,7 @@ BlueSheet provides a way to track the members of the various groups, committees,
 
 ## Who can use the BlueSheet?
 
-Anyone with an Internet ID has access to view their own group membership and to browse the other groups within the system. In order to make changes, you need to be marked as the administrator for a given group, or you need to request administrative access to the tool. [Email us](mailto:latistecharch@umn.edu) for that access.
+Anyone with an Internet ID has access to view their own group membership and to browse the other groups within the system. In order to make changes, you need to be marked as a BlueSheet Manager for a given group, or you need to request administrative access to the tool. [Email us](mailto:latistecharch@umn.edu) for that access.
 
 ## Who updates groups?
 
