@@ -104,8 +104,19 @@ class UserService {
         return $users->first();
     }
 
-    public function getDeptInstructors(string $deptId): Collection {
+    public function getDeptInstructors(string $deptId, array $options = []): Collection {
         $cacheKey = 'deptInstructors-' . $deptId;
+
+        $defaultOptions = [
+            'refresh' => false,
+        ];
+
+        $options = array_merge($defaultOptions, $options);
+
+        if ($options['refresh']) {
+            Cache::forget($cacheKey);
+        }
+
         $cachedInstructors = Cache::get($cacheKey);
         if ($cachedInstructors) {
             return $cachedInstructors;
