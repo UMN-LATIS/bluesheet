@@ -79,9 +79,15 @@ const canViewLeaves = ref(isCurrentUser.value);
 watch(
   () => props.userId,
   async () => {
-    if (props.userId === null) {
+    if (isCurrentUser.value) {
       canViewLeaves.value = true;
       return;
+    }
+
+    if (!props.userId) {
+      throw new Error(
+        "This shouldn't happen. UserId is null, but not current user.",
+      );
     }
 
     canViewLeaves.value = await permissionsStore.canViewAnyLeavesForUser(

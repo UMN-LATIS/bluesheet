@@ -146,6 +146,10 @@ export const useUserStore = defineStore("user", () => {
         end_date: dayjs().add(1, "year").format("YYYY-MM-DD"),
         created_at: dayjs().format(),
         updated_at: dayjs().format(),
+        canCurrentUser: {
+          update: true,
+          delete: true,
+        },
       };
 
       user.leaves.push(newLeave.id);
