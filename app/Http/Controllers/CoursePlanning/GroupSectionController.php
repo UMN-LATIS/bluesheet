@@ -9,6 +9,7 @@ use App\Http\Resources\CourseSectionResource;
 use App\Http\Resources\EnrollmentResource;
 use Illuminate\Http\Request;
 use App\Library\Bandaid;
+use App\Constants\Permissions;
 
 class GroupSectionController extends Controller {
     protected $bandaid;
@@ -18,7 +19,7 @@ class GroupSectionController extends Controller {
     }
 
     public function index(Request $request, Group $group) {
-        abort_if($request->user()->cannot('view planned courses'), 403);
+        abort_unless($request->user()->can(Permissions::VIEW_PLANNED_COURSES) || $request->user()->managesGroup($group), 403);
 
         // get all the unpublished sections from our app database
         $dbSections = $group->courseSections()->with('enrollments')->where('is_published', false)->get();

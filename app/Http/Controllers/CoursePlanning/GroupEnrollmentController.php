@@ -9,6 +9,7 @@ use App\Group;
 use App\Http\Resources\EnrollmentResource;
 use App\User;
 use App\Enrollment;
+use App\Constants\Permissions;
 
 
 class GroupEnrollmentController extends Controller {
@@ -20,7 +21,7 @@ class GroupEnrollmentController extends Controller {
     }
 
     public function index(Request $request, Group $group) {
-        abort_if($request->user()->cannot('view planned courses'), 403);
+        abort_unless($request->user()->can(Permissions::VIEW_PLANNED_COURSES) || $request->user()->managesGroup($group), 403);
 
         $dbEnrollments = $group->enrollments()->with('user:id,emplid')->get();
 

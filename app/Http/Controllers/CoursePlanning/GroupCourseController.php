@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\CoursePlanning;
 
+use App\Constants\Permissions;
 use App\Course;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -18,7 +19,7 @@ class GroupCourseController extends Controller {
     }
 
     public function index(Request $request, Group $group) {
-        abort_if($request->user()->cannot('view planned courses'), 403);
+        abort_unless($request->user()->can(Permissions::VIEW_PLANNED_COURSES) || $request->user()->managesGroup($group), 403);
 
         $localCourses = $group->courses;
 

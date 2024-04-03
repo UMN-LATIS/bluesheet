@@ -8,6 +8,7 @@ use App\Http\Resources\PersonResource;
 use Illuminate\Http\Request;
 use App\Library\Bandaid;
 use App\Library\UserService;
+use App\Constants\Permissions;
 
 class GroupPersonController extends Controller {
 
@@ -20,7 +21,7 @@ class GroupPersonController extends Controller {
     }
 
     public function index(Request $request, Group $group) {
-        abort_if($request->user()->cannot('view planned courses'), 403);
+        abort_unless($request->user()->can(Permissions::VIEW_PLANNED_COURSES) || $request->user()->managesGroup($group), 403);
 
         $users = $this->userService->getDeptInstructors($group->dept_id);
 
