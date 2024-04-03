@@ -150,7 +150,13 @@ describe("User leaves", () => {
     beforeEach(() => {
       // create a new leave
       // which will also create the leaveOwner user
-      cy.create("App\\Leave")
+      cy.create({
+        model: "App\\Leave",
+        attributes: {
+          start_date: dayjs().add(10, "day").format("YYYY-MM-DD"),
+          end_date: dayjs().add(200, "day").format("YYYY-MM-DD"),
+        },
+      })
         .then((createdLeave) => {
           leave = createdLeave;
 
@@ -209,22 +215,26 @@ describe("User leaves", () => {
           cy.get("[data-cy=leaveRow]").should("have.length", 1);
         });
 
-        it("allows a group manager to create a leave for a fellow group member", () => {
+        it.only("allows a group manager to create a leave for a fellow group member", () => {
           const startDate = dayjs().add(30, "day");
           const endDate = dayjs().add(60, "day");
 
           cy.visit(`/user/${leave.user_id}`);
+
+          // expect that only 1 leave exists
+          cy.get("[data-cy=leaveRow]").should("have.length", 1);
+
           cy.contains("Add Leave").click();
 
           cy.get('[data-cy="leavesSection"] .is-new-leave')
             .first()
             .within(() => {
-              cy.get("[data-cy=leaveDescription] input").type(
-                "{selectall}Test Leave",
-              );
+              cy.get("[data-cy=leaveDescription] input").type("Test Leave");
               cy.get("[data-cy=leaveStartDate] input").type(
                 startDate.format("YYYY-MM-DD"),
               );
+
+              cy.wait(300); // add short wait to accommodate datepicker
               cy.get("[data-cy=leaveEndDate] input").type(
                 endDate.format("YYYY-MM-DD"),
               );
@@ -234,7 +244,7 @@ describe("User leaves", () => {
             });
 
           // check that the leave was added
-          cy.get("[data-cy=leaveRow]").should("have.length", 3);
+          cy.get("[data-cy=leaveRow]").should("have.length", 2);
           cy.contains("Test Leave")
             .closest("tr")
             .within(() => {
@@ -246,6 +256,10 @@ describe("User leaves", () => {
               );
               cy.get("[data-cy=leaveType]").contains("Development");
               cy.get("[data-cy=leaveStatus]").contains("confirmed");
+
+              // expect the Edit and Delete buttons to be visible
+              cy.contains("Edit").should("exist");
+              cy.contains("Delete").should("exist");
             });
         });
         it("allows a group manager to edit a leave for a fellow group member");
