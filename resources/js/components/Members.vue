@@ -180,7 +180,7 @@
             />
           </th>
           <th v-if="!showGantt && (editing || $can('edit groups'))" scope="col">
-            Group Admin
+            BlueSheet Manager
           </th>
           <th v-if="editing && !showGantt" scope="col">
             End Active Membership

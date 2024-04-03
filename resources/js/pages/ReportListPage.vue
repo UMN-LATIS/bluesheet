@@ -56,7 +56,7 @@
             v-if="$can('view reports')"
             :to="{ name: 'groupadmins' }"
             class="nav-link"
-            >Group Admins
+            >BlueSheet Managers
           </router-link>
         </li>
         <li v-if="$can('view eligibility')" class="list-group-item">
