@@ -92,6 +92,7 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
     Route::prefix('permissions')->group(function () {
         Route::get('leaves/{leave}', [LeavePermissionController::class, 'show']);
         Route::get('users/{leaveOwner}/leaves', [LeavePermissionController::class, 'userLeaves']);
+        Route::get('groups/{group}/leaves', [LeavePermissionController::class, 'groupLeaves']);
     });
 
     Route::prefix('course-planning')->group(function () {

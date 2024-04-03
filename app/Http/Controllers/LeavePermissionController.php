@@ -6,6 +6,7 @@ use Auth;
 use Illuminate\Http\Request;
 use App\Leave;
 use App\User;
+use App\Group;
 
 class LeavePermissionController extends Controller {
     function show(Request $request, Leave $leave) {
@@ -24,6 +25,15 @@ class LeavePermissionController extends Controller {
         return [
             'viewAny' => Auth::user()->can('viewAnyLeavesForUser', [Leave::class, $leaveOwner]),
             'create' => Auth::user()->can('createLeavesForUser', [Leave::class, $leaveOwner]),
+        ];
+    }
+
+    function groupLeaves(Request $request, Group $group) {
+        abort_if(!Auth::user(), 401);
+
+        return [
+            'viewAny' => Auth::user()->can('viewAnyLeavesForGroup', [Leave::class, $group]),
+            'create' => Auth::user()->can('createLeavesForGroup', [Leave::class, $group]),
         ];
     }
 }

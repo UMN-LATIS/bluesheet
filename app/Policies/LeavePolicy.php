@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Constants\Permissions;
+use App\Group;
 use App\Leave;
 use App\User;
 
@@ -119,6 +120,18 @@ class LeavePolicy {
         }
 
         if ($currentUser->managesGroupWithMember($leaveOwner)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function viewAnyLeavesForGroup(User $currentUser, Group $group): bool {
+        if ($currentUser->can(Permissions::VIEW_ANY_LEAVES)) {
+            return true;
+        }
+
+        if ($currentUser->managesGroup($group)) {
             return true;
         }
 
