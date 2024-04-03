@@ -56,8 +56,8 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { dayjs, $can, isTempId } from "@/utils";
-import { Leave, UserPermissions } from "@/types";
+import { dayjs, isTempId } from "@/utils";
+import { Leave } from "@/types";
 import Button from "@/components/Button.vue";
 import { Table, Th, Td, THead } from "@/components/Table";
 import CheckboxGroup from "@/components/CheckboxGroup.vue";

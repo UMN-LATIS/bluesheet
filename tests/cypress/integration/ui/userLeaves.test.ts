@@ -215,7 +215,7 @@ describe("User leaves", () => {
           cy.get("[data-cy=leaveRow]").should("have.length", 1);
         });
 
-        it.only("allows a group manager to create a leave for a fellow group member", () => {
+        it("allows a group manager to create a leave for a fellow group member", () => {
           const startDate = dayjs().add(30, "day");
           const endDate = dayjs().add(60, "day");
 
