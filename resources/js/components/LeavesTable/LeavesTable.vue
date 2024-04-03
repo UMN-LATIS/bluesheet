@@ -12,7 +12,7 @@
           v-model="showPastLeaves"
           label="Show Past Leaves"
         />
-        <template v-if="canCreateLeavesForUser">
+        <template v-if="canCreateLeaves">
           <Button
             variant="secondary"
             @click="userStore.addLeaveForUser(userId)"
@@ -34,12 +34,12 @@
           <Th>Status</Th>
           <Th>Start Date</Th>
           <Th>End Date</Th>
-          <Th v-if="$can(UserPermissions.EDIT_ANY_LEAVES)"></Th>
+          <Th v-if="canUpdateLeaves || canDeleteLeaves"></Th>
         </tr>
       </THead>
       <tr v-if="!sortedAndFilteredLeaves.length">
         <Td
-          :colspan="$can(UserPermissions.EDIT_ANY_LEAVES) ? 6 : 5"
+          :colspan="canUpdateLeaves || canDeleteLeaves ? 6 : 5"
           class="tw-text-center !tw-p-6 tw-italic tw-text-neutral-500"
         >
           No Leaves
@@ -73,13 +73,20 @@ const props = defineProps<{
 const userStore = useUserStore();
 const permissionsStore = usePermissionsStore();
 const showPastLeaves = ref(false);
-const canCreateLeavesForUser = ref(false);
+const canCreateLeaves = ref(false);
+const canUpdateLeaves = computed(() =>
+  props.leaves.some((leave) => leave.canCurrentUser?.update),
+);
+const canDeleteLeaves = computed(() =>
+  props.leaves.some((leave) => leave.canCurrentUser?.delete),
+);
 
 watch(
   () => props.userId,
   async () => {
-    canCreateLeavesForUser.value =
-      await permissionsStore.canCreateLeavesForUser(props.userId);
+    canCreateLeaves.value = await permissionsStore.canCreateLeavesForUser(
+      props.userId,
+    );
   },
   { immediate: true },
 );
