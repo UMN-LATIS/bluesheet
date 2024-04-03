@@ -185,7 +185,7 @@ class UserController extends Controller {
         } else if (count($outputArray) == 0) {
             $returnData['status'] = "Error";
             $returnData['message'] = "We couldn't find that user.";
-            $code = 500;
+            $code = 404;
         } else {
             $returnData['status'] = "Partial";
             $returnData['users'] = $outputArray;
