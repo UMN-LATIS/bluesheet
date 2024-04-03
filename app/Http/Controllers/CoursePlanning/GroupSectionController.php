@@ -62,7 +62,7 @@ class GroupSectionController extends Controller {
     }
 
     public function update(Request $request, Group $group, CourseSection $section) {
-        abort_if($request->user()->cannot('edit planned courses'), 403);
+        $this->authorize('editAnySectionsForGroup', [CourseSection::class, $group]);
 
         $validated = $request->validate([
             'course_id' => 'required|string',
@@ -80,7 +80,7 @@ class GroupSectionController extends Controller {
     }
 
     public function destroy(Request $request, Group $group, CourseSection $section) {
-        abort_if($request->user()->cannot('edit planned courses'), 403);
+        $this->authorize('editAnySectionsForGroup', [CourseSection::class, $group]);
 
         $section->delete();
 
