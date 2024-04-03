@@ -19,7 +19,7 @@ class GroupCourseController extends Controller {
     }
 
     public function index(Request $request, Group $group) {
-        abort_unless($request->user()->can(Permissions::VIEW_PLANNED_COURSES) || $request->user()->managesGroup($group), 403);
+        $this->authorize('viewAnyCoursesForGroup', [Course::class, $group]);
 
         $localCourses = $group->courses;
 
@@ -40,7 +40,7 @@ class GroupCourseController extends Controller {
     }
 
     public function store(Request $request, Group $group) {
-        abort_if($request->user()->cannot('edit planned courses'), 403);
+        $this->authorize('editAnyCoursesForGroup', [Course::class, $group]);
 
         $validated = $request->validate([
             'subject' => 'required|string',

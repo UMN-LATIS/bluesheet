@@ -20,6 +20,7 @@ use App\Http\Controllers\CoursePlanning\GroupLeaveController;
 use App\Http\Controllers\CoursePlanning\GroupCourseController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\LeavePermissionController;
+use App\Http\Controllers\CoursePermissionController;
 
 Route::impersonate();
 
@@ -93,6 +94,7 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
         Route::get('leaves/{leave}', [LeavePermissionController::class, 'show']);
         Route::get('users/{leaveOwner}/leaves', [LeavePermissionController::class, 'userLeaves']);
         Route::get('groups/{group}/leaves', [LeavePermissionController::class, 'groupLeaves']);
+        Route::get('groups/{group}/courses', [CoursePermissionController::class, 'groupCourses']);
     });
 
     Route::prefix('course-planning')->group(function () {

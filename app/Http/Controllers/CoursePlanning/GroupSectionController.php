@@ -19,7 +19,7 @@ class GroupSectionController extends Controller {
     }
 
     public function index(Request $request, Group $group) {
-        abort_unless($request->user()->can(Permissions::VIEW_PLANNED_COURSES) || $request->user()->managesGroup($group), 403);
+        $this->authorize('viewAnySectionsForGroup', [CourseSection::class, $group]);
 
         // get all the unpublished sections from our app database
         $dbSections = $group->courseSections()->with('enrollments')->where('is_published', false)->get();
@@ -45,7 +45,7 @@ class GroupSectionController extends Controller {
     }
 
     public function store(Request $request, Group $group) {
-        abort_if($request->user()->cannot('edit planned courses'), 403);
+        $this->authorize('editAnySectionsForGroup', [CourseSection::class, $group]);
 
         $validated = $request->validate([
             'course_id' => 'required|string',

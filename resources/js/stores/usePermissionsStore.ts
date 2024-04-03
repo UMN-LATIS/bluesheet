@@ -48,6 +48,13 @@ export const usePermissionsStore = defineStore("permissions", () => {
 
       return groupLeavePermissions.viewAny;
     },
+
+    async canViewAnyCoursesForGroup(groupId: T.Group["id"]): Promise<boolean> {
+      const groupPlannedCoursePermissions =
+        await api.getPermissionsForGroupCourses(groupId);
+
+      return groupPlannedCoursePermissions.viewAny;
+    },
   };
 
   return {

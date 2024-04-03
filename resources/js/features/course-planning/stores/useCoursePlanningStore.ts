@@ -9,13 +9,20 @@ import { useTermStore } from "@/stores/useTermStore";
 import { useLeaveStore } from "./useLeaveStore";
 import { countBy, debounce, uniq } from "lodash";
 import * as T from "@/types";
+import * as api from "@/api";
 import { getCourseSpreadsheetRecords } from "../helpers/getCourseSpreadsheetRecords";
 import { getPersonSpreadsheetRecords } from "../helpers/getPersonSpreadsheetRecords";
 import { filterTermByStartAndEndTerm } from "../helpers/coursePlanningFilters";
+import { usePermissionsStore } from "@/stores/usePermissionsStore";
 
 interface CoursePlanningStoreState {
   activeGroupId: T.Group["id"] | null;
   filters: T.CoursePlanningFilters;
+  currentUserCan: {
+    viewAnyLeavesForGroup: boolean;
+    viewAnyPlannedCoursesForGroup: boolean;
+    editPlannedCoursesForGroup: boolean;
+  };
 }
 
 export const useCoursePlanningStore = defineStore("coursePlanning", () => {
@@ -41,6 +48,11 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
       includedEnrollmentRoles: new Set(["PI"]),
       minSectionEnrollment: 0,
       search: "",
+    },
+    currentUserCan: {
+      viewAnyLeavesForGroup: false,
+      viewAnyPlannedCoursesForGroup: false,
+      editPlannedCoursesForGroup: false,
     },
   });
 
@@ -230,6 +242,21 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
   const actions = {
     async initGroup(groupId: number) {
       state.activeGroupId = groupId;
+
+      const [groupLeavePermissions, groupCoursePermissions] = await Promise.all(
+        [
+          api.getPermissionsForGroupLeaves(groupId),
+          api.getPermissionsForGroupCourses(groupId),
+        ],
+      );
+
+      state.currentUserCan.viewAnyLeavesForGroup =
+        groupLeavePermissions.viewAny;
+      state.currentUserCan.viewAnyPlannedCoursesForGroup =
+        groupCoursePermissions.viewAny;
+      state.currentUserCan.editPlannedCoursesForGroup =
+        groupCoursePermissions.create;
+
       await Promise.all([
         stores.termsStore.init(),
         stores.groupStore.fetchGroup(groupId),

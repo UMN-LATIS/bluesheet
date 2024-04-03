@@ -167,3 +167,11 @@ export async function getPermissionsForGroupLeaves(groupId: number) {
 
   return res.data;
 }
+
+export async function getPermissionsForGroupCourses(groupId: number) {
+  const res = await axios.get<T.ApiResourcePermissions>(
+    `/api/permissions/groups/${groupId}/courses`,
+  );
+
+  return res.data;
+}
