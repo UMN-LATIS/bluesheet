@@ -32,12 +32,12 @@ describe("GET /api/user/:id/leaves", () => {
           "id",
           "user_id",
           "description",
+          "user",
           "start_date",
           "end_date",
           "type",
           "status",
-          "created_at",
-          "updated_at",
+          "canCurrentUser",
         ]);
         leaves.forEach((leave) => {
           expect(leave.user_id).to.eq(1);

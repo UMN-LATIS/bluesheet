@@ -307,8 +307,7 @@ describe("PUT /api/leaves/:id", () => {
             "status",
             "user",
             "artifacts",
-            "created_at",
-            "updated_at",
+            "canCurrentUser",
           ]);
         });
     });

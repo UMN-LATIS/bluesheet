@@ -31,6 +31,7 @@ class LeaveResource extends JsonResource {
                 'title' => $this->user->title,
             ]),
             'terms' => TermResource::collection($this->whenNotNull($this->terms)),
+            'artifacts' => LeaveArtifactResource::collection($this->whenLoaded('artifacts')),
             'canCurrentUser' => [
                 'update' => $request->user()->can('update', $this->resource),
                 'delete' => $request->user()->can('delete', $this->resource),

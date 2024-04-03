@@ -62,8 +62,7 @@ describe("POST /api/leaves", () => {
             "type",
             "status",
             "user",
-            "created_at",
-            "updated_at",
+            "canCurrentUser",
           ]);
         });
       });
@@ -245,8 +244,7 @@ describe("POST /api/leaves", () => {
             "type",
             "status",
             "user",
-            "created_at",
-            "updated_at",
+            "canCurrentUser",
           ]);
         });
     });

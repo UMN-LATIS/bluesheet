@@ -45,8 +45,7 @@ describe("GET /api/leaves/:id", () => {
             "status",
             "user",
             "artifacts",
-            "created_at",
-            "updated_at",
+            "canCurrentUser",
           ]);
         });
       });
@@ -70,8 +69,7 @@ describe("GET /api/leaves/:id", () => {
           "status",
           "user",
           "artifacts",
-          "created_at",
-          "updated_at",
+          "canCurrentUser",
         ]);
       });
     });
@@ -105,8 +103,7 @@ describe("GET /api/leaves/:id", () => {
           "status",
           "user",
           "artifacts",
-          "created_at",
-          "updated_at",
+          "canCurrentUser",
         ]);
       });
     });
@@ -179,8 +176,7 @@ describe("GET /api/leaves/:id", () => {
             "status",
             "user",
             "artifacts",
-            "created_at",
-            "updated_at",
+            "canCurrentUser",
           ]);
         });
     });
