@@ -179,7 +179,9 @@
               @sort="sort"
             />
           </th>
-          <th v-if="editing && !showGantt" scope="col">Group Admin</th>
+          <th v-if="!showGantt && (editing || $can('edit groups'))" scope="col">
+            Group Admin
+          </th>
           <th v-if="editing && !showGantt" scope="col">
             End Active Membership
           </th>
@@ -417,8 +419,11 @@ export default defineComponent({
       });
     },
     compositeList(): MembershipWithMaybeChildGroupTitle[] {
-
-      if (!this.group || !this.group.include_child_groups || !this.group.child_groups) {
+      if (
+        !this.group ||
+        !this.group.include_child_groups ||
+        !this.group.child_groups
+      ) {
         return this.members;
       }
 
