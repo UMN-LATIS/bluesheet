@@ -69,7 +69,7 @@ class LeaveController extends Controller {
 
 
         $leave = Leave::create($validated);
-        return $leave->load('user');
+        return LeaveResource::make($leave->load('user'));
     }
 
     /**
@@ -81,7 +81,7 @@ class LeaveController extends Controller {
     public function show(Leave $leave) {
         $this->authorize('view', $leave);
 
-        return $leave->load(['user', 'artifacts']);
+        return LeaveResource::make($leave->load(['user', 'artifacts']));
     }
 
     /**
@@ -105,7 +105,7 @@ class LeaveController extends Controller {
 
         $leave->update($validated);
 
-        return $leave->load(['user', 'artifacts']);
+        return LeaveResource::make($leave->load(['user', 'artifacts']));
     }
 
     /**
