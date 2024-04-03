@@ -96,12 +96,14 @@
         ></i>
         <i v-else class="searchIcon fa fa-close"></i>
       </td>
-      <td v-if="editing" class="text-right">
+      <td v-if="editing || $can('edit groups')" class="tw-text-center">
         <input
+          v-if="editing"
           v-model="member.admin"
           class="form-check-input"
           type="checkbox"
         />
+        <CheckIcon v-else-if="member.admin" />
       </td>
       <td v-if="editing">
         <button class="btn btn-danger" @click="$emit('remove', member)">
@@ -116,11 +118,13 @@
 import GroupTitle from "./GroupTitle.vue";
 import { dayjs, $can } from "@/utils";
 import ComboBox from "./ComboBox.vue";
+import { CheckIcon } from "@/icons";
 
 export default {
   components: {
     GroupTitle,
     ComboBox,
+    CheckIcon,
   },
   props: [
     "editing",
