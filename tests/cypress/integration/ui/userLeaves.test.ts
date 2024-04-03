@@ -195,78 +195,100 @@ describe("User leaves", () => {
       cy.get("[data-cy=leavesSection]").should("not.exist");
     });
 
-    context(
-      "that is a group manager (has the `admin` flag set for the group)",
-      () => {
-        beforeEach(() => {
-          // promote the follow group member to a group manager
-          cy.promoteUserToGroupManager({
-            userId: fellowGroupMembership.user_id,
-            groupId: fellowGroupMembership.group_id,
+    context("as a group manager (admin)", () => {
+      beforeEach(() => {
+        // promote the follow group member to a group manager
+        cy.promoteUserToGroupManager({
+          userId: fellowGroupMembership.user_id,
+          groupId: fellowGroupMembership.group_id,
+        });
+      });
+
+      it("permits a group manager to see a fellow group member's leaves", () => {
+        cy.visit(`/user/${leave.user_id}`);
+
+        cy.wait("@apiPermissions");
+
+        cy.get("[data-cy=leavesSection]").should("exist");
+        cy.get("[data-cy=leaveRow]").should("have.length", 1);
+      });
+
+      it("allows a group manager to create a leave for a fellow group member", () => {
+        const startDate = dayjs().add(30, "day");
+        const endDate = dayjs().add(60, "day");
+
+        cy.visit(`/user/${leave.user_id}`);
+
+        // expect that only 1 leave exists
+        cy.get("[data-cy=leaveRow]").should("have.length", 1);
+
+        cy.contains("Add Leave").click();
+
+        cy.get('[data-cy="leavesSection"] .is-new-leave')
+          .first()
+          .within(() => {
+            cy.get("[data-cy=leaveDescription] input").type("Test Leave");
+            cy.get("[data-cy=leaveStartDate] input").type(
+              startDate.format("YYYY-MM-DD"),
+            );
+
+            cy.wait(300); // add short wait to accommodate datepicker
+            cy.get("[data-cy=leaveEndDate] input").type(
+              endDate.format("YYYY-MM-DD"),
+            );
+            cy.get("[data-cy=leaveType] select").select("Development");
+            cy.get("[data-cy=leaveStatus] select").select("Confirmed");
+            cy.contains("Save").click();
           });
-        });
 
-        it("permits a group manager to see a fellow group member's leaves", () => {
-          cy.visit(`/user/${leave.user_id}`);
+        // check that the leave was added
+        cy.get("[data-cy=leaveRow]").should("have.length", 2);
+        cy.contains("Test Leave")
+          .closest("tr")
+          .within(() => {
+            cy.get("[data-cy=leaveStartDate]").contains(
+              startDate.format("MMM D, YYYY"),
+            );
+            cy.get("[data-cy=leaveEndDate]").contains(
+              endDate.format("MMM D, YYYY"),
+            );
+            cy.get("[data-cy=leaveType]").contains("Development");
+            cy.get("[data-cy=leaveStatus]").contains("confirmed");
 
-          cy.wait("@apiPermissions");
+            // expect the Edit and Delete buttons to be visible
+            cy.contains("Edit").should("exist");
+            cy.contains("Delete").should("exist");
+          });
+      });
 
-          cy.get("[data-cy=leavesSection]").should("exist");
-          cy.get("[data-cy=leaveRow]").should("have.length", 1);
-        });
+      it("allows a group manager to edit a leave for a fellow group member", () => {
+        cy.visit(`/user/${leave.user_id}`);
+        cy.get("[data-cy=leaveRow]")
+          .first()
+          .within(() => {
+            cy.contains("Edit").click();
+            cy.get("[data-cy=leaveDescription] input")
+              .first()
+              .type("{selectall}Test Leave Edited");
+            cy.contains("Save").click();
+          });
 
-        it("allows a group manager to create a leave for a fellow group member", () => {
-          const startDate = dayjs().add(30, "day");
-          const endDate = dayjs().add(60, "day");
+        expect(cy.contains("Test Leave Edited")).to.exist;
+      });
 
-          cy.visit(`/user/${leave.user_id}`);
+      it("allows a group manager to delete a leave for a fellow group member", () => {
+        cy.visit(`/user/${leave.user_id}`);
 
-          // expect that only 1 leave exists
-          cy.get("[data-cy=leaveRow]").should("have.length", 1);
+        cy.get("[data-cy=leaveRow]").should("have.length", 1);
 
-          cy.contains("Add Leave").click();
+        cy.get("[data-cy=leaveRow]")
+          .first()
+          .within(() => {
+            cy.contains("Delete").click();
+          });
 
-          cy.get('[data-cy="leavesSection"] .is-new-leave')
-            .first()
-            .within(() => {
-              cy.get("[data-cy=leaveDescription] input").type("Test Leave");
-              cy.get("[data-cy=leaveStartDate] input").type(
-                startDate.format("YYYY-MM-DD"),
-              );
-
-              cy.wait(300); // add short wait to accommodate datepicker
-              cy.get("[data-cy=leaveEndDate] input").type(
-                endDate.format("YYYY-MM-DD"),
-              );
-              cy.get("[data-cy=leaveType] select").select("Development");
-              cy.get("[data-cy=leaveStatus] select").select("Confirmed");
-              cy.contains("Save").click();
-            });
-
-          // check that the leave was added
-          cy.get("[data-cy=leaveRow]").should("have.length", 2);
-          cy.contains("Test Leave")
-            .closest("tr")
-            .within(() => {
-              cy.get("[data-cy=leaveStartDate]").contains(
-                startDate.format("MMM D, YYYY"),
-              );
-              cy.get("[data-cy=leaveEndDate]").contains(
-                endDate.format("MMM D, YYYY"),
-              );
-              cy.get("[data-cy=leaveType]").contains("Development");
-              cy.get("[data-cy=leaveStatus]").contains("confirmed");
-
-              // expect the Edit and Delete buttons to be visible
-              cy.contains("Edit").should("exist");
-              cy.contains("Delete").should("exist");
-            });
-        });
-        it("allows a group manager to edit a leave for a fellow group member");
-        it(
-          "allows a group manager to delete a leave for a fellow group member",
-        );
-      },
-    );
+        cy.get("[data-cy=leaveRow]").should("have.length", 0);
+      });
+    });
   });
 });

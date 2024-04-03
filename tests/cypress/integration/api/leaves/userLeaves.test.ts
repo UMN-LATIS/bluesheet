@@ -81,7 +81,60 @@ describe("GET /api/user/:id/leaves", () => {
       });
   });
 
-  it("lets a group manager get any member's leaves", () => {});
+  context("as a fellow group member", () => {
+    let fellowGroupMembership;
+    let leave;
 
-  it("does not let a group manager get leaves for a non-member", () => {});
+    beforeEach(() => {
+      // create a new leave
+      // which will also create the leaveOwner user
+      cy.create("App\\Leave")
+        .then((createdLeave) => {
+          leave = createdLeave;
+
+          // create a new membership for the leave owner
+          // which will also create the group for our test
+          return cy.create({
+            model: "App\\Membership",
+            attributes: {
+              user_id: leave.user_id,
+            },
+          });
+        })
+        .then((leaveUserMembership) => {
+          // create another membership within the group
+          // which will also create a fellow group member
+          // which we can promote to a group manager when
+          // we want
+          return cy.create({
+            model: "App\\Membership",
+            attributes: {
+              group_id: leaveUserMembership.group_id,
+            },
+          });
+        })
+        .then((membership) => {
+          fellowGroupMembership = membership;
+        });
+    });
+
+    it("lets a group manager get any member's leaves", () => {
+      cy.promoteUserToGroupManager({
+        userId: fellowGroupMembership.user_id,
+        groupId: fellowGroupMembership.group_id,
+      })
+        .then(() => {
+          cy.login({ id: fellowGroupMembership.user_id });
+        })
+        .then(() => {
+          return api.get(`/api/users/${leave.user_id}/leaves`);
+        })
+        .then((response) => {
+          expect(response.status).to.eq(200);
+          const leaves = response.body;
+          expect(leaves).to.have.length(1);
+          expect(leaves[0].id).to.eq(leave.id);
+        });
+    });
+  });
 });
