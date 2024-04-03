@@ -123,7 +123,6 @@ import Tabs, { type Tab } from "@/components/Tabs.vue";
 import CheckboxGroup from "@/components/CheckboxGroup.vue";
 import { CourseTable } from "../components/CourseTable";
 import { useDebouncedComputed } from "@/utils/useDebouncedComputed";
-import { $can } from "@/utils";
 import DownloadSpreadsheetButton from "@/components/DownloadSpreadsheetButton.vue";
 import { getSpreadsheetFromWorker } from "../workers/getSpreadsheetFromWorker";
 import * as MESSAGE_TYPES from "../workers/messageTypes";

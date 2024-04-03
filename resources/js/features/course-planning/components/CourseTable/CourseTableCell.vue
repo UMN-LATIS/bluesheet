@@ -51,7 +51,6 @@ import EnrollmentInPublishedSection from "./EnrollmentInPublishedSection.vue";
 import EnrollmentInUnpublishedSection from "./EnrollmentInUnpublishedSection.vue";
 import { partition } from "lodash";
 import { DragDrop } from "@/components/DragDrop";
-import { $can } from "@/utils";
 import { DropEvent } from "@/types";
 import EditDraftSectionModal from "../EditDraftSectionModal.vue";
 
@@ -93,12 +92,15 @@ const arePlannedSectionsViewable = computed(() => {
   return (
     coursePlanningStore.filters.inPlanningMode &&
     coursePlanningStore.termsStore.isTermPlannable(props.term.id) &&
-    $can("view planned courses")
+    coursePlanningStore.currentUserCan.viewAnyPlannedCoursesForGroup
   );
 });
 
 const arePlannedSectionsEditable = computed(() => {
-  return arePlannedSectionsViewable.value && $can("edit planned courses");
+  return (
+    arePlannedSectionsViewable.value &&
+    coursePlanningStore.currentUserCan.editPlannedCoursesForGroup
+  );
 });
 
 interface CourseTableDragDropMeta extends T.DragDropMeta {
