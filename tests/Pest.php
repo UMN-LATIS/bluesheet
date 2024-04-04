@@ -87,3 +87,11 @@ function setupMockBandaidApiResponses() {
 
     Http::fake($fakedResponses);
 }
+
+function promoteUserToGroupManager(int $userId, int $groupId): void {
+    $membership = App\Membership::where('user_id', $userId)
+        ->where('group_id', $groupId)
+        ->first();
+    $membership->admin = true;
+    $membership->save();
+}
