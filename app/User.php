@@ -100,7 +100,7 @@ class User extends Authenticatable implements Auditable {
         return $this->memberships()->where('admin', true)->get()->pluck('group');
     }
 
-    public function managesGroupWithMember(User $member): bool {
+    public function managesAnyGroupWithMember(User $member): bool {
         $memberGroupIds = $member->groups->pluck('id');
         $adminGroupIds = $this->getManagedGroups()->pluck('id');
 

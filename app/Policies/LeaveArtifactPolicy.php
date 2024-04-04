@@ -6,12 +6,19 @@ use App\Constants\Permissions;
 use App\LeaveArtifact;
 use App\User;
 use App\Leave;
+use App\Library\UserService;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
 
 class LeaveArtifactPolicy {
 
     use HandlesAuthorization;
+
+    protected UserService $userService;
+
+    public function __construct() {
+        $this->userService = new UserService();
+    }
 
     /**
      * Determine whether the user can view any models.
@@ -28,7 +35,11 @@ class LeaveArtifactPolicy {
 
         // a group manager should be able to view the leaves
         // of any member of their group
-        if ($user->managesGroupWithMember($leave->user)) {
+        if ($user->managesAnyGroupWithMember($leave->user)) {
+            return true;
+        }
+
+        if ($this->userService->doesUserManageAnyGroupWithInstructor($user, $leave->user)) {
             return true;
         }
 
@@ -51,7 +62,11 @@ class LeaveArtifactPolicy {
 
         // a group manager should be able to view the leaves
         // of any member of their group
-        if ($currentUser->managesGroupWithMember($leaveArtifact->leave->user)) {
+        if ($currentUser->managesAnyGroupWithMember($leaveArtifact->leave->user)) {
+            return true;
+        }
+
+        if ($this->userService->doesUserManageAnyGroupWithInstructor($currentUser, $leaveArtifact->leave->user)) {
             return true;
         }
 
@@ -66,7 +81,11 @@ class LeaveArtifactPolicy {
             return true;
         }
 
-        if ($user->managesGroupWithMember($leave->user)) {
+        if ($user->managesAnyGroupWithMember($leave->user)) {
+            return true;
+        }
+
+        if ($this->userService->doesUserManageAnyGroupWithInstructor($user, $leave->user)) {
             return true;
         }
 
@@ -81,7 +100,12 @@ class LeaveArtifactPolicy {
             return true;
         }
 
-        if ($user->managesGroupWithMember($leaveArtifact->leave->user)) {
+        if ($user->managesAnyGroupWithMember($leaveArtifact->leave->user)) {
+            return true;
+        }
+
+
+        if ($this->userService->doesUserManageAnyGroupWithInstructor($user, $leaveArtifact->leave->user)) {
             return true;
         }
 
@@ -98,7 +122,12 @@ class LeaveArtifactPolicy {
 
         // a group manager should be able to edit the leaves
         // of any member of their group
-        if ($currentUser->managesGroupWithMember($leaveArtifact->leave->user)) {
+        if ($currentUser->managesAnyGroupWithMember($leaveArtifact->leave->user)) {
+            return true;
+        }
+
+
+        if ($this->userService->doesUserManageAnyGroupWithInstructor($currentUser, $leaveArtifact->leave->user)) {
             return true;
         }
 

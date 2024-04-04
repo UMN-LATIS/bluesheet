@@ -4,9 +4,15 @@ namespace App\Policies;
 
 use App\Constants\Permissions;
 use App\Leave;
+use App\Library\UserService;
 use App\User;
 
 class LeavePolicy {
+    private UserService $userService;
+
+    function __construct() {
+        $this->userService = new UserService();
+    }
 
     public function viewAny(User $user): bool {
         return false;
@@ -27,7 +33,11 @@ class LeavePolicy {
 
         // a group manager should be able to view the leaves
         // of other members of their group
-        if ($user->managesGroupWithMember($leave->user)) {
+        if ($user->managesAnyGroupWithMember($leave->user)) {
+            return true;
+        }
+
+        if ($this->userService->doesUserManageAnyGroupWithInstructor($user, $leave->user)) {
             return true;
         }
 
@@ -53,7 +63,11 @@ class LeavePolicy {
             return true;
         }
 
-        if ($user->managesGroupWithMember($leave->user)) {
+        if ($user->managesAnyGroupWithMember($leave->user)) {
+            return true;
+        }
+
+        if ($this->userService->doesUserManageAnyGroupWithInstructor($user, $leave->user)) {
             return true;
         }
 
@@ -68,7 +82,11 @@ class LeavePolicy {
             return true;
         }
 
-        if ($user->managesGroupWithMember($leave->user)) {
+        if ($user->managesAnyGroupWithMember($leave->user)) {
+            return true;
+        }
+
+        if ($this->userService->doesUserManageAnyGroupWithInstructor($user, $leave->user)) {
             return true;
         }
 
@@ -102,7 +120,11 @@ class LeavePolicy {
             return true;
         }
 
-        if ($currentUser->managesGroupWithMember($leaveOwner)) {
+        if ($currentUser->managesAnyGroupWithMember($leaveOwner)) {
+            return true;
+        }
+
+        if ($this->userService->doesUserManageAnyGroupWithInstructor($currentUser, $leaveOwner)) {
             return true;
         }
 
@@ -118,7 +140,11 @@ class LeavePolicy {
             return true;
         }
 
-        if ($currentUser->managesGroupWithMember($leaveOwner)) {
+        if ($currentUser->managesAnyGroupWithMember($leaveOwner)) {
+            return true;
+        }
+
+        if ($this->userService->doesUserManageAnyGroupWithInstructor($currentUser, $leaveOwner)) {
             return true;
         }
 
