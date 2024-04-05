@@ -23,7 +23,7 @@ class LeavePermissionController extends Controller {
 
         return [
             'viewAny' => Auth::user()->can('viewAnyLeavesForUser', [Leave::class, $leaveOwner]),
-            'create' => Auth::user()->can('createLeavesForUser', [Leave::class, $leaveOwner]),
+            'create' => Auth::user()->can('modifyLeavesForUser', [Leave::class, $leaveOwner]),
         ];
     }
 }

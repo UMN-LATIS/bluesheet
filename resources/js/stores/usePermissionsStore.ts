@@ -33,7 +33,7 @@ export const usePermissionsStore = defineStore("permissions", () => {
       return userLeavePermissions.viewAny;
     },
 
-    async canCreateLeavesForUser(leaveOwnerId: T.User["id"]): Promise<boolean> {
+    async canModifyLeavesForUser(leaveOwnerId: T.User["id"]): Promise<boolean> {
       const userLeavePermissions = await api.getPermissionsForUserLeaves(
         leaveOwnerId,
       );
