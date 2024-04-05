@@ -170,7 +170,7 @@ class UserService {
     public function doesUserManageAnyGroupWithInstructor(User $manager, User $instructor): bool {
         $userManagedDeptIds = $manager->getManagedGroups()->pluck('dept_id');
 
-        return $userManagedDeptIds->some(function ($deptId) use ($instructor) {
+        return $userManagedDeptIds->contains(function ($deptId) use ($instructor) {
             return $this->isUserInstructorInDept($instructor, $deptId);
         });
     }
