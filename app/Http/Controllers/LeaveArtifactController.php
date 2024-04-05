@@ -14,7 +14,7 @@ class LeaveArtifactController extends Controller {
     public function index(Leave $leave) {
         $this->authorize('viewAny', [LeaveArtifact::class, $leave]);
 
-        return $leave->artifacts;
+        return LeaveArtifactResource::collection($leave->artifacts);
     }
 
     public function show(Leave $leave, LeaveArtifact $leaveArtifact) {
@@ -31,7 +31,9 @@ class LeaveArtifactController extends Controller {
             'target' => 'required|string',
         ]);
 
-        return $leave->artifacts()->create($validated);
+        $leaveArtifact = $leave->artifacts()->create($validated);
+
+        return LeaveArtifactResource::make($leaveArtifact);
     }
 
     public function update(Request $request, Leave $leave, LeaveArtifact $leaveArtifact) {
@@ -47,7 +49,7 @@ class LeaveArtifactController extends Controller {
         if (!$updateSuccessful) {
             return response()->json(['message' => 'Could not update artifact'], 500);
         } else {
-            return $leaveArtifact->refresh();
+            return LeaveArtifactResource::make($leaveArtifact);
         }
     }
 

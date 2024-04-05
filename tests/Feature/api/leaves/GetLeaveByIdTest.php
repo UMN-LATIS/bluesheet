@@ -44,7 +44,10 @@ it('allows a user to view their own leave', function () {
             "status",
             "user",
             "artifacts",
-            "canCurrentUser",
+            "canCurrentUser" => [
+                "update",
+                "delete",
+            ]
         ]);
 });
 

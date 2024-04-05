@@ -19,7 +19,7 @@ beforeEach(function () {
     ]);
 
     // create some leave artifacts
-    $this->leaveArtifacts = LeaveArtifact::factory()->count(3)->create([
+    $this->leaveArtifact = LeaveArtifact::factory()->create([
         'leave_id' => $this->leave->id,
     ]);
 
@@ -33,42 +33,37 @@ beforeEach(function () {
 });
 
 it('returns a 401 if the user is not authenticated', function () {
-    getJson("/api/leaves/{$this->leave->id}/artifacts")
+    getJson("/api/leaves/{$this->leave->id}/artifacts/{$this->leaveArtifact->id}")
         ->assertUnauthorized();
 });
 
 it('does not allow a default user to view leave artifacts for a leave they do not own', function () {
     actingAs(User::factory()->create())
-        ->getJson("/api/leaves/{$this->leave->id}/artifacts")
+        ->getJson("/api/leaves/{$this->leave->id}/artifacts/{$this->leaveArtifact->id}")
         ->assertForbidden();
 });
 
 it('lets a user view their own leave artifacts', function () {
     actingAs($this->leaveOwner)
-        ->getJson("/api/leaves/{$this->leave->id}/artifacts")
+        ->getJson("/api/leaves/{$this->leave->id}/artifacts/{$this->leaveArtifact->id}")
         ->assertOk()
-        ->assertJsonCount(3)
         ->assertJsonStructure([
-            '*' => [
-                "id",
-                "leave_id",
-                "label",
-                "target",
-                "created_at",
-                "updated_at",
-                "canCurrentUser" => [
-                    "update",
-                    "delete",
-                ]
-            ],
+            "id",
+            "label",
+            "target",
+            "created_at",
+            "updated_at",
+            "canCurrentUser" => [
+                "update",
+                "delete",
+            ]
         ]);
 });
 
-it('lets a user with VIEW_ANY_LEAVES permission view all of a leave\'s artifacts', function () {
+it('lets a user with VIEW_ANY_LEAVES permission view any leave artifact', function () {
     actingAs($this->viewAnyLeavesUser)
-        ->getJson("/api/leaves/{$this->leave->id}/artifacts")
-        ->assertOk()
-        ->assertJsonCount(3);
+        ->getJson("/api/leaves/{$this->leave->id}/artifacts/{$this->leaveArtifact->id}")
+        ->assertOk();
 });
 
 describe('as a fellow group member', function () {
@@ -90,14 +85,13 @@ describe('as a fellow group member', function () {
         promoteUserToGroupManager($this->fellowGroupMembership->user->id, $this->fellowGroupMembership->group->id);
 
         actingAs($this->fellowGroupMembership->user)
-            ->getJson("/api/leaves/{$this->leave->id}/artifacts")
-            ->assertOk()
-            ->assertJsonCount(3);
+            ->getJson("/api/leaves/{$this->leave->id}/artifacts/{$this->leaveArtifact->id}")
+            ->assertOk();
     });
 
     it('does not allow a group member to view leave artifacts of a group member if they are not a BlueSheet Manager', function () {
         actingAs($this->fellowGroupMembership->user)
-            ->getJson("/api/leaves/{$this->leave->id}/artifacts")
+            ->getJson("/api/leaves/{$this->leave->id}/artifacts/{$this->leaveArtifact->id}")
             ->assertForbidden();
     });
 });

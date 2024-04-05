@@ -140,7 +140,7 @@ describe("GET /api/leaves/:leaveId/artifacts/:artifactId", () => {
       .then((response) => {
         expect(response.status).to.eq(200);
         const artifact = response.body;
-        expect(artifact.currentUserCan).to.deep.eq({
+        expect(artifact.canCurrentUser).to.deep.eq({
           // a user can view their own artifacts
           // but not update or delete them
           viewAny: true,
