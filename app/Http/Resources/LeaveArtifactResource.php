@@ -15,15 +15,14 @@ class LeaveArtifactResource extends JsonResource {
     public function toArray(Request $request): array {
         return [
             'id' => $this->id,
+            'leave_id' => $this->leave_id,
             'label' => $this->label,
             'target' => $this->target,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
-            'currentUserCan' => [
+            'canCurrentUser' => [
                 'update' => $request->user()->can('update', $this->resource),
                 'delete' => $request->user()->can('delete', $this->resource),
-                'view' => $request->user()->can('view', $this->resource),
-                'viewAny' => $request->user()->can('viewAny', [LeaveArtifact::class, $this->resource->leave])
             ]
         ];
     }

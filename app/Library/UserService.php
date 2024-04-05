@@ -5,7 +5,10 @@ namespace App\Library;
 use App\User;
 use Illuminate\Support\Collection;
 use App\Library\Bandaid;
+use Exception;
 use Illuminate\Support\Facades\Cache;
+use RuntimeException;
+use InvalidArgumentException;
 
 class UserService {
     private Bandaid $bandaid;
@@ -104,8 +107,26 @@ class UserService {
         return $users->first();
     }
 
-    public function getDeptInstructors(string $deptId): Collection {
+    /**
+     * Get the instructors for a department
+     * @param string $deptId
+     * @param array $options
+     * @param bool $options['refresh'] - Whether to refresh the cache
+     * @return Collection<User>
+     */
+    public function getDeptInstructors(string $deptId, array $options = []): Collection {
         $cacheKey = 'deptInstructors-' . $deptId;
+
+        $defaultOptions = [
+            'refresh' => false,
+        ];
+
+        $options = array_merge($defaultOptions, $options);
+
+        if ($options['refresh']) {
+            Cache::forget($cacheKey);
+        }
+
         $cachedInstructors = Cache::get($cacheKey);
         if ($cachedInstructors) {
             return $cachedInstructors;
@@ -139,5 +160,18 @@ class UserService {
         Cache::put($cacheKey, $instructors, now()->addMinutes(10));
 
         return $instructors;
+    }
+
+    public function isUserInstructorInDept(User $maybeInstructor, int $deptId): bool {
+        $instructors = $this->getDeptInstructors($deptId);
+        return $instructors->contains('id', $maybeInstructor->id);
+    }
+
+    public function doesUserManageAnyGroupWithInstructor(User $manager, User $instructor): bool {
+        $userManagedDeptIds = $manager->getManagedGroups()->pluck('dept_id');
+
+        return $userManagedDeptIds->contains(function ($deptId) use ($instructor) {
+            return $this->isUserInstructorInDept($instructor, $deptId);
+        });
     }
 }

@@ -65,7 +65,7 @@ class LeaveController extends Controller {
 
         $leaveOwner = User::find($validated['user_id']);
 
-        $this->authorize('createLeavesForUser', [Leave::class, $leaveOwner]);
+        $this->authorize('modifyLeavesForUser', [Leave::class, $leaveOwner]);
 
 
         $leave = Leave::create($validated);

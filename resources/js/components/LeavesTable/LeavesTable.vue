@@ -84,7 +84,7 @@ const canDeleteLeaves = computed(() =>
 watch(
   () => props.userId,
   async () => {
-    canCreateLeaves.value = await permissionsStore.canCreateLeavesForUser(
+    canCreateLeaves.value = await permissionsStore.canModifyLeavesForUser(
       props.userId,
     );
   },

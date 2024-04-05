@@ -71,19 +71,37 @@ function fixture(string $filename): array {
     );
 }
 
+function clearExistingHttpFakes(): void {
+    $reflection = new \ReflectionObject(Http::getFacadeRoot());
+    $property = $reflection->getProperty('stubCallbacks');
+    $property->setAccessible(true);
+    $property->setValue(Http::getFacadeRoot(), collect());
+}
+
 function mockResponse(string $filename, int $status = 200) {
     $fixture = fixture($filename);
     return Http::response($fixture, $status);
 }
 
-function setupMockBandaidApiResponses() {
+function getMockBandaidResponses($additionalReponses = []) {
     $BANDAID_API = config('bandaid.baseUri');
 
-    $fakedResponses = [
+    return [
         "{$BANDAID_API}/classes/terms*" => mockResponse("Bandaid/mockGetTerms.json"),
         "{$BANDAID_API}/classes/list*" => mockResponse("Bandaid/mockGetDeptClassList.json"),
         "{$BANDAID_API}/department/*/employees" => mockResponse("Bandaid/mockGetEmployeesForDept.json"),
+        ...$additionalReponses,
     ];
+}
 
-    Http::fake($fakedResponses);
+function setupMockBandaidApiResponses() {
+    Http::fake(getMockBandaidResponses());
+}
+
+function promoteUserToGroupManager(int $userId, int $groupId): void {
+    $membership = App\Membership::where('user_id', $userId)
+        ->where('group_id', $groupId)
+        ->first();
+    $membership->admin = true;
+    $membership->save();
 }

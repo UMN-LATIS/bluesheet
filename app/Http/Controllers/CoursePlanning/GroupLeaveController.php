@@ -24,7 +24,7 @@ class GroupLeaveController extends Controller {
     public function index(Request $request, Group $group) {
         $this->authorize('viewAnyLeavesForGroup', [Leave::class, $group]);
 
-        $employees = $this->userService->getDeptInstructors($group->dept_id);
+        $employees = $this->userService->getDeptInstructors($group->dept_id, ['refresh' => true]);
 
         return $employees->flatMap(function ($employee) {
             return $employee->leaves;
