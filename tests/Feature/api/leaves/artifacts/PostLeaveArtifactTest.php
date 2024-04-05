@@ -18,9 +18,10 @@ beforeEach(function () {
         'user_id' => $this->leaveOwner->id,
     ]);
 
-    $this->leaveArtifact = LeaveArtifact::factory()->create([
-        'leave_id' => $this->leave->id,
-    ]);
+    $this->validLeaveArtifactData = [
+        'label' => 'Artifact label',
+        'target' => 'https://example.com',
+    ];
 
     $this->superAdmin = User::where('umndid', 'admin')->first();
 
@@ -29,30 +30,47 @@ beforeEach(function () {
 });
 
 it('returns a 401 if the user is not authenticated', function () {
-    deleteJson("/api/leaves/{$this->leave->id}/artifacts/{$this->leaveArtifact->id}")
+    postJson("/api/leaves/{$this->leave->id}/artifacts", $this->validLeaveArtifactData)
         ->assertUnauthorized();
 });
 
-it('does not allow a default user to delete leave artifacts for a leave they do not own', function () {
+it('does not allow a default user to create leave artifacts', function () {
     actingAs(User::factory()->create())
-        ->deleteJson("/api/leaves/{$this->leave->id}/artifacts/{$this->leaveArtifact->id}")
+        ->postJson("/api/leaves/{$this->leave->id}/artifacts", $this->validLeaveArtifactData)
         ->assertForbidden();
 });
 
-
-it('does not let a user delete their own leave artifacts', function () {
+it('does not allow user to create their own leave artifacts', function () {
     actingAs($this->leaveOwner)
-        ->deleteJson("/api/leaves/{$this->leave->id}/artifacts/{$this->leaveArtifact->id}")
+        ->postJson("/api/leaves/{$this->leave->id}/artifacts", $this->validLeaveArtifactData)
         ->assertForbidden();
 });
 
-it('lets a user with EDIT_ANY_LEAVES permission to delete an artifact', function () {
+it('lets a user with EDIT_ANY_LEAVES permission to create an artifact', function () {
     actingAs($this->editAnyLeavesUser)
-        ->deleteJson("/api/leaves/{$this->leave->id}/artifacts/{$this->leaveArtifact->id}")
-        ->assertNoContent();
+        ->postJson("/api/leaves/{$this->leave->id}/artifacts", $this->validLeaveArtifactData)
+        ->assertStatus(201)
+        ->assertJsonFragment($this->validLeaveArtifactData)
+        ->assertJsonStructure([
+            'id',
+            'label',
+            'target',
+            'leave_id',
+            'created_at',
+            'updated_at',
+            'canCurrentUser' => [
+                'delete',
+                'update'
+            ]
+        ]);
 });
 
-
+it('fails if required field is missing', function () {
+    actingAs($this->editAnyLeavesUser)
+        ->postJson("/api/leaves/{$this->leave->id}/artifacts", [])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['label', 'target']);
+});
 
 describe('as a fellow group member', function () {
     beforeEach(function () {
@@ -69,17 +87,17 @@ describe('as a fellow group member', function () {
         ]);
     });
 
-    it('does not let a fellow group member delete a leave artifact', function () {
+    it('does not let a fellow group member create a leave artifact', function () {
         actingAs($this->fellowGroupMembership->user)
-            ->deleteJson("/api/leaves/{$this->leave->id}/artifacts/{$this->leaveArtifact->id}")
+            ->postJson("/api/leaves/{$this->leave->id}/artifacts", $this->validLeaveArtifactData)
             ->assertForbidden();
     });
 
-    it('lets a fellow group member delete a leave artifact if they are a BlueSheet Manager', function () {
+    it('lets a fellow group member create a leave artifact if they are a BlueSheet Manager', function () {
         promoteUserToGroupManager($this->fellowGroupMembership->user->id, $this->fellowGroupMembership->group->id);
 
         actingAs($this->fellowGroupMembership->user)
-            ->deleteJson("/api/leaves/{$this->leave->id}/artifacts/{$this->leaveArtifact->id}")
-            ->assertNoContent();
+            ->postJson("/api/leaves/{$this->leave->id}/artifacts", $this->validLeaveArtifactData)
+            ->assertStatus(201);
     });
 });
