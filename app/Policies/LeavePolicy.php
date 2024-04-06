@@ -69,14 +69,7 @@ class LeavePolicy {
     }
 
     public function viewAnyLeavesForGroup(User $currentUser, Group $group): bool {
-        if ($currentUser->can(Permissions::VIEW_ANY_LEAVES)) {
-            return true;
-        }
-
-        if ($currentUser->managesGroup($group)) {
-            return true;
-        }
-
-        return false;
+        return $currentUser->can(Permissions::VIEW_ANY_LEAVES)
+            || $currentUser->managesGroup($group);
     }
 }

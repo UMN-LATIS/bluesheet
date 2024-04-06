@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\CoursePlanning;
 
-use App\Constants\Permissions;
 use App\Group;
 use App\Http\Controllers\Controller;
 use App\Leave;
