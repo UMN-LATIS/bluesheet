@@ -1,14 +1,7 @@
-// see: https://mmccaff.github.io/2018/11/03/laravel-permissions-in-vue-components/
+import * as T from "@/types";
+import { usePermissionsStore } from "@/stores/usePermissionsStore";
 
-import { UserPermission } from "@/types";
-
-declare global {
-  interface Window {
-    Permissions: UserPermission[];
-  }
-}
-
-export default function $can(permissionName: UserPermission) {
-  // Permissions is a global variable that is set in the main blade template
-  return window.Permissions.indexOf(permissionName) !== -1;
+export default function $can(permissionName: T.UserPermission) {
+  const { can } = usePermissionsStore();
+  return can(permissionName);
 }

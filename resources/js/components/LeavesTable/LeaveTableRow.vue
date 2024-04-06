@@ -113,7 +113,7 @@
       />
       <span v-else>{{ dayjs(leave.end_date).format("MMM D, YYYY") }}</span>
     </Td>
-    <Td v-if="$can('edit leaves')">
+    <Td v-if="canEditLeave">
       <div class="tw-flex tw-gap-1 tw-justify-end tw-items-center">
         <template v-if="isEditing">
           <SmallButton @click="handleCancelEditLeave">Cancel</SmallButton>
@@ -153,7 +153,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch, reactive } from "vue";
-import { dayjs, $can, isTempId } from "@/utils";
+import { dayjs, isTempId } from "@/utils";
 import { Leave, leaveStatuses, leaveTypes } from "@/types";
 import InputGroup from "@/components/InputGroup.vue";
 import SelectGroup from "@/components/SelectGroup.vue";
@@ -173,6 +173,10 @@ const isShowingDetails = ref(false);
 const isNewLeave = computed(() => isTempId(props.leave.id));
 const isEditing = ref(isNewLeave.value);
 const userStore = useUserStore();
+
+const canEditLeave = computed(
+  () => isNewLeave.value || props.leave.canCurrentUser?.update || false,
+);
 
 const localLeave = reactive({
   description: props.leave.description,

@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Auth;
 use DB;
-use App\Http\Resources\User as UserResource;
+use App\Http\Resources\UserResource;
+use App\Leave;
 use App\Library\LDAP as LDAP;
 use \App\Library\Bandaid;
 
@@ -48,12 +49,18 @@ class UserController extends Controller {
                 'message' => "You don't have permission to view this user"
             );
             return Response()->json($returnData, 500);
-        } else {
-
-            // some of these might not actually be returned - the resource will gate based on perms
-            $user->load(['memberships', 'memberships.group', 'memberships.role', 'favoriteGroups', 'favoriteRoles', 'leaves', 'leaves.artifacts']);
-            return new UserResource($user);
         }
+
+        $relationsToLoad = ['memberships', 'memberships.group', 'memberships.role', 'favoriteGroups', 'favoriteRoles'];
+
+        // only load leaves if the user has permission to view them
+        if (Auth::user()->can('viewAnyLeavesForUser', [Leave::class, $user])) {
+            $relationsToLoad[] = 'leaves';
+            $relationsToLoad[] = 'leaves.artifacts';
+        }
+
+        $user->load($relationsToLoad);
+        return new UserResource($user);
     }
 
     /**

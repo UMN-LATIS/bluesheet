@@ -15,7 +15,6 @@ export const UserPermissions = {
   CREATE_GROUPS: "create groups",
   EDIT_GROUPS: "edit groups",
   EDIT_USERS: "edit users",
-  EDIT_LEAVES: "edit leaves",
   EDIT_PLANNED_COURSES: "edit planned courses",
   SCHEDULE_DEPTS: "schedule departments",
   VIEW_OWN_GROUPS: "view own groups",
@@ -23,7 +22,8 @@ export const UserPermissions = {
   VIEW_PRIVATE_GROUPS: "view private groups",
   VIEW_USERS: "view users",
   VIEW_REPORTS: "view reports",
-  VIEW_LEAVES: "view leaves",
+  EDIT_ANY_LEAVES: "edit leaves",
+  VIEW_ANY_LEAVES: "view leaves",
   VIEW_ELIGIBILITY: "view eligibility",
   VIEW_PLANNED_COURSES: "view planned courses",
 } as const;
@@ -195,6 +195,7 @@ export interface Leave {
   created_at: ISODateTime;
   updated_at: ISODateTime;
   deleted_at?: ISODateTime | null;
+  canCurrentUser?: ApiResourceItemPermissions;
 }
 
 export interface LeaveWithPerson extends Leave {
@@ -469,4 +470,14 @@ export interface DeptLeavesReportRow {
     term: string;
     leaveCountByStatus: Record<LeaveStatus, number> & { all: number };
   }[];
+}
+
+export interface ApiResourcePermissions {
+  viewAny: boolean;
+  create: boolean;
+}
+
+export interface ApiResourceItemPermissions {
+  update: boolean;
+  delete: boolean;
 }

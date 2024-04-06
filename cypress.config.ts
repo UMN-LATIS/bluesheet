@@ -4,7 +4,7 @@ export default defineConfig({
   chromeWebSecurity: false,
   defaultCommandTimeout: 5000,
   watchForFileChanges: true,
-  retries: 2,
+  // retries: 2,
   videosFolder: "tests/cypress/videos",
   screenshotsFolder: "tests/cypress/screenshots",
   fixturesFolder: "tests/cypress/fixture",

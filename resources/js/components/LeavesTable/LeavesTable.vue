@@ -12,7 +12,7 @@
           v-model="showPastLeaves"
           label="Show Past Leaves"
         />
-        <template v-if="$can('edit leaves')">
+        <template v-if="canCreateLeaves">
           <Button
             variant="secondary"
             @click="userStore.addLeaveForUser(userId)"
@@ -34,12 +34,12 @@
           <Th>Status</Th>
           <Th>Start Date</Th>
           <Th>End Date</Th>
-          <Th v-if="$can('edit leaves')"></Th>
+          <Th v-if="canUpdateLeaves || canDeleteLeaves"></Th>
         </tr>
       </THead>
       <tr v-if="!sortedAndFilteredLeaves.length">
         <Td
-          :colspan="$can('edit leaves') ? 6 : 5"
+          :colspan="canUpdateLeaves || canDeleteLeaves ? 6 : 5"
           class="tw-text-center !tw-p-6 tw-italic tw-text-neutral-500"
         >
           No Leaves
@@ -55,14 +55,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import { dayjs, $can, isTempId } from "@/utils";
+import { computed, ref, watch } from "vue";
+import { dayjs, isTempId } from "@/utils";
 import { Leave } from "@/types";
 import Button from "@/components/Button.vue";
 import { Table, Th, Td, THead } from "@/components/Table";
 import CheckboxGroup from "@/components/CheckboxGroup.vue";
 import LeaveTableRow from "./LeaveTableRow.vue";
 import { useUserStore } from "@/stores/useUserStore";
+import { usePermissionsStore } from "@/stores/usePermissionsStore";
 
 const props = defineProps<{
   userId: number;
@@ -70,7 +71,25 @@ const props = defineProps<{
 }>();
 
 const userStore = useUserStore();
+const permissionsStore = usePermissionsStore();
 const showPastLeaves = ref(false);
+const canCreateLeaves = ref(false);
+const canUpdateLeaves = computed(() =>
+  props.leaves.some((leave) => leave.canCurrentUser?.update),
+);
+const canDeleteLeaves = computed(() =>
+  props.leaves.some((leave) => leave.canCurrentUser?.delete),
+);
+
+watch(
+  () => props.userId,
+  async () => {
+    canCreateLeaves.value = await permissionsStore.canModifyLeavesForUser(
+      props.userId,
+    );
+  },
+  { immediate: true },
+);
 
 const sortByStartDateDescending = (a, b) => {
   if (dayjs(a.start_date).isBefore(dayjs(b.start_date))) return 1;

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Leave;
+use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\Response;
@@ -53,8 +54,6 @@ class LeaveController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request) {
-        abort_if($request->user()->cannot('edit leaves'), 403);
-
         $validated = $request->validate([
             'user_id' => 'required|integer|exists:users,id',
             'description' => 'required|string|max:255',
@@ -64,8 +63,13 @@ class LeaveController extends Controller {
             'type' => ['required', Rule::in(Leave::TYPES)],
         ]);
 
+        $leaveOwner = User::find($validated['user_id']);
+
+        $this->authorize('modifyLeavesForUser', [Leave::class, $leaveOwner]);
+
+
         $leave = Leave::create($validated);
-        return $leave->load('user');
+        return LeaveResource::make($leave->load('user'));
     }
 
     /**
@@ -75,10 +79,9 @@ class LeaveController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function show(Leave $leave) {
-        $currentUser = Auth::user();
-        abort_if($currentUser->cannot('view leave') && $leave->user_id !== $currentUser->id, 403);
+        $this->authorize('view', $leave);
 
-        return $leave->load(['user', 'artifacts']);
+        return LeaveResource::make($leave->load(['user', 'artifacts']));
     }
 
     /**
@@ -89,7 +92,7 @@ class LeaveController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, Leave $leave) {
-        abort_if($request->user()->cannot('edit leaves'), 403);
+        $this->authorize('update', $leave);
 
         $validated = $request->validate([
             'user_id' => 'required|integer|exists:users,id',
@@ -102,7 +105,7 @@ class LeaveController extends Controller {
 
         $leave->update($validated);
 
-        return $leave->load(['user', 'artifacts']);
+        return LeaveResource::make($leave->load(['user', 'artifacts']));
     }
 
     /**
@@ -112,7 +115,7 @@ class LeaveController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function destroy(Request $request, Leave $leave) {
-        abort_if($request->user()->cannot('edit leaves'), 403);
+        $this->authorize('delete', $leave);
 
         $leave->delete();
         return response()->json(null, Response::HTTP_NO_CONTENT);

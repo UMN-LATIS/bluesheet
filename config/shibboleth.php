@@ -40,7 +40,7 @@ return array(
             'sn'          => 'User',
             'eppn'        => 'admin@umn.edu',
             'umnDID'      => 'admin',
-            'umnEmplId'      => '1111111',
+            'umnEmplId'      => '2328381',
         ),
         'staff' => array(
             'uid'         => 'staff',
@@ -84,14 +84,14 @@ return array(
             'umnDID' => 'view_user',
             'umnEmplId'      => '1111115',
         ],
-        'group_admin' => [
-            'uid' => 'group_admin',
-            'displayName' => 'Group Admin',
-            'givenName' => 'Group',
+        'global_group_admin' => [
+            'uid' => 'global_group_admin',
+            'displayName' => 'Global Group Admin',
+            'givenName' => 'Global Group',
             'surname' => 'Admin',
             'sn' => 'Admin',
-            'mail' => 'group_admin@umn.edu',
-            'umnDID' => 'group_admin',
+            'mail' => 'global_group_admin@umn.edu',
+            'umnDID' => 'global_group_admin',
             'umnEmplId'      => '1111116',
         ],
         'site_admin' => [

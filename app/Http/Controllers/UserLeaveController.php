@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\User;
 use App\Leave;
+use App\Http\Resources\LeaveResource;
 use Auth;
 
 class UserLeaveController extends Controller {
@@ -14,10 +15,11 @@ class UserLeaveController extends Controller {
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(User $user) {
-        $currentUser = Auth::user();
-        abort_if($currentUser->cannot('view leaves') && $currentUser->id !== $user->id, 403);
+    public function index(User $leaveOwner) {
+        $this->authorize('viewAnyLeavesForUser', [Leave::class, $leaveOwner]);
 
-        return Leave::where('user_id', $user->id)->get();
+        $leaves = Leave::where('user_id', $leaveOwner->id)->get();
+
+        return LeaveResource::collection($leaves);
     }
 }

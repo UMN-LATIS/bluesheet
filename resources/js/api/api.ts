@@ -148,3 +148,14 @@ export async function getDeptLeavesReport() {
 
   return res.data;
 }
+
+/**
+ * fetches permissions to view/create leaves for a user
+ */
+export async function getPermissionsForUserLeaves(leaveOwnerId: number) {
+  const res = await axios.get<T.ApiResourcePermissions>(
+    `/api/permissions/users/${leaveOwnerId}/leaves`,
+  );
+
+  return res.data;
+}

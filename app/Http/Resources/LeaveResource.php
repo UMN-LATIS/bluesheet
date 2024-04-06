@@ -19,7 +19,8 @@ class LeaveResource extends JsonResource {
             'end_date' => $this->end_date,
             'status' => $this->status,
             'type' => $this->type,
-            'user' => [
+            'user_id' => $this->user_id,
+            'user' => $this->whenLoaded('user', [
                 'id' => $this->user->id,
                 'givenname' => $this->user->givenname,
                 'surname' => $this->user->surname,
@@ -28,8 +29,13 @@ class LeaveResource extends JsonResource {
                 'emplid' => $this->user->emplid,
                 'ou' => $this->user->ou,
                 'title' => $this->user->title,
-            ],
-            'terms' => TermResource::collection($this->terms),
+            ]),
+            'terms' => TermResource::collection($this->whenNotNull($this->terms)),
+            'artifacts' => LeaveArtifactResource::collection($this->whenLoaded('artifacts')),
+            'canCurrentUser' => [
+                'update' => $request->user()->can('update', $this->resource),
+                'delete' => $request->user()->can('delete', $this->resource),
+            ]
         ];
     }
 }

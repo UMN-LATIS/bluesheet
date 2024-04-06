@@ -35,7 +35,7 @@ describe("Leave Artifacts", () => {
       url: "/api/leaves/*/artifacts",
     }).as("apiCreateLeaveArtifact");
 
-    cy.login("group_admin");
+    cy.login("global_group_admin");
   });
 
   it("add and then cancel adding an artifact", () => {
