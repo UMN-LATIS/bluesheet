@@ -7,27 +7,18 @@ use App\Group;
 use App\Constants\Permissions;
 
 class CourseSectionPolicy {
+
+    protected CoursePolicy $coursePolicy;
+
+    public function __construct() {
+        $this->coursePolicy = new CoursePolicy();
+    }
+
     public function viewAnySectionsForGroup(User $currentUser, Group $group) {
-        if ($currentUser->can(Permissions::VIEW_PLANNED_COURSES)) {
-            return true;
-        }
-
-        if ($currentUser->managesGroup($group)) {
-            return true;
-        }
-
-        return false;
+        return $this->coursePolicy->viewAnyCoursesForGroup($currentUser, $group);
     }
 
     public function editAnySectionsForGroup(User $user, Group $group) {
-        if ($user->can(Permissions::EDIT_PLANNED_COURSES)) {
-            return true;
-        }
-
-        if ($user->managesGroup($group)) {
-            return true;
-        }
-
-        return false;
+        return $this->coursePolicy->editAnyCoursesForGroup($user, $group);
     }
 }
