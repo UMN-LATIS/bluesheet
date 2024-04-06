@@ -89,6 +89,29 @@ describe("User leaves", () => {
         });
     });
 
+    it("cancels the creation of a new leave", () => {
+      cy.visit(`/user/${basicUserId}`);
+
+      // verify that only 2 leaves exist
+      cy.get("[data-cy=leaveRow]").should("have.length", 2);
+
+      // add a leave
+      cy.contains("Add Leave").click();
+
+      // now should have 3 rows
+      cy.get("[data-cy=leaveRow]").should("have.length", 3);
+
+      // cancel the new leave
+      cy.get('[data-cy="leavesSection"] .is-new-leave')
+        .first()
+        .within(() => {
+          cy.get("button").contains("Cancel").click();
+        });
+
+      // now should have 2 rows again
+      cy.get("[data-cy=leaveRow]").should("have.length", 2);
+    });
+
     it("edits a leave", () => {
       cy.visit(`/user/${basicUserId}`);
       cy.get("[data-cy=leaveRow]")

@@ -201,6 +201,10 @@ function handleEditClick() {
 }
 
 function handleCancelEditLeave() {
+  if (isNewLeave.value) {
+    userStore.removeLeaveFromStore(props.leave.id);
+  }
+
   isEditing.value = false;
   resetLocalLeaveToProps();
 }
