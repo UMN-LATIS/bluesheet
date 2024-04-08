@@ -1,8 +1,8 @@
 <template>
   <DefaultLayout>
     <p>
-      This report gives you information about BlueSheet group admins (those who
-      can manage a given group) and groups without admins.
+      This report gives you information about BlueSheet Managers (those who can
+      manage a given group) and groups without managers.
     </p>
 
     <table class="table">

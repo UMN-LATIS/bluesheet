@@ -2,13 +2,13 @@
 
 BlueSheet provides a way to track the members of the various groups, committees, taskforces and departments. It tracks the roles that people have within those groups, and keeps track of historical membership. It can be used to answer questions like "Who are all the Directors of Undergraduate Studies" or "Who chaired our Fun Committee three year ago?".
 
-## Who can use the BlueSheet? ##
+## Who can use the BlueSheet?
 
-Anyone with an Internet ID has access to view their own group membership and to browse the other groups within the system. In order to make changes, you need to be marked as the administrator for a given group, or you need to request administrative access to the tool. [Email us](mailto:latistecharch@umn.edu) for that access.
+Anyone with an Internet ID has access to view their own group membership and to browse the other groups within the system. In order to make changes, you need to be marked as a BlueSheet Manager for a given group, or you need to request administrative access to the tool. [Email us](mailto:latistecharch@umn.edu) for that access.
 
-## Who updates groups? ##
+## Who updates groups?
 
-This can vary from group to group. In academic departments, the Departmental Admin is usually responsible for maintaining the department's entry in BlueSheet. Anyone flagged as group administrator will get periodic (twice per year) email reminders to update their groups.
+This can vary from group to group. In academic departments, the Departmental Admin is usually responsible for maintaining the department's entry in BlueSheet. Anyone flagged as BlueSheet Manager will get periodic (twice per year) email reminders to update their groups.
 
 ## I want to add a new group - where should it go?
 
