@@ -29,8 +29,8 @@ class LeavePolicy {
     /**
      * Determine whether the user can create models.
      */
-    public function create(User $user): bool {
-        return $user->can(Permissions::EDIT_ANY_LEAVES);
+    public function create(User $user, Leave $leaveToCreate): bool {
+        return $this->modifyLeavesForUser($user, $leaveToCreate->user);
     }
 
     /**
