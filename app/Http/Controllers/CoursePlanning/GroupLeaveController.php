@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\CoursePlanning;
 
-use App\Constants\Permissions;
 use App\Group;
 use App\Http\Controllers\Controller;
+use App\Leave;
 use Illuminate\Http\Request;
 
 use App\Library\Bandaid;
@@ -21,7 +21,7 @@ class GroupLeaveController extends Controller {
 
 
     public function index(Request $request, Group $group) {
-        abort_if($request->user()->cannot(Permissions::VIEW_ANY_LEAVES), 403);
+        $this->authorize('viewAnyLeavesForGroup', [Leave::class, $group]);
 
         $employees = $this->userService->getDeptInstructors($group->dept_id, ['refresh' => true]);
 

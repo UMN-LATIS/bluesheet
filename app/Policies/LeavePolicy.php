@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Constants\Permissions;
+use App\Group;
 use App\Leave;
 use App\Library\UserService;
 use App\User;
@@ -65,5 +66,10 @@ class LeavePolicy {
         return $currentUser->can(Permissions::EDIT_ANY_LEAVES)
             || $currentUser->managesAnyGroupWithMember($leaveOwner)
             || $this->userService->doesUserManageAnyGroupWithInstructor($currentUser, $leaveOwner);
+    }
+
+    public function viewAnyLeavesForGroup(User $currentUser, Group $group): bool {
+        return $currentUser->can(Permissions::VIEW_ANY_LEAVES)
+            || $currentUser->managesGroup($group);
     }
 }

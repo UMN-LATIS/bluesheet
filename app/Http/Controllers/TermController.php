@@ -15,7 +15,7 @@ class TermController extends Controller {
     }
 
     public function index(Request $request) {
-        abort_if($request->user()->cannot('view planned courses'), 403);
+        abort_unless($request->user(), 401);
 
         $MAX_YEARS_IN_FUTURE = 3;
 

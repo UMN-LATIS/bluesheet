@@ -38,7 +38,6 @@
 import * as T from "@/types";
 import { useCoursePlanningStore } from "../../stores/useCoursePlanningStore";
 import { computed, ref } from "vue";
-import { $can } from "@/utils";
 import DraggableCard from "@/components/DraggableCard.vue";
 import EditDraftSectionModal from "../EditDraftSectionModal.vue";
 
@@ -70,12 +69,15 @@ const isUnpublishedViewable = computed(() => {
   return (
     planningStore.filters.inPlanningMode &&
     planningStore.termsStore.isTermPlannable(props.section.termId) &&
-    $can("view planned courses")
+    planningStore.currentUserCan.viewAnyPlannedCoursesForGroup
   );
 });
 
 const isUnpublishedEditable = computed(() => {
-  return isUnpublishedViewable.value && $can("edit planned courses");
+  return (
+    isUnpublishedViewable.value &&
+    planningStore.currentUserCan.editPlannedCoursesForGroup
+  );
 });
 
 const isShowingEditModal = ref(false);

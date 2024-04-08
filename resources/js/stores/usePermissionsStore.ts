@@ -40,6 +40,21 @@ export const usePermissionsStore = defineStore("permissions", () => {
 
       return userLeavePermissions.create;
     },
+
+    async canViewAnyLeavesForGroup(groupId: T.Group["id"]): Promise<boolean> {
+      const groupLeavePermissions = await api.getPermissionsForGroupLeaves(
+        groupId,
+      );
+
+      return groupLeavePermissions.viewAny;
+    },
+
+    async canViewAnyCoursesForGroup(groupId: T.Group["id"]): Promise<boolean> {
+      const groupPlannedCoursePermissions =
+        await api.getPermissionsForGroupCourses(groupId);
+
+      return groupPlannedCoursePermissions.viewAny;
+    },
   };
 
   return {

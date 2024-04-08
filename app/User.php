@@ -108,4 +108,8 @@ class User extends Authenticatable implements Auditable {
             ->intersect($memberGroupIds)
             ->isNotEmpty();
     }
+
+    public function managesGroup(Group $group): bool {
+        return $this->getManagedGroups()->pluck('id')->contains($group->id);
+    }
 }

@@ -57,7 +57,6 @@ import { ref, computed } from "vue";
 import EditDraftSectionModal from "../EditDraftSectionModal.vue";
 import * as T from "@/types";
 import { useCoursePlanningStore } from "../../stores/useCoursePlanningStore";
-import { $can } from "@/utils";
 import { DragDrop } from "@/components/DragDrop";
 import { DropEvent } from "@/types";
 import PublishedSectionDetails from "./PublishedSectionDetails.vue";
@@ -97,12 +96,15 @@ const arePlannedSectionsViewable = computed(() => {
   return (
     coursePlanningStore.filters.inPlanningMode &&
     coursePlanningStore.termsStore.isTermPlannable(props.term.id) &&
-    $can("view planned courses")
+    coursePlanningStore.currentUserCan.viewAnyPlannedCoursesForGroup
   );
 });
 
 const arePlannedSectionsEditable = computed(() => {
-  return arePlannedSectionsViewable.value && $can("edit planned courses");
+  return (
+    arePlannedSectionsViewable.value &&
+    coursePlanningStore.currentUserCan.editPlannedCoursesForGroup
+  );
 });
 
 const initialRole = computed(() => {

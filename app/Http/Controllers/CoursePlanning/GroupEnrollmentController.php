@@ -9,6 +9,7 @@ use App\Group;
 use App\Http\Resources\EnrollmentResource;
 use App\User;
 use App\Enrollment;
+use App\Constants\Permissions;
 
 
 class GroupEnrollmentController extends Controller {
@@ -20,7 +21,7 @@ class GroupEnrollmentController extends Controller {
     }
 
     public function index(Request $request, Group $group) {
-        abort_if($request->user()->cannot('view planned courses'), 403);
+        $this->authorize('viewAnyEnrollmentsForGroup', [Enrollment::class, $group]);
 
         $dbEnrollments = $group->enrollments()->with('user:id,emplid')->get();
 
@@ -43,7 +44,7 @@ class GroupEnrollmentController extends Controller {
     }
 
     public function store(Request $request, Group $group) {
-        abort_if($request->user()->cannot('edit planned courses'), 403);
+        $this->authorize('editAnyEnrollmentsForGroup', [Enrollment::class, $group]);
 
         $validated = $request->validate([
             'course_section_id' => 'required|integer',
@@ -68,7 +69,7 @@ class GroupEnrollmentController extends Controller {
     }
 
     public function update(Request $request, Group $group, Enrollment $enrollment) {
-        abort_if($request->user()->cannot('edit planned courses'), 403);
+        $this->authorize('editAnyEnrollmentsForGroup', [Enrollment::class, $group]);
 
         $validated = $request->validate([
             'course_section_id' => 'required|exists:course_sections,id',
@@ -91,7 +92,7 @@ class GroupEnrollmentController extends Controller {
     }
 
     public function destroy(Request $request, Group $group, Enrollment $enrollment) {
-        abort_if($request->user()->cannot('edit planned courses'), 403);
+        $this->authorize('editAnyEnrollmentsForGroup', [Enrollment::class, $group]);
 
         $enrollment->delete();
 

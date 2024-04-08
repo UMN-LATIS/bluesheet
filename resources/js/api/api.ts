@@ -159,3 +159,19 @@ export async function getPermissionsForUserLeaves(leaveOwnerId: number) {
 
   return res.data;
 }
+
+export async function getPermissionsForGroupLeaves(groupId: number) {
+  const res = await axios.get<T.ApiResourcePermissions>(
+    `/api/permissions/groups/${groupId}/leaves`,
+  );
+
+  return res.data;
+}
+
+export async function getPermissionsForGroupCourses(groupId: number) {
+  const res = await axios.get<T.ApiResourcePermissions>(
+    `/api/permissions/groups/${groupId}/courses`,
+  );
+
+  return res.data;
+}

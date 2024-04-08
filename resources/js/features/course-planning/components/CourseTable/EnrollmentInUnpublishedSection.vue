@@ -34,7 +34,6 @@ import { computed, ref } from "vue";
 import * as T from "@/types";
 import { useCoursePlanningStore } from "../../stores/useCoursePlanningStore";
 import DraggableCard from "@/components/DraggableCard.vue";
-import { $can } from "@/utils";
 import EditDraftSectionModal from "../EditDraftSectionModal.vue";
 
 const props = defineProps<{
@@ -73,12 +72,15 @@ const isUnpublishedViewable = computed((): boolean => {
     !!section.value &&
     planningStore.filters.inPlanningMode &&
     planningStore.termsStore.isTermPlannable(section.value.termId) &&
-    $can("view planned courses")
+    planningStore.currentUserCan.viewAnyPlannedCoursesForGroup
   );
 });
 
 const isUnpublishedEditable = computed((): boolean => {
-  return isUnpublishedViewable.value && $can("edit planned courses");
+  return (
+    isUnpublishedViewable.value &&
+    planningStore.currentUserCan.editPlannedCoursesForGroup
+  );
 });
 
 const isShowingEditModal = ref(false);

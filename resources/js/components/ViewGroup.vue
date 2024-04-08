@@ -83,7 +83,7 @@
               </li>
             </ul>
           </li>
-          <li v-if="$can('schedule departments') && group.dept_id">
+          <li v-if="canViewGroupLeaves && group.dept_id">
             <router-link :to="`/course-planning/groups/${group.id}`">
               Faculty Leaves Planning Report
             </router-link>
@@ -122,10 +122,11 @@
 import GroupTitle from "./GroupTitle.vue";
 import Members from "./Members.vue";
 import { $can } from "@/utils";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import * as T from "@/types";
 import { useUserStore } from "@/stores/useUserStore";
 import * as api from "@/api";
+import { usePermissionsStore } from "@/stores/usePermissionsStore";
 
 const props = defineProps<{
   group: T.Group;
@@ -138,6 +139,18 @@ defineEmits<{
 
 const allRoles = ref<T.MemberRole[]>([]);
 const userStore = useUserStore();
+const permissionsStore = usePermissionsStore();
+const canViewGroupLeaves = ref(false);
+
+watch(
+  () => props.group,
+  async () => {
+    canViewGroupLeaves.value = await permissionsStore.canViewAnyLeavesForGroup(
+      props.group.id,
+    );
+  },
+  { immediate: true },
+);
 
 const isGroupFavorited = computed(() => {
   return userStore.currentGroupFavorites.some((g) => g.id == props.group.id);

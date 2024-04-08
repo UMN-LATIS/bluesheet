@@ -9,6 +9,7 @@ use App\Http\Resources\CourseSectionResource;
 use App\Http\Resources\EnrollmentResource;
 use Illuminate\Http\Request;
 use App\Library\Bandaid;
+use App\Constants\Permissions;
 
 class GroupSectionController extends Controller {
     protected $bandaid;
@@ -18,7 +19,7 @@ class GroupSectionController extends Controller {
     }
 
     public function index(Request $request, Group $group) {
-        abort_if($request->user()->cannot('view planned courses'), 403);
+        $this->authorize('viewAnySectionsForGroup', [CourseSection::class, $group]);
 
         // get all the unpublished sections from our app database
         $dbSections = $group->courseSections()->with('enrollments')->where('is_published', false)->get();
@@ -44,7 +45,7 @@ class GroupSectionController extends Controller {
     }
 
     public function store(Request $request, Group $group) {
-        abort_if($request->user()->cannot('edit planned courses'), 403);
+        $this->authorize('editAnySectionsForGroup', [CourseSection::class, $group]);
 
         $validated = $request->validate([
             'course_id' => 'required|string',
@@ -61,7 +62,7 @@ class GroupSectionController extends Controller {
     }
 
     public function update(Request $request, Group $group, CourseSection $section) {
-        abort_if($request->user()->cannot('edit planned courses'), 403);
+        $this->authorize('editAnySectionsForGroup', [CourseSection::class, $group]);
 
         $validated = $request->validate([
             'course_id' => 'required|string',
@@ -79,7 +80,7 @@ class GroupSectionController extends Controller {
     }
 
     public function destroy(Request $request, Group $group, CourseSection $section) {
-        abort_if($request->user()->cannot('edit planned courses'), 403);
+        $this->authorize('editAnySectionsForGroup', [CourseSection::class, $group]);
 
         $section->delete();
 

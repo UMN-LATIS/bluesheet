@@ -18,7 +18,7 @@
               Settings
             </h2>
             <CheckboxGroup
-              v-if="canViewPlanCourses"
+              v-if="canViewPlannedCourses"
               id="toggle-planning-mode"
               v-model="coursePlanningStore.filters.inPlanningMode"
               label="Planning Mode"
@@ -116,13 +116,13 @@ import WideLayout from "@/layouts/WideLayout.vue";
 import { computed, ref, watch, onMounted } from "vue";
 import { PersonTable } from "../components/PersonTable";
 import { useCoursePlanningStore } from "../stores/useCoursePlanningStore";
+import { usePermissionsStore } from "@/stores/usePermissionsStore";
 import CoursePlanningFilters from "../components/CoursePlanningFilters.vue";
 import Spinner from "@/components/Spinner.vue";
 import Tabs, { type Tab } from "@/components/Tabs.vue";
 import CheckboxGroup from "@/components/CheckboxGroup.vue";
 import { CourseTable } from "../components/CourseTable";
 import { useDebouncedComputed } from "@/utils/useDebouncedComputed";
-import { $can } from "@/utils";
 import DownloadSpreadsheetButton from "@/components/DownloadSpreadsheetButton.vue";
 import { getSpreadsheetFromWorker } from "../workers/getSpreadsheetFromWorker";
 import * as MESSAGE_TYPES from "../workers/messageTypes";
@@ -132,6 +132,7 @@ const props = defineProps<{
 }>();
 
 const coursePlanningStore = useCoursePlanningStore();
+const permissionsStore = usePermissionsStore();
 const isLoadingComplete = ref(false);
 const isShowingFilters = ref(false);
 
@@ -141,7 +142,16 @@ onMounted(async () => {
   isLoadingComplete.value = true;
 });
 
-const canViewPlanCourses = computed(() => $can("view planned courses"));
+const canViewPlannedCourses = ref(false);
+watch(
+  () => props.groupId,
+  async () => {
+    canViewPlannedCourses.value =
+      await permissionsStore.canViewAnyCoursesForGroup(props.groupId);
+  },
+  { immediate: true },
+);
+
 const group = computed(() =>
   coursePlanningStore.groupStore.getGroup(props.groupId),
 );
