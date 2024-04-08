@@ -101,7 +101,7 @@ class User extends Authenticatable implements Auditable {
 
         // get subgroups for each managed groups
         $subgroups = $managedGroups->map(function ($group) {
-            return $group->childGroups;
+            return $group->getDescendentGroups();
         })->flatten();
 
         return $managedGroups->merge($subgroups)->unique('id');

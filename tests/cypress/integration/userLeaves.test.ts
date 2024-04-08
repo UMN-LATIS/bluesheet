@@ -313,7 +313,7 @@ describe("User leaves", () => {
         cy.get("[data-cy=leaveRow]").should("have.length", 0);
       });
 
-      it.only("allows a group manager to view leaves for a subgroup member", () => {
+      it("allows a group manager to view leaves for a subgroup member", () => {
         // create a subgroup
         cy.create({
           model: "App\\Group",
