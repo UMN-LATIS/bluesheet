@@ -4,6 +4,7 @@ use App\Constants\Permissions;
 use App\Leave;
 use App\Membership;
 use App\User;
+use App\Group;
 use Database\Seeders\TestDatabaseSeeder;
 use function Pest\Laravel\{postJson, getJson, actingAs, deleteJson, putJson};
 
@@ -153,5 +154,41 @@ describe('as a fellow group member', function () {
                 'description' => 'Updated leave',
             ])
             ->assertStatus(200);
+    });
+});
+
+describe('as a group manager', function () {
+    beforeEach(function () {
+        $this->groupManager = User::factory()->create();
+        $this->groupMembership = Membership::factory()->create([
+            'user_id' => $this->groupManager->id,
+        ]);
+        $this->managedGroup = $this->groupMembership->group;
+
+        promoteUserToGroupManager($this->groupManager->id, $this->groupMembership->group_id);
+    });
+
+    it('lets a group manager view a leave of a subgroup', function () {
+        // create a sub group
+        $subgroup =  Group::factory()->create([
+            'parent_group_id' => $this->managedGroup->id,
+        ]);
+
+        // create a membership (including user) for the sub group
+        $subgroupMembership = Membership::factory()->create([
+            'group_id' => $subgroup->id,
+        ]);
+
+        // create a leave for the user in the sub group
+        $subgroupLeave = Leave::factory()->create([
+            'user_id' => $subgroupMembership->user_id,
+        ]);
+
+        actingAs($this->groupManager)
+            ->putJson("/api/leaves/{$subgroupLeave->id}", [
+                ...$subgroupLeave->toArray(),
+                'description' => 'Updated leave',
+            ])
+            ->assertOk();
     });
 });

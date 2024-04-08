@@ -312,6 +312,42 @@ describe("User leaves", () => {
 
         cy.get("[data-cy=leaveRow]").should("have.length", 0);
       });
+
+      it("allows a group manager to view leaves for a subgroup member", () => {
+        // create a subgroup
+        cy.create({
+          model: "App\\Group",
+          attributes: {
+            parent_group_id: fellowGroupMembership.group_id,
+          },
+        })
+          .then((subgroup) => {
+            // create a new membership in the subgroup
+            return cy.create({
+              model: "App\\Membership",
+              attributes: {
+                group_id: subgroup.id,
+              },
+            });
+          })
+          .then((subgroupMembership) => {
+            // create a new leave for the member of the subgroup
+            return cy.create({
+              model: "App\\Leave",
+              attributes: {
+                start_date: dayjs().add(10, "day").format("YYYY-MM-DD"),
+                end_date: dayjs().add(200, "day").format("YYYY-MM-DD"),
+                user_id: subgroupMembership.user_id,
+              },
+            });
+          })
+          .then((leave) => {
+            cy.visit(`/user/${leave.user_id}`);
+
+            cy.get("[data-cy=leavesSection]").should("exist");
+            cy.get("[data-cy=leaveRow]").should("have.length", 1);
+          });
+      });
     });
   });
 });

@@ -4,6 +4,7 @@ use App\Constants\Permissions;
 use App\Leave;
 use App\Membership;
 use App\User;
+use App\Group;
 use Database\Seeders\TestDatabaseSeeder;
 use Illuminate\Support\Facades\Http;
 
@@ -210,5 +211,41 @@ describe('as a fellow group member', function () {
         actingAs($this->fellowGroupMembership->user)
             ->getJson("/api/users/{$this->leaveOwner->id}/leaves")
             ->assertForbidden();
+    });
+});
+
+
+describe('as a group manager', function () {
+    beforeEach(function () {
+        $this->groupManager = User::factory()->create();
+        $this->groupMembership = Membership::factory()->create([
+            'user_id' => $this->groupManager->id,
+        ]);
+        $this->managedGroup = $this->groupMembership->group;
+
+        promoteUserToGroupManager($this->groupManager->id, $this->groupMembership->group_id);
+    });
+
+    it('lets a group manager view all subgroup member leaves', function () {
+        // create a sub group
+        $subgroup =  Group::factory()->create([
+            'parent_group_id' => $this->managedGroup->id,
+        ]);
+
+        // create a membership (including user) for the sub group
+        $subgroupMembership = Membership::factory()->create([
+            'group_id' => $subgroup->id,
+        ]);
+
+        $subgroupUserId = $subgroupMembership->user_id;
+
+        // create a leave for the user in the sub group
+        $subgroupLeave = Leave::factory()->create([
+            'user_id' => $subgroupUserId,
+        ]);
+
+        actingAs($this->groupManager)
+            ->getJson("/api/users/{$subgroupUserId}/leaves")
+            ->assertOk();
     });
 });

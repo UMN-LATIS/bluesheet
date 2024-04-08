@@ -97,7 +97,14 @@ class User extends Authenticatable implements Auditable {
      * @return Collection<array-key, mixed>
      */
     public function getManagedGroups() {
-        return $this->memberships()->where('admin', true)->get()->pluck('group');
+        $managedGroups =  $this->memberships()->where('admin', true)->get()->pluck('group');
+
+        // get subgroups for each managed groups
+        $subgroups = $managedGroups->map(function ($group) {
+            return $group->getDescendentGroups();
+        })->flatten();
+
+        return $managedGroups->merge($subgroups)->unique('id');
     }
 
     public function managesAnyGroupWithMember(User $member): bool {
