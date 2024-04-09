@@ -69,6 +69,16 @@ export async function fetchGroup(groupId: number) {
   return res.data;
 }
 
+export async function createGroup(newGroupData: {
+  groupName: string;
+  parentOrganizationId: T.ParentOrganization["id"];
+  groupType: T.GroupType["label"] | T.GroupType["id"];
+  parentGroupId?: T.Group["id"];
+}) {
+  const res = await axios.post<T.Group>(`/api/group`, newGroupData);
+  return res.data;
+}
+
 export async function createLeaveArtifact(artifact: T.LeaveArtifact) {
   const res = await axios.post<T.LeaveArtifact>(
     `/api/leaves/${artifact.leave_id}/artifacts`,

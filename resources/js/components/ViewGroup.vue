@@ -67,6 +67,7 @@
               group.child_groups?.some((g) => g.active_group) ||
               canCreateSubgroup
             "
+            data-cy="child-groups"
           >
             Sub Groups:
             <ul v-if="group.child_groups">
@@ -82,13 +83,20 @@
                 >
               </li>
             </ul>
-            <Button
-              v-if="canCreateSubgroup"
-              variant="tertiary"
-              class="-tw-ml-2"
-            >
-              Add Subgroup
-            </Button>
+            <template v-if="canCreateSubgroup">
+              <Button
+                variant="tertiary"
+                class="-tw-ml-2"
+                @click="isAddingSubgroup = true"
+              >
+                Create Subgroup
+              </Button>
+              <CreateGroup
+                :show="isAddingSubgroup"
+                :parentGroup="group"
+                @close="isAddingSubgroup = false"
+              ></CreateGroup>
+            </template>
           </li>
           <li v-if="canViewGroupLeaves && group.dept_id">
             <router-link :to="`/course-planning/groups/${group.id}`">
@@ -135,6 +143,7 @@ import { useUserStore } from "@/stores/useUserStore";
 import * as api from "@/api";
 import { usePermissionsStore } from "@/stores/usePermissionsStore";
 import Button from "./Button.vue";
+import CreateGroup from "./CreateGroup.vue";
 
 const props = defineProps<{
   group: T.Group;
@@ -150,6 +159,7 @@ const userStore = useUserStore();
 const permissionsStore = usePermissionsStore();
 const canViewGroupLeaves = ref(false);
 const canCreateSubgroup = ref(true);
+const isAddingSubgroup = ref(false);
 
 watch(
   () => props.group,

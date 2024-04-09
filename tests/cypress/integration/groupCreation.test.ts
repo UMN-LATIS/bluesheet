@@ -118,6 +118,13 @@ describe("Groups UI", () => {
       cy.login({ id: groupManagerId });
       cy.visit(`/group/${groupId}`);
       cy.contains("Create Subgroup").click();
+      cy.get("#groupName").type("Test Subgroup");
+      cy.get("#groupTypes input").type("Working Group{enter}");
+      cy.contains("Create Group").click();
+
+      cy.get('[data-cy=child-groups]').contains("Test Subgroup").click();
+
+      cy.contains("Working Group");
     });
   });
 });
