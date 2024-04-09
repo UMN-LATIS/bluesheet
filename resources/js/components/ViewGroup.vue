@@ -158,13 +158,17 @@ const allRoles = ref<T.MemberRole[]>([]);
 const userStore = useUserStore();
 const permissionsStore = usePermissionsStore();
 const canViewGroupLeaves = ref(false);
-const canCreateSubgroup = ref(true);
+const canCreateSubgroup = ref(false);
 const isAddingSubgroup = ref(false);
 
 watch(
   () => props.group,
   async () => {
     canViewGroupLeaves.value = await permissionsStore.canViewAnyLeavesForGroup(
+      props.group.id,
+    );
+
+    canCreateSubgroup.value = await permissionsStore.canCreateSubgroupForGroup(
       props.group.id,
     );
   },

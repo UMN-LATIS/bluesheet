@@ -185,3 +185,11 @@ export async function getPermissionsForGroupCourses(groupId: number) {
 
   return res.data;
 }
+
+export async function getPermissionsForSubgroupsOf(groupId: T.Group["id"]) {
+  const res = await axios.get<T.ApiResourcePermissions>(
+    `/api/permissions/groups/${groupId}/subgroups`,
+  );
+
+  return res.data;
+}
