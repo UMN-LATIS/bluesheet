@@ -72,4 +72,9 @@ class LeavePolicy {
         return $currentUser->can(Permissions::VIEW_ANY_LEAVES)
             || $currentUser->managesGroup($group);
     }
+
+    public function createLeavesForGroup(User $currentUser, Group $group): bool {
+        return $currentUser->can(Permissions::EDIT_ANY_LEAVES)
+            || $currentUser->managesGroup($group);
+    }
 }
