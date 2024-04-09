@@ -98,4 +98,26 @@ describe("Groups UI", () => {
       );
     });
   });
+
+  context("as a group manager", () => {
+    let groupId;
+    let groupManagerId;
+    beforeEach(() => {
+      cy.create("App\\Membership").then((membership) => {
+        groupId = membership.group_id;
+        groupManagerId = membership.user_id;
+
+        cy.promoteUserToGroupManager({
+          userId: groupManagerId,
+          groupId,
+        });
+      });
+    });
+
+    it.only("creates a new subgroup for their group", () => {
+      cy.login({ id: groupManagerId });
+      cy.visit(`/group/${groupId}`);
+      cy.contains("Create Subgroup").click();
+    });
+  });
 });
