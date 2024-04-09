@@ -55,6 +55,12 @@ export const usePermissionsStore = defineStore("permissions", () => {
 
       return groupPlannedCoursePermissions.viewAny;
     },
+
+    async canCreateSubgroupForGroup(groupId: T.Group["id"]): Promise<boolean> {
+      const subgroupPermissions = await api.getPermissionsForSubgroupsOf(groupId);
+
+      return subgroupPermissions.create;
+    }
   };
 
   return {

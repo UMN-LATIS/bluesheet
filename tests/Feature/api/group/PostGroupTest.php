@@ -5,7 +5,7 @@ use App\Membership;
 use App\User;
 use App\Group;
 use Database\Seeders\TestDatabaseSeeder;
-use function Pest\Laravel\{postJson, actingAs };
+use function Pest\Laravel\{postJson, actingAs};
 
 beforeEach(function () {
     setupMockBandaidApiResponses();
@@ -35,7 +35,7 @@ it('does not let a default user create a group', function () {
 it('creates a group', function (User $user) {
     actingAs($user)
         ->postJson('/api/group', $this->validGroupData)
-        ->assertStatus(200); // TODO: 201
+        ->assertStatus(201);
 })->with([
     'super admin' => fn () => $this->superAdmin,
     'user with edit groups permission' => fn () => User::factory()->create()->givePermissionTo(Permissions::CREATE_GROUPS),
@@ -66,7 +66,7 @@ describe('as a group manager', function () {
                 ...$this->validGroupData,
                 'parentGroupId' => $this->group->id,
             ])
-            ->assertStatus(200);
+            ->assertStatus(201);
     });
 
     it('checks that the parentGroupId is valid', function () {

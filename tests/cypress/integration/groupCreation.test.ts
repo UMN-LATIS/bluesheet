@@ -97,5 +97,72 @@ describe("Groups UI", () => {
         1,
       );
     });
+
+    it("does not show subgroups section if empty", () => {
+      cy.create("App\\Group").then((group) => {
+        cy.login("user");
+        cy.visit(`/group/${group.id}`);
+        cy.get("[data-cy=child-groups]").should("not.exist");
+      });
+    });
+
+    it("only shows Create Subgroup button if user has correct permissions", () => {
+      let parentGroup = null;
+      let subgroup = null;
+      cy.create("App\\Group")
+        .then((group) => {
+          parentGroup = group;
+          return cy.create({
+            model: "App\\Group",
+            attributes: {
+              parent_group_id: parentGroup.id,
+            },
+          });
+        })
+        .then((group) => {
+          subgroup = group;
+
+          cy.login("user");
+          cy.visit(`/group/${parentGroup.id}`);
+
+          // subgroup should be listed
+          cy.get("[data-cy=child-groups]").contains(subgroup.group_title);
+
+          // but Create Subgroup button should not be visible
+          cy.get("[data-cy=child-groups]").should(
+            "not.contain",
+            "Create Subgroup",
+          );
+        });
+    });
+  });
+
+  context("as a group manager", () => {
+    let groupId;
+    let groupManagerId;
+    beforeEach(() => {
+      cy.create("App\\Membership").then((membership) => {
+        groupId = membership.group_id;
+        groupManagerId = membership.user_id;
+
+        cy.promoteUserToGroupManager({
+          userId: groupManagerId,
+          groupId,
+        });
+      });
+    });
+
+    it("creates a new subgroup for their group", () => {
+      cy.login({ id: groupManagerId });
+      cy.visit(`/group/${groupId}`);
+      cy.contains("Create Subgroup").click();
+      cy.get("#groupName").type("Test Subgroup");
+      cy.get("#groupTypes input").type("Working Group{enter}");
+      cy.contains("Create Group").click();
+
+      cy.get("[data-cy=child-groups]").contains("Test Subgroup").click();
+
+      cy.contains("Working Group");
+    });
   });
 });

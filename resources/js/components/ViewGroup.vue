@@ -64,9 +64,10 @@
           <li>{{ group.notes }}</li>
           <li
             v-if="
-              group.child_groups?.some((g) => g.active_group) &&
-              $can('view groups')
+              group.child_groups?.some((g) => g.active_group) ||
+              canCreateSubgroup
             "
+            data-cy="child-groups"
           >
             Sub Groups:
             <ul v-if="group.child_groups">
@@ -82,6 +83,20 @@
                 >
               </li>
             </ul>
+            <template v-if="canCreateSubgroup">
+              <Button
+                variant="tertiary"
+                class="-tw-ml-2"
+                @click="isAddingSubgroup = true"
+              >
+                Create Subgroup
+              </Button>
+              <CreateGroup
+                :show="isAddingSubgroup"
+                :parentGroup="group"
+                @close="isAddingSubgroup = false"
+              ></CreateGroup>
+            </template>
           </li>
           <li v-if="canViewGroupLeaves && group.dept_id">
             <router-link :to="`/course-planning/groups/${group.id}`">
@@ -127,6 +142,8 @@ import * as T from "@/types";
 import { useUserStore } from "@/stores/useUserStore";
 import * as api from "@/api";
 import { usePermissionsStore } from "@/stores/usePermissionsStore";
+import Button from "./Button.vue";
+import CreateGroup from "./CreateGroup.vue";
 
 const props = defineProps<{
   group: T.Group;
@@ -141,11 +158,17 @@ const allRoles = ref<T.MemberRole[]>([]);
 const userStore = useUserStore();
 const permissionsStore = usePermissionsStore();
 const canViewGroupLeaves = ref(false);
+const canCreateSubgroup = ref(false);
+const isAddingSubgroup = ref(false);
 
 watch(
   () => props.group,
   async () => {
     canViewGroupLeaves.value = await permissionsStore.canViewAnyLeavesForGroup(
+      props.group.id,
+    );
+
+    canCreateSubgroup.value = await permissionsStore.canCreateSubgroupForGroup(
       props.group.id,
     );
   },
