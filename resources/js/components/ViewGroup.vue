@@ -98,7 +98,7 @@
               <Button
                 v-if="canCreateSubgroup"
                 variant="tertiary"
-                class="tw-my-0 tw-bg-bs-blue/10"
+                class="!tw-bg-bs-blue/10"
                 @click="isAddingSubgroup = true"
               >
                 Create Subgroup
