@@ -69,9 +69,9 @@ class GroupController extends Controller
         $this->authorize('create', [Group::class, $parentGroup]);
 
         $newGroup = new \App\Group;
-        
+
         $newGroup->group_title = $request->get("groupName");
-        
+
         if($groupType = $request->get("groupType")) {
             if(isset($groupType["id"])) {
                 $newGroup->group_type_id = $groupType["id"];
@@ -87,19 +87,14 @@ class GroupController extends Controller
             );
             return Response()->json($returnData, 500);
         }
-        
-        
+
         $newGroup->parent_organization_id = $request->get("parentOrganization");
         $newGroup->parent_group_id = $parentGroupId;
         $newGroup->active_group = 1;
         $newGroup->show_unit = false;
         $newGroup->save();
-        $returnData = array(
-            'status' => 'success',
-            'id' => $newGroup->id
-        );
 
-        return Response()->json($returnData);
+        return GroupResource::make($newGroup);
     }
 
     /**
