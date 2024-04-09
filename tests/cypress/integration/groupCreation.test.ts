@@ -6,7 +6,7 @@
 // https://on.cypress.io/writing-first-test
 
 describe("Groups UI", () => {
-  before(() => {
+  beforeEach(() => {
     cy.refreshDatabase();
     cy.seed("TestDatabaseSeeder");
   });
@@ -29,10 +29,8 @@ describe("Groups UI", () => {
       cy.get("#parentOrganization").select("CLA");
       cy.get(".btn").contains("Create Group").click();
       cy.contains("Test Group");
-    });
 
-    it("loads a group", () => {
-      cy.visit("/");
+      // check that the group is in the list of groups
       cy.get(".app-header").contains("Browse Groups").click();
       cy.get("table").contains("CLA").click();
       cy.get("table").contains("Test Group").click();
@@ -40,13 +38,15 @@ describe("Groups UI", () => {
     });
 
     it("edits a group", () => {
-      cy.visit("/group/1");
-      cy.contains("Edit Group").click().wait(1000);
-      cy.get("#groupTypes").type("List{enter}");
-      cy.get("#groupNotes").type("Test Notes");
-      cy.contains("Save").click();
-      cy.contains("Test Notes");
-      cy.contains("List");
+      cy.create("App\\Group").then((group) => {
+        cy.visit(`/group/${group.id}`);
+        cy.contains("Edit Group").click();
+        cy.get("#groupTypes").type("List{enter}");
+        cy.get("#groupNotes").type("Test Notes");
+        cy.contains("Save").click();
+        cy.contains("Test Notes");
+        cy.contains("List");
+      });
     });
 
     it("adds a member", () => {
@@ -62,7 +62,7 @@ describe("Groups UI", () => {
     });
   });
 
-  context("when authenticated as user", () => {
+  context("when authenticated as default user", () => {
     beforeEach(() => {
       cy.login("user");
     });
