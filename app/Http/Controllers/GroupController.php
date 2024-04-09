@@ -7,8 +7,7 @@ use App\Http\Resources\Group as GroupResource;
 use App\Http\Resources\Membership as MembershipResource;
 use App\ParentOrganization;
 use DB;
-use Auth;
-Use Log;
+use App\Group;
 
 class GroupController extends Controller
 {
@@ -58,13 +57,17 @@ class GroupController extends Controller
      */
     public function store(Request $request)
     {
-        if(!$this->authorize('create', \App\Group::class)) {
-             $returnData = array(
-                'status' => 'error',
-                'message' => "You don't have permission to create a group"
-            );
-            return Response()->json($returnData, 500);
-        }
+        $validated = $request->validate([
+            'groupName' => 'required',
+            'groupType' => 'required',
+            'parentOrganization' => 'exists:parent_organizations,id|nullable',
+            'parentGroupId' => 'exists:groups,id|nullable',
+        ]);
+
+        $parentGroupId = $validated['parentGroupId'] ?? null;
+        $parentGroup = Group::find($parentGroupId);
+        $this->authorize('create', [Group::class, $parentGroup]);
+
         $newGroup = new \App\Group;
         
         $newGroup->group_title = $request->get("groupName");
@@ -87,6 +90,7 @@ class GroupController extends Controller
         
         
         $newGroup->parent_organization_id = $request->get("parentOrganization");
+        $newGroup->parent_group_id = $parentGroupId;
         $newGroup->active_group = 1;
         $newGroup->show_unit = false;
         $newGroup->save();
@@ -95,13 +99,6 @@ class GroupController extends Controller
             'id' => $newGroup->id
         );
 
-        // $newMember = new \App\Membership;
-        // $newMember->user()->associate(Auth::user());
-        // $role = $this->addOrFindRole("member");
-        // $newMember->role()->associate($role);
-        // $newMember->start_date = \Carbon\Carbon::now();
-        // $newMember->admin = true;
-        // $newGroup->members()->save($newMember);
         return Response()->json($returnData);
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Constants\Permissions;
 use App\User;
 use App\Group;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -61,10 +62,9 @@ class GroupPolicy
         }
     }
 
-    public function create(User $user)
+    public function create(User $user, ?Group $maybeParentGroup)
     {
-        if ($user->can('create groups')) {
-            return true;
-        }
+        return $user->can(Permissions::CREATE_GROUPS)
+            || ($maybeParentGroup && $user->managesGroup($maybeParentGroup));
     }
 }
