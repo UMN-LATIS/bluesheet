@@ -179,7 +179,14 @@
               @sort="sort"
             />
           </th>
-          <th v-if="!showGantt && (editing || $can('edit groups'))" scope="col">
+          <th
+            v-if="
+              !showGantt &&
+              viewType === 'group' &&
+              (editing || $can('edit groups'))
+            "
+            scope="col"
+          >
             BlueSheet Manager
           </th>
           <th v-if="editing && !showGantt" scope="col">
@@ -329,7 +336,7 @@ export default defineComponent({
       required: true,
     },
     viewType: {
-      type: String,
+      type: String as PropType<"group" | "role">,
       required: true,
     },
     downloadTitle: {
