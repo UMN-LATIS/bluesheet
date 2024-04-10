@@ -119,4 +119,8 @@ class User extends Authenticatable implements Auditable {
     public function managesGroup(Group $group): bool {
         return $this->getManagedGroups()->pluck('id')->contains($group->id);
     }
+
+    public function isMemberOf(Group $group): bool {
+        return $this->groups->pluck('id')->contains($group->id);
+    }
 }
