@@ -39,16 +39,10 @@ class GroupPolicy
         return $group->activeUsers()->pluck("id")->contains($user->id);
     }
 
-
     public function update(User $user, Group $group)
     {
-        if($group->userCanEdit($user)) {
-            return true;
-        }
-
-        if ($user->can('edit groups')) {
-            return true;
-        }
+        return $user->can(Permissions::EDIT_GROUPS)
+            || $user->managesGroup($group);
     }
 
     public function delete(User $user, Group $group)

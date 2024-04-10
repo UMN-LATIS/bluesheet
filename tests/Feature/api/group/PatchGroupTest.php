@@ -98,7 +98,7 @@ describe('PUT /api/group/{groupId}', function () {
     })->with([
         'super admin' => fn () => $this->superAdmin,
         'user with edit groups permission' => fn () => User::factory()->create()->givePermissionTo(Permissions::EDIT_GROUPS),
-        // 'group manager' => fn () => $this->groupManager,
+        'group manager' => fn () => $this->groupManager,
     ]);
 
 });
