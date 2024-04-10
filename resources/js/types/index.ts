@@ -112,7 +112,7 @@ export interface ParentOrganization {
 
 export interface BaseGroup {
   id: number;
-  user_can_edit: boolean; // current user can edit
+  canCurrentUser: ApiResourceItemPermissions;
   group_title: string | null; // "Anthropology";
   abbreviation: string | null; // "ANTH";
   group_type_id?: number;

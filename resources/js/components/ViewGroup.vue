@@ -18,7 +18,7 @@
             Favorite
           </button>
           <button
-            v-if="$can('edit groups') || group.user_can_edit"
+            v-if="group.canCurrentUser.update"
             class="btn btn-outline-primary"
             @click="$emit('update:isEditing', true)"
           >
