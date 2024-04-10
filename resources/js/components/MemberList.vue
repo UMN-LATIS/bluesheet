@@ -96,7 +96,10 @@
         ></i>
         <i v-else class="searchIcon fa fa-close"></i>
       </td>
-      <td v-if="editing || $can('edit groups')" class="tw-text-center">
+      <td
+        v-if="viewType === 'group' && ($can('edit groups') || editing)"
+        class="tw-text-center"
+      >
         <input
           v-if="editing"
           v-model="member.admin"
@@ -133,7 +136,7 @@ export default {
     "includePreviousMembers",
     "roles",
     "show_unit",
-    "viewType",
+    "viewType", // "group" or "role"
   ],
   emits: ["remove", "update:roles"],
   methods: {
