@@ -40,8 +40,7 @@ class Group extends JsonResource
             "notes"=>$this->notes,
             "include_child_groups"=>$this->include_child_groups,
             "members"=>$this->relationLoaded('members')?($this->members->map(function($membership) {
-                return new MembershipResource($membership);})):[],
-
+                return new MembershipResource($membership);})):[]
         ];
     }
 }
