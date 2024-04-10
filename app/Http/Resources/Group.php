@@ -18,7 +18,10 @@ class Group extends JsonResource
 
         return [
             "id"=>$this->id,
-            "user_can_edit"=>Auth::user()?$this->userCanEdit(Auth::user()):false,
+            "canCurrentUser" => [
+                "update" => $request->user()->can('update', $this->resource),
+                "delete" => $request->user()->can('delete', $this->resource),
+            ],
             "group_title"=>$this->group_title,
             "abbreviation"=>$this->abbreviation,
             "dept_id"=>$this->dept_id,

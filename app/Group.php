@@ -90,17 +90,6 @@ class Group extends Model implements AuditableContract {
         return $this->activeMembers->pluck('user');
     }
 
-    public function userCanEdit($user) {
-        $activeMembers = $this->activeMembers;
-
-        foreach ($activeMembers as $member) {
-            if ($member->user && $member->user->is($user) && $member->admin) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public function getHashAttribute() {
         return substr(sha1($this->id . config("app.key")), 0, 10);
     }
