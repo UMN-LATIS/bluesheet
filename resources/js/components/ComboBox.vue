@@ -66,18 +66,13 @@
               ]"
             >
               <div class="tw-flex tw-flex-col">
-                <div
-                  :class="[
-                    'tw-block tw-truncate',
-                    selected && 'tw-font-semibold',
-                  ]"
-                >
+                <div :class="['tw-block', selected && 'tw-font-semibold']">
                   {{ option.label }}
                 </div>
                 <div
                   v-if="option.secondaryLabel"
                   :class="[
-                    'tw-text-xs tw-truncate',
+                    'tw-text-xs',
                     active ? 'tw-text-white/75' : 'tw-text-neutral-400',
                     selected && 'tw-font-semibold',
                   ]"
