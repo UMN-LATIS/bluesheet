@@ -119,6 +119,7 @@
               v-model="member.role"
               :options="roles"
               :canAddNewOption="true"
+              class="tw-min-w-[10rem]"
               @addNewOption="
                 (newRole) => $emit('update:roles', [...roles, newRole])
               "
