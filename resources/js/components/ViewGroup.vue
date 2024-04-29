@@ -117,7 +117,10 @@
           <template v-if="group.artifacts.length">
             <dt>Artifacts</dt>
             <dd>
-              <ul class="tw-list-none tw-pl-0 tw-m-0">
+              <ul
+                class="tw-list-none tw-pl-0 tw-m-0"
+                data-cy="group-artifacts-list"
+              >
                 <li v-for="(artifact, index) in group.artifacts" :key="index">
                   <a :href="artifact.target">{{ artifact.label }}</a>
                 </li>

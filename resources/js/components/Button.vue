@@ -9,6 +9,8 @@
         variant === 'secondary',
       'tw-text-bs-blue hover:tw-bg-blue-100 tw-text-xs tw-uppercase tw-font-semibold tw-p-2 tw-bg-transparent tw-border-none tw-whitespace-nowrap':
         variant === 'tertiary',
+      'tw-border tw-border-red-500 tw-bg-transparent hover:tw-bg-bs-red tw-text-red-500 !tw-px-3 !tw-py-2':
+        variant === 'danger',
     }"
     v-bind="$attrs"
     :to="componentType === RouterLink ? to : undefined"
