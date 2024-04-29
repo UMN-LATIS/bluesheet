@@ -92,22 +92,24 @@
       </div>
     </div>
 
-    <MemberList
-      v-if="!showGantt"
-      :show_unit="show_unit"
-      :roles="roles"
-      :editing="editing"
-      :filteredList="filteredList"
-      :filterList="filterList"
-      :includePreviousMembers="includePreviousMembers"
-      :viewType="viewType"
-      :currentSort="currentSort"
-      :currentSortDir="currentSortDir"
-      @remove="removeMember"
-      @update:roles="(val) => $emit('update:roles', val)"
-      @sort="sort"
-    >
-    </MemberList>
+    <div class="tw-max-w-full tw-overflow-auto">
+      <MemberList
+        v-if="!showGantt"
+        :show_unit="show_unit"
+        :roles="roles"
+        :editing="editing"
+        :filteredList="filteredList"
+        :filterList="filterList"
+        :includePreviousMembers="includePreviousMembers"
+        :viewType="viewType"
+        :currentSort="currentSort"
+        :currentSortDir="currentSortDir"
+        @remove="removeMember"
+        @update:roles="(val) => $emit('update:roles', val)"
+        @sort="sort"
+      >
+      </MemberList>
+    </div>
     <Gantt
       v-if="showGantt"
       :members="filteredList"
