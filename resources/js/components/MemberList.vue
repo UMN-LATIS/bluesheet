@@ -254,3 +254,10 @@ export default {
   width: 300px;
 }
 </style>
+<style scoped>
+.table,
+.form-control,
+button {
+  font-size: 0.875rem;
+}
+</style>
