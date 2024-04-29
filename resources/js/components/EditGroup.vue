@@ -150,7 +150,7 @@
         </div>
       </div>
     </div>
-    <div class="row">
+    <div class="row" data-cy="group-artifacts-section">
       <div class="col-md-12">
         <div class="row">
           <div class="col-md-12">
@@ -166,28 +166,35 @@
         <div
           v-for="(artifact, key) in localGroup.artifacts"
           :key="key"
-          class="form-row"
+          class="form-row tw-flex tw-items-start tw-gap-2"
         >
-          <div class="form-group col-md-5">
-            <input
-              v-model="artifact.label"
-              type=""
-              class="form-control"
-              placeholder="Label"
-            />
-          </div>
-          <div class="form-group col-md-6">
-            <input
-              v-model="artifact.target"
-              class="form-control"
-              placeholder="Target URL"
-            />
-          </div>
-          <div class="form-group col-md-1 d-flex flex-column">
-            <button class="btn btn-danger" @click="removeArtifact(key)">
-              <i class="fas fa-trash-alt"></i>
-            </button>
-          </div>
+          <InputGroup
+            v-model="artifact.label"
+            label="Label"
+            required
+            placeholder="Label"
+            :showLabel="false"
+            class="tw-flex-1"
+            :validateWhenUntouched="true"
+            :isValid="!!artifact.label"
+            data-cy="artifact-label"
+          />
+          <InputGroup
+            v-model="artifact.target"
+            label="Target URL"
+            required
+            placeholder="Target URL"
+            :showLabel="false"
+            class="tw-flex-1"
+            :validateWhenUntouched="true"
+            :isValid="isValidUrl(artifact.target)"
+            errorText="Invalid URL. Must be like 'https://umn.edu'"
+            data-cy="artifact-target"
+          />
+          <button class="btn btn-danger tw-py-1" @click="removeArtifact(key)">
+            <i class="fas fa-trash-alt tw-m-0"></i>
+            <span class="sr-only">Remove Artifact</span>
+          </button>
         </div>
       </div>
     </div>
@@ -306,7 +313,8 @@ import Members from "./Members.vue";
 import Modal from "./Modal.vue";
 import FolderWidget from "./FolderWidget.vue";
 import PersonSearch from "./PersonSearch.vue";
-import { dayjs, axios, getTempId, isTempId } from "@/utils";
+import { dayjs, axios, isValidUrl } from "@/utils";
+import InputGroup from "./InputGroup.vue";
 
 export default {
   components: {
@@ -315,6 +323,7 @@ export default {
     FolderWidget,
     PersonSearch,
     ComboBox,
+    InputGroup,
   },
   props: ["group"],
   emits: ["update:editing", "update:reload"],
@@ -420,6 +429,7 @@ export default {
       });
   },
   methods: {
+    isValidUrl,
     handleUpdateParentGroup(group) {
       this.localGroup.parent_group_id = group?.id ?? null;
     },
@@ -459,6 +469,14 @@ export default {
       for (var member of this.localGroup.members) {
         if (!member.role) {
           this.saveError = "Every member must have a role assigned";
+          this.showError = true;
+          return false;
+        }
+      }
+
+      for (let artifact of this.localGroup.artifacts) {
+        if (!artifact.label || !isValidUrl(artifact.target)) {
+          this.saveError = "Every artifact must have a label and valid URL";
           this.showError = true;
           return false;
         }

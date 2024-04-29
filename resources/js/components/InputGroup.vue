@@ -65,6 +65,8 @@ const props = withDefaults(
     isValid: undefined,
     validator: () => true,
     validateWhenUntouched: false,
+    labelClass: "",
+    inputClass: "",
   },
 );
 

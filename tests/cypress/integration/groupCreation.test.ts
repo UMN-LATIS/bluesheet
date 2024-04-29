@@ -60,6 +60,61 @@ describe("Groups UI", () => {
       cy.contains("Save").click();
       cy.contains("McAdmin");
     });
+
+    it("requires url and label to add a group artifact", () => {
+      cy.create("App\\Group").then((group) => {
+        cy.visit(`/group/${group.id}`);
+        cy.contains("Edit Group").click();
+        cy.contains("Add Artifact").click();
+
+        // try to save without entering any data
+        cy.contains("Save").click();
+
+        // an error should be displayed
+        cy.contains("Every artifact must have a label and valid URL");
+
+        // dismiss the error
+        cy.contains("Close").click();
+
+        // try to save with a label but no URL
+        cy.get("[data-cy=group-artifacts-section]").within(() => {
+          cy.get("[data-cy=artifact-label] input").type("CLA Website")
+        });
+
+        cy.contains("Save").click();
+
+        // an error should be displayed
+        cy.contains("Every artifact must have a label and valid URL");
+
+        // dismiss the error
+        cy.contains("Close").click();
+
+        // add an invalid URL
+        cy.get("[data-cy=group-artifacts-section]").within(() => {
+          cy.get("[data-cy=artifact-target] input").type("not a url")
+          // an error should show up next to the URL input
+          cy.contains("Invalid URL");
+        });
+
+        // attempting to save again shows the error
+        cy.contains("Save").click();
+        cy.contains("Every artifact must have a label and valid URL");
+
+        // dismiss the error
+        cy.contains("Close").click();
+
+        // finally add a valid url
+        cy.get("[data-cy=group-artifacts-section]").within(() => {
+          cy.get("[data-cy=artifact-target] input").clear().type("https://cla.umn.edu")
+        });
+
+        // saving should be successful
+        cy.contains("Save").click();
+        cy.get("[data-cy=group-artifacts-list]").within(() => {
+          cy.contains("CLA Website").should("have.attr", "href", "https://cla.umn.edu");
+        });
+      });
+    })
   });
 
   context("when authenticated as default user", () => {
