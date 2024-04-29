@@ -119,6 +119,7 @@
               v-model="member.role"
               :options="roles"
               :canAddNewOption="true"
+              class="tw-min-w-[10rem]"
               @addNewOption="
                 (newRole) => $emit('update:roles', [...roles, newRole])
               "
@@ -251,5 +252,12 @@ export default {
 
 .vs__dropdown-menu {
   width: 300px;
+}
+</style>
+<style scoped>
+.table,
+.form-control,
+button {
+  font-size: 0.875rem;
 }
 </style>
