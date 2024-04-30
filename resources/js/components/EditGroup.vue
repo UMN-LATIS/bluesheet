@@ -104,7 +104,7 @@
               label="Department ID"
               :showLabel="true"
               class="tw-flex-1"
-              :validator="(value) => !value || Number.isInteger(value)"
+              :validator="isValidDeptId"
               :validateWhenUntouched="true"
               errorText="Must be a number"
               labelClass="!tw-text-sm tw-normal-case tw-mb-2 tw-text-neutral-800"
@@ -434,6 +434,10 @@ export default {
   },
   methods: {
     isValidUrl,
+    isValidDeptId(str) {
+      if (!str) return true;
+      return /^[0-9]+$/.test(str);
+    },
     handleUpdateParentGroup(group) {
       this.localGroup.parent_group_id = group?.id ?? null;
     },
@@ -469,6 +473,12 @@ export default {
     },
     checkForm: function () {
       this.saveError = null;
+
+      if (!this.isValidDeptId(this.localGroup.dept_id)) {
+        this.saveError = "Department ID must be a number";
+        this.showError = true;
+        return false;
+      }
 
       for (var member of this.localGroup.members) {
         if (!member.role) {
