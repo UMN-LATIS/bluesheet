@@ -98,14 +98,18 @@
             />
           </div>
           <div class="col-sm-3">
-            <div class="form-group">
-              <label for="abbreviation" class="small">Department ID</label>
-              <input
-                id="abbreviation"
-                v-model="localGroup.dept_id"
-                class="form-control"
-              />
-            </div>
+            <!-- CSS Class overrides make the input look like Bootstrap. -->
+            <InputGroup
+              v-model="localGroup.dept_id"
+              label="Department ID"
+              :showLabel="true"
+              class="tw-flex-1"
+              :validator="isValidDeptId"
+              :validateWhenUntouched="true"
+              errorText="Must be a number"
+              labelClass="!tw-text-sm tw-normal-case tw-mb-2 tw-text-neutral-800"
+              inputClass="!tw-text-base"
+            />
           </div>
         </div>
         <div class="row">
@@ -430,6 +434,10 @@ export default {
   },
   methods: {
     isValidUrl,
+    isValidDeptId(str) {
+      if (!str) return true;
+      return /^[0-9]+$/.test(str);
+    },
     handleUpdateParentGroup(group) {
       this.localGroup.parent_group_id = group?.id ?? null;
     },
@@ -465,6 +473,12 @@ export default {
     },
     checkForm: function () {
       this.saveError = null;
+
+      if (!this.isValidDeptId(this.localGroup.dept_id)) {
+        this.saveError = "Department ID must be a number";
+        this.showError = true;
+        return false;
+      }
 
       for (var member of this.localGroup.members) {
         if (!member.role) {
