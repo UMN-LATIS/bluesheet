@@ -444,6 +444,9 @@ export default {
     handleUserSelected(user) {
       this.newUserId = user.mail;
 
+      // reset user lookup input
+      this.userLookupText = "";
+
       this.$nextTick(() => {
         this.$refs.addMemberRef.focus();
       });
