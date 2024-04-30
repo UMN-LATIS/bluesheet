@@ -98,14 +98,18 @@
             />
           </div>
           <div class="col-sm-3">
-            <div class="form-group">
-              <label for="abbreviation" class="small">Department ID</label>
-              <input
-                id="abbreviation"
-                v-model="localGroup.dept_id"
-                class="form-control"
-              />
-            </div>
+            <!-- CSS Class overrides make the input look like Bootstrap. -->
+            <InputGroup
+              v-model="localGroup.dept_id"
+              label="Department ID"
+              :showLabel="true"
+              class="tw-flex-1"
+              :validator="(value) => !value || Number.isInteger(value)"
+              :validateWhenUntouched="true"
+              errorText="Must be a number"
+              labelClass="!tw-text-sm tw-normal-case tw-mb-2 tw-text-neutral-800"
+              inputClass="!tw-text-base"
+            />
           </div>
         </div>
         <div class="row">
