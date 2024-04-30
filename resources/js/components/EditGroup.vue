@@ -78,7 +78,7 @@
                 v-if="groups"
                 id="groups"
                 :modelValue="parentGroup"
-                :options="groups"
+                :options="parentGroupOptions"
                 placeholder="Select..."
                 label="Parent Group"
                 :showLabel="false"
@@ -317,7 +317,7 @@ import Members from "./Members.vue";
 import Modal from "./Modal.vue";
 import FolderWidget from "./FolderWidget.vue";
 import PersonSearch from "./PersonSearch.vue";
-import { dayjs, axios, isValidUrl } from "@/utils";
+import { dayjs, axios, isValidUrl, doesGroupHaveSubgroup } from "@/utils";
 import InputGroup from "./InputGroup.vue";
 
 export default {
@@ -350,12 +350,47 @@ export default {
   },
   computed: {
     parentGroup() {
-      if (!this.groups?.length || !this.localGroup) return null;
+      if (!this.groups?.length || !this.localGroup) {
+        return null;
+      }
+
       return (
-        this.groups.find(
+        this.parentGroupOptions.find(
           (group) => group.id == this.localGroup.parent_group_id,
         ) ?? null
       );
+    },
+    parentGroupOptions() {
+      if (!this.groups || !this.localGroup) return [];
+
+      const parentGroupOptions = this.groups
+        .filter((group) => {
+          if (!group.canCurrentUser) {
+            throw new Error(`Group ${group.id} has no canCurrentUser property`);
+          }
+          // if this is the current saved parent group
+          // permit it to be selected
+          if (group.id == this.group?.parent_group_id) {
+            return true;
+          }
+
+          return (
+            // the group is not the current group
+            group.id != this.localGroup.id &&
+            // the current user can update the group
+            group.canCurrentUser.update &&
+            // if the group is not a subgroup of the current group (to prevent circular references)
+            !doesGroupHaveSubgroup(this.group, group)
+          );
+        })
+        .map((group) => ({
+          id: group.id,
+          label: group.group_title,
+        }))
+        .toSorted((a, b) => a.label.localeCompare(b.label));
+
+      // prepend a null option for "no parent group"
+      return [{ id: null, label: "-- None --" }, ...parentGroupOptions];
     },
     filteredRoles: function () {
       if (!this.roles) {
@@ -415,18 +450,9 @@ export default {
     axios
       .get("/api/group")
       .then((res) => {
-        this.groups = res.data
-          .filter((e) => e.active_group)
-          .filter((e) => e.id != this.localGroup.id)
-          .map((e) => {
-            return {
-              id: e.id,
-              label: e.group_title,
-            };
-          })
-          .sort(function (a, b) {
-            return a.label > b.label;
-          });
+        this.groups = res.data.filter(
+          (g) => g.active_group && g.id != this.localGroup.id,
+        );
       })
       .catch((err) => {
         console.error(err);
