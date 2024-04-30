@@ -8,6 +8,7 @@ use App\Http\Resources\Membership as MembershipResource;
 use App\ParentOrganization;
 use DB;
 use App\Group;
+use App\Constants\Permissions;
 
 class GroupController extends Controller
 {
