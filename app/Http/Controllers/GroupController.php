@@ -25,7 +25,10 @@ class GroupController extends Controller
         // batch get group permissions rather than using Group Policy
         // directly to avoid n+1 queries. Maybe this should be elsewhere,
         // so that it doesn't diverge from GroupPolicy update method?
-        $managedGroupIds = $request->user()->getManagedGroups()->pluck('id')->keyBy(fn ($id) => $id); // key by id for faster lookup
+        $managedGroupIds = $request->user()
+            ->getManagedGroups()
+            ->pluck('id')
+            ->keyBy(fn ($id) => $id);
         $canModifyAnyGroup = $request->user()->can(Permissions::EDIT_GROUPS);
 
         // Enhance groups with permission data

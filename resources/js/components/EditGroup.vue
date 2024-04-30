@@ -369,7 +369,7 @@ export default {
             throw new Error(`Group ${group.id} has no canCurrentUser property`);
           }
           // if this is the current saved parent group
-          // permit it to be selected
+          // permit it to remain selected
           if (group.id == this.group?.parent_group_id) {
             return true;
           }
