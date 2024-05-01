@@ -6,3 +6,4 @@ export { getTempId, isTempId } from "./tempIdHelpers";
 export { parseIntFromRouteParam } from "./parseIntFromRouteParam";
 export { sortByValueAtPath } from "./sortByValueAtPath";
 export { isValidUrl } from "./isValidUrl";
+export { doesGroupHaveSubgroup } from "./doesGroupHaveSubgroup";

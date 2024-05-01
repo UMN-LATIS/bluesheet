@@ -8,6 +8,7 @@ use App\Http\Resources\Membership as MembershipResource;
 use App\ParentOrganization;
 use DB;
 use App\Group;
+use App\Constants\Permissions;
 
 class GroupController extends Controller
 {
@@ -16,10 +17,28 @@ class GroupController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
-    {
+    public function index(Request $request) {
+        $groups = Group::where("active_group", 1)
+            ->with("groupType", "parentGroup", "childGroups", "parentOrganization", "artifacts", "activeMembers")
+            ->get();
 
-         return \App\Group::where("active_group",1)->get()->load("groupType", "parentGroup", "childGroups", "parentOrganization", "artifacts", "activeMembers");
+        // batch get group permissions rather than using Group Policy
+        // directly to avoid n+1 queries. Maybe this should be elsewhere,
+        // so that it doesn't diverge from GroupPolicy update method?
+        $managedGroupIds = $request->user()
+            ->getManagedGroups()
+            ->pluck('id')
+            ->keyBy(fn ($id) => $id);
+        $canModifyAnyGroup = $request->user()->can(Permissions::EDIT_GROUPS);
+
+        // Enhance groups with permission data
+        return $groups->map(function ($group) use ($managedGroupIds, $canModifyAnyGroup) {
+            $group->canCurrentUser = [
+                'update' => $canModifyAnyGroup || $managedGroupIds->has($group->id),
+                'delete' => $canModifyAnyGroup || $managedGroupIds->has($group->id),
+            ];
+            return $group;
+        });
     }
 
     public function getGroupsByFolder(ParentOrganization $parentOrganization=null) {
