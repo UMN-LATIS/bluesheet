@@ -34,9 +34,26 @@
       </div>
     </Modal>
 
-    <div class="row controlRow">
-      <div class="col">
-        <div class="form-check float-right checkContainer">
+    <div
+      class="tw-flex tw-justify-between tw-items-baseline tw-flex-wrap tw-gap-8 tw-mb-2"
+    >
+      <div
+        class="search-container tw-relative"
+        :class="{ expandBox: showSearch }"
+      >
+        <input
+          v-if="showSearch"
+          ref="searchbox"
+          v-model="searchValue"
+          class="searchBox"
+          placeholder="Search"
+        />
+        <a class="button" @click="showSearch = !showSearch">
+          <i class="searchIcon fa fa-search"></i>
+        </a>
+      </div>
+      <div class="tw-flex tw-justify-end tw-items-baseline tw-gap-4">
+        <div class="form-check checkContainer">
           <input
             id="pastMembers"
             v-model="includePreviousMembers"
@@ -47,25 +64,7 @@
             Include Previous Members
           </label>
         </div>
-      </div>
-    </div>
-    <div class="row controlRow">
-      <div class="col">
-        <div class="search-container" :class="{ expandBox: showSearch }">
-          <input
-            v-if="showSearch"
-            ref="searchbox"
-            v-model="searchValue"
-            class="searchBox"
-            placeholder="Search"
-          />
-          <a class="button" @click="showSearch = !showSearch">
-            <i class="searchIcon fa fa-search"></i>
-          </a>
-        </div>
-      </div>
-      <div class="col">
-        <div class="btn-group btn-group-toggle float-right">
+        <div class="btn-group btn-group-toggle">
           <label
             class="btn btn-outline-secondary"
             :class="{ active: !showGantt }"

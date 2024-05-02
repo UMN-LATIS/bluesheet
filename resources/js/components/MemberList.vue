@@ -81,10 +81,13 @@
         <th
           v-if="viewType === 'group' && (editing || $can('edit groups'))"
           scope="col"
+          class="tw-text-center"
         >
           BlueSheet Manager
         </th>
-        <th v-if="editing" scope="col">End Active Membership</th>
+        <th v-if="editing" scope="col" class="tw-text-center">
+          End Active Membership
+        </th>
       </tr>
     </thead>
     <tbody>
@@ -191,17 +194,19 @@
           v-if="viewType === 'group' && ($can('edit groups') || editing)"
           class="tw-text-center"
         >
-          <input
-            v-if="editing"
-            v-model="member.admin"
-            class="form-check-input"
-            type="checkbox"
-          />
+          <div v-if="editing">
+            <input v-model="member.admin" type="checkbox" />
+            <label class="sr-only">BlueSheet Manager</label>
+          </div>
           <CheckIcon v-else-if="member.admin" />
         </td>
-        <td v-if="editing">
-          <button class="btn btn-danger" @click="$emit('remove', member)">
+        <td v-if="editing" class="tw-text-center">
+          <button
+            class="btn btn-outline-danger"
+            @click="$emit('remove', member)"
+          >
             <i class="fas fa-user-minus"></i>
+            <span class="sr-only">End User Membership</span>
           </button>
         </td>
       </tr>

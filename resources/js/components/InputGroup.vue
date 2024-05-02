@@ -28,7 +28,10 @@
       @input="updateValue"
     />
     <small v-if="helpText" class="form-text text-muted">{{ helpText }}</small>
-    <div v-if="!isValidComputed && errorText" class="invalid-feedback">
+    <div
+      v-if="!isValidComputed && errorText"
+      class="invalid-feedback tw-text-xs"
+    >
       {{ errorText }}
     </div>
   </div>
