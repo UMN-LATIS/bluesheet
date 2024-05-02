@@ -6,6 +6,42 @@
       </div>
       <button class="btn btn-primary" @click="showError = false">Close</button>
     </Modal>
+
+
+    <header
+      class="tw-sticky tw-top-0 tw-z-10 tw-bg-white/10 tw-backdrop-blur-sm tw-py-6 tw-mb-8 -tw-mx-4 tw-px-4"
+    >
+      <h3 class="tw-text-sm tw-uppercase tw-m-0 tw-text-neutral-500">
+        Edit Group
+      </h3>
+      <div class="sm:tw-flex tw-justify-between tw-items-baseline">
+        <h2 class="tw-text-xl sm:tw-text-2xl md:tw-text-3xl">
+          {{ localGroup.group_title || "My Group" }}
+          <span v-if="localGroup.abbreviation">
+            ({{ localGroup.abbreviation }})
+          </span>
+        </h2>
+
+        <div class="tw-flex tw-gap-1">
+          <ButtonComponent
+            class="!tw-m-0"
+            @click="
+              $emit('update:editing', false);
+              $emit('update:reload');
+            "
+          >
+            Cancel
+          </ButtonComponent>
+          <ButtonComponent
+            variant="primary"
+            class="tw-bg-green-500 tw-border-green-500 hover:tw-bg-green-600 hover:tw-border-green-600 !tw-m-0"
+            @click="save"
+            >Save</ButtonComponent
+          >
+        </div>
+      </div>
+    </header>
+
     <div class="row">
       <div class="col-md-12">
         <div class="form-group row">
@@ -29,20 +65,6 @@
                 class="form-control"
               />
             </div>
-          </div>
-          <div class="col-sm-3">
-            <button class="btn btn-success float-right" @click="save">
-              Save
-            </button>
-            <button
-              class="btn btn-outline-primary float-right"
-              @click="
-                $emit('update:editing', false);
-                $emit('update:reload');
-              "
-            >
-              Cancel Editing
-            </button>
           </div>
         </div>
         <div class="row">
@@ -319,6 +341,7 @@ import FolderWidget from "./FolderWidget.vue";
 import PersonSearch from "./PersonSearch.vue";
 import { dayjs, axios, isValidUrl, doesGroupHaveSubgroup } from "@/utils";
 import InputGroup from "./InputGroup.vue";
+import ButtonComponent from "./Button.vue";
 
 export default {
   components: {
@@ -328,6 +351,7 @@ export default {
     PersonSearch,
     ComboBox,
     InputGroup,
+    ButtonComponent,
   },
   props: ["group"],
   emits: ["update:editing", "update:reload"],
