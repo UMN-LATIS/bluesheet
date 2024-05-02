@@ -160,7 +160,7 @@
           ></textarea>
         </div>
 
-        <section data-cy="group-artifacts-section tw-mt-4">
+        <section data-cy="group-artifacts-section" class="tw-mt-4">
           <header class="tw-flex tw-justify-between tw-items-baseline">
             <h3 class="tw-text-xs tw-uppercase tw-m-0">Artifacts</h3>
             <ButtonComponent variant="tertiary" @click="addArtifact">
