@@ -78,7 +78,7 @@ describe("Groups UI", () => {
 
         // try to save with a label but no URL
         cy.get("[data-cy=group-artifacts-section]").within(() => {
-          cy.get("[data-cy=artifact-label] input").type("CLA Website")
+          cy.get("[data-cy=artifact-label] input").type("CLA Website");
         });
 
         cy.contains("Save").click();
@@ -91,9 +91,9 @@ describe("Groups UI", () => {
 
         // add an invalid URL
         cy.get("[data-cy=group-artifacts-section]").within(() => {
-          cy.get("[data-cy=artifact-target] input").type("not a url")
+          cy.get("[data-cy=artifact-target] input").type("not a url");
           // an error should show up next to the URL input
-          cy.contains("Invalid URL");
+          cy.contains("URL must be");
         });
 
         // attempting to save again shows the error
@@ -105,16 +105,22 @@ describe("Groups UI", () => {
 
         // finally add a valid url
         cy.get("[data-cy=group-artifacts-section]").within(() => {
-          cy.get("[data-cy=artifact-target] input").clear().type("https://cla.umn.edu")
+          cy.get("[data-cy=artifact-target] input")
+            .clear()
+            .type("https://cla.umn.edu");
         });
 
         // saving should be successful
         cy.contains("Save").click();
         cy.get("[data-cy=group-artifacts-list]").within(() => {
-          cy.contains("CLA Website").should("have.attr", "href", "https://cla.umn.edu");
+          cy.contains("CLA Website").should(
+            "have.attr",
+            "href",
+            "https://cla.umn.edu",
+          );
         });
       });
-    })
+    });
   });
 
   context("when authenticated as default user", () => {
