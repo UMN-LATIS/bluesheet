@@ -1,6 +1,9 @@
 <template>
   <div>
-    <div v-if="$can('view groups') && !editing" class="tw-flex tw-gap-1">
+    <div
+      v-if="$can('view groups') && !editing"
+      class="tw-flex tw-gap-1 tw-mb-4"
+    >
       <button class="btn btn-success" @click="showEmailList = !showEmailList">
         Show Email List
       </button>
