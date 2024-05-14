@@ -42,6 +42,14 @@
             <span v-if="!membership.group.id"
               ><GroupTitle :group="membership.group"
             /></span>
+            <div
+              v-if="membership.admin"
+              class="tw-inline-flex tw-bg-yellow-50 tw-text-yellow-600 tw-gap-1 tw-items-baseline tw-px-1 tw-rounded-full tw-text-xs tw-border tw-border-solid tw-border-yellow-200 tw-leading-none"
+              title="Group Manager"
+            >
+              <i class="fas fa-shield-alt"></i>
+              <span class="tw-uppercase">Manager</span>
+            </div>
           </Td>
           <Td>{{ membership.role.label }}</Td>
           <Td>
