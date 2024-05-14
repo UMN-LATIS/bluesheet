@@ -22,19 +22,24 @@
             v-model="user.notify_of_favorite_changes"
             label="Changes"
             description="Notify me when my favorite groups and roles change."
-            @update:modelValue="api.updateUser(user)"
+            @update:modelValue="api.updateUser(user!)"
           />
           <CheckboxGroup
             id="send_email_reminders"
             v-model="user.send_email_reminders"
             label="Reminders"
             description="Send me occasional reminders to update my groups."
-            @update:modelValue="api.updateUser(user)"
+            @update:modelValue="api.updateUser(user!)"
           />
         </aside>
       </div>
 
-      <Roles id="v-step-4" :memberships="memberships" class="tw-mt-12"></Roles>
+      <Roles
+        id="v-step-4"
+        :memberships="memberships"
+        :isCurrentUser="isCurrentUser"
+        class="tw-mt-12"
+      />
 
       <LeavesTable
         v-if="canViewLeaves"

@@ -79,7 +79,7 @@
           />
         </th>
         <th
-          v-if="viewType === 'group' && (editing || $can('edit groups'))"
+          v-if="viewType === 'group' && editing"
           scope="col"
           class="tw-text-center"
         >
@@ -106,6 +106,11 @@
           <span v-if="!member.user.id || !$can('view users')"
             >{{ member.user.surname }}, {{ member.user.givenname }}</span
           >
+          <ManagerBadge
+            v-if="member.admin && showManagerBadge"
+            :showLabel="!editing"
+            class="tw-ml-2"
+          />
         </td>
         <td v-if="show_unit && viewType == 'group'">{{ member.user.ou }}</td>
 
@@ -190,15 +195,9 @@
           ></i>
           <i v-else class="searchIcon fa fa-close"></i>
         </td>
-        <td
-          v-if="viewType === 'group' && ($can('edit groups') || editing)"
-          class="tw-text-center"
-        >
-          <div v-if="editing">
-            <input v-model="member.admin" type="checkbox" />
-            <label class="sr-only">BlueSheet Manager</label>
-          </div>
-          <CheckIcon v-else-if="member.admin" />
+        <td v-if="viewType === 'group' && editing" class="tw-text-center">
+          <input v-model="member.admin" type="checkbox" />
+          <label class="sr-only">BlueSheet Manager</label>
         </td>
         <td v-if="editing" class="tw-text-center">
           <button
@@ -218,15 +217,15 @@
 import GroupTitle from "./GroupTitle.vue";
 import { dayjs, $can } from "@/utils";
 import ComboBox from "./ComboBox.vue";
-import { CheckIcon } from "@/icons";
 import SortableLink from "./SortableLink.vue";
+import ManagerBadge from "./ManagerBadge.vue";
 
 export default {
   components: {
     GroupTitle,
     ComboBox,
-    CheckIcon,
     SortableLink,
+    ManagerBadge,
   },
   props: [
     "editing",
@@ -238,6 +237,7 @@ export default {
     "viewType", // "group" or "role"
     "currentSort",
     "currentSortDir",
+    "showManagerBadge",
   ],
   emits: ["remove", "update:roles", "sort"],
   methods: {
