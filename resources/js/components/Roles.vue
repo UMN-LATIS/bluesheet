@@ -37,11 +37,16 @@
             <router-link
               v-if="membership.group.id"
               :to="{ name: 'group', params: { groupId: membership.group.id } }"
-              ><GroupTitle :group="membership.group"
-            /></router-link>
+            >
+              <GroupTitle :group="membership.group" />
+            </router-link>
             <span v-if="!membership.group.id"
               ><GroupTitle :group="membership.group"
             /></span>
+            <ManagerBadge
+              v-if="membership.admin && (isCurrentUser || $can('edit groups'))"
+              class="tw-ml-2"
+            />
           </Td>
           <Td>{{ membership.role.label }}</Td>
           <Td>
@@ -67,14 +72,21 @@
 <script lang="ts" setup>
 import { ref, computed } from "vue";
 import GroupTitle from "../components/GroupTitle.vue";
-import { dayjs } from "@/utils";
+import { dayjs, $can } from "@/utils";
 import { Table, Td, Th, THead, TBody } from "@/components/Table";
 import { Membership } from "@/types";
 import CheckboxGroup from "./CheckboxGroup.vue";
+import ManagerBadge from "./ManagerBadge.vue";
 
-const props = defineProps<{
-  memberships: Membership[];
-}>();
+const props = withDefaults(
+  defineProps<{
+    memberships: Membership[];
+    isCurrentUser?: boolean;
+  }>(),
+  {
+    isCurrentUser: false,
+  },
+);
 
 const showPastRoles = ref(false);
 
@@ -97,9 +109,5 @@ function isCurrentOrFutureRole(role: Membership) {
 const filteredList = computed((): Membership[] => {
   if (showPastRoles.value) return sortedList.value;
   return sortedList.value.filter(isCurrentOrFutureRole);
-});
-
-const hasPastRoles = computed((): boolean => {
-  return sortedList.value.some((role) => !isCurrentOrFutureRole(role));
 });
 </script>

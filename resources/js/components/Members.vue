@@ -100,6 +100,7 @@
         :show_unit="show_unit"
         :roles="roles"
         :editing="editing"
+        :showManagerBadge="$can('edit groups') || group?.canCurrentUser?.update"
         :filteredList="filteredList"
         :filterList="filterList"
         :includePreviousMembers="includePreviousMembers"
