@@ -70,6 +70,11 @@ If you're adding a "department", BlueSheet will show a list of "official roles" 
 
 You can set both start and end dates. End dates can be in the future as well - BlueSheet will automatically remove users when the date passes.
 
+### BlueSheet Managers
+
+Anyone with a checkmark in the "BlueSheet Managers" column will have permission to edit this group in BlueSheet, and will be able to create and edit subgroups underneath this group. Anyone within your group can be given this permission - it's totally separate from the "role" you've selected. 
+
+
 ## Editing Membership
 
 Membership can be edited at any time. To remove a member from a group, click the red icon of the person with the minus sign. This will remove their current membership, but you'll always be able to see historical membership data with the "include previous members" checkbox. You can also edit the member's participation dates - for example, if you'd like to add historical data, you can backdate membership.
