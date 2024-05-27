@@ -127,7 +127,7 @@
             type="checkbox"
           />
           <label class="form-check-label small" for="showunit">
-            Show Academic Unit Column in Members List
+            Show Unit Column in Members List
           </label>
         </div>
         <div class="form-check">
