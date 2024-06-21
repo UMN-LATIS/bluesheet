@@ -30,12 +30,28 @@ class LeaveController extends Controller {
 
         $leaves = Leave::with('user')->get();
 
-        // append term data
-        $leavesWithTerms = $leaves
-            ->map(function ($leave) {
+        $emplids = $leaves
+            ->map(fn ($leave) => $leave->user->emplid)
+            ->unique()
+            ->filter();
+
+        $employees = $this->bandaid->getEmployees($emplids->toArray());
+        $employeeLookup = collect($employees)->keyBy("EMPLID");
+
+        $leaves
+            ->each(function ($leave) use ($employeeLookup) {
+
+                // append terms
                 $leave->terms = $this->bandaid->getTermsOverlappingDates($leave->start_date, $leave->end_date);
 
-                return $leave;
+
+                // append user's dept_id, if available
+                $emplid = $leave->user->emplid;
+                if (!$emplid) {
+                    return;
+                }
+
+                $leave->user->deptId = (int) $employeeLookup->get($emplid)?->DEPTID ?? null;
             })
             ->filter(function ($leave) {
                 // if terms are empty then the leave
@@ -43,7 +59,7 @@ class LeaveController extends Controller {
                 return $leave['terms']->isNotEmpty();
             });
 
-        return LeaveResource::collection($leavesWithTerms);
+        return LeaveResource::collection($leaves);
     }
 
 

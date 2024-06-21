@@ -29,6 +29,10 @@ class LeaveResource extends JsonResource {
                 'emplid' => $this->user->emplid,
                 'ou' => $this->user->ou,
                 'title' => $this->user->title,
+                'deptId' => $this->when(
+                    isset($this->user->deptId),
+                    $this->user->deptId
+                ),
             ]),
             'terms' => TermResource::collection($this->whenNotNull($this->terms)),
             'artifacts' => LeaveArtifactResource::collection($this->whenLoaded('artifacts')),
