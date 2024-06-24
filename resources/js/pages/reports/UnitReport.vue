@@ -1,7 +1,8 @@
 <template>
   <DefaultLayout>
     <p>
-      This list combines the following data.
+      <b>Draft Report</b>
+      This report is still in draft, as we clarify which data should be included. This list combines the following data:
     </p>
     <ul>
       <li>
