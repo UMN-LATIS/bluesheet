@@ -46,6 +46,14 @@
         <li class="list-group-item">
           <router-link
             v-if="$can('view reports')"
+            :to="{ name: 'unitReport' }"
+            class="nav-link"
+            >Unit Report
+          </router-link>
+        </li>
+        <li class="list-group-item">
+          <router-link
+            v-if="$can('view reports')"
             :to="{ name: 'committeeService' }"
             class="nav-link"
             >Committee Service
