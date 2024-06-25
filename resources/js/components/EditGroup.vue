@@ -6,214 +6,235 @@
       </div>
       <button class="btn btn-primary" @click="showError = false">Close</button>
     </Modal>
-    <div class="row">
-      <div class="col-md-12">
-        <div class="form-group row">
-          <div class="col-sm-6">
-            <div class="form-group">
-              <label for="groupTitle" class="small">Group Title</label>
-              <input
-                id="groupTitle"
-                v-model="localGroup.group_title"
-                class="form-control"
-                type="text"
-              />
-            </div>
-          </div>
-          <div class="col-sm-3">
-            <div class="form-group">
-              <label for="abbreviation" class="small">Abbreviation</label>
-              <input
-                id="abbreviation"
-                v-model="localGroup.abbreviation"
-                class="form-control"
-              />
-            </div>
-          </div>
-          <div class="col-sm-3">
-            <button class="btn btn-success float-right" @click="save">
-              Save
-            </button>
-            <button
-              class="btn btn-outline-primary float-right"
-              @click="
-                $emit('update:editing', false);
-                $emit('update:reload');
-              "
-            >
-              Cancel Editing
-            </button>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-sm-4">
-            <div class="form-group">
-              <label for="groupType" class="small">Group Type</label>
-              <ComboBox
-                v-if="groupTypes"
-                id="groupTypes"
-                v-model="localGroup.group_type"
-                :options="groupTypes"
-                placeholder="Select..."
-                :canAddNewOption="true"
-                label="Group Type"
-                :showLabel="false"
-                @addNewOption="(newGroupType) => groupTypes.push(newGroupType)"
-              />
-            </div>
-          </div>
 
-          <div class="col-sm-4">
-            <div class="form-group">
-              <label for="parentOrganization" class="small">Folder</label>
-              <FolderWidget
-                v-model="localGroup.parent_organization.id"
-              ></FolderWidget>
-            </div>
-          </div>
-          <div class="col-sm-4">
-            <div class="form-group">
-              <label for="parentGroup" class="small">Parent Group</label>
-              <ComboBox
-                v-if="groups"
-                id="groups"
-                :modelValue="parentGroup"
-                :options="groups"
-                placeholder="Select..."
-                label="Parent Group"
-                :showLabel="false"
-                @update:modelValue="handleUpdateParentGroup"
-              />
-            </div>
-          </div>
-        </div>
+    <header
+      class="tw-sticky tw-top-0 tw-z-10 tw-bg-white/10 tw-backdrop-blur-sm tw-py-4 tw-mb-4 -tw-mx-4 tw-px-4"
+    >
+      <h3 class="tw-text-sm tw-uppercase tw-mb-2 tw-mt-0 tw-text-neutral-500">
+        Edit Group
+      </h3>
+      <div class="sm:tw-flex tw-justify-between tw-items-baseline">
+        <h2 class="tw-text-xl sm:tw-text-2xl md:tw-text-3xl">
+          {{ localGroup.group_title || "My Group" }}
+          <span v-if="localGroup.abbreviation">
+            ({{ localGroup.abbreviation }})
+          </span>
+        </h2>
 
-        <div class="row">
-          <div class="col-md-6">
-            <label for="googleGroup" class="small">Google Group Name</label>
-            <input
-              id="googleGroup"
-              v-model="localGroup.google_group"
-              class="form-control"
-            />
-          </div>
-          <div class="col-sm-3">
-            <div class="form-group">
-              <label for="abbreviation" class="small">Department ID</label>
-              <input
-                id="abbreviation"
-                v-model="localGroup.dept_id"
-                class="form-control"
-              />
-            </div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-6">
-            <div class="form-check">
-              <input
-                id="showunit"
-                v-model="localGroup.show_unit"
-                class="form-check-input"
-                type="checkbox"
-              />
-              <label class="form-check-label small" for="showunit">
-                Show Unit
-              </label>
-            </div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-6">
-            <div class="form-check">
-              <input
-                id="includechildgroups"
-                v-model="localGroup.include_child_groups"
-                class="form-check-input"
-                type="checkbox"
-              />
-              <label class="form-check-label small" for="includechildgroups">
-                Include Child Groups in Member List
-              </label>
-            </div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-12">
-            <label for="groupNotes" class="small">Group Notes</label>
-            <textarea
-              id="groupNotes"
-              v-model="localGroup.notes"
-              class="form-control"
-            ></textarea>
-          </div>
+        <div class="tw-flex tw-gap-1">
+          <ButtonComponent
+            class="!tw-m-0"
+            @click="
+              $emit('update:editing', false);
+              $emit('update:reload');
+            "
+          >
+            Cancel
+          </ButtonComponent>
+          <ButtonComponent
+            variant="primary"
+            class="tw-bg-green-500 tw-border-green-500 hover:tw-bg-green-600 hover:tw-border-green-600 !tw-m-0"
+            @click="save"
+            >Save</ButtonComponent
+          >
         </div>
       </div>
-    </div>
-    <div class="row">
-      <div class="col-md-12">
-        <div class="row">
-          <div class="col-md-12">
-            <button
-              class="btn btn-outline-primary float-right"
-              @click="addArtifact"
-            >
-              Add Artifact <i class="fas fa-plus"></i>
-            </button>
-            <p>Artifacts:</p>
-          </div>
+    </header>
+
+    <div
+      class="tw-grid md:tw-grid-cols-2 lg:tw-grid-cols-3 tw-gap-8 tw-items-start"
+    >
+      <section
+        class="lg:tw-col-span-2 tw-grid lg:tw-grid-cols-4 tw-gap-x-4 tw-items-start"
+      >
+        <div class="form-group tw-col-span-2">
+          <label for="groupTitle" class="small">Group Title</label>
+          <input
+            id="groupTitle"
+            v-model="localGroup.group_title"
+            class="form-control"
+            type="text"
+          />
         </div>
-        <div
-          v-for="(artifact, key) in localGroup.artifacts"
-          :key="key"
-          class="form-row"
+        <div class="form-group">
+          <label for="abbreviation" class="small">Abbreviation</label>
+          <input
+            id="abbreviation"
+            v-model="localGroup.abbreviation"
+            class="form-control"
+          />
+        </div>
+        <InputGroup
+          v-model="localGroup.dept_id"
+          label="Department ID"
+          :showLabel="true"
+          class="tw-flex-1 form-group"
+          :validator="isValidDeptId"
+          :validateWhenUntouched="true"
+          errorText="Must be a number"
+          labelClass="!tw-text-sm tw-normal-case tw-mb-2 tw-text-neutral-800"
+          inputClass="!tw-text-base"
+        />
+        <div class="form-group tw-col-span-2">
+          <label for="groupType" class="small">Group Type</label>
+          <ComboBox
+            v-if="groupTypes"
+            id="groupTypes"
+            v-model="localGroup.group_type"
+            :options="groupTypes"
+            placeholder="Select..."
+            :canAddNewOption="true"
+            label="Group Type"
+            :showLabel="false"
+            @addNewOption="(newGroupType) => groupTypes.push(newGroupType)"
+          />
+        </div>
+
+        <div class="form-group tw-col-span-2">
+          <label for="parentOrganization" class="small">Folder</label>
+          <FolderWidget
+            v-model="localGroup.parent_organization.id"
+          ></FolderWidget>
+        </div>
+        <div class="form-group tw-col-span-2">
+          <label for="parentGroup" class="small">Parent Group</label>
+          <ComboBox
+            v-if="groups"
+            id="groups"
+            :modelValue="parentGroup"
+            :options="parentGroupOptions"
+            placeholder="Select..."
+            label="Parent Group"
+            :showLabel="false"
+            @update:modelValue="handleUpdateParentGroup"
+          />
+        </div>
+
+        <div class="form-group tw-col-span-2">
+          <label for="googleGroup" class="small">Google Group Name</label>
+          <input
+            id="googleGroup"
+            v-model="localGroup.google_group"
+            class="form-control"
+          />
+        </div>
+
+        <div class="form-check">
+          <input
+            id="showunit"
+            v-model="localGroup.show_unit"
+            class="form-check-input"
+            type="checkbox"
+          />
+          <label class="form-check-label small" for="showunit">
+            Show Unit Column in Members List
+          </label>
+        </div>
+        <div class="form-check">
+          <input
+            id="includechildgroups"
+            v-model="localGroup.include_child_groups"
+            class="form-check-input"
+            type="checkbox"
+          />
+          <label class="form-check-label small" for="includechildgroups">
+            Include Subgroup Members in Members List
+          </label>
+        </div>
+      </section>
+      <aside class="tw-bg-neutral-100 tw-p-4 tw-rounded-md tw-w-full">
+        <h2
+          class="tw-inline-block tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-mb-4"
         >
-          <div class="form-group col-md-5">
-            <input
+          Group Details
+        </h2>
+
+        <div class="form-group">
+          <LabelComponent for="groupNotes" class="tw-text-neutral-900"
+            >Notes</LabelComponent
+          >
+          <textarea
+            id="groupNotes"
+            v-model="localGroup.notes"
+            class="form-control"
+          ></textarea>
+        </div>
+
+        <section data-cy="group-artifacts-section" class="tw-mt-4">
+          <header class="tw-flex tw-justify-between tw-items-baseline">
+            <h3 class="tw-text-xs tw-uppercase tw-m-0">Artifacts</h3>
+            <ButtonComponent variant="tertiary" @click="addArtifact">
+              Add Artifact <i class="fas fa-plus tw-m-0"></i>
+            </ButtonComponent>
+          </header>
+          <p class="tw-text-sm tw-italic tw-mb-2 tw-text-neutral-500">
+            Artifacts are links to documents or web pages that are relevant to
+            this group.
+          </p>
+
+          <div
+            v-for="(artifact, key) in localGroup.artifacts"
+            :key="key"
+            class="tw-flex tw-items-baseline tw-gap-2"
+          >
+            <InputGroup
               v-model="artifact.label"
-              type=""
-              class="form-control"
+              label="Label"
+              required
               placeholder="Label"
+              :showLabel="false"
+              class="tw-flex-1"
+              :validateWhenUntouched="true"
+              :isValid="!!artifact.label"
+              data-cy="artifact-label"
             />
-          </div>
-          <div class="form-group col-md-6">
-            <input
+            <InputGroup
               v-model="artifact.target"
-              class="form-control"
+              label="Target URL"
+              required
               placeholder="Target URL"
+              :showLabel="false"
+              class="tw-flex-1"
+              :validateWhenUntouched="true"
+              :isValid="isValidUrl(artifact.target)"
+              errorText="URL must be like 'https://umn.edu'"
+              data-cy="artifact-target"
             />
+            <ButtonComponent
+              variant="tertiary"
+              class="tw-text-red-600 hover:!tw-bg-red-600/10"
+              @click="removeArtifact(key)"
+            >
+              <XIcon />
+              <span class="sr-only">Remove Artifact</span>
+            </ButtonComponent>
           </div>
-          <div class="form-group col-md-1 d-flex flex-column">
-            <button class="btn btn-danger" @click="removeArtifact(key)">
-              <i class="fas fa-trash-alt"></i>
-            </button>
-          </div>
-        </div>
-      </div>
+        </section>
+      </aside>
     </div>
-    <div class="row">
-      <div class="col-md-12">
-        <button
-          class="btn btn-outline-primary float-right"
-          @click="addMember = true"
-        >
-          Add Member <i class="fas fa-plus"></i>
-        </button>
-        <p>Members:</p>
-      </div>
-    </div>
-    <Members
-      v-model:members="localGroup.members"
-      :groupType="localGroup.group_type.label"
-      :show_unit="localGroup.show_unit"
-      editing="true"
-      :roles="filteredRoles"
-      viewType="group"
-      :downloadTitle="localGroup.group_title"
-      :group="group"
-      @update:members="handleUpdateMembers"
-      @update:roles="(updatedRoles) => (roles = updatedRoles)"
-    ></Members>
+
+    <section
+      class="tw-mt-12 tw-border-0 tw-border-t tw-border-solid tw-border-neutral-200 tw-pt-8"
+    >
+      <header class="tw-flex tw-justify-between tw-items-baseline tw-mb-4">
+        <h2 class="tw-text-xl">Members</h2>
+        <ButtonComponent variant="secondary" @click="addMember = true">
+          Add Member <i class="fas fa-plus tw-m-0"></i>
+        </ButtonComponent>
+      </header>
+      <Members
+        v-model:members="localGroup.members"
+        :groupType="localGroup.group_type.label"
+        :show_unit="localGroup.show_unit"
+        editing="true"
+        :roles="filteredRoles"
+        viewType="group"
+        :downloadTitle="localGroup.group_title"
+        :group="group"
+        @update:members="handleUpdateMembers"
+        @update:roles="(updatedRoles) => (roles = updatedRoles)"
+      ></Members>
+    </section>
 
     <div class="row border border-danger rounded deactivate">
       <div class="col-sm-12">
@@ -306,7 +327,11 @@ import Members from "./Members.vue";
 import Modal from "./Modal.vue";
 import FolderWidget from "./FolderWidget.vue";
 import PersonSearch from "./PersonSearch.vue";
-import { dayjs, axios, getTempId, isTempId } from "@/utils";
+import { dayjs, axios, isValidUrl, doesGroupHaveSubgroup } from "@/utils";
+import InputGroup from "./InputGroup.vue";
+import ButtonComponent from "./Button.vue";
+import { XIcon } from "@/icons";
+import LabelComponent from "./Label.vue";
 
 export default {
   components: {
@@ -315,6 +340,10 @@ export default {
     FolderWidget,
     PersonSearch,
     ComboBox,
+    InputGroup,
+    ButtonComponent,
+    LabelComponent,
+    XIcon,
   },
   props: ["group"],
   emits: ["update:editing", "update:reload"],
@@ -337,12 +366,47 @@ export default {
   },
   computed: {
     parentGroup() {
-      if (!this.groups?.length || !this.localGroup) return null;
+      if (!this.groups?.length || !this.localGroup) {
+        return null;
+      }
+
       return (
-        this.groups.find(
+        this.parentGroupOptions.find(
           (group) => group.id == this.localGroup.parent_group_id,
         ) ?? null
       );
+    },
+    parentGroupOptions() {
+      if (!this.groups || !this.localGroup) return [];
+
+      const parentGroupOptions = this.groups
+        .filter((group) => {
+          if (!group.canCurrentUser) {
+            throw new Error(`Group ${group.id} has no canCurrentUser property`);
+          }
+          // if this is the current saved parent group
+          // permit it to remain selected
+          if (group.id == this.group?.parent_group_id) {
+            return true;
+          }
+
+          return (
+            // the group is not the current group
+            group.id != this.localGroup.id &&
+            // the current user can update the group
+            group.canCurrentUser.update &&
+            // if the group is not a subgroup of the current group (to prevent circular references)
+            !doesGroupHaveSubgroup(this.group, group)
+          );
+        })
+        .map((group) => ({
+          id: group.id,
+          label: group.group_title,
+        }))
+        .toSorted((a, b) => a.label.localeCompare(b.label));
+
+      // prepend a null option for "no parent group"
+      return [{ id: null, label: "-- None --" }, ...parentGroupOptions];
     },
     filteredRoles: function () {
       if (!this.roles) {
@@ -402,29 +466,28 @@ export default {
     axios
       .get("/api/group")
       .then((res) => {
-        this.groups = res.data
-          .filter((e) => e.active_group)
-          .filter((e) => e.id != this.localGroup.id)
-          .map((e) => {
-            return {
-              id: e.id,
-              label: e.group_title,
-            };
-          })
-          .sort(function (a, b) {
-            return a.label > b.label;
-          });
+        this.groups = res.data.filter(
+          (g) => g.active_group && g.id != this.localGroup.id,
+        );
       })
       .catch((err) => {
         console.error(err);
       });
   },
   methods: {
+    isValidUrl,
+    isValidDeptId(str) {
+      if (!str) return true;
+      return /^[0-9]+$/.test(str);
+    },
     handleUpdateParentGroup(group) {
       this.localGroup.parent_group_id = group?.id ?? null;
     },
     handleUserSelected(user) {
       this.newUserId = user.mail;
+
+      // reset user lookup input
+      this.userLookupText = "";
 
       this.$nextTick(() => {
         this.$refs.addMemberRef.focus();
@@ -456,9 +519,23 @@ export default {
     checkForm: function () {
       this.saveError = null;
 
+      if (!this.isValidDeptId(this.localGroup.dept_id)) {
+        this.saveError = "Department ID must be a number";
+        this.showError = true;
+        return false;
+      }
+
       for (var member of this.localGroup.members) {
         if (!member.role) {
           this.saveError = "Every member must have a role assigned";
+          this.showError = true;
+          return false;
+        }
+      }
+
+      for (let artifact of this.localGroup.artifacts) {
+        if (!artifact.label || !isValidUrl(artifact.target)) {
+          this.saveError = "Every artifact must have a label and valid URL";
           this.showError = true;
           return false;
         }

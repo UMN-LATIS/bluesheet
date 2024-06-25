@@ -9,6 +9,11 @@
                 <div class="card">
                     <div class="card-header">Edit users #{{ $user->id }}</div>
                     <div class="card-body">
+                        @canImpersonate
+                          <a href="{{ route('impersonate', $user->id) }}">
+                            Impersonate this user
+                          </a>
+                        @endCanImpersonate
                         <a href="{{ url('/admin/users') }}" title="Back"><button class="btn btn-warning btn-sm"><i class="fa fa-arrow-left" aria-hidden="true"></i> Back</button></a>
                         <br />
                         <br />

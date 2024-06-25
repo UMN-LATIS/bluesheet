@@ -7,8 +7,8 @@ use App\Http\Resources\Group as GroupResource;
 use App\Http\Resources\Membership as MembershipResource;
 use App\ParentOrganization;
 use DB;
-use Auth;
-Use Log;
+use App\Group;
+use App\Constants\Permissions;
 
 class GroupController extends Controller
 {
@@ -17,10 +17,28 @@ class GroupController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
-    {
+    public function index(Request $request) {
+        $groups = Group::where("active_group", 1)
+            ->with("groupType", "parentGroup", "childGroups", "parentOrganization", "artifacts", "activeMembers")
+            ->get();
 
-         return \App\Group::where("active_group",1)->get()->load("groupType", "parentGroup", "childGroups", "parentOrganization", "artifacts", "activeMembers");
+        // batch get group permissions rather than using Group Policy
+        // directly to avoid n+1 queries. Maybe this should be elsewhere,
+        // so that it doesn't diverge from GroupPolicy update method?
+        $managedGroupIds = $request->user()
+            ->getManagedGroups()
+            ->pluck('id')
+            ->keyBy(fn ($id) => $id);
+        $canModifyAnyGroup = $request->user()->can(Permissions::EDIT_GROUPS);
+
+        // Enhance groups with permission data
+        return $groups->map(function ($group) use ($managedGroupIds, $canModifyAnyGroup) {
+            $group->canCurrentUser = [
+                'update' => $canModifyAnyGroup || $managedGroupIds->has($group->id),
+                'delete' => $canModifyAnyGroup || $managedGroupIds->has($group->id),
+            ];
+            return $group;
+        });
     }
 
     public function getGroupsByFolder(ParentOrganization $parentOrganization=null) {
@@ -58,17 +76,21 @@ class GroupController extends Controller
      */
     public function store(Request $request)
     {
-        if(!$this->authorize('create', \App\Group::class)) {
-             $returnData = array(
-                'status' => 'error',
-                'message' => "You don't have permission to create a group"
-            );
-            return Response()->json($returnData, 500);
-        }
+        $validated = $request->validate([
+            'groupName' => 'required',
+            'groupType' => 'required',
+            'parentOrganization' => 'exists:parent_organizations,id|nullable',
+            'parentGroupId' => 'exists:groups,id|nullable',
+        ]);
+
+        $parentGroupId = $validated['parentGroupId'] ?? null;
+        $parentGroup = Group::find($parentGroupId);
+        $this->authorize('create', [Group::class, $parentGroup]);
+
         $newGroup = new \App\Group;
-        
+
         $newGroup->group_title = $request->get("groupName");
-        
+
         if($groupType = $request->get("groupType")) {
             if(isset($groupType["id"])) {
                 $newGroup->group_type_id = $groupType["id"];
@@ -84,25 +106,14 @@ class GroupController extends Controller
             );
             return Response()->json($returnData, 500);
         }
-        
-        
+
         $newGroup->parent_organization_id = $request->get("parentOrganization");
+        $newGroup->parent_group_id = $parentGroupId;
         $newGroup->active_group = 1;
         $newGroup->show_unit = false;
         $newGroup->save();
-        $returnData = array(
-            'status' => 'success',
-            'id' => $newGroup->id
-        );
 
-        // $newMember = new \App\Membership;
-        // $newMember->user()->associate(Auth::user());
-        // $role = $this->addOrFindRole("member");
-        // $newMember->role()->associate($role);
-        // $newMember->start_date = \Carbon\Carbon::now();
-        // $newMember->admin = true;
-        // $newGroup->members()->save($newMember);
-        return Response()->json($returnData);
+        return GroupResource::make($newGroup);
     }
 
     /**

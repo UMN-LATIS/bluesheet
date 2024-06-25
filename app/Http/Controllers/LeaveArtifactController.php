@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\LeaveArtifactResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\LeaveArtifact;
@@ -10,31 +11,33 @@ use Auth;
 
 
 class LeaveArtifactController extends Controller {
-    public function index(Request $request, Leave $leave) {
-        abort_if($request->user()->cannot('view leaves') && $leave->user_id !== Auth::user()->id, 403);
+    public function index(Leave $leave) {
+        $this->authorize('viewAny', [LeaveArtifact::class, $leave]);
 
-        return $leave->artifacts;
+        return LeaveArtifactResource::collection($leave->artifacts);
     }
 
-    public function show(Request $request, Leave $leave, LeaveArtifact $leaveArtifact) {
-        abort_if($request->user()->cannot('view leaves') && $leave->user_id !== Auth::user()->id, 403);
+    public function show(Leave $leave, LeaveArtifact $leaveArtifact) {
+        $this->authorize('view', $leaveArtifact);
 
-        return $leaveArtifact;
+        return LeaveArtifactResource::make($leaveArtifact);
     }
 
     public function store(Request $request, Leave $leave) {
-        abort_if($request->user()->cannot('edit leaves'), 403);
+        $this->authorize('create', [LeaveArtifact::class, $leave]);
 
         $validated = $request->validate([
             'label' => 'required|string',
             'target' => 'required|string',
         ]);
 
-        return $leave->artifacts()->create($validated);
+        $leaveArtifact = $leave->artifacts()->create($validated);
+
+        return LeaveArtifactResource::make($leaveArtifact);
     }
 
     public function update(Request $request, Leave $leave, LeaveArtifact $leaveArtifact) {
-        abort_if($request->user()->cannot('edit leaves'), 403);
+        $this->authorize('update', $leaveArtifact);
 
         $validated = $request->validate([
             'label' => 'required|string',
@@ -46,12 +49,12 @@ class LeaveArtifactController extends Controller {
         if (!$updateSuccessful) {
             return response()->json(['message' => 'Could not update artifact'], 500);
         } else {
-            return $leaveArtifact->refresh();
+            return LeaveArtifactResource::make($leaveArtifact);
         }
     }
 
     public function destroy(Request $request, Leave $leave, LeaveArtifact $leaveArtifact) {
-        abort_if($request->user()->cannot('edit leaves'), 403);
+        abort_if($request->user()->cannot('delete', $leaveArtifact), 403);
 
         $leaveArtifact->delete();
 

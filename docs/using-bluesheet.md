@@ -70,6 +70,11 @@ If you're adding a "department", BlueSheet will show a list of "official roles" 
 
 You can set both start and end dates. End dates can be in the future as well - BlueSheet will automatically remove users when the date passes.
 
+### BlueSheet Managers
+
+Anyone with a checkmark in the "BlueSheet Managers" column will have permission to edit this group in BlueSheet, and will be able to create and edit subgroups underneath this group. Anyone within your group can be given this permission - it's totally separate from the "role" you've selected. 
+
+
 ## Editing Membership
 
 Membership can be edited at any time. To remove a member from a group, click the red icon of the person with the minus sign. This will remove their current membership, but you'll always be able to see historical membership data with the "include previous members" checkbox. You can also edit the member's participation dates - for example, if you'd like to add historical data, you can backdate membership.
@@ -96,19 +101,19 @@ The "Browse Roles" link allows you to see all of the people who have been tagged
 
 Folders provide a way to "group groups", based on College or other high-level organization. Folders don't have their own memberships, they just hold other groups. To request that a new folder be added, please [send us an email](mailto:latistecharch@umn.edu).
 
-## Leaves ##
+## Leaves
 
 BlueSheet tracks faculty leaves and leave eligibility.  These features are intended to give departmental staff an easy way to keep track of leaves for scheduling purposes, and to provide shared visibility for faculty and departmental staff. The leave features in BlueSheet **do not** automatically enter leaves into Peoplesoft. Normal HR processes should be followed to officially enter leaves. 
 
-### Automatically Imported Leaves ###
+### Automatically Imported Leaves
 
 BlueSheet automatically imports historical leave data, including sabbatical information. These leaves will be have the description of "Imported Leave". These leaves can be edited to add additional historical context if desired. 
 
 BlueSheet also automatically imports information about eligibility for sabbatical, single semester leave, and mid-career awards. Eligibility data is only updated once per academic year, usually in September.
 
-### Adding and Editing Leaves ###
+### Adding and Editing Leaves
 
-Users with administrative permissions in BlueSheet can add and edit additional leaves within any user record. Begin by finding a user by clicking `User Lookup` in the navigation bar. The "Leaves" section is at the bottom of their profile page. 
+Users with BlueSheet Manager permissions can add and edit additional leaves within a group member's user record. Begin by finding a user by clicking `User Lookup` in the navigation bar. The "Leaves" section is at the bottom of their profile page. 
 
 Any current or future leaves will be displayed by default. The "Show past leaves" checkbox enables you to view historical leave data. 
 
@@ -120,6 +125,6 @@ The description field allows you to add additional context for the leave - for e
 
 ## Faculty Leaves Planning Report
 
-Group administrators can use the Faculty Leaves Planning Report to quickly get a sense of how leaves and other scheduling issues might impact course planning. The Faculty Leaves Planning Report link is attached to any academic department in BlueSheet. If you don't see the report and believe you should have access, [contact support](mailto:latistecharch@umn.edu).
+BlueSheet Managers can use the Faculty Leaves Planning Report to quickly get a sense of how leaves and other scheduling issues might impact course planning. The Faculty Leaves Planning Report link is attached to any academic department in BlueSheet. If you don't see the report and believe you should have access, [contact support](mailto:latistecharch@umn.edu).
 
-The Faculty Leaves Planning Report displays a grid of semesters and instructors, with entries for courses taught and leave data. Courses in the future are generally only available for one or two semesters. 
+The Faculty Leaves Planning Report displays a grid of semesters and instructors, with entries for courses taught and leave data. Courses in the future are generally only available for one or two semesters.

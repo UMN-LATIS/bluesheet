@@ -124,15 +124,35 @@
           <span class="tw-text-neutral-400 tw-text-xs ml-1">({{ count }})</span>
         </label>
       </fieldset>
+      <fieldset>
+        <div class="tw-flex tw-items-baseline tw-mb-1">
+          <legend
+            class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold tw-my-1"
+          >
+            Minimum Enrollment
+          </legend>
+        </div>
+        <InputGroup
+          v-model="minSectionEnrollmentRaw"
+          label="Minimum Enrollment"
+          type="number"
+          placeholder="0"
+          class="tw-w-20"
+          :required="false"
+          :showLabel="false"
+        />
+      </fieldset>
     </div>
   </section>
 </template>
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 import SelectGroup from "@/components/SelectGroup.vue";
 import Button from "@/components/Button.vue";
 import { useCoursePlanningStore } from "../stores/useCoursePlanningStore";
 import { storeToRefs } from "pinia";
+import InputGroup from "@/components/InputGroup.vue";
+import { debounce } from "lodash";
 
 const coursePlanningStore = useCoursePlanningStore();
 
@@ -148,6 +168,15 @@ const {
 
 const termSelectOptions = computed(
   () => coursePlanningStore.termsStore.termSelectOptions,
+);
+
+const minSectionEnrollmentRaw = ref("");
+
+watch(
+  minSectionEnrollmentRaw,
+  debounce((value) => {
+    coursePlanningStore.setMinSectionEnrollment(value);
+  }, 500),
 );
 </script>
 <style scoped></style>

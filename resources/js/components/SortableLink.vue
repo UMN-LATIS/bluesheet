@@ -1,14 +1,15 @@
 <template>
-  <span class="sortableLink" @click="$emit('sort', sortElement)"
-    >{{ sortLabel }}
+  <button class="sortableLink" @click="$emit('sort', sortElement)">
+    {{ sortLabel }}
     <i
       class="fas"
       :class="{
         'fa-sort-alpha-up': currentSortDir == 'desc' && isCurrentSort,
         'fa-sort-alpha-down': currentSortDir == 'asc' && isCurrentSort,
+        'fa-sort tw-text-neutral-300': !isCurrentSort,
       }"
     ></i>
-  </span>
+  </button>
 </template>
 
 <script setup lang="ts">
@@ -37,5 +38,15 @@ const isCurrentSort = computed(() => {
 .sortableLink {
   cursor: pointer;
   text-transform: capitalize;
+  border: none;
+  background-color: transparent;
+  color: inherit;
+  padding: 0;
+  margin: 0;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: bold;
 }
 </style>

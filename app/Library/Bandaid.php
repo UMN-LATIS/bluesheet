@@ -39,8 +39,10 @@ class Bandaid {
     }
 
     public function cachedPost($url, $body) {
-        if ($value = Cache::get(json_encode($body))) {
-            return $value;
+        $cacheKey = $url . "_" . json_encode($body);
+        $cachedValue = Cache::get($cacheKey);
+        if ($cachedValue) {
+            return $cachedValue;
         }
 
         $response = Http::withHeaders($this->headers)
@@ -50,7 +52,7 @@ class Bandaid {
             );
 
         $value = json_decode($response->body());
-        Cache::put(json_encode($body), $value, 600);
+        Cache::put($cacheKey, $value, 600);
         return $value;
     }
 
@@ -68,12 +70,15 @@ class Bandaid {
     }
 
     public function getEmployees(array $emplIds): array {
+        if (empty($emplIds)) {
+            return [];
+        }
         try {
             $result = $this->cachedPost(
                 '/employment/employees',
                 ["emplids" => $emplIds]
             );
-            return $result;
+            return $result ?? [];
         } catch (RequestException $e) {
             $msg = $e->getMessage();
             $errorMessage = 'getEmployees Error: ' . $msg;
@@ -260,6 +265,10 @@ class Bandaid {
      * }>
      */
     public function getNames(array $emplids): Collection {
+        if (empty($emplids)) {
+            return collect();
+        }
+
         try {
             $result = $this->cachedPost('/names', ["emplids" => $emplids]);
             return collect($result);

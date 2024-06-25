@@ -1,5 +1,5 @@
 <template>
-  <DefaultLayout>
+  <WideLayout>
     <div>
       <div v-if="error" class="alert alert-danger" role="alert">
         {{ error }}
@@ -16,13 +16,13 @@
         @update:reload="groupStore.fetchGroup(props.groupId)"
       />
     </div>
-  </DefaultLayout>
+  </WideLayout>
 </template>
 
 <script lang="ts" setup>
 import ViewGroup from "@/components/ViewGroup.vue";
 import EditGroup from "@/components/EditGroup.vue";
-import DefaultLayout from "@/layouts/DefaultLayout.vue";
+import WideLayout from "@/layouts/WideLayout.vue";
 import { usePageTitle } from "@/utils/usePageTitle";
 import { Group } from "@/types";
 import { computed, ref, watch } from "vue";

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /// <reference types="cypress" />
 
 declare namespace Cypress {
@@ -9,7 +10,7 @@ declare namespace Cypress {
      * cy.login()
      * cy.login({ id: 1 })
      */
-    login(umndid: string): Chainable<any>;
+    login(umndidOrAttributes: string | object): Chainable<any>;
 
     /**
      * Log out the current user.
@@ -103,6 +104,11 @@ declare namespace Cypress {
     php(command: string): Chainable<any>;
 
     /**
+     * Get a user by their userId.
+     */
+    getUser(userId: number): Chainable<any>;
+
+    /**
      * Get a user by their username (umndid).
      */
     getUserByUsername(umndid: string): Chainable<any>;
@@ -115,9 +121,27 @@ declare namespace Cypress {
     /**
      * Give a permission to a user.
      */
-    givePermissionToUser(
+    addPermissionToUser(
       permissionName: string,
       umndid: string,
     ): Chainable<void>;
+
+    createMembership({
+      umndid,
+      groupName,
+      roleName,
+    }: {
+      umndid: string;
+      groupName: string;
+      roleName: string;
+    }): Chainable<any>;
+
+    promoteUserToGroupManager({
+      userId,
+      groupId,
+    }: {
+      userId: number;
+      groupId: number;
+    }): Chainable<any>;
   }
 }

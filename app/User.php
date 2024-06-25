@@ -12,6 +12,7 @@ use Spatie\Permission\Traits\HasRoles;
 use Spatie\Permission\Models\Permission;
 use Laravel\Sanctum\HasApiTokens;
 use App\Leave;
+use Illuminate\Support\Collection;
 
 /**
  * @mixin IdeHelperUser
@@ -87,5 +88,39 @@ class User extends Authenticatable implements Auditable {
 
     public function leavesIncludingTrashed() {
         return $this->hasMany(Leave::class)->withTrashed();
+    }
+
+    /**
+     * Get the groups that this user manages. That is,
+     * their `admin` field is set to true.
+     *
+     * @return Collection<array-key, mixed>
+     */
+    public function getManagedGroups() {
+        $managedGroups =  $this->memberships()->where('admin', true)->get()->pluck('group');
+
+        // get subgroups for each managed groups
+        $subgroups = $managedGroups->map(function ($group) {
+            return $group->getDescendentGroups();
+        })->flatten();
+
+        return $managedGroups->merge($subgroups)->unique('id');
+    }
+
+    public function managesAnyGroupWithMember(User $member): bool {
+        $memberGroupIds = $member->groups->pluck('id');
+        $adminGroupIds = $this->getManagedGroups()->pluck('id');
+
+        return $adminGroupIds
+            ->intersect($memberGroupIds)
+            ->isNotEmpty();
+    }
+
+    public function managesGroup(Group $group): bool {
+        return $this->getManagedGroups()->pluck('id')->contains($group->id);
+    }
+
+    public function isMemberOf(Group $group): bool {
+        return $this->groups->pluck('id')->contains($group->id);
     }
 }

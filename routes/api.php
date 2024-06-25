@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\LeaveController;
 use Illuminate\Http\Request;
 
 /*
@@ -13,6 +14,7 @@ use Illuminate\Http\Request;
 |
 */
 
-Route::group(['prefix'=>'/remote/', 'middleware' => 'auth:sanctum'], function () {
+Route::group(['prefix' => '/remote/', 'middleware' => 'auth:sanctum'], function () {
     Route::get('role/{role}', 'GroupController@role');
+    Route::get('leaves', [LeaveController::class, 'index']);
 });

@@ -16,7 +16,7 @@ return array(
     'idp_login'     => '/Shibboleth.sso/Login',
     'idp_logout'    => '/Shibboleth.sso/Logout?return=https%3a%2f%2flogin.umn.edu%2fidp%2fLogoutUMN',
     'authenticated' => '/',
-    'authfield'     => 'umndid',
+    'authfield'     => 'emplid',
     /*
     |--------------------------------------------------------------------------
     | Emulate an IdP
@@ -50,6 +50,7 @@ return array(
             'sn'          => 'User',
             'eppn'        => 'staff@umn.edu',
             'umnDID'      => 'staff',
+            'umnEmplId'      => '1111112',
         ),
         'user'  => array(
             'uid'         => 'user',
@@ -59,6 +60,7 @@ return array(
             'sn'          => 'User',
             'mail'        => 'user@umn.edu',
             'umnDID'      => 'user',
+            'umnEmplId'      => '1111113',
         ),
 
         // users for testing roles
@@ -70,6 +72,7 @@ return array(
             'sn' => 'User',
             'mail' => 'basic_user@umn.edu',
             'umnDID' => 'basic_user',
+            'umnEmplId'      => '1111114',
         ],
         'view_user' => [
             'uid' => 'view_user',
@@ -79,15 +82,17 @@ return array(
             'sn' => 'User',
             'mail' => 'view_user@umn.edu',
             'umnDID' => 'view_user',
+            'umnEmplId'      => '1111115',
         ],
-        'group_admin' => [
-            'uid' => 'group_admin',
-            'displayName' => 'Group Admin',
-            'givenName' => 'Group',
+        'global_group_admin' => [
+            'uid' => 'global_group_admin',
+            'displayName' => 'Global Group Admin',
+            'givenName' => 'Global Group',
             'surname' => 'Admin',
             'sn' => 'Admin',
-            'mail' => 'group_admin@umn.edu',
-            'umnDID' => 'group_admin',
+            'mail' => 'global_group_admin@umn.edu',
+            'umnDID' => 'global_group_admin',
+            'umnEmplId'      => '1111116',
         ],
         'site_admin' => [
             'uid' => 'site_admin',
@@ -97,6 +102,7 @@ return array(
             'sn' => 'Admin',
             'mail' => 'site_admin@umn.edu',
             'umnDID' => 'site_admin',
+            'umnEmplId'      => '1111117',
         ]
     ),
 
@@ -115,6 +121,7 @@ return array(
         // fillable user model attribute => server variable
         'email'       => 'eppn',
         'umndid' => 'umnDID',
+        'emplid' => 'umnEmplId',
         // 'surname' => 'surname',
         // 'givenname' => 'givenName',
         // 'displayname' => 'displayName',

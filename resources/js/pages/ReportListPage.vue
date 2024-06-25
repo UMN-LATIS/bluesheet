@@ -46,6 +46,14 @@
         <li class="list-group-item">
           <router-link
             v-if="$can('view reports')"
+            :to="{ name: 'unitReport' }"
+            class="nav-link"
+            >Unit Report
+          </router-link>
+        </li>
+        <li class="list-group-item">
+          <router-link
+            v-if="$can('view reports')"
             :to="{ name: 'committeeService' }"
             class="nav-link"
             >Committee Service
@@ -56,12 +64,21 @@
             v-if="$can('view reports')"
             :to="{ name: 'groupadmins' }"
             class="nav-link"
-            >Group Admins
+            >BlueSheet Managers
           </router-link>
         </li>
         <li v-if="$can('view eligibility')" class="list-group-item">
           <router-link :to="{ name: 'eligibilityReport' }" class="nav-link"
             >Eligibility Report
+          </router-link>
+        </li>
+        <li v-if="$can('view eligibility')" class="list-group-item">
+          <router-link
+            v-if="$can(UserPermissions.VIEW_ANY_LEAVES)"
+            :to="{ name: 'deptLeavesReport' }"
+            class="nav-link"
+          >
+            Department Leaves Report
           </router-link>
         </li>
       </ul>
@@ -75,8 +92,9 @@
 
 <script setup>
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
+import { UserPermissions } from "@/types";
 import { $can } from "@/utils";
 import { usePageTitle } from "@/utils/usePageTitle";
 
-usePageTitle('Reports');
+usePageTitle("Reports");
 </script>

@@ -8,9 +8,61 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\Response;
 use Auth;
-use Illuminate\Support\Arr;
+use App\Http\Resources\LeaveResource;
+use App\Library\Bandaid;
 
 class LeaveController extends Controller {
+    protected $bandaid;
+    protected $userService;
+
+    public function __construct(Bandaid $bandaid) {
+        $this->bandaid = $bandaid;
+    }
+
+
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index(Request $request) {
+        $this->authorize('viewAny', Leave::class);
+
+        $leaves = Leave::with('user')->get();
+
+        $emplids = $leaves
+            ->map(fn ($leave) => $leave->user->emplid)
+            ->unique()
+            ->filter();
+
+        $employees = $this->bandaid->getEmployees($emplids->toArray());
+        $employeeLookup = collect($employees)->keyBy("EMPLID");
+
+        $leaves
+            ->each(function ($leave) use ($employeeLookup) {
+
+                // append terms
+                $leave->terms = $this->bandaid->getTermsOverlappingDates($leave->start_date, $leave->end_date);
+
+
+                // append user's dept_id, if available
+                $emplid = $leave->user->emplid;
+                if (!$emplid) {
+                    return;
+                }
+
+                $leave->user->deptId = (int) $employeeLookup->get($emplid)?->DEPTID ?? null;
+            })
+            ->filter(function ($leave) {
+                // if terms are empty then the leave
+                // can be ignored
+                return $leave['terms']->isNotEmpty();
+            });
+
+        return LeaveResource::collection($leaves);
+    }
+
+
     /**
      * Store a newly created resource in storage.
      *
@@ -18,8 +70,6 @@ class LeaveController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request) {
-        abort_if($request->user()->cannot('edit leaves'), 403);
-
         $validated = $request->validate([
             'user_id' => 'required|integer|exists:users,id',
             'description' => 'required|string|max:255',
@@ -29,8 +79,13 @@ class LeaveController extends Controller {
             'type' => ['required', Rule::in(Leave::TYPES)],
         ]);
 
+        $leaveOwner = User::find($validated['user_id']);
+
+        $this->authorize('modifyLeavesForUser', [Leave::class, $leaveOwner]);
+
+
         $leave = Leave::create($validated);
-        return $leave->load('user');
+        return LeaveResource::make($leave->load('user'));
     }
 
     /**
@@ -40,10 +95,9 @@ class LeaveController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function show(Leave $leave) {
-        $currentUser = Auth::user();
-        abort_if($currentUser->cannot('view leave') && $leave->user_id !== $currentUser->id, 403);
+        $this->authorize('view', $leave);
 
-        return $leave->load(['user', 'artifacts']);
+        return LeaveResource::make($leave->load(['user', 'artifacts']));
     }
 
     /**
@@ -54,7 +108,7 @@ class LeaveController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, Leave $leave) {
-        abort_if($request->user()->cannot('edit leaves'), 403);
+        $this->authorize('update', $leave);
 
         $validated = $request->validate([
             'user_id' => 'required|integer|exists:users,id',
@@ -67,7 +121,7 @@ class LeaveController extends Controller {
 
         $leave->update($validated);
 
-        return $leave->load(['user', 'artifacts']);
+        return LeaveResource::make($leave->load(['user', 'artifacts']));
     }
 
     /**
@@ -77,7 +131,7 @@ class LeaveController extends Controller {
      * @return \Illuminate\Http\Response
      */
     public function destroy(Request $request, Leave $leave) {
-        abort_if($request->user()->cannot('edit leaves'), 403);
+        $this->authorize('delete', $leave);
 
         $leave->delete();
         return response()->json(null, Response::HTTP_NO_CONTENT);

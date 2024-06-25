@@ -28,8 +28,12 @@ Cypress.Commands.add("getUserByUsername", (umndid: string) => {
   return cy.php(`App\\User::where('umndid', '${umndid}')->firstOrFail()`);
 });
 
+Cypress.Commands.add("getUser", (userId: number) => {
+  return cy.php(`App\\User::findOrFail(${userId});`);
+});
+
 Cypress.Commands.add("addRoleToUser", (roleName: string, umndid: string) => {
-  cy.php(`
+  return cy.php(`
     $roleId = App\\Role::where('name', '${roleName}')->firstOrFail()->id;
     $user = App\\User::where('umndid', '${umndid}')->firstOrFail();
     $user->roles()->attach($roleId);
@@ -37,10 +41,47 @@ Cypress.Commands.add("addRoleToUser", (roleName: string, umndid: string) => {
 });
 
 Cypress.Commands.add(
-  "givePermissionToUser",
+  "addPermissionToUser",
   (permissionName: string, umndid: string) => {
-    cy.php(`
+    return cy.php(`
     App\\User::where('umndid', '${umndid}')->firstOrFail()->givePermissionTo('${permissionName}');
+  `);
+  },
+);
+
+Cypress.Commands.add(
+  "createMembership",
+  ({
+    umndid,
+    groupName,
+    roleName,
+  }: {
+    umndid: string;
+    groupName: string;
+    roleName: string;
+  }) => {
+    return cy.php(`
+    $user = App\\User::where('umndid', '${umndid}')->firstOrFail();
+    $group = App\\Group::where('title', '${groupName}')->firstOrFail();
+    $role = App\\Role::where('name', ${roleName})->firstOrFail();
+    App\\Membership::create([
+      'user_id' => $user->id,
+      'group_id' => $group->id,
+      'role_id' => $role->id,
+    ]);
+  `);
+  },
+);
+
+Cypress.Commands.add(
+  "promoteUserToGroupManager",
+  ({ userId, groupId }: { userId: number; groupId: number }) => {
+    return cy.php(`
+    App\\Membership::where("user_id", ${userId})
+    ->where("group_id", ${groupId})
+    ->update([
+      'admin' => true,
+    ]);
   `);
   },
 );

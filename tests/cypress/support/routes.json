@@ -332,6 +332,74 @@
       "DELETE"
     ]
   },
+  "courses.index": {
+    "name": "courses.index",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\CoursePlanning\\GroupCourseController@index",
+    "uri": "api/course-planning/groups/{group}/courses",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "courses.create": {
+    "name": "courses.create",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\CoursePlanning\\GroupCourseController@create",
+    "uri": "api/course-planning/groups/{group}/courses/create",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "courses.store": {
+    "name": "courses.store",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\CoursePlanning\\GroupCourseController@store",
+    "uri": "api/course-planning/groups/{group}/courses",
+    "method": [
+      "POST"
+    ]
+  },
+  "courses.show": {
+    "name": "courses.show",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\CoursePlanning\\GroupCourseController@show",
+    "uri": "api/course-planning/groups/{group}/courses/{course}",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "courses.edit": {
+    "name": "courses.edit",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\CoursePlanning\\GroupCourseController@edit",
+    "uri": "api/course-planning/groups/{group}/courses/{course}/edit",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "courses.update": {
+    "name": "courses.update",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\CoursePlanning\\GroupCourseController@update",
+    "uri": "api/course-planning/groups/{group}/courses/{course}",
+    "method": [
+      "PUT",
+      "PATCH"
+    ]
+  },
+  "courses.destroy": {
+    "name": "courses.destroy",
+    "domain": null,
+    "action": "App\\Http\\Controllers\\CoursePlanning\\GroupCourseController@destroy",
+    "uri": "api/course-planning/groups/{group}/courses/{course}",
+    "method": [
+      "DELETE"
+    ]
+  },
   "sections.index": {
     "name": "sections.index",
     "domain": null,

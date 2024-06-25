@@ -72,6 +72,12 @@ class Group extends Model implements AuditableContract {
         return $this->hasMany("App\Group", "parent_group_id");
     }
 
+    public function getDescendentGroups() {
+        return $this->childGroups->flatMap(function ($group) {
+            return collect([$group])->merge($group->getDescendentGroups());
+        });
+    }
+
     public function courseSections(): HasMany {
         return $this->hasMany(CourseSection::class);
     }
@@ -82,17 +88,6 @@ class Group extends Model implements AuditableContract {
 
     public function activeUsers() {
         return $this->activeMembers->pluck('user');
-    }
-
-    public function userCanEdit($user) {
-        $activeMembers = $this->activeMembers;
-
-        foreach ($activeMembers as $member) {
-            if ($member->user && $member->user->is($user) && $member->admin) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public function getHashAttribute() {

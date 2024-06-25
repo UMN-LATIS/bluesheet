@@ -18,6 +18,10 @@ use App\Http\Controllers\CoursePlanning\GroupEnrollmentController;
 use App\Http\Controllers\CoursePlanning\GroupPersonController;
 use App\Http\Controllers\CoursePlanning\GroupLeaveController;
 use App\Http\Controllers\CoursePlanning\GroupCourseController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\LeavePermissionController;
+use App\Http\Controllers\CoursePermissionController;
+use App\Http\Controllers\GroupPermissionController;
 
 Route::impersonate();
 
@@ -76,8 +80,9 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
     Route::get('leaves/{leave}', 'LeaveController@show');
     Route::put('leaves/{leave}', 'LeaveController@update');
     Route::delete('leaves/{leave}', 'LeaveController@destroy');
-    Route::get('users/{user}/leaves', 'UserLeaveController@index');
-    Route::put('users/{user}/leaves', 'UserLeaveController@update');
+    Route::get('users/{leaveOwner}/leaves', 'UserLeaveController@index');
+
+    Route::get('reports/deptLeavesReport', [ReportController::class, 'deptLeavesReport']);
 
     // Leave Artifacts
     Route::get('leaves/{leave}/artifacts', [LeaveArtifactController::class, 'index']);
@@ -85,6 +90,17 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
     Route::post('leaves/{leave}/artifacts', [LeaveArtifactController::class, 'store']);
     Route::put('leaves/{leave}/artifacts/{leaveArtifact}', [LeaveArtifactController::class, 'update']);
     Route::delete('leaves/{leave}/artifacts/{leaveArtifact}', [LeaveArtifactController::class, 'destroy']);
+
+    Route::prefix('permissions')->group(function () {
+        Route::get('leaves/{leave}', [LeavePermissionController::class, 'show']);
+        Route::get('users/{leaveOwner}/leaves', [LeavePermissionController::class, 'userLeaves']);
+        Route::get('groups/{group}/leaves', [LeavePermissionController::class, 'groupLeaves']);
+        Route::get('groups/{group}/courses', [CoursePermissionController::class, 'groupCourses']);
+        Route::get(
+            'groups/{group}/subgroups',
+            [GroupPermissionController::class, 'subgroups']
+        );
+    });
 
     Route::prefix('course-planning')->group(function () {
         Route::resource('/groups/{group}/courses', GroupCourseController::class);

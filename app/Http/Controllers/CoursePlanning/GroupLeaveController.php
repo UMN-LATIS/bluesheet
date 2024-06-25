@@ -4,6 +4,7 @@ namespace App\Http\Controllers\CoursePlanning;
 
 use App\Group;
 use App\Http\Controllers\Controller;
+use App\Leave;
 use Illuminate\Http\Request;
 
 use App\Library\Bandaid;
@@ -20,9 +21,9 @@ class GroupLeaveController extends Controller {
 
 
     public function index(Request $request, Group $group) {
-        abort_if($request->user()->cannot('view leaves'), 403);
+        $this->authorize('viewAnyLeavesForGroup', [Leave::class, $group]);
 
-        $employees = $this->userService->getDeptEmployees($group->dept_id);
+        $employees = $this->userService->getDeptInstructors($group->dept_id, ['refresh' => true]);
 
         return $employees->flatMap(function ($employee) {
             return $employee->leaves;

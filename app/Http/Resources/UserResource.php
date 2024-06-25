@@ -2,20 +2,19 @@
 
 namespace App\Http\Resources;
 
+use App\Constants\Permissions;
 use Illuminate\Http\Resources\Json\JsonResource;
 use App\Http\Resources\MembershipWithGroups as MembershipWithGroups;
+use Illuminate\Http\Request;
 
-
-class User extends JsonResource
-{
+class UserResource extends JsonResource {
     /**
      * Transform the resource into an array.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return array
      */
-    public function toArray($request)
-    {
+    public function toArray(Request $request) {
         return [
             'id' => $this->id,
             'givenname' => $this->givenname,
@@ -33,9 +32,9 @@ class User extends JsonResource
             'ssl_eligible' => $this->ssl_eligible,
             'midcareer_eligible' => $this->midcareer_eligible,
             'ssl_apply_eligible' => $this->ssl_apply_eligible,
-            'deptid' => $this->deptid??null,
-            'dept_name' => $this->dept_name??null,
-            'leaves'=>$this->when(($request->user()->hasPermissionTo('view leaves') || $request->user()->id == $this->id), $this->leaves)
+            'deptid' => $this->deptid ?? null,
+            'dept_name' => $this->dept_name ?? null,
+            'leaves' => LeaveResource::collection($this->whenLoaded('leaves')),
         ];
     }
 }

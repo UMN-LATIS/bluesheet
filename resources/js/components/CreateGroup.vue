@@ -1,5 +1,9 @@
 <template>
-  <Modal :show="show" @close="close">
+  <Modal
+    :show="show"
+    :title="parentGroup ? `Create Subgroup` : `Create Group`"
+    @close="close"
+  >
     <div class="form-group row">
       <label for="internetId" class="col-sm-3 col-form-label"
         >Group Name:</label
@@ -34,7 +38,7 @@
         />
       </div>
     </div>
-    <div class="form-group row">
+    <div v-if="!parentGroup" class="form-group row">
       <label for="parentOrganization" class="col-sm-3 col-form-label"
         >Folder</label
       >
@@ -65,6 +69,8 @@
 import Modal from "./Modal.vue";
 import FolderWidget from "./FolderWidget.vue";
 import ComboBox from "./ComboBox.vue";
+import { mapStores } from "pinia";
+import { useGroupStore } from "@/stores/useGroupStore";
 
 export default {
   components: {
@@ -72,16 +78,30 @@ export default {
     FolderWidget,
     ComboBox,
   },
-  props: ["show"],
-  emits: ["close"],
+  props: {
+    show: {
+      type: Boolean,
+      required: true,
+    },
+    parentGroup: {
+      type: Object, // Group
+      default: undefined,
+    },
+  },
+  emits: ["close", "groupCreated"],
   data() {
     return {
       groupNameError: null,
       groupName: null,
       groupType: null,
       groupTypes: [],
-      parentOrganization: null,
+      parentOrganization: this.parentGroup
+        ? this.parentGroup.parent_organization_id
+        : null,
     };
+  },
+  computed: {
+    ...mapStores(useGroupStore),
   },
   watch: {
     show: function (newVal) {
@@ -109,7 +129,7 @@ export default {
       this.groupName = null;
       this.$emit("close");
     },
-    createGroup: function () {
+    async createGroup() {
       if (this.groupName == null) {
         this.groupNameError = "You must enter a group name";
         return;
@@ -124,22 +144,22 @@ export default {
       }
       this.groupNameError = null;
 
-      axios
-        .post("/api/group", {
-          groupName: this.groupName,
-          groupType: this.groupType,
-          parentOrganization: this.parentOrganization,
-        })
-        .then((res) => {
-          this.$router.push({
-            name: "group",
-            params: { groupId: res.data.id },
-          });
-          this.close();
-        })
-        .catch((err) => {
-          this.groupNameError = err.response.data.message;
+      const newGroup = await this.groupStore.createGroup({
+        groupName: this.groupName,
+        groupType: this.groupType,
+        parentOrganization: this.parentOrganization,
+        parentGroupId: this.parentGroup ? this.parentGroup.id : null,
+      });
+
+      this.close();
+
+      // if this is not a subgroup, then redirect to the new group
+      if (!this.parentGroup) {
+        this.$router.push({
+          name: "group",
+          params: { groupId: newGroup.id },
         });
+      }
     },
   },
 };

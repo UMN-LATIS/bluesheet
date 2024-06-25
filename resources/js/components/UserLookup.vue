@@ -41,7 +41,13 @@
 
     <div class="form-group row">
       <div class="col-sm-3">
-        <button class="btn btn-primary" @click="lookupUser">Find User</button>
+        <button
+          class="btn btn-primary"
+          :disabled="!userLookupId"
+          @click="lookupUser"
+        >
+          Find User
+        </button>
       </div>
     </div>
     <div class="row">
@@ -59,6 +65,7 @@
 <script>
 import Modal from "./Modal.vue";
 import PersonSearch from "./PersonSearch.vue";
+import { axios } from "@/utils";
 
 export default {
   components: {
@@ -96,8 +103,18 @@ export default {
       });
     },
     lookupUser: function () {
+      if (!this.userLookupId) {
+        return;
+      }
+
       axios
-        .post("/api/user/lookup", { users: this.userLookupId })
+        .post(
+          "/api/user/lookup",
+          { users: this.userLookupId },
+          {
+            skipErrorNotifications: true,
+          },
+        )
         .then((res) => {
           if (res.data.users.length == 1) {
             this.$router.push({
@@ -114,7 +131,7 @@ export default {
           }
         })
         .catch((err) => {
-          this.findUserError = err.response.data.message;
+          this.findUserError = err.data.message;
         });
     },
   },

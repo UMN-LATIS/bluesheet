@@ -52,10 +52,7 @@
       </template>
     </AppHeader>
 
-    <router-view
-      :key="$route.fullPath"
-      :userperms="userStore.currentUserPermissions"
-    />
+    <router-view :key="$route.fullPath" />
 
     <AppFooter />
 

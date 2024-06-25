@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\CoursePlanning;
 
+use App\Constants\Permissions;
 use App\Course;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -18,7 +19,7 @@ class GroupCourseController extends Controller {
     }
 
     public function index(Request $request, Group $group) {
-        abort_if($request->user()->cannot('view planned courses'), 403);
+        $this->authorize('viewAnyCoursesForGroup', [Course::class, $group]);
 
         $localCourses = $group->courses;
 
@@ -39,7 +40,7 @@ class GroupCourseController extends Controller {
     }
 
     public function store(Request $request, Group $group) {
-        abort_if($request->user()->cannot('edit planned courses'), 403);
+        $this->authorize('editAnyCoursesForGroup', [Course::class, $group]);
 
         $validated = $request->validate([
             'subject' => 'required|string',

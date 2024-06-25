@@ -1,6 +1,9 @@
 <template>
   <div>
-    <div v-if="$can('view groups') && !editing" class="tw-flex tw-gap-1">
+    <div
+      v-if="$can('view groups') && !editing"
+      class="tw-flex tw-gap-1 tw-mb-4"
+    >
       <button class="btn btn-success" @click="showEmailList = !showEmailList">
         Show Email List
       </button>
@@ -34,9 +37,26 @@
       </div>
     </Modal>
 
-    <div class="row controlRow">
-      <div class="col">
-        <div class="form-check float-right checkContainer">
+    <div
+      class="tw-flex tw-justify-between tw-items-baseline tw-flex-wrap tw-gap-8 tw-mb-2"
+    >
+      <div
+        class="search-container tw-relative"
+        :class="{ expandBox: showSearch }"
+      >
+        <input
+          v-if="showSearch"
+          ref="searchbox"
+          v-model="searchValue"
+          class="searchBox"
+          placeholder="Search"
+        />
+        <a class="button" @click="showSearch = !showSearch">
+          <i class="searchIcon fa fa-search"></i>
+        </a>
+      </div>
+      <div class="tw-flex tw-justify-end tw-items-baseline tw-gap-4">
+        <div class="form-check checkContainer">
           <input
             id="pastMembers"
             v-model="includePreviousMembers"
@@ -47,25 +67,7 @@
             Include Previous Members
           </label>
         </div>
-      </div>
-    </div>
-    <div class="row controlRow">
-      <div class="col">
-        <div class="search-container" :class="{ expandBox: showSearch }">
-          <input
-            v-if="showSearch"
-            ref="searchbox"
-            v-model="searchValue"
-            class="searchBox"
-            placeholder="Search"
-          />
-          <a class="button" @click="showSearch = !showSearch">
-            <i class="searchIcon fa fa-search"></i>
-          </a>
-        </div>
-      </div>
-      <div class="col">
-        <div class="btn-group btn-group-toggle float-right">
+        <div class="btn-group btn-group-toggle">
           <label
             class="btn btn-outline-secondary"
             :class="{ active: !showGantt }"
@@ -92,122 +94,37 @@
       </div>
     </div>
 
-    <table class="table">
-      <thead>
-        <tr>
-          <th v-if="filterList" scope="col" width="5%">Filter</th>
-          <th scope="col">
-            <SortableLink
-              sortLabel="Name"
-              sortElement="user.surname"
-              :currentSort="currentSort"
-              :currentSortDir="currentSortDir"
-              @sort="sort"
-            />
-          </th>
-          <th v-if="show_unit && !showGantt && viewType == 'group'" scope="col">
-            <SortableLink
-              sortLabel="Unit"
-              sortElement="user.ou"
-              :currentSort="currentSort"
-              :currentSortDir="currentSortDir"
-              @sort="sort"
-            />
-          </th>
-          <th v-if="!showGantt && viewType == 'group'" scope="col">
-            <SortableLink
-              sortLabel="Role"
-              sortElement="role.label"
-              :currentSort="currentSort"
-              :currentSortDir="currentSortDir"
-              @sort="sort"
-            />
-          </th>
-
-          <th v-if="!showGantt && viewType == 'role'" scope="col">
-            <SortableLink
-              sortLabel="Group"
-              sortElement="group.group_title"
-              :currentSort="currentSort"
-              :currentSortDir="currentSortDir"
-              @sort="sort"
-            />
-          </th>
-
-          <th v-if="!showGantt" scope="col">
-            <SortableLink
-              sortLabel="Notes"
-              sortElement="notes"
-              :currentSort="currentSort"
-              :currentSortDir="currentSortDir"
-              @sort="sort"
-            />
-          </th>
-
-          <th v-if="!showGantt" scope="col">
-            <SortableLink
-              sortLabel="From"
-              sortElement="start_date"
-              :currentSort="currentSort"
-              :currentSortDir="currentSortDir"
-              @sort="sort"
-            />
-          </th>
-
-          <th
-            v-if="!showGantt && (includePreviousMembers || editing)"
-            scope="col"
-          >
-            <SortableLink
-              sortLabel="Until"
-              sortElement="end_date"
-              :currentSort="currentSort"
-              :currentSortDir="currentSortDir"
-              @sort="sort"
-            />
-          </th>
-          <th
-            v-if="!showGantt && !editing && viewType == 'group'"
-            scope="col"
-            width="11%"
-          >
-            <SortableLink
-              sortLabel="Official Role"
-              sortElement="role.official_group_type"
-              :currentSort="currentSort"
-              :currentSortDir="currentSortDir"
-              @sort="sort"
-            />
-          </th>
-          <th v-if="editing && !showGantt" scope="col">Group Admin</th>
-          <th v-if="editing && !showGantt" scope="col">
-            End Active Membership
-          </th>
-        </tr>
-      </thead>
+    <div class="tw-max-w-full tw-overflow-auto">
       <MemberList
         v-if="!showGantt"
         :show_unit="show_unit"
         :roles="roles"
         :editing="editing"
+        :showManagerBadge="$can('edit groups') || group?.canCurrentUser?.update"
         :filteredList="filteredList"
         :filterList="filterList"
         :includePreviousMembers="includePreviousMembers"
         :viewType="viewType"
+        :currentSort="currentSort"
+        :currentSortDir="currentSortDir"
         @remove="removeMember"
         @update:roles="(val) => $emit('update:roles', val)"
+        @sort="sort"
       >
       </MemberList>
-      <Gantt
-        v-if="showGantt"
-        :members="filteredList"
-        :filterList="filterList"
-        :mindate="lowestValue"
-        :maxdate="highestValue"
-        :show_unit="show_unit"
-        @update:member="(val) => $emit('update:members', val)"
-      ></Gantt>
-    </table>
+    </div>
+    <Gantt
+      v-if="showGantt"
+      :members="filteredList"
+      :filterList="filterList"
+      :mindate="lowestValue"
+      :maxdate="highestValue"
+      :currentSort="currentSort"
+      :currentSortDir="currentSortDir"
+      :show_unit="show_unit"
+      @update:member="(val) => $emit('update:members', val)"
+      @sort="sort"
+    ></Gantt>
     <div
       v-if="officialRoles.length > 0 && unfilledRoles.length > 0 && editing"
       class="card mt-3 mb-3 col-sm-6"
@@ -268,7 +185,6 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import SortableLink from "./SortableLink.vue";
 import DownloadCSV from "./DownloadCSV.vue";
 import MemberList from "./MemberList.vue";
 import Gantt from "./Gantt.vue";
@@ -294,7 +210,6 @@ interface MembershipWithMaybeChildGroupTitle extends Membership {
 
 export default defineComponent({
   components: {
-    SortableLink,
     DownloadCSV,
     MemberList,
     Gantt,
@@ -327,7 +242,7 @@ export default defineComponent({
       required: true,
     },
     viewType: {
-      type: String,
+      type: String as PropType<"group" | "role">,
       required: true,
     },
     downloadTitle: {
@@ -417,8 +332,11 @@ export default defineComponent({
       });
     },
     compositeList(): MembershipWithMaybeChildGroupTitle[] {
-
-      if (!this.group || !this.group.include_child_groups || !this.group.child_groups) {
+      if (
+        !this.group ||
+        !this.group.include_child_groups ||
+        !this.group.child_groups
+      ) {
         return this.members;
       }
 

@@ -7,15 +7,22 @@ import { useCourseStore } from "./useCourseStore";
 import { useGroupStore } from "@/stores/useGroupStore";
 import { useTermStore } from "@/stores/useTermStore";
 import { useLeaveStore } from "./useLeaveStore";
-import { countBy, debounce, filter, uniq } from "lodash";
+import { countBy, debounce, uniq } from "lodash";
 import * as T from "@/types";
+import * as api from "@/api";
 import { getCourseSpreadsheetRecords } from "../helpers/getCourseSpreadsheetRecords";
 import { getPersonSpreadsheetRecords } from "../helpers/getPersonSpreadsheetRecords";
 import { filterTermByStartAndEndTerm } from "../helpers/coursePlanningFilters";
+import { usePermissionsStore } from "@/stores/usePermissionsStore";
 
 interface CoursePlanningStoreState {
   activeGroupId: T.Group["id"] | null;
   filters: T.CoursePlanningFilters;
+  currentUserCan: {
+    viewAnyLeavesForGroup: boolean;
+    viewAnyPlannedCoursesForGroup: boolean;
+    editPlannedCoursesForGroup: boolean;
+  };
 }
 
 export const useCoursePlanningStore = defineStore("coursePlanning", () => {
@@ -39,7 +46,13 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
       excludedCourseLevels: new Set(),
       excludedAcadAppts: new Set(),
       includedEnrollmentRoles: new Set(["PI"]),
+      minSectionEnrollment: 0,
       search: "",
+    },
+    currentUserCan: {
+      viewAnyLeavesForGroup: false,
+      viewAnyPlannedCoursesForGroup: false,
+      editPlannedCoursesForGroup: false,
     },
   });
 
@@ -229,6 +242,21 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
   const actions = {
     async initGroup(groupId: number) {
       state.activeGroupId = groupId;
+
+      const [groupLeavePermissions, groupCoursePermissions] = await Promise.all(
+        [
+          api.getPermissionsForGroupLeaves(groupId),
+          api.getPermissionsForGroupCourses(groupId),
+        ],
+      );
+
+      state.currentUserCan.viewAnyLeavesForGroup =
+        groupLeavePermissions.viewAny;
+      state.currentUserCan.viewAnyPlannedCoursesForGroup =
+        groupCoursePermissions.viewAny;
+      state.currentUserCan.editPlannedCoursesForGroup =
+        groupCoursePermissions.create;
+
       await Promise.all([
         stores.termsStore.init(),
         stores.groupStore.fetchGroup(groupId),
@@ -262,6 +290,16 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
       state.filters.excludedCourseLevels = new Set(courseLevels);
     },
 
+    // this is a separate method so that we can debounce it
+    setMinSectionEnrollment(minEnrollment: string) {
+      const minEnrollmentInt = Number.parseInt(minEnrollment);
+      if (Number.isNaN(minEnrollmentInt)) {
+        state.filters.minSectionEnrollment = 0;
+        return;
+      }
+
+      state.filters.minSectionEnrollment = minEnrollmentInt;
+    },
     toggleAllAcadAppts() {
       const areAllExcluded = getters.allAcadApptTypes.value.every(
         (acadAppt) => state.filters.excludedAcadAppts?.has(acadAppt) ?? false,
@@ -321,6 +359,7 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
       state.filters.excludedAcadAppts = new Set();
       state.filters.excludedCourseLevels = new Set();
       state.filters.excludedCourseTypes = new Set();
+      state.filters.minSectionEnrollment = 0;
 
       const earliestTerm = stores.termsStore.earliestTerm;
       const latestTerm = stores.termsStore.latestTerm;
@@ -471,6 +510,10 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
       return methods.isCourseMatchingSearch(course);
     },
 
+    doesSectionHaveMinEnrollment(section: T.CourseSection) {
+      return section.enrollmentTotal >= state.filters.minSectionEnrollment;
+    },
+
     isTermVisible(termId: T.Term["id"]) {
       if (!state.filters.startTermId || !state.filters.endTermId) {
         return true;
@@ -531,7 +574,10 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
       );
 
       return (
-        isSectionTermVisible && isCourseTypeVisible && isCourseLevelVisible
+        isSectionTermVisible &&
+        isCourseTypeVisible &&
+        isCourseLevelVisible &&
+        methods.doesSectionHaveMinEnrollment(section)
       );
     },
 
