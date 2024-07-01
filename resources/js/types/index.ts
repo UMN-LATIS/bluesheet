@@ -168,6 +168,7 @@ export const leaveTypes = {
   SINGLE_SEMESTER: "single_semester",
   COURSE_RELEASE: "course_release",
   COURSE_BUYOUT: "course_buyout",
+  COURSE_PHASED_RETIREMENT: "phased_retirement",
   OTHER: "other",
 } as const;
 

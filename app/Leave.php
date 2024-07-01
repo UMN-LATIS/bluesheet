@@ -52,6 +52,7 @@ class Leave extends Model implements Auditable {
     const TYPE_SINGLE_SEMESTER = 'single_semester';
     const TYPE_COURSE_RELEASE = 'course_release';
     const TYPE_COURSE_BUYOUT = 'course_buyout';
+    const TYPE_PHASED_RETIREMENT = 'phased_retirement';
     const TYPE_OTHER = 'other';
     const TYPES = [
         self::TYPE_SABBATICAL,
@@ -60,6 +61,7 @@ class Leave extends Model implements Auditable {
         self::TYPE_COURSE_RELEASE,
         self::TYPE_COURSE_BUYOUT,
         self::TYPE_OTHER,
+        self::TYPE_PHASED_RETIREMENT,
     ];
 
     public function user() {
