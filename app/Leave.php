@@ -87,14 +87,7 @@ class Leave extends Model implements Auditable {
     }
 
     public function setTypeAttribute($value) {
-        $allowed = [
-            self::TYPE_SABBATICAL,
-            self::TYPE_DEVELOPMENT,
-            self::TYPE_SINGLE_SEMESTER,
-            self::TYPE_COURSE_RELEASE,
-            self::TYPE_COURSE_BUYOUT,
-            self::TYPE_OTHER,
-        ];
+        $allowed = Leave::TYPES;
 
         if (!in_array($value, $allowed)) {
             throw new \Exception("Invalid leave type");
