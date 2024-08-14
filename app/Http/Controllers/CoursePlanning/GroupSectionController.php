@@ -35,7 +35,6 @@ class GroupSectionController extends Controller {
                     in_array($classRecord->INSTRUCTOR_ROLE, ['PI', 'TA'])
             );
 
-
         $allGroupSections = $dbSections->concat($sisSections);
 
         return CourseSectionResource::collection($allGroupSections);
