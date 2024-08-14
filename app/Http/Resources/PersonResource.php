@@ -15,8 +15,8 @@ class PersonResource extends JsonResource {
     public function toArray($request) {
         return [
             'id' => $this->id,
-            'givenName' => $this->givenname,
-            'surName' => $this->surname,
+            'givenName' => $this->givenname ?? '',
+            'surName' => $this->surname ?? '',
             'displayName' => $this->displayName,
             'email' => $this->email,
             'title' => $this->title,
