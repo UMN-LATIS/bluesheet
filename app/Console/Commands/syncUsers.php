@@ -41,7 +41,7 @@ class syncUsers extends Command
     {
         $users = User::all();
         foreach($users as $user) {
-            LDAP::lookupUser($user->email, "mail", $user);
+            LDAP::lookupUser($user->umndid, "umndid", $user);
             $user->save();
         }
     }
