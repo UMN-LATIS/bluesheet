@@ -33,10 +33,6 @@ class GroupSectionController extends Controller {
                 $classRecord->INSTRUCTOR_EMPLID !== null &&
                     // and people who aren't instructors or TAs
                     in_array($classRecord->INSTRUCTOR_ROLE, ['PI', 'TA'])
-            )->groupBy('CLASS_NUMBER')
-            ->map(
-                // use the first record to get the section info
-                fn ($classRecords) => $classRecords->first()
             );
 
         $allGroupSections = $dbSections->concat($sisSections);
