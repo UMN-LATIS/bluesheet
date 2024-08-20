@@ -13,7 +13,8 @@ import * as api from "@/api";
 import { getCourseSpreadsheetRecords } from "../helpers/getCourseSpreadsheetRecords";
 import { getPersonSpreadsheetRecords } from "../helpers/getPersonSpreadsheetRecords";
 import { filterTermByStartAndEndTerm } from "../helpers/coursePlanningFilters";
-import { usePermissionsStore } from "@/stores/usePermissionsStore";
+import qs from "qs";
+import { serializedCoursePlanningFilters } from "../helpers/serializedCoursePlanningFilters";
 
 interface CoursePlanningStoreState {
   activeGroupId: T.Group["id"] | null;
@@ -410,6 +411,62 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
 
       await stores.courseSectionStore.removeSection(section);
     },
+
+    setFiltersFromQueryString(parsedQuery: ReturnType<typeof qs.parse>) {
+      const updatedFilters: T.CoursePlanningFilters = { ...state.filters };
+      console.log("parsed query", parsedQuery);
+
+      if (parsedQuery.inPlanningMode) {
+        updatedFilters.inPlanningMode = parsedQuery.inPlanningMode === "true";
+      }
+
+      if (parsedQuery.startTermId) {
+        updatedFilters.startTermId = Number.parseInt(
+          parsedQuery.startTermId as string,
+        );
+      }
+
+      if (parsedQuery.endTermId) {
+        updatedFilters.endTermId = Number.parseInt(
+          parsedQuery.endTermId as string,
+        );
+      }
+
+      if (Array.isArray(parsedQuery.excludedCourseTypes)) {
+        updatedFilters.excludedCourseTypes = new Set(
+          parsedQuery.excludedCourseTypes as string[],
+        );
+      }
+
+      if (Array.isArray(parsedQuery.excludedCourseLevels)) {
+        updatedFilters.excludedCourseLevels = new Set(
+          parsedQuery.excludedCourseLevels as string[],
+        );
+      }
+
+      if (Array.isArray(parsedQuery.excludedAcadAppts)) {
+        updatedFilters.excludedAcadAppts = new Set(
+          parsedQuery.excludedAcadAppts as string[],
+        );
+      }
+
+      // maybe we should ignore this filter and let the default reign?
+      if (Array.isArray(parsedQuery.includedEnrollmentRoles)) {
+        updatedFilters.includedEnrollmentRoles = new Set(
+          parsedQuery.includedEnrollmentRoles as T.EnrollmentRole[],
+        );
+      }
+
+      if (parsedQuery.minSectionEnrollment) {
+        updatedFilters.minSectionEnrollment = Number.parseInt(
+          parsedQuery.minSectionEnrollment as string,
+        );
+      }
+
+      state.filters = updatedFilters;
+
+      console.log("parsed query", { parsedQuery, filters: updatedFilters });
+    },
   };
 
   const methods = {
@@ -670,6 +727,10 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
           includedEnrollmentRoles: new Set([role]),
         },
       });
+    },
+
+    getSerializableFilters(): T.SerializedCoursePlanningFilters {
+      return serializedCoursePlanningFilters(state.filters);
     },
   };
 

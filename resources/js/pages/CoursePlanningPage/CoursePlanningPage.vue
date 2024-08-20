@@ -126,6 +126,8 @@ import { useDebouncedComputed } from "@/utils/useDebouncedComputed";
 import DownloadSpreadsheetButton from "@/components/DownloadSpreadsheetButton.vue";
 import { getSpreadsheetFromWorker } from "./workers/getSpreadsheetFromWorker";
 import * as MESSAGE_TYPES from "./workers/messageTypes";
+import qs from "qs";
+import { omit } from "lodash";
 
 const props = defineProps<{
   groupId: number;
@@ -138,6 +140,13 @@ const isShowingFilters = ref(false);
 
 onMounted(async () => {
   await coursePlanningStore.initGroup(props.groupId);
+
+  // parse query params and set filters
+  const parsedQuery = qs.parse(window.location.search, {
+    ignoreQueryPrefix: true,
+  });
+  coursePlanningStore.setFiltersFromQueryString(parsedQuery);
+
   performance.mark("CoursePlanningPage:start");
   isLoadingComplete.value = true;
 });
@@ -150,6 +159,26 @@ watch(
       await permissionsStore.canViewAnyCoursesForGroup(props.groupId);
   },
   { immediate: true },
+);
+
+// keep url in sync with filters
+watch(
+  () => coursePlanningStore.filters,
+  () => {
+    // waith until load is complete to avoid clobbering
+    // any initial filters set from query params
+    if (!isLoadingComplete.value) return;
+
+    const serializabledFilters = coursePlanningStore.getSerializableFilters();
+    const filtersToPersist = omit(serializabledFilters, ["search"]);
+
+    const normalizedFilters = qs.stringify(filtersToPersist, {
+      // some names have `&` in them, so we need to encode them
+      encode: true,
+    });
+    history.replaceState(null, "", `?${normalizedFilters}`);
+  },
+  { deep: true },
 );
 
 const group = computed(() =>
