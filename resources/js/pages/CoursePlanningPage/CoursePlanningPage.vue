@@ -114,18 +114,18 @@
 <script setup lang="ts">
 import WideLayout from "@/layouts/WideLayout.vue";
 import { computed, ref, watch, onMounted } from "vue";
-import { PersonTable } from "../components/PersonTable";
-import { useCoursePlanningStore } from "../stores/useCoursePlanningStore";
+import { PersonTable } from "./components/PersonTable";
+import { useCoursePlanningStore } from "./stores/useCoursePlanningStore";
 import { usePermissionsStore } from "@/stores/usePermissionsStore";
-import CoursePlanningFilters from "../components/CoursePlanningFilters.vue";
+import CoursePlanningFilters from "./components/CoursePlanningFilters.vue";
 import Spinner from "@/components/Spinner.vue";
 import Tabs, { type Tab } from "@/components/Tabs.vue";
 import CheckboxGroup from "@/components/CheckboxGroup.vue";
-import { CourseTable } from "../components/CourseTable";
+import { CourseTable } from "./components/CourseTable";
 import { useDebouncedComputed } from "@/utils/useDebouncedComputed";
 import DownloadSpreadsheetButton from "@/components/DownloadSpreadsheetButton.vue";
-import { getSpreadsheetFromWorker } from "../workers/getSpreadsheetFromWorker";
-import * as MESSAGE_TYPES from "../workers/messageTypes";
+import { getSpreadsheetFromWorker } from "./workers/getSpreadsheetFromWorker";
+import * as MESSAGE_TYPES from "./workers/messageTypes";
 
 const props = defineProps<{
   groupId: number;
