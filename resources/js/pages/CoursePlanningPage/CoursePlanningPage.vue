@@ -127,7 +127,7 @@ import DownloadSpreadsheetButton from "@/components/DownloadSpreadsheetButton.vu
 import { getSpreadsheetFromWorker } from "./workers/getSpreadsheetFromWorker";
 import * as MESSAGE_TYPES from "./workers/messageTypes";
 import qs from "qs";
-import { omit } from "lodash";
+import { omit } from "lodash-es";
 
 const props = defineProps<{
   groupId: number;
@@ -145,7 +145,15 @@ onMounted(async () => {
   const parsedQuery = qs.parse(window.location.search, {
     ignoreQueryPrefix: true,
   });
+
+  // if there's something in the parsed query, show filters to user
   coursePlanningStore.setFiltersFromQueryString(parsedQuery);
+
+  // if the set filters are different from the defaults, show filters
+  // to the user
+  if (!coursePlanningStore.hasDefaultFilters()) {
+    isShowingFilters.value = true;
+  }
 
   performance.mark("CoursePlanningPage:start");
   isLoadingComplete.value = true;
@@ -177,6 +185,7 @@ watch(
       encode: true,
     });
     history.replaceState(null, "", `?${normalizedFilters}`);
+    // router.replace({ query: normalizedFilters });
   },
   { deep: true },
 );

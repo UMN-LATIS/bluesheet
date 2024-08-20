@@ -7,7 +7,7 @@ import { useCourseStore } from "./useCourseStore";
 import { useGroupStore } from "@/stores/useGroupStore";
 import { useTermStore } from "@/stores/useTermStore";
 import { useLeaveStore } from "./useLeaveStore";
-import { countBy, debounce, uniq } from "lodash";
+import { countBy, debounce, isEqual, omit, uniq } from "lodash";
 import * as T from "@/types";
 import * as api from "@/api";
 import { getCourseSpreadsheetRecords } from "../helpers/getCourseSpreadsheetRecords";
@@ -357,18 +357,11 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
     },
 
     resetFilters() {
-      state.filters.excludedAcadAppts = new Set();
-      state.filters.excludedCourseLevels = new Set();
-      state.filters.excludedCourseTypes = new Set();
-      state.filters.minSectionEnrollment = 0;
-
-      const earliestTerm = stores.termsStore.earliestTerm;
-      const latestTerm = stores.termsStore.latestTerm;
-
-      state.filters.startTermId = earliestTerm?.id ?? null;
-      state.filters.endTermId = latestTerm?.id ?? null;
-
-      // don't reset the search
+      state.filters = {
+        ...methods.getDefaultFilters(),
+        // don't reset the search
+        search: state.filters.search,
+      };
     },
 
     async createSectionWithEnrollee({
@@ -731,6 +724,29 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
 
     getSerializableFilters(): T.SerializedCoursePlanningFilters {
       return serializedCoursePlanningFilters(state.filters);
+    },
+
+    getDefaultFilters(): T.CoursePlanningFilters {
+      const earliestTerm = stores.termsStore.earliestTerm;
+      const latestTerm = stores.termsStore.latestTerm;
+
+      return {
+        inPlanningMode: false,
+        startTermId: earliestTerm?.id ?? null,
+        endTermId: latestTerm?.id ?? null,
+        excludedCourseTypes: new Set(),
+        excludedCourseLevels: new Set(),
+        excludedAcadAppts: new Set(),
+        includedEnrollmentRoles: new Set(["PI"]),
+        minSectionEnrollment: 0,
+        search: "",
+      };
+    },
+
+    hasDefaultFilters(): boolean {
+      const defaults = omit(methods.getDefaultFilters(), ["search"]);
+      const current = omit(state.filters, ["search"]);
+      return isEqual(defaults, current);
     },
   };
 
