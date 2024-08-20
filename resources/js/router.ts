@@ -23,7 +23,7 @@ import GroupAdminsReportPage from "./pages/reports/GroupAdmins.vue";
 import EligibilityReportPage from "./pages/reports/EligibilityReport.vue";
 import DeptLeavesReportPage from "./pages/reports/DeptLeavesReportPage.vue";
 import UnitReportPage from "./pages/reports/UnitReport.vue";
-import CoursePlanningPage from "./features/course-planning/pages/CoursePlanningPage.vue";
+import CoursePlanningPage from "@/pages/CoursePlanningPage/CoursePlanningPage.vue";
 import { parseIntFromRouteParam as parseIntFromParam } from "@/utils";
 
 export const router = createRouter({
