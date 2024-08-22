@@ -169,23 +169,37 @@ watch(
   { immediate: true },
 );
 
+function updateQueryParams(queryObject: Record<string, unknown>) {
+  // manually updating the history state to avoid
+  // triggering a rerender with `router.replace()`
+  // (not sure why the rerender happens, but it does)
+  const stringifiedQuery = qs.stringify(queryObject, {
+    // some names have `&` in them, so we need to encode them
+    encode: true,
+  });
+
+  history.replaceState(
+    {
+      ...history.state,
+      current: `${window.location.pathname}?${stringifiedQuery}`,
+    },
+    "",
+    `?${stringifiedQuery}`,
+  );
+}
+
 // keep url in sync with filters
 watch(
   () => coursePlanningStore.filters,
   () => {
-    // waith until load is complete to avoid clobbering
+    // wait until load is complete to avoid clobbering
     // any initial filters set from query params
     if (!isLoadingComplete.value) return;
 
+    // convert sets to arrays and such
     const serializabledFilters = coursePlanningStore.getSerializableFilters();
     const filtersToPersist = omit(serializabledFilters, ["search"]);
-
-    const normalizedFilters = qs.stringify(filtersToPersist, {
-      // some names have `&` in them, so we need to encode them
-      encode: true,
-    });
-    history.replaceState(null, "", `?${normalizedFilters}`);
-    // router.replace({ query: normalizedFilters });
+    updateQueryParams(filtersToPersist);
   },
   { deep: true },
 );
