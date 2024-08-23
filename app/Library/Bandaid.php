@@ -22,6 +22,11 @@ class Bandaid {
             'Authorization' => 'Bearer ' . config('bandaid.key'),
         ];
 
+
+        Http::globalOptions([
+            'allow_redirects' => false,
+        ]);
+        
         $this->baseUri = config('bandaid.baseUri');
     }
 
