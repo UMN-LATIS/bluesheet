@@ -7,13 +7,14 @@ import { useCourseStore } from "./useCourseStore";
 import { useGroupStore } from "@/stores/useGroupStore";
 import { useTermStore } from "@/stores/useTermStore";
 import { useLeaveStore } from "./useLeaveStore";
-import { countBy, debounce, uniq } from "lodash";
+import { countBy, debounce, isEqual, omit, uniq } from "lodash";
 import * as T from "@/types";
 import * as api from "@/api";
 import { getCourseSpreadsheetRecords } from "../helpers/getCourseSpreadsheetRecords";
 import { getPersonSpreadsheetRecords } from "../helpers/getPersonSpreadsheetRecords";
 import { filterTermByStartAndEndTerm } from "../helpers/coursePlanningFilters";
-import { usePermissionsStore } from "@/stores/usePermissionsStore";
+import qs from "qs";
+import { serializedCoursePlanningFilters } from "../helpers/serializedCoursePlanningFilters";
 
 interface CoursePlanningStoreState {
   activeGroupId: T.Group["id"] | null;
@@ -356,18 +357,11 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
     },
 
     resetFilters() {
-      state.filters.excludedAcadAppts = new Set();
-      state.filters.excludedCourseLevels = new Set();
-      state.filters.excludedCourseTypes = new Set();
-      state.filters.minSectionEnrollment = 0;
-
-      const earliestTerm = stores.termsStore.earliestTerm;
-      const latestTerm = stores.termsStore.latestTerm;
-
-      state.filters.startTermId = earliestTerm?.id ?? null;
-      state.filters.endTermId = latestTerm?.id ?? null;
-
-      // don't reset the search
+      state.filters = {
+        ...methods.getDefaultFilters(),
+        // don't reset the search
+        search: state.filters.search,
+      };
     },
 
     async createSectionWithEnrollee({
@@ -409,6 +403,62 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
       stores.enrollmentStore.removeAllSectionEnrollmentFromStore(section.id);
 
       await stores.courseSectionStore.removeSection(section);
+    },
+
+    setFiltersFromQueryString(parsedQuery: ReturnType<typeof qs.parse>) {
+      const updatedFilters: T.CoursePlanningFilters = { ...state.filters };
+      console.log("parsed query", parsedQuery);
+
+      if (parsedQuery.inPlanningMode) {
+        updatedFilters.inPlanningMode = parsedQuery.inPlanningMode === "true";
+      }
+
+      if (parsedQuery.startTermId) {
+        updatedFilters.startTermId = Number.parseInt(
+          parsedQuery.startTermId as string,
+        );
+      }
+
+      if (parsedQuery.endTermId) {
+        updatedFilters.endTermId = Number.parseInt(
+          parsedQuery.endTermId as string,
+        );
+      }
+
+      if (Array.isArray(parsedQuery.excludedCourseTypes)) {
+        updatedFilters.excludedCourseTypes = new Set(
+          parsedQuery.excludedCourseTypes as string[],
+        );
+      }
+
+      if (Array.isArray(parsedQuery.excludedCourseLevels)) {
+        updatedFilters.excludedCourseLevels = new Set(
+          parsedQuery.excludedCourseLevels as string[],
+        );
+      }
+
+      if (Array.isArray(parsedQuery.excludedAcadAppts)) {
+        updatedFilters.excludedAcadAppts = new Set(
+          parsedQuery.excludedAcadAppts as string[],
+        );
+      }
+
+      // maybe we should ignore this filter and let the default reign?
+      if (Array.isArray(parsedQuery.includedEnrollmentRoles)) {
+        updatedFilters.includedEnrollmentRoles = new Set(
+          parsedQuery.includedEnrollmentRoles as T.EnrollmentRole[],
+        );
+      }
+
+      if (parsedQuery.minSectionEnrollment) {
+        updatedFilters.minSectionEnrollment = Number.parseInt(
+          parsedQuery.minSectionEnrollment as string,
+        );
+      }
+
+      state.filters = updatedFilters;
+
+      console.log("parsed query", { parsedQuery, filters: updatedFilters });
     },
   };
 
@@ -670,6 +720,33 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
           includedEnrollmentRoles: new Set([role]),
         },
       });
+    },
+
+    getSerializableFilters(): T.SerializedCoursePlanningFilters {
+      return serializedCoursePlanningFilters(state.filters);
+    },
+
+    getDefaultFilters(): T.CoursePlanningFilters {
+      const earliestTerm = stores.termsStore.earliestTerm;
+      const latestTerm = stores.termsStore.latestTerm;
+
+      return {
+        inPlanningMode: false,
+        startTermId: earliestTerm?.id ?? null,
+        endTermId: latestTerm?.id ?? null,
+        excludedCourseTypes: new Set(),
+        excludedCourseLevels: new Set(),
+        excludedAcadAppts: new Set(),
+        includedEnrollmentRoles: new Set(["PI"]),
+        minSectionEnrollment: 0,
+        search: "",
+      };
+    },
+
+    hasDefaultFilters(): boolean {
+      const defaults = omit(methods.getDefaultFilters(), ["search"]);
+      const current = omit(state.filters, ["search"]);
+      return isEqual(defaults, current);
     },
   };
 

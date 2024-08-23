@@ -126,6 +126,8 @@ import { useDebouncedComputed } from "@/utils/useDebouncedComputed";
 import DownloadSpreadsheetButton from "@/components/DownloadSpreadsheetButton.vue";
 import { getSpreadsheetFromWorker } from "./workers/getSpreadsheetFromWorker";
 import * as MESSAGE_TYPES from "./workers/messageTypes";
+import qs from "qs";
+import { omit } from "lodash-es";
 
 const props = defineProps<{
   groupId: number;
@@ -138,6 +140,21 @@ const isShowingFilters = ref(false);
 
 onMounted(async () => {
   await coursePlanningStore.initGroup(props.groupId);
+
+  // parse query params and set filters
+  const parsedQuery = qs.parse(window.location.search, {
+    ignoreQueryPrefix: true,
+  });
+
+  // if there's something in the parsed query, show filters to user
+  coursePlanningStore.setFiltersFromQueryString(parsedQuery);
+
+  // if the set filters are different from the defaults, show filters
+  // to the user
+  if (!coursePlanningStore.hasDefaultFilters()) {
+    isShowingFilters.value = true;
+  }
+
   performance.mark("CoursePlanningPage:start");
   isLoadingComplete.value = true;
 });
@@ -150,6 +167,41 @@ watch(
       await permissionsStore.canViewAnyCoursesForGroup(props.groupId);
   },
   { immediate: true },
+);
+
+function updateQueryParams(queryObject: Record<string, unknown>) {
+  // manually updating the history state to avoid
+  // triggering a rerender with `router.replace()`
+  // (not sure why the rerender happens, but it does)
+  const stringifiedQuery = qs.stringify(queryObject, {
+    // some names have `&` in them, so we need to encode them
+    encode: true,
+  });
+
+  history.replaceState(
+    {
+      ...history.state,
+      current: `${window.location.pathname}?${stringifiedQuery}`,
+    },
+    "",
+    `?${stringifiedQuery}`,
+  );
+}
+
+// keep url in sync with filters
+watch(
+  () => coursePlanningStore.filters,
+  () => {
+    // wait until load is complete to avoid clobbering
+    // any initial filters set from query params
+    if (!isLoadingComplete.value) return;
+
+    // convert sets to arrays and such
+    const serializabledFilters = coursePlanningStore.getSerializableFilters();
+    const filtersToPersist = omit(serializabledFilters, ["search"]);
+    updateQueryParams(filtersToPersist);
+  },
+  { deep: true },
 );
 
 const group = computed(() =>
