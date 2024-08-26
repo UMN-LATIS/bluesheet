@@ -26,7 +26,7 @@ class Bandaid {
         Http::globalOptions([
             'allow_redirects' => false,
         ]);
-        
+
         $this->baseUri = config('bandaid.baseUri');
     }
 
@@ -142,7 +142,7 @@ class Bandaid {
      */
     public function getTerms(): array {
         try {
-            $result = $this->cachedGet('/classes/terms/');
+            $result = $this->cachedGet('/classes/terms');
             return $result;
         } catch (RequestException $e) {
             $msg = $e->getMessage();
