@@ -193,3 +193,8 @@ export async function getPermissionsForSubgroupsOf(groupId: T.Group["id"]) {
 
   return res.data;
 }
+
+export async function getLeaveDateOptions() {
+  const res = await axios.get<T.ApiLeaveDateOptions>(`/api/leaves/dateOptions`);
+  return res.data;
+}

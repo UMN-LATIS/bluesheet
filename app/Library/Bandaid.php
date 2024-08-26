@@ -242,15 +242,10 @@ class Bandaid {
     public function getTermsOverlappingDates($startDate, $endDate) {
         $terms = $this->getCLATerms();
         return $terms->filter(function ($term) use ($startDate, $endDate) {
-            $termStartDate = $term->TERM_BEGIN_DT;
-            $termEndDate = $term->TERM_END_DT;
-
-            // is term start or end between the leave start and end dates?
-            $isTermStartInRange = ($startDate <= $termStartDate && $termStartDate <= $endDate);
-
-            $isTermEndInRange = ($startDate <= $termEndDate && $termEndDate <= $endDate);
-
-            return ($isTermStartInRange || $isTermEndInRange);
+            $termStartDate = new Carbon($term->TERM_BEGIN_DT);
+            $termEndDate = new Carbon($term->TERM_END_DT);
+            return $startDate->between($termStartDate, $termEndDate)
+                || $endDate->between($termStartDate, $termEndDate);
         });
     }
 

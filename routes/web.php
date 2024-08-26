@@ -22,6 +22,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\LeavePermissionController;
 use App\Http\Controllers\CoursePermissionController;
 use App\Http\Controllers\GroupPermissionController;
+use App\Http\Controllers\LeaveController;
 
 Route::impersonate();
 
@@ -77,9 +78,11 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
     // Laravel thinks the singular of `leaves` is `leaf`
     // so instead of using a resource, just define the routes
     Route::post('leaves', 'LeaveController@store');
+    Route::get('leaves/dateOptions', [LeaveController::class, 'dateOptions']);
     Route::get('leaves/{leave}', 'LeaveController@show');
     Route::put('leaves/{leave}', 'LeaveController@update');
     Route::delete('leaves/{leave}', 'LeaveController@destroy');
+
     Route::get('users/{leaveOwner}/leaves', 'UserLeaveController@index');
 
     Route::get('reports/deptLeavesReport', [ReportController::class, 'deptLeavesReport']);

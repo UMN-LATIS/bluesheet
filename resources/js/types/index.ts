@@ -481,3 +481,19 @@ export interface ApiResourceItemPermissions {
   update: boolean;
   delete: boolean;
 }
+
+export interface LeaveStartDateOption {
+  date: ISODate;
+  label: string; // "Fall 2024"
+  isFirstTermOption: boolean;
+}
+
+export interface LeaveEndDateOption {
+  date: ISODate;
+  label: string; // "Fall 2024"
+  isLastTermOption: boolean;
+}
+export interface ApiLeaveDateOptions {
+  startDateOptions: LeaveStartDateOption[];
+  endDateOptions: LeaveEndDateOption[];
+}
