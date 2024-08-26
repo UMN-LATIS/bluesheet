@@ -77,11 +77,19 @@ const courseSections = computed(() => {
 });
 
 const publishedSections = computed(() => {
-  return courseSections.value.filter((section) => section.isPublished);
+  return courseSections.value
+    .filter((section) => section.isPublished)
+    .toSorted((a, b) => {
+      return a.courseId.localeCompare(b.courseId);
+    });
 });
 
 const unpublishedSections = computed(() => {
-  return courseSections.value.filter((section) => !section.isPublished);
+  return courseSections.value
+    .filter((section) => !section.isPublished)
+    .toSorted((a, b) => {
+      return a.courseId.localeCompare(b.courseId);
+    });
 });
 
 const isShowingEditModal = ref(false);
