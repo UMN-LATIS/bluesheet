@@ -1,3 +1,4 @@
+export { default as CalendarIcon } from "./CalendarIcon.vue";
 export { default as CheckIcon } from "./CheckIcon.vue";
 export { default as ChevronUpDownIcon } from "./ChevronUpDownIcon.vue";
 export { default as ChevronDownIcon } from "./ChevronDownIcon.vue";
