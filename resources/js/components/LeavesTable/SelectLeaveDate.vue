@@ -1,16 +1,22 @@
 <template>
   <div class="">
-    <!-- <select v-if="variant === 'start'" :value="modelValue">
-      <option value="">-- Select a date --</option>
-      <option v-for="opt in startDateOptions" :key="opt.date" :value="opt.date">
-        {{ opt.date }} - {{ opt.term }}
-      </option>
-    </select> -->
     <ComboBox
       :modelValue="localComboBoxValue"
       :label="variant === 'start' ? 'Leave Start Date' : 'Leave End Date'"
       :showLabel="false"
       :options="comboboxOptions"
+      @update:modelValue="
+        (comboboxOption) =>
+          $emit('update:modelValue', comboboxOption?.id as string)
+      "
+    />
+    <button>...</button>
+    <InputGroup
+      label="Custom Leave Start Date"
+      type="date"
+      :modelValue="modelValue"
+      :showLabel="false"
+      @update:modelValue="$emit('update:modelValue', $event)"
     />
   </div>
 </template>
@@ -18,6 +24,8 @@
 import { useLeaveDateOptions } from "@/composables/useLeaveDateOptions";
 import { computed, ref } from "vue";
 import ComboBox, { ComboBoxOption } from "@/components/ComboBox.vue";
+import dayjs from "dayjs";
+import InputGroup from "../InputGroup.vue";
 
 const props = withDefaults(
   defineProps<{
@@ -36,39 +44,43 @@ defineEmits<{
 
 const { startDateOptions } = useLeaveDateOptions();
 
-interface TermLabelLookup {
-  [date: string]: {
-    date: string;
-    term: string;
-    weekNumber: number;
-  };
+interface DateTermInfo {
+  date: string;
+  term: string;
+  payrollNumber: number;
 }
 
+type DateTermInfoLookup = Record<string, DateTermInfo>;
+
 const dateToTermLookup = computed(() => {
-  return startDateOptions.value.reduce(
-    (acc, option, index): TermLabelLookup => {
-      const previousTerm = index === 0 ? acc[index - 1] : null;
+  const dateTermInfoArr: DateTermInfo[] = [];
 
-      if (!previousTerm) {
-        acc[option.date] = {
-          date: option.date,
-          term: option.term,
-          weekNumber: 1,
-        };
-        return acc;
-      }
+  // loop thru, assigning term week numbers
+  for (let i = 0; i < startDateOptions.value.length; i++) {
+    const currentOption = startDateOptions.value[i];
+    const prevDateTermInfo = i === 0 ? null : dateTermInfoArr[i - 1];
+    const isSameTerm = prevDateTermInfo?.term === currentOption.term;
 
-      const isNewTerm = option.term === previousTerm.term;
+    dateTermInfoArr.push({
+      date: startDateOptions.value[i].date,
+      term: startDateOptions.value[i].term,
+      payrollNumber: isSameTerm ? prevDateTermInfo.payrollNumber + 1 : 1,
+    });
+  }
 
-      acc[option.date] = {
-        date: option.date,
-        term: option.term,
-        weekNumber: isNewTerm ? 1 : previousTerm.weekNumber + 1,
-      };
-      return acc;
-    },
-    {},
-  );
+  // turn it into a lookup
+  return dateTermInfoArr.reduce((acc, curr) => {
+    acc[curr.date] = curr;
+    return acc;
+  }, {} as DateTermInfoLookup);
+});
+
+const toComboBoxOption = (dateTermInfo: DateTermInfo): ComboBoxOption => ({
+  id: dateTermInfo.date,
+  label: dayjs(dateTermInfo.date).format("MMM D, YYYY"),
+  secondaryLabel: dateTermInfo.term
+    ? `${dateTermInfo.term} - Payroll ${dateTermInfo.payrollNumber}`
+    : undefined,
 });
 
 const localComboBoxValue = computed((): ComboBoxOption | null => {
@@ -80,21 +92,11 @@ const localComboBoxValue = computed((): ComboBoxOption | null => {
     return null;
   }
 
-  return {
-    id: props.modelValue,
-    label: dateTermInfo.date,
-    secondaryLabel: `${dateTermInfo.term} - Week ${dateTermInfo.weekNumber}`,
-  };
+  return toComboBoxOption(dateTermInfo);
 });
 
-const comboboxOptions = computed(() => {
-  return startDateOptions.value.map((opt) => ({
-    id: opt.date,
-    label: opt.date,
-    secondaryLabel: `${opt.term} - Week ${
-      dateToTermLookup.value[opt.date].weekNumber
-    }`,
-  }));
-});
+const comboboxOptions = computed(() =>
+  Object.values(dateToTermLookup.value).map(toComboBoxOption),
+);
 </script>
 <style scoped></style>
