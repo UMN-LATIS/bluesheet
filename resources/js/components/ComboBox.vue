@@ -30,6 +30,7 @@
       -->
       <ComboboxButton as="div">
         <ComboboxInput
+          ref="anchorRef"
           class="combobox__input tw-w-full tw-rounded tw-border-0 tw-bg-white tw-py-2 tw-pl-3 tw-pr-10 tw-text-neutral-900 tw-ring-1 tw-ring-inset tw-ring-neutral-300 focus:tw-ring-2 focus:tw-ring-inset focus:tw-ring-blue-600 sm:tw-leading-6"
           :class="inputClass"
           :displayValue="(item) => (item as ComboBoxOption | null)?.label ?? ''"
@@ -47,9 +48,11 @@
           />
         </div>
       </ComboboxButton>
-      <Transition name="fade-slide">
+      <Teleport to="body">
         <ComboboxOptions
-          class="tw-absolute tw-z-10 tw-mt-1 tw-max-h-60 tw-w-full tw-overflow-auto tw-rounded-md tw-bg-white tw-py-1 tw-text-base tw-shadow-lg tw-ring-1 tw-ring-black tw-ring-opacity-5 focus:tw-outline-none sm:tw-text-sm tw-pl-0"
+          ref="floatingRef"
+          class="tw-absolute tw-z-10 tw-mt-1 tw-max-h-60 tw-w-56 tw-overflow-auto tw-rounded-md tw-bg-white tw-py-1 tw-text-base tw-shadow-lg tw-ring-1 tw-ring-black tw-ring-opacity-5 focus:tw-outline-none sm:tw-text-sm tw-pl-0"
+          :style="floatingStyles"
         >
           <ComboboxOption
             v-for="option in filteredOptions"
@@ -110,7 +113,7 @@
             </button>
           </div>
         </ComboboxOptions>
-      </Transition>
+      </Teleport>
     </div>
   </Combobox>
 </template>
@@ -128,6 +131,7 @@ import {
 } from "@headlessui/vue";
 import { CSSClass } from "@/types";
 import Label from "./Label.vue";
+import { useFloating, offset, autoPlacement } from "@floating-ui/vue";
 
 export interface ComboBoxOption {
   id?: string | number; // new options might have an undefined id
@@ -204,4 +208,11 @@ function handleAddNewOption(newOptionLabel: string) {
   emit("addNewOption", newOption);
   emit("update:modelValue", newOption);
 }
+
+const anchorRef = ref<HTMLElement | null>(null);
+const floatingRef = ref<HTMLElement | null>(null);
+
+const { floatingStyles } = useFloating(anchorRef, floatingRef, {
+  middleware: [offset(10), autoPlacement()],
+});
 </script>
