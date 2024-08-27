@@ -146,7 +146,6 @@ class LeaveController extends Controller {
         // start from 1 year before current FY and go 1 year after
         // adding an entry for every 14 days
         $thisStartDate = $currentFYStart->copy();
-        $previousTerm = null;
         while ($thisStartDate->lte($currentFYStart->copy()->addYears(3))) {
             $thisEndDate = $thisStartDate->copy()->addDays(13);
             $thisTerm = $this->bandaid
@@ -157,23 +156,14 @@ class LeaveController extends Controller {
             $startDateOptions[] = [
                 'date' => $thisStartDate->format('Y-m-d'),
                 'term' => $thisTerm,
-                'isFirstTermOption' => $thisTerm && $thisTerm !== $previousTerm,
             ];
-
-            // if this term is new term and the previous term was defined,
-            // then mark the previous end date as last option in term
-            if ($previousTerm && $thisTerm !== $previousTerm) {
-                $endDateOptions[count($endDateOptions) - 1]['isLastTermOption'] = true;
-            }
 
             $endDateOptions[] = [
                 'date' => $thisEndDate->format('Y-m-d'),
                 'term' => $thisTerm,
-                'isLastTermOption' => false,
             ];
 
             $thisStartDate->addDays(14);
-            $previousTerm = $thisTerm;
         }
 
         return response()->json([

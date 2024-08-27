@@ -78,18 +78,11 @@
         '!tw-px-2 !tw-py-1': isEditing,
       }"
     >
-      <InputGroup
+      <SelectLeaveDate
         v-if="isEditing"
-        v-model="localLeave.start_date"
-        :required="true"
-        label="start date"
-        :showLabel="false"
-        type="date"
-        :validator="
-          (startDate) =>
-            areStartAndEndDatesValid(startDate, localLeave.end_date)
-        "
-        :validateWhenUntouched="true"
+        variant="start"
+        :modelValue="localLeave.start_date"
+        @update:modelValue="(date) => (localLeave.start_date = date ?? '')"
       />
       <span v-else>{{ dayjs(leave.start_date).format("MMM D, YYYY") }}</span>
     </Td>
@@ -164,6 +157,7 @@ import { ChevronDownIcon, ChevronRightIcon } from "@/icons";
 import LeaveArtifacts from "./LeaveArtifacts.vue";
 import SmallButton from "./SmallButton.vue";
 import { useUserStore } from "@/stores/useUserStore";
+import SelectLeaveDate from "./SelectLeaveDate.vue";
 
 const props = defineProps<{
   leave: Leave;
