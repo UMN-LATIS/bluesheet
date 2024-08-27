@@ -10,13 +10,20 @@ import {
   type NormalizedUser,
   type User,
   type LeaveArtifact,
+  type LeaveStartDateOption,
+  type LeaveEndDateOption,
+  type DateWithTermAndWeekNum,
 } from "@/types";
+import * as T from "@/types";
 import { dayjs, getTempId, isTempId } from "@/utils";
+import { keyBy } from "lodash";
 
 interface UserStoreState {
   currentUserId: User["id"] | null;
   userLookup: Record<User["id"], NormalizedUser | undefined>;
   leaveLookup: Record<Leave["id"], Leave | undefined>;
+  leaveStartDateOptions: LeaveStartDateOption[];
+  leaveEndDateOptions: LeaveEndDateOption[];
 }
 
 function toNormalizedUser(user: User): NormalizedUser {
@@ -60,11 +67,41 @@ function toLeavesArray(
     .filter(Boolean) as Leave[];
 }
 
+function generateDateTermInfo(
+  variant: "start" | "end",
+  rawOptions: LeaveStartDateOption[] | LeaveEndDateOption[],
+): DateWithTermAndWeekNum[] {
+  const dateTermInfoArr: DateWithTermAndWeekNum[] = [];
+
+  // loop thru, assigning term week numbers
+  for (let i = 0; i < rawOptions.length; i++) {
+    const currentOption = rawOptions[i];
+    const prevDateTermInfo = i === 0 ? null : dateTermInfoArr[i - 1];
+    const isSameTerm = prevDateTermInfo?.term === currentOption.term;
+
+    // payroll is bi-weekly, so we add 2 to the week number
+    // start of payroll period is week 1, end is week 2
+    const startWeekNumber = isSameTerm ? prevDateTermInfo.weekNumber + 2 : 1;
+    const endWeekNumber = isSameTerm ? prevDateTermInfo.weekNumber + 2 : 2;
+
+    dateTermInfoArr.push({
+      date: rawOptions[i].date,
+      term: rawOptions[i].term,
+      // add 2 since payroll is bi-weekly
+      weekNumber: variant === "start" ? startWeekNumber : endWeekNumber,
+    });
+  }
+
+  console.log(dateTermInfoArr);
+  return dateTermInfoArr;
+}
 export const useUserStore = defineStore("user", () => {
   const state = reactive<UserStoreState>({
     currentUserId: null,
     userLookup: {},
     leaveLookup: {},
+    leaveStartDateOptions: [],
+    leaveEndDateOptions: [],
   });
 
   const getters = {
@@ -85,6 +122,24 @@ export const useUserStore = defineStore("user", () => {
     currentRoleFavorites: computed((): MemberRole[] => {
       return getters.currentUser.value?.favoriteRoles ?? [];
     }),
+
+    leaveStartDateLookup: computed(
+      (): Record<T.ISODate, DateWithTermAndWeekNum> => {
+        return keyBy(
+          generateDateTermInfo("start", state.leaveStartDateOptions),
+          "date",
+        );
+      },
+    ),
+
+    leaveEndDateLookup: computed(
+      (): Record<T.ISODate, DateWithTermAndWeekNum> => {
+        return keyBy(
+          generateDateTermInfo("end", state.leaveEndDateOptions),
+          "date",
+        );
+      },
+    ),
 
     getUserRef: (userId: User["id"]) =>
       computed((): User | null => {
@@ -111,7 +166,10 @@ export const useUserStore = defineStore("user", () => {
 
   const actions = {
     async init() {
-      await actions.loadCurrentUser();
+      await Promise.all([
+        actions.loadCurrentUser(),
+        actions.loadLeaveDateOptions(),
+      ]);
     },
 
     async loadCurrentUser() {
@@ -132,7 +190,14 @@ export const useUserStore = defineStore("user", () => {
       return user;
     },
 
-    addLeaveForUser(userId: User["id"]) {
+    async loadLeaveDateOptions() {
+      const { startDateOptions, endDateOptions } =
+        await api.getLeaveDateOptions();
+      state.leaveStartDateOptions = startDateOptions;
+      state.leaveEndDateOptions = endDateOptions;
+    },
+
+    async addLeaveForUser(userId: User["id"]) {
       const user = state.userLookup[userId];
       if (!user) throw new Error("No user found");
 
@@ -142,8 +207,8 @@ export const useUserStore = defineStore("user", () => {
         description: "",
         type: leaveTypes.SABBATICAL,
         status: leaveStatuses.PENDING,
-        start_date: dayjs().format("YYYY-MM-DD"),
-        end_date: dayjs().add(1, "year").format("YYYY-MM-DD"),
+        start_date: "",
+        end_date: "",
         created_at: dayjs().format(),
         updated_at: dayjs().format(),
         canCurrentUser: {

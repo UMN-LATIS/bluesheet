@@ -92,7 +92,13 @@
         '!tw-px-2 !tw-py-1': isEditing,
       }"
     >
-      <InputGroup
+      <SelectLeaveDate
+        v-if="isEditing"
+        variant="end"
+        :modelValue="localLeave.end_date"
+        @update:modelValue="(date) => (localLeave.end_date = date ?? '')"
+      />
+      <!-- <InputGroup
         v-if="isEditing"
         v-model="localLeave.end_date"
         label="start date"
@@ -103,7 +109,7 @@
           (endDate) => areStartAndEndDatesValid(localLeave.start_date, endDate)
         "
         :validateWhenUntouched="true"
-      />
+      /> -->
       <span v-else>{{ dayjs(leave.end_date).format("MMM D, YYYY") }}</span>
     </Td>
     <Td v-if="canEditLeave">

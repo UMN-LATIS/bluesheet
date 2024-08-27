@@ -495,3 +495,9 @@ export interface ApiLeaveDateOptions {
   startDateOptions: LeaveStartDateOption[];
   endDateOptions: LeaveEndDateOption[];
 }
+
+export interface DateWithTermAndWeekNum {
+  date: string;
+  term: string;
+  weekNumber: number;
+}

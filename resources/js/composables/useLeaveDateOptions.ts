@@ -1,11 +1,8 @@
 import * as api from "@/api";
 import * as T from "@/types";
-import { reactive, toRefs, type Ref } from "vue";
+import { computed, reactive, toRefs } from "vue";
 
-export const useLeaveDateOptions = (): {
-  startDateOptions: Ref<T.LeaveStartDateOption[]>;
-  endDateOptions: Ref<T.LeaveEndDateOption[]>;
-} => {
+export const useLeaveDateOptions = () => {
   const state = reactive({
     loadStatus: "idle" as "idle" | "loading" | "success" | "error",
     startDateOptions: [] as T.LeaveStartDateOption[],
@@ -27,5 +24,8 @@ export const useLeaveDateOptions = (): {
       });
   }
 
-  return toRefs(state);
+  return {
+    ...toRefs(state),
+    isLoaded: computed(() => state.loadStatus === "success"),
+  };
 };

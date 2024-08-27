@@ -1,34 +1,29 @@
 <template>
-  <div v-if="!isChoosingCustomDate" class="tw-flex">
+  <div class="tw-flex">
     <ComboBox
+      v-if="!showCustomDateInput"
       :modelValue="localComboBoxValue"
       :label="variant === 'start' ? 'Leave Start Date' : 'Leave End Date'"
       :showLabel="false"
       :options="comboboxOptions"
+      class="tw-w-36"
       @update:modelValue="
         (comboboxOption) =>
           $emit('update:modelValue', comboboxOption?.id as string)
       "
     />
-    <button
-      class="tw-bg-transparent tw-border-none"
-      @click="isChoosingCustomDate = true"
-    >
-      <VDotsIcon />
-      <span class="sr-only">Custom Leave Start Date</span>
-    </button>
-  </div>
-  <div v-else class="tw-flex">
     <InputGroup
+      v-else
       label="Custom Leave Start Date"
       type="date"
       :modelValue="modelValue"
       :showLabel="false"
+      class="tw-w-36"
       @update:modelValue="$emit('update:modelValue', $event)"
     />
     <button
       class="tw-bg-transparent tw-border-none"
-      @click="isChoosingCustomDate = false"
+      @click="showCustomDateInput = !showCustomDateInput"
     >
       <VDotsIcon />
       <span class="sr-only">Choose from available leave dates</span>
@@ -36,20 +31,13 @@
   </div>
 </template>
 <script setup lang="ts">
-import { useLeaveDateOptions } from "@/composables/useLeaveDateOptions";
-import { computed, ref, onMounted } from "vue";
+import { computed, ref, watch } from "vue";
 import ComboBox, { ComboBoxOption } from "@/components/ComboBox.vue";
-import dayjs from "dayjs";
 import InputGroup from "../InputGroup.vue";
-import { CalendarIcon, VDotsIcon } from "@/icons";
-
-interface DateTermInfo {
-  date: string;
-  term: string;
-  weekNumber: number;
-}
-
-type DateTermInfoLookup = Record<string, DateTermInfo>;
+import { VDotsIcon } from "@/icons";
+import { useUserStore } from "@/stores/useUserStore";
+import { DateWithTermAndWeekNum, ISODate } from "@/types";
+import dayjs from "dayjs";
 
 const props = withDefaults(
   defineProps<{
@@ -66,46 +54,30 @@ defineEmits<{
   (event: "update:modelValue", value: string): void;
 }>();
 
-const isChoosingCustomDate = ref(false);
-const { startDateOptions } = useLeaveDateOptions();
+const showCustomDateInput = ref(false);
+const userStore = useUserStore();
+const { leaveStartDateLookup, leaveEndDateLookup } = userStore;
+const currentLookupVariant = computed(() =>
+  props.variant === "start" ? leaveStartDateLookup : leaveEndDateLookup,
+);
 
-const dateToTermLookup = computed(() => {
-  const dateTermInfoArr: DateTermInfo[] = [];
-
-  // loop thru, assigning term week numbers
-  for (let i = 0; i < startDateOptions.value.length; i++) {
-    const currentOption = startDateOptions.value[i];
-    const prevDateTermInfo = i === 0 ? null : dateTermInfoArr[i - 1];
-    const isSameTerm = prevDateTermInfo?.term === currentOption.term;
-
-    dateTermInfoArr.push({
-      date: startDateOptions.value[i].date,
-      term: startDateOptions.value[i].term,
-      // add 2 since payroll is bi-weekly
-      weekNumber: isSameTerm ? prevDateTermInfo.weekNumber + 2 : 1,
-    });
-  }
-
-  // turn it into a lookup
-  return dateTermInfoArr.reduce((acc, curr) => {
-    acc[curr.date] = curr;
-    return acc;
-  }, {} as DateTermInfoLookup);
-});
-
-const toComboBoxOption = (dateTermInfo: DateTermInfo): ComboBoxOption => ({
-  id: dateTermInfo.date,
-  label: dayjs(dateTermInfo.date).format("MM/DD/YYYY"),
-  secondaryLabel: dateTermInfo.term
-    ? `${dateTermInfo.term} - Wk ${dateTermInfo.weekNumber}`
-    : "-",
-});
+function toComboBoxOption(
+  dateTermInfo: DateWithTermAndWeekNum,
+): ComboBoxOption {
+  return {
+    id: dateTermInfo.date,
+    label: dayjs(dateTermInfo.date).format("MM/DD/YYYY"),
+    secondaryLabel: dateTermInfo.term
+      ? `${dateTermInfo.term} - Week ${dateTermInfo.weekNumber}`
+      : "-",
+  };
+}
 
 const localComboBoxValue = computed((): ComboBoxOption | null => {
   if (!props.modelValue) {
     return null;
   }
-  const dateTermInfo = dateToTermLookup.value[props.modelValue];
+  const dateTermInfo = currentLookupVariant.value[props.modelValue];
   if (!dateTermInfo) {
     return null;
   }
@@ -114,21 +86,7 @@ const localComboBoxValue = computed((): ComboBoxOption | null => {
 });
 
 const comboboxOptions = computed(() =>
-  Object.values(dateToTermLookup.value).map(toComboBoxOption),
+  Object.values(currentLookupVariant.value).map(toComboBoxOption),
 );
-
-const isComboBoxOption = (value: string): boolean => {
-  return !!dateToTermLookup.value[value];
-};
-
-onMounted(() => {
-  if (!props.modelValue) {
-    return;
-  }
-
-  if (!isComboBoxOption(props.modelValue)) {
-    isChoosingCustomDate.value = true;
-  }
-});
 </script>
 <style scoped></style>
