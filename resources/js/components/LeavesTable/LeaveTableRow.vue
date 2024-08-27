@@ -2,8 +2,8 @@
   <tr
     data-cy="leaveRow"
     :class="{
-      'is-new-leave': isNewLeave,
-      'is-invalid-leave tw-bg-red-50': !isLeaveValid,
+      'tw-bg-blue-50': isNewLeave,
+      'tw-bg-yellow-50': !isLeaveValid,
       'is-past-leave tw-bg-neutral-100':
         !isNewLeave && !isCurrentOrFutureLeave && !isEditing,
       'is-past-leave--editing tw-bg-neutral-100':
@@ -37,6 +37,7 @@
         label="description"
         :showLabel="false"
         :validator="isNotEmptyString"
+        :validateWhenUntouched="true"
       />
       <span v-else>{{ leave.description }}</span>
     </Td>
@@ -82,6 +83,10 @@
         v-if="isEditing"
         variant="start"
         :modelValue="localLeave.start_date"
+        :validator="
+          (startDate) =>
+            areStartAndEndDatesValid(startDate, localLeave.end_date)
+        "
         @update:modelValue="(date) => (localLeave.start_date = date ?? '')"
       />
       <span v-else>{{ dayjs(leave.start_date).format("MMM D, YYYY") }}</span>
@@ -96,6 +101,9 @@
         v-if="isEditing"
         variant="end"
         :modelValue="localLeave.end_date"
+        :validator="
+          (endDate) => areStartAndEndDatesValid(localLeave.start_date, endDate)
+        "
         @update:modelValue="(date) => (localLeave.end_date = date ?? '')"
       />
       <!-- <InputGroup
@@ -246,9 +254,13 @@ const areStartAndEndDatesValid = (startDate: unknown, endDate: unknown) =>
   dayjs(endDate).isValid() &&
   dayjs(endDate).isAfter(dayjs(startDate));
 
-const isLeaveValid = (leave: Leave) =>
-  [leave.description, leave.type, leave.status].every(isNotEmptyString) &&
-  areStartAndEndDatesValid(leave.start_date, leave.end_date);
+const isLeaveValid = computed(() => {
+  return (
+    [localLeave.description, localLeave.type, localLeave.status].every(
+      isNotEmptyString,
+    ) && areStartAndEndDatesValid(localLeave.start_date, localLeave.end_date)
+  );
+});
 
 const isCurrentOrFutureLeave = computed(() =>
   dayjs(props.leave.end_date).isAfter(dayjs()),

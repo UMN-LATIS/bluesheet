@@ -6,7 +6,10 @@
       :label="variant === 'start' ? 'Leave Start Date' : 'Leave End Date'"
       :showLabel="false"
       :options="comboboxOptions"
-      class="tw-w-36"
+      class="tw-w-40"
+      :inputClass="{
+        '!tw-border-red-500 tw-border tw-solid': !isDateValid,
+      }"
       @update:modelValue="
         (comboboxOption) =>
           $emit('update:modelValue', comboboxOption?.id as string)
@@ -18,7 +21,9 @@
       type="date"
       :modelValue="modelValue"
       :showLabel="false"
-      class="tw-w-36"
+      class="tw-w-40"
+      :validator="validator"
+      :validateWhenUntouched="true"
       @update:modelValue="$emit('update:modelValue', $event)"
     />
     <button
@@ -31,22 +36,24 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref } from "vue";
 import ComboBox, { ComboBoxOption } from "@/components/ComboBox.vue";
 import InputGroup from "../InputGroup.vue";
 import { VDotsIcon } from "@/icons";
 import { useUserStore } from "@/stores/useUserStore";
-import { DateWithTermAndWeekNum, ISODate } from "@/types";
+import { DateWithTermAndWeekNum } from "@/types";
 import dayjs from "dayjs";
 
 const props = withDefaults(
   defineProps<{
     modelValue: string;
     variant?: "start" | "end";
+    validator?: (value: unknown) => boolean;
   }>(),
   {
     modelValue: "",
     variant: "start",
+    validator: () => true,
   },
 );
 
@@ -88,5 +95,9 @@ const localComboBoxValue = computed((): ComboBoxOption | null => {
 const comboboxOptions = computed(() =>
   Object.values(currentLookupVariant.value).map(toComboBoxOption),
 );
+
+const isDateValid = computed(() => {
+  return props.validator(props.modelValue);
+});
 </script>
 <style scoped></style>
