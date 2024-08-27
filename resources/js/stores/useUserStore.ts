@@ -92,7 +92,6 @@ function generateDateTermInfo(
     });
   }
 
-  console.log(dateTermInfoArr);
   return dateTermInfoArr;
 }
 export const useUserStore = defineStore("user", () => {
