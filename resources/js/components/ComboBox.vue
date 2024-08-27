@@ -31,7 +31,7 @@
       <ComboboxButton as="div">
         <ComboboxInput
           ref="anchorRef"
-          class="combobox__input tw-w-full tw-rounded tw-border-0 tw-bg-white tw-py-2 tw-pl-3 tw-pr-10 tw-text-neutral-900 tw-ring-1 tw-ring-inset tw-ring-neutral-300 focus:tw-ring-2 focus:tw-ring-inset focus:tw-ring-blue-600 sm:tw-leading-6"
+          class="combobox__input tw-w-full tw-rounded tw-bg-transparent tw-border-0 tw-py-2 tw-pl-3 tw-pr-10 tw-text-neutral-900 tw-ring-1 tw-ring-inset tw-ring-neutral-300 focus:tw-ring-2 focus:tw-ring-inset focus:tw-ring-blue-600 sm:tw-leading-6"
           :class="inputClass"
           :displayValue="(item) => (item as ComboBoxOption | null)?.label ?? ''"
           :placeholder="placeholder"
