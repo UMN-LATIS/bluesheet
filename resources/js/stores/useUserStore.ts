@@ -10,10 +10,12 @@ import {
   type NormalizedUser,
   type User,
   type LeaveArtifact,
+  type LoadState,
 } from "@/types";
 import { dayjs, getTempId, isTempId } from "@/utils";
 
 interface UserStoreState {
+  currentUserLoadStatus: LoadState;
   currentUserId: User["id"] | null;
   userLookup: Record<User["id"], NormalizedUser | undefined>;
   leaveLookup: Record<Leave["id"], Leave | undefined>;
@@ -62,6 +64,7 @@ function toLeavesArray(
 
 export const useUserStore = defineStore("user", () => {
   const state = reactive<UserStoreState>({
+    currentUserLoadStatus: "idle",
     currentUserId: null,
     userLookup: {},
     leaveLookup: {},
@@ -115,10 +118,14 @@ export const useUserStore = defineStore("user", () => {
     },
 
     async loadCurrentUser() {
+      if (state.currentUserLoadStatus === "loading") return;
+
+      state.currentUserLoadStatus = "loading";
       const user = await api.fetchCurrentUser();
       state.currentUserId = user.id;
       state.userLookup[user.id] = toNormalizedUser(user);
       state.leaveLookup = concatLeavesToLookup(state.leaveLookup, user.leaves);
+      state.currentUserLoadStatus = "complete";
 
       return user;
     },
