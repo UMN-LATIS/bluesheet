@@ -62,8 +62,10 @@ export const useTermStore = defineStore("terms", () => {
 
     isTermPlannable: computed(() => (termId: T.Term["id"]): boolean => {
       const term = getters.getTerm.value(termId);
-      if (!term)  {
-        throw new Error(`Cannot determine if term is plannable. Term ${termId} not found.`);
+      if (!term) {
+        throw new Error(
+          `Cannot determine if term is plannable. Term ${termId} not found.`,
+        );
       }
       // terms that start within the next 2 months are no longer plannable
       const lastPlannableDate = dayjs(term.startDate).subtract(2, "months");
@@ -77,8 +79,7 @@ export const useTermStore = defineStore("terms", () => {
       if (state.loadStatus !== "idle") return;
 
       try {
-        await actions.fetchTerms();
-        state.loadStatus = "complete";
+        await actions.fetchTerms(), (state.loadStatus = "complete");
       } catch (e) {
         state.loadStatus = "error";
         throw new Error(`Failed to load terms: ${e}`);

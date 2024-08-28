@@ -38,12 +38,12 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, onMounted } from "vue";
 import ComboBox, { ComboBoxOption } from "@/components/ComboBox.vue";
 import InputGroup from "../InputGroup.vue";
 import { VDotsIcon } from "@/icons";
-import { useTermPayrollDates } from "@/composables/useTermPayrollDates";
 import dayjs from "dayjs";
+import { useTermPayrollDatesStore } from "@/stores/useTermPayrollDateStore";
 
 const props = withDefaults(
   defineProps<{
@@ -63,10 +63,13 @@ defineEmits<{
 }>();
 
 const showCustomDateInput = ref(false);
-const { termPayrollDates } = useTermPayrollDates();
+const termPayrollDatesStore = useTermPayrollDatesStore();
+onMounted(() => {
+  termPayrollDatesStore.init();
+});
 
 const comboboxOptions = computed(() => {
-  return termPayrollDates.value.map((termPayrollDate) => {
+  return termPayrollDatesStore.termPayrollDates.map((termPayrollDate) => {
     const date =
       props.variant === "start"
         ? termPayrollDate.payroll_start_date
