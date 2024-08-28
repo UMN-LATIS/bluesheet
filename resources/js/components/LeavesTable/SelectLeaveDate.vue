@@ -11,30 +11,35 @@
       :inputClass="{
         '!tw-border-red-500 tw-border tw-solid': !isDateValid,
       }"
+      :canAddNewOption="true"
+      :addNewOptionLabel="`Custom Date`"
+      @addNewOption="showCustomDateInput = true"
       @update:modelValue="
         (comboboxOption) =>
           $emit('update:modelValue', comboboxOption?.id as string)
       "
     />
-    <InputGroup
-      v-else
-      :data-cy="`select-leave-date-input-${variant}`"
-      label="Custom Leave Start Date"
-      type="date"
-      :modelValue="modelValue"
-      :showLabel="false"
-      class="tw-w-40"
-      :validator="validator"
-      :validateWhenUntouched="true"
-      @update:modelValue="$emit('update:modelValue', $event)"
-    />
-    <button
-      class="tw-bg-transparent tw-border-none"
-      @click="showCustomDateInput = !showCustomDateInput"
-    >
-      <VDotsIcon />
-      <span class="sr-only">Choose from available leave dates</span>
-    </button>
+    <div v-else class="tw-flex">
+      <InputGroup
+        :data-cy="`select-leave-date-input-${variant}`"
+        label="Custom Leave Start Date"
+        type="date"
+        :modelValue="modelValue"
+        :showLabel="false"
+        class="tw-w-40"
+        :validator="validator"
+        :validateWhenUntouched="true"
+        @update:modelValue="$emit('update:modelValue', $event)"
+      />
+      <button
+        class="tw-bg-transparent tw-border-none"
+        title="cancel custom date"
+        @click="showCustomDateInput = !showCustomDateInput"
+      >
+        <XIcon />
+        <span class="sr-only">Cancel custom date</span>
+      </button>
+    </div>
   </div>
 </template>
 <script setup lang="ts">
@@ -44,6 +49,7 @@ import InputGroup from "../InputGroup.vue";
 import { VDotsIcon } from "@/icons";
 import dayjs from "dayjs";
 import { useTermPayrollDatesStore } from "@/stores/useTermPayrollDateStore";
+import XIcon from "@/icons/XIcon.vue";
 
 const props = withDefaults(
   defineProps<{
