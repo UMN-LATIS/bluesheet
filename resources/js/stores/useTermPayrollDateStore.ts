@@ -11,9 +11,9 @@ export const useTermPayrollDatesStore = defineStore("termPayrollDates", {
     isLoaded: (state) => state.loadStatus === "complete",
   },
   actions: {
-    init() {
+    async init() {
       if (this.loadStatus === "idle") {
-        this.fetchTermPayrollDates();
+        return this.fetchTermPayrollDates();
       }
     },
     async fetchTermPayrollDates() {

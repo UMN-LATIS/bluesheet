@@ -69,9 +69,19 @@ defineEmits<{
 
 const showCustomDateInput = ref(false);
 const termPayrollDatesStore = useTermPayrollDatesStore();
-onMounted(() => {
-  termPayrollDatesStore.init();
+onMounted(async () => {
+  await termPayrollDatesStore.init();
+
+  // once payroll dates are loaded, if modelValue is a
+  // custom date, show the custom date input
+  if (isCustomDate.value) {
+    showCustomDateInput.value = true;
+  }
 });
+
+const isCustomDate = computed(() =>
+  comboboxOptions.value.every((option) => option.id !== props.modelValue),
+);
 
 const comboboxOptions = computed(() => {
   return termPayrollDatesStore.termPayrollDates.map((termPayrollDate) => {
