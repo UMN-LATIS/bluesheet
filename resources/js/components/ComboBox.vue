@@ -131,7 +131,13 @@ import {
 } from "@headlessui/vue";
 import { CSSClass } from "@/types";
 import Label from "./Label.vue";
-import { useFloating, offset, autoPlacement } from "@floating-ui/vue";
+import {
+  useFloating,
+  offset,
+  autoPlacement,
+  flip,
+  autoUpdate,
+} from "@floating-ui/vue";
 
 export interface ComboBoxOption {
   id?: string | number; // new options might have an undefined id
@@ -215,6 +221,13 @@ const anchorRef = ref<HTMLElement | null>(null);
 const floatingRef = ref<HTMLElement | null>(null);
 
 const { floatingStyles } = useFloating(anchorRef, floatingRef, {
-  middleware: [offset(10), autoPlacement()],
+  middleware: [offset(10), flip()],
+  whileElementsMounted(referenceEl, floatingEl, update) {
+    // stop the combobox options from triggering a scroll – I think?
+    const cleanup = autoUpdate(referenceEl, floatingEl, update, {
+      ancestorScroll: false,
+    });
+    return cleanup;
+  },
 });
 </script>
