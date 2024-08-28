@@ -52,7 +52,7 @@
         <ComboboxOptions
           ref="floatingRef"
           class="tw-absolute tw-z-10 tw-mt-1 tw-max-h-72 tw-w-56 tw-overflow-auto tw-rounded-md tw-bg-white tw-py-1 tw-text-base tw-shadow-lg tw-ring-1 tw-ring-black tw-ring-opacity-5 focus:tw-outline-none sm:tw-text-sm tw-pl-0"
-          :style="floatingStyles"
+          :style="floatingStylesHack"
         >
           <ComboboxOption
             v-for="option in filteredOptions"
@@ -131,7 +131,8 @@ import {
 } from "@headlessui/vue";
 import { CSSClass } from "@/types";
 import Label from "./Label.vue";
-import { useFloating, offset, flip, autoUpdate } from "@floating-ui/vue";
+import { useFloating, offset, flip } from "@floating-ui/vue";
+import { unset } from "lodash";
 
 export interface ComboBoxOption {
   id?: string | number; // new options might have an undefined id
@@ -216,12 +217,32 @@ const floatingRef = ref<HTMLElement | null>(null);
 
 const { floatingStyles } = useFloating(anchorRef, floatingRef, {
   middleware: [offset(10), flip()],
-  whileElementsMounted(referenceEl, floatingEl, update) {
-    // stop the combobox options from triggering a scroll – I think?
-    const cleanup = autoUpdate(referenceEl, floatingEl, update, {
-      ancestorScroll: false,
-    });
-    return cleanup;
-  },
+});
+
+// This is a hack to fix an issue where page scroll
+// jumps when a combobox positioned further down the page
+// is first opened.
+//
+// FloatingUI emits multiple style changes for some reason
+// (maybe some interaction headlessUI's combobox and
+// floatingUI styles.)
+//
+// FloatingUI uses css transforms to position itself, when the combobox
+// is opened:
+// 1. floating ui positions the combobox options with a translate(0px, 0px)
+// 2. the first option of the combobox is scrolled into view (at 0,0)
+// 3. floating ui updates the styles again to the correct transform position
+//
+// This hack works by ignoring any transform(0px, 0px) styles.
+//
+// NOTE: we're using floatingUI for positioning because the combobox may
+// appear in a scrollable container like the Leaves section, and without
+// floating UI, the combobox options would be clipped and cause the section
+// scrollbars to appear.
+const floatingStylesHack = computed(() => {
+  if (floatingStyles.value.transform === "translate(0px, 0px)") {
+    return null;
+  }
+  return floatingStyles.value;
 });
 </script>
