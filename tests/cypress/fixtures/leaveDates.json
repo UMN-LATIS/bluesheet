@@ -1,0 +1,46 @@
+{
+  "startDateOptions": [
+    {
+      "date": "2024-06-17",
+      "term": "Summer 2024"
+    },
+    {
+      "date": "2024-07-01",
+      "term": "Summer 2024"
+    },
+    {
+      "date": "2024-07-15",
+      "term": "Summer 2024"
+    },
+    {
+      "date": "2024-07-29",
+      "term": "Summer 2024"
+    },
+    {
+      "date": "2024-08-12",
+      "term": ""
+    }
+  ],
+  "endDateOptions": [
+    {
+      "date": "2024-06-30",
+      "term": "Summer 2024"
+    },
+    {
+      "date": "2024-07-14",
+      "term": "Summer 2024"
+    },
+    {
+      "date": "2024-07-28",
+      "term": "Summer 2024"
+    },
+    {
+      "date": "2024-08-11",
+      "term": "Summer 2024"
+    },
+    {
+      "date": "2024-08-25",
+      "term": ""
+    }
+  ]
+}

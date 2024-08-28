@@ -2,6 +2,7 @@
   <div class="tw-flex">
     <ComboBox
       v-if="!showCustomDateInput"
+      :data-cy="`select-leave-date-combobox-${variant}`"
       :modelValue="localComboBoxValue"
       :label="variant === 'start' ? 'Leave Start Date' : 'Leave End Date'"
       :showLabel="false"
@@ -17,6 +18,7 @@
     />
     <InputGroup
       v-else
+      :data-cy="`select-leave-date-input-${variant}`"
       label="Custom Leave Start Date"
       type="date"
       :modelValue="modelValue"

@@ -18,6 +18,10 @@ describe("User leaves", () => {
       method: "GET",
       url: "/api/permissions/**",
     }).as("apiPermissions");
+
+    cy.intercept("GET", "/api/leaves/leaveDates", {
+      fixture: "../fixtures/leaveDates.json",
+    }).as("apiLeaveDates");
   });
 
   context("as a user that can view leaves", () => {
@@ -44,8 +48,9 @@ describe("User leaves", () => {
     });
 
     it("creates a new leave", () => {
-      const startDate = dayjs().add(30, "day");
-      const endDate = dayjs().add(60, "day");
+      // see fixtures/leaveDates.json for valid dates
+      const startDate = dayjs("2024-06-17"); // SU 2024 - week 1
+      const endDate = dayjs("2024-08-11"); // SU 2024 - week 8
 
       cy.visit(`/user/${basicUserId}`);
 
@@ -62,19 +67,29 @@ describe("User leaves", () => {
           cy.get("[data-cy=leaveDescription] input").type(
             "{selectall}Test Leave",
           );
-          cy.get("[data-cy=leaveStartDate] input").type(
-            startDate.format("YYYY-MM-DD"),
+          cy.get("[data-cy=select-leave-date-combobox-start] input").type(
+            `${startDate.format("MM/DD/YYYY")}{enter}`,
           );
-          cy.get("[data-cy=leaveEndDate] input").type(
-            endDate.format("YYYY-MM-DD"),
+          cy.get("[data-cy=select-leave-date-combobox-end] input").type(
+            `${endDate.format("MM/DD/YYYY")}{enter}`,
           );
+          // cy.get("[data-cy=select-leave-date-combobox-start] input").type(
+          //   startDate.format("YYYY-MM-DD"),
+          // );
+          // cy.get("[data-cy=leaveEndDate] input").type(
+          //   endDate.format("YYYY-MM-DD"),
+          // );
           cy.get("[data-cy=leaveType] select").select("Development");
           cy.get("[data-cy=leaveStatus] select").select("Confirmed");
           cy.contains("Save").click();
         });
 
       // check that the leave was added
-      cy.get("[data-cy=leaveRow]").should("have.length", 3);
+
+      // show Past Leaves so that this added leave is visible
+      cy.get("[data-cy=leavesSection]").contains("Show Past").click();
+
+      cy.get("[data-cy=leaveRow]").should("have.length", 6);
       cy.contains("Test Leave")
         .closest("tr")
         .within(() => {

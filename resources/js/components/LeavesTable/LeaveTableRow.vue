@@ -166,7 +166,7 @@ import InputGroup from "@/components/InputGroup.vue";
 import SelectGroup from "@/components/SelectGroup.vue";
 import { Td } from "@/components/Table";
 import Chip from "@/components/Chip.vue";
-import { isEqual } from "lodash";
+import { isEqual } from "lodash-es";
 import { ChevronDownIcon, ChevronRightIcon } from "@/icons";
 import LeaveArtifacts from "./LeaveArtifacts.vue";
 import SmallButton from "./SmallButton.vue";
