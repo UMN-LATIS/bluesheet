@@ -482,22 +482,20 @@ export interface ApiResourceItemPermissions {
   delete: boolean;
 }
 
-export interface LeaveStartDateOption {
-  date: ISODate;
-  term: string; // "Fall 2024"
-}
-
-export interface LeaveEndDateOption {
+export interface LeaveDateOption {
   date: ISODate;
   term: string; // "Fall 2024"
 }
 export interface ApiLeaveDateOptions {
-  startDateOptions: LeaveStartDateOption[];
-  endDateOptions: LeaveEndDateOption[];
+  startDateOptions: LeaveDateOption[];
+  endDateOptions: LeaveDateOption[];
 }
 
-export interface DateWithTermAndWeekNum {
-  date: string;
-  term: string;
-  weekNumber: number;
+export interface TermPayrollDate {
+  id: number;
+  term_code: TermCode;
+  semester: string; // "Spring", "Fall"
+  year: number; // academic year
+  payroll_start_date: ISODate;
+  payroll_end_date: ISODate;
 }

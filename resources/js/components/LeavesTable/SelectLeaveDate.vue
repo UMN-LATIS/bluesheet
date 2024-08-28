@@ -42,8 +42,7 @@ import { computed, ref } from "vue";
 import ComboBox, { ComboBoxOption } from "@/components/ComboBox.vue";
 import InputGroup from "../InputGroup.vue";
 import { VDotsIcon } from "@/icons";
-import { useUserStore } from "@/stores/useUserStore";
-import { DateWithTermAndWeekNum } from "@/types";
+import { useTermPayrollDates } from "@/composables/useTermPayrollDates";
 import dayjs from "dayjs";
 
 const props = withDefaults(
@@ -64,39 +63,34 @@ defineEmits<{
 }>();
 
 const showCustomDateInput = ref(false);
-const userStore = useUserStore();
-const { leaveStartDateLookup, leaveEndDateLookup } = userStore;
-const currentLookupVariant = computed(() =>
-  props.variant === "start" ? leaveStartDateLookup : leaveEndDateLookup,
-);
+const { termPayrollDates } = useTermPayrollDates();
 
-function toComboBoxOption(
-  dateTermInfo: DateWithTermAndWeekNum,
-): ComboBoxOption {
-  return {
-    id: dateTermInfo.date,
-    label: dayjs(dateTermInfo.date).format("MM/DD/YYYY"),
-    secondaryLabel: dateTermInfo.term
-      ? `${dateTermInfo.term} - Week ${dateTermInfo.weekNumber}`
-      : "-",
-  };
-}
+const comboboxOptions = computed(() => {
+  return termPayrollDates.value.map((termPayrollDate) => {
+    const date =
+      props.variant === "start"
+        ? termPayrollDate.payroll_start_date
+        : termPayrollDate.payroll_end_date;
+
+    return {
+      id: date,
+      label: dayjs(date).format("MM/DD/YYYY"),
+      secondaryLabel: `${termPayrollDate.semester} ${termPayrollDate.year}`,
+    };
+  });
+});
 
 const localComboBoxValue = computed((): ComboBoxOption | null => {
   if (!props.modelValue) {
     return null;
   }
-  const dateTermInfo = currentLookupVariant.value[props.modelValue];
-  if (!dateTermInfo) {
-    return null;
-  }
 
-  return toComboBoxOption(dateTermInfo);
+  const selectedOption = comboboxOptions.value.find(
+    (option) => option.id === props.modelValue,
+  );
+
+  return selectedOption ?? null;
 });
-
-const comboboxOptions = computed(() =>
-  Object.values(currentLookupVariant.value).map(toComboBoxOption),
-);
 
 const isDateValid = computed(() => {
   return props.validator(props.modelValue);

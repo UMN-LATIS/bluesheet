@@ -2,20 +2,18 @@ import * as api from "@/api";
 import * as T from "@/types";
 import { computed, reactive, toRefs } from "vue";
 
-export const useLeaveDateOptions = () => {
+export const useTermPayrollDates = () => {
   const state = reactive({
     loadStatus: "idle" as "idle" | "loading" | "success" | "error",
-    startDateOptions: [] as T.LeaveStartDateOption[],
-    endDateOptions: [] as T.LeaveEndDateOption[],
+    termPayrollDates: [] as T.TermPayrollDate[],
   });
 
   // fetch data if needed
   if (state.loadStatus === "idle") {
     api
-      .getLeaveDateOptions()
-      .then((opts) => {
-        state.startDateOptions = opts.startDateOptions;
-        state.endDateOptions = opts.endDateOptions;
+      .getTermPayrollDates()
+      .then((termPayrollDates) => {
+        state.termPayrollDates = termPayrollDates;
         state.loadStatus = "success";
       })
       .catch((error) => {

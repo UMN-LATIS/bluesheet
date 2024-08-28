@@ -67,7 +67,7 @@ export const useLeaveStore = defineStore("leave", () => {
 
     async fetchLeaveDateOptions() {
       const { startDateOptions, endDateOptions } =
-        await api.getLeaveDateOptions();
+        await api.getTermPayrollDates();
       state.startDateOptions = startDateOptions;
       state.endDateOptions = endDateOptions;
     },
