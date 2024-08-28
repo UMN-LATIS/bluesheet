@@ -46,7 +46,6 @@
 import { computed, ref, onMounted } from "vue";
 import ComboBox, { ComboBoxOption } from "@/components/ComboBox.vue";
 import InputGroup from "../InputGroup.vue";
-import { VDotsIcon } from "@/icons";
 import dayjs from "dayjs";
 import { useTermPayrollDatesStore } from "@/stores/useTermPayrollDateStore";
 import XIcon from "@/icons/XIcon.vue";
