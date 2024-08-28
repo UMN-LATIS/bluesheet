@@ -131,13 +131,7 @@ import {
 } from "@headlessui/vue";
 import { CSSClass } from "@/types";
 import Label from "./Label.vue";
-import {
-  useFloating,
-  offset,
-  autoPlacement,
-  flip,
-  autoUpdate,
-} from "@floating-ui/vue";
+import { useFloating, offset, flip, autoUpdate } from "@floating-ui/vue";
 
 export interface ComboBoxOption {
   id?: string | number; // new options might have an undefined id
