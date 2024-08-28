@@ -137,8 +137,4 @@ class LeaveController extends Controller {
         $leave->delete();
         return response()->json(null, Response::HTTP_NO_CONTENT);
     }
-
-    public function dateOptions(Request $request) {
-        return TermPayrollDate::all();
-    }
 }

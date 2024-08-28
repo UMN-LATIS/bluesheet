@@ -195,6 +195,6 @@ export async function getPermissionsForSubgroupsOf(groupId: T.Group["id"]) {
 }
 
 export async function getTermPayrollDates() {
-  const res = await axios.get<T.TermPayrollDate[]>(`/api/leaves/dateOptions`);
+  const res = await axios.get<T.TermPayrollDate[]>(`/api/terms/payrollDates`);
   return res.data;
 }
