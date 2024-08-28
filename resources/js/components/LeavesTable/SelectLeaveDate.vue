@@ -54,11 +54,13 @@ const props = withDefaults(
   defineProps<{
     modelValue: string;
     variant?: "start" | "end";
+    isOptionDisabled?: (opt: ComboBoxOption) => boolean;
     validator?: (value: unknown) => boolean;
   }>(),
   {
     modelValue: "",
     variant: "start",
+    isOptionDisabled: () => false,
     validator: () => true,
   },
 );
@@ -79,23 +81,27 @@ onMounted(async () => {
   }
 });
 
-const isCustomDate = computed(() =>
-  comboboxOptions.value.every((option) => option.id !== props.modelValue),
+const isCustomDate = computed(
+  () =>
+    !!props.modelValue &&
+    comboboxOptions.value.every((option) => option.id !== props.modelValue),
 );
 
 const comboboxOptions = computed(() => {
-  return termPayrollDatesStore.termPayrollDates.map((termPayrollDate) => {
-    const date =
-      props.variant === "start"
-        ? termPayrollDate.payroll_start_date
-        : termPayrollDate.payroll_end_date;
+  return termPayrollDatesStore.termPayrollDates
+    .map((termPayrollDate) => {
+      const date =
+        props.variant === "start"
+          ? termPayrollDate.payroll_start_date
+          : termPayrollDate.payroll_end_date;
 
-    return {
-      id: date,
-      label: dayjs(date).format("MM/DD/YYYY"),
-      secondaryLabel: `${termPayrollDate.semester} ${termPayrollDate.year}`,
-    };
-  });
+      return {
+        id: date,
+        label: dayjs(date).format("MM/DD/YYYY"),
+        secondaryLabel: `${termPayrollDate.semester} ${termPayrollDate.year}`,
+      };
+    })
+    .filter((option) => !props.isOptionDisabled(option));
 });
 
 const localComboBoxValue = computed((): ComboBoxOption | null => {

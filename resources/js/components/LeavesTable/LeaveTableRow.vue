@@ -104,6 +104,9 @@
         :validator="
           (endDate) => areStartAndEndDatesValid(localLeave.start_date, endDate)
         "
+        :isOptionDisabled="
+          (opt) => dayjs(opt.id).isBefore(dayjs(localLeave.start_date))
+        "
         @update:modelValue="(date) => (localLeave.end_date = date ?? '')"
       />
       <!-- <InputGroup
