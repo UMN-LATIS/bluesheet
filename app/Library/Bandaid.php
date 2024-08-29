@@ -242,16 +242,11 @@ class Bandaid {
     public function getTermsOverlappingDates($startDate, $endDate) {
         $terms = $this->getCLATerms();
 
-        // convert non-carbon dates to carbon
-        $startDate = $startDate instanceof Carbon ? $startDate : new Carbon($startDate);
-        $endDate = $endDate instanceof Carbon ? $endDate : new Carbon($endDate);
-
         return $terms->filter(function ($term) use ($startDate, $endDate) {
-
             $termStartDate = new Carbon($term->TERM_BEGIN_DT);
             $termEndDate = new Carbon($term->TERM_END_DT);
-            return $startDate->between($termStartDate, $termEndDate)
-                || $endDate->between($termStartDate, $termEndDate);
+            return $termStartDate->between($startDate, $endDate)
+                || $termEndDate->between($startDate, $endDate);
         });
     }
 
