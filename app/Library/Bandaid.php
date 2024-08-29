@@ -130,7 +130,7 @@ class Bandaid {
      * Get all academic terms for CLA (undergrad and grad)
      * at the UMNTC
      *
-     * @return array<array{
+     * @return array<object{
      *   id: int,
      *   TERM: int,
      *   TERM_BEGIN_DT: string, // "2019-01-22"
@@ -181,7 +181,7 @@ class Bandaid {
     /**
      * Retrieves a list of course details.
      *
-     * @return array<array{
+     * @return array<object{
      *   id: int,
      *   TERM: int,
      *   INSTRUCTOR_EMPLID: int,
