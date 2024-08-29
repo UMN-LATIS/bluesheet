@@ -31,10 +31,10 @@
         class="tw-text-base tw-w-5 tw-h-5 tw-inline-flex tw-items-center tw-justify-center"
         >✧</span
       >
-      <NoIcon v-if="leave.status === CANCELLED" :title="leaveStatusLabel" />
+      <NoIcon v-if="leave.status === DEFERRED" :title="leaveStatusLabel" />
       <div
         :class="{
-          'tw-line-through': leave.status === CANCELLED,
+          'tw-line-through': leave.status === DEFERRED,
         }"
       >
         <span v-if="variant === 'person' && person">
@@ -83,7 +83,7 @@ const props = withDefaults(
 );
 
 const coursePlanningStore = useCoursePlanningStore();
-const { ELIGIBLE, PENDING, DEFERRED: CANCELLED, CONFIRMED } = leaveStatuses;
+const { ELIGIBLE, PENDING, DEFERRED, CONFIRMED } = leaveStatuses;
 
 const isOpen = ref(false);
 const person = computed(() =>
@@ -114,7 +114,7 @@ const statusColor = computed(() => {
       return "orange-600";
     case CONFIRMED:
       return "green-600";
-    case CANCELLED:
+    case DEFERRED:
       return "neutral-400";
     default:
       return "neutral-400";
