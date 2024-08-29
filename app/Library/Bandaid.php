@@ -227,8 +227,8 @@ class Bandaid {
     /**
      * Get academic terms which coincide with the given date range
      *
-     * @param Carbon $startDate
-     * @param Carbon $endDate
+     * @param Carbon|string $startDate
+     * @param Carbon|string $endDate
      * @return \Illuminate\Support\Collection<array{
      *  id: int,
      *  TERM: int,
@@ -241,7 +241,13 @@ class Bandaid {
      */
     public function getTermsOverlappingDates($startDate, $endDate) {
         $terms = $this->getCLATerms();
+
+        // convert non-carbon dates to carbon
+        $startDate = $startDate instanceof Carbon ? $startDate : new Carbon($startDate);
+        $endDate = $endDate instanceof Carbon ? $endDate : new Carbon($endDate);
+
         return $terms->filter(function ($term) use ($startDate, $endDate) {
+
             $termStartDate = new Carbon($term->TERM_BEGIN_DT);
             $termEndDate = new Carbon($term->TERM_END_DT);
             return $startDate->between($termStartDate, $termEndDate)
