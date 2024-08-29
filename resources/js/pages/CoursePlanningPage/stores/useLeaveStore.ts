@@ -51,10 +51,7 @@ export const useLeaveStore = defineStore("leave", () => {
   const actions = {
     init(groupId: T.Group["id"]) {
       state.activeGroupId = groupId;
-      return Promise.all([
-        actions.fetchLeaves(),
-        actions.fetchLeaveDateOptions(),
-      ]);
+      return Promise.all([actions.fetchLeaves()]);
     },
 
     async fetchLeaves() {
@@ -63,13 +60,6 @@ export const useLeaveStore = defineStore("leave", () => {
       }
       const leaves = await api.fetchLeavesForGroup(state.activeGroupId);
       state.leaveLookup = keyBy(leaves, "id");
-    },
-
-    async fetchLeaveDateOptions() {
-      const { startDateOptions, endDateOptions } =
-        await api.getTermPayrollDates();
-      state.startDateOptions = startDateOptions;
-      state.endDateOptions = endDateOptions;
     },
   };
 
