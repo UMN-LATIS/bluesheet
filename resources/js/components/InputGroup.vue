@@ -20,7 +20,7 @@
       class="form-control tw-text-sm tw-bg-transparent tw-border placeholder:tw-text-neutral-400 placeholder:tw-italic"
       :class="[
         {
-          'is-invalid': !isValidComputed,
+          'tw-border tw-border-red-500 tw-border-solid': !isValidComputed,
         },
         inputClass,
       ]"

@@ -7,12 +7,16 @@ import { groupBy, keyBy } from "lodash";
 interface LeaveStoreState {
   activeGroupId: T.Group["id"] | null;
   leaveLookup: Record<T.Leave["id"], T.Leave>;
+  startDateOptions: T.ApiLeaveDateOptions["startDateOptions"];
+  endDateOptions: T.ApiLeaveDateOptions["endDateOptions"];
 }
 
 export const useLeaveStore = defineStore("leave", () => {
   const state = reactive<LeaveStoreState>({
     activeGroupId: null,
     leaveLookup: {},
+    startDateOptions: [],
+    endDateOptions: [],
   });
 
   const getters = {
@@ -45,9 +49,12 @@ export const useLeaveStore = defineStore("leave", () => {
   };
 
   const actions = {
-    init(groupId: T.Group["id"]): Promise<void> {
+    init(groupId: T.Group["id"]) {
       state.activeGroupId = groupId;
-      return actions.fetchLeaves();
+      return Promise.all([
+        actions.fetchLeaves(),
+        actions.fetchLeaveDateOptions(),
+      ]);
     },
 
     async fetchLeaves() {
@@ -56,6 +63,13 @@ export const useLeaveStore = defineStore("leave", () => {
       }
       const leaves = await api.fetchLeavesForGroup(state.activeGroupId);
       state.leaveLookup = keyBy(leaves, "id");
+    },
+
+    async fetchLeaveDateOptions() {
+      const { startDateOptions, endDateOptions } =
+        await api.getTermPayrollDates();
+      state.startDateOptions = startDateOptions;
+      state.endDateOptions = endDateOptions;
     },
   };
 

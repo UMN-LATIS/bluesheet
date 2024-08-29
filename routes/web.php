@@ -22,6 +22,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\LeavePermissionController;
 use App\Http\Controllers\CoursePermissionController;
 use App\Http\Controllers\GroupPermissionController;
+use App\Http\Controllers\LeaveController;
 
 Route::impersonate();
 
@@ -72,6 +73,8 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
     Route::get('lookup/department/{deptId?}', 'LookupController@departmentInfo');
 
     Route::get('terms', [TermController::class, 'index']);
+    Route::get('terms/payrollDates', [TermController::class, 'payrollDates']);
+
     Route::get('eligibility/{type}', 'UserController@eligibility');
 
     // Laravel thinks the singular of `leaves` is `leaf`
@@ -80,6 +83,7 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
     Route::get('leaves/{leave}', 'LeaveController@show');
     Route::put('leaves/{leave}', 'LeaveController@update');
     Route::delete('leaves/{leave}', 'LeaveController@destroy');
+
     Route::get('users/{leaveOwner}/leaves', 'UserLeaveController@index');
 
     Route::get('reports/deptLeavesReport', [ReportController::class, 'deptLeavesReport']);

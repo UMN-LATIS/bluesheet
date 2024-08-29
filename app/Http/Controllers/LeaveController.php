@@ -10,6 +10,7 @@ use Illuminate\Http\Response;
 use Auth;
 use App\Http\Resources\LeaveResource;
 use App\Library\Bandaid;
+use App\TermPayrollDate;
 
 class LeaveController extends Controller {
     protected $bandaid;

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Library\Bandaid;
 use App\Http\Resources\TermResource;
 use Illuminate\Support\Carbon;
+use App\TermPayrollDate;
 
 class TermController extends Controller {
     protected $bandaid;
@@ -27,5 +28,9 @@ class TermController extends Controller {
         });
 
         return TermResource::collection($terms);
+    }
+
+    public function payrollDates() {
+        return TermPayrollDate::all();
     }
 }

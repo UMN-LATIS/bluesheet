@@ -30,7 +30,8 @@
       -->
       <ComboboxButton as="div">
         <ComboboxInput
-          class="combobox__input tw-w-full tw-rounded tw-border-0 tw-bg-white tw-py-2 tw-pl-3 tw-pr-10 tw-text-neutral-900 tw-ring-1 tw-ring-inset tw-ring-neutral-300 focus:tw-ring-2 focus:tw-ring-inset focus:tw-ring-blue-600 sm:tw-leading-6"
+          ref="anchorRef"
+          class="combobox__input tw-w-full tw-rounded tw-bg-transparent tw-border-0 tw-py-2 tw-pl-3 tw-pr-10 tw-text-neutral-900 tw-ring-1 tw-ring-inset tw-ring-neutral-300 focus:tw-ring-2 focus:tw-ring-inset focus:tw-ring-blue-600 sm:tw-leading-6"
           :class="inputClass"
           :displayValue="(item) => (item as ComboBoxOption | null)?.label ?? ''"
           :placeholder="placeholder"
@@ -47,9 +48,11 @@
           />
         </div>
       </ComboboxButton>
-      <Transition name="fade-slide">
+      <Teleport to="body">
         <ComboboxOptions
-          class="tw-absolute tw-z-10 tw-mt-1 tw-max-h-60 tw-w-full tw-overflow-auto tw-rounded-md tw-bg-white tw-py-1 tw-text-base tw-shadow-lg tw-ring-1 tw-ring-black tw-ring-opacity-5 focus:tw-outline-none sm:tw-text-sm tw-pl-0"
+          ref="floatingRef"
+          class="tw-absolute tw-z-10 tw-mt-1 tw-max-h-72 tw-w-56 tw-overflow-auto tw-rounded-md tw-bg-white tw-py-1 tw-text-base tw-shadow-lg tw-ring-1 tw-ring-black tw-ring-opacity-5 focus:tw-outline-none sm:tw-text-sm tw-pl-0"
+          :style="floatingStylesHack"
         >
           <ComboboxOption
             v-for="option in filteredOptions"
@@ -106,11 +109,11 @@
               class="combobox__add-new-option-button tw-block tw-w-full tw-mt-2 tw-py-2 tw-px-4 tw-border tw-border-transparent tw-rounded tw-shadow-sm tw-text-sm tw-font-medium tw-text-white tw-bg-neutral-700 hover:tw-bg-neutral-900 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-offset-2 focus:tw-ring-blue-500 disabled:tw-opacity-25 hover:disabled:tw-bg-neutral-700 disabled:tw-cursor-not-allowed"
               @click="handleAddNewOption(query)"
             >
-              Add New Option
+              {{ addNewOptionLabel }}
             </button>
           </div>
         </ComboboxOptions>
-      </Transition>
+      </Teleport>
     </div>
   </Combobox>
 </template>
@@ -128,6 +131,7 @@ import {
 } from "@headlessui/vue";
 import { CSSClass } from "@/types";
 import Label from "./Label.vue";
+import { useFloating, offset, flip } from "@floating-ui/vue";
 
 export interface ComboBoxOption {
   id?: string | number; // new options might have an undefined id
@@ -145,6 +149,7 @@ const props = withDefaults(
     showLabel?: boolean;
     required?: boolean;
     canAddNewOption?: boolean;
+    addNewOptionLabel?: string;
     nullable?: boolean; // can be cleared after selected
     placeholder?: string;
   }>(),
@@ -155,6 +160,7 @@ const props = withDefaults(
     showLabel: true,
     required: false,
     canAddNewOption: false,
+    addNewOptionLabel: "Add New Option",
     nullable: false,
     placeholder: "",
   },
@@ -204,4 +210,38 @@ function handleAddNewOption(newOptionLabel: string) {
   emit("addNewOption", newOption);
   emit("update:modelValue", newOption);
 }
+
+const anchorRef = ref<HTMLElement | null>(null);
+const floatingRef = ref<HTMLElement | null>(null);
+
+const { floatingStyles } = useFloating(anchorRef, floatingRef, {
+  middleware: [offset(10), flip()],
+});
+
+// This is a hack to fix an issue where page scroll
+// jumps when a combobox positioned further down the page
+// is first opened.
+//
+// FloatingUI emits multiple style changes for some reason
+// (maybe some interaction headlessUI's combobox and
+// floatingUI styles.)
+//
+// FloatingUI uses css transforms to position itself, when the combobox
+// is opened:
+// 1. floating ui positions the combobox options with a translate(0px, 0px)
+// 2. the first option of the combobox is scrolled into view (at 0,0)
+// 3. floating ui updates the styles again to the correct transform position
+//
+// This hack works by ignoring any transform(0px, 0px) styles.
+//
+// NOTE: we're using floatingUI for positioning because the combobox may
+// appear in a scrollable container like the Leaves section, and without
+// floating UI, the combobox options would be clipped and cause the section
+// scrollbars to appear.
+const floatingStylesHack = computed(() => {
+  if (floatingStyles.value.transform === "translate(0px, 0px)") {
+    return null;
+  }
+  return floatingStyles.value;
+});
 </script>

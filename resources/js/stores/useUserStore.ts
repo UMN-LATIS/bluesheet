@@ -114,7 +114,7 @@ export const useUserStore = defineStore("user", () => {
 
   const actions = {
     async init() {
-      await actions.loadCurrentUser();
+      await Promise.all([actions.loadCurrentUser()]);
     },
 
     async loadCurrentUser() {
@@ -139,7 +139,7 @@ export const useUserStore = defineStore("user", () => {
       return user;
     },
 
-    addLeaveForUser(userId: User["id"]) {
+    async addLeaveForUser(userId: User["id"]) {
       const user = state.userLookup[userId];
       if (!user) throw new Error("No user found");
 
@@ -149,8 +149,8 @@ export const useUserStore = defineStore("user", () => {
         description: "",
         type: leaveTypes.SABBATICAL,
         status: leaveStatuses.PENDING,
-        start_date: dayjs().format("YYYY-MM-DD"),
-        end_date: dayjs().add(1, "year").format("YYYY-MM-DD"),
+        start_date: "",
+        end_date: "",
         created_at: dayjs().format(),
         updated_at: dayjs().format(),
         canCurrentUser: {

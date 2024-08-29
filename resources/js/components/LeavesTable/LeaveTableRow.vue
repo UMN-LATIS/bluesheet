@@ -2,8 +2,8 @@
   <tr
     data-cy="leaveRow"
     :class="{
-      'is-new-leave': isNewLeave,
-      'is-invalid-leave tw-bg-red-50': !isLeaveValid,
+      'is-new-leave tw-bg-blue-50': isNewLeave,
+      'is-invalid-leave tw-bg-yellow-50': !isLeaveValid,
       'is-past-leave tw-bg-neutral-100':
         !isNewLeave && !isCurrentOrFutureLeave && !isEditing,
       'is-past-leave--editing tw-bg-neutral-100':
@@ -37,6 +37,7 @@
         label="description"
         :showLabel="false"
         :validator="isNotEmptyString"
+        :validateWhenUntouched="true"
       />
       <span v-else>{{ leave.description }}</span>
     </Td>
@@ -78,18 +79,15 @@
         '!tw-px-2 !tw-py-1': isEditing,
       }"
     >
-      <InputGroup
+      <SelectLeaveDate
         v-if="isEditing"
-        v-model="localLeave.start_date"
-        :required="true"
-        label="start date"
-        :showLabel="false"
-        type="date"
+        variant="start"
+        :modelValue="localLeave.start_date"
         :validator="
           (startDate) =>
             areStartAndEndDatesValid(startDate, localLeave.end_date)
         "
-        :validateWhenUntouched="true"
+        @update:modelValue="(date) => (localLeave.start_date = date ?? '')"
       />
       <span v-else>{{ dayjs(leave.start_date).format("MMM D, YYYY") }}</span>
     </Td>
@@ -99,7 +97,19 @@
         '!tw-px-2 !tw-py-1': isEditing,
       }"
     >
-      <InputGroup
+      <SelectLeaveDate
+        v-if="isEditing"
+        variant="end"
+        :modelValue="localLeave.end_date"
+        :validator="
+          (endDate) => areStartAndEndDatesValid(localLeave.start_date, endDate)
+        "
+        :isOptionDisabled="
+          (opt) => dayjs(opt.id).isBefore(dayjs(localLeave.start_date))
+        "
+        @update:modelValue="(date) => (localLeave.end_date = date ?? '')"
+      />
+      <!-- <InputGroup
         v-if="isEditing"
         v-model="localLeave.end_date"
         label="start date"
@@ -110,7 +120,7 @@
           (endDate) => areStartAndEndDatesValid(localLeave.start_date, endDate)
         "
         :validateWhenUntouched="true"
-      />
+      /> -->
       <span v-else>{{ dayjs(leave.end_date).format("MMM D, YYYY") }}</span>
     </Td>
     <Td v-if="canEditLeave">
@@ -159,11 +169,12 @@ import InputGroup from "@/components/InputGroup.vue";
 import SelectGroup from "@/components/SelectGroup.vue";
 import { Td } from "@/components/Table";
 import Chip from "@/components/Chip.vue";
-import { isEqual } from "lodash";
+import { isEqual } from "lodash-es";
 import { ChevronDownIcon, ChevronRightIcon } from "@/icons";
 import LeaveArtifacts from "./LeaveArtifacts.vue";
 import SmallButton from "./SmallButton.vue";
 import { useUserStore } from "@/stores/useUserStore";
+import SelectLeaveDate from "./SelectLeaveDate.vue";
 
 const props = defineProps<{
   leave: Leave;
@@ -246,9 +257,13 @@ const areStartAndEndDatesValid = (startDate: unknown, endDate: unknown) =>
   dayjs(endDate).isValid() &&
   dayjs(endDate).isAfter(dayjs(startDate));
 
-const isLeaveValid = (leave: Leave) =>
-  [leave.description, leave.type, leave.status].every(isNotEmptyString) &&
-  areStartAndEndDatesValid(leave.start_date, leave.end_date);
+const isLeaveValid = computed(() => {
+  return (
+    [localLeave.description, localLeave.type, localLeave.status].every(
+      isNotEmptyString,
+    ) && areStartAndEndDatesValid(localLeave.start_date, localLeave.end_date)
+  );
+});
 
 const isCurrentOrFutureLeave = computed(() =>
   dayjs(props.leave.end_date).isAfter(dayjs()),

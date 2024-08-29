@@ -481,3 +481,21 @@ export interface ApiResourceItemPermissions {
   update: boolean;
   delete: boolean;
 }
+
+export interface LeaveDateOption {
+  date: ISODate;
+  term: string; // "Fall 2024"
+}
+export interface ApiLeaveDateOptions {
+  startDateOptions: LeaveDateOption[];
+  endDateOptions: LeaveDateOption[];
+}
+
+export interface TermPayrollDate {
+  id: number;
+  term_code: TermCode;
+  semester: string; // "Spring", "Fall"
+  year: number; // academic year
+  payroll_start_date: ISODate;
+  payroll_end_date: ISODate;
+}
