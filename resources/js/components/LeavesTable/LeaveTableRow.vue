@@ -268,7 +268,7 @@ const statusColor = computed(() => {
       return "orange-600";
     case leaveStatuses.CONFIRMED:
       return "green-600";
-    case leaveStatuses.CANCELLED:
+    case leaveStatuses.DEFERRED:
       return "neutral-400";
     default:
       return "neutral-400";

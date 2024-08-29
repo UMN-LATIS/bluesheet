@@ -4,7 +4,7 @@ const leaveStatusToLabelMap: Record<LeaveStatus, string> = {
   [leaveStatuses.ELIGIBLE]: "Eligible",
   [leaveStatuses.PENDING]: "Pending",
   [leaveStatuses.CONFIRMED]: "Confirmed",
-  [leaveStatuses.CANCELLED]: "Deferred",
+  [leaveStatuses.DEFERRED]: "Deferred",
 };
 
 /**

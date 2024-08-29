@@ -83,7 +83,7 @@ const props = withDefaults(
 );
 
 const coursePlanningStore = useCoursePlanningStore();
-const { ELIGIBLE, PENDING, CANCELLED, CONFIRMED } = leaveStatuses;
+const { ELIGIBLE, PENDING, DEFERRED: CANCELLED, CONFIRMED } = leaveStatuses;
 
 const isOpen = ref(false);
 const person = computed(() =>

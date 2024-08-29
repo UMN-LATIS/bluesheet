@@ -173,11 +173,12 @@ export const leaveTypes = {
 
 export type LeaveType = (typeof leaveTypes)[keyof typeof leaveTypes];
 
+// constants for db strings for indicating status
 export const leaveStatuses = {
   CONFIRMED: "confirmed",
   PENDING: "pending",
   ELIGIBLE: "eligible",
-  CANCELLED: "cancelled",
+  DEFERRED: "cancelled",
 } as const;
 
 export type LeaveStatus = (typeof leaveStatuses)[keyof typeof leaveStatuses];
