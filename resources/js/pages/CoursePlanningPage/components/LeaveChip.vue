@@ -17,27 +17,30 @@
         'tw-font-bold': isOpen,
       }"
     >
-      <CircleCheckIcon v-if="leave.status === 'confirmed'" title="confirmed" />
-      <QuestionIcon v-if="leave.status === 'pending'" title="pending" />
+      <CircleCheckIcon
+        v-if="leave.status === CONFIRMED"
+        :title="leaveStatusLabel"
+      />
+      <QuestionIcon v-if="leave.status === PENDING" :title="leaveStatusLabel" />
       <SparklesIcon
-        v-if="leave.status === 'eligible' && !isOnlyPartiallyEligible"
-        title="eligible"
+        v-if="leave.status === ELIGIBLE && !isOnlyPartiallyEligible"
+        :title="leaveStatusLabel"
       />
       <span
-        v-if="leave.status === 'eligible' && isOnlyPartiallyEligible"
+        v-if="leave.status === ELIGIBLE && isOnlyPartiallyEligible"
         class="tw-text-base tw-w-5 tw-h-5 tw-inline-flex tw-items-center tw-justify-center"
         >✧</span
       >
-      <NoIcon v-if="leave.status === 'cancelled'" title="cancelled" />
+      <NoIcon v-if="leave.status === CANCELLED" :title="leaveStatusLabel" />
       <div
         :class="{
-          'tw-line-through': leave.status === 'cancelled',
+          'tw-line-through': leave.status === CANCELLED,
         }"
       >
         <span v-if="variant === 'person' && person">
           {{ person.surName }}, {{ person.givenName }}
         </span>
-        <span v-else> {{ prettyLeaveType }} Leave </span>
+        <span v-else> {{ leaveStatusLabel }} Leave </span>
       </div>
     </header>
     <div
@@ -67,6 +70,7 @@ import dayjs from "dayjs";
 import Chip from "@/components/Chip.vue";
 import { CircleCheckIcon, QuestionIcon, NoIcon, SparklesIcon } from "@/icons";
 import { useCoursePlanningStore } from "../stores/useCoursePlanningStore";
+import { getLeaveStatusLabel } from "@/utils/leaveStatusHelpers";
 
 const props = withDefaults(
   defineProps<{
@@ -79,13 +83,17 @@ const props = withDefaults(
 );
 
 const coursePlanningStore = useCoursePlanningStore();
+const { ELIGIBLE, PENDING, CANCELLED, CONFIRMED } = leaveStatuses;
 
 const isOpen = ref(false);
 const person = computed(() =>
   coursePlanningStore.personStore.getPersonByUserId(props.leave.user_id),
 );
 
-const prettyLeaveType = computed(() => props.leave.type.replace(/_/g, " "));
+const leaveStatusLabel = computed(() =>
+  getLeaveStatusLabel(props.leave.status),
+);
+
 const isOnlyPartiallyEligible = computed(() => {
   const ASST_PROF_JOB_CODE = "9403";
 
@@ -93,20 +101,20 @@ const isOnlyPartiallyEligible = computed(() => {
   // as they (likely?) lack tenure
   return (
     props.leave.type === leaveTypes.SABBATICAL &&
-    props.leave.status === leaveStatuses.ELIGIBLE &&
+    props.leave.status === ELIGIBLE &&
     person.value?.jobCode === ASST_PROF_JOB_CODE
   );
 });
 
 const statusColor = computed(() => {
   switch (props.leave.status) {
-    case leaveStatuses.ELIGIBLE:
+    case ELIGIBLE:
       return "blue-600";
-    case leaveStatuses.PENDING:
+    case PENDING:
       return "orange-600";
-    case leaveStatuses.CONFIRMED:
+    case CONFIRMED:
       return "green-600";
-    case leaveStatuses.CANCELLED:
+    case CANCELLED:
       return "neutral-400";
     default:
       return "neutral-400";
