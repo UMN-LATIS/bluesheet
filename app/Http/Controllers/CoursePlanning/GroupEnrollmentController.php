@@ -29,7 +29,7 @@ class GroupEnrollmentController extends Controller {
         // of a course with a particular instructor
         // and their role.
         $sisEnrollments = collect($this->bandaid
-            ->getDeptClassList($group->dept_id))
+            ->getAllClassesForDeptInstructors($group->dept_id))
             ->filter(
                 // remove classes without instructors
                 fn ($classRecord) =>
