@@ -152,7 +152,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, reactive } from "vue";
 import { dayjs, isTempId } from "@/utils";
-import { Leave, LeaveStatus, leaveStatuses, leaveTypes } from "@/types";
+import { Leave, leaveStatuses, leaveTypes } from "@/types";
 import InputGroup from "@/components/InputGroup.vue";
 import SelectGroup from "@/components/SelectGroup.vue";
 import { Td } from "@/components/Table";
@@ -163,6 +163,10 @@ import LeaveArtifacts from "./LeaveArtifacts.vue";
 import SmallButton from "./SmallButton.vue";
 import { useUserStore } from "@/stores/useUserStore";
 import SelectLeaveDate from "./SelectLeaveDate.vue";
+import {
+  getLeaveStatusLabel,
+  getLeaveStatusOptions,
+} from "@/utils/leaveStatusHelpers";
 
 const props = defineProps<{
   leave: Leave;
@@ -172,15 +176,9 @@ const isShowingDetails = ref(false);
 const isNewLeave = computed(() => isTempId(props.leave.id));
 const isEditing = ref(isNewLeave.value);
 const userStore = useUserStore();
-const leaveStatusToLabelMap: Record<LeaveStatus, string> = {
-  [leaveStatuses.ELIGIBLE]: "Eligible",
-  [leaveStatuses.PENDING]: "Pending",
-  [leaveStatuses.CONFIRMED]: "Confirmed",
-  [leaveStatuses.CANCELLED]: "Deferred",
-};
 
-const leaveStatusLabel = computed(
-  () => leaveStatusToLabelMap[props.leave.status],
+const leaveStatusLabel = computed(() =>
+  getLeaveStatusLabel(props.leave.status),
 );
 
 const canEditLeave = computed(
@@ -233,12 +231,7 @@ const leaveTypeOptions = computed(() => {
   }));
 });
 
-const leaveStatusOptions = computed(() => {
-  return Object.entries(leaveStatusToLabelMap).map(([value, text]) => ({
-    value,
-    text,
-  }));
-});
+const leaveStatusOptions = computed(() => getLeaveStatusOptions());
 
 const hasLeaveChanged = computed(() => {
   return Object.keys(localLeave).some((key) => {
