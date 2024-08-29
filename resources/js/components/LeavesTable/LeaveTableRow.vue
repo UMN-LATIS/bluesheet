@@ -71,7 +71,7 @@
         :validator="isNotEmptyString"
         label="status"
       />
-      <Chip v-else :color="statusColor">{{ leave.status }}</Chip>
+      <Chip v-else :color="statusColor">{{ leaveStatusLabel }}</Chip>
     </Td>
     <Td
       data-cy="leaveStartDate"
@@ -109,18 +109,6 @@
         "
         @update:modelValue="(date) => (localLeave.end_date = date ?? '')"
       />
-      <!-- <InputGroup
-        v-if="isEditing"
-        v-model="localLeave.end_date"
-        label="start date"
-        :required="true"
-        :showLabel="false"
-        type="date"
-        :validator="
-          (endDate) => areStartAndEndDatesValid(localLeave.start_date, endDate)
-        "
-        :validateWhenUntouched="true"
-      /> -->
       <span v-else>{{ dayjs(leave.end_date).format("MMM D, YYYY") }}</span>
     </Td>
     <Td v-if="canEditLeave">
@@ -164,7 +152,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, reactive } from "vue";
 import { dayjs, isTempId } from "@/utils";
-import { Leave, leaveStatuses, leaveTypes } from "@/types";
+import { Leave, LeaveStatus, leaveStatuses, leaveTypes } from "@/types";
 import InputGroup from "@/components/InputGroup.vue";
 import SelectGroup from "@/components/SelectGroup.vue";
 import { Td } from "@/components/Table";
@@ -184,6 +172,16 @@ const isShowingDetails = ref(false);
 const isNewLeave = computed(() => isTempId(props.leave.id));
 const isEditing = ref(isNewLeave.value);
 const userStore = useUserStore();
+const leaveStatusToLabelMap: Record<LeaveStatus, string> = {
+  [leaveStatuses.ELIGIBLE]: "Eligible",
+  [leaveStatuses.PENDING]: "Pending",
+  [leaveStatuses.CONFIRMED]: "Confirmed",
+  [leaveStatuses.CANCELLED]: "Deferred",
+};
+
+const leaveStatusLabel = computed(
+  () => leaveStatusToLabelMap[props.leave.status],
+);
 
 const canEditLeave = computed(
   () => isNewLeave.value || props.leave.canCurrentUser?.update || false,
@@ -236,9 +234,9 @@ const leaveTypeOptions = computed(() => {
 });
 
 const leaveStatusOptions = computed(() => {
-  return Object.entries(leaveStatuses).map(([text, value]) => ({
+  return Object.entries(leaveStatusToLabelMap).map(([value, text]) => ({
     value,
-    text: capitalizeEachWord(text.replace("_", " ").toLowerCase()),
+    text,
   }));
 });
 
