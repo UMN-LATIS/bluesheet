@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 
-const validStartDate = "2024-06-17"; // SU 2024 - week 1
-const validEndDate = "2024-08-11"; // SU 2024 - week 8
+const validStartDate = "2024-08-26"; // Fall 2024 start
+const validEndDate = "2025-05-25"; // Spring 2025 end
 
 function createPastLeave({ description, startDate, endDate }) {
   // see fixtures/leaveDates.json for valid dates
@@ -49,10 +49,6 @@ describe("User leaves", () => {
       method: "GET",
       url: "/api/permissions/**",
     }).as("apiPermissions");
-
-    cy.intercept("GET", "/api/leaves/leaveDates", {
-      fixture: "../fixtures/leaveDates.json",
-    }).as("apiLeaveDates");
   });
 
   context("as a user that can view leaves", () => {
@@ -258,7 +254,7 @@ describe("User leaves", () => {
         cy.get("[data-cy=leaveRow]").should("have.length", 1);
       });
 
-      it.only("allows a group manager to create a leave for a fellow group member", () => {
+      it("allows a group manager to create a leave for a fellow group member", () => {
         cy.visit(`/user/${leave.user_id}`);
 
         // show past leaves so that new leave is visible
