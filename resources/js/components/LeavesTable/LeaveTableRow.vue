@@ -71,7 +71,7 @@
         :validator="isNotEmptyString"
         label="status"
       />
-      <Chip v-else :color="statusColor">{{ leave.status }}</Chip>
+      <Chip v-else :color="statusColor">{{ leaveStatusLabel }}</Chip>
     </Td>
     <Td
       data-cy="leaveStartDate"
@@ -109,18 +109,6 @@
         "
         @update:modelValue="(date) => (localLeave.end_date = date ?? '')"
       />
-      <!-- <InputGroup
-        v-if="isEditing"
-        v-model="localLeave.end_date"
-        label="start date"
-        :required="true"
-        :showLabel="false"
-        type="date"
-        :validator="
-          (endDate) => areStartAndEndDatesValid(localLeave.start_date, endDate)
-        "
-        :validateWhenUntouched="true"
-      /> -->
       <span v-else>{{ dayjs(leave.end_date).format("MMM D, YYYY") }}</span>
     </Td>
     <Td v-if="canEditLeave">
@@ -175,6 +163,10 @@ import LeaveArtifacts from "./LeaveArtifacts.vue";
 import SmallButton from "./SmallButton.vue";
 import { useUserStore } from "@/stores/useUserStore";
 import SelectLeaveDate from "./SelectLeaveDate.vue";
+import {
+  getLeaveStatusLabel,
+  getLeaveStatusOptions,
+} from "@/utils/leaveStatusHelpers";
 
 const props = defineProps<{
   leave: Leave;
@@ -235,12 +227,11 @@ const leaveTypeOptions = computed(() => {
   }));
 });
 
-const leaveStatusOptions = computed(() => {
-  return Object.entries(leaveStatuses).map(([text, value]) => ({
-    value,
-    text: capitalizeEachWord(text.replace("_", " ").toLowerCase()),
-  }));
-});
+const leaveStatusOptions = computed(() => getLeaveStatusOptions());
+
+const leaveStatusLabel = computed(() =>
+  getLeaveStatusLabel(props.leave.status),
+);
 
 const hasLeaveChanged = computed(() => {
   return Object.keys(localLeave).some((key) => {
@@ -277,7 +268,7 @@ const statusColor = computed(() => {
       return "orange-600";
     case leaveStatuses.CONFIRMED:
       return "green-600";
-    case leaveStatuses.CANCELLED:
+    case leaveStatuses.DEFERRED:
       return "neutral-400";
     default:
       return "neutral-400";

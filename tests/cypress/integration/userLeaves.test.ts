@@ -103,7 +103,7 @@ describe("User leaves", () => {
             dayjs(validEndDate).format("MMM D, YYYY"),
           );
           cy.get("[data-cy=leaveType]").contains("Development");
-          cy.get("[data-cy=leaveStatus]").contains("confirmed");
+          cy.get("[data-cy=leaveStatus]").contains("Confirmed");
         });
     });
 
