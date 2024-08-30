@@ -24,7 +24,7 @@ class GroupCourseController extends Controller {
         $localCourses = $group->courses;
 
         $sisCourses = collect($this->bandaid
-            ->getDeptClassList($group->dept_id))
+            ->getAllClassesForDeptInstructors($group->dept_id))
             ->map(function ($classRecord) {
                 $classRecord->source = 'sis';
                 $classRecord->courseCode = join('-', [

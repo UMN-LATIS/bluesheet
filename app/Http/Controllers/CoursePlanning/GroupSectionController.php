@@ -26,7 +26,7 @@ class GroupSectionController extends Controller {
 
         // each "section" contains a different enrolled instructor
         $sisSections = collect($this->bandaid
-            ->getDeptClassList($group->dept_id))
+            ->getAllClassesForDeptInstructors($group->dept_id))
             ->filter(
                 // filter out sections with no instructor
                 fn ($classRecord) =>
