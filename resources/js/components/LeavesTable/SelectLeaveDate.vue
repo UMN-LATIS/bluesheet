@@ -43,7 +43,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, ref, onMounted } from "vue";
+import { computed, ref, onMounted, watch } from "vue";
 import ComboBox, { ComboBoxOption } from "@/components/ComboBox.vue";
 import InputGroup from "../InputGroup.vue";
 import dayjs from "dayjs";
@@ -73,12 +73,6 @@ const showCustomDateInput = ref(false);
 const termPayrollDatesStore = useTermPayrollDatesStore();
 onMounted(async () => {
   await termPayrollDatesStore.init();
-
-  // once payroll dates are loaded, if modelValue is a
-  // custom date, show the custom date input
-  if (isCustomDate.value) {
-    showCustomDateInput.value = true;
-  }
 });
 
 const isCustomDate = computed(
@@ -103,6 +97,17 @@ const comboboxOptions = computed(() => {
     })
     .filter((option) => !props.isOptionDisabled(option));
 });
+
+// if combobox options update (e.g. when term payroll dates are loaded,
+// or the valid end dates change), re-check if the current modelValue
+// is a custom date and show the custom date input
+watch(
+  comboboxOptions,
+  () => {
+    showCustomDateInput.value = isCustomDate.value;
+  },
+  { immediate: true },
+);
 
 const localComboBoxValue = computed((): ComboBoxOption | null => {
   if (!props.modelValue) {
