@@ -64,7 +64,7 @@ class Bandaid {
     public function getDepartments(array $deptIds): array {
         try {
             $result = $this->cachedGet(
-                '/department/?' . urldecode(http_build_query(["deptId" => $deptIds]))
+                '/department?' . urldecode(http_build_query(["deptId" => $deptIds]))
             );
             return $result;
         } catch (RequestException $e) {
