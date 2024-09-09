@@ -123,7 +123,8 @@
               userStore.saveLeave({
                 ...leave,
                 ...localLeave,
-              })
+              });
+              isEditing = false;
             "
           >
             Save
