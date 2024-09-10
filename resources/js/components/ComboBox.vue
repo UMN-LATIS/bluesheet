@@ -51,8 +51,8 @@
       <Teleport to="body">
         <ComboboxOptions
           ref="floatingRef"
-          class="tw-absolute tw-mt-1 tw-max-h-72 tw-w-56 tw-overflow-auto tw-rounded-md tw-bg-white tw-py-1 tw-text-base tw-shadow-lg tw-ring-1 tw-ring-black tw-ring-opacity-5 focus:tw-outline-none sm:tw-text-sm tw-pl-0"
-          :style="floatingStylesHack" style="z-index: 10000;"
+          class="tw-absolute tw-z-[10000] tw-max-h-72 tw-w-56 tw-overflow-auto tw-rounded-md tw-bg-white tw-py-1 tw-text-base tw-shadow-lg tw-ring-1 tw-ring-black tw-ring-opacity-5 focus:tw-outline-none sm:tw-text-sm tw-pl-0"
+          :style="floatingStylesHack"
         >
           <ComboboxOption
             v-for="option in filteredOptions"
@@ -131,7 +131,7 @@ import {
 } from "@headlessui/vue";
 import { CSSClass } from "@/types";
 import Label from "./Label.vue";
-import { useFloating, offset, flip } from "@floating-ui/vue";
+import { useFloating, offset, flip, autoUpdate } from "@floating-ui/vue";
 
 export interface ComboBoxOption {
   id?: string | number; // new options might have an undefined id
@@ -216,6 +216,7 @@ const floatingRef = ref<HTMLElement | null>(null);
 
 const { floatingStyles } = useFloating(anchorRef, floatingRef, {
   middleware: [offset(10), flip()],
+  whileElementsMounted: autoUpdate,
 });
 
 // This is a hack to fix an issue where page scroll
