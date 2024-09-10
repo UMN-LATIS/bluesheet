@@ -51,8 +51,8 @@
       <Teleport to="body">
         <ComboboxOptions
           ref="floatingRef"
-          class="tw-absolute tw-z-10 tw-mt-1 tw-max-h-72 tw-w-56 tw-overflow-auto tw-rounded-md tw-bg-white tw-py-1 tw-text-base tw-shadow-lg tw-ring-1 tw-ring-black tw-ring-opacity-5 focus:tw-outline-none sm:tw-text-sm tw-pl-0"
-          :style="floatingStylesHack"
+          class="tw-absolute tw-mt-1 tw-max-h-72 tw-w-56 tw-overflow-auto tw-rounded-md tw-bg-white tw-py-1 tw-text-base tw-shadow-lg tw-ring-1 tw-ring-black tw-ring-opacity-5 focus:tw-outline-none sm:tw-text-sm tw-pl-0"
+          :style="floatingStylesHack" style="z-index: 10000;"
         >
           <ComboboxOption
             v-for="option in filteredOptions"
