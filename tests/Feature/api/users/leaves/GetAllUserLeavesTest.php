@@ -143,6 +143,10 @@ it('does not let BlueSheet Managers view leaves of instructors outside their gro
 
     $BANDAID_API = config('bandaid.baseUri');
     Http::fake([
+        // mock the getEmployeesForDept response, needed for checking
+        // whether the instructor has an active status
+        "{$BANDAID_API}/department/*/employees" => mockResponse("Bandaid/mockGetEmployeesForDept.json"),
+
         // Now, put the $instructor1 in the mock
         // reponse for getEmployeesForDept($deptId)
         "{$BANDAID_API}/classes/list/{$deptId}" => Http::response([
