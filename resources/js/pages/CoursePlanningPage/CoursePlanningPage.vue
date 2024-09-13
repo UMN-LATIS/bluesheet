@@ -113,7 +113,7 @@
 </template>
 <script setup lang="ts">
 import WideLayout from "@/layouts/WideLayout.vue";
-import { computed, ref, watch, onMounted } from "vue";
+import { computed, ref, watch, onMounted, nextTick } from "vue";
 import { PersonTable } from "./components/PersonTable";
 import { useCoursePlanningStore } from "./stores/useCoursePlanningStore";
 import { usePermissionsStore } from "@/stores/usePermissionsStore";
@@ -265,10 +265,15 @@ function handleTabChange(tab: Tab) {
 
 const personTableRef = ref<HTMLElement>();
 watch(
-  [isLoadingComplete, personTableRef],
+  [
+    isLoadingComplete,
+    personTableRef,
+    () => coursePlanningStore.filters.startTermId,
+    () => coursePlanningStore.filters.endTermId,
+  ],
   () => {
     if (!isLoadingComplete.value || !personTableRef.value) return;
-    scrollToCurrentTerm();
+    nextTick(() => scrollToCurrentTerm());
   },
   { immediate: true },
 );
