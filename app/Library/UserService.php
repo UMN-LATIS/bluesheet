@@ -142,17 +142,24 @@ class UserService {
 
         // get employee info from bandaid for job code and category
         // note: only active employees will have a job code
-        $activeDeptEmployees = $this->bandaid->getEmployees($allDeptEmplids);
+        $allDeptInstructors = $this->bandaid->getEmployees($allDeptEmplids);
 
-        $activeDeptEmployeeLookup = collect($activeDeptEmployees)->keyBy('EMPLID');
+        $allDeptInstructorLookup = collect($allDeptInstructors)->keyBy('EMPLID');
+
+        // get active employees for dept
+        $activeDeptEmployees = collect($this->bandaid->getEmployeesForDepartment($deptId))
+            ->keyBy('EMPLID');
+
 
         $instructors = $this
             ->findOrCreateManyByEmplId($allDeptEmplids)
-            ->map(function ($user) use ($activeDeptEmployeeLookup) {
-                $activeDeptEmployee = $activeDeptEmployeeLookup->get($user->emplid) ?? null;
+            ->map(function ($user) use ($allDeptInstructorLookup, $activeDeptEmployees) {
+                $instructor = $allDeptInstructorLookup->get($user->emplid) ?? null;
 
-                $user->jobCategory = $activeDeptEmployee?->CATEGORY ?? null;
-                $user->jobCode = $activeDeptEmployee?->JOBCODE ?? null;
+                $user->hasActiveDeptAppointment = $activeDeptEmployees->has($user->emplid);
+
+                $user->jobCategory = $instructor?->CATEGORY ?? null;
+                $user->jobCode = $instructor?->JOBCODE ?? null;
                 return $user;
             })
             ->values();
