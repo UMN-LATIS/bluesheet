@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Resources\Json\JsonResource;
 use App\Library\Utilities;
 
-class PersonResource extends JsonResource {
+class DeptInstructorResource extends JsonResource {
     /**
      * Transform the resource into an array.
      *
@@ -22,6 +22,7 @@ class PersonResource extends JsonResource {
             'title' => $this->title,
             'leaveIds' => $this->leaveIds,
             'academicAppointment' => Utilities::trimWithFallback($this->jobCategory),
+            'hasActiveDeptAppointment' => $this->hasActiveDeptAppointment,
             'jobCode' => $this->jobCode,
             'emplid' => $this->emplid,
             'sslEligible' => $this->ssl_eligible,

@@ -47,6 +47,7 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
       excludedCourseLevels: new Set(),
       excludedAcadAppts: new Set(),
       includedEnrollmentRoles: new Set(["PI"]),
+      onlyActiveAppointments: true,
       minSectionEnrollment: 0,
       search: "",
     },
@@ -205,7 +206,9 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
       const isPersonVisibleLookupByEmplId: Record<T.Person["emplid"], boolean> =
         {};
 
-      const people = stores.personStore.allPeople;
+      const people = state.filters.onlyActiveAppointments
+        ? stores.personStore.peopleWithActiveAppointments
+        : stores.personStore.allPeople;
 
       people.forEach((person) => {
         const hasVisibleRole = methods.isPersonEnrolledWithVisibleRole(person);
@@ -730,6 +733,7 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
         excludedCourseLevels: new Set(),
         excludedAcadAppts: new Set(),
         includedEnrollmentRoles: new Set(["PI"]),
+        onlyActiveAppointments: true,
         minSectionEnrollment: 0,
         search: "",
       };

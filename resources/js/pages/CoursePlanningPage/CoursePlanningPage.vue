@@ -253,6 +253,13 @@ function handleTabChange(tab: Tab) {
 
   setTimeout(() => {
     coursePlanningStore.setIncludedEnrollmentRoles(tabRoleLookup[tab.id]);
+
+    // the default active appointment filter will mean that no TA's are shown
+    // so we need to change it to show all appointments if the tab is the TA tab
+    // not sure if this is the best way to do this... but it works
+    if (tab.id === "tas") {
+      coursePlanningStore.filters.onlyActiveAppointments = false;
+    }
   }, 0);
 }
 
