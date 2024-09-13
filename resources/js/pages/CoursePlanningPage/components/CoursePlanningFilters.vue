@@ -124,14 +124,35 @@
           <span class="tw-text-neutral-400 tw-text-xs ml-1">({{ count }})</span>
         </label>
       </fieldset>
-      <fieldset>
-        <div class="tw-flex tw-items-baseline tw-mb-1">
-          <legend
-            class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold tw-my-1"
-          >
-            Minimum Enrollment
-          </legend>
-        </div>
+      <fieldset class="tw-flex tw-flex-col tw-text-sm tw-mt-1.5">
+        <legend
+          class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold"
+        >
+          Appointment Status
+        </legend>
+        <label :class="{ active: filters.onlyActiveAppointments }">
+          <input
+            v-model="filters.onlyActiveAppointments"
+            type="radio"
+            :value="true"
+          />
+          Active
+        </label>
+        <label :class="{ active: !filters.onlyActiveAppointments }">
+          <input
+            v-model="filters.onlyActiveAppointments"
+            type="radio"
+            :value="false"
+          />
+          All
+        </label>
+      </fieldset>
+      <fieldset class="tw-mt-1.5">
+        <legend
+          class="tw-uppercase tw-text-xs tw-text-neutral-500 tw-tracking-wide tw-font-semibold tw-my-1"
+        >
+          Minimum Enrollment
+        </legend>
         <InputGroup
           v-model="minSectionEnrollmentRaw"
           label="Minimum Enrollment"

@@ -235,6 +235,7 @@ export interface Person {
   emplid: number;
   title: string;
   jobCode: string;
+  hasActiveDeptAppointment: boolean;
   givenName: string;
   surName: string;
   displayName: string;
@@ -380,6 +381,7 @@ export interface CoursePlanningFilters {
   excludedAcadAppts: Set<string>;
   minSectionEnrollment: number;
   includedEnrollmentRoles: Set<EnrollmentRole>;
+  onlyActiveAppointments: boolean;
   search: string;
   inPlanningMode: boolean;
 }

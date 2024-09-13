@@ -24,6 +24,9 @@ export const usePersonStore = defineStore("person", () => {
       ) as T.Person[];
       return people.sort(sortByName);
     }),
+    peopleWithActiveAppointments: computed((): T.Person[] => {
+      return getters.allPeople.value.filter((p) => p.hasActiveDeptAppointment);
+    }),
     getPersonByEmplId: computed(
       () =>
         (emplId: T.Person["emplid"]): T.Person | null => {
