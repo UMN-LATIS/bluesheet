@@ -215,14 +215,9 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
           false
         );
 
-        const hasVisibleSection = methods.isPersonEnrolledInVisibleSection(
-          person.emplid,
-        );
-
         const isPersonVisible =
           hasVisibleRole &&
           isAcadApptVisible &&
-          hasVisibleSection &&
           (methods.isPersonMatchingSearch(person) ||
             methods.isPersonEnrolledInCourseMatchingSearch(person));
 
