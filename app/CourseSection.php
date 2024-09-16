@@ -4,11 +4,12 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Contracts\CourseSectionInterface;
 
 /**
  * @mixin IdeHelperCourseSection
  */
-class CourseSection extends Model {
+class CourseSection extends Model implements CourseSectionInterface {
     use HasFactory;
 
     protected $fillable = [
@@ -32,4 +33,62 @@ class CourseSection extends Model {
     public function enrollments() {
         return $this->hasMany(Enrollment::class);
     }
+
+    public function getApiId(): string {
+        return join('-',[
+            $this->getCourseApiId(),
+            $this->class_section,
+            $this->term_id
+        ]);
+    }
+
+    public function getCourseApiId(): string
+    {
+        return $this->course_id; // "HIST-1001W"
+    }
+
+    public function getDBId(): int | null {
+        return $this->id;
+    }
+
+    public function getTermId(): int {
+        return $this->term_id;
+    }
+
+    public function getClassSection(): string {
+        return $this->class_section;
+    }
+
+    public function getCourse(): Course {
+        return $this->course;
+    }
+
+    public function getEnrollmentCap(): int {
+        return 0;
+    }
+
+    public function getEnrollmentTotal(): int {
+        return 0;
+    }
+
+    public function getWaitlistCap(): int {
+        return 0;
+    }
+
+    public function getWaitlistTotal(): int {
+        return 0;
+    }
+
+    public function isCancelled(): bool {
+        return $this->is_cancelled;
+    }
+
+    public function isPublished(): bool {
+        return $this->is_published;
+    }
+
+    public function getSource(): string {
+        return 'local';
+    }
+
 }

@@ -10,6 +10,7 @@ use App\Http\Resources\EnrollmentResource;
 use Illuminate\Http\Request;
 use App\Library\Bandaid;
 use App\Constants\Permissions;
+use App\DTOs\SISCourseSectionDTO;
 
 class GroupSectionController extends Controller {
     protected $bandaid;
@@ -33,7 +34,7 @@ class GroupSectionController extends Controller {
                 $classRecord->INSTRUCTOR_EMPLID !== null &&
                     // and people who aren't instructors or TAs
                     in_array($classRecord->INSTRUCTOR_ROLE, ['PI', 'TA'])
-            );
+            )->map(fn ($classRecord) => new SISCourseSectionDTO($classRecord));
 
         $allGroupSections = $dbSections->concat($sisSections);
 
