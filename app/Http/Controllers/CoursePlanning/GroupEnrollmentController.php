@@ -10,6 +10,7 @@ use App\Http\Resources\EnrollmentResource;
 use App\User;
 use App\Enrollment;
 use App\Constants\Permissions;
+use App\DTOs\SISEnrollmentDTO;
 
 
 class GroupEnrollmentController extends Controller {
@@ -36,7 +37,8 @@ class GroupEnrollmentController extends Controller {
                 $classRecord->INSTRUCTOR_EMPLID !== null &&
                     // and people who aren't instructors or TAs
                     in_array($classRecord->INSTRUCTOR_ROLE, ['PI', 'TA'])
-            )->sortBy('sectionId');
+            )->sortBy('sectionId')
+            ->map(fn ($classRecord) => new SISEnrollmentDTO($classRecord));
 
         $allGroupEnrollments = $dbEnrollments->concat($sisEnrollments);
 

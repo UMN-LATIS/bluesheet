@@ -4,11 +4,12 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Contracts\EnrollmentInterface;
 
 /**
  * @mixin IdeHelperEnrollment
  */
-class Enrollment extends Model {
+class Enrollment extends Model implements EnrollmentInterface {
     use HasFactory;
 
     protected $fillable = [
@@ -23,5 +24,37 @@ class Enrollment extends Model {
 
     public function user() {
         return $this->belongsTo(User::class);
+    }
+
+    public function getApiId(): string {
+        return join('_', [
+            $this->user->emplid,
+            $this->courseSection->getApiId(),
+        ]);
+    }
+
+    public function getDBId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getEmplid(): string
+    {
+        return $this->user->emplid;
+    }
+
+    public function getSectionApiId(): string
+    {
+        return $this->courseSection->getApiId();
+    }
+
+    public function getRole(): string
+    {
+        return $this->role;
+    }
+
+    public function getSource(): string
+    {
+        return 'local';
     }
 }
