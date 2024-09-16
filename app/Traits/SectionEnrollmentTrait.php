@@ -16,9 +16,9 @@ trait SectionEnrollmentTrait {
         $prefix = $this->isFromSIS() ? 'sis' : 'db';
         return join('-', [
             $prefix,
-            $this->CLASS_NUMBER ??
-                $this->course_section_id ??
-                $this->id
+            $this->getCourseId(),
+            $this->CLASS_SECTION,
+            $this->TERM,
         ]);
     }
 
