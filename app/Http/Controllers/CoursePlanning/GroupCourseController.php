@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Library\Bandaid;
 use App\Group;
 use App\Http\Resources\CourseResource;
+use App\DTOs\SISCourseDTO;
 
 class GroupCourseController extends Controller {
 
@@ -25,16 +26,9 @@ class GroupCourseController extends Controller {
 
         $sisCourses = collect($this->bandaid
             ->getAllClassesForDeptInstructors($group->dept_id))
-            ->map(function ($classRecord) {
-                $classRecord->source = 'sis';
-                $classRecord->courseCode = join('-', [
-                    $classRecord->SUBJECT,
-                    $classRecord->CATALOG_NUMBER,
-                ]);
-                return $classRecord;
-            })
-            ->unique('courseCode')
-            ->sortBy('courseCode');
+            ->map(fn ($class) => new SISCourseDTO($class))
+            ->unique(fn ($course) => $course->getCourseCode())
+            ->sortBy(fn ($course) => $course->getCourseCode());
 
         return CourseResource::collection($localCourses->concat($sisCourses));
     }
