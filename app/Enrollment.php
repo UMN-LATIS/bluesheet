@@ -38,7 +38,7 @@ class Enrollment extends Model implements EnrollmentInterface {
         return $this->id;
     }
 
-    public function getEmplid(): string
+    public function getEmplid(): int
     {
         return $this->user->emplid;
     }
@@ -56,5 +56,10 @@ class Enrollment extends Model implements EnrollmentInterface {
     public function getSource(): string
     {
         return 'local';
+    }
+
+    public function getSectionDBId(): ?int
+    {
+        return $this->courseSection->id;
     }
 }

@@ -52,7 +52,7 @@ class SISEnrollmentDTO implements EnrollmentInterface {
         return null;
     }
 
-    public function getEmplid(): string
+    public function getEmplid(): int
     {
         return $this->emplid;
     }
@@ -70,5 +70,10 @@ class SISEnrollmentDTO implements EnrollmentInterface {
     public function getSource(): string
     {
         return 'sis';
+    }
+
+    public function getSectionDBId(): ?int
+    {
+        return null;
     }
 }

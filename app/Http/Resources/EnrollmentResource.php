@@ -15,6 +15,7 @@ class EnrollmentResource extends JsonResource {
             'dbId' => $enrollment->getDBId(),
             'emplid' => $enrollment->getEmplid(),
             'sectionId' => $enrollment->getSectionApiId(),
+            'sectionDbId' => $enrollment->getSectionDBId(),
             'role' => $enrollment->getRole(),
             'source' => $enrollment->getSource(),
         ];

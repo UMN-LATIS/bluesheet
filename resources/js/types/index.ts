@@ -247,21 +247,12 @@ export interface Person {
   sslApplyEligible: boolean;
 }
 
-/**
- * a person in a course section with a particular role
- * like "primary instructor" or "teaching assistant"
- */
-
-type DBEnrollmentId = `db-${NonNullable<Enrollment["dbId"]>}`;
-type SISEnrollmentId = `sis-${NonNullable<
-  Enrollment["sectionId"]
->}-${NonNullable<Enrollment["emplid"]>}`;
-
 export interface Enrollment {
-  id: DBEnrollmentId | SISEnrollmentId;
+  id: `${Person["emplid"]}_${CourseSection["id"]}`;
   dbId: number | null;
   emplid: Person["emplid"];
   sectionId: CourseSection["id"];
+  sectionDbId: CourseSection["dbId"];
   role: EnrollmentRole;
 }
 
@@ -272,14 +263,8 @@ export interface AcademicDepartment {
   abbreviation: string;
 }
 
-// these courses come from the bandaid api and are all considered published
-export type SISSectionId = `sis-${NonNullable<CourseSection["classNumber"]>}`;
-
-// these courses come from the app db and are likely unpublished
-export type DbSectionId = `db-${NonNullable<CourseSection["dbId"]>}`;
-
 export interface CourseSection {
-  id: SISSectionId | DbSectionId;
+  id: `${Course["id"]}-${CourseSection["classSection"]}-${Term["id"]}`;
   classNumber: ApiCourseSectionRecord["classNumber"];
   dbId: ApiCourseSectionRecord["dbId"];
   courseId: Course["id"]; // short code like "HIST-1001W"
@@ -292,6 +277,7 @@ export interface CourseSection {
   isCancelled: boolean;
   isPublished: boolean; // true if from bandaid, false if from app DB
   groupId: Group["id"];
+  source: "sis" | "local";
 }
 
 export interface CourseSectionWithEnrollments extends CourseSection {
@@ -311,8 +297,11 @@ export interface Course {
   source: "sis" | "local";
 }
 
+type CourseSectionId =
+  `${Course["id"]}-${CourseSection["classSection"]}-${Term["id"]}`;
+
 export interface ApiCourseSectionRecord {
-  id: SISSectionId | DbSectionId;
+  id: CourseSectionId;
   classNumber: number | null; // null if from db
   dbId: number | null; // null if from sis (bandaid)
   termId: number;
@@ -394,6 +383,7 @@ export interface SerializedCoursePlanningFilters {
   excludedAcadAppts: string[];
   minSectionEnrollment: number;
   includedEnrollmentRoles: EnrollmentRole[];
+  onlyActiveAppointments: boolean;
   search: string;
   inPlanningMode: boolean;
 }

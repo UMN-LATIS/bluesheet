@@ -55,6 +55,8 @@ class GroupSectionController extends Controller {
         // create new section
         $section = $group->courseSections()->create($validated);
 
+        $section->refresh();
+
         return new CourseSectionResource($section);
     }
 
