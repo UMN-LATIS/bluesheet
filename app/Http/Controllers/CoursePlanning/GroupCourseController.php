@@ -26,11 +26,13 @@ class GroupCourseController extends Controller {
 
         $sisCourses = collect($this->bandaid
             ->getAllClassesForDeptInstructors($group->dept_id))
-            ->map(fn ($class) => new SISCourseDTO($class))
+            ->map(fn ($class) => new SISCourseDTO($class));
+
+        $combinedCourses = $localCourses->concat($sisCourses)
             ->unique(fn ($course) => $course->getCourseCode())
             ->sortBy(fn ($course) => $course->getCourseCode());
 
-        return CourseResource::collection($localCourses->concat($sisCourses));
+        return CourseResource::collection($combinedCourses);
     }
 
     public function store(Request $request, Group $group) {
