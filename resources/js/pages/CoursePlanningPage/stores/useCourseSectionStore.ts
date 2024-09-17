@@ -117,7 +117,9 @@ export const useCourseSectionStore = defineStore("couseSection", () => {
         section,
         state.activeGroupId,
       );
-      state.sectionLookup[section.id] = updatedSection;
+
+      delete state.sectionLookup[section.id];
+      state.sectionLookup[updatedSection.id] = updatedSection;
       return updatedSection;
     },
 
