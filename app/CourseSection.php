@@ -35,10 +35,12 @@ class CourseSection extends Model implements CourseSectionInterface {
     }
 
     public function getApiId(): string {
+        // note: we're using a id field that remains fixed for the record
+        // even after updates to avoid issues when a user changes the term
+        // or course or instructor
         return join('-',[
-            $this->getCourseApiId(),
-            $this->class_section,
-            $this->term_id
+            'local-db',
+            $this->id,
         ]);
     }
 

@@ -27,9 +27,12 @@ class Enrollment extends Model implements EnrollmentInterface {
     }
 
     public function getApiId(): string {
-        return join('_', [
-            $this->user->emplid,
-            $this->courseSection->getApiId(),
+        // note: we're using a id field that remains fixed for the record
+        // even after updates to avoid issues when a user changes the term
+        // or course or instructor
+        return join('-', [
+            'local-db',
+            $this->id,
         ]);
     }
 
