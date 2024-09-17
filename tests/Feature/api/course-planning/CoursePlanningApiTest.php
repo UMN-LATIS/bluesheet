@@ -237,7 +237,7 @@ describe('GET /api/groups/:groupId/sections', function () {
         // expect that the unofficial section is included
         $sectionFromApi = collect($res->json())->firstWhere('courseId', $section->course_id);
         expect($sectionFromApi)->toEqual([
-            'id' => "TEST-1234-{$section->class_section}-{$section->term_id}",
+            'id' => "local-db-{$section->id}",
             'dbId' => $section->id,
             'courseId' => $section->course_id,
             'termId' => $section->term_id,
