@@ -13,12 +13,19 @@ trait SectionEnrollmentTrait {
     }
 
     protected function getSectionId() {
-        $prefix = $this->isFromSIS() ? 'sis' : 'db';
+        if ($this->isFromSIS()) {
+            return join('-', [
+                'sis',
+                $this->getCourseId(),
+                $this->CLASS_SECTION,
+                $this->TERM,
+            ]);
+        }
+
         return join('-', [
-            $prefix,
-            $this->CLASS_NUMBER ??
-                $this->course_section_id ??
-                $this->id
+            'db',
+            $this->course_section_id ?? $this->id,
+            $this->TERM,
         ]);
     }
 
