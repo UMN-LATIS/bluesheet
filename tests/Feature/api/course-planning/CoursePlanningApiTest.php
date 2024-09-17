@@ -62,12 +62,12 @@ describe("GET /api/course-planning/groups/:groupId/courses", function () {
         $res = getJson("/api/course-planning/groups/{$this->group->id}/courses");
 
         // expect that the unofficial course is included
-        $courseFromApi = collect($res->json())->firstWhere('id', $course->courseCode);
+        $courseFromApi = collect($res->json())->firstWhere('id', 'TEST-1234');
 
 
         expect($courseFromApi)->not()->toBeNull();
         expect($courseFromApi)->toMatchArray([
-            'id' => $course->courseCode,
+            'id' => 'TEST-1234',
             'title' => $course->title,
             'subject' => $course->subject,
             'catalogNumber' => $course->catalog_number,
@@ -208,9 +208,8 @@ describe('GET /api/groups/:groupId/sections', function () {
         expect($res->status())->toBe(200);
         expect($res->json())->not()->toBeEmpty();
         expect($res->json()[0])->toEqual([
-            'id' => 'sis-87153',
+            'id' => 'AFRO-3654-001-1195',
             'courseId' => 'AFRO-3654',
-            'classNumber' => 87153,
             'dbId' => null,
             'termId' => 1195,
             'classSection' => '001',
@@ -220,6 +219,7 @@ describe('GET /api/groups/:groupId/sections', function () {
             'waitlistTotal' => 0,
             'isCancelled' => true,
             'isPublished' => true,
+            'source' => 'sis'
         ]);
     });
 
@@ -237,9 +237,8 @@ describe('GET /api/groups/:groupId/sections', function () {
         // expect that the unofficial section is included
         $sectionFromApi = collect($res->json())->firstWhere('courseId', $section->course_id);
         expect($sectionFromApi)->toEqual([
-            'id' => "db-{$section->id}",
+            'id' => "TEST-1234-{$section->class_section}-{$section->term_id}",
             'dbId' => $section->id,
-            'groupId' => $section->group_id,
             'courseId' => $section->course_id,
             'termId' => $section->term_id,
             'classSection' => $section->class_section,
@@ -249,7 +248,7 @@ describe('GET /api/groups/:groupId/sections', function () {
             'waitlistTotal' => 0,
             'isCancelled' => false,
             'isPublished' => false,
-            'classNumber' => null,
+            'source' => 'local'
         ]);
     });
 

@@ -51,11 +51,11 @@ class Course extends Model implements CourseInterface {
     }
 
     public function getSource(): string {
-        return $this->source;
+        return 'local';
     }
 
     public function getApiId(): string {
-        return $this->courseCode;
+        return $this->getCourseCode();
     }
 
 }
