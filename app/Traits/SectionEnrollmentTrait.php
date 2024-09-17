@@ -25,7 +25,7 @@ trait SectionEnrollmentTrait {
         return join('-', [
             'db',
             $this->course_section_id ?? $this->id,
-            $this->TERM,
+            $this->term_id,
         ]);
     }
 

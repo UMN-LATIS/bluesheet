@@ -208,7 +208,7 @@ describe('GET /api/groups/:groupId/sections', function () {
         expect($res->status())->toBe(200);
         expect($res->json())->not()->toBeEmpty();
         expect($res->json()[0])->toEqual([
-            'id' => 'sis-87153',
+            'id' => 'sis-AFRO-3654-001-1195',
             'courseId' => 'AFRO-3654',
             'classNumber' => 87153,
             'dbId' => null,
@@ -237,7 +237,7 @@ describe('GET /api/groups/:groupId/sections', function () {
         // expect that the unofficial section is included
         $sectionFromApi = collect($res->json())->firstWhere('courseId', $section->course_id);
         expect($sectionFromApi)->toEqual([
-            'id' => "db-{$section->id}",
+            'id' => "db-{$section->id}-{$section->term_id}",
             'dbId' => $section->id,
             'groupId' => $section->group_id,
             'courseId' => $section->course_id,
