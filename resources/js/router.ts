@@ -11,6 +11,7 @@ import ReportListPage from "./pages/ReportListPage.vue";
 import RoleListPage from "./pages/RoleListPage.vue";
 import RolePage from "./pages/RolePage.vue";
 import ErrorPage from "./pages/ErrorPage.vue";
+import TestComboBoxPage from "./pages/TestComboBoxPage/TestComboBoxPage.vue";
 
 // reports
 import CeddLikeReportPage from "./pages/reports/CeddLikeReportPage.vue";
@@ -144,6 +145,10 @@ export const router = createRouter({
     {
       path: "/reports/schedulingReport/:groupId",
       redirect: (to) => `/course-planning/groups/${to.params.groupId}`,
+    },
+    {
+      path: "/test/combobox",
+      component: TestComboBoxPage,
     },
     {
       name: "error",
