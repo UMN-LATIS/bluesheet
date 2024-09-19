@@ -7,7 +7,7 @@
       }"
       >{{ label }}</label
     >
-    <div ref="comboboxContainerRef" @keydown="handleKeyDown">
+    <div ref="comboboxContainerRef" class="tw-cursor-pointer">
       <button
         v-if="modelValue"
         ref="selectedItemRef"
@@ -29,11 +29,17 @@
           aria-autocomplete="list"
           :aria-expanded="areOptionsOpen"
           @focus="areOptionsOpen = true"
+          @keydown="handleKeyDown"
         />
-        <ChevronDownIcon
-          class="tw-w-6 tw-h-6 tw-text-neutral-900"
-          aria-hidden="true"
-        />
+        <button
+          class="tw-flex tw-items-center tw-justify-center tw-bg-transparent tw-border-none tw-p-2 tw-rounded-md"
+          @click="areOptionsOpen = !areOptionsOpen"
+        >
+          <ChevronDownIcon
+            class="tw-w-6 tw-h-6 tw-text-neutral-900"
+            aria-hidden="true"
+          />
+        </button>
       </div>
 
       <div
@@ -47,7 +53,7 @@
           role="listbox"
         >
           <ComboBoxOption
-            v-for="option in options"
+            v-for="option in filteredOptions"
             :key="option.id ?? option.label"
             class="tw-list-none"
             role="option"
@@ -66,6 +72,7 @@ import { ref, computed } from "vue";
 import { ComboBoxOptionType, ComboBoxOption } from ".";
 import { onClickOutside } from "@vueuse/core";
 import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
+import { first } from "lodash";
 
 const props = withDefaults(
   defineProps<{
@@ -92,18 +99,26 @@ const areOptionsOpen = ref(false);
 const comboboxContainerRef = ref<HTMLElement | null>(null);
 const selectedItemRef = ref<HTMLElement | null>(null);
 const comboboxOptionsRef = ref<HTMLElement | null>(null);
-const highlightedOptionIndex = ref<number | null>(null);
+const highlightedOption = ref<ComboBoxOptionType | null>(null);
 
-const highlightedOption = computed(() => {
-  if (highlightedOptionIndex.value === null) {
-    return null;
-  }
+const filteredOptions = computed(() => {
+  const lcQuery = query.value.toLowerCase();
+  return props.options.filter(
+    (option) =>
+      option.label.toLowerCase().includes(lcQuery) ||
+      option.secondaryLabel?.toLowerCase().includes(lcQuery),
+  );
+});
 
-  return props.options[highlightedOptionIndex.value];
+const indexOfHighlightedOption = computed(() => {
+  const index = filteredOptions.value.findIndex(
+    (option) => option?.id === highlightedOption.value?.id,
+  );
+  return index === -1 ? null : index;
 });
 
 function isHighlighted(option: ComboBoxOptionType) {
-  return highlightedOption.value === option;
+  return highlightedOption.value?.id === option.id;
 }
 
 function isSelected(option: ComboBoxOptionType) {
@@ -113,7 +128,8 @@ function isSelected(option: ComboBoxOptionType) {
 function handleSelectOption(option: ComboBoxOptionType) {
   emit("update:modelValue", option);
   areOptionsOpen.value = false;
-  reset();
+  query.value = "";
+  highlightedOption.value = null;
   selectedItemRef.value?.focus();
 }
 
@@ -121,28 +137,35 @@ onClickOutside(comboboxContainerRef, () => {
   areOptionsOpen.value = false;
 });
 
-function reset() {
-  query.value = "";
-  highlightedOptionIndex.value = null;
-}
-
-function highlightedNextOption() {
-  if (highlightedOptionIndex.value === null) {
-    highlightedOptionIndex.value = 0;
+function highlightNextOption() {
+  if (
+    highlightedOption.value === null ||
+    indexOfHighlightedOption.value === null
+  ) {
+    highlightedOption.value = first(filteredOptions.value) ?? null;
+    console.log(highlightedOption.value);
     return;
   }
-  highlightedOptionIndex.value = Math.min(
-    highlightedOptionIndex.value + 1,
-    props.options.length - 1,
+
+  const nextIndex = Math.min(
+    indexOfHighlightedOption.value + 1,
+    filteredOptions.value.length - 1,
   );
+
+  highlightedOption.value = filteredOptions.value[nextIndex];
 }
 
-function highlightedPreviousOption() {
-  if (highlightedOptionIndex.value === null) {
-    highlightedOptionIndex.value = props.options.length - 1;
+function highlightPrevOption() {
+  if (
+    highlightedOption.value === null ||
+    indexOfHighlightedOption.value === null
+  ) {
+    highlightedOption.value = first(filteredOptions.value) ?? null;
     return;
   }
-  highlightedOptionIndex.value = Math.max(highlightedOptionIndex.value - 1, 0);
+
+  const prevIndex = Math.max(indexOfHighlightedOption.value - 1, 0);
+  highlightedOption.value = filteredOptions.value[prevIndex];
 }
 
 function handleKeyDown(event: KeyboardEvent) {
@@ -153,6 +176,9 @@ function handleKeyDown(event: KeyboardEvent) {
     Escape: "Escape",
   };
 
+  // open options
+  areOptionsOpen.value = true;
+
   if (!Object.values(KEYS).includes(event.key)) {
     return;
   }
@@ -161,10 +187,10 @@ function handleKeyDown(event: KeyboardEvent) {
 
   switch (event.key) {
     case "ArrowDown":
-      highlightedNextOption();
+      highlightNextOption();
       break;
     case "ArrowUp":
-      highlightedPreviousOption();
+      highlightPrevOption();
       break;
     case "Enter":
       if (highlightedOption.value) {
@@ -172,7 +198,9 @@ function handleKeyDown(event: KeyboardEvent) {
       }
       break;
     case "Escape":
-      reset();
+      query.value = "";
+      highlightedOption.value = null;
+      areOptionsOpen.value = false;
       break;
   }
 }
