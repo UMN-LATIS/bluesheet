@@ -3,6 +3,7 @@
     :show="show"
     :title="`${isEditingSection ? 'Edit' : 'Add'} Class`"
     :closeOnEsc="false"
+    class="tw-max-w-md"
     @close="$emit('close')"
   >
     <form @submit.prevent="handleSubmit">
@@ -15,9 +16,16 @@
           label="Course"
           :showLabel="true"
           :required="true"
-          :canAddNewOption="true"
-          @addNewOption="isAddingAsNewCourse = true"
-        />
+        >
+          <template #afterOptions>
+            <Button
+              class="!tw-block tw-w-full tw-bg-neutral-900 tw-text-white hover:tw-bg-blue-700"
+              @click="isAddingAsNewCourse = true"
+            >
+              Add New Course
+            </Button>
+          </template>
+        </ComboBox>
         <fieldset
           v-if="isAddingAsNewCourse"
           class="tw-border-neutral-300 tw-bg-neutral-100 tw-flex tw-flex-col tw-gap-4 tw-p-4 tw-rounded-md"
@@ -114,7 +122,7 @@
 </template>
 <script setup lang="ts">
 import Modal from "@/components/Modal.vue";
-import ComboBox, { ComboBoxOption } from "@/components/ComboBox.vue";
+import { ComboBox, ComboBoxOptionType } from "@/components/ComboBox";
 import { Term } from "@/types";
 import { computed, reactive, ref, watch } from "vue";
 import Button from "@/components/Button.vue";
@@ -190,10 +198,10 @@ const initialSelected = computed(() => ({
 }));
 
 const selectedOptions = reactive<{
-  person: ComboBoxOption | null;
-  course: ComboBoxOption | null;
-  term: ComboBoxOption | null;
-  role: ComboBoxOption | null;
+  person: ComboBoxOptionType | null;
+  course: ComboBoxOptionType | null;
+  term: ComboBoxOptionType | null;
+  role: ComboBoxOptionType | null;
 }>({
   person: null,
   course: null,
