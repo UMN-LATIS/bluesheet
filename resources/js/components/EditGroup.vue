@@ -83,10 +83,8 @@
             v-model="localGroup.group_type"
             :options="groupTypes"
             placeholder="Select..."
-            :canAddNewOption="true"
             label="Group Type"
             :showLabel="false"
-            @addNewOption="(newGroupType) => groupTypes.push(newGroupType)"
           >
             <template #afterOptions="{ query }">
               <ButtonComponent
@@ -307,7 +305,18 @@
             label="Role"
             :showLabel="false"
             @addNewOption="(newOption) => roles.push(newOption)"
-          />
+          >
+            <template #afterOptions="{ query }">
+              <ButtonComponent
+                @click="
+                  addRoleOption({
+                    label: query,
+                  })
+                "
+                >Add New Role</ButtonComponent
+              >
+            </template>
+          </ComboBox>
         </div>
         <div class="col-sm-3">
           <button
@@ -506,6 +515,27 @@ export default {
       // set the group type to the new group type
       this.groupTypes.push(newOption);
       this.localGroup.group_type = newOption;
+    },
+
+    addRoleOption({ label }) {
+      const newOption = {
+        id: null,
+        label,
+      };
+
+      // check if it already exists
+      const existingRole = this.roles.find(
+        (role) => role.label === newOption.label,
+      );
+
+      if (existingRole) {
+        this.newRole = existingRole;
+        return;
+      }
+
+      // set the role to the new role
+      this.roles.push(newOption);
+      this.newRole = newOption;
     },
     isValidUrl,
     isValidDeptId(str) {
