@@ -8,6 +8,7 @@ import {
   filterPersonByAcadAppt,
   filterPersonTableRowForAtLeastOneEnrollment,
   filterTermByStartAndEndTerm,
+  filterPersonByActiveDeptApptStatus,
 } from "./coursePlanningFilters";
 
 export function getPersonTableRows({
@@ -24,7 +25,12 @@ export function getPersonTableRows({
     (a, b) => a.id - b.id,
   );
 
-  const filteredPeople = sortedPeople.filter(filterPersonByAcadAppt(filters));
+  const matchedAcadAppt = filterPersonByAcadAppt(filters);
+  const matchesActiveInDeptStatus = filterPersonByActiveDeptApptStatus(filters);
+
+  const filteredPeople = sortedPeople.filter(
+    (person) => matchedAcadAppt(person) && matchesActiveInDeptStatus(person),
+  );
 
   const filteredTerms = sortedTerms.filter(
     filterTermByStartAndEndTerm(filters),

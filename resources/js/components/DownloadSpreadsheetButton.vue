@@ -85,4 +85,3 @@ async function handleDownloadClick(): Promise<void> {
 }
 </script>
 <style scoped></style>
-@/utils/useSimulatedProgress

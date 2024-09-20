@@ -1,6 +1,9 @@
 import * as T from "@/types";
 import { getLeavesInTerm } from "./getLeavesInTerm";
-import { filterPersonByAcadAppt } from "./coursePlanningFilters";
+import {
+  filterPersonByAcadAppt,
+  filterPersonByActiveDeptApptStatus,
+} from "./coursePlanningFilters";
 
 export function getListOfTermLeaves({
   lookups,
@@ -12,9 +15,12 @@ export function getListOfTermLeaves({
   return Object.values(lookups.termLookup).map((term) => {
     const leaves = getLeavesInTerm({ lookups, term });
 
-    // remove leaves for people with excluded academic appointments
     const filteredLeaves = leaves.filter((leave) => {
-      return filterPersonByAcadAppt(filters)(leave.person);
+      // remove leaves for people with excluded academic appointments
+      return (
+        filterPersonByAcadAppt(filters)(leave.person) &&
+        filterPersonByActiveDeptApptStatus(filters)(leave.person)
+      );
     });
 
     return { term, leaves: filteredLeaves };

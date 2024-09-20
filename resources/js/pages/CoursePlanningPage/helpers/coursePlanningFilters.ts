@@ -25,6 +25,14 @@ export const filterPersonByAcadAppt =
     );
   };
 
+export const filterPersonByActiveDeptApptStatus =
+  (filters: T.CoursePlanningFilters) => (person: T.Person) => {
+    if (filters.onlyActiveAppointments) {
+      return person.hasActiveDeptAppointment;
+    }
+    return true;
+  };
+
 export const filterEnrollmentByRole =
   (filters: Pick<T.CoursePlanningFilters, "includedEnrollmentRoles">) =>
   (enrollment: T.Enrollment) => {
@@ -40,7 +48,9 @@ export const allEnrollmentFiltersPass =
       filterSectionByPublishStateWhenNotInPlanningMode(filters)(
         enrollment.section,
       ) &&
-      filterEnrollmentByRole(filters)(enrollment.enrollment)
+      filterEnrollmentByRole(filters)(enrollment.enrollment) &&
+      filterPersonByAcadAppt(filters)(enrollment.person) &&
+      filterPersonByActiveDeptApptStatus(filters)(enrollment.person)
     );
   };
 
