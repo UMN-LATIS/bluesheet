@@ -85,8 +85,8 @@
 <script setup lang="ts">
 import { PostIt } from "@umn-latis/cla-vue-template";
 import { options } from "./options";
-import { ComboBox, ComboBoxOptionType } from "./ComboBox";
-import { computed, ref } from "vue";
+import { ComboBox, ComboBoxOptionType } from "@/components/ComboBox";
+import { ref } from "vue";
 
 import OldCombobox from "@/components/LegacyComboBox.vue";
 import Modal from "@/components/Modal.vue";
