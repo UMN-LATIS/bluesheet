@@ -8,13 +8,6 @@
       class="tw-mb-4"
     />
 
-    <OldCombobox
-      v-model="selectedOption"
-      :options="options"
-      label="Old ComboBox"
-      class="tw-mb-4"
-    />
-
     <p>
       Lorem ipsum dolor sit, amet consectetur adipisicing elit. Nam labore
       aliquid sed maxime fuga deleniti alias dolorum! Debitis, mollitia
@@ -54,12 +47,6 @@
         :options="options"
         label="New ComboBox"
       />
-
-      <OldCombobox
-        v-model="selectedOption"
-        :options="options"
-        label="Old ComboBox"
-      />
     </div>
 
     <Button @click="isModalOpen = true">Open Modal</Button>
@@ -72,12 +59,6 @@
           :options="options"
           label="New ComboBox"
         />
-
-        <OldCombobox
-          v-model="selectedOption"
-          :options="options"
-          label="Old ComboBox"
-        />
       </div>
     </Modal>
   </PostIt>
@@ -88,14 +69,8 @@ import { options } from "./options";
 import { ComboBox, ComboBoxOptionType } from "@/components/ComboBox";
 import { ref } from "vue";
 
-import OldCombobox from "@/components/LegacyComboBox.vue";
 import Modal from "@/components/Modal.vue";
 import Button from "@/components/Button.vue";
-
-// const abridgedOptions = computed(() => {
-//   const maxOptions = Math.min(10, options.length);
-//   return options.slice(0, maxOptions);
-// });
 
 const selectedOption = ref<ComboBoxOptionType | null>(null);
 const isModalOpen = ref(false);
