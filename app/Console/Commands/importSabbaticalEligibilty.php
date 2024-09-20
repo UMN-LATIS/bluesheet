@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Library\UserService;
 use Illuminate\Console\Command;
+use App\TermPayrollDate;
 
 class ImportSabbaticalEligibilty extends Command
 {
@@ -51,7 +52,7 @@ class ImportSabbaticalEligibilty extends Command
        }
         $this->userService = new \App\Library\UserService();
         $bandaid = new \App\Library\Bandaid();
-        $terms = $bandaid->getTerms();
+        $terms = TermPayrollDate::all();
         while ($row = fgetcsv($fp)) {
             $all_rows[] = array_combine($headings, $row);
         }
@@ -82,18 +83,18 @@ class ImportSabbaticalEligibilty extends Command
                 $targetEndTerm = 1 . $termYear . $nextTerm;
                 echo $targetEndTerm . "\n";
                 foreach($terms as $term) {
-                    if($term->TERM == $row['PROJECTED_SABBATICAL_ELIGIBILITY_TERM'] && $term->INSTITUTION == "UMNTC" && $term->ACADEMIC_CAREER == "UGRD") {
+                    if($term->term_code == $row['PROJECTED_SABBATICAL_ELIGIBILITY_TERM']) {
                         $startTerm = $term;
                     }
-                    if($term->TERM == $targetEndTerm && $term->INSTITUTION == "UMNTC" && $term->ACADEMIC_CAREER == "UGRD") {
+                    if($term->term_code == $targetEndTerm) {
                         $endTerm = $term;
                     }
                 }
 
                 if($startTerm && $endTerm) {
                     $leave = new \App\Leave();
-                    $leave->start_date = $startTerm->TERM_BEGIN_DT;
-                    $leave->end_date = $endTerm->TERM_END_DT;
+                    $leave->start_date = $startTerm->payroll_start_date;
+                    $leave->end_date = $endTerm->payroll_end_date;
                     $leave->synchronized_leave = true;
                     $leave->type = \App\Leave::TYPE_SABBATICAL;
                     $leave->status = \App\Leave::STATUS_ELIGIBLE;
