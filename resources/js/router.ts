@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import { useErrorStore } from "@/stores/useErrorStore";
 
 // pages
@@ -11,7 +11,6 @@ import ReportListPage from "./pages/ReportListPage.vue";
 import RoleListPage from "./pages/RoleListPage.vue";
 import RolePage from "./pages/RolePage.vue";
 import ErrorPage from "./pages/ErrorPage.vue";
-import TestComboBoxPage from "./pages/TestComboBoxPage/TestComboBoxPage.vue";
 
 // reports
 import CeddLikeReportPage from "./pages/reports/CeddLikeReportPage.vue";
@@ -26,6 +25,14 @@ import DeptLeavesReportPage from "./pages/reports/DeptLeavesReportPage.vue";
 import UnitReportPage from "./pages/reports/UnitReport.vue";
 import CoursePlanningPage from "@/pages/CoursePlanningPage/CoursePlanningPage.vue";
 import { parseIntFromRouteParam as parseIntFromParam } from "@/utils";
+
+// test routes
+const testRoutes: RouteRecordRaw[] = [
+  {
+    path: "/test/combobox",
+    component: () => import("./pages/TestComboBoxPage/TestComboBoxPage.vue"),
+  },
+];
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -147,10 +154,6 @@ export const router = createRouter({
       redirect: (to) => `/course-planning/groups/${to.params.groupId}`,
     },
     {
-      path: "/test/combobox",
-      component: () => import("./pages/TestComboBoxPage/TestComboBoxPage.vue"),
-    },
-    {
       name: "error",
       path: "/error/:errorCode",
       component: ErrorPage,
@@ -158,7 +161,7 @@ export const router = createRouter({
         errorCode: parseIntFromParam(route.params.errorCode),
       }),
     },
-
+    ...(import.meta.env.DEV ? testRoutes : []),
     {
       name: "catchall",
       path: "/:pathMatch(.*)",
