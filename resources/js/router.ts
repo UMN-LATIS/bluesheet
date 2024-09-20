@@ -148,7 +148,7 @@ export const router = createRouter({
     },
     {
       path: "/test/combobox",
-      component: TestComboBoxPage,
+      component: () => import("./pages/TestComboBoxPage/TestComboBoxPage.vue"),
     },
     {
       name: "error",
