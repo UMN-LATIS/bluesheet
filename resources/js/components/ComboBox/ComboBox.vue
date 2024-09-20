@@ -57,36 +57,38 @@
         </button>
       </div>
 
-      <div
-        v-if="areOptionsOpen"
-        ref="comboboxOptionsRef"
-        class="combobox__options tw-border tw-border-neutral-300 tw-py-3 tw-px-2 tw-max-h-60 tw-overflow-auto tw-bg-white tw-rounded-md tw-shadow-lg tw-ring-1 tw-ring-black tw-ring-opacity-5 focus:tw-outline-none tw-relative tw-z-[1000] tw-min-w-[20rem]"
-        :style="floatingStyles"
-      >
-        <ul
-          v-if="filteredOptions.length"
-          :id="`combobox-${label}__options`"
-          class="tw-pl-0 tw-flex tw-flex-col gap-2"
-          role="listbox"
-        >
-          <ComboBoxOption
-            v-for="option in filteredOptions"
-            :key="option.id ?? option.label"
-            role="option"
-            :option="option"
-            :isSelected="isSelected(option)"
-            :isHighlighted="isHighlighted(option)"
-            @click="() => handleSelectOption(option)"
-          />
-        </ul>
+      <MaybeTeleport :teleportTo="teleportTo">
         <div
-          v-else
-          class="tw-p-2 tw-text-neutral-500 tw-text-sm tw-text-center"
+          v-if="areOptionsOpen"
+          ref="comboboxOptionsRef"
+          class="combobox__options tw-border tw-border-neutral-300 tw-py-3 tw-px-2 tw-max-h-60 tw-overflow-auto tw-bg-white tw-rounded-md tw-shadow-lg tw-ring-1 tw-ring-black tw-ring-opacity-5 focus:tw-outline-none tw-relative tw-z-[1000] tw-min-w-[20rem]"
+          :style="floatingStyles"
         >
-          None.
+          <ul
+            v-if="filteredOptions.length"
+            :id="`combobox-${label}__options`"
+            class="tw-pl-0 tw-flex tw-flex-col gap-2"
+            role="listbox"
+          >
+            <ComboBoxOption
+              v-for="option in filteredOptions"
+              :key="option.id ?? option.label"
+              role="option"
+              :option="option"
+              :isSelected="isSelected(option)"
+              :isHighlighted="isHighlighted(option)"
+              @click="() => handleSelectOption(option)"
+            />
+          </ul>
+          <div
+            v-else
+            class="tw-p-2 tw-text-neutral-500 tw-text-sm tw-text-center"
+          >
+            None.
+          </div>
+          <slot name="afterOptions" :query="query" />
         </div>
-        <slot name="afterOptions" :query="query" />
-      </div>
+      </MaybeTeleport>
     </div>
   </div>
 </template>
@@ -96,8 +98,14 @@ import { ComboBoxOptionType, ComboBoxOption } from ".";
 import { onClickOutside } from "@vueuse/core";
 import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
 import { first } from "lodash";
-import { useFloating, offset } from "@floating-ui/vue";
+import {
+  useFloating,
+  offset,
+  autoPlacement,
+  autoUpdate,
+} from "@floating-ui/vue";
 import Label from "@/components/Label.vue";
+import MaybeTeleport from "../MaybeTeleport.vue";
 
 const props = withDefaults(
   defineProps<{
@@ -107,6 +115,8 @@ const props = withDefaults(
     placeholder?: string;
     showLabel?: boolean;
     required?: boolean;
+    strategy?: "absolute" | "fixed";
+    teleportTo?: string;
   }>(),
   {
     showLabel: true,
@@ -114,6 +124,8 @@ const props = withDefaults(
     options: () => [] as ComboBoxOptionType[],
     placeholder: "Choose...",
     required: false,
+    strategy: "absolute",
+    teleportTo: undefined,
   },
 );
 
@@ -266,7 +278,9 @@ const { floatingStyles } = useFloating(
   comboboxOptionsRef,
   {
     placement: "bottom-start",
-    middleware: [offset(10)],
+    middleware: [offset(10), autoPlacement()],
+    strategy: props.strategy,
+    whileElementsMounted: autoUpdate,
   },
 );
 </script>
