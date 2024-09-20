@@ -1,11 +1,12 @@
 <template>
-  <div class="combobox-w-label">
-    <label
+  <div class="combobox tw-max-w-[20rem]">
+    <Label
       :for="`combobox-${label}__input`"
       :class="{
         'tw-sr-only': hideLabel,
       }"
-      >{{ label }}</label
+      :required="required"
+      >{{ label }}</Label
     >
     <div ref="comboboxContainerRef" class="tw-cursor-pointer">
       <button
@@ -59,9 +60,11 @@
       <div
         v-if="areOptionsOpen"
         ref="comboboxOptionsRef"
-        class="combobox__options tw-border tw-border-neutral-300 tw-py-3 tw-px-2 tw-max-h-60 tw-overflow-auto"
+        class="combobox__options tw-border tw-border-neutral-300 tw-py-3 tw-px-2 tw-max-h-60 tw-overflow-auto tw-bg-white tw-rounded-md tw-shadow-lg tw-ring-1 tw-ring-black tw-ring-opacity-5 focus:tw-outline-none tw-relative tw-z-[1000] tw-min-w-[20rem]"
+        :style="floatingStyles"
       >
         <ul
+          v-if="filteredOptions.length"
           :id="`combobox-${label}__options`"
           class="tw-pl-0 tw-flex tw-flex-col gap-2"
           role="listbox"
@@ -76,6 +79,12 @@
             @click="() => handleSelectOption(option)"
           />
         </ul>
+        <div
+          v-else
+          class="tw-p-2 tw-text-neutral-500 tw-text-sm tw-text-center"
+        >
+          None.
+        </div>
       </div>
     </div>
   </div>
@@ -86,6 +95,8 @@ import { ComboBoxOptionType, ComboBoxOption } from ".";
 import { onClickOutside } from "@vueuse/core";
 import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
 import { first } from "lodash";
+import { useFloating, offset } from "@floating-ui/vue";
+import Label from "@/components/Label.vue";
 
 const props = withDefaults(
   defineProps<{
@@ -94,12 +105,14 @@ const props = withDefaults(
     modelValue: ComboBoxOptionType | null;
     placeholder?: string;
     hideLabel?: boolean;
+    required?: boolean;
   }>(),
   {
     hideLabel: false,
     modelValue: null,
     options: () => [] as ComboBoxOptionType[],
     placeholder: "Choose...",
+    required: false,
   },
 );
 
@@ -246,5 +259,14 @@ function handleKeyDown(event: KeyboardEvent) {
       break;
   }
 }
+
+const { floatingStyles } = useFloating(
+  comboboxContainerRef,
+  comboboxOptionsRef,
+  {
+    placement: "bottom-start",
+    middleware: [offset(10)],
+  },
+);
 </script>
 <style scoped></style>
