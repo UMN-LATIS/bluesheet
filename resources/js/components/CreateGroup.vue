@@ -68,7 +68,7 @@
 <script>
 import Modal from "./Modal.vue";
 import FolderWidget from "./FolderWidget.vue";
-import ComboBox from "./ComboBox.vue";
+import ComboBox from "./LegacyComboBox.vue";
 import { mapStores } from "pinia";
 import { useGroupStore } from "@/stores/useGroupStore";
 

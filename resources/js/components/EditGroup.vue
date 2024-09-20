@@ -322,7 +322,7 @@
 </template>
 
 <script>
-import ComboBox from "./ComboBox.vue";
+import ComboBox from "./LegacyComboBox.vue";
 import Members from "./Members.vue";
 import Modal from "./Modal.vue";
 import FolderWidget from "./FolderWidget.vue";

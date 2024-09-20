@@ -216,7 +216,7 @@
 <script lang="ts">
 import GroupTitle from "./GroupTitle.vue";
 import { dayjs, $can } from "@/utils";
-import ComboBox from "./ComboBox.vue";
+import ComboBox from "./LegacyComboBox.vue";
 import SortableLink from "./SortableLink.vue";
 import ManagerBadge from "./ManagerBadge.vue";
 

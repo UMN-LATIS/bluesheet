@@ -44,7 +44,7 @@
 </template>
 <script setup lang="ts">
 import { computed, ref, onMounted, watch } from "vue";
-import ComboBox, { ComboBoxOption } from "@/components/ComboBox.vue";
+import ComboBox, { ComboBoxOption } from "@/components/LegacyComboBox.vue";
 import InputGroup from "../InputGroup.vue";
 import dayjs from "dayjs";
 import { useTermPayrollDatesStore } from "@/stores/useTermPayrollDateStore";

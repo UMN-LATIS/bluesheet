@@ -114,7 +114,7 @@
 </template>
 <script setup lang="ts">
 import Modal from "@/components/Modal.vue";
-import ComboBox, { ComboBoxOption } from "@/components/ComboBox.vue";
+import ComboBox, { ComboBoxOption } from "@/components/LegacyComboBox.vue";
 import { Term } from "@/types";
 import { computed, reactive, ref, watch } from "vue";
 import Button from "@/components/Button.vue";

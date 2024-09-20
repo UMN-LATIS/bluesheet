@@ -55,7 +55,7 @@
 <script>
 import SortableLink from "@/components/SortableLink.vue";
 import GroupTitle from "@/components/GroupTitle.vue";
-import ComboBox from "@/components/ComboBox.vue";
+import ComboBox from "@/components/LegacyComboBox.vue";
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
 
 export default {

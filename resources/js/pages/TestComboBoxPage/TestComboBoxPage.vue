@@ -88,7 +88,7 @@ import { options } from "./options";
 import { ComboBox, ComboBoxOptionType } from "./ComboBox";
 import { computed, ref } from "vue";
 
-import OldCombobox from "@/components/ComboBox.vue";
+import OldCombobox from "@/components/LegacyComboBox.vue";
 import Modal from "@/components/Modal.vue";
 import Button from "@/components/Button.vue";
 
