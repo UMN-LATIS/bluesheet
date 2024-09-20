@@ -12,10 +12,10 @@
       <button
         v-if="modelValue && !areOptionsOpen"
         ref="selectedItemRef"
-        class="tw-flex tw-bg-transparent tw-border tw-border-neutral-300 tw-w-full tw-py-3 tw-px-4 tw-items-center tw-justify-between tw-rounded-md"
+        class="tw-flex tw-bg-transparent tw-border tw-border-neutral-300 tw-w-full tw-py-3 tw-px-4 tw-items-center tw-justify-between tw-rounded-md tw-text-left"
         @click="handleChangeOption"
       >
-        <div class="tw-flex tw-flex-col tw-items-start">
+        <div class="tw-flex tw-flex-col tw-items-start tw-flex-1">
           <span class="tw-text-sm">{{ modelValue.label }}</span>
           <span
             v-if="modelValue.secondaryLabel"
