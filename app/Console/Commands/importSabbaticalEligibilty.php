@@ -33,7 +33,7 @@ class ImportSabbaticalEligibilty extends Command
     public function handle()
     {
 
-        $prompt = $this->confirm('You must clear any existing eligibility values before running this import. Have you done that?');
+        $prompt = $this->confirm('You must clear any existing eligibility values before running this import. Have you done that? This query is fine: delete from leaves where description = "Imported Sabbatical Eligibility" and type ="sabbatical" and status = "eligible" and `synchronized_leave`=1');
         if(!$prompt) {
             return;
         }
