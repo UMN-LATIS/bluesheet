@@ -226,7 +226,7 @@
         v-model:members="localGroup.members"
         :groupType="localGroup.group_type.label"
         :show_unit="localGroup.show_unit"
-        editing="true"
+        :editing="true"
         :roles="filteredRoles"
         viewType="group"
         :downloadTitle="localGroup.group_title"
