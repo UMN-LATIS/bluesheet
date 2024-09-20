@@ -3,6 +3,7 @@
     :show="show"
     :title="`${isEditingSection ? 'Edit' : 'Add'} Class`"
     :closeOnEsc="false"
+    class="tw-max-w-md"
     @close="$emit('close')"
   >
     <form @submit.prevent="handleSubmit">
@@ -114,7 +115,7 @@
 </template>
 <script setup lang="ts">
 import Modal from "@/components/Modal.vue";
-import ComboBox, { ComboBoxOption } from "@/components/LegacyComboBox.vue";
+import { ComboBox, ComboBoxOptionType } from "@/components/ComboBox";
 import { Term } from "@/types";
 import { computed, reactive, ref, watch } from "vue";
 import Button from "@/components/Button.vue";
@@ -190,10 +191,10 @@ const initialSelected = computed(() => ({
 }));
 
 const selectedOptions = reactive<{
-  person: ComboBoxOption | null;
-  course: ComboBoxOption | null;
-  term: ComboBoxOption | null;
-  role: ComboBoxOption | null;
+  person: ComboBoxOptionType | null;
+  course: ComboBoxOptionType | null;
+  term: ComboBoxOptionType | null;
+  role: ComboBoxOptionType | null;
 }>({
   person: null,
   course: null,
