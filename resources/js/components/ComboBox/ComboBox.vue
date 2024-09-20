@@ -101,7 +101,7 @@ import { first } from "lodash";
 import {
   useFloating,
   offset,
-  autoPlacement,
+  autoPlacement as autoPlacementFn,
   autoUpdate,
 } from "@floating-ui/vue";
 import Label from "@/components/Label.vue";
@@ -185,9 +185,7 @@ function isSelected(option: ComboBoxOptionType) {
 
 function handleSelectOption(option: ComboBoxOptionType) {
   emit("update:modelValue", option);
-  areOptionsOpen.value = false;
-  query.value = "";
-  highlightedOption.value = null;
+  closeComboBoxOptions();
   nextTick(() => {
     selectedItemRef.value?.focus();
   });
@@ -238,6 +236,12 @@ function highlightPrevOption() {
   highlightedOption.value = filteredOptions.value[prevIndex];
 }
 
+function closeComboBoxOptions() {
+  query.value = "";
+  highlightedOption.value = null;
+  areOptionsOpen.value = false;
+}
+
 function handleKeyDown(event: KeyboardEvent) {
   const KEYS = {
     ArrowDown: "ArrowDown",
@@ -266,11 +270,14 @@ function handleKeyDown(event: KeyboardEvent) {
       if (highlightedOption.value) {
         handleSelectOption(highlightedOption.value);
       }
+
+      // if there's only one option, select it
+      else if (filteredOptions.value.length === 1) {
+        handleSelectOption(filteredOptions.value[0]);
+      }
       break;
     case "Escape":
-      query.value = "";
-      highlightedOption.value = null;
-      areOptionsOpen.value = false;
+      closeComboBoxOptions();
       break;
   }
 }
@@ -280,7 +287,10 @@ const { floatingStyles } = useFloating(
   comboboxOptionsRef,
   {
     placement: "bottom-start",
-    middleware: [offset(10), ...(props.autoPlacement ? [autoPlacement()] : [])],
+    middleware: [
+      offset(10),
+      ...(props.autoPlacement ? [autoPlacementFn()] : []),
+    ],
     strategy: props.strategy,
     whileElementsMounted: autoUpdate,
   },
