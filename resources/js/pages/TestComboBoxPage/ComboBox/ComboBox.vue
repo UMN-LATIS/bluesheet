@@ -9,27 +9,33 @@
     >
     <div ref="comboboxContainerRef" class="tw-cursor-pointer">
       <button
-        v-if="modelValue"
+        v-if="modelValue && !areOptionsOpen"
         ref="selectedItemRef"
         class="tw-flex tw-bg-transparent tw-border tw-border-neutral-300 tw-w-full tw-py-3 tw-px-4 tw-items-center tw-justify-between tw-rounded-md"
-        @click="areOptionsOpen = !areOptionsOpen"
+        @click="handleChangeOption"
       >
-        {{ modelValue.label }}
+        <span>{{ modelValue.label }}</span>
+        <ChevronDownIcon
+          class="tw-w-6 tw-h-6 tw-text-neutral-900"
+          aria-hidden="true"
+        />
       </button>
       <div
-        class="tw-flex tw-bg-transparent tw-border tw-border-neutral-300 tw-w-full tw-py-3 tw-px-4 tw-items-center tw-justify-between tw-rounded-md focus-within:tw-ring-2 focus-within:tw-ring-blue-500"
+        v-else
+        class="tw-flex tw-bg-transparent tw-border tw-border-neutral-300 tw-w-full tw-items-center tw-justify-between tw-rounded-md focus-within:tw-ring-2 focus-within:tw-ring-blue-500"
       >
         <input
           :id="`combobox-${label}__input`"
+          ref="comboboxInputRef"
           v-model="query"
-          class="tw-border-none tw-bg-transparent tw-block tw-w-full tw-text-neutral-900 focus:tw-outline-none"
+          class="tw-border-none tw-bg-transparent tw-block tw-w-full tw-py-3 tw-px-4 tw-text-neutral-900 focus:tw-outline-none"
           :placeholder="placeholder"
           role="combobox"
           :aria-controls="`combobox-${label}__options`"
           aria-autocomplete="list"
           :aria-expanded="areOptionsOpen"
-          @focus="areOptionsOpen = true"
           @keydown="handleKeyDown"
+          @focus="areOptionsOpen = true"
         />
         <button
           class="tw-flex tw-items-center tw-justify-center tw-bg-transparent tw-border-none tw-p-2 tw-rounded-md"
@@ -45,7 +51,7 @@
       <div
         v-if="areOptionsOpen"
         ref="comboboxOptionsRef"
-        class="combobox__options tw-border tw-border-neutral-300"
+        class="combobox__options tw-border tw-border-neutral-300 tw-py-3 tw-px-2 tw-max-h-60 tw-overflow-auto"
       >
         <ul
           :id="`combobox-${label}__options`"
@@ -55,7 +61,6 @@
           <ComboBoxOption
             v-for="option in filteredOptions"
             :key="option.id ?? option.label"
-            class="tw-list-none"
             role="option"
             :option="option"
             :isSelected="isSelected(option)"
@@ -68,7 +73,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, nextTick } from "vue";
 import { ComboBoxOptionType, ComboBoxOption } from ".";
 import { onClickOutside } from "@vueuse/core";
 import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
@@ -96,10 +101,12 @@ const emit = defineEmits<{
 
 const query = ref("");
 const areOptionsOpen = ref(false);
+const highlightedOption = ref<ComboBoxOptionType | null>(null);
+
 const comboboxContainerRef = ref<HTMLElement | null>(null);
 const selectedItemRef = ref<HTMLElement | null>(null);
+const comboboxInputRef = ref<HTMLInputElement | null>(null);
 const comboboxOptionsRef = ref<HTMLElement | null>(null);
-const highlightedOption = ref<ComboBoxOptionType | null>(null);
 
 const filteredOptions = computed(() => {
   const lcQuery = query.value.toLowerCase();
@@ -117,12 +124,27 @@ const indexOfHighlightedOption = computed(() => {
   return index === -1 ? null : index;
 });
 
+function areOptionsEqual(
+  option1: ComboBoxOptionType | null,
+  option2: ComboBoxOptionType | null,
+) {
+  if (!option1 || !option2) {
+    return false;
+  }
+
+  return (
+    option1.id === option2.id ||
+    (option1.label === option2.label &&
+      option1.secondaryLabel === option2.secondaryLabel)
+  );
+}
+
 function isHighlighted(option: ComboBoxOptionType) {
-  return highlightedOption.value?.id === option.id;
+  return areOptionsEqual(option, highlightedOption.value);
 }
 
 function isSelected(option: ComboBoxOptionType) {
-  return props.modelValue === option;
+  return areOptionsEqual(option, props.modelValue);
 }
 
 function handleSelectOption(option: ComboBoxOptionType) {
@@ -130,12 +152,24 @@ function handleSelectOption(option: ComboBoxOptionType) {
   areOptionsOpen.value = false;
   query.value = "";
   highlightedOption.value = null;
-  selectedItemRef.value?.focus();
+  nextTick(() => {
+    selectedItemRef.value?.focus();
+  });
 }
 
 onClickOutside(comboboxContainerRef, () => {
   areOptionsOpen.value = false;
 });
+
+function handleChangeOption() {
+  // begin with the currently selected option label
+  query.value = props.modelValue?.label ?? "";
+  highlightedOption.value = props.modelValue;
+  areOptionsOpen.value = !areOptionsOpen.value;
+  nextTick(() => {
+    comboboxInputRef.value?.focus();
+  });
+}
 
 function highlightNextOption() {
   if (
