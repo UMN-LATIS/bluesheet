@@ -85,6 +85,7 @@
         >
           None.
         </div>
+        <slot name="afterOptions" />
       </div>
     </div>
   </div>

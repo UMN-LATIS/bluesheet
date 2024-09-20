@@ -16,9 +16,16 @@
           label="Course"
           :showLabel="true"
           :required="true"
-          :canAddNewOption="true"
-          @addNewOption="isAddingAsNewCourse = true"
-        />
+        >
+          <template #afterOptions>
+            <Button
+              class="!tw-block tw-w-full tw-bg-neutral-900 tw-text-white hover:tw-bg-blue-700"
+              @click="isAddingAsNewCourse = true"
+            >
+              Add New Course
+            </Button>
+          </template>
+        </ComboBox>
         <fieldset
           v-if="isAddingAsNewCourse"
           class="tw-border-neutral-300 tw-bg-neutral-100 tw-flex tw-flex-col tw-gap-4 tw-p-4 tw-rounded-md"
