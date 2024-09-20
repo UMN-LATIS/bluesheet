@@ -3,7 +3,7 @@
     <Label
       :for="`combobox-${label}__input`"
       :class="{
-        'tw-sr-only': hideLabel,
+        'tw-sr-only': !showLabel,
       }"
       :required="required"
       >{{ label }}</Label
@@ -105,11 +105,11 @@ const props = withDefaults(
     options: ComboBoxOptionType[];
     modelValue: ComboBoxOptionType | null;
     placeholder?: string;
-    hideLabel?: boolean;
+    showLabel?: boolean;
     required?: boolean;
   }>(),
   {
-    hideLabel: false,
+    showLabel: true,
     modelValue: null,
     options: () => [] as ComboBoxOptionType[],
     placeholder: "Choose...",
