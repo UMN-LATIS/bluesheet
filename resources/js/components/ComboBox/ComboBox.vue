@@ -117,6 +117,7 @@ const props = withDefaults(
     required?: boolean;
     strategy?: "absolute" | "fixed";
     teleportTo?: string;
+    autoPlacement?: boolean;
   }>(),
   {
     showLabel: true,
@@ -126,6 +127,7 @@ const props = withDefaults(
     required: false,
     strategy: "absolute",
     teleportTo: undefined,
+    autoPlacement: false,
   },
 );
 
@@ -278,7 +280,7 @@ const { floatingStyles } = useFloating(
   comboboxOptionsRef,
   {
     placement: "bottom-start",
-    middleware: [offset(10), autoPlacement()],
+    middleware: [offset(10), ...(props.autoPlacement ? [autoPlacement()] : [])],
     strategy: props.strategy,
     whileElementsMounted: autoUpdate,
   },
