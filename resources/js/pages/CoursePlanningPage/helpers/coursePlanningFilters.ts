@@ -48,7 +48,9 @@ export const allEnrollmentFiltersPass =
       filterSectionByPublishStateWhenNotInPlanningMode(filters)(
         enrollment.section,
       ) &&
-      filterEnrollmentByRole(filters)(enrollment.enrollment)
+      filterEnrollmentByRole(filters)(enrollment.enrollment) &&
+      filterPersonByAcadAppt(filters)(enrollment.person) &&
+      filterPersonByActiveDeptApptStatus(filters)(enrollment.person)
     );
   };
 
