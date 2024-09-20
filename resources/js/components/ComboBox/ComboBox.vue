@@ -85,7 +85,7 @@
         >
           None.
         </div>
-        <slot name="afterOptions" />
+        <slot name="afterOptions" :query="query" />
       </div>
     </div>
   </div>
