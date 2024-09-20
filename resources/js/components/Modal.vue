@@ -2,7 +2,7 @@
   <Teleport to="body">
     <Transition name="modal">
       <div v-if="show" class="modal-mask" @mousedown="$emit('close')">
-        <div class="modal-container" @mousedown.stop>
+        <div class="modal-container" v-bind="$attrs" @mousedown.stop>
           <div v-if="title" class="modal-header">
             <h5 class="modal-title">{{ title }}</h5>
             <button
