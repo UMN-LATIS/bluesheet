@@ -37,7 +37,7 @@
           :id="`combobox-${label}__input`"
           ref="comboboxInputRef"
           v-model="query"
-          class="tw-border-none tw-bg-transparent tw-block tw-w-full tw-py-3 tw-px-4 tw-text-neutral-900 focus:tw-outline-none"
+          class="tw-border-none tw-bg-transparent tw-block tw-w-full tw-py-3 tw-pl-4 tw-text-neutral-900 focus:tw-outline-none tw-text-sm flex-1"
           :placeholder="placeholder"
           role="combobox"
           :aria-controls="`combobox-${label}__options`"
@@ -47,7 +47,7 @@
           @focus="areOptionsOpen = true"
         />
         <button
-          class="tw-flex tw-items-center tw-justify-center tw-bg-transparent tw-border-none tw-p-2 tw-rounded-md"
+          class="tw-flex tw-items-center tw-justify-center tw-bg-transparent tw-border-none tw-p-2 tw-mr-2 tw-rounded-md"
           @click="areOptionsOpen = !areOptionsOpen"
         >
           <ChevronDownIcon
