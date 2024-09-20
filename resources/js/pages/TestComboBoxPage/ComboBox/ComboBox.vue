@@ -14,7 +14,15 @@
         class="tw-flex tw-bg-transparent tw-border tw-border-neutral-300 tw-w-full tw-py-3 tw-px-4 tw-items-center tw-justify-between tw-rounded-md"
         @click="handleChangeOption"
       >
-        <span>{{ modelValue.label }}</span>
+        <div class="tw-flex tw-flex-col tw-items-start">
+          <span class="tw-text-sm">{{ modelValue.label }}</span>
+          <span
+            v-if="modelValue.secondaryLabel"
+            class="tw-text-neutral-500 tw-text-xs"
+          >
+            {{ modelValue.secondaryLabel }}
+          </span>
+        </div>
         <ChevronDownIcon
           class="tw-w-6 tw-h-6 tw-text-neutral-900"
           aria-hidden="true"
