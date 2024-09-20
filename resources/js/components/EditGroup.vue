@@ -87,7 +87,18 @@
             label="Group Type"
             :showLabel="false"
             @addNewOption="(newGroupType) => groupTypes.push(newGroupType)"
-          />
+          >
+            <template #afterOptions="{ query }">
+              <ButtonComponent
+                @click="
+                  addGroupTypeOption({
+                    label: query,
+                  })
+                "
+                >Add New Group Type</ButtonComponent
+              >
+            </template>
+          </ComboBox>
         </div>
 
         <div class="form-group tw-col-span-2">
@@ -322,7 +333,7 @@
 </template>
 
 <script>
-import ComboBox from "./LegacyComboBox.vue";
+import { ComboBox } from "./ComboBox";
 import Members from "./Members.vue";
 import Modal from "./Modal.vue";
 import FolderWidget from "./FolderWidget.vue";
@@ -475,6 +486,27 @@ export default {
       });
   },
   methods: {
+    addGroupTypeOption({ label }) {
+      const newOption = {
+        id: null,
+        label,
+        secondaryLabel: "",
+      };
+
+      // check if it already exists
+      const existingGroup = this.groupTypes.find(
+        (groupType) => groupType.label === newOption.label,
+      );
+
+      if (existingGroup) {
+        this.localGroup.group_type = existingGroup;
+        return;
+      }
+
+      // set the group type to the new group type
+      this.groupTypes.push(newOption);
+      this.localGroup.group_type = newOption;
+    },
     isValidUrl,
     isValidDeptId(str) {
       if (!str) return true;
