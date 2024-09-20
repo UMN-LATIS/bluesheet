@@ -25,6 +25,14 @@ export const filterPersonByAcadAppt =
     );
   };
 
+export const filterPersonByActiveDeptApptStatus =
+  (filters: T.CoursePlanningFilters) => (person: T.Person) => {
+    if (filters.onlyActiveAppointments) {
+      return person.hasActiveDeptAppointment;
+    }
+    return true;
+  };
+
 export const filterEnrollmentByRole =
   (filters: Pick<T.CoursePlanningFilters, "includedEnrollmentRoles">) =>
   (enrollment: T.Enrollment) => {
