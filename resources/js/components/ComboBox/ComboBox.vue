@@ -101,7 +101,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, computed, nextTick } from "vue";
+import { ref, computed, nextTick, watch } from "vue";
 import { ComboBoxOptionType, ComboBoxOption } from ".";
 import { onClickOutside } from "@vueuse/core";
 import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
@@ -208,7 +208,7 @@ function handleSelectOption(option: ComboBoxOptionType) {
 }
 
 onClickOutside(comboboxContainerRef, () => {
-  areOptionsOpen.value = false;
+  closeComboBoxOptions();
 });
 
 function handleChangeOption() {
@@ -276,15 +276,10 @@ function handleAddNewOptionsClick() {
   // if it doesn't exist, add it as a new option
   const newOption: ComboBoxOptionType = {
     label: query.value,
-    secondaryLabel: "",
   };
 
   emit("addNewOption", newOption);
-
-  // do I need to wait until next tick to select the option?
-  nextTick(() => {
-    handleSelectOption(newOption);
-  });
+  handleSelectOption(newOption);
 }
 
 function handleKeyDown(event: KeyboardEvent) {
@@ -317,9 +312,7 @@ function handleKeyDown(event: KeyboardEvent) {
       } else if (filteredOptions.value.length === 1) {
         // if there's only one option, select it
         handleSelectOption(filteredOptions.value[0]);
-      } else if (props.canAddNewOptions && filteredOptions.value.length === 0) {
-        // if we can add new options, and there aren't any shown
-        // (to avoid accidental creation of duplicate options)
+      } else if (props.canAddNewOptions) {
         handleAddNewOptionsClick();
       }
       break;
@@ -328,6 +321,10 @@ function handleKeyDown(event: KeyboardEvent) {
       break;
   }
 }
+
+watch(query, () => {
+  highlightedOption.value = first(filteredOptions.value) ?? null;
+});
 
 const { floatingStyles } = useFloating(
   comboboxContainerRef,
