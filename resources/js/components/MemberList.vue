@@ -130,15 +130,9 @@
               :options="roles"
               :canAddNewOption="true"
               class="tw-min-w-[10rem]"
-            >
-              <template #afterOptions="{ query }">
-                <Button
-                  @click="$emit('update:roles', [...roles, { label: query }])"
-                >
-                  Add New Role
-                </Button>
-              </template>
-            </ComboBox>
+              :canAddNewOptions="true"
+              @addNewOption="$emit('update:roles', [...roles, $event])"
+            />
           </td>
         </template>
 
@@ -226,7 +220,6 @@ import { dayjs, $can } from "@/utils";
 import { ComboBox } from "@/components/ComboBox";
 import SortableLink from "./SortableLink.vue";
 import ManagerBadge from "./ManagerBadge.vue";
-import Button from "./Button.vue";
 
 export default {
   components: {
@@ -234,7 +227,6 @@ export default {
     ComboBox,
     SortableLink,
     ManagerBadge,
-    Button,
   },
   props: [
     "editing",
