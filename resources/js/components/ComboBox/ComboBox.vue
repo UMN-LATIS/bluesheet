@@ -339,34 +339,6 @@ watch(query, () => {
     : first(filteredOptions.value) ?? null;
 });
 
-// make sure the highlighted option is always in view
-watch(
-  [areOptionsOpen, highlightedOption],
-  () => {
-    nextTick(() => {
-      if (!areOptionsOpen.value || !highlightedOption.value) {
-        return;
-      }
-
-      const highlightedOptionRef = document
-        .getElementById(`combobox-${props.label}__options`)
-        ?.querySelector(`[data-highlighted-option="true"]`);
-
-      if (!highlightedOptionRef) {
-        return;
-      }
-
-      if (highlightedOptionRef) {
-        highlightedOptionRef.scrollIntoView({
-          block: "nearest",
-          inline: "nearest",
-        });
-      }
-    });
-  },
-  { immediate: true },
-);
-
 const { floatingStyles } = useFloating(
   comboboxContainerRef,
   comboboxOptionsRef,

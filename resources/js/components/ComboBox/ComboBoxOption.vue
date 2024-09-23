@@ -1,5 +1,9 @@
 <template>
-  <li :id="`option-${option.id ?? option.label}`" class="tw-list-none">
+  <li
+    :id="`option-${option.id ?? option.label}`"
+    ref="currentOption"
+    class="tw-list-none"
+  >
     <div
       class="tw-flex tw-justify-between tw-items-center tw-rounded-md tw-cursor-pointer"
       :class="{
@@ -30,11 +34,28 @@
 <script setup lang="ts">
 import CircleCheckIcon from "@/icons/CircleCheckIcon.vue";
 import { ComboBoxOptionType } from ".";
+import { watch, ref } from "vue";
 
-defineProps<{
+const props = defineProps<{
   option: ComboBoxOptionType;
   isSelected: boolean;
   isHighlighted: boolean;
 }>();
+
+const currentOption = ref<HTMLElement | null>(null);
+
+watch(
+  [() => props.isHighlighted],
+  () => {
+    if (!props.isHighlighted) return;
+
+    // make sure if the current option is highlighted, it's in vue of the scroll container
+    currentOption.value?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+    });
+  },
+  { immediate: true },
+);
 </script>
 <style scoped></style>
