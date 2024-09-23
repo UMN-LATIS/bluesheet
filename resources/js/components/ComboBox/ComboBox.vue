@@ -229,7 +229,6 @@ function highlightNextOption() {
     indexOfHighlightedOption.value === null
   ) {
     highlightedOption.value = first(filteredOptions.value) ?? null;
-    console.log(highlightedOption.value);
     return;
   }
 
@@ -356,8 +355,6 @@ watch(
       if (!highlightedOptionRef) {
         return;
       }
-
-      console.log(highlightedOptionRef);
 
       if (highlightedOptionRef) {
         highlightedOptionRef.scrollIntoView({
