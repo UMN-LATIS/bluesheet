@@ -166,8 +166,8 @@ const filteredOptions = computed(() => {
 });
 
 const indexOfHighlightedOption = computed(() => {
-  const index = filteredOptions.value.findIndex(
-    (option) => option?.id === highlightedOption.value?.id,
+  const index = filteredOptions.value.findIndex((option) =>
+    areOptionsEqual(option, highlightedOption.value),
   );
   return index === -1 ? null : index;
 });
