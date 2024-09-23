@@ -77,6 +77,7 @@
               :option="option"
               :isSelected="isSelected(option)"
               :isHighlighted="isHighlighted(option)"
+              :data-highlighted-option="isHighlighted(option)"
               @click="() => handleSelectOption(option)"
             />
           </ul>
@@ -338,6 +339,36 @@ watch(query, () => {
     ? props.modelValue
     : first(filteredOptions.value) ?? null;
 });
+
+// make sure the highlighted option is always in view
+watch(
+  [areOptionsOpen, highlightedOption],
+  () => {
+    nextTick(() => {
+      if (!areOptionsOpen.value || !highlightedOption.value) {
+        return;
+      }
+
+      const highlightedOptionRef = document
+        .getElementById(`combobox-${props.label}__options`)
+        ?.querySelector(`[data-highlighted-option="true"]`);
+
+      if (!highlightedOptionRef) {
+        return;
+      }
+
+      console.log(highlightedOptionRef);
+
+      if (highlightedOptionRef) {
+        highlightedOptionRef.scrollIntoView({
+          block: "nearest",
+          inline: "nearest",
+        });
+      }
+    });
+  },
+  { immediate: true },
+);
 
 const { floatingStyles } = useFloating(
   comboboxContainerRef,
