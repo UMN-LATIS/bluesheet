@@ -30,7 +30,7 @@
           v-model="groupType"
           :options="groupTypes"
           placeholder="Select..."
-          :canAddNewOption="true"
+          :canAddNewOptions="true"
           :nullable="true"
           label="Group Type"
           :showLabel="false"

@@ -86,6 +86,14 @@
           >
             None.
           </div>
+          <Button
+            v-if="canAddNewOptions"
+            class="tw-w-full tw-items-center disabled:tw-opacity-40"
+            :disabled="!query || isQueryAnOption"
+            @click="handleAddNewOptionsClick"
+          >
+            Add New Option
+          </Button>
           <slot name="afterOptions" :query="query" />
         </div>
       </MaybeTeleport>
@@ -105,7 +113,8 @@ import {
   autoUpdate,
 } from "@floating-ui/vue";
 import Label from "@/components/Label.vue";
-import MaybeTeleport from "../MaybeTeleport.vue";
+import MaybeTeleport from "@/components/MaybeTeleport.vue";
+import Button from "@/components/Button.vue";
 
 const props = withDefaults(
   defineProps<{
@@ -118,6 +127,7 @@ const props = withDefaults(
     strategy?: "absolute" | "fixed";
     teleportTo?: string;
     autoPlacement?: boolean;
+    canAddNewOptions?: boolean;
   }>(),
   {
     showLabel: true,
@@ -128,11 +138,13 @@ const props = withDefaults(
     strategy: "absolute",
     teleportTo: undefined,
     autoPlacement: false,
+    canAddNewOptions: false,
   },
 );
 
 const emit = defineEmits<{
   (eventName: "update:modelValue", value: ComboBoxOptionType);
+  (eventName: "addNewOption", value: ComboBoxOptionType);
 }>();
 
 const query = ref("");
@@ -158,6 +170,10 @@ const indexOfHighlightedOption = computed(() => {
     (option) => option?.id === highlightedOption.value?.id,
   );
   return index === -1 ? null : index;
+});
+
+const isQueryAnOption = computed(() => {
+  return filteredOptions.value.some((option) => option.label === query.value);
 });
 
 function areOptionsEqual(
@@ -242,6 +258,35 @@ function closeComboBoxOptions() {
   areOptionsOpen.value = false;
 }
 
+function handleAddNewOptionsClick() {
+  if (!query.value) {
+    return;
+  }
+
+  // check if the option already exists
+  const existingOption = props.options.find(
+    (option) => option.label === query.value,
+  );
+
+  if (existingOption) {
+    handleSelectOption(existingOption);
+    return;
+  }
+
+  // if it doesn't exist, add it as a new option
+  const newOption: ComboBoxOptionType = {
+    label: query.value,
+    secondaryLabel: "",
+  };
+
+  emit("addNewOption", newOption);
+
+  // do I need to wait until next tick to select the option?
+  nextTick(() => {
+    handleSelectOption(newOption);
+  });
+}
+
 function handleKeyDown(event: KeyboardEvent) {
   const KEYS = {
     ArrowDown: "ArrowDown",
@@ -269,11 +314,13 @@ function handleKeyDown(event: KeyboardEvent) {
     case "Enter":
       if (highlightedOption.value) {
         handleSelectOption(highlightedOption.value);
-      }
-
-      // if there's only one option, select it
-      else if (filteredOptions.value.length === 1) {
+      } else if (filteredOptions.value.length === 1) {
+        // if there's only one option, select it
         handleSelectOption(filteredOptions.value[0]);
+      } else if (props.canAddNewOptions && filteredOptions.value.length === 0) {
+        // if we can add new options, and there aren't any shown
+        // (to avoid accidental creation of duplicate options)
+        handleAddNewOptionsClick();
       }
       break;
     case "Escape":
