@@ -85,18 +85,9 @@
             placeholder="Select..."
             label="Group Type"
             :showLabel="false"
-          >
-            <template #afterOptions="{ query }">
-              <ButtonComponent
-                @click="
-                  addGroupTypeOption({
-                    label: query,
-                  })
-                "
-                >Add New Group Type</ButtonComponent
-              >
-            </template>
-          </ComboBox>
+            :canAddNewOptions="true"
+            @addNewOption="groupTypes.push($event)"
+          />
         </div>
 
         <div class="form-group tw-col-span-2">
@@ -301,22 +292,11 @@
             id="roles"
             v-model="newRole"
             :options="filteredRoles"
-            :canAddNewOption="true"
             label="Role"
             :showLabel="false"
+            :canAddNewOption="true"
             @addNewOption="(newOption) => roles.push(newOption)"
-          >
-            <template #afterOptions="{ query }">
-              <ButtonComponent
-                @click="
-                  addRoleOption({
-                    label: query,
-                  })
-                "
-                >Add New Role</ButtonComponent
-              >
-            </template>
-          </ComboBox>
+          />
         </div>
         <div class="col-sm-3">
           <button
@@ -495,48 +475,6 @@ export default {
       });
   },
   methods: {
-    addGroupTypeOption({ label }) {
-      const newOption = {
-        id: null,
-        label,
-        secondaryLabel: "",
-      };
-
-      // check if it already exists
-      const existingGroup = this.groupTypes.find(
-        (groupType) => groupType.label === newOption.label,
-      );
-
-      if (existingGroup) {
-        this.localGroup.group_type = existingGroup;
-        return;
-      }
-
-      // set the group type to the new group type
-      this.groupTypes.push(newOption);
-      this.localGroup.group_type = newOption;
-    },
-
-    addRoleOption({ label }) {
-      const newOption = {
-        id: null,
-        label,
-      };
-
-      // check if it already exists
-      const existingRole = this.roles.find(
-        (role) => role.label === newOption.label,
-      );
-
-      if (existingRole) {
-        this.newRole = existingRole;
-        return;
-      }
-
-      // set the role to the new role
-      this.roles.push(newOption);
-      this.newRole = newOption;
-    },
     isValidUrl,
     isValidDeptId(str) {
       if (!str) return true;
