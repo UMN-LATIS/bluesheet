@@ -324,7 +324,19 @@ function handleKeyDown(event: KeyboardEvent) {
 }
 
 watch(query, () => {
-  highlightedOption.value = first(filteredOptions.value) ?? null;
+  if (!props.modelValue) {
+    highlightedOption.value = first(filteredOptions.value) ?? null;
+  }
+
+  // if the current selected item is in the filtered options,
+  // use it as the default highlighted option
+  const isModelValueInFilteredOptions = filteredOptions.value.some((option) =>
+    areOptionsEqual(option, props.modelValue),
+  );
+
+  highlightedOption.value = isModelValueInFilteredOptions
+    ? props.modelValue
+    : first(filteredOptions.value) ?? null;
 });
 
 const { floatingStyles } = useFloating(
