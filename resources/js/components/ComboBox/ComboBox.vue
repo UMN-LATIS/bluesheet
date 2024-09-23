@@ -184,11 +184,12 @@ function areOptionsEqual(
     return false;
   }
 
-  return (
-    option1.id === option2.id ||
-    (option1.label === option2.label &&
-      option1.secondaryLabel === option2.secondaryLabel)
-  );
+  // use ids if they both exist otherwise use labels
+  const areEqual =
+    option1.id && option2.id
+      ? option1.id === option2.id
+      : option1.label === option2.label;
+  return areEqual;
 }
 
 function isHighlighted(option: ComboBoxOptionType) {
