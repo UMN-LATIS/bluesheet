@@ -24,7 +24,7 @@
                         <form method="POST" action="{{ url('/role') }}" accept-charset="UTF-8" class="form-horizontal" enctype="multipart/form-data">
                             {{ csrf_field() }}
 
-                            @include ('admin/role.role.form', ['formMode' => 'create'])
+                            @include ('admin.role.form', ['formMode' => 'create'])
 
                         </form>
 
