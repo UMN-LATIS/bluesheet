@@ -28,13 +28,15 @@
           v-if="groupTypes"
           id="groupTypes"
           v-model="groupType"
-          :options="groupTypes"
+          :options="sortedGroupTypes"
           placeholder="Select..."
-          :canAddNewOption="true"
+          :canAddNewOptions="true"
           :nullable="true"
           label="Group Type"
           :showLabel="false"
-          @addNewOption="(newGroupType) => groupTypes.push(newGroupType)"
+          @addNewOption="
+            (newGroupType) => (groupTypes = [...groupTypes, newGroupType])
+          "
         />
       </div>
     </div>
@@ -68,7 +70,7 @@
 <script>
 import Modal from "./Modal.vue";
 import FolderWidget from "./FolderWidget.vue";
-import ComboBox from "./LegacyComboBox.vue";
+import { ComboBox } from "./ComboBox";
 import { mapStores } from "pinia";
 import { useGroupStore } from "@/stores/useGroupStore";
 
@@ -102,6 +104,9 @@ export default {
   },
   computed: {
     ...mapStores(useGroupStore),
+    sortedGroupTypes() {
+      return this.groupTypes.toSorted((a, b) => a.label.localeCompare(b.label));
+    },
   },
   watch: {
     show: function (newVal) {
@@ -116,9 +121,7 @@ export default {
     axios
       .get("/api/group/types")
       .then((res) => {
-        this.groupTypes = res.data.sort((a, b) =>
-          a.label.localeCompare(b.label),
-        );
+        this.groupTypes = res.data;
       })
       .catch((err) => {
         console.error(err);

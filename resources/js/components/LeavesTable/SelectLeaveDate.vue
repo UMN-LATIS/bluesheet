@@ -7,18 +7,20 @@
       :label="variant === 'start' ? 'Leave Start Date' : 'Leave End Date'"
       :showLabel="false"
       :options="comboboxOptions"
+      teleportTo="body"
       class="tw-w-40"
       :inputClass="{
         '!tw-border-red-500 tw-border tw-solid': !isDateValid,
       }"
-      :canAddNewOption="true"
-      :addNewOptionLabel="`Custom Date`"
-      @addNewOption="showCustomDateInput = true"
       @update:modelValue="
         (comboboxOption) =>
           $emit('update:modelValue', comboboxOption?.id as string)
       "
-    />
+    >
+      <template #afterOptions>
+        <Button @click="showCustomDateInput = true"> Custom Date </Button>
+      </template>
+    </ComboBox>
     <div v-else class="tw-flex">
       <InputGroup
         :data-cy="`select-leave-date-input-${variant}`"
@@ -44,8 +46,9 @@
 </template>
 <script setup lang="ts">
 import { computed, ref, onMounted, watch } from "vue";
-import ComboBox, { ComboBoxOption } from "@/components/LegacyComboBox.vue";
+import { ComboBox, ComboBoxOptionType } from "@/components/ComboBox";
 import InputGroup from "../InputGroup.vue";
+import Button from "../Button.vue";
 import dayjs from "dayjs";
 import { useTermPayrollDatesStore } from "@/stores/useTermPayrollDateStore";
 import XIcon from "@/icons/XIcon.vue";
@@ -54,7 +57,7 @@ const props = withDefaults(
   defineProps<{
     modelValue: string;
     variant?: "start" | "end";
-    isOptionDisabled?: (opt: ComboBoxOption) => boolean;
+    isOptionDisabled?: (opt: ComboBoxOptionType) => boolean;
     validator?: (value: unknown) => boolean;
   }>(),
   {
@@ -109,7 +112,7 @@ watch(
   { immediate: true },
 );
 
-const localComboBoxValue = computed((): ComboBoxOption | null => {
+const localComboBoxValue = computed((): ComboBoxOptionType | null => {
   if (!props.modelValue) {
     return null;
   }

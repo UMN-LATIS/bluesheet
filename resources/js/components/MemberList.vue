@@ -125,12 +125,13 @@
             <ComboBox
               v-if="roles"
               v-model="member.role"
+              :label="`${member.user.displayName} Role`"
+              :showLabel="false"
               :options="roles"
               :canAddNewOption="true"
               class="tw-min-w-[10rem]"
-              @addNewOption="
-                (newRole) => $emit('update:roles', [...roles, newRole])
-              "
+              :canAddNewOptions="true"
+              @addNewOption="$emit('update:roles', [...roles, $event])"
             />
           </td>
         </template>
@@ -216,7 +217,7 @@
 <script lang="ts">
 import GroupTitle from "./GroupTitle.vue";
 import { dayjs, $can } from "@/utils";
-import ComboBox from "./LegacyComboBox.vue";
+import { ComboBox } from "@/components/ComboBox";
 import SortableLink from "./SortableLink.vue";
 import ManagerBadge from "./ManagerBadge.vue";
 

@@ -1,19 +1,15 @@
 <template>
   <DefaultLayout>
-    <div class="form-group row">
-      <label for="officialRole" class="col-sm-2 col-form-label"
-        >Filter by Official Role</label
-      >
-      <div class="col-sm-6">
-        <ComboBox
-          v-if="officialRoles"
-          id="groupTypes"
-          v-model="officialRoleFilter"
-          :options="officialRoles"
-          placeholder="Select..."
-        />
-      </div>
-    </div>
+    <ComboBox
+      v-if="officialRoles"
+      id="groupTypes"
+      v-model="officialRoleFilter"
+      label="Filter By Official Role"
+      :options="officialRoles"
+      placeholder="Select..."
+      class="tw-mb-8"
+    />
+
     <table class="table">
       <thead>
         <tr>
@@ -55,7 +51,7 @@
 <script>
 import SortableLink from "@/components/SortableLink.vue";
 import GroupTitle from "@/components/GroupTitle.vue";
-import ComboBox from "@/components/LegacyComboBox.vue";
+import { ComboBox } from "@/components/ComboBox";
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
 
 export default {

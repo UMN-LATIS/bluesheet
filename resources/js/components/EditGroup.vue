@@ -83,10 +83,10 @@
             v-model="localGroup.group_type"
             :options="groupTypes"
             placeholder="Select..."
-            :canAddNewOption="true"
             label="Group Type"
             :showLabel="false"
-            @addNewOption="(newGroupType) => groupTypes.push(newGroupType)"
+            :canAddNewOptions="true"
+            @addNewOption="groupTypes.push($event)"
           />
         </div>
 
@@ -226,7 +226,7 @@
         v-model:members="localGroup.members"
         :groupType="localGroup.group_type.label"
         :show_unit="localGroup.show_unit"
-        editing="true"
+        :editing="true"
         :roles="filteredRoles"
         viewType="group"
         :downloadTitle="localGroup.group_title"
@@ -292,9 +292,9 @@
             id="roles"
             v-model="newRole"
             :options="filteredRoles"
-            :canAddNewOption="true"
             label="Role"
             :showLabel="false"
+            :canAddNewOption="true"
             @addNewOption="(newOption) => roles.push(newOption)"
           />
         </div>
@@ -322,7 +322,7 @@
 </template>
 
 <script>
-import ComboBox from "./LegacyComboBox.vue";
+import { ComboBox } from "./ComboBox";
 import Members from "./Members.vue";
 import Modal from "./Modal.vue";
 import FolderWidget from "./FolderWidget.vue";

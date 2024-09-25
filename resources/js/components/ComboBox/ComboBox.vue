@@ -3,7 +3,7 @@
     <Label
       :for="`combobox-${label}__input`"
       :class="{
-        'tw-sr-only': hideLabel,
+        'tw-sr-only': !showLabel,
       }"
       :required="required"
       >{{ label }}</Label
@@ -12,10 +12,10 @@
       <button
         v-if="modelValue && !areOptionsOpen"
         ref="selectedItemRef"
-        class="tw-flex tw-bg-transparent tw-border tw-border-neutral-300 tw-w-full tw-py-3 tw-px-4 tw-items-center tw-justify-between tw-rounded-md"
+        class="tw-flex tw-bg-transparent tw-border tw-border-neutral-300 tw-w-full tw-py-3 tw-px-4 tw-items-center tw-justify-between tw-rounded-md tw-text-left"
         @click="handleChangeOption"
       >
-        <div class="tw-flex tw-flex-col tw-items-start">
+        <div class="tw-flex tw-flex-col tw-items-start tw-flex-1">
           <span class="tw-text-sm">{{ modelValue.label }}</span>
           <span
             v-if="modelValue.secondaryLabel"
@@ -37,7 +37,7 @@
           :id="`combobox-${label}__input`"
           ref="comboboxInputRef"
           v-model="query"
-          class="tw-border-none tw-bg-transparent tw-block tw-w-full tw-py-3 tw-px-4 tw-text-neutral-900 focus:tw-outline-none"
+          class="tw-border-none tw-bg-transparent tw-block tw-w-full tw-py-3 tw-pl-4 tw-text-neutral-900 focus:tw-outline-none tw-text-sm flex-1"
           :placeholder="placeholder"
           role="combobox"
           :aria-controls="`combobox-${label}__options`"
@@ -47,7 +47,7 @@
           @focus="areOptionsOpen = true"
         />
         <button
-          class="tw-flex tw-items-center tw-justify-center tw-bg-transparent tw-border-none tw-p-2 tw-rounded-md"
+          class="tw-flex tw-items-center tw-justify-center tw-bg-transparent tw-border-none tw-p-2 tw-mr-2 tw-rounded-md"
           @click="areOptionsOpen = !areOptionsOpen"
         >
           <ChevronDownIcon
@@ -57,47 +57,65 @@
         </button>
       </div>
 
-      <div
-        v-if="areOptionsOpen"
-        ref="comboboxOptionsRef"
-        class="combobox__options tw-border tw-border-neutral-300 tw-py-3 tw-px-2 tw-max-h-60 tw-overflow-auto tw-bg-white tw-rounded-md tw-shadow-lg tw-ring-1 tw-ring-black tw-ring-opacity-5 focus:tw-outline-none tw-relative tw-z-[1000] tw-min-w-[20rem]"
-        :style="floatingStyles"
-      >
-        <ul
-          v-if="filteredOptions.length"
-          :id="`combobox-${label}__options`"
-          class="tw-pl-0 tw-flex tw-flex-col gap-2"
-          role="listbox"
-        >
-          <ComboBoxOption
-            v-for="option in filteredOptions"
-            :key="option.id ?? option.label"
-            role="option"
-            :option="option"
-            :isSelected="isSelected(option)"
-            :isHighlighted="isHighlighted(option)"
-            @click="() => handleSelectOption(option)"
-          />
-        </ul>
+      <MaybeTeleport :teleportTo="teleportTo">
         <div
-          v-else
-          class="tw-p-2 tw-text-neutral-500 tw-text-sm tw-text-center"
+          v-if="areOptionsOpen"
+          ref="comboboxOptionsRef"
+          class="combobox__options tw-border tw-border-neutral-300 tw-py-3 tw-px-2 tw-max-h-60 tw-overflow-auto tw-bg-white tw-rounded-md tw-shadow-lg tw-ring-1 tw-ring-black tw-ring-opacity-5 focus:tw-outline-none tw-relative tw-z-[1000] tw-min-w-[20rem]"
+          :style="floatingStyles"
         >
-          None.
+          <ul
+            v-if="filteredOptions.length"
+            :id="`combobox-${label}__options`"
+            class="tw-pl-0 tw-flex tw-flex-col gap-2"
+            role="listbox"
+          >
+            <ComboBoxOption
+              v-for="option in filteredOptions"
+              :key="option.id ?? option.label"
+              role="option"
+              :option="option"
+              :isSelected="isSelected(option)"
+              :isHighlighted="isHighlighted(option)"
+              :data-highlighted-option="isHighlighted(option)"
+              @click="() => handleSelectOption(option)"
+            />
+          </ul>
+          <div
+            v-else
+            class="tw-p-2 tw-text-neutral-500 tw-text-sm tw-text-center"
+          >
+            None.
+          </div>
+          <Button
+            v-if="canAddNewOptions"
+            class="tw-w-full tw-items-center disabled:tw-opacity-40"
+            :disabled="!query || isQueryAnOption"
+            @click="handleAddNewOptionsClick"
+          >
+            Add New Option
+          </Button>
+          <slot name="afterOptions" :query="query" />
         </div>
-        <slot name="afterOptions" />
-      </div>
+      </MaybeTeleport>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-import { ref, computed, nextTick } from "vue";
+import { ref, computed, nextTick, watch } from "vue";
 import { ComboBoxOptionType, ComboBoxOption } from ".";
 import { onClickOutside } from "@vueuse/core";
 import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
 import { first } from "lodash";
-import { useFloating, offset } from "@floating-ui/vue";
+import {
+  useFloating,
+  offset,
+  autoPlacement as autoPlacementFn,
+  autoUpdate,
+} from "@floating-ui/vue";
 import Label from "@/components/Label.vue";
+import MaybeTeleport from "@/components/MaybeTeleport.vue";
+import Button from "@/components/Button.vue";
 
 const props = withDefaults(
   defineProps<{
@@ -105,20 +123,29 @@ const props = withDefaults(
     options: ComboBoxOptionType[];
     modelValue: ComboBoxOptionType | null;
     placeholder?: string;
-    hideLabel?: boolean;
+    showLabel?: boolean;
     required?: boolean;
+    strategy?: "absolute" | "fixed";
+    teleportTo?: string;
+    autoPlacement?: boolean;
+    canAddNewOptions?: boolean;
   }>(),
   {
-    hideLabel: false,
+    showLabel: true,
     modelValue: null,
     options: () => [] as ComboBoxOptionType[],
     placeholder: "Choose...",
     required: false,
+    strategy: "absolute",
+    teleportTo: undefined,
+    autoPlacement: false,
+    canAddNewOptions: false,
   },
 );
 
 const emit = defineEmits<{
   (eventName: "update:modelValue", value: ComboBoxOptionType);
+  (eventName: "addNewOption", value: ComboBoxOptionType);
 }>();
 
 const query = ref("");
@@ -140,10 +167,14 @@ const filteredOptions = computed(() => {
 });
 
 const indexOfHighlightedOption = computed(() => {
-  const index = filteredOptions.value.findIndex(
-    (option) => option?.id === highlightedOption.value?.id,
+  const index = filteredOptions.value.findIndex((option) =>
+    areOptionsEqual(option, highlightedOption.value),
   );
   return index === -1 ? null : index;
+});
+
+const isQueryAnOption = computed(() => {
+  return filteredOptions.value.some((option) => option.label === query.value);
 });
 
 function areOptionsEqual(
@@ -154,11 +185,12 @@ function areOptionsEqual(
     return false;
   }
 
-  return (
-    option1.id === option2.id ||
-    (option1.label === option2.label &&
-      option1.secondaryLabel === option2.secondaryLabel)
-  );
+  // use ids if they both exist otherwise use labels
+  const areEqual =
+    option1.id && option2.id
+      ? option1.id === option2.id
+      : option1.label === option2.label;
+  return areEqual;
 }
 
 function isHighlighted(option: ComboBoxOptionType) {
@@ -171,16 +203,14 @@ function isSelected(option: ComboBoxOptionType) {
 
 function handleSelectOption(option: ComboBoxOptionType) {
   emit("update:modelValue", option);
-  areOptionsOpen.value = false;
-  query.value = "";
-  highlightedOption.value = null;
+  closeComboBoxOptions();
   nextTick(() => {
     selectedItemRef.value?.focus();
   });
 }
 
 onClickOutside(comboboxContainerRef, () => {
-  areOptionsOpen.value = false;
+  closeComboBoxOptions();
 });
 
 function handleChangeOption() {
@@ -199,7 +229,6 @@ function highlightNextOption() {
     indexOfHighlightedOption.value === null
   ) {
     highlightedOption.value = first(filteredOptions.value) ?? null;
-    console.log(highlightedOption.value);
     return;
   }
 
@@ -222,6 +251,36 @@ function highlightPrevOption() {
 
   const prevIndex = Math.max(indexOfHighlightedOption.value - 1, 0);
   highlightedOption.value = filteredOptions.value[prevIndex];
+}
+
+function closeComboBoxOptions() {
+  query.value = "";
+  highlightedOption.value = null;
+  areOptionsOpen.value = false;
+}
+
+function handleAddNewOptionsClick() {
+  if (!query.value) {
+    return;
+  }
+
+  // check if the option already exists
+  const existingOption = props.options.find(
+    (option) => option.label === query.value,
+  );
+
+  if (existingOption) {
+    handleSelectOption(existingOption);
+    return;
+  }
+
+  // if it doesn't exist, add it as a new option
+  const newOption: ComboBoxOptionType = {
+    label: query.value,
+  };
+
+  emit("addNewOption", newOption);
+  handleSelectOption(newOption);
 }
 
 function handleKeyDown(event: KeyboardEvent) {
@@ -251,22 +310,46 @@ function handleKeyDown(event: KeyboardEvent) {
     case "Enter":
       if (highlightedOption.value) {
         handleSelectOption(highlightedOption.value);
+      } else if (filteredOptions.value.length === 1) {
+        // if there's only one option, select it
+        handleSelectOption(filteredOptions.value[0]);
+      } else if (props.canAddNewOptions) {
+        handleAddNewOptionsClick();
       }
       break;
     case "Escape":
-      query.value = "";
-      highlightedOption.value = null;
-      areOptionsOpen.value = false;
+      closeComboBoxOptions();
       break;
   }
 }
+
+watch(query, () => {
+  if (!props.modelValue) {
+    highlightedOption.value = first(filteredOptions.value) ?? null;
+  }
+
+  // if the current selected item is in the filtered options,
+  // use it as the default highlighted option
+  const isModelValueInFilteredOptions = filteredOptions.value.some((option) =>
+    areOptionsEqual(option, props.modelValue),
+  );
+
+  highlightedOption.value = isModelValueInFilteredOptions
+    ? props.modelValue
+    : first(filteredOptions.value) ?? null;
+});
 
 const { floatingStyles } = useFloating(
   comboboxContainerRef,
   comboboxOptionsRef,
   {
     placement: "bottom-start",
-    middleware: [offset(10)],
+    middleware: [
+      offset(10),
+      ...(props.autoPlacement ? [autoPlacementFn()] : []),
+    ],
+    strategy: props.strategy,
+    whileElementsMounted: autoUpdate,
   },
 );
 </script>
