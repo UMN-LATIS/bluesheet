@@ -48,8 +48,8 @@
           </th>
           <th>
             <SortableLink
-              sortLabel="Accountant"
-              sortElement="accountant.0.user.displayName"
+              sortLabel="HR Consultant"
+              sortElement="hrconsultant.0.user.displayName"
               :currentSort="currentSort"
               :currentSortDir="currentSortDir"
               @sort="sort"
@@ -57,17 +57,8 @@
           </th>
           <th>
             <SortableLink
-              sortLabel="Finance Manager"
-              sortElement="financeManager.0.user.displayName"
-              :currentSort="currentSort"
-              :currentSortDir="currentSortDir"
-              @sort="sort"
-            />
-          </th>
-          <th>
-            <SortableLink
-              sortLabel="Payroll Specialist"
-              sortElement="payrollSpecialist.0.user.displayName"
+              sortLabel="HR Generalist"
+              sortElement="hrgeneralist.0.user.displayName"
               :currentSort="currentSort"
               :currentSortDir="currentSortDir"
               @sort="sort"
@@ -89,16 +80,11 @@
             >
           </td>
           <td>
-            <UserWithLink :memberList="department.accountant"></UserWithLink>
+            <UserWithLink :memberList="department.hrConsultant"></UserWithLink>
           </td>
           <td>
             <UserWithLink
-              :memberList="department.financeManager"
-            ></UserWithLink>
-          </td>
-          <td>
-            <UserWithLink
-              :memberList="department.payrollSpecialist"
+              :memberList="department.hrGeneralist"
             ></UserWithLink>
           </td>
         </tr>
@@ -147,9 +133,8 @@ export default {
         outputObject.dept_id = members[0].group.dept_id;
         outputObject.department = members[0].group.group_title;
         outputObject.group = members[0].group;
-        outputObject.financeManager = members.filter((m) => m.role.id == 24);
-        outputObject.payrollSpecialist = members.filter((m) => m.role.id == 14);
-        outputObject.accountant = members.filter((m) => m.role.id == 11);
+        outputObject.hrConsultant = members.filter((m) => m.role.id == 12);
+        outputObject.hrGeneralist = members.filter((m) => m.role.id == 13);
         listByDepartment.push(outputObject);
       }
 
