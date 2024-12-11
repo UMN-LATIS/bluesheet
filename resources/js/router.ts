@@ -16,6 +16,7 @@ import ErrorPage from "./pages/ErrorPage.vue";
 import CeddLikeReportPage from "./pages/reports/CeddLikeReportPage.vue";
 import CommitteeServiceReportPage from "./pages/reports/CommitteeServiceReportPage.vue";
 import FiscalReportPage from "./pages/reports/FiscalReportPage.vue";
+import HRReportPage from "./pages/reports/HRReportPage.vue";
 import LastModifiedReportPage from "./pages/reports/LastModifiedReportPage.vue";
 import MissingOfficialReportPage from "./pages/reports/MissingOfficialReportPage.vue";
 import OrgpReportPage from "./pages/reports/OrgpReportPage.vue";
@@ -105,6 +106,12 @@ export const router = createRouter({
       name: "fiscal",
       path: "/reports/fiscal",
       component: FiscalReportPage,
+      props: true,
+    },
+    {
+      name: "hr",
+      path: "/reports/hr",
+      component: HRReportPage,
       props: true,
     },
     {
