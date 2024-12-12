@@ -14,6 +14,11 @@
           >HR Generalist</router-link
         >
       </li>
+      <li>
+        <router-link :to="{ name: 'role', params: { roleId: 14 } }"
+          >Payroll Specialist</router-link
+        >
+        </li>
 
     </ul>
     <table class="table">
@@ -64,6 +69,15 @@
               @sort="sort"
             />
           </th>
+          <th>
+            <SortableLink
+              sortLabel="Payroll Specialist"
+              sortElement="payrollspecialist.0.user.displayName"
+              :currentSort="currentSort"
+              :currentSortDir="currentSortDir"
+              @sort="sort"
+            />
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -87,6 +101,11 @@
               :memberList="department.hrGeneralist"
             ></UserWithLink>
           </td>
+          <td>
+            <UserWithLink
+              :memberList="department.payrollSpecialist"
+            ></UserWithLink>
+            </td>
         </tr>
       </tbody>
     </table>
@@ -135,6 +154,7 @@ export default {
         outputObject.group = members[0].group;
         outputObject.hrConsultant = members.filter((m) => m.role.id == 12);
         outputObject.hrGeneralist = members.filter((m) => m.role.id == 13);
+        outputObject.payrollSpecialist = members.filter((m) => m.role.id == 14);
         listByDepartment.push(outputObject);
       }
 
@@ -168,6 +188,10 @@ export default {
       },
       {
         roleId: 13, // hr generalist
+        groupType: null,
+      },
+      {
+        roleId: 14, // payroll specialist
         groupType: null,
       }
     ];
