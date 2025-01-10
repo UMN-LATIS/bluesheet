@@ -16,7 +16,7 @@
   "dependencies": {
     "@floating-ui/vue": "^1.1.4",
     "@headlessui/vue": "^1.7.16",
-    "@umn-latis/cla-vue-template": "^1.1.0",
+    "@umn-latis/cla-vue-template": "^1.2.2",
     "@vitejs/plugin-vue": "^4.2.3",
     "@vueuse/core": "^10.2.1",
     "axios": "^0.18.1",
