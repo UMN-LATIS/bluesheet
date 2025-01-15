@@ -175,7 +175,7 @@ class UserService {
     }
 
     public function doesUserManageAnyGroupWithInstructor(User $manager, User $instructor): bool {
-        $userManagedDeptIds = $manager->getManagedGroups()->pluck('dept_id');
+        $userManagedDeptIds = $manager->getManagedGroups()->pluck('dept_id')->filter();
 
         return $userManagedDeptIds->contains(function ($deptId) use ($instructor) {
             return $this->isUserInstructorInDept($instructor, $deptId);
