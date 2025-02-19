@@ -27,6 +27,7 @@ class User extends Authenticatable implements Auditable {
     use HasApiTokens;
 
     public $timestamps = true;
+    public $leaveIds = null;
 
     protected $casts = [
         'send_email_reminders' => 'boolean',
