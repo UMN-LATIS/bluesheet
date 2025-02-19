@@ -7,6 +7,33 @@
     </p>
     <h1 class="tw-mt-0 tw-mb-8">Department Leaves</h1>
 
+    <DownloadSpreadsheetButton 
+              v-if="loadStatus === 'complete'"
+              :filename="'department-leaves-report-' + new Date().toISOString() + '.xlsx'"
+              :sheetData="[
+                {
+                  sheetName: 'All Department Leaves',
+                  data: leavesRecordsToDownload('all'),
+                },
+                {
+                  sheetName: 'Confirmed Leaves',
+                  data: leavesRecordsToDownload('confirmed'),
+                },
+                {
+                  sheetName: 'Pending Leaves',
+                  data: leavesRecordsToDownload('pending'),
+                },
+                {
+                  sheetName: 'Eligible Leaves',
+                  data: leavesRecordsToDownload('eligible'),
+                },
+                {
+                  sheetName: 'Cancelled Leaves',
+                  data: leavesRecordsToDownload('cancelled'),
+                }
+
+              ]"
+            />
     <div
       v-if="loadStatus === 'loading'"
       class="tw-p-8 tw-flex-col tw-justify-center tw-items-center tw-text-center tw-bg-neutral-50 tw-text-neutral-400"
@@ -68,6 +95,7 @@ import ProgressSpinner from "@/components/ProgressSpinner.vue";
 import { useSimulatedProgress } from "@/utils/useSimulatedProgress";
 import WideLayout from "@/layouts/WideLayout.vue";
 import { $can } from "@/utils";
+import DownloadSpreadsheetButton from "@/components/DownloadSpreadsheetButton.vue";
 
 // TODO: add permissions for if user can view this report
 
@@ -83,6 +111,26 @@ const termLabels = computed(() => {
 
 const loadStatus = ref<T.LoadState>("loading");
 const { progress, simulateUpTo } = useSimulatedProgress();
+
+const leavesRecordsToDownload = function(typeFilter: string | null = null) {
+  return leaveCountReportRows.value.map((row) => {
+    return {
+      department: row.group.name,
+      ...row.leavesByTerm.reduce((acc, data) => {
+          // acc[data.term] = 
+          const entries = Object.entries(data.leaveCountByStatus);
+          if(typeFilter) {
+            acc[data.term] = entries.filter(([status, count]) => status === typeFilter).map(([status, count]) => `${count}`).join('');
+          }
+          else {
+            acc[data.term] = entries.map(([status, count]) => `${status}: ${count}`)
+            .join('\n');
+          }
+        return acc;
+      }, {} as Record<string, string>),
+    };
+  });
+};
 
 onMounted(async () => {
   const progressSpinnerComplete = simulateUpTo(0.9);
