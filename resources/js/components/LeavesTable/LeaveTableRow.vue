@@ -104,6 +104,11 @@
         :validator="
           (endDate) => areStartAndEndDatesValid(localLeave.start_date, endDate)
         "
+        :errorText="
+          !isEndDateAfterStartDate
+            ? 'End date must be after start date'
+            : 'Invalid Date'
+        "
         :isOptionDisabled="
           (opt) => dayjs(opt.id).isBefore(dayjs(localLeave.start_date))
         "
@@ -241,6 +246,10 @@ const hasLeaveChanged = computed(() => {
 });
 
 const isNotEmptyString = (value: unknown) => value !== "";
+
+const isEndDateAfterStartDate = computed(() =>
+  dayjs(localLeave.end_date).isAfter(dayjs(localLeave.start_date)),
+);
 
 const areStartAndEndDatesValid = (startDate: unknown, endDate: unknown) =>
   typeof startDate === "string" &&
