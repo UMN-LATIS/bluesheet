@@ -4,6 +4,8 @@ on: [push, pull_request]
 
 env:
   LDAP_PASSWORD: ${{ secrets.LDAP_PASSWORD }}
+  WWWGROUP: 1000
+  WWWUSER: 1000
 
 jobs:
   tests:
