@@ -17,10 +17,10 @@ add('shared_dirs', []);
 add('writable_dirs', []);
 
 // Servers
-$devHost = 'cla-groups-dev.oit.umn.edu';
-$tstHost = 'cla-groups-tst.oit.umn.edu';
-$prodHost = 'cla-groups-prd.oit.umn.edu';
-$phpPath = '/opt/remi/php81/root/usr/bin/php';
+$devHost = 'cla-bluesheet-dev.oit.umn.edu';
+$tstHost = 'cla-bluesheet-tst.oit.umn.edu';
+$prodHost = 'cla-bluesheet-prd.oit.umn.edu';
+
 
 host('dev')
   ->set('hostname', $devHost)
@@ -28,7 +28,7 @@ host('dev')
   ->set('labels', ['stage' => 'development'])
   // ->identityFile()
   ->set('bin/php', $phpPath)
-  ->set('deploy_path', '/swadm/var/www/html/');
+  ->set('deploy_path', '/var/www/bluesheet/');
 
 host('stage')
   ->set('hostname', $tstHost)
@@ -36,14 +36,14 @@ host('stage')
   ->set('labels', ['stage' => 'stage'])
   // ->identityFile()
   ->set('bin/php', $phpPath)
-  ->set('deploy_path', '/swadm/var/www/html/');
+  ->set('deploy_path', '/var/www/bluesheet/');
 
 host('prod')
   ->set('hostname', $prodHost)
   ->set('remote_user', 'swadm')
   ->set('labels', ['stage' => 'production'])
   ->set('bin/php', $phpPath)
-  ->set('deploy_path', '/swadm/var/www/html/');
+  ->set('deploy_path', '/var/www/bluesheet/');
 
 task('assets:generate', function() {
   cd('{{release_path}}');
