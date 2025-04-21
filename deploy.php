@@ -1,7 +1,7 @@
 <?php
 namespace Deployer;
 // require 'contrib/laravel.php';
-require 'contrib/yarn.php';
+require 'contrib/npm.php';
 require 'recipe/laravel.php';
 
 // Configuration
@@ -24,31 +24,24 @@ $prodHost = 'cla-bluesheet-prd.oit.umn.edu';
 
 host('dev')
   ->set('hostname', $devHost)
-  ->set('remote_user', 'swadm')
+  ->set('remote_user', 'latis_deploy')
   ->set('labels', ['stage' => 'development'])
   // ->identityFile()
-  ->set('bin/php', $phpPath)
   ->set('deploy_path', '/var/www/bluesheet/');
 
 host('stage')
   ->set('hostname', $tstHost)
-  ->set('remote_user', 'swadm')
+  ->set('remote_user', 'latis_deploy')
   ->set('labels', ['stage' => 'stage'])
   // ->identityFile()
-  ->set('bin/php', $phpPath)
   ->set('deploy_path', '/var/www/bluesheet/');
 
 host('prod')
   ->set('hostname', $prodHost)
-  ->set('remote_user', 'swadm')
+  ->set('remote_user', 'latis_deploy')
   ->set('labels', ['stage' => 'production'])
-  ->set('bin/php', $phpPath)
   ->set('deploy_path', '/var/www/bluesheet/');
 
-task('assets:generate', function() {
-  cd('{{release_path}}');
-  run('yarn build');
-})->desc('Assets generation');
 
 
 // [Optional] if deploy fails automatically unlock.
@@ -65,8 +58,12 @@ task('deploy:git:submodules', function () {
 // Migrate database before symlink new release.
 
 before('deploy:symlink', 'artisan:migrate');
-after('deploy:update_code', 'yarn:install');
-after('yarn:install', 'assets:generate');
+after('deploy:update_code', 'npm:install');
+task('assets:generate', function () {
+    cd('{{release_path}}');
+    run('npm run build');
+})->desc('Assets generation');
+after('deploy:vendors', 'assets:generate');
 after('artisan:migrate', 'artisan:queue:restart');
 
 // clear any cached data, like cached instructor info,
