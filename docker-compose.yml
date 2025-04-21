@@ -3,6 +3,11 @@ version: "3"
 services:
   app:
     image: sail-8.4/app
+    build:
+      context: ./vendor/laravel/sail/runtimes/8.4
+      dockerfile: Dockerfile
+      args:
+          WWWGROUP: '${WWWGROUP}'
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
