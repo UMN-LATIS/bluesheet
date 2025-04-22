@@ -1,5 +1,10 @@
 <template>
-  <div class="tw-flex">
+  <div
+    class="select-leave-date tw-flex tw-flex-col"
+    :class="{
+      'tw-pt-3': !isDateValid && errorText,
+    }"
+  >
     <ComboBox
       v-if="!showCustomDateInput"
       :data-cy="`select-leave-date-combobox-${variant}`"
@@ -42,6 +47,9 @@
         <span class="sr-only">Cancel custom date</span>
       </button>
     </div>
+    <span v-if="!isDateValid && errorText" class="tw-text-xs tw-text-red-600">{{
+      errorText
+    }}</span>
   </div>
 </template>
 <script setup lang="ts">
@@ -59,12 +67,14 @@ const props = withDefaults(
     variant?: "start" | "end";
     isOptionDisabled?: (opt: ComboBoxOptionType) => boolean;
     validator?: (value: unknown) => boolean;
+    errorText?: string;
   }>(),
   {
     modelValue: "",
     variant: "start",
     isOptionDisabled: () => false,
     validator: () => true,
+    errorText: "",
   },
 );
 
