@@ -25,7 +25,7 @@ return array(
       // by default, we'll register the necessary routes. In multitennancy cases, you probably don't want to do this.
       "register_routes" => env('SHIB_REGISTER_ROUTES', true),
       // where should the user be redirected after a successful login
-      'authenticated' => '/home',
+      'authenticated' => '/',
       // authfield defines the field we should use as the primary key to look up users in our database.
       'authfield'     => env('SHIB_AUTH_FIELD', 'umndid'),
     /*
