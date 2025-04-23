@@ -69,7 +69,7 @@ Some features of BlueSheet require access to [Bandaid](https://github.com/UMN-LA
 To connect to Bandaid for local development:
 
 1. Connect to UMN VPN.
-2. Login to <https://cla-bandaid-prd-web.oit.umn.edu/admin>
+2. Login to <https://bandaid.cla.umn.edu/admin>
 3. In Bandaid, add a new API Token for your user: Users > `username` > Edit > Add Token.
 4. Add the token in `.env` as `BANDAID_KEY=<your token>`
 5. Get your VPN ip address from https://z.umn.edu/ip
