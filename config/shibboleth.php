@@ -88,8 +88,8 @@ return array(
          // fillable user model attribute => server variable
          'email'       => env('SHIB_EMAIL_FIELD', 'eppn'),
          'name'        => env('SHIB_NAME_FIELD', 'displayName'),
-         'givenname'  => env('SHIB_FIRST_NAME', 'givenName'),
-         'surname'   => env('SHIB_LAST_NAME', 'sn'),
+         'first_name'  => env('SHIB_FIRST_NAME', 'givenName'),
+         'last_name'   => env('SHIB_LAST_NAME', 'sn'),
          'umndid'  => env("SHIB_DID", 'umnDID'),
          'emplid'  => env('SHIB_EMPL_ID', 'umnEmplId'),
      ],
