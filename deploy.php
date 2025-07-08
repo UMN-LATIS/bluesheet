@@ -3,7 +3,9 @@ namespace Deployer;
 // require 'contrib/laravel.php';
 require 'contrib/npm.php';
 require 'recipe/laravel.php';
+require 'contrib/cachetool.php';
 
+set('cachetool_args', '--tmp-dir=/var/www/chimein');
 // Configuration
 set('ssh_type', 'native');
 set('ssh_multiplexing', true);
@@ -68,3 +70,4 @@ after('artisan:migrate', 'artisan:queue:restart');
 
 // clear any cached data, like cached instructor info,
 before('artisan:config:cache', 'artisan:cache:clear');
+after('deploy:symlink', 'cachetool:clear:opcache');
