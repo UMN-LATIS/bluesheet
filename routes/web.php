@@ -114,6 +114,8 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
         Route::get('/groups/{group}/leaves', [GroupLeaveController::class, 'index']);
     });
 
+    Route::post('groups/{group}/change-request', 'GroupController@requestChange');
+
     // Catchall 404 JSON route
     Route::any('{any}', function () {
         return response()->json(['message' => 'Not Found'], 404);

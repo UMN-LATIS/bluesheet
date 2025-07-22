@@ -9,6 +9,7 @@ use App\ParentOrganization;
 use DB;
 use App\Group;
 use App\Constants\Permissions;
+use Illuminate\Support\Facades\Mail;
 
 class GroupController extends Controller
 {
@@ -408,4 +409,26 @@ class GroupController extends Controller
         });
         return response()->json($groups);
     }
+
+    public function requestChange(Request $request, Group $group) {
+        $validated = $request->validate([
+            'description' => 'nullable|string|max:2000',
+        ]);
+        
+        $admins = $group->activeMembers->filter(function($member) {
+            return $member->admin;
+        });
+
+        if($admins->count() == 0) {
+            return response()->json(['success' => false, 'message' => 'No active managers found for this group. Please e-mail latistecharch@umn.edu for assistance.'], 400);
+        }
+        else {
+            $adminEmails = $admins->pluck('user.email')->unique()->toArray();
+            // Send email notifications to admins
+            Mail::to($adminEmails)->send(new \App\Mail\GroupChangeRequest($group, $validated['description'], $request->user()));
+        }
+        
+        return response()->json(['success' => true, 'message' => 'Change request submitted successfully.']);
+    }
+
 }

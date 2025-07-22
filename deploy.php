@@ -5,7 +5,7 @@ require 'contrib/npm.php';
 require 'recipe/laravel.php';
 require 'contrib/cachetool.php';
 
-set('cachetool_args', '--tmp-dir=/var/www/chimein');
+set('cachetool_args', '--tmp-dir=/var/www/bluesheet');
 // Configuration
 set('ssh_type', 'native');
 set('ssh_multiplexing', true);
