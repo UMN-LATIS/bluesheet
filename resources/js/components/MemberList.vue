@@ -23,7 +23,7 @@
         </th>
         <th v-if="viewType == 'group'" scope="col">
           <SortableLink
-            sortLabel="Role"
+            :sortLabel="groupType?(groupType + ' ' + 'Role'):'Role'"
             sortElement="role.label"
             :currentSort="currentSort"
             :currentSortDir="currentSortDir"
@@ -236,6 +236,7 @@ export default {
     "roles",
     "show_unit",
     "viewType", // "group" or "role"
+    "groupType",
     "currentSort",
     "currentSortDir",
     "showManagerBadge",

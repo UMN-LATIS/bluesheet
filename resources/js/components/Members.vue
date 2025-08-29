@@ -107,6 +107,7 @@
         :viewType="viewType"
         :currentSort="currentSort"
         :currentSortDir="currentSortDir"
+        :groupType="groupType"
         @remove="removeMember"
         @update:roles="(val) => $emit('update:roles', val)"
         @sort="sort"
