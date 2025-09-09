@@ -128,10 +128,10 @@ Route::get('/api/group/{group}/members/{hash}', 'GroupController@members');
 
 // Route::resource('users', 'Admin\\UsersController');
 Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'permission:edit users']], function () {
-    Route::resource('/', 'Admin\\AdminController');
-    Route::resource('users', 'Admin\\UsersController');
-    Route::resource('group-type', 'Admin\\GroupTypeController');
-    Route::resource('role', 'Admin\\RoleController');
+    // Route::resource('/', 'Admin\\AdminController');
+    // Route::resource('users', 'Admin\\UsersController');
+    // Route::resource('group-type', 'Admin\\GroupTypeController');
+    // Route::resource('role', 'Admin\\RoleController');
 });
 
 Route::get('/group/{group}/{hash}', 'HomeController@index');
