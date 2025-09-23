@@ -232,17 +232,22 @@ class UserController extends Controller {
             if (isset($userRecords[$user->emplid])) {
                 $user->deptid = $userRecords[$user->emplid]->DEPTID;
             }
+            $user->lastEligibilityImport = config('bluesheet.lastEligibilityImport');
         }
 
-        $departmentRecords = collect($bandaid->getDepartments($users->pluck("deptid")->toArray()))->keyBy("DEPT_ID");
-        foreach ($users as $user) {
-            if (!isset($user->deptid)) {
-                continue;
+        try {
+            $departmentRecords = collect($bandaid->getDepartments($users->pluck("deptid")->toArray()))->keyBy("DEPT_ID");
+            foreach ($users as $user) {
+                if (!isset($user->deptid)) {
+                    continue;
+                }
+                if ($departmentRecords[$user->deptid]) {
+                    $user->dept_name = $departmentRecords[$user->deptid]->DESCRIPTION;
+                }
             }
-            if ($departmentRecords[$user->deptid]) {
-                $user->dept_name = $departmentRecords[$user->deptid]->DESCRIPTION;
-            }
-        }
+        } catch (\Exception $e) {
+            // if we can't get department info, oh well
+        }   
 
 
 

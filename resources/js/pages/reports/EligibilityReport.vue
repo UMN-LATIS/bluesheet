@@ -45,6 +45,10 @@
     >
       Download List
     </DownloadCSV>
+    <p>
+      Eligibility list last updated:
+      {{ userList.length > 0 && userList[0].lastEligibilityImport ? new Date(userList[0].lastEligibilityImport).toLocaleString() : 'Not available' }}
+    </p>
     <table class="table">
       <thead>
         <tr>
