@@ -3,7 +3,9 @@ namespace Deployer;
 // require 'contrib/laravel.php';
 require 'contrib/npm.php';
 require 'recipe/laravel.php';
+require 'contrib/cachetool.php';
 
+set('cachetool_args', '--tmp-dir=/var/www/bluesheet');
 // Configuration
 set('ssh_type', 'native');
 set('ssh_multiplexing', true);
@@ -47,13 +49,21 @@ host('prod')
 // [Optional] if deploy fails automatically unlock.
 after('deploy:failed', 'deploy:unlock');
 
-after('deploy:update_code', 'deploy:git:submodules');
-task('deploy:git:submodules', function () {
-    $git = get('bin/git');
+// after('deploy:update_code', 'deploy:git:submodules');
+// task('deploy:git:submodules', function () {
+//     $git = get('bin/git');
 
-    cd('{{release_path}}');
-    run("$git submodule update --init");
+//     cd('{{release_path}}');
+//     run("$git submodule update --init");
+// });
+
+// install private composer packages, like Laravel Nova
+task('composer:private', function () {
+  cd('{{release_path}}');
+  run('source .env && {{bin/composer}} config "http-basic.nova.laravel.com" "$NOVA_USERNAME" "$NOVA_LICENSE_KEY"');
 });
+before('deploy:vendors', 'composer:private');
+
 
 // Migrate database before symlink new release.
 
@@ -68,3 +78,4 @@ after('artisan:migrate', 'artisan:queue:restart');
 
 // clear any cached data, like cached instructor info,
 before('artisan:config:cache', 'artisan:cache:clear');
+after('deploy:symlink', 'cachetool:clear:opcache');

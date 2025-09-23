@@ -51,7 +51,8 @@ class sendPeriodicUpdateEmail extends Command
             });
             // should be groups where we're an admin
             if($userGroups->count() > 0) {
-                Mail::to($user->email)->send(new \App\Mail\GroupUpdateReminder($userGroups));
+                $uniqueGroups = $userGroups->unique('id');
+                Mail::to($user->email)->send(new \App\Mail\GroupUpdateReminder($uniqueGroups));
             }
             
 

@@ -24,6 +24,13 @@
           >
             Edit Group
           </button>
+          <button
+            v-else
+            class="btn btn-outline-primary"
+            @click="requestAChange = true"
+          >
+            Request a Change
+          </button>
         </div>
         <h1><GroupTitle :group="group" /></h1>
         <dl class="tuple-list">
@@ -131,6 +138,12 @@
       </div>
     </div>
 
+    <RequestAChange
+      v-if="requestAChange"
+      :groupId="group.id"
+      @close="requestAChange = false"
+    />
+
     <Members
       :groupType="group.group_type.label"
       :members="group.members"
@@ -163,6 +176,7 @@ import { usePermissionsStore } from "@/stores/usePermissionsStore";
 import Button from "./Button.vue";
 import CreateGroup from "./CreateGroup.vue";
 import { CheckIcon } from "@/icons";
+import RequestAChange from "./RequestAChange.vue";
 
 const props = defineProps<{
   group: T.Group;
@@ -179,6 +193,8 @@ const permissionsStore = usePermissionsStore();
 const canViewGroupLeaves = ref(false);
 const canCreateSubgroup = ref(false);
 const isAddingSubgroup = ref(false);
+
+const requestAChange = ref(false);
 
 watch(
   () => props.group,

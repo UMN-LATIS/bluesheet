@@ -412,7 +412,19 @@ export default {
       if (!this.roles) {
         return [];
       }
-      return this.roles;
+
+      // filter roles that have an official_group_type and where the official_group_type does not equal the group_type of our current group
+      const currentGroupType = this.localGroup?.group_type?.id;
+      const filtered = this.roles.filter(role => {
+        if (role.official_group_type == null) {
+          return true;
+        }
+
+        // Check if any of the official_group_type entries have an id that matches currentGroupType
+        return role.official_group_type.some(groupType => groupType.id === currentGroupType);
+      });
+
+      return filtered;
     },
     groupURL: function () {
       return (

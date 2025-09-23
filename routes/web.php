@@ -114,6 +114,8 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
         Route::get('/groups/{group}/leaves', [GroupLeaveController::class, 'index']);
     });
 
+    Route::post('groups/{group}/change-request', 'GroupController@requestChange');
+
     // Catchall 404 JSON route
     Route::any('{any}', function () {
         return response()->json(['message' => 'Not Found'], 404);
@@ -126,10 +128,10 @@ Route::get('/api/group/{group}/members/{hash}', 'GroupController@members');
 
 // Route::resource('users', 'Admin\\UsersController');
 Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'permission:edit users']], function () {
-    Route::resource('/', 'Admin\\AdminController');
-    Route::resource('users', 'Admin\\UsersController');
-    Route::resource('group-type', 'Admin\\GroupTypeController');
-    Route::resource('role', 'Admin\\RoleController');
+    // Route::resource('/', 'Admin\\AdminController');
+    // Route::resource('users', 'Admin\\UsersController');
+    // Route::resource('group-type', 'Admin\\GroupTypeController');
+    // Route::resource('role', 'Admin\\RoleController');
 });
 
 Route::get('/group/{group}/{hash}', 'HomeController@index');
