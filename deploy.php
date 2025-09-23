@@ -49,13 +49,21 @@ host('prod')
 // [Optional] if deploy fails automatically unlock.
 after('deploy:failed', 'deploy:unlock');
 
-after('deploy:update_code', 'deploy:git:submodules');
-task('deploy:git:submodules', function () {
-    $git = get('bin/git');
+// after('deploy:update_code', 'deploy:git:submodules');
+// task('deploy:git:submodules', function () {
+//     $git = get('bin/git');
 
-    cd('{{release_path}}');
-    run("$git submodule update --init");
+//     cd('{{release_path}}');
+//     run("$git submodule update --init");
+// });
+
+// install private composer packages, like Laravel Nova
+task('composer:private', function () {
+  cd('{{release_path}}');
+  run('source .env && {{bin/composer}} config "http-basic.nova.laravel.com" "$NOVA_USERNAME" "$NOVA_LICENSE_KEY"');
 });
+before('deploy:vendors', 'composer:private');
+
 
 // Migrate database before symlink new release.
 
