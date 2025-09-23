@@ -5,6 +5,7 @@ namespace App\Library;
 use App\User;
 use Illuminate\Support\Collection;
 use App\Library\Bandaid;
+use App\Library\Utilities;
 use Exception;
 use Illuminate\Support\Facades\Cache;
 use RuntimeException;
@@ -144,7 +145,7 @@ class UserService {
         // note: only active employees will have a job code
         $allDeptInstructors = $this->bandaid->getEmployees($allDeptEmplids);
 
-        $allDeptInstructorLookup = collect($allDeptInstructors)->keyBy('EMPLID');
+        $allDeptInstructorLookup = collect($allDeptInstructors)->groupBy('EMPLID');
 
         // get active employees for dept
         $activeDeptEmployees = collect($this->bandaid->getEmployeesForDepartment($deptId))
@@ -154,12 +155,25 @@ class UserService {
         $instructors = $this
             ->findOrCreateManyByEmplId($allDeptEmplids)
             ->map(function ($user) use ($allDeptInstructorLookup, $activeDeptEmployees) {
-                $instructor = $allDeptInstructorLookup->get($user->emplid) ?? null;
+                $instructorRecords = $allDeptInstructorLookup->get($user->emplid) ?? collect();
 
                 $user->hasActiveDeptAppointment = $activeDeptEmployees->has($user->emplid);
 
-                $user->jobCategory = $instructor?->CATEGORY ?? null;
-                $user->jobCode = $instructor?->JOBCODE ?? null;
+                
+                $user->jobCategories = $instructorRecords->pluck('CATEGORY')
+                    ->map(fn($category) => Utilities::trimWithFallback($category))
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->toArray();
+                    
+                $user->jobCodes = $instructorRecords
+                    ->pluck('JOBCODE')
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->toArray();
+                
                 return $user;
             })
             ->values();

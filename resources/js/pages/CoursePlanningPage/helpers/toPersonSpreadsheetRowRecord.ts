@@ -10,7 +10,7 @@ export function toPersonSpreadsheetRowRecord(
     id: String(person.emplid),
     surName: person.surName,
     givenName: person.givenName,
-    academicAppointment: person.academicAppointment,
+    academicAppointments: person.academicAppointments.join(", "),
     ...termRecords.reduce((acc, termRecord) => {
       return {
         ...acc,

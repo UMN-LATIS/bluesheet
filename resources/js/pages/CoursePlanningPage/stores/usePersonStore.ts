@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { computed, reactive, toRefs } from "vue";
 import * as api from "@/api";
 import * as T from "@/types";
-import { countBy, keyBy } from "lodash";
+import { keyBy } from "lodash";
 import { useEnrollmentStore } from "./useEnrollmentStore";
 import { sortByName } from "@/utils";
 
@@ -66,11 +66,17 @@ export const usePersonStore = defineStore("person", () => {
         },
     ),
     acadApptCounts: computed(
-      (): Record<T.Person["academicAppointment"], number> => {
-        const acadAppts = getters.allPeople.value.map(
-          (p) => p.academicAppointment,
-        );
-        return countBy(acadAppts);
+      (): Record<string, number> => {
+        const people = getters.allPeople.value;
+        const counts: Record<string, number> = {};
+        
+        people.forEach(person => {
+          person.academicAppointments.forEach(appt => {
+            counts[appt] = (counts[appt] || 0) + 1;
+          });
+        });
+        
+        return counts;
       },
     ),
   };

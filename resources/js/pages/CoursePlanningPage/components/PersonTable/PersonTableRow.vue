@@ -14,7 +14,7 @@
       <div class="tw-text-xs tw-text-neutral-400 tw-flex tw-flex-col">
         <span class="tw-truncate">
           {{ person.title }}
-          {{ person.jobCode ? `(${person.jobCode})` : "" }}
+          {{ person.jobCodes && person.jobCodes.length ? `(${person.jobCodes.join(", ")})` : "" }}
         </span>
         <span>{{ person.emplid }}</span>
         <span v-if="person.sslApplyEligible">✦ SSL Apply Eligible </span>
