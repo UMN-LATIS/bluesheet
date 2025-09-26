@@ -5,6 +5,7 @@ module.exports = {
     "**/resources/js/**/__tests__/**/*.?(m)[jt]s?(x)",
     "**/resources/js/**/?(*.)+(spec|test).?(m)[tj]s?(x)",
   ],
+  testPathIgnorePatterns: ["/node_modules/", "/vendor/"],
   preset: "ts-jest/presets/js-with-ts-esm",
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/resources/js/$1",
