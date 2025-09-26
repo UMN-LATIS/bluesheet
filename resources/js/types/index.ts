@@ -234,13 +234,13 @@ export interface Person {
   id: User["id"];
   emplid: number;
   title: string;
-  jobCode: string;
+  jobCodes: string[];
   hasActiveDeptAppointment: boolean;
   givenName: string;
   surName: string;
   displayName: string;
   email: string;
-  academicAppointment: string; // "Faculty"
+  academicAppointments: string[]; // ["Faculty", "Staff"]
   leaveIds: Leave["id"][];
   midcareerEligible: boolean;
   sslEligible: boolean;
@@ -419,7 +419,7 @@ export interface PersonSpreadsheetRowRecord {
   id: string; // emplid
   surName: Person["surName"];
   givenName: Person["givenName"];
-  academicAppointment: Person["academicAppointment"];
+  academicAppointments: string; // joined academic appointments
   [termName: string]: string; // concatenated list of leaves and enrollments
 }
 

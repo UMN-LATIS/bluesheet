@@ -7,7 +7,7 @@ import { useCourseStore } from "./useCourseStore";
 import { useGroupStore } from "@/stores/useGroupStore";
 import { useTermStore } from "@/stores/useTermStore";
 import { useLeaveStore } from "./useLeaveStore";
-import { countBy, debounce, isEqual, omit, uniq } from "lodash";
+import { debounce, isEqual, omit, uniq } from "lodash";
 import * as T from "@/types";
 import * as api from "@/api";
 import { getCourseSpreadsheetRecords } from "../helpers/getCourseSpreadsheetRecords";
@@ -112,15 +112,19 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
     }),
 
     acadApptCountsForVisibleTerms: computed(
-      (): Record<T.Person["academicAppointment"], number> => {
+      (): Record<string, number> => {
         if (!state.activeGroupId) {
           return {};
         }
 
-        const counts = countBy(
-          getters.peopleWithIncludedRolesInVisibleTerms.value,
-          "academicAppointment",
-        );
+        const people = getters.peopleWithIncludedRolesInVisibleTerms.value;
+        const counts: Record<string, number> = {};
+        
+        people.forEach(person => {
+          person.academicAppointments.forEach(appt => {
+            counts[appt] = (counts[appt] || 0) + 1;
+          });
+        });
 
         return counts;
       },
@@ -181,15 +185,15 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
     }),
 
     sortedAcadAppts: computed(
-      (): [T.Person["academicAppointment"], number][] => {
-        const acadApptCounts: Record<T.Person["academicAppointment"], number> =
+      (): [string, number][] => {
+        const acadApptCounts: Record<string, number> =
           getters.acadApptCountsForVisibleTerms.value;
         return Object.entries(acadApptCounts).sort((a, b) => {
           return a[0].localeCompare(b[0]);
         });
       },
     ),
-    allAcadApptTypes: computed((): T.Person["academicAppointment"][] =>
+    allAcadApptTypes: computed((): string[] =>
       Object.keys(getters.acadApptCountsForVisibleTerms.value),
     ),
     allCourseTypes: computed((): T.Course["courseType"][] =>
@@ -213,9 +217,8 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
       people.forEach((person) => {
         const hasVisibleRole = methods.isPersonEnrolledWithVisibleRole(person);
 
-        const isAcadApptVisible = !(
-          state.filters.excludedAcadAppts?.has(person.academicAppointment) ??
-          false
+        const isAcadApptVisible = !person.academicAppointments.some(appt =>
+          state.filters.excludedAcadAppts?.has(appt) ?? false
         );
 
         const isPersonVisible =
@@ -277,7 +280,7 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
       state.filters.endTermId = termId;
     },
 
-    setExcludedAcadAppts(acadAppts: T.Person["academicAppointment"][]) {
+    setExcludedAcadAppts(acadAppts: string[]) {
       state.filters.excludedAcadAppts = new Set(acadAppts);
     },
 
@@ -340,7 +343,7 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
       );
     },
 
-    toggleAcadApptFilter(acadAppt: T.Person["academicAppointment"]) {
+    toggleAcadApptFilter(acadAppt: string) {
       state.filters.excludedAcadAppts.has(acadAppt)
         ? state.filters.excludedAcadAppts.delete(acadAppt)
         : state.filters.excludedAcadAppts.add(acadAppt);

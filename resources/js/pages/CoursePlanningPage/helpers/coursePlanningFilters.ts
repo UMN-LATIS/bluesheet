@@ -20,8 +20,14 @@ export const filterSectionByPublishStateWhenNotInPlanningMode =
 
 export const filterPersonByAcadAppt =
   (filters: T.CoursePlanningFilters) => (person: T.Person) => {
-    return !(
-      filters?.excludedAcadAppts?.has(person.academicAppointment) ?? false
+    // If no academic appointments, include the person
+    if (!person.academicAppointments || person.academicAppointments.length === 0) {
+      return true;
+    }
+    
+    // Include person if none of their academic appointments are excluded
+    return !person.academicAppointments.some(appt => 
+      filters?.excludedAcadAppts?.has(appt) ?? false
     );
   };
 
