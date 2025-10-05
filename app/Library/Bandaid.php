@@ -66,7 +66,7 @@ class Bandaid {
             $result = $this->cachedGet(
                 '/department?' . urldecode(http_build_query(["deptId" => $deptIds]))
             );
-            return is_array($result)?:[];
+            return is_array($result)? $result : [];
         } catch (RequestException $e) {
             $msg = $e->getMessage();
             $errorMessage = 'getUserName Error: ' . $msg;
