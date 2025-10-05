@@ -27,7 +27,7 @@ class ImportSSLAndMidcareerEligibility extends Command
      */
     public function handle()
     {
-        $prompt = $this->confirm('You must clear any existing sabbatical and midcareer values before running this import. Have you done that?');
+        $prompt = $this->confirm('You must clear any existing sabbatical and midcareer values before running this import. A query like this: `update users set `midcareer_eligible`=0, `ssl_apply_eligible`=0, `ssl_eligible`=0`.  Have you done that?');
         if(!$prompt) {
             return;
         }
