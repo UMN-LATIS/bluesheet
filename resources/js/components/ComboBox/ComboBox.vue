@@ -37,6 +37,7 @@
           :id="`combobox-${label}__input`"
           ref="comboboxInputRef"
           v-model="query"
+          type="search"
           class="tw-border-none tw-bg-transparent tw-block tw-w-full tw-py-3 tw-pl-4 tw-text-neutral-900 focus:tw-outline-none tw-text-sm flex-1"
           :placeholder="placeholder"
           role="combobox"
@@ -83,9 +84,20 @@
           </ul>
           <div
             v-else
-            class="tw-p-2 tw-text-neutral-500 tw-text-sm tw-text-center"
+            class="tw-p-2 tw-text-neutral-500 tw-text-center"
           >
-            None.
+            <p class="tw-text-sm">No matches found.</p>
+            <p class="tw-text-sm">
+              <Button
+              v-if="query"
+              variant="link"
+              type="button"
+              class="tw-inline-block"
+              @click="query = ''"
+            >
+              Clear
+            </Button>
+            to see all options.</p>
           </div>
           <div
             v-if="canAddNewOptions"
@@ -131,6 +143,7 @@ import {
 } from "@floating-ui/vue";
 import Label from "@/components/Label.vue";
 import MaybeTeleport from "@/components/MaybeTeleport.vue";
+import Button from "../Button.vue";
 
 const props = withDefaults(
   defineProps<{
@@ -226,8 +239,8 @@ onClickOutside(comboboxContainerRef, () => {
 });
 
 function handleChangeOption() {
-  // begin with the currently selected option label
-  query.value = props.modelValue?.label ?? "";
+  // Clear the query to show all options when editing
+  query.value = "";
   highlightedOption.value = props.modelValue;
   areOptionsOpen.value = !areOptionsOpen.value;
   nextTick(() => {
