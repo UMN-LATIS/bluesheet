@@ -44,36 +44,33 @@ return array(
      'emulate_idp'       => env('SHIB_EMULATE', false),
      //can also be a url to redirect to
      'emulate_idp_login_view'   => env('SHIB_EMULATE_LOGIN_VIEW', 'vendor.shibalike.IdpLogin'),
-     'emulate_idp_users' => array(
-         'admin' => array(
-             'uid'         => 'admin',
-             'displayName' => 'Admin User',
-             'givenName'   => 'Admin',
-             'sn'          => 'User',
-             'mail'        => 'admin@uwm.edu',
-             'umndid'        => 'fkEWzvkzzksed',
-             'emplid'        => '1111111',
-         ),
-         'staff' => array(
-             'uid'         => 'staff',
-             'displayName' => 'Staff User',
-             'givenName'   => 'Staff',
-             'sn'          => 'User',
-             'mail'        => 'staff@uwm.edu',
-             'umndid'        => 'dktEfcdzzksed',
-             'emplid'        => '2222222',
-         ),
-         'user'  => array(
-             'uid'         => 'user',
-             'displayName' => 'User User',
-             'givenName'   => 'User',
-             'sn'          => 'User',
-             'mail'        => 'user@uwm.edu',
-             'umndid'        => 'vDSAeszf',
-             'emplid'        => '3333333',
-         ),
-     ),
- 
+    'emulate_idp_users' => [
+        'admin' => [
+            env("SHIB_DID", 'umnDID') => 'admin',
+            env('SHIB_EMPL_ID', 'umnEmplId') => '111',
+            env('SHIB_NAME_FIELD', 'displayName') => 'Admin User',
+            env('SHIB_FIRST_NAME', 'givenName') => 'Admin',
+            env('SHIB_LAST_NAME', 'sn') => 'User',
+            env('SHIB_EMAIL_FIELD', 'eppn') => 'latistecharch+admin@umn.edu',
+        ],
+        'staff' => [
+            env("SHIB_DID", 'umnDID') => 'staff',
+            env('SHIB_EMPL_ID', 'umnEmplId') => '222',
+            env('SHIB_NAME_FIELD', 'displayName') => 'Staff User',
+            env('SHIB_FIRST_NAME', 'givenName') => 'Staff',
+            env('SHIB_LAST_NAME', 'sn') => 'User',
+            env('SHIB_EMAIL_FIELD', 'eppn') => 'latistecharch+staff@umn.edu',
+        ],
+        'user' => [
+            env("SHIB_DID", 'umnDID') => 'user',
+            env('SHIB_EMPL_ID', 'umnEmplId') => '333',
+            env('SHIB_NAME_FIELD', 'displayName') => 'User User',
+            env('SHIB_FIRST_NAME', 'givenName') => 'User',
+            env('SHIB_LAST_NAME', 'sn') => 'User',
+            env('SHIB_EMAIL_FIELD', 'eppn') => 'latistecharch+userf@umn.edu',
+        ],
+    ],
+
      /*
      |--------------------------------------------------------------------------
      | Server Variable Mapping
