@@ -65,6 +65,14 @@
           class="combobox__options tw-border tw-border-neutral-300 tw-py-3 tw-px-2 tw-max-h-60 tw-overflow-auto tw-bg-white tw-rounded-md tw-shadow-lg tw-ring-1 tw-ring-black tw-ring-opacity-5 focus:tw-outline-none tw-relative tw-z-[1000] tw-min-w-[20rem]"
           :style="floatingStyles"
         >
+          <button
+            type="button"
+            class="tw-absolute tw-top-2 tw-right-2 tw-p-1 tw-text-neutral-400 hover:tw-text-neutral-600 tw-bg-transparent tw-border-none tw-cursor-pointer tw-rounded"
+            aria-label="Close"
+            @click="closeComboBoxOptions"
+          >
+            <XIcon />
+          </button>
           <ul
             v-if="filteredOptions.length"
             :id="`combobox-${label}__options`"
@@ -86,7 +94,7 @@
             v-else
             class="tw-p-2 tw-text-neutral-500 tw-text-center"
           >
-            <p class="tw-text-sm">No matches found.</p>
+            <p class="tw-text-sm tw-mb-1">No matches found.</p>
             <p class="tw-text-sm">
               <Button
               v-if="query"
@@ -134,6 +142,7 @@ import { ComboBoxOptionType, ComboBoxOption } from ".";
 import { onClickOutside } from "@vueuse/core";
 import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
 import CheckIcon from "@/icons/CheckIcon.vue";
+import XIcon from "@/icons/XIcon.vue";
 import { first } from "lodash";
 import {
   useFloating,
