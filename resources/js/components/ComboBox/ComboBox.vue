@@ -87,14 +87,29 @@
           >
             None.
           </div>
-          <Button
+          <div
             v-if="canAddNewOptions"
-            class="tw-w-full tw-items-center disabled:tw-opacity-40"
-            :disabled="!query || isQueryAnOption"
-            @click="handleAddNewOptionsClick"
+            class="tw-mt-3 tw-pt-3 tw-border-t tw-border-neutral-200"
           >
-            Add New Option
-          </Button>
+            <div class="tw-flex tw-gap-2 tw-items-center">
+              <input
+                v-model="newOptionValue"
+                type="text"
+                placeholder="Add new option..."
+                class="tw-flex-1 tw-px-3 tw-py-2 tw-border tw-border-neutral-300 tw-rounded-md tw-text-sm focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-blue-500"
+                @keydown.enter="handleAddNewOptionsClick"
+              />
+              <button
+                class="tw-flex tw-items-center tw-justify-center tw-w-9 tw-h-9 tw-bg-bs-blue tw-text-white tw-rounded-md hover:tw-bg-blue-600 disabled:tw-opacity-40 disabled:tw-cursor-not-allowed"
+                :disabled="!newOptionValue"
+                aria-label="Add new option"
+                title="Add new option"
+                @click="handleAddNewOptionsClick"
+              >
+                <CheckIcon aria-hidden="true" />
+              </button>
+            </div>
+          </div>
           <slot name="afterOptions" :query="query" />
         </div>
       </MaybeTeleport>
@@ -106,6 +121,7 @@ import { ref, computed, nextTick, watch } from "vue";
 import { ComboBoxOptionType, ComboBoxOption } from ".";
 import { onClickOutside } from "@vueuse/core";
 import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
+import CheckIcon from "@/icons/CheckIcon.vue";
 import { first } from "lodash";
 import {
   useFloating,
@@ -115,7 +131,6 @@ import {
 } from "@floating-ui/vue";
 import Label from "@/components/Label.vue";
 import MaybeTeleport from "@/components/MaybeTeleport.vue";
-import Button from "@/components/Button.vue";
 
 const props = withDefaults(
   defineProps<{
@@ -151,6 +166,7 @@ const emit = defineEmits<{
 const query = ref("");
 const areOptionsOpen = ref(false);
 const highlightedOption = ref<ComboBoxOptionType | null>(null);
+const newOptionValue = ref("");
 
 const comboboxContainerRef = ref<HTMLElement | null>(null);
 const selectedItemRef = ref<HTMLElement | null>(null);
@@ -171,10 +187,6 @@ const indexOfHighlightedOption = computed(() => {
     areOptionsEqual(option, highlightedOption.value),
   );
   return index === -1 ? null : index;
-});
-
-const isQueryAnOption = computed(() => {
-  return filteredOptions.value.some((option) => option.label === query.value);
 });
 
 function areOptionsEqual(
@@ -260,27 +272,29 @@ function closeComboBoxOptions() {
 }
 
 function handleAddNewOptionsClick() {
-  if (!query.value) {
+  if (!newOptionValue.value) {
     return;
   }
 
   // check if the option already exists
   const existingOption = props.options.find(
-    (option) => option.label === query.value,
+    (option) => option.label === newOptionValue.value,
   );
 
   if (existingOption) {
     handleSelectOption(existingOption);
+    newOptionValue.value = "";
     return;
   }
 
   // if it doesn't exist, add it as a new option
   const newOption: ComboBoxOptionType = {
-    label: query.value,
+    label: newOptionValue.value,
   };
 
   emit("addNewOption", newOption);
   handleSelectOption(newOption);
+  newOptionValue.value = "";
 }
 
 function handleKeyDown(event: KeyboardEvent) {
