@@ -21,7 +21,7 @@ class GetRolesForGroup extends Tool
      */
     public function handle(Request $request): Response
     {
-        $groupId = $request->input('groupId');
+        $groupId = $request->integer('groupId');
         $group = \App\Group::find($groupId);
 
         $membership = $group->activeMembers->map(function ($member) {
