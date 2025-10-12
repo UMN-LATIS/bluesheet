@@ -40,8 +40,9 @@ class ListGroups extends Tool
      */
     public function schema(JsonSchema $schema): array
     {
-        return [
-            //
+	    return [
+            'folder'=>$schema->integer()
+                ->description('The folder ID to list groups from. If not provided, lists all groups.')->default(0)
         ];
     }
 }
