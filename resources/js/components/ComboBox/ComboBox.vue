@@ -128,7 +128,7 @@
                 @keydown.enter="handleAddNewOptionsClick"
               />
               <button
-                class="tw-flex tw-items-center tw-justify-center tw-w-9 tw-h-9 tw-bg-bs-blue tw-text-white tw-rounded-md hover:tw-bg-blue-600 disabled:tw-opacity-40 disabled:tw-cursor-not-allowed"
+                class="tw-flex tw-items-center tw-justify-center tw-w-9 tw-h-9 tw-bg-bs-blue tw-border-none tw-text-white tw-rounded-md hover:tw-bg-blue-600 disabled:tw-opacity-40 disabled:tw-cursor-not-allowed"
                 :disabled="!newOptionValue"
                 aria-label="Add new option"
                 title="Add new option"
