@@ -65,16 +65,24 @@
           class="combobox__options tw-border tw-border-neutral-300 tw-py-3 tw-px-2 tw-max-h-60 tw-overflow-auto tw-bg-white tw-rounded-md tw-shadow-lg tw-ring-1 tw-ring-black tw-ring-opacity-5 focus:tw-outline-none tw-relative tw-z-[1000] tw-min-w-[20rem]"
           :style="floatingStyles"
         >
+        <div class="tw-flex tw-justify-end">
           <button
             type="button"
-            class="tw-absolute tw-top-2 tw-right-2 tw-p-1 tw-text-neutral-400 hover:tw-text-neutral-600 tw-bg-transparent tw-border-none tw-cursor-pointer tw-rounded"
-            aria-label="Close"
+            class="tw-p-1 tw-text-neutral-400 hover:tw-text-neutral-600 tw-bg-transparent tw-border-none tw-cursor-pointer tw-rounded"
+            aria-label="Close options dropdown"
+            title="Close options dropdown"
             @click="closeComboBoxOptions"
           >
             <XIcon />
           </button>
+        </div>
+          <div v-if="!options.length">
+            <p class="tw-text-sm tw-text-neutral-500 tw-text-center">
+              No options.
+            </p>
+          </div>
           <ul
-            v-if="filteredOptions.length"
+            v-else-if="filteredOptions.length"
             :id="`combobox-${label}__options`"
             class="tw-pl-0 tw-flex tw-flex-col gap-2"
             role="listbox"
