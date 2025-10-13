@@ -67,7 +67,7 @@ return array(
             env('SHIB_NAME_FIELD', 'displayName') => 'User User',
             env('SHIB_FIRST_NAME', 'givenName') => 'User',
             env('SHIB_LAST_NAME', 'sn') => 'User',
-            env('SHIB_EMAIL_FIELD', 'eppn') => 'latistecharch+userf@umn.edu',
+            env('SHIB_EMAIL_FIELD', 'eppn') => 'latistecharch+user@umn.edu',
         ],
     ],
 
