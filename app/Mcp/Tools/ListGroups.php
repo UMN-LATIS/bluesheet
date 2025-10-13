@@ -30,7 +30,7 @@ class ListGroups extends Tool
             ];
         });
 
-        return Response::json($groups);
+        return Response::json($groups->toArray());
     }
 
     /**

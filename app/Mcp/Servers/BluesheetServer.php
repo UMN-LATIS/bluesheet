@@ -20,7 +20,7 @@ class BluesheetServer extends Server
      * The MCP server's instructions for the LLM.
      */
     protected string $instructions = <<<'MARKDOWN'
-        Provides the ability to determine who serves in a particular role for a particular department at the University of Minnesota College of Liberal Arts. 
+        Provides the ability to determine who serves in a particular role for a particular department at the University of Minnesota College of Liberal Arts. Any time you reply with a response, you can link back to the original group using https://bluesheet.cla.umn.edu/groups/<GroupId> where <GroupId> is the id of the group you are referencing. Keep in mind that users often refer to roles using partial terms - they might say "chair" instead of "academic department chair". 
     MARKDOWN;
 
     /**
