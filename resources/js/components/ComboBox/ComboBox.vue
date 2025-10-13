@@ -132,6 +132,7 @@
                 :disabled="!newOptionValue"
                 aria-label="Add new option"
                 title="Add new option"
+                data-cy="add-new-option-button"
                 @click="handleAddNewOptionsClick"
               >
                 <CheckIcon aria-hidden="true" />
