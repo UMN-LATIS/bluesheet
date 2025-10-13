@@ -3,6 +3,7 @@
     :id="`option-${option.id ?? option.label}`"
     ref="currentOption"
     class="tw-list-none"
+    role="option"
     :aria-selected="isSelected"
   >
     <div

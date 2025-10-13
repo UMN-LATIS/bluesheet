@@ -13,6 +13,7 @@
         v-if="modelValue && !areOptionsOpen"
         ref="selectedItemRef"
         class="tw-flex tw-bg-transparent tw-border tw-border-neutral-300 tw-w-full tw-py-3 tw-px-4 tw-items-center tw-justify-between tw-rounded-md tw-text-left"
+        :aria-label="`Change ${label}: ${modelValue.label} ${modelValue.secondaryLabel ? '(' + modelValue.secondaryLabel + ')' : ''}`"
         @click="handleChangeOption"
       >
         <div class="tw-flex tw-flex-col tw-items-start tw-flex-1">
@@ -44,11 +45,13 @@
           :aria-controls="`combobox-${label}__options`"
           aria-autocomplete="list"
           :aria-expanded="areOptionsOpen"
+          :aria-activedescendant="activeDescendantId"
           @keydown="handleKeyDown"
           @focus="areOptionsOpen = true"
         />
         <button
           class="tw-flex tw-items-center tw-justify-center tw-bg-transparent tw-border-none tw-p-2 tw-mr-2 tw-rounded-md"
+          :aria-label="areOptionsOpen ? 'Collapse options' : 'Expand options'"
           @click="areOptionsOpen = !areOptionsOpen"
         >
           <ChevronDownIcon
@@ -59,6 +62,7 @@
       </div>
 
       <MaybeTeleport :teleportTo="teleportTo">
+        <!-- see https://www.w3.org/WAI/ARIA/apg/patterns/combobox/#wai-ariaroles,states,andproperties -->
         <div
           v-if="areOptionsOpen"
           ref="comboboxOptionsRef"
@@ -90,7 +94,6 @@
             <ComboBoxOption
               v-for="option in filteredOptions"
               :key="option.id ?? option.label"
-              role="option"
               :option="option"
               :isSelected="isSelected(option)"
               :isHighlighted="isHighlighted(option)"
@@ -124,6 +127,7 @@
                 v-model="newOptionValue"
                 type="text"
                 placeholder="Add new option..."
+                aria-label="New option value"
                 class="tw-flex-1 tw-px-3 tw-py-2 tw-border tw-border-neutral-300 tw-rounded-md tw-text-sm focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-blue-500"
                 @keydown.enter="handleAddNewOptionsClick"
               />
@@ -218,6 +222,13 @@ const indexOfHighlightedOption = computed(() => {
     areOptionsEqual(option, highlightedOption.value),
   );
   return index === -1 ? null : index;
+});
+
+const activeDescendantId = computed(() => {
+  if (!highlightedOption.value) {
+    return undefined;
+  }
+  return `option-${highlightedOption.value.id ?? highlightedOption.value.label}`;
 });
 
 function areOptionsEqual(
