@@ -7,9 +7,7 @@
       <button class="btn btn-primary" @click="showError = false">Close</button>
     </Modal>
 
-    <header
-      class="tw-sticky tw-top-0 tw-z-10 tw-bg-white/10 tw-backdrop-blur-sm tw-py-4 tw-mb-4 -tw-mx-4 tw-px-4"
-    >
+    <header class="tw-sticky tw-top-0 tw-z-10 tw-bg-white/10 tw-backdrop-blur-sm tw-py-4 tw-mb-4 -tw-mx-4 tw-px-4">
       <h3 class="tw-text-sm tw-uppercase tw-mb-2 tw-mt-0 tw-text-neutral-500">
         Edit Group
       </h3>
@@ -22,142 +20,77 @@
         </h2>
 
         <div class="tw-flex tw-gap-1">
-          <ButtonComponent
-            class="!tw-m-0"
-            @click="
-              $emit('update:editing', false);
-              $emit('update:reload');
-            "
-          >
+          <ButtonComponent class="!tw-m-0" @click="
+            $emit('update:editing', false);
+          $emit('update:reload');
+          ">
             Cancel
           </ButtonComponent>
-          <ButtonComponent
-            variant="primary"
+          <ButtonComponent variant="primary"
             class="tw-bg-green-500 tw-border-green-500 hover:tw-bg-green-600 hover:tw-border-green-600 !tw-m-0"
-            @click="save"
-            >Save</ButtonComponent
-          >
+            @click="save">Save</ButtonComponent>
         </div>
       </div>
     </header>
 
-    <div
-      class="tw-grid md:tw-grid-cols-2 lg:tw-grid-cols-3 tw-gap-8 tw-items-start"
-    >
-      <section
-        class="lg:tw-col-span-2 tw-grid lg:tw-grid-cols-4 tw-gap-x-4 tw-items-start"
-      >
+    <div class="tw-grid md:tw-grid-cols-2 lg:tw-grid-cols-3 tw-gap-8 tw-items-start">
+      <section class="lg:tw-col-span-2 tw-grid lg:tw-grid-cols-4 tw-gap-x-4 tw-items-start">
         <div class="form-group tw-col-span-2">
           <label for="groupTitle" class="small">Group Title</label>
-          <input
-            id="groupTitle"
-            v-model="localGroup.group_title"
-            class="form-control"
-            type="text"
-          />
+          <input id="groupTitle" v-model="localGroup.group_title" class="form-control" type="text" />
         </div>
         <div class="form-group">
           <label for="abbreviation" class="small">Abbreviation</label>
-          <input
-            id="abbreviation"
-            v-model="localGroup.abbreviation"
-            class="form-control"
-          />
+          <input id="abbreviation" v-model="localGroup.abbreviation" class="form-control" />
         </div>
-        <InputGroup
-          v-model="localGroup.dept_id"
-          label="Department ID"
-          :showLabel="true"
-          class="tw-flex-1 form-group"
-          :validator="isValidDeptId"
-          :validateWhenUntouched="true"
-          errorText="Must be a number"
-          labelClass="!tw-text-sm tw-normal-case tw-mb-2 tw-text-neutral-800"
-          inputClass="!tw-text-base"
-        />
+        <InputGroup v-model="localGroup.dept_id" label="Department ID" :showLabel="true" class="tw-flex-1 form-group"
+          :validator="isValidDeptId" :validateWhenUntouched="true" errorText="Must be a number"
+          labelClass="!tw-text-sm tw-normal-case tw-mb-2 tw-text-neutral-800" inputClass="!tw-text-base" />
         <div class="form-group tw-col-span-2">
           <label for="groupType" class="small">Group Type</label>
-          <ComboBox
-            v-if="groupTypes"
-            id="groupTypes"
-            v-model="localGroup.group_type"
-            :options="groupTypes"
-            placeholder="Select..."
-            label="Group Type"
-            :showLabel="false"
-            :canAddNewOptions="true"
-            @addNewOption="groupTypes.push($event)"
-          />
+          <ComboBox v-if="groupTypes" id="groupTypes" v-model="localGroup.group_type" :options="groupTypes"
+            placeholder="Select..." label="Group Type" :showLabel="false" :canAddNewOptions="true"
+            @addNewOption="groupTypes.push($event)" />
         </div>
 
         <div class="form-group tw-col-span-2">
           <label for="parentOrganization" class="small">Folder</label>
-          <FolderWidget
-            v-model="localGroup.parent_organization.id"
-          ></FolderWidget>
+          <FolderWidget v-model="localGroup.parent_organization.id"></FolderWidget>
         </div>
         <div class="form-group tw-col-span-2">
           <label for="parentGroup" class="small">Parent Group</label>
-          <ComboBox
-            v-if="groups"
-            id="groups"
-            :modelValue="parentGroup"
-            :options="parentGroupOptions"
-            placeholder="Select..."
-            label="Parent Group"
-            :showLabel="false"
-            @update:modelValue="handleUpdateParentGroup"
-          />
+          <ComboBox v-if="groups" id="groups" :modelValue="parentGroup" :options="parentGroupOptions"
+            placeholder="Select..." label="Parent Group" :showLabel="false"
+            @update:modelValue="handleUpdateParentGroup" />
         </div>
 
         <div class="form-group tw-col-span-2">
           <label for="googleGroup" class="small">Google Group Name</label>
-          <input
-            id="googleGroup"
-            v-model="localGroup.google_group"
-            class="form-control"
-          />
+          <input id="googleGroup" v-model="localGroup.google_group" class="form-control" />
         </div>
 
         <div class="form-check">
-          <input
-            id="showunit"
-            v-model="localGroup.show_unit"
-            class="form-check-input"
-            type="checkbox"
-          />
+          <input id="showunit" v-model="localGroup.show_unit" class="form-check-input" type="checkbox" />
           <label class="form-check-label small" for="showunit">
             Show Unit Column in Members List
           </label>
         </div>
         <div class="form-check">
-          <input
-            id="includechildgroups"
-            v-model="localGroup.include_child_groups"
-            class="form-check-input"
-            type="checkbox"
-          />
+          <input id="includechildgroups" v-model="localGroup.include_child_groups" class="form-check-input"
+            type="checkbox" />
           <label class="form-check-label small" for="includechildgroups">
             Include Subgroup Members in Members List
           </label>
         </div>
       </section>
       <aside class="tw-bg-neutral-100 tw-p-4 tw-rounded-md tw-w-full">
-        <h2
-          class="tw-inline-block tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-mb-4"
-        >
+        <h2 class="tw-inline-block tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-mb-4">
           Group Details
         </h2>
 
         <div class="form-group">
-          <LabelComponent for="groupNotes" class="tw-text-neutral-900"
-            >Notes</LabelComponent
-          >
-          <textarea
-            id="groupNotes"
-            v-model="localGroup.notes"
-            class="form-control"
-          ></textarea>
+          <LabelComponent for="groupNotes" class="tw-text-neutral-900">Notes</LabelComponent>
+          <textarea id="groupNotes" v-model="localGroup.notes" class="form-control"></textarea>
         </div>
 
         <section data-cy="group-artifacts-section" class="tw-mt-4">
@@ -172,39 +105,14 @@
             this group.
           </p>
 
-          <div
-            v-for="(artifact, key) in localGroup.artifacts"
-            :key="key"
-            class="tw-flex tw-items-baseline tw-gap-2"
-          >
-            <InputGroup
-              v-model="artifact.label"
-              label="Label"
-              required
-              placeholder="Label"
-              :showLabel="false"
-              class="tw-flex-1"
-              :validateWhenUntouched="true"
-              :isValid="!!artifact.label"
-              data-cy="artifact-label"
-            />
-            <InputGroup
-              v-model="artifact.target"
-              label="Target URL"
-              required
-              placeholder="Target URL"
-              :showLabel="false"
-              class="tw-flex-1"
-              :validateWhenUntouched="true"
-              :isValid="isValidUrl(artifact.target)"
-              errorText="URL must be like 'https://umn.edu'"
-              data-cy="artifact-target"
-            />
-            <ButtonComponent
-              variant="tertiary"
-              class="tw-text-red-600 hover:!tw-bg-red-600/10"
-              @click="removeArtifact(key)"
-            >
+          <div v-for="(artifact, key) in localGroup.artifacts" :key="key" class="tw-flex tw-items-baseline tw-gap-2">
+            <InputGroup v-model="artifact.label" label="Label" required placeholder="Label" :showLabel="false"
+              class="tw-flex-1" :validateWhenUntouched="true" :isValid="!!artifact.label" data-cy="artifact-label" />
+            <InputGroup v-model="artifact.target" label="Target URL" required placeholder="Target URL"
+              :showLabel="false" class="tw-flex-1" :validateWhenUntouched="true" :isValid="isValidUrl(artifact.target)"
+              errorText="URL must be like 'https://umn.edu'" data-cy="artifact-target" />
+            <ButtonComponent variant="tertiary" class="tw-text-red-600 hover:!tw-bg-red-600/10"
+              @click="removeArtifact(key)">
               <XIcon />
               <span class="sr-only">Remove Artifact</span>
             </ButtonComponent>
@@ -213,35 +121,23 @@
       </aside>
     </div>
 
-    <section
-      class="tw-mt-12 tw-border-0 tw-border-t tw-border-solid tw-border-neutral-200 tw-pt-8"
-    >
+    <section class="tw-mt-12 tw-border-0 tw-border-t tw-border-solid tw-border-neutral-200 tw-pt-8">
       <header class="tw-flex tw-justify-between tw-items-baseline tw-mb-4">
         <h2 class="tw-text-xl">Members</h2>
         <ButtonComponent variant="secondary" @click="addMember = true">
           Add Member <i class="fas fa-plus tw-m-0"></i>
         </ButtonComponent>
       </header>
-      <Members
-        v-model:members="localGroup.members"
-        :groupType="localGroup.group_type.label"
-        :show_unit="localGroup.show_unit"
-        :editing="true"
-        :roles="filteredRoles"
-        viewType="group"
-        :downloadTitle="localGroup.group_title"
-        :group="group"
-        @update:members="handleUpdateMembers"
-        @update:roles="(updatedRoles) => (roles = updatedRoles)"
-      ></Members>
+      <Members v-model:members="localGroup.members" :groupType="localGroup.group_type.label"
+        :show_unit="localGroup.show_unit" :editing="true" :roles="filteredRoles" viewType="group"
+        :downloadTitle="localGroup.group_title" :group="group" @update:members="handleUpdateMembers"
+        @update:roles="(updatedRoles) => (roles = updatedRoles)"></Members>
     </section>
 
     <div class="row border border-danger rounded deactivate">
       <div class="col-sm-12">
-        <strong
-          >If you deactivate this group, all members will be removed and an
-          administrator will be required to reactivate it.</strong
-        >
+        <strong>If you deactivate this group, all members will be removed and an
+          administrator will be required to reactivate it.</strong>
         <button class="btn btn-danger float-right" @click="deactivate">
           Deactivate Group
         </button>
@@ -252,10 +148,7 @@
       <div class="row">
         <label for="nameLookup" class="col-sm-3 col-form-label">Name:</label>
         <div class="col-sm-6">
-          <PersonSearch
-            v-model="userLookupText"
-            @selected="handleUserSelected"
-          />
+          <PersonSearch v-model="userLookupText" @selected="handleUserSelected" />
           <small id="addUserHelpBlock" class="form-text text-muted">
             Optional: Enter a name and select the person from the list
           </small>
@@ -263,20 +156,10 @@
       </div>
 
       <div class="row">
-        <label for="internetId" class="col-sm-3 col-form-label"
-          >Internet ID:</label
-        >
+        <label for="internetId" class="col-sm-3 col-form-label">Internet ID:</label>
         <div class="col-sm-6">
-          <input
-            id="internetId"
-            ref="addMemberRef"
-            v-model="newUserId"
-            type="text"
-            class="form-control"
-            placeholder="Internet ID"
-            @keyup="addMemberError = null"
-            @keyup.enter="lookupMember"
-          />
+          <input id="internetId" ref="addMemberRef" v-model="newUserId" type="text" class="form-control"
+            placeholder="Internet ID" @keyup="addMemberError = null" @keyup.enter="lookupMember" />
           <small id="addUserHelpBlock" class="form-text text-muted">
             Enter one or more InternetIds or email addresses (comma-separated).
             You can add a list of users, even if it's in the format "John Smith
@@ -287,33 +170,17 @@
       <div class="row">
         <label for="roles" class="col-sm-3 col-form-label">Role:</label>
         <div class="col-sm-6">
-          <ComboBox
-            v-if="roles"
-            id="roles"
-            v-model="newRole"
-            :options="filteredRoles"
-            label="Role"
-            :showLabel="false"
-            :canAddNewOption="true"
-            @addNewOption="(newOption) => roles.push(newOption)"
-          />
+          <ComboBox v-if="roles" id="roles" v-model="newRole" :options="filteredRoles" label="Role" :showLabel="false"
+            :canAddNewOption="true" @addNewOption="(newOption) => roles.push(newOption)" />
         </div>
         <div class="col-sm-3">
-          <button
-            class="btn btn-primary"
-            style="white-space: nowrap"
-            @click="lookupMember"
-          >
+          <button class="btn btn-primary" style="white-space: nowrap" @click="lookupMember">
             Add Member
           </button>
         </div>
       </div>
       <div class="row">
-        <div
-          v-if="addMemberError"
-          class="alert alert-danger col-sm-12"
-          role="alert"
-        >
+        <div v-if="addMemberError" class="alert alert-danger col-sm-12" role="alert">
           {{ addMemberError }}
         </div>
       </div>
@@ -589,7 +456,10 @@ export default {
       axios
         .post("/api/user/lookup", {
           users: this.newUserId,
-        })
+        },
+          {
+            skipErrorNotifications: true
+          })
         .then((res) => {
           for (var user of res.data.users) {
             var newMembershipRecord = {
@@ -611,7 +481,7 @@ export default {
           }
         })
         .catch((err) => {
-          this.addMemberError = err.response.data.message;
+          this.addMemberError = err.data.message;
         });
     },
   },
