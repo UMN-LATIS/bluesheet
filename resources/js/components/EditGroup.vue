@@ -587,10 +587,21 @@ export default {
     },
     lookupMember: function () {
       axios
-        .post("/api/user/lookup", {
-          users: this.newUserId,
-        })
+        .post(
+          "/api/user/lookup",
+          {
+            users: this.newUserId,
+          },
+          {
+            skipErrorNotifications: true,
+          },
+        )
         .then((res) => {
+          if (res.data.status === "Error") {
+            this.addMemberError = res.data.message;
+            return;
+          }
+
           for (var user of res.data.users) {
             var newMembershipRecord = {
               group_id: this.localGroup.id,
@@ -602,7 +613,7 @@ export default {
             this.localGroup.members.push(newMembershipRecord);
           }
 
-          if (res.data.status == "Partial") {
+          if (res.data.status === "Partial") {
             this.addMemberError = res.data.message;
           } else {
             this.newUserId = null;
@@ -611,7 +622,7 @@ export default {
           }
         })
         .catch((err) => {
-          this.addMemberError = err.response.data.message;
+          this.addMemberError = err.message;
         });
     },
   },
