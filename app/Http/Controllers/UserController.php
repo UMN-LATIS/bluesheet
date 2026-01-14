@@ -185,14 +185,13 @@ class UserController extends Controller {
 
 
         $returnData = [];
-        $code = 200;
         if (count($notFoundUser) == 0) {
             $returnData['status'] = "Success";
             $returnData['users'] = $outputArray;
         } else if (count($outputArray) == 0) {
             $returnData['status'] = "Error";
+            $returnData['users'] = [];
             $returnData['message'] = "We couldn't find that user.";
-            $code = 404;
         } else {
             $returnData['status'] = "Partial";
             $returnData['users'] = $outputArray;
@@ -200,7 +199,7 @@ class UserController extends Controller {
         }
 
 
-        return Response()->json($returnData, $code);
+        return Response()->json($returnData, 200);
     }
 
     public function eligibility(string $eligibilityType) {
