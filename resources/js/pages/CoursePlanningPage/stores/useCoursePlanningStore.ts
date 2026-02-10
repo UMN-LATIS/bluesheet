@@ -216,13 +216,15 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
 
       people.forEach((person) => {
         const hasVisibleRole = methods.isPersonEnrolledWithVisibleRole(person);
+        const hasLeaveInRange = methods.doesPersonHaveLeaveInVisibleTerms(person);
+        const hasActivityInRange = hasVisibleRole || hasLeaveInRange;
 
         const isAcadApptVisible = !person.academicAppointments.some(appt =>
           state.filters.excludedAcadAppts?.has(appt) ?? false
         );
 
         const isPersonVisible =
-          hasVisibleRole &&
+          hasActivityInRange &&
           isAcadApptVisible &&
           (methods.isPersonMatchingSearch(person) ||
             methods.isPersonEnrolledInCourseMatchingSearch(person));
@@ -503,13 +505,26 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
       if (!state.activeGroupId) {
         return false;
       }
-      const personEnrollments = stores.enrollmentStore.getEnrollmentsByEmplId(
-        person.emplid,
+
+      // Only consider enrollments in the visible term range
+      const enrollmentsInRange = getters.enrollmentsInVisibleTerms.value.filter(
+        (e) => e.emplid === person.emplid,
       );
 
-      return personEnrollments.some((enrollment) => {
-        return state.filters.includedEnrollmentRoles.has(enrollment.role);
-      });
+      return enrollmentsInRange.some((enrollment) =>
+        state.filters.includedEnrollmentRoles.has(enrollment.role),
+      );
+    },
+
+    doesPersonHaveLeaveInVisibleTerms(person: T.Person) {
+      const visibleTermIds = new Set(
+        getters.visibleTerms.value.map((t) => t.id),
+      );
+      const personLeaves = stores.leaveStore.getLeavesByUserId(person.id);
+      return personLeaves.some(
+        (leave) =>
+          leave.termIds?.some((termId) => visibleTermIds.has(termId)) ?? false,
+      );
     },
 
     isPersonMatchingSearch(person: T.Person) {
