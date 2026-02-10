@@ -7,7 +7,7 @@ import { useCourseStore } from "./useCourseStore";
 import { useGroupStore } from "@/stores/useGroupStore";
 import { useTermStore } from "@/stores/useTermStore";
 import { useLeaveStore } from "./useLeaveStore";
-import { debounce, isEqual, omit, uniq } from "lodash";
+import { debounce, groupBy, isEqual, omit, uniq } from "lodash";
 import * as T from "@/types";
 import * as api from "@/api";
 import { getCourseSpreadsheetRecords } from "../helpers/getCourseSpreadsheetRecords";
@@ -86,6 +86,20 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
           stores.enrollmentStore.getEnrollmentsBySectionId(section.id),
         )
         .filter(Boolean) as T.Enrollment[];
+    }),
+
+    // keyed lookup to avoid O(people × enrollments) filtering per person
+    enrollmentsInVisibleTermsByEmplId: computed(
+      (): Record<string, T.Enrollment[]> => {
+        return groupBy(
+          getters.enrollmentsInVisibleTerms.value,
+          (e) => e.emplid,
+        );
+      },
+    ),
+
+    visibleTermIds: computed((): Set<number> => {
+      return new Set(getters.visibleTerms.value.map((t) => t.id));
     }),
 
     peopleInVisibleTerms: computed((): T.Person[] => {
@@ -216,13 +230,15 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
 
       people.forEach((person) => {
         const hasVisibleRole = methods.isPersonEnrolledWithVisibleRole(person);
+        const hasLeaveInRange = methods.doesPersonHaveLeaveInVisibleTerms(person);
+        const hasActivityInRange = hasVisibleRole || hasLeaveInRange;
 
         const isAcadApptVisible = !person.academicAppointments.some(appt =>
           state.filters.excludedAcadAppts?.has(appt) ?? false
         );
 
         const isPersonVisible =
-          hasVisibleRole &&
+          hasActivityInRange &&
           isAcadApptVisible &&
           (methods.isPersonMatchingSearch(person) ||
             methods.isPersonEnrolledInCourseMatchingSearch(person));
@@ -503,13 +519,23 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
       if (!state.activeGroupId) {
         return false;
       }
-      const personEnrollments = stores.enrollmentStore.getEnrollmentsByEmplId(
-        person.emplid,
-      );
 
-      return personEnrollments.some((enrollment) => {
-        return state.filters.includedEnrollmentRoles.has(enrollment.role);
-      });
+      const enrollmentsInRange =
+        getters.enrollmentsInVisibleTermsByEmplId.value[person.emplid] ?? [];
+
+      return enrollmentsInRange.some((enrollment) =>
+        state.filters.includedEnrollmentRoles.has(enrollment.role),
+      );
+    },
+
+    doesPersonHaveLeaveInVisibleTerms(person: T.Person) {
+      const personLeaves = stores.leaveStore.getLeavesByUserId(person.id);
+      return personLeaves.some(
+        (leave) =>
+          leave.termIds?.some((termId) =>
+            getters.visibleTermIds.value.has(termId),
+          ) ?? false,
+      );
     },
 
     isPersonMatchingSearch(person: T.Person) {
