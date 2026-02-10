@@ -48,6 +48,15 @@
       "DELETE"
     ]
   },
+  "debugbar.queries.explain": {
+    "name": "debugbar.queries.explain",
+    "domain": null,
+    "action": "Barryvdh\\Debugbar\\Controllers\\QueriesController@explain",
+    "uri": "_debugbar/queries/explain",
+    "method": [
+      "POST"
+    ]
+  },
   "cypress.factory": {
     "name": "cypress.factory",
     "domain": null,
@@ -121,6 +130,58 @@
       "POST"
     ]
   },
+  "": {
+    "name": null,
+    "domain": null,
+    "action": "App\\Http\\Controllers\\HomeController@index",
+    "uri": "{all}",
+    "method": [
+      "GET",
+      "HEAD",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS"
+    ]
+  },
+  "nova.asset.": {
+    "name": "nova.asset.",
+    "domain": null,
+    "action": "Laravel\\Nova\\Http\\Controllers\\StyleController",
+    "uri": "nova-api/styles/{style}",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "nova.api.": {
+    "name": "nova.api.",
+    "domain": null,
+    "action": "Laravel\\Nova\\Http\\Controllers\\MorphedResourceAttachController",
+    "uri": "nova-api/{resource}/{resourceId}/attach-morphed/{relatedResource}",
+    "method": [
+      "POST"
+    ]
+  },
+  "nova.api.start-nova-impersonation": {
+    "name": "nova.api.start-nova-impersonation",
+    "domain": null,
+    "action": "Laravel\\Nova\\Http\\Controllers\\ImpersonateController@startImpersonating",
+    "uri": "nova-api/impersonate",
+    "method": [
+      "POST"
+    ]
+  },
+  "nova.api.stop-nova-impersonation": {
+    "name": "nova.api.stop-nova-impersonation",
+    "domain": null,
+    "action": "Laravel\\Nova\\Http\\Controllers\\ImpersonateController@stopImpersonating",
+    "uri": "nova-api/impersonate",
+    "method": [
+      "DELETE"
+    ]
+  },
   "sanctum.csrf-cookie": {
     "name": "sanctum.csrf-cookie",
     "domain": null,
@@ -151,11 +212,50 @@
       "HEAD"
     ]
   },
-  "": {
-    "name": null,
+  "local-sp-login": {
+    "name": "local-sp-login",
     "domain": null,
-    "action": "App\\Http\\Controllers\\HomeController@index",
-    "uri": "{all}",
+    "action": "\\StudentAffairsUwm\\Shibboleth\\Controllers\\ShibbolethController@localSPLogin",
+    "uri": "local-sp/Login",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "local-sp-logout": {
+    "name": "local-sp-logout",
+    "domain": null,
+    "action": "\\StudentAffairsUwm\\Shibboleth\\Controllers\\ShibbolethController@localSPLogout",
+    "uri": "local-sp/Logout",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "local-sp-acs": {
+    "name": "local-sp-acs",
+    "domain": null,
+    "action": "\\StudentAffairsUwm\\Shibboleth\\Controllers\\ShibbolethController@localSPACS",
+    "uri": "local-sp/ACS",
+    "method": [
+      "POST"
+    ]
+  },
+  "local-sp-metadata": {
+    "name": "local-sp-metadata",
+    "domain": null,
+    "action": "\\StudentAffairsUwm\\Shibboleth\\Controllers\\ShibbolethController@localSPMetadata",
+    "uri": "local-sp/Metadata",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "nova.pages.login": {
+    "name": "nova.pages.login",
+    "domain": null,
+    "action": "\\Illuminate\\Routing\\RedirectController",
+    "uri": "admin/login",
     "method": [
       "GET",
       "HEAD",
@@ -164,6 +264,195 @@
       "PATCH",
       "DELETE",
       "OPTIONS"
+    ]
+  },
+  "nova.pages.password.email": {
+    "name": "nova.pages.password.email",
+    "domain": null,
+    "action": "\\Illuminate\\Routing\\RedirectController",
+    "uri": "admin/password/reset",
+    "method": [
+      "GET",
+      "HEAD",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS"
+    ]
+  },
+  "nova.pages.user-security": {
+    "name": "nova.pages.user-security",
+    "domain": null,
+    "action": "Laravel\\Nova\\Http\\Controllers\\Pages\\UserSecurityController@show",
+    "uri": "admin/user-security",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "nova.pages.password.verify": {
+    "name": "nova.pages.password.verify",
+    "domain": null,
+    "action": "Laravel\\Nova\\Http\\Controllers\\Fortify\\ConfirmablePasswordController@show",
+    "uri": "admin/user-security/confirm-password",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "nova.password.confirmation": {
+    "name": "nova.password.confirmation",
+    "domain": null,
+    "action": "Laravel\\Fortify\\Http\\Controllers\\ConfirmedPasswordStatusController@show",
+    "uri": "admin/user-security/confirmed-password-status",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "nova.password.confirm": {
+    "name": "nova.password.confirm",
+    "domain": null,
+    "action": "Laravel\\Nova\\Http\\Controllers\\Fortify\\ConfirmablePasswordController@store",
+    "uri": "admin/user-security/confirm-password",
+    "method": [
+      "POST"
+    ]
+  },
+  "nova.pages.403": {
+    "name": "nova.pages.403",
+    "domain": null,
+    "action": "Laravel\\Nova\\Http\\Controllers\\Pages\\Error403Controller",
+    "uri": "admin/403",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "nova.pages.404": {
+    "name": "nova.pages.404",
+    "domain": null,
+    "action": "Laravel\\Nova\\Http\\Controllers\\Pages\\Error404Controller",
+    "uri": "admin/404",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "nova.pages.home": {
+    "name": "nova.pages.home",
+    "domain": null,
+    "action": "Laravel\\Nova\\Http\\Controllers\\Pages\\HomeController",
+    "uri": "admin",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "nova.pages.dashboard": {
+    "name": "nova.pages.dashboard",
+    "domain": null,
+    "action": "\\Illuminate\\Routing\\RedirectController",
+    "uri": "admin/dashboard",
+    "method": [
+      "GET",
+      "HEAD",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS"
+    ]
+  },
+  "nova.pages.dashboard.custom": {
+    "name": "nova.pages.dashboard.custom",
+    "domain": null,
+    "action": "Laravel\\Nova\\Http\\Controllers\\Pages\\DashboardController",
+    "uri": "admin/dashboards/{name}",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "nova.pages.index": {
+    "name": "nova.pages.index",
+    "domain": null,
+    "action": "Laravel\\Nova\\Http\\Controllers\\Pages\\ResourceIndexController",
+    "uri": "admin/resources/{resource}",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "nova.pages.create": {
+    "name": "nova.pages.create",
+    "domain": null,
+    "action": "Laravel\\Nova\\Http\\Controllers\\Pages\\ResourceCreateController",
+    "uri": "admin/resources/{resource}/new",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "nova.pages.detail": {
+    "name": "nova.pages.detail",
+    "domain": null,
+    "action": "Laravel\\Nova\\Http\\Controllers\\Pages\\ResourceDetailController",
+    "uri": "admin/resources/{resource}/{resourceId}",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "nova.pages.edit": {
+    "name": "nova.pages.edit",
+    "domain": null,
+    "action": "Laravel\\Nova\\Http\\Controllers\\Pages\\ResourceUpdateController",
+    "uri": "admin/resources/{resource}/{resourceId}/edit",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "nova.pages.replicate": {
+    "name": "nova.pages.replicate",
+    "domain": null,
+    "action": "Laravel\\Nova\\Http\\Controllers\\Pages\\ResourceReplicateController",
+    "uri": "admin/resources/{resource}/{resourceId}/replicate",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "nova.pages.lens": {
+    "name": "nova.pages.lens",
+    "domain": null,
+    "action": "Laravel\\Nova\\Http\\Controllers\\Pages\\LensController",
+    "uri": "admin/resources/{resource}/lens/{lens}",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "nova.pages.attach": {
+    "name": "nova.pages.attach",
+    "domain": null,
+    "action": "Laravel\\Nova\\Http\\Controllers\\Pages\\AttachableController",
+    "uri": "admin/resources/{resource}/{resourceId}/attach/{relatedResource}",
+    "method": [
+      "GET",
+      "HEAD"
+    ]
+  },
+  "nova.pages.edit-attached": {
+    "name": "nova.pages.edit-attached",
+    "domain": null,
+    "action": "Laravel\\Nova\\Http\\Controllers\\Pages\\AttachedResourceUpdateController",
+    "uri": "admin/resources/{resource}/{resourceId}/edit-attached/{relatedResource}/{relatedResourceId}",
+    "method": [
+      "GET",
+      "HEAD"
     ]
   },
   "impersonate": {
@@ -532,278 +821,6 @@
     "domain": null,
     "action": "App\\Http\\Controllers\\CoursePlanning\\GroupEnrollmentController@destroy",
     "uri": "api/course-planning/groups/{group}/enrollments/{enrollment}",
-    "method": [
-      "DELETE"
-    ]
-  },
-  "index": {
-    "name": "index",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\AdminController@index",
-    "uri": "admin",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
-  },
-  "create": {
-    "name": "create",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\AdminController@create",
-    "uri": "admin/create",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
-  },
-  "store": {
-    "name": "store",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\AdminController@store",
-    "uri": "admin",
-    "method": [
-      "POST"
-    ]
-  },
-  "show": {
-    "name": "show",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\AdminController@show",
-    "uri": "admin/{}",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
-  },
-  "edit": {
-    "name": "edit",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\AdminController@edit",
-    "uri": "admin/{}/edit",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
-  },
-  "update": {
-    "name": "update",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\AdminController@update",
-    "uri": "admin/{}",
-    "method": [
-      "PUT",
-      "PATCH"
-    ]
-  },
-  "destroy": {
-    "name": "destroy",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\AdminController@destroy",
-    "uri": "admin/{}",
-    "method": [
-      "DELETE"
-    ]
-  },
-  "users.index": {
-    "name": "users.index",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\UsersController@index",
-    "uri": "admin/users",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
-  },
-  "users.create": {
-    "name": "users.create",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\UsersController@create",
-    "uri": "admin/users/create",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
-  },
-  "users.store": {
-    "name": "users.store",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\UsersController@store",
-    "uri": "admin/users",
-    "method": [
-      "POST"
-    ]
-  },
-  "users.show": {
-    "name": "users.show",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\UsersController@show",
-    "uri": "admin/users/{user}",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
-  },
-  "users.edit": {
-    "name": "users.edit",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\UsersController@edit",
-    "uri": "admin/users/{user}/edit",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
-  },
-  "users.update": {
-    "name": "users.update",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\UsersController@update",
-    "uri": "admin/users/{user}",
-    "method": [
-      "PUT",
-      "PATCH"
-    ]
-  },
-  "users.destroy": {
-    "name": "users.destroy",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\UsersController@destroy",
-    "uri": "admin/users/{user}",
-    "method": [
-      "DELETE"
-    ]
-  },
-  "group-type.index": {
-    "name": "group-type.index",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\GroupTypeController@index",
-    "uri": "admin/group-type",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
-  },
-  "group-type.create": {
-    "name": "group-type.create",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\GroupTypeController@create",
-    "uri": "admin/group-type/create",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
-  },
-  "group-type.store": {
-    "name": "group-type.store",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\GroupTypeController@store",
-    "uri": "admin/group-type",
-    "method": [
-      "POST"
-    ]
-  },
-  "group-type.show": {
-    "name": "group-type.show",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\GroupTypeController@show",
-    "uri": "admin/group-type/{group_type}",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
-  },
-  "group-type.edit": {
-    "name": "group-type.edit",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\GroupTypeController@edit",
-    "uri": "admin/group-type/{group_type}/edit",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
-  },
-  "group-type.update": {
-    "name": "group-type.update",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\GroupTypeController@update",
-    "uri": "admin/group-type/{group_type}",
-    "method": [
-      "PUT",
-      "PATCH"
-    ]
-  },
-  "group-type.destroy": {
-    "name": "group-type.destroy",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\GroupTypeController@destroy",
-    "uri": "admin/group-type/{group_type}",
-    "method": [
-      "DELETE"
-    ]
-  },
-  "role.index": {
-    "name": "role.index",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\RoleController@index",
-    "uri": "admin/role",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
-  },
-  "role.create": {
-    "name": "role.create",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\RoleController@create",
-    "uri": "admin/role/create",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
-  },
-  "role.store": {
-    "name": "role.store",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\RoleController@store",
-    "uri": "admin/role",
-    "method": [
-      "POST"
-    ]
-  },
-  "role.show": {
-    "name": "role.show",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\RoleController@show",
-    "uri": "admin/role/{role}",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
-  },
-  "role.edit": {
-    "name": "role.edit",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\RoleController@edit",
-    "uri": "admin/role/{role}/edit",
-    "method": [
-      "GET",
-      "HEAD"
-    ]
-  },
-  "role.update": {
-    "name": "role.update",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\RoleController@update",
-    "uri": "admin/role/{role}",
-    "method": [
-      "PUT",
-      "PATCH"
-    ]
-  },
-  "role.destroy": {
-    "name": "role.destroy",
-    "domain": null,
-    "action": "App\\Http\\Controllers\\Admin\\RoleController@destroy",
-    "uri": "admin/role/{role}",
     "method": [
       "DELETE"
     ]

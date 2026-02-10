@@ -7,6 +7,15 @@ module.exports = {
   ],
   testPathIgnorePatterns: ["/node_modules/", "/vendor/"],
   preset: "ts-jest/presets/js-with-ts-esm",
+  transform: {
+    "^.+\\.tsx?$": [
+      "ts-jest",
+      {
+        useESM: true,
+        diagnostics: false,
+      },
+    ],
+  },
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/resources/js/$1",
     "^lodash-es$": "lodash",
