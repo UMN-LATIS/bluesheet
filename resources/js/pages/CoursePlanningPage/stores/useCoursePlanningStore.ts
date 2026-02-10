@@ -7,7 +7,7 @@ import { useCourseStore } from "./useCourseStore";
 import { useGroupStore } from "@/stores/useGroupStore";
 import { useTermStore } from "@/stores/useTermStore";
 import { useLeaveStore } from "./useLeaveStore";
-import { debounce, isEqual, omit, uniq } from "lodash";
+import { debounce, groupBy, isEqual, omit, uniq } from "lodash";
 import * as T from "@/types";
 import * as api from "@/api";
 import { getCourseSpreadsheetRecords } from "../helpers/getCourseSpreadsheetRecords";
@@ -86,6 +86,20 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
           stores.enrollmentStore.getEnrollmentsBySectionId(section.id),
         )
         .filter(Boolean) as T.Enrollment[];
+    }),
+
+    // keyed lookup to avoid O(people × enrollments) filtering per person
+    enrollmentsInVisibleTermsByEmplId: computed(
+      (): Record<string, T.Enrollment[]> => {
+        return groupBy(
+          getters.enrollmentsInVisibleTerms.value,
+          (e) => e.emplid,
+        );
+      },
+    ),
+
+    visibleTermIds: computed((): Set<number> => {
+      return new Set(getters.visibleTerms.value.map((t) => t.id));
     }),
 
     peopleInVisibleTerms: computed((): T.Person[] => {
@@ -506,10 +520,8 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
         return false;
       }
 
-      // Only consider enrollments in the visible term range
-      const enrollmentsInRange = getters.enrollmentsInVisibleTerms.value.filter(
-        (e) => e.emplid === person.emplid,
-      );
+      const enrollmentsInRange =
+        getters.enrollmentsInVisibleTermsByEmplId.value[person.emplid] ?? [];
 
       return enrollmentsInRange.some((enrollment) =>
         state.filters.includedEnrollmentRoles.has(enrollment.role),
@@ -517,13 +529,12 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
     },
 
     doesPersonHaveLeaveInVisibleTerms(person: T.Person) {
-      const visibleTermIds = new Set(
-        getters.visibleTerms.value.map((t) => t.id),
-      );
       const personLeaves = stores.leaveStore.getLeavesByUserId(person.id);
       return personLeaves.some(
         (leave) =>
-          leave.termIds?.some((termId) => visibleTermIds.has(termId)) ?? false,
+          leave.termIds?.some((termId) =>
+            getters.visibleTermIds.value.has(termId),
+          ) ?? false,
       );
     },
 
