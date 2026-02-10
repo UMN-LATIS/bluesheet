@@ -1,4 +1,3 @@
-/// <reference types="vitest/config" />
 import { defineConfig } from "vite";
 import laravel from "laravel-vite-plugin";
 import vue from "@vitejs/plugin-vue";
@@ -38,9 +37,4 @@ export default defineConfig({
   // WARNING: DO NOT SET TO "" OR [] OR IT WILL EXPOSE ALL ENV VARS
   // just remove the line if you don't need it
   envPrefix: ["VITE_", "MIX_"],
-  test: {
-    environment: "jsdom",
-    include: ["resources/js/**/*.{test,spec}.{js,ts}"],
-    globals: true,
-  },
 });

@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach } from "vitest";
 import { setActivePinia, createPinia } from "pinia";
 import { useCoursePlanningStore } from "./useCoursePlanningStore";
 import { usePersonStore } from "./usePersonStore";
