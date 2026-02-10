@@ -38,7 +38,7 @@
             Course Levels
           </legend>
           <Button variant="tertiary" @click="toggleAllCourseLevels"
-            >Select All</Button
+            >Toggle All</Button
           >
         </div>
         <label
@@ -70,7 +70,7 @@
             Course Types
           </legend>
           <Button variant="tertiary" @click="toggleAllCourseTypes"
-            >Select All</Button
+            >Toggle All</Button
           >
         </div>
         <label
@@ -101,7 +101,7 @@
             Employee Appointment
           </legend>
           <Button variant="tertiary" @click="toggleAllAcadAppts">
-            Select All
+            Toggle All
           </Button>
         </div>
         <label
