@@ -51,19 +51,23 @@ class Leave extends Model implements Auditable {
     const TYPE_DEVELOPMENT = 'development';
     const TYPE_SINGLE_SEMESTER = 'single_semester';
     const TYPE_COURSE_RELEASE = 'course_release';
-    const TYPE_COURSE_RELEASE_ADMINISTRATIVE = 'course_release_administrative';
     const TYPE_COURSE_RELEASE_REGENTS = 'course_release_regents';
     const TYPE_COURSE_RELEASE_NON_ADMINISTRATIVE = 'course_release_non_administrative';
     const TYPE_TEACHING_FREE_SEMESTER = 'teaching_free_semester';
     const TYPE_COURSE_BUYOUT = 'course_buyout';
     const TYPE_PHASED_RETIREMENT = 'phased_retirement';
+    const TYPE_UNPAID_DISCRETIONARY = 'unpaid_discretionary';
     const TYPE_OTHER = 'other';
     const TYPES = [
         self::TYPE_SABBATICAL,
         self::TYPE_DEVELOPMENT,
         self::TYPE_SINGLE_SEMESTER,
         self::TYPE_COURSE_RELEASE,
+        self::TYPE_COURSE_RELEASE_REGENTS,
+        self::TYPE_COURSE_RELEASE_NON_ADMINISTRATIVE,
+        self::TYPE_TEACHING_FREE_SEMESTER,  
         self::TYPE_COURSE_BUYOUT,
+        self::TYPE_UNPAID_DISCRETIONARY,
         self::TYPE_OTHER,
         self::TYPE_PHASED_RETIREMENT,
     ];
