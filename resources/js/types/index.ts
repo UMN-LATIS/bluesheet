@@ -167,12 +167,31 @@ export const leaveTypes = {
   DEVELOPMENT: "development",
   SINGLE_SEMESTER: "single_semester",
   COURSE_RELEASE: "course_release",
+  COURSE_RELEASE_REGENTS: "course_release_regents",
+  COURSE_RELEASE_NON_ADMINISTRATIVE: "course_release_non_administrative",
+  TEACHING_FREE_SEMESTER: "teaching_free_semester",
   COURSE_BUYOUT: "course_buyout",
   PHASED_RETIREMENT: "phased_retirement",
+  UNPAID_DISCRETIONARY: "unpaid_discretionary",
   OTHER: "other",
 } as const;
 
 export type LeaveType = (typeof leaveTypes)[keyof typeof leaveTypes];
+
+export const leaveTypeLabels: Record<LeaveType, string> = {
+  [leaveTypes.SABBATICAL]: "Sabbatical",
+  [leaveTypes.DEVELOPMENT]: "CLAFDL",
+  [leaveTypes.SINGLE_SEMESTER]: "Single Semester",
+  [leaveTypes.COURSE_RELEASE]: "Course Release (Administrative)",
+  [leaveTypes.COURSE_RELEASE_REGENTS]: "Course Release (Regents Professor)",
+  [leaveTypes.COURSE_RELEASE_NON_ADMINISTRATIVE]:
+    "Course Release (Non-Administrative)",
+  [leaveTypes.TEACHING_FREE_SEMESTER]: "Teaching-Free Semester",
+  [leaveTypes.COURSE_BUYOUT]: "Course Buyout",
+  [leaveTypes.PHASED_RETIREMENT]: "Phased Retirement",
+  [leaveTypes.UNPAID_DISCRETIONARY]: "Unpaid Discretionary",
+  [leaveTypes.OTHER]: "Other",
+};
 
 // constants for db strings for indicating status
 export const leaveStatuses = {
