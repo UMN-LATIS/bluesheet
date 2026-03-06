@@ -186,7 +186,7 @@ export const leaveTypeLabels: Record<LeaveType, string> = {
   [leaveTypes.COURSE_RELEASE_REGENTS]: "Course Release (Regents Professor)",
   [leaveTypes.COURSE_RELEASE_NON_ADMINISTRATIVE]:
     "Course Release (Non-Administrative)",
-  [leaveTypes.TEACHING_FREE_SEMESTER]: "Administrative Service",
+  [leaveTypes.TEACHING_FREE_SEMESTER]: "Teaching-Free Semester",
   [leaveTypes.COURSE_BUYOUT]: "Course Buyout",
   [leaveTypes.PHASED_RETIREMENT]: "Phased Retirement",
   [leaveTypes.UNPAID_DISCRETIONARY]: "Unpaid Discretionary",
