@@ -11,6 +11,8 @@
         variant === 'tertiary',
       'tw-border tw-border-red-500 tw-bg-transparent hover:tw-bg-bs-red tw-text-red-500 !tw-px-3 !tw-py-2':
         variant === 'danger',
+      'tw-text-bs-blue hover:!tw-underline hover:tw-text-bs-blue-dark tw-bg-transparent tw-border-none tw-p-0 tw-no-underline':
+        variant === 'link',
     }"
     v-bind="$attrs"
     :to="componentType === RouterLink ? to : undefined"
@@ -28,7 +30,7 @@ const props = withDefaults(
   defineProps<{
     href?: string;
     to?: RouteLocationRaw;
-    variant?: "primary" | "secondary" | "tertiary" | "danger";
+    variant?: "primary" | "secondary" | "tertiary" | "danger" | "link";
     type?: "button" | "submit" | "reset";
   }>(),
   {

@@ -25,7 +25,26 @@ describe("Groups UI", () => {
       cy.visit("/");
       cy.get(".app-header").contains("Create Group").click();
       cy.get("#groupName").type("Test Group");
-      cy.get("#groupTypes input").type("Committee{enter}");
+      cy.get("#groupTypes input").type("Comm{enter}");
+
+      // should see that no options are available
+      cy.get(".combobox__options").contains("No options.");
+
+      // add a new option
+      cy.get(".combobox__options").within(() => {
+        cy.get("input").type("Committee");
+        cy.get("[data-cy='add-new-option-button']").click();
+      });
+
+      // the new option should be selected
+      cy.get("#groupTypes").contains("Committee").click();
+
+      // the option should be marked as selected within the option list
+      cy.get(".combobox__options [aria-selected=true]").contains("Committee");
+
+      // close the options list
+      cy.get(".combobox__options button[aria-label='Close options dropdown']").click();
+
       cy.get("#parentOrganization").select("CLA");
       cy.get(".btn").contains("Create Group").click();
       cy.contains("Test Group");
@@ -218,7 +237,26 @@ describe("Groups UI", () => {
       cy.visit(`/group/${groupId}`);
       cy.contains("Create Subgroup").click();
       cy.get("#groupName").type("Test Subgroup");
-      cy.get("#groupTypes input").type("Working Group{enter}");
+      cy.get("#groupTypes input").type("Working{enter}");
+
+      // should see that no options are available
+      cy.get(".combobox__options").contains("No options.");
+
+      // add a new option
+      cy.get(".combobox__options").within(() => {
+        cy.get("input").type("Working Group");
+        cy.get("[data-cy='add-new-option-button']").click();
+      });
+
+      // the new option should be selected
+      cy.get("#groupTypes").contains("Working Group").click();
+
+      // the option should be marked as selected within the option list
+      cy.get(".combobox__options [aria-selected=true]").contains("Working Group");
+
+      // close the options list
+      cy.get(".combobox__options button[aria-label='Close options dropdown']").click();
+
       cy.contains("Create Group").click();
 
       cy.get("[data-cy=child-groups]").contains("Test Subgroup").click();

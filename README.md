@@ -22,6 +22,11 @@ To get started:
 # Create a .env file
 cp .env.example .env
 
+# create auth.json for Nova credentials
+cp auth.json.example auth.json
+
+# add your username/key to auth.json
+
 # Install php dependencies
 composer install
 
@@ -35,10 +40,10 @@ sail exec app ./bin/ci.sh
 sail artisan migrate:fresh --seed
 
 # Install node modules
-yarn install
+npm install
 
 # Start Vite
-yarn dev
+npm run dev
 
 ```
 
@@ -48,7 +53,7 @@ The application will be running on <http://localhost>.
 
 ```sh
 sail up
-yarn dev
+npm run dev
 ```
 
 Load <http://localhost> in your browser.
@@ -79,9 +84,9 @@ To connect to Bandaid for local development:
 
 | Enviroment Name | URL                                  |
 | --------------- | ------------------------------------ |
-| `dev`           | <https://cla-groups-dev.oit.umn.edu> |
-| `stage`         | <https://cla-groups-tst.oit.umn.edu> |
-| `prod`          | <https://cla-groups-prd.oit.umn.edu> |
+| `dev`           | <https://cla-bluesheet-dev.oit.umn.edu> |
+| `stage`         | <https://cla-bluesheet-tst.oit.umn.edu> |
+| `prod`          | <https://bluesheet.cla.umn.edu> |
 
 ```sh
 ./vendor/bin/dep deploy <environment name>
@@ -95,20 +100,20 @@ To develop locally:
 
 ```sh
 cd docs
-yarn install
-yarn docs:dev
+npm install
+npm run docs:dev
 ```
 
 Building the documentation:
 
 ```sh
 cd docs
-yarn docs:build
+npm run docs:build
 ```
 
 and publishing:
 
 ```sh
 cd docs
-yarn docs:publish
+npm run docs:publish
 ```
