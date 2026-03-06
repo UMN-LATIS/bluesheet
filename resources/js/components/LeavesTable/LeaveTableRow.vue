@@ -55,7 +55,7 @@
         :validator="isNotEmptyString"
         label="type"
       />
-      <span v-else>{{ capitalizeEachWord(leave.type.replace("_", " ")) }}</span>
+      <span v-else>{{ getLeaveTypeLabel(leave.type) }}</span>
     </Td>
     <Td
       data-cy="leaveStatus"
@@ -158,7 +158,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, reactive } from "vue";
 import { dayjs, isTempId } from "@/utils";
-import { Leave, leaveStatuses, leaveTypes } from "@/types";
+import { Leave, leaveStatuses } from "@/types";
 import InputGroup from "@/components/InputGroup.vue";
 import SelectGroup from "@/components/SelectGroup.vue";
 import { Td } from "@/components/Table";
@@ -173,6 +173,7 @@ import {
   getLeaveStatusLabel,
   getLeaveStatusOptions,
 } from "@/utils/leaveStatusHelpers";
+import { getLeaveTypeLabel, getLeaveTypeOptions } from "@/utils/leaveTypeHelpers";
 
 const props = defineProps<{
   leave: Leave;
@@ -218,20 +219,7 @@ function handleCancelEditLeave() {
   resetLocalLeaveToProps();
 }
 
-const capitalizeEachWord = (str: string) =>
-  str
-    .toLowerCase()
-    .replace(/_/g, " ")
-    .split(" ")
-    .map((s) => s[0].toUpperCase() + s.slice(1))
-    .join(" ");
-
-const leaveTypeOptions = computed(() => {
-  return Object.entries(leaveTypes).map(([text, value]) => ({
-    value,
-    text: capitalizeEachWord(text),
-  }));
-});
+const leaveTypeOptions = computed(() => getLeaveTypeOptions());
 
 const leaveStatusOptions = computed(() => getLeaveStatusOptions());
 
