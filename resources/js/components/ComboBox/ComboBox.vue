@@ -13,6 +13,7 @@
         v-if="modelValue && !areOptionsOpen"
         ref="selectedItemRef"
         class="tw-flex tw-bg-transparent tw-border tw-border-neutral-300 tw-w-full tw-py-3 tw-px-4 tw-items-center tw-justify-between tw-rounded-md tw-text-left"
+        :aria-label="`Change ${label}: ${modelValue.label} ${modelValue.secondaryLabel ? '(' + modelValue.secondaryLabel + ')' : ''}`"
         @click="handleChangeOption"
       >
         <div class="tw-flex tw-flex-col tw-items-start tw-flex-1">
@@ -37,17 +38,20 @@
           :id="`combobox-${label}__input`"
           ref="comboboxInputRef"
           v-model="query"
+          type="search"
           class="tw-border-none tw-bg-transparent tw-block tw-w-full tw-py-3 tw-pl-4 tw-text-neutral-900 focus:tw-outline-none tw-text-sm flex-1"
           :placeholder="placeholder"
           role="combobox"
           :aria-controls="`combobox-${label}__options`"
           aria-autocomplete="list"
           :aria-expanded="areOptionsOpen"
+          :aria-activedescendant="activeDescendantId"
           @keydown="handleKeyDown"
           @focus="areOptionsOpen = true"
         />
         <button
           class="tw-flex tw-items-center tw-justify-center tw-bg-transparent tw-border-none tw-p-2 tw-mr-2 tw-rounded-md"
+          :aria-label="areOptionsOpen ? 'Collapse options' : 'Expand options'"
           @click="areOptionsOpen = !areOptionsOpen"
         >
           <ChevronDownIcon
@@ -58,14 +62,31 @@
       </div>
 
       <MaybeTeleport :teleportTo="teleportTo">
+        <!-- see https://www.w3.org/WAI/ARIA/apg/patterns/combobox/#wai-ariaroles,states,andproperties -->
         <div
           v-if="areOptionsOpen"
           ref="comboboxOptionsRef"
           class="combobox__options tw-border tw-border-neutral-300 tw-py-3 tw-px-2 tw-max-h-60 tw-overflow-auto tw-bg-white tw-rounded-md tw-shadow-lg tw-ring-1 tw-ring-black tw-ring-opacity-5 focus:tw-outline-none tw-relative tw-z-[1000] tw-min-w-[20rem]"
           :style="floatingStyles"
         >
+        <div class="tw-flex tw-justify-end">
+          <button
+            type="button"
+            class="tw-p-1 tw-text-neutral-400 hover:tw-text-neutral-600 tw-bg-transparent tw-border-none tw-cursor-pointer tw-rounded"
+            aria-label="Close options dropdown"
+            title="Close options dropdown"
+            @click="closeComboBoxOptions"
+          >
+            <XIcon />
+          </button>
+        </div>
+          <div v-if="!options.length">
+            <p class="tw-text-sm tw-text-neutral-500 tw-text-center">
+              No options.
+            </p>
+          </div>
           <ul
-            v-if="filteredOptions.length"
+            v-else-if="filteredOptions.length"
             :id="`combobox-${label}__options`"
             class="tw-pl-0 tw-flex tw-flex-col gap-2"
             role="listbox"
@@ -73,7 +94,6 @@
             <ComboBoxOption
               v-for="option in filteredOptions"
               :key="option.id ?? option.label"
-              role="option"
               :option="option"
               :isSelected="isSelected(option)"
               :isHighlighted="isHighlighted(option)"
@@ -83,18 +103,46 @@
           </ul>
           <div
             v-else
-            class="tw-p-2 tw-text-neutral-500 tw-text-sm tw-text-center"
+            class="tw-p-2 tw-text-neutral-500 tw-text-center"
           >
-            None.
+            <p class="tw-text-sm tw-mb-1">No matches found.</p>
+            <p class="tw-text-sm">
+              <Button
+              v-if="query"
+              variant="link"
+              type="button"
+              class="tw-inline-block"
+              @click="query = ''"
+            >
+              Clear
+            </Button>
+            to see all options.</p>
           </div>
-          <Button
+          <div
             v-if="canAddNewOptions"
-            class="tw-w-full tw-items-center disabled:tw-opacity-40"
-            :disabled="!query || isQueryAnOption"
-            @click="handleAddNewOptionsClick"
+            class="tw-mt-3 tw-pt-3 tw-border-t tw-border-neutral-200"
           >
-            Add New Option
-          </Button>
+            <div class="tw-flex tw-gap-2 tw-items-center">
+              <input
+                v-model="newOptionValue"
+                type="text"
+                placeholder="Add new option..."
+                aria-label="New option value"
+                class="tw-flex-1 tw-px-3 tw-py-2 tw-border tw-border-neutral-300 tw-rounded-md tw-text-sm focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-blue-500"
+                @keydown.enter="handleAddNewOptionsClick"
+              />
+              <button
+                class="tw-flex tw-items-center tw-justify-center tw-w-9 tw-h-9 tw-bg-bs-blue tw-border-none tw-text-white tw-rounded-md hover:tw-bg-blue-600 disabled:tw-opacity-40 disabled:tw-cursor-not-allowed"
+                :disabled="!newOptionValue"
+                aria-label="Add new option"
+                title="Add new option"
+                data-cy="add-new-option-button"
+                @click="handleAddNewOptionsClick"
+              >
+                <CheckIcon aria-hidden="true" />
+              </button>
+            </div>
+          </div>
           <slot name="afterOptions" :query="query" />
         </div>
       </MaybeTeleport>
@@ -106,6 +154,8 @@ import { ref, computed, nextTick, watch } from "vue";
 import { ComboBoxOptionType, ComboBoxOption } from ".";
 import { onClickOutside } from "@vueuse/core";
 import ChevronDownIcon from "@/icons/ChevronDownIcon.vue";
+import CheckIcon from "@/icons/CheckIcon.vue";
+import XIcon from "@/icons/XIcon.vue";
 import { first } from "lodash";
 import {
   useFloating,
@@ -115,7 +165,7 @@ import {
 } from "@floating-ui/vue";
 import Label from "@/components/Label.vue";
 import MaybeTeleport from "@/components/MaybeTeleport.vue";
-import Button from "@/components/Button.vue";
+import Button from "../Button.vue";
 
 const props = withDefaults(
   defineProps<{
@@ -151,6 +201,7 @@ const emit = defineEmits<{
 const query = ref("");
 const areOptionsOpen = ref(false);
 const highlightedOption = ref<ComboBoxOptionType | null>(null);
+const newOptionValue = ref("");
 
 const comboboxContainerRef = ref<HTMLElement | null>(null);
 const selectedItemRef = ref<HTMLElement | null>(null);
@@ -173,8 +224,11 @@ const indexOfHighlightedOption = computed(() => {
   return index === -1 ? null : index;
 });
 
-const isQueryAnOption = computed(() => {
-  return filteredOptions.value.some((option) => option.label === query.value);
+const activeDescendantId = computed(() => {
+  if (!highlightedOption.value) {
+    return undefined;
+  }
+  return `option-${highlightedOption.value.id ?? highlightedOption.value.label}`;
 });
 
 function areOptionsEqual(
@@ -214,8 +268,8 @@ onClickOutside(comboboxContainerRef, () => {
 });
 
 function handleChangeOption() {
-  // begin with the currently selected option label
-  query.value = props.modelValue?.label ?? "";
+  // Clear the query to show all options when editing
+  query.value = "";
   highlightedOption.value = props.modelValue;
   areOptionsOpen.value = !areOptionsOpen.value;
   nextTick(() => {
@@ -260,27 +314,29 @@ function closeComboBoxOptions() {
 }
 
 function handleAddNewOptionsClick() {
-  if (!query.value) {
+  if (!newOptionValue.value) {
     return;
   }
 
   // check if the option already exists
   const existingOption = props.options.find(
-    (option) => option.label === query.value,
+    (option) => option.label === newOptionValue.value,
   );
 
   if (existingOption) {
     handleSelectOption(existingOption);
+    newOptionValue.value = "";
     return;
   }
 
   // if it doesn't exist, add it as a new option
   const newOption: ComboBoxOptionType = {
-    label: query.value,
+    label: newOptionValue.value,
   };
 
   emit("addNewOption", newOption);
   handleSelectOption(newOption);
+  newOptionValue.value = "";
 }
 
 function handleKeyDown(event: KeyboardEvent) {

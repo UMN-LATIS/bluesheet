@@ -15,6 +15,7 @@ module.exports = {
         "umn-neutral-800": `#262626`, // active text color
         "umn-neutral-900": `#1a1a1a`,
         "bs-blue": "#3490dc",
+        "bs-blue-dark": "#1d68a7",
       },
       backgroundImage: {
         striped:
