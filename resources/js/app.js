@@ -13,9 +13,9 @@ import { router } from "./router";
 import App from "./App.vue";
 
 // Global CSS
+import "@umn-latis/cla-vue-template/dist/index.css";
 import "../sass/app.scss";
 import "../sass/utils.css";
-import "@umn-latis/cla-vue-template/dist/index.css";
 
 const pinia = createPinia();
 
