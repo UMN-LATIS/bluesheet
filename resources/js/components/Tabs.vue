@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="!tw-hidden sm:!tw-block">
+    <div class="tw-hidden sm:tw-block">
       <nav class="tw-flex tw-space-x-4" aria-label="Tabs">
         <button
           v-for="tab in tabs"
