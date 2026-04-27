@@ -19,7 +19,7 @@
         >
           <template #afterOptions>
             <Button
-              class="!tw-block tw-w-full tw-bg-neutral-900 tw-text-white hover:tw-bg-blue-700"
+              class="tw-w-full tw-border-current tw-bg-neutral-900 tw-text-white hover:tw-bg-blue-700"
               @click="isAddingAsNewCourse = true"
             >
               Add New Course

@@ -1,20 +1,24 @@
 <template>
   <component
     :is="componentType"
-    class="tw-inline-flex tw-items-center tw-gap-1 tw-no-underline hover:tw-no-underline tw-rounded tw-justify-center tw-leading-none tw-transition-colors tw-ease-in-out tw-group tw-cursor-pointer disabled:tw-opacity-50 disabled:tw-cursor-not-allowed"
-    :class="{
-      'tw-border tw-border-bs-blue tw-bg-bs-blue hover:tw-border-700 hover:tw-bg-bs-blue tw-text-blue-50 !tw-px-3 !tw-py-2':
-        variant === 'primary',
-      'tw-border tw-border-bs-blue tw-text-bs-blue tw-px-3 tw-py-2 tw-bg-transparent':
-        variant === 'secondary',
-      'tw-text-bs-blue hover:tw-bg-blue-100 tw-text-xs tw-uppercase tw-font-semibold tw-p-2 tw-bg-transparent tw-border-none tw-whitespace-nowrap':
-        variant === 'tertiary',
-      'tw-border tw-border-red-500 tw-bg-transparent hover:tw-bg-bs-red tw-text-red-500 !tw-px-3 !tw-py-2':
-        variant === 'danger',
-      'tw-text-bs-blue hover:!tw-underline hover:tw-text-bs-blue-dark tw-bg-transparent tw-border-none tw-p-0 tw-no-underline':
-        variant === 'link',
-    }"
-    v-bind="$attrs"
+    :class="
+      cn(
+        'tw-inline-flex tw-items-center tw-gap-1 tw-no-underline hover:tw-no-underline tw-rounded tw-justify-center tw-leading-none tw-transition-colors tw-ease-in-out tw-group tw-cursor-pointer disabled:tw-opacity-50 disabled:tw-cursor-not-allowed',
+        {
+          'tw-border tw-border-bs-blue tw-bg-bs-blue hover:tw-border-700 hover:tw-bg-bs-blue tw-text-blue-50 tw-px-3 tw-py-2':
+            variant === 'primary',
+          'tw-border tw-border-bs-blue tw-text-bs-blue tw-px-3 tw-py-2 tw-bg-transparent':
+            variant === 'secondary',
+          'tw-text-bs-blue hover:tw-bg-blue-100 tw-text-xs tw-uppercase tw-font-semibold tw-p-2 tw-bg-transparent tw-border-none tw-whitespace-nowrap':
+            variant === 'tertiary',
+          'tw-border tw-border-red-500 tw-bg-transparent hover:tw-bg-bs-red tw-text-red-500 tw-px-3 tw-py-2':
+            variant === 'danger',
+          'tw-text-bs-blue hover:tw-underline hover:tw-text-bs-blue-dark tw-bg-transparent tw-border-none tw-p-0 tw-no-underline':
+            variant === 'link',
+        },
+        props.class,
+      )
+    "
     :to="componentType === RouterLink ? to : undefined"
     :href="resolvedHref"
     :type="componentType === 'button' ? type : undefined"
@@ -23,8 +27,10 @@
   </component>
 </template>
 <script setup lang="ts">
+import { CSSClass } from "@/types";
 import { computed } from "vue";
 import { RouterLink, type RouteLocationRaw, useRouter } from "vue-router";
+import { cn } from "@/utils";
 
 const props = withDefaults(
   defineProps<{
@@ -32,12 +38,14 @@ const props = withDefaults(
     to?: RouteLocationRaw;
     variant?: "primary" | "secondary" | "tertiary" | "danger" | "link";
     type?: "button" | "submit" | "reset";
+    class?: CSSClass;
   }>(),
   {
     variant: "secondary",
     href: undefined,
     to: undefined,
     type: "button",
+    class: "",
   },
 );
 
@@ -46,7 +54,6 @@ const resolvedHref = computed(() => {
   if (props.href) {
     return props.href;
   } else if (props.to && componentType.value === RouterLink) {
-    // If `to` is an object, resolve it to a string URL
     return router.resolve(props.to).href;
   }
   return undefined;

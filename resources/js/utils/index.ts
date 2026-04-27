@@ -7,3 +7,4 @@ export { parseIntFromRouteParam } from "./parseIntFromRouteParam";
 export { sortByValueAtPath } from "./sortByValueAtPath";
 export { isValidUrl } from "./isValidUrl";
 export { doesGroupHaveSubgroup } from "./doesGroupHaveSubgroup";
+export { cn } from "./cn";
