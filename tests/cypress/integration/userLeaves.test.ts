@@ -25,7 +25,7 @@ function createPastLeave({ description, startDate, endDate }) {
       cy.get("[data-cy=select-leave-date-combobox-end] input").type(
         `${endDate.format("MM/DD/YYYY")}{enter}`,
       );
-      cy.get("[data-cy=leaveType] select").select("Development");
+      cy.get("[data-cy=leaveType] select").select("CLAFDL");
       cy.get("[data-cy=leaveStatus] select").select("Confirmed");
       cy.contains("Save").click();
     });
@@ -102,7 +102,7 @@ describe("User leaves", () => {
           cy.get("[data-cy=leaveEndDate]").contains(
             dayjs(validEndDate).format("MMM D, YYYY"),
           );
-          cy.get("[data-cy=leaveType]").contains("Development");
+          cy.get("[data-cy=leaveType]").contains("CLAFDL");
           cy.get("[data-cy=leaveStatus]").contains("Confirmed");
         });
     });
