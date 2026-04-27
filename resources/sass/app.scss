@@ -2,6 +2,11 @@
 @import "bootstrap/scss/bootstrap";
 @import "footer";
 
+body {
+  // prevent default white bg
+  background: var(--main-bg-color);
+}
+
 p {
   font-size: 1rem;
   font-weight: 400;
@@ -22,9 +27,11 @@ p {
 .v-select {
   background-color: white;
 }
+
 .v-select.dropdown .dropdown-toggle::after {
   content: normal;
 }
+
 .vs__selected-options {
   height: 2.1em;
   max-width: none;
