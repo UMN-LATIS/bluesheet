@@ -45,7 +45,7 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function fixture(string $filename): array {
+function fixtureData(string $filename): array {
     $cwd = getcwd();
     $path = $cwd . "/tests/Fixtures/$filename";
 
@@ -79,7 +79,7 @@ function clearExistingHttpFakes(): void {
 }
 
 function mockResponse(string $filename, int $status = 200) {
-    $fixture = fixture($filename);
+    $fixture = fixtureData($filename);
     return Http::response($fixture, $status);
 }
 
