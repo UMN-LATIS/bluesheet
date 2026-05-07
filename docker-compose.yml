@@ -2,12 +2,12 @@
 version: "3"
 services:
   app:
-    image: sail-8.4/app
+    image: sail-8.5/app
     build:
-      context: ./vendor/laravel/sail/runtimes/8.4
+      context: ./vendor/laravel/sail/runtimes/8.5
       dockerfile: Dockerfile
       args:
-          WWWGROUP: '${WWWGROUP}'
+        WWWGROUP: "${WWWGROUP}"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
@@ -25,12 +25,12 @@ services:
       - mariadb
       - redis
   mailpit:
-    image: 'axllent/mailpit:latest'
+    image: "axllent/mailpit:latest"
     ports:
-        - '${FORWARD_MAILPIT_PORT:-1025}:1025'
-        - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
+      - "${FORWARD_MAILPIT_PORT:-1025}:1025"
+      - "${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025"
     networks:
-        - sail
+      - sail
   mariadb:
     image: "mariadb:10"
     ports:
