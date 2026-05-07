@@ -1,5 +1,7 @@
+import forms from "@tailwindcss/forms";
+
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   content: ["./resources/js/**/*.{vue,js,ts,jsx,tsx}"],
   theme: {
     extend: {
@@ -8,12 +10,12 @@ module.exports = {
         "umn-gold": "#ffcc33",
         "umn-gold-light": "#ffde7a",
         "umn-neutral-50": "#f9f7f6", // page background color
-        "umn-neutral-100": `#f0efee`, // gray for navbar
-        "umn-neutral-200": `#d5d6d2`,
-        "umn-neutral-500": `#737487`,
-        "umn-neutral-700": `#5a5a5a`, // text color
-        "umn-neutral-800": `#262626`, // active text color
-        "umn-neutral-900": `#1a1a1a`,
+        "umn-neutral-100": "#f0efee", // gray for navbar
+        "umn-neutral-200": "#d5d6d2",
+        "umn-neutral-500": "#737487",
+        "umn-neutral-700": "#5a5a5a", // text color
+        "umn-neutral-800": "#262626", // active text color
+        "umn-neutral-900": "#1a1a1a",
         "bs-blue": "#3490dc",
         "bs-blue-dark": "#1d68a7",
       },
@@ -28,9 +30,8 @@ module.exports = {
     preflight: false,
   },
   plugins: [
-    require("@tailwindcss/forms")({
-      // strategy: "base", // only generate global styles
-      strategy: "class", // only generate classes
+    forms({
+      strategy: "class",
     }),
     /**
      * expose tailwind colors as CSS variables
