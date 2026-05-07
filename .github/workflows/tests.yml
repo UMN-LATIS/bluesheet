@@ -13,9 +13,8 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        php: ["8.4", "8.5"]
-        node: [22, 24]
-    name: PHP ${{ matrix.php }} / Node ${{ matrix.node }}
+        node: [24, 26]
+    name: Node ${{ matrix.node }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -25,7 +24,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php }}
+          php-version: "8.5"
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -72,12 +71,12 @@ jobs:
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: cypress-screenshots-php${{ matrix.php }}-node${{ matrix.node }}
+          name: cypress-screenshots-node${{ matrix.node }}
           path: tests/cypress/screenshots
 
       - name: Upload snapshots
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: cypress-snapshots-php${{ matrix.php }}-node${{ matrix.node }}
+          name: cypress-snapshots-node${{ matrix.node }}
           path: cypress/snapshots
