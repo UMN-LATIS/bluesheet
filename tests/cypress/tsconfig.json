@@ -1,10 +1,10 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "lib": ["es5", "dom"],
+    "target": "esnext",
+    "module": "esnext",
+    "lib": ["esnext", "dom"],
     "types": ["cypress", "node"],
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "bundler",
     "paths": {
       "@/*": ["../../resources/js/*"]
     }

@@ -21,3 +21,5 @@ cache
 # ignore phpunit caches
 .phpunit.*
 auth.json
+.mise.local.toml
+!.tool-versions

@@ -43,7 +43,9 @@ describe("Groups UI", () => {
       cy.get(".combobox__options [aria-selected=true]").contains("Committee");
 
       // close the options list
-      cy.get(".combobox__options button[aria-label='Close options dropdown']").click();
+      cy.get(
+        ".combobox__options button[aria-label='Close options dropdown']",
+      ).click();
 
       cy.get("#parentOrganization").select("CLA");
       cy.get(".btn").contains("Create Group").click();
@@ -167,8 +169,20 @@ describe("Groups UI", () => {
       cy.visit("/");
       cy.get("[data-cy=favorite-groups-section]").should("not.exist");
 
+      cy.intercept("GET", "/api/user/show").as("getCurrentUser");
+      cy.intercept("POST", "/api/user/favorite/groups/1").as("favoriteGroup");
+
       cy.visit("/group/1");
-      cy.contains("Favorite").click();
+
+      // wait for the current-user fetch to resolve; otherwise the click
+      // handler short-circuits with "No current user" and never POSTs
+      cy.wait("@getCurrentUser").its("response.statusCode").should("eq", 200);
+
+      cy.contains("button", "Favorite").click();
+
+      // wait for the favorite to be persisted before navigating away,
+      // otherwise the homepage's user fetch can race the in-flight POST
+      cy.wait("@favoriteGroup").its("response.statusCode").should("eq", 200);
 
       // check that the favorite groups table contains 1 group
       cy.visit("/");
@@ -252,10 +266,14 @@ describe("Groups UI", () => {
       cy.get("#groupTypes").contains("Working Group").click();
 
       // the option should be marked as selected within the option list
-      cy.get(".combobox__options [aria-selected=true]").contains("Working Group");
+      cy.get(".combobox__options [aria-selected=true]").contains(
+        "Working Group",
+      );
 
       // close the options list
-      cy.get(".combobox__options button[aria-label='Close options dropdown']").click();
+      cy.get(
+        ".combobox__options button[aria-label='Close options dropdown']",
+      ).click();
 
       cy.contains("Create Group").click();
 
