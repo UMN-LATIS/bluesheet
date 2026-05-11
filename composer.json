@@ -18,7 +18,7 @@
   ],
   "license": "MIT",
   "require": {
-    "php": "^8.2",
+    "php": "^8.4",
     "doctrine/dbal": "^3.7",
     "fakerphp/faker": "^1.23",
     "guzzlehttp/guzzle": "^7.8",
@@ -56,6 +56,9 @@
     "allow-plugins": {
       "php-http/discovery": true,
       "pestphp/pest-plugin": true
+    },
+    "platform": {
+      "php": "8.4"
     }
   },
   "extra": {
