@@ -46,8 +46,8 @@ jobs:
         run: |
           docker compose ps --all
 
-      - run: yarn install --frozen-lockfile
-      - run: yarn build
+      - run: npm ci
+      - run: npm run build
       - run: docker compose exec -T app ./bin/ci.sh
       - run: docker compose exec -T app php artisan key:generate
       - run: docker compose exec -T app php artisan migrate:fresh
@@ -58,7 +58,7 @@ jobs:
         run: docker compose exec -T app ./vendor/bin/pest
 
       - name: Run unit tests with Jest
-        run: yarn test:unit
+        run: npm run test:unit
 
       - name: Run E2E tests with Cypress
         uses: cypress-io/github-action@v6
