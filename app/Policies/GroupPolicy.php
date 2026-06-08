@@ -33,7 +33,7 @@ class GroupPolicy
         return $this->update($user, $group);
     }
 
-    public function create(User $user, ?Group $maybeParentGroup)
+    public function create(User $user, ?Group $maybeParentGroup = null)
     {
         return $user->can(Permissions::CREATE_GROUPS)
             || ($maybeParentGroup && $user->managesGroup($maybeParentGroup));

@@ -29,7 +29,11 @@ class LeavePolicy {
     /**
      * Determine whether the user can create models.
      */
-    public function create(User $user, Leave $leaveToCreate): bool {
+    public function create(User $user, ?Leave $leaveToCreate = null): bool {
+        if (!$leaveToCreate) {
+            return false;
+        }
+
         return $this->modifyLeavesForUser($user, $leaveToCreate->user);
     }
 

@@ -22,8 +22,16 @@ class LeaveArtifactPolicy {
 
     /**
      * Determine whether the user can view any models.
+     *
+     * Nova calls viewAny with only the authenticated user, while our own
+     * LeaveArtifactController scopes the check to a specific leave. Mirror
+     * LeavePolicy::viewAny and deny the unscoped (Nova) case.
      */
-    public function viewAny(User $user, Leave $leave): bool {
+    public function viewAny(User $user, ?Leave $leave = null): bool {
+        if (!$leave) {
+            return false;
+        }
+
         return $this->leavePolicy->viewAnyLeavesForUser($user, $leave->user);
     }
 
@@ -37,7 +45,11 @@ class LeaveArtifactPolicy {
     /**
      * Determine whether the user can create models.
      */
-    public function create(User $user, Leave $leave): bool {
+    public function create(User $user, ?Leave $leave = null): bool {
+        if ($leave === null) {
+            return false;
+        }
+
         return $this->leavePolicy->modifyLeavesForUser($user, $leave->user);
     }
 
