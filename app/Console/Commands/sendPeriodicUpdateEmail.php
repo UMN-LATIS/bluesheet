@@ -95,7 +95,7 @@ class sendPeriodicUpdateEmail extends Command
                         ]);
 
                         try {
-                            Mail::to($email)->send(new \App\Mail\GroupUpdateReminder($uniqueGroups));
+                            Mail::to($email)->sendNow(new \App\Mail\GroupUpdateReminder($uniqueGroups));
                             $sent++;
                         } catch (Throwable $sendException) {
                             $failed++;
