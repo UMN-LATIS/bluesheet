@@ -7,9 +7,16 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class GroupUpdateReminder extends Mailable
+class GroupUpdateReminder extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
+
+    public $tries = 3;
+
+    public $backoff = [60, 300, 900];
+
+    public $timeout = 120;
+
     public $userGroups;
     /**
      * Create a new message instance.
