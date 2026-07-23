@@ -102,7 +102,12 @@ class EmailForFavoriteGroupsAndRoles extends Command
 
 
         foreach($outputArray as $userChanges) {
-            Mail::to($userChanges["user"]->email)->send(new \App\Mail\ChangedFavoriteNotification($userChanges["favorites"]));
+            try {
+                Mail::to($userChanges["user"]->email)->send(new \App\Mail\ChangedFavoriteNotification($userChanges["favorites"]));
+            } catch (\Throwable $e) {
+                \Log::error("Failed to send favorite change notification to " . $userChanges["user"]->email . ": " . $e->getMessage());
+                $this->error("Failed to send favorite change notification to " . $userChanges["user"]->email . ": " . $e->getMessage());
+            }
         }
         
     }
