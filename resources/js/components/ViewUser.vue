@@ -16,6 +16,10 @@
         <dt>Title</dt>
         <dd>{{ user.title }}</dd>
       </template>
+      <template v-if="user.dept_name">
+        <dt>Department Name</dt>
+        <dd>{{ user.dept_name }}</dd>
+      </template>
       <template v-if="user.office">
         <dt>Office</dt>
         <dd v-html="formattedOffice" />

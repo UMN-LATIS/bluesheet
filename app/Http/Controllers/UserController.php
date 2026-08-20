@@ -7,8 +7,8 @@ use Auth;
 use DB;
 use App\Http\Resources\UserResource;
 use App\Leave;
-use App\Library\LDAP as LDAP;
-use \App\Library\Bandaid;
+use App\Library\Bandaid;
+use App\Library\UserService;
 
 class UserController extends Controller {
     /**
@@ -172,10 +172,9 @@ class UserController extends Controller {
             if ($user) {
                 $outputArray[] = new UserResource($user);
             } else {
-                $foundUser = LDAP::lookupUser($userId);
+                $foundUser = (new UserService())->findOrCreateByInternetId($userId);
 
                 if ($foundUser) {
-                    $foundUser->save();
                     $outputArray[] = new UserResource($foundUser);
                 } else {
                     $notFoundUser[] = $userId;

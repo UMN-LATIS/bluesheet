@@ -43,6 +43,7 @@ export interface BaseUser {
   phone?: string | null;
   title: string | null;
   ou: string | null;
+  dept_name?: string | null;
   memberships: Membership[];
   favoriteGroups: Group[];
   favoriteRoles: MemberRole[];

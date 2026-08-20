@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use \App\User;
-use App\Library\LDAP as LDAP;
+use App\Library\UserService;
 
 class syncUsers extends Command
 {
@@ -39,9 +39,10 @@ class syncUsers extends Command
      */
     public function handle()
     {
+        $userService = new UserService();
         $users = User::all();
         foreach($users as $user) {
-            LDAP::lookupUser($user->umndid, "umndid", $user);
+            $userService->refreshProfileFromBandaid($user);
             $user->save();
         }
     }

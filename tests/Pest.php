@@ -90,6 +90,10 @@ function getMockBandaidResponses($additionalReponses = []) {
         "{$BANDAID_API}/classes/terms*" => mockResponse("Bandaid/mockGetTerms.json"),
         "{$BANDAID_API}/classes/list*" => mockResponse("Bandaid/mockGetDeptClassList.json"),
         "{$BANDAID_API}/department/*/employees" => mockResponse("Bandaid/mockGetEmployeesForDept.json"),
+        "{$BANDAID_API}/department?*" => mockResponse("Bandaid/mockGetDepartments.json"),
+        "{$BANDAID_API}/employment/employee/*" => mockResponse("Bandaid/mockGetEmployeeDetail.json"),
+        "{$BANDAID_API}/names/autocomplete/*" => mockResponse("Bandaid/mockSearchNames.json"),
+        "{$BANDAID_API}/names" => mockResponse("Bandaid/mockGetNames.json"),
         ...$additionalReponses,
     ];
 }

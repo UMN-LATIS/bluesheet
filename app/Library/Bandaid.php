@@ -251,8 +251,7 @@ class Bandaid {
     }
 
     /**
-     * This gets name info for a list of emplids. This can be used
-     * as a fallback when a user is not found in LDAP.
+     * This gets name info for a list of emplids.
      *
      * @param int[] $emplids
      * @return Collection<array{
@@ -263,6 +262,7 @@ class Bandaid {
      * LAST_NAME: string,
      * MIDDLE_NAME: string,
      * INTERNET_ID: string,
+     * UMNDID: ?string,
      * }>
      */
     public function getNames(array $emplids): Collection {
@@ -276,6 +276,68 @@ class Bandaid {
         } catch (RequestException $e) {
             $msg = $e->getMessage();
             $errorMessage = 'getEmployees Error: ' . $msg;
+            throw new RuntimeException($errorMessage);
+        }
+    }
+
+    /**
+     * Get employment details for a single employee, including address info.
+     * The endpoint returns one record per concurrent job - we return the
+     * primary one (JOB_INDICATOR "P"), falling back to the first record.
+     *
+     * @param int $emplid
+     * @return ?object{
+     *   ID: int,
+     *   EMPLID: int,
+     *   DEPTID: string,
+     *   DEPTNAME: string,
+     *   JOBCODE: string,
+     *   POSITION_DESCR: string,
+     *   CATEGORY: string,
+     *   JOB_INDICATOR: string,
+     *   INSTITUTIONAL_ADDRESS: string,
+     *   OFFICE_ADDRESS: string,
+     * }
+     */
+    public function getEmployeeDetail(int $emplid): ?object {
+        try {
+            $result = $this->cachedGet('/employment/employee/' . $emplid);
+            if (empty($result)) {
+                return null;
+            }
+
+            $records = collect($result);
+            return $records->firstWhere('JOB_INDICATOR', 'P') ?? $records->first();
+        } catch (RequestException $e) {
+            $msg = $e->getMessage();
+            $errorMessage = 'getEmployeeDetail Error: ' . $msg;
+            throw new RuntimeException($errorMessage);
+        }
+    }
+
+    /**
+     * Search for people by name or internet id. Used for both autocomplete
+     * and exact-match lookups (e.g. searching by an exact internet id).
+     *
+     * @param string $query
+     * @return Collection<array{
+     * EMPLID: int,
+     * NAME: string,
+     * FIRST_NAME: string,
+     * LAST_NAME: string,
+     * MIDDLE_NAME: string,
+     * FULL_NAME: string,
+     * INTERNET_ID: string,
+     * UMNDID: ?string,
+     * }>
+     */
+    public function searchNames(string $query): Collection {
+        try {
+            $result = $this->cachedGet('/names/autocomplete/' . urlencode($query));
+            return collect($result);
+        } catch (RequestException $e) {
+            $msg = $e->getMessage();
+            $errorMessage = 'searchNames Error: ' . $msg;
             throw new RuntimeException($errorMessage);
         }
     }

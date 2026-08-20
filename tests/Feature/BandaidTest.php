@@ -67,4 +67,35 @@ describe('Bandaid Service Mocks', function () {
             'JOB_INDICATOR',
         ]);
     });
+
+    it('getEmployeeDetail() returns employee details including address info', function () {
+        $bandaid = new Bandaid();
+        $employee = $bandaid->getEmployeeDetail(145);
+        expect($employee)->toBeObject();
+        expect($employee)->toHaveProperties([
+            'EMPLID',
+            'DEPTID',
+            'DEPTNAME',
+            'JOBCODE',
+            'POSITION_DESCR',
+            'JOB_INDICATOR',
+            'OFFICE_ADDRESS',
+        ]);
+    });
+
+    it('searchNames() returns a collection of matching people', function () {
+        $bandaid = new Bandaid();
+        $results = $bandaid->searchNames('smith');
+        expect($results)->toBeInstanceOf(\Illuminate\Support\Collection::class);
+        expect($results)->not()->toBeEmpty();
+        expect($results->first())->toHaveProperties([
+            'EMPLID',
+            'NAME',
+            'FIRST_NAME',
+            'LAST_NAME',
+            'FULL_NAME',
+            'INTERNET_ID',
+            'UMNDID',
+        ]);
+    });
 });

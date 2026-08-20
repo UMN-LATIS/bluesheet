@@ -1,0 +1,14 @@
+[
+  {
+    "ID": 5722,
+    "EMPLID": 145,
+    "DEPTID": "10947",
+    "DEPTNAME": "Department of Something",
+    "JOBCODE": "9703ED",
+    "POSITION_DESCR": "Assistant Professor",
+    "CATEGORY": "Faculty",
+    "JOB_INDICATOR": "P",
+    "INSTITUTIONAL_ADDRESS": "123 Some Hall\n123 Some St\nMinneapolis, MN 55455\nUSA",
+    "OFFICE_ADDRESS": "123 Some Hall\n123 Some St\nMinneapolis, MN 55455\nUSA"
+  }
+]

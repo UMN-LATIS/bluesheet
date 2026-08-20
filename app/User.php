@@ -55,6 +55,7 @@ class User extends Authenticatable implements Auditable {
         'title',
         'office',
         'phone',
+        'dept_name',
     ];
 
     public function memberships() {

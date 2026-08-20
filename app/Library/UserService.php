@@ -41,55 +41,19 @@ class UserService {
         // find emplids that don't exist in the DB
         $missingEmplids = $uniqueEmplids->diff($dbUsers->pluck('emplid'));
 
-        // we'll use this to look up fallback names info from Bandaid
-        $emplidsNotInLDAP = [];
-
-        // lookup and created missing users from LDAP
-        $newUsersFromLDAPInfo = $missingEmplids
-            ->map(function ($emplid) use (&$emplidsNotInLDAP) {
-                $paddedEmplid = str_pad($emplid, 7, 0, STR_PAD_LEFT);
-                $ldapUser = LDAP::lookupUserCached($paddedEmplid, 'umnemplid');
-
-                if (!$ldapUser || !$ldapUser->emplid) {
-                    // add the $emplid to the list of users not found in LDAP
-                    // so we can look up fallback names info from Bandaid
-                    $emplidsNotInLDAP[] = $emplid;
-                    return null;
-                };
-
-                return User::updateOrCreate(
-                    // emplid may be null for some users, so we're using
-                    // the using the umndid here since it's guaranteed to be
-                    // unique and not null, then we we can update the emplid
-                    // if the user already exists
-                    ['umndid' => $ldapUser->umndid],
-
-                    // note that updateOrCreate returns the values below and
-                    // not the values from the DB. So if the emplid is a string
-                    // but the DB stores it as an int, it will be returned as a
-                    // string. For this reason, we need to cast the emplid to an
-                    // int below so that it matches the DB. Otherwise when
-                    // we try to match users by emplid user `"0123"` will be
-                    // treated as a different user than `123`.
-                    [
-                        ...$ldapUser->toArray(),
-                        'emplid' => (int) $ldapUser->emplid,
-                    ]
-                );
-            })->filter();
-
-        // now we handle emplids that aren't found in LDAP
-        // getting as much info as possible from bandaid
+        // create users for any emplids that aren't in the DB yet, getting
+        // as much info as possible from bandaid
         $newUsersFromBandaidInfo = $this->bandaid
-            ->getNames($emplidsNotInLDAP)
+            ->getNames($missingEmplids->toArray())
             ->map(function ($bandaidUser) {
+                $umndid = $this->resolveUmndid($bandaidUser);
                 return User::updateOrCreate(
-                    ['umndid' => $bandaidUser->INTERNET_ID],
+                    ['umndid' => $umndid],
                     [
                         'givenname' => $bandaidUser->FIRST_NAME,
                         'surname' => $bandaidUser->LAST_NAME,
-                        'displayName' => $bandaidUser->NAME,
-                        'umndid' => $bandaidUser->INTERNET_ID,
+                        'displayName' => $bandaidUser->FULL_NAME,
+                        'umndid' => $umndid,
                         'email' => $bandaidUser->INTERNET_ID . '@umn.edu',
                         'emplid' => (int) $bandaidUser->EMPLID,
                     ]
@@ -99,7 +63,6 @@ class UserService {
 
         // return the requested users if they exist
         return $dbUsers
-            ->concat($newUsersFromLDAPInfo)
             ->concat($newUsersFromBandaidInfo);
     }
 
@@ -107,6 +70,97 @@ class UserService {
         $users = $this->findOrCreateManyByEmplId([$emplid]);
         return $users->first();
     }
+
+    /**
+     * Find or create a user by their internet id (umndid), using Bandaid's
+     * exact-match name search as a fallback when the user isn't in the DB.
+     */
+    public function findOrCreateByInternetId(string $internetId): ?User {
+        $dbUser = User::where('umndid', $internetId)->first();
+        if ($dbUser) {
+            return $dbUser;
+        }
+
+        $bandaidUser = $this->bandaid
+            ->searchNames($internetId)
+            ->first(fn ($person) => $person->INTERNET_ID === $internetId);
+
+        if (!$bandaidUser) {
+            return null;
+        }
+
+        $umndid = $this->resolveUmndid($bandaidUser);
+        $user = User::updateOrCreate(
+            ['umndid' => $umndid],
+            [
+                'givenname' => $bandaidUser->FIRST_NAME,
+                'surname' => $bandaidUser->LAST_NAME,
+                'displayName' => $bandaidUser->FULL_NAME,
+                'umndid' => $umndid,
+                'email' => $bandaidUser->INTERNET_ID . '@umn.edu',
+                'emplid' => (int) $bandaidUser->EMPLID,
+            ]
+        );
+
+        // fill in office/title/ou too, to match the old LDAP lookup's behavior
+        $this->refreshProfileFromBandaid($user);
+        $user->save();
+
+        return $user;
+    }
+
+    /**
+     * Bandaid's UMNDID is the true Shibboleth-auth identifier, but it's null
+     * for people without an active UMN internet account - fall back to
+     * their internet id in that case so we always have a stable key.
+     */
+    private function resolveUmndid(object $bandaidUser): string {
+        return $bandaidUser->UMNDID ?: $bandaidUser->INTERNET_ID;
+    }
+
+    /**
+     * Bandaid's OFFICE_ADDRESS uses real newlines - convert to the same
+     * '$'-delimited format LDAP used, which the frontend already renders.
+     */
+    private function formatAddress(string $address): string {
+        return trim(preg_replace('/\r\n|\r|\n/', ' $ ', trim($address)));
+    }
+
+    /**
+     * Refresh a user's name, office, title, and department fields from
+     * Bandaid. Does not save the user - the caller is responsible for that.
+     */
+    public function refreshProfileFromBandaid(User $user): void {
+        if (!$user->emplid) {
+            return;
+        }
+
+        $names = $this->bandaid->getNames([$user->emplid])->first();
+        if ($names) {
+            $user->surname = $names->LAST_NAME;
+            $user->givenname = $names->FIRST_NAME;
+            $user->displayName = $names->FULL_NAME;
+            $user->email = $names->INTERNET_ID . '@umn.edu';
+        }
+
+        $employee = $this->bandaid->getEmployeeDetail($user->emplid);
+        if (!$employee) {
+            return;
+        }
+
+        $user->office = isset($employee->OFFICE_ADDRESS) ? $this->formatAddress($employee->OFFICE_ADDRESS) : null;
+        $user->title = $employee->POSITION_DESCR ?? null;
+        $user->dept_name = $employee->DEPTNAME ?? null;
+
+        if (!empty($employee->DEPTID)) {
+            $department = collect($this->bandaid->getDepartments([$employee->DEPTID]))
+                ->first(fn ($dept) => $dept->DEPT_ID == $employee->DEPTID);
+            if ($department) {
+                $user->ou = $department->DESCRIPTION;
+            }
+        }
+    }
+
 
     /**
      * Get the instructors for a department
