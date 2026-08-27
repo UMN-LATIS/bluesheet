@@ -4,70 +4,66 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 
-class TestGroupsGroupTypesTableSeeder extends Seeder
-{
+class TestGroupsGroupTypesTableSeeder extends Seeder {
 
     /**
      * Auto generated seed file
      *
      * @return void
      */
-    public function run()
-    {
+    public function run() {
 
-        \DB::table('group_types')->insert(array (
+        \DB::table('group_types')->upsert(array(
             0 =>
-            array (
+            array(
                 'id' => 1,
                 'label' => 'Committee',
             ),
             1 =>
-            array (
+            array(
                 'id' => 2,
                 'label' => 'List',
             ),
             2 =>
-            array (
+            array(
                 'id' => 3,
-                'label' => 'Academic Department',
+                'label' => 'Academic Departments',
             ),
             3 =>
-            array (
+            array(
                 'id' => 4,
                 'label' => 'Fun Time',
             ),
             4 =>
-            array (
+            array(
                 'id' => 5,
                 'label' => 'Center',
             ),
             5 =>
-            array (
+            array(
                 'id' => 6,
                 'label' => 'Initiative',
             ),
             6 =>
-            array (
+            array(
                 'id' => 7,
                 'label' => 'Consortium',
             ),
             7 =>
-            array (
+            array(
                 'id' => 8,
                 'label' => 'Program',
             ),
             8 =>
-            array (
+            array(
                 'id' => 9,
                 'label' => 'Administrative Unit',
             ),
             9 =>
-            array (
+            array(
                 'id' => 10,
                 'label' => 'Department',
             ),
-        ));
-
-
+        ), 'id');
     }
 }

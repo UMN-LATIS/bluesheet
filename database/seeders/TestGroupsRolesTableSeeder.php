@@ -14,7 +14,7 @@ class TestGroupsRolesTableSeeder extends Seeder
      */
     public function run()
     {
-        \DB::table('roles')->insert(array (
+        \DB::table('roles')->upsert(array (
             0 =>
             array (
                 'id' => 11,
@@ -143,8 +143,6 @@ class TestGroupsRolesTableSeeder extends Seeder
                 'updated_at' => NULL,
                 'official_role_category_id' => 1,
             ),
-        ));
-
-
+        ), 'id');
     }
 }

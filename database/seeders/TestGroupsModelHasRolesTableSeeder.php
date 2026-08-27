@@ -14,7 +14,7 @@ class TestGroupsModelHasRolesTableSeeder extends Seeder
      */
     public function run()
     {
-        \DB::table('model_has_roles')->insert(array (
+        \DB::table('model_has_roles')->upsert(array (
             0 =>
             array (
                 'role_id' => 1,
@@ -33,8 +33,6 @@ class TestGroupsModelHasRolesTableSeeder extends Seeder
                 'model_type' => 'App\\User',
                 'model_id' => 1,
             ),
-        ));
-
-
+        ), ['role_id', 'model_type', 'model_id']);
     }
 }
