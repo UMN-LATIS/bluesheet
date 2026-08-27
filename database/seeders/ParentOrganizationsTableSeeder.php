@@ -5,13 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 
 class ParentOrganizationsTableSeeder extends Seeder {
-
-    /**
-     * Auto generated seed file
-     *
-     * @return void
-     */
-    public function run() {
+    public function run(): void {
         \DB::table('parent_organizations')->updateOrInsert(
             ['id' => 1],
             [

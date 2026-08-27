@@ -6,13 +6,7 @@ use Illuminate\Database\Seeder;
 use App\User;
 
 class TestUsersSeeder extends Seeder {
-
-    /**
-     * Auto generated seed file
-     *
-     * @return void
-     */
-    public function run() {
+    public function run(): void {
         $admin = $this->firstOrCreateUser([
             'givenname' => 'Admin',
             'surname' => 'McAdmin',

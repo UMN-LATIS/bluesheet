@@ -4,32 +4,14 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 
-class TestGroupsOfficialRoleCategoriesTableSeeder extends Seeder
-{
+class TestGroupsOfficialRoleCategoriesTableSeeder extends Seeder {
+    public function run(): void {
+        $categories = [
+            ['id' => 1, 'category' => 'Unit'],
+            ['id' => 2, 'category' => 'College'],
+            ['id' => 3, 'category' => 'Operations'],
+        ];
 
-    /**
-     * Auto generated seed file
-     *
-     * @return void
-     */
-    public function run()
-    {
-        \DB::table('official_role_categories')->upsert(array (
-            0 =>
-            array (
-                'id' => 1,
-                'category' => 'Unit',
-            ),
-            1 =>
-            array (
-                'id' => 2,
-                'category' => 'College',
-            ),
-            2 =>
-            array (
-                'id' => 3,
-                'category' => 'Operations',
-            ),
-        ), 'id');
+        \DB::table('official_role_categories')->upsert($categories, 'id');
     }
 }

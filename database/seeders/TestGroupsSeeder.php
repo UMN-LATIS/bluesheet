@@ -2,19 +2,13 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Group;
 use App\GroupType;
 use App\ParentOrganization;
 
 class TestGroupsSeeder extends Seeder {
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
-    public function run() {
+    public function run(): void {
         $cla = ParentOrganization::where('group_title', 'CLA')->firstOrFail();
         $committee = GroupType::where('label', 'Committee')->firstOrFail();
         $academicDepartments = GroupType::where('label', 'Academic Departments')->firstOrFail();
