@@ -12,9 +12,9 @@ Blue Sheeet uses Laravel's docker environment, [Laravel Sail](https://laravel.co
 Prereqs:
 
 - Docker
-- PHP v7.4
+- PHP 8.4 or newer (the Sail container runs 8.5)
 - Composer
-- Node LTS
+- Node 24
 
 To get started:
 
@@ -49,6 +49,10 @@ npm run dev
 
 The application will be running on <http://localhost>.
 
+`migrate:fresh --seed` gives you a working environment rather than an empty
+one: users in every role, groups of several types, and leave records. Nothing
+else needs configuring before you can click around.
+
 ## Using the Application
 
 ```sh
@@ -67,6 +71,48 @@ Additional users can be configured in `config/shibboleth.php`.
 
 Stop the application: `sail down`.
 
+## Running Tests
+
+```sh
+# PHP feature tests
+sail pest
+
+# JS unit tests
+npm run test:unit
+
+# end to end tests, with the app running
+npm run test:e2e
+```
+
+Pest uses its own `testing` database, so running it leaves your development
+data alone. Sail creates that database the first time the MariaDB container
+starts. A container older than that change will not have it, so create it once:
+
+```sh
+docker compose exec mariadb mariadb -uroot -ppassword -e "CREATE DATABASE IF NOT EXISTS testing"
+```
+
+The suite needs no credentials of any kind. LDAP is never reached and Bandaid
+is faked, so a fresh checkout with the stock `.env.example` runs everything.
+
+## Working in Multiple Worktrees
+
+Each worktree gets its own containers and its own database already, because
+Docker Compose names the project after the directory it runs in. Ports are the
+one thing they cannot share, so give a second worktree its own:
+
+```sh
+cp .env.example .env
+
+# uncomment the port block at the bottom of .env and pick unused values
+
+sail up
+```
+
+Vite finds itself a free port when you run `npm run dev` on the host, so it
+needs nothing. Run it inside the container instead and you will need to set
+`VITE_PORT` as well.
+
 ## Local Development with Bandaid
 
 Some features of BlueSheet require access to [Bandaid](https://github.com/UMN-LATIS/Bandaid) API (e.g. the Faculty Leaves Planning Report page).
@@ -79,6 +125,15 @@ To connect to Bandaid for local development:
 4. Add the token in `.env` as `BANDAID_KEY=<your token>`
 5. Get your VPN ip address from https://z.umn.edu/ip
 6. Add your ip address to Bandaid's Allow List. (You'll need to do this each time your ip address changes. Be sure to remove the old ip address from the list.)
+
+The seeded Anthropology and Psychology groups carry real department ids, so
+once your key is in place those two load actual courses and employees.
+
+## Local Development with LDAP
+
+User lookup and autocomplete read UMN's LDAP directory, which needs a password
+in `LDAP_PASSWORD`. Ask the team for one if you need those features. Without
+it, lookups return nothing and everything else behaves normally.
 
 ## Deploy
 
