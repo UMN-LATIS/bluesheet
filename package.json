@@ -1,4 +1,5 @@
 {
+  "name": "bluesheet",
   "private": true,
   "type": "module",
   "scripts": {
