@@ -30,6 +30,8 @@ class Bandaid {
         $this->baseUri = config('bandaid.baseUri');
     }
 
+    // TODO: once callers read from the sis_* tables instead of hitting Bandaid
+    // per request, this response cache has no job left and should be removed.
     public function cachedGet($url) {
         if ($value = Cache::get($url)) {
             return $value;
