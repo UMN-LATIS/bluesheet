@@ -3,10 +3,6 @@ name: Tests
 on: [push, pull_request, workflow_dispatch]
 
 env:
-  # .env.example points at the Sail service names. Real environment variables
-  # win over .env, so these redirect the app at the runner's own services.
-  # The database runs as a throwaway container, so we connect as root rather
-  # than granting a second user access to the test database.
   DB_HOST: 127.0.0.1
   DB_USERNAME: root
   DB_PASSWORD: password

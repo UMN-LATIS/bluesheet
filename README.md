@@ -9,13 +9,6 @@
 
 Blue Sheeet uses Laravel's docker environment, [Laravel Sail](https://laravel.com/docs/8.x/sail) for development.
 
-Prereqs:
-
-- Docker
-- PHP 8.4 or newer (the Sail container runs 8.5)
-- Composer
-- Node 24
-
 To get started:
 
 ```sh
@@ -36,7 +29,7 @@ sail up
 # create app key, link storage, etc
 sail exec app ./bin/ci.sh
 
-# migrate the database
+# setup local db
 sail artisan migrate:fresh --seed
 
 # Install node modules
@@ -48,10 +41,6 @@ npm run dev
 ```
 
 The application will be running on <http://localhost>.
-
-`migrate:fresh --seed` gives you a working environment rather than an empty
-one: users in every role, groups of several types, and leave records. Nothing
-else needs configuring before you can click around.
 
 ## Using the Application
 
@@ -92,27 +81,6 @@ starts. A container older than that change will not have it, so create it once:
 docker compose exec mariadb mariadb -uroot -ppassword -e "CREATE DATABASE IF NOT EXISTS testing"
 ```
 
-The suite needs no credentials of any kind. LDAP is never reached and Bandaid
-is faked, so a fresh checkout with the stock `.env.example` runs everything.
-
-## Working in Multiple Worktrees
-
-Each worktree gets its own containers and its own database already, because
-Docker Compose names the project after the directory it runs in. Ports are the
-one thing they cannot share, so give a second worktree its own:
-
-```sh
-cp .env.example .env
-
-# uncomment the port block at the bottom of .env and pick unused values
-
-sail up
-```
-
-Vite finds itself a free port when you run `npm run dev` on the host, so it
-needs nothing. Run it inside the container instead and you will need to set
-`VITE_PORT` as well.
-
 ## Local Development with Bandaid
 
 Some features of BlueSheet require access to [Bandaid](https://github.com/UMN-LATIS/Bandaid) API (e.g. the Faculty Leaves Planning Report page).
@@ -137,11 +105,11 @@ it, lookups return nothing and everything else behaves normally.
 
 ## Deploy
 
-| Enviroment Name | URL                                  |
-| --------------- | ------------------------------------ |
+| Enviroment Name | URL                                     |
+| --------------- | --------------------------------------- |
 | `dev`           | <https://cla-bluesheet-dev.oit.umn.edu> |
 | `stage`         | <https://cla-bluesheet-tst.oit.umn.edu> |
-| `prod`          | <https://bluesheet.cla.umn.edu> |
+| `prod`          | <https://bluesheet.cla.umn.edu>         |
 
 ```sh
 ./vendor/bin/dep deploy <environment name>
