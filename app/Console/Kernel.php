@@ -26,12 +26,13 @@ class Kernel extends ConsoleKernel {
         $schedule->command('sync:users')
             ->daily();
 
-        // ahead of import:leaves, so leaves land against a current mirror
         $schedule->command('import:sis')
-            ->dailyAt('05:00');
+            ->dailyAt('05:30')
+            ->timezone('America/Chicago');
 
         $schedule->command('import:leaves')
-            ->dailyAt('05:15');
+            ->dailyAt('05:45')
+            ->timezone('America/Chicago');
 
 
         if (App::environment('production')) {
