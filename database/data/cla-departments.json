@@ -1,0 +1,188 @@
+{
+  "source": "https://docs.google.com/spreadsheets/d/1a4TS6pHVaNyL4ByqgM5G1-XAeA0YDGfqAARZwi_lCck/edit?gid=1580528165",
+  "sourceName": "U of M Financial System DeptID values, rows whose RRC is 'CLAXX - Liberal Arts, College of'",
+  "retrievedOn": "2026-08-29",
+  "note": "Reference only. import:sis reads dept ids from the groups table, not from here. The 86 CLA dept ids were each queried against Bandaid /classes/list/{deptId}; these are the 36 that returned classes. The other 50 hold none, either because they are service units or because their courses belong to a parent department. sectionCount is a snapshot on retrievedOn, covering every term Bandaid holds (1219 through 1273).",
+  "departments": [
+    {
+      "deptId": "10925",
+      "name": "CLA Dean's Office",
+      "sectionCount": 92
+    },
+    {
+      "deptId": "10935",
+      "name": "CLA Language Center",
+      "sectionCount": 571
+    },
+    {
+      "deptId": "10936",
+      "name": "CLASS Student Support",
+      "sectionCount": 2473
+    },
+    {
+      "deptId": "10947",
+      "name": "African-Amer & African Studies",
+      "sectionCount": 444
+    },
+    {
+      "deptId": "10948",
+      "name": "American Indian Studies",
+      "sectionCount": 557
+    },
+    {
+      "deptId": "10949",
+      "name": "American Studies",
+      "sectionCount": 388
+    },
+    {
+      "deptId": "10950",
+      "name": "Anthropology",
+      "sectionCount": 3619
+    },
+    {
+      "deptId": "10951",
+      "name": "Art Department",
+      "sectionCount": 2065
+    },
+    {
+      "deptId": "10953",
+      "name": "Art History",
+      "sectionCount": 1073
+    },
+    {
+      "deptId": "10954",
+      "name": "Asian & Middle Eastern Studies",
+      "sectionCount": 2308
+    },
+    {
+      "deptId": "10955",
+      "name": "Chicano & Latino Studies",
+      "sectionCount": 283
+    },
+    {
+      "deptId": "10956",
+      "name": "Classical/Near Eastern Rel/Cul",
+      "sectionCount": 1368
+    },
+    {
+      "deptId": "10958",
+      "name": "Communication Studies",
+      "sectionCount": 1467
+    },
+    {
+      "deptId": "10959",
+      "name": "Cultural Studies & Comp Lit",
+      "sectionCount": 1317
+    },
+    {
+      "deptId": "10960",
+      "name": "Economics",
+      "sectionCount": 1747
+    },
+    {
+      "deptId": "10961",
+      "name": "Eng Languages & Literature",
+      "sectionCount": 2102
+    },
+    {
+      "deptId": "10962",
+      "name": "French & Italian",
+      "sectionCount": 1358
+    },
+    {
+      "deptId": "10963",
+      "name": "Gender, Women & Sexuality",
+      "sectionCount": 740
+    },
+    {
+      "deptId": "10964",
+      "name": "Geography,Environment,Society",
+      "sectionCount": 2127
+    },
+    {
+      "deptId": "10967",
+      "name": "German, Nordic, Slavic & Dutch",
+      "sectionCount": 1320
+    },
+    {
+      "deptId": "10968",
+      "name": "History Department",
+      "sectionCount": 1561
+    },
+    {
+      "deptId": "10971",
+      "name": "Global Studies Department",
+      "sectionCount": 512
+    },
+    {
+      "deptId": "10975",
+      "name": "Linguistics, Institute of",
+      "sectionCount": 626
+    },
+    {
+      "deptId": "10976",
+      "name": "Hubbard Schl Journal/Mass Comm",
+      "sectionCount": 1714
+    },
+    {
+      "deptId": "10980",
+      "name": "Music, School of",
+      "sectionCount": 7578
+    },
+    {
+      "deptId": "10982",
+      "name": "Philosophy Department",
+      "sectionCount": 882
+    },
+    {
+      "deptId": "10984",
+      "name": "Political Science Department",
+      "sectionCount": 816
+    },
+    {
+      "deptId": "10986",
+      "name": "Psychology",
+      "sectionCount": 2586
+    },
+    {
+      "deptId": "10987",
+      "name": "Sociology",
+      "sectionCount": 1176
+    },
+    {
+      "deptId": "10988",
+      "name": "Spanish & Portuguese Studies",
+      "sectionCount": 1979
+    },
+    {
+      "deptId": "10989",
+      "name": "Speech-Language-Hearg Sci Dept",
+      "sectionCount": 1922
+    },
+    {
+      "deptId": "10991",
+      "name": "Statistics, School of",
+      "sectionCount": 1581
+    },
+    {
+      "deptId": "10992",
+      "name": "Theatre Arts & Dance Dept",
+      "sectionCount": 2020
+    },
+    {
+      "deptId": "10994",
+      "name": "Writing Studies Department",
+      "sectionCount": 2599
+    },
+    {
+      "deptId": "11002",
+      "name": "Premodern Studies, Center for",
+      "sectionCount": 12
+    },
+    {
+      "deptId": "12356",
+      "name": "Religious Studies",
+      "sectionCount": 165
+    }
+  ]
+}
