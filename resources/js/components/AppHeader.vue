@@ -13,9 +13,9 @@
         </router-link>
       </NavbarItem>
       <NavbarItem v-if="$can('create groups')">
-        <a class="nav-link" href="#" @click.prevent="createGroup = true"
-          >Create Group <i class="fas fa-plus"></i
-        ></a>
+        <button class="nav-link" @click="createGroup = true">
+          Create Group <i class="fas fa-plus"></i>
+        </button>
       </NavbarItem>
       <NavbarItem v-if="$can('view groups')">
         <router-link :to="{ name: 'groupList' }" class="nav-link">
@@ -33,9 +33,9 @@
         </router-link>
       </NavbarItem>
       <NavbarItem v-if="$can('view users')">
-        <a class="nav-link" href="#" @click.prevent="findUser = true"
-          >User Lookup <i class="fas fa-users"></i
-        ></a>
+        <button type="button" class="nav-link" @click="findUser = true">
+          User Lookup <i class="fas fa-users"></i>
+        </button>
       </NavbarItem>
       <NavbarItem>
         <a
@@ -87,5 +87,16 @@ const createGroup = ref(false);
     display: inline-flex;
     justify-content: center;
   }
+}
+</style>
+<style lang="css" scoped>
+button.nav-link {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--dark-gray);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 </style>
