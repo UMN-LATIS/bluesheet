@@ -11,8 +11,11 @@ return new class extends Migration {
 
             // one row per job, not per person: a chair who also holds a
             // professorship has two rows in the same department
-            $table->integer('emplid')->index();
-            $table->string('dept_id')->index();
+            $table->integer('emplid');
+            $table->foreign('emplid')->references('emplid')->on('sis_employees');
+
+            $table->string('dept_id');
+            $table->foreign('dept_id')->references('dept_id')->on('sis_departments');
 
             $table->string('dept_name')->nullable();
             $table->string('job_code');

@@ -61,10 +61,16 @@ class ImportSisData extends Command {
         try {
             $this->buildTmpTables();
 
-            $this->importTerms();
-            $this->importDepartments($departments->keys());
-            $emplids = $this->importClassesAndAppointments($departments);
-            $this->importEmployees($emplids);
+            // appointments and instructors are written by department before
+            // employees is populated at the end, so their emplid foreign key
+            // would reject rows it hasn't caught up to yet without this
+            $emplids = collect();
+            Schema::withoutForeignKeyConstraints(function () use ($departments, &$emplids) {
+                $this->importTerms();
+                $this->importDepartments($departments->keys());
+                $emplids = $this->importClassesAndAppointments($departments);
+                $this->importEmployees($emplids);
+            });
 
             // an empty build never replaces a populated mirror
             $sectionCount = DB::table('sis_class_sections_tmp')->count();
@@ -112,11 +118,34 @@ class ImportSisData extends Command {
     }
 
     private function buildTmpTables(): void {
+        // dropping one side of a foreign key before the other is rejected;
+        // _old/_tmp leftovers from a previous run can reference each other
+        Schema::withoutForeignKeyConstraints(function () {
+            foreach (self::TABLES as $table) {
+                // _old is a leftover only when a previous run died mid-swap
+                Schema::dropIfExists("{$table}_old");
+                Schema::dropIfExists("{$table}_tmp");
+            }
+        });
+
         foreach (self::TABLES as $table) {
-            // _old is a leftover only when a previous run died mid-swap
-            Schema::dropIfExists("{$table}_old");
-            Schema::dropIfExists("{$table}_tmp");
             DB::statement("CREATE TABLE {$table}_tmp LIKE {$table}");
+        }
+
+        // LIKE doesn't copy foreign keys, so they're re-added here by reading
+        // them back off the live tables. The migrations stay the one place
+        // these are declared: nothing here needs updating if a migration
+        // adds, drops, or changes one.
+        foreach (self::TABLES as $table) {
+            foreach (Schema::getForeignKeys($table) as $foreignKey) {
+                $columns = implode(', ', $foreignKey['columns']);
+                $foreignColumns = implode(', ', $foreignKey['foreign_columns']);
+                DB::statement(
+                    "ALTER TABLE {$table}_tmp ADD FOREIGN KEY ({$columns}) " .
+                        "REFERENCES {$foreignKey['foreign_table']}_tmp ({$foreignColumns}) " .
+                        "ON UPDATE {$foreignKey['on_update']} ON DELETE {$foreignKey['on_delete']}"
+                );
+            }
         }
     }
 
@@ -298,9 +327,15 @@ class ImportSisData extends Command {
 
         DB::statement("RENAME TABLE {$renames}");
 
-        foreach (self::TABLES as $table) {
-            Schema::dropIfExists("{$table}_old");
-        }
+        // every table renames in the one statement above, parent and child
+        // together, so the foreign keys already point at the fresh data by
+        // the time they're dropped here. Checks are only off because the
+        // displaced _old tables still reference each other
+        Schema::withoutForeignKeyConstraints(function () {
+            foreach (self::TABLES as $table) {
+                Schema::dropIfExists("{$table}_old");
+            }
+        });
     }
 
     private function insertInChunks(string $table, Collection $rows): void {

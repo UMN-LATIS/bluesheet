@@ -8,12 +8,11 @@ return new class extends Migration {
     public function up(): void {
         Schema::create('sis_class_instructors', function (Blueprint $table) {
             $table->id();
-            // plain column, no FK: MySQL foreign keys follow a table through
-            // RENAME, so after the importer's swap an FK here would still
-            // point at the displaced _old table
-            $table->unsignedBigInteger('sis_class_section_id');
+            $table->foreignId('sis_class_section_id')->constrained();
 
-            $table->integer('emplid')->index();
+            $table->integer('emplid');
+            $table->foreign('emplid')->references('emplid')->on('sis_employees');
+
             $table->string('role');
             $table->timestamps();
 
