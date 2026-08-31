@@ -14,7 +14,7 @@ class TestGroupsRolesTableSeeder extends Seeder {
             ['id' => 15, 'label' => 'Dept Preparer', 'official_role_category_id' => 2],
             ['id' => 16, 'label' => 'Development Officer', 'official_role_category_id' => 2],
             ['id' => 17, 'label' => 'LATIS DC', 'official_role_category_id' => 2],
-            ['id' => 18, 'label' => 'Dir of Graduate Studies ', 'official_role_category_id' => 1],
+            ['id' => 18, 'label' => 'Dir of Graduate Studies', 'official_role_category_id' => 1],
             ['id' => 19, 'label' => 'Dept Advisor', 'official_role_category_id' => 1],
             ['id' => 21, 'label' => 'Dir of Undergraduate Studies', 'official_role_category_id' => 1],
             ['id' => 22, 'label' => 'Academic Unit Chair/Director', 'official_role_category_id' => 1],

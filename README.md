@@ -105,7 +105,7 @@ it, lookups return nothing and everything else behaves normally.
 
 ## Deploy
 
-| Enviroment Name | URL                                     |
+| Environment Name | URL                                    |
 | --------------- | --------------------------------------- |
 | `dev`           | <https://cla-bluesheet-dev.oit.umn.edu> |
 | `stage`         | <https://cla-bluesheet-tst.oit.umn.edu> |
