@@ -4,7 +4,7 @@
     :title="`${isEditingSection ? 'Edit' : 'Add'} Class`"
     :closeOnEsc="false"
     class="tw-max-w-md"
-    @update:show="$emit('close')"
+    @close="$emit('close')"
   >
     <form @submit.prevent="handleSubmit">
       <div class="tw-flex tw-flex-col tw-gap-4">

@@ -1,5 +1,5 @@
 <template>
-  <Modal :show="show" @update:show="close()">
+  <Modal :show="show" @close="close">
     <form autocomplete="off">
       <div class="row">
         <label for="lookup" class="col-sm-3 col-form-label">Name:</label>

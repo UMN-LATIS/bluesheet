@@ -6,7 +6,7 @@
     :aria-labelledby="title ? titleId : undefined"
     @cancel.prevent="handleCancel"
     @close="handleNativeClose"
-    @mousedown.self="show = false"
+    @mousedown.self="$emit('close')"
   >
     <div class="modal-content">
       <div v-if="title" class="modal-header">
@@ -15,7 +15,7 @@
           type="button"
           class="close"
           aria-label="Close"
-          @click="show = false"
+          @click="$emit('close')"
         >
           <span aria-hidden="true">&times;</span>
         </button>
@@ -38,6 +38,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(
   defineProps<{
     title?: string;
+    show: boolean;
     closeOnEsc?: boolean;
   }>(),
   {
@@ -46,45 +47,48 @@ const props = withDefaults(
   },
 );
 
-const show = defineModel<boolean>("show", { required: true });
+const emit = defineEmits<{ close: [] }>();
 
 const dialogRef = ref<HTMLDialogElement | null>(null);
 const titleId = useId();
 
 /**
  * This lets `show` be the "truth" for whether a dialog is open
- * or not. When the model changes, we update the dialog.
+ * or not. When the prop changes, we update the dialog.
  */
-function syncDialogToShow() {
+function syncDialogToShowProp() {
   const dialog = dialogRef.value;
   if (!dialog) return;
 
-  if (show.value && !dialog.open) {
+  if (props.show && !dialog.open) {
     dialog.showModal();
-  } else if (!show.value && dialog.open) {
+  } else if (!props.show && dialog.open) {
     dialog.close();
   }
 }
 
 // The `cancel` event is Escape. We always prevent the browser's own close
-// so that the dialog's open state stays owned by `show`, then close by
-// setting the model.
+// so that the dialog's open state stays owned by the `show` prop, then ask
+// the parent to close by flipping that prop.
 function handleCancel() {
   if (props.closeOnEsc) {
-    show.value = false;
+    emit("close");
   }
 }
 
-// The dialog can close without going through `show`: Chrome ignores
-// `cancel.prevent` on a second Escape press, and a `<form method="dialog">`
-// in the slot closes the dialog directly. Set the model so it catches up.
+// The dialog can close without a `close` emit reaching the parent: Chrome
+// ignores `cancel.prevent` on a second Escape press, and a
+// `<form method="dialog">` in the slot closes the dialog directly. Re-emit
+// so the `show` prop catches up.
 function handleNativeClose() {
-  show.value = false;
+  if (props.show) {
+    emit("close");
+  }
 }
 
 // re-runs when the template ref populates on mount, so this
 // also handles a dialog that starts with `show` already true
-watchEffect(syncDialogToShow);
+watchEffect(syncDialogToShowProp);
 </script>
 
 <style>

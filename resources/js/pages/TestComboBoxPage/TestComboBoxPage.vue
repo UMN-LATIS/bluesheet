@@ -51,7 +51,7 @@
 
     <Button @click="isModalOpen = true">Open Modal</Button>
 
-    <Modal v-model:show="isModalOpen">
+    <Modal :show="isModalOpen" @close="isModalOpen = false">
       <div class="tw-flex tw-flex-col tw-gap-4">
         <h1>Test Combobox Modal</h1>
         <ComboBox

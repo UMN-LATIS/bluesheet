@@ -2,7 +2,7 @@
   <Modal
     :show="show"
     :title="parentGroup ? `Create Subgroup` : `Create Group`"
-    @update:show="close()"
+    @close="close"
   >
     <div class="form-group row">
       <label for="internetId" class="col-sm-3 col-form-label"

@@ -111,6 +111,7 @@
                 Create Subgroup
               </Button>
               <CreateGroup
+                v-if="canCreateSubgroup"
                 :show="isAddingSubgroup"
                 :parentGroup="group"
                 @close="isAddingSubgroup = false"
