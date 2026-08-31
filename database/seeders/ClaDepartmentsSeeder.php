@@ -18,7 +18,7 @@ use Illuminate\Database\Seeder;
 class ClaDepartmentsSeeder extends Seeder {
     public function run(): void {
         $cla = ParentOrganization::where('group_title', 'CLA')->firstOrFail();
-        $academicDepartments = GroupType::where('label', 'Academic Departments')->firstOrFail();
+        $academicDepartmentsType = GroupType::where('label', 'Academic Departments')->firstOrFail();
 
         $path = database_path('data/cla-departments.json');
         $departments = json_decode(file_get_contents($path))->departments;
@@ -31,7 +31,7 @@ class ClaDepartmentsSeeder extends Seeder {
             Group::factory()->create([
                 'group_title' => $department->name,
                 'dept_id' => $department->deptId,
-                'group_type_id' => $academicDepartments->id,
+                'group_type_id' => $academicDepartmentsType->id,
                 'parent_organization_id' => $cla->id,
             ]);
         }

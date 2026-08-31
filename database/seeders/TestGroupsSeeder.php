@@ -10,15 +10,15 @@ use App\ParentOrganization;
 class TestGroupsSeeder extends Seeder {
     public function run(): void {
         $cla = ParentOrganization::where('group_title', 'CLA')->firstOrFail();
-        $committee = GroupType::where('label', 'Committee')->firstOrFail();
-        $academicDepartments = GroupType::where('label', 'Academic Departments')->firstOrFail();
+        $committeeType = GroupType::where('label', 'Committee')->firstOrFail();
+        $academicDepartmentsType = GroupType::where('label', 'Academic Departments')->firstOrFail();
 
         // Pin the folder and type, since the factory would otherwise build a
         // throwaway one of each per group and clutter both pickers.
         Group::factory()
             ->count(3)
             ->create([
-                'group_type_id' => $committee->id,
+                'group_type_id' => $committeeType->id,
                 'parent_organization_id' => $cla->id,
             ]);
 
@@ -36,7 +36,7 @@ class TestGroupsSeeder extends Seeder {
 
             Group::factory()->create([
                 ...$department,
-                'group_type_id' => $academicDepartments->id,
+                'group_type_id' => $academicDepartmentsType->id,
                 'parent_organization_id' => $cla->id,
             ]);
         }

@@ -2,7 +2,6 @@
 
 namespace App\Library\Sis;
 
-use App\SisClassMeeting;
 use Illuminate\Support\Collection;
 
 /**
@@ -14,19 +13,31 @@ use Illuminate\Support\Collection;
  * what makes it worth testing directly.
  */
 class ClassRecordTransformer {
-    /** A time of exactly midnight is how the SIS says "this section never meets". */
+    /**
+     * A midnight TIME_START overwhelmingly marks a section with no real
+     * meeting, mostly independent study. A small number of Music applied
+     * lessons carry midnight with real day flags and a distinct end time;
+     * those are knowingly dropped along with the rest.
+     */
     private const NEVER_MEETS = '00:00:00';
 
     /**
-     * A departmental proxy is listed as instructor of record on many sections at
-     * once, so keeping the role would report every proxy as double-booked with
-     * itself. Dropping it here means a handful of independent-study sections show
-     * no instructor, which is the accepted trade.
+     * A departmental proxy is listed as instructor of record on many
+     * sections at once, so keeping the role would report every proxy as
+     * double-booked with itself. Dropping it means a handful of
+     * independent-study sections show no instructor, an accepted trade.
      */
     private const IGNORED_ROLE = 'PRXY';
 
-    /** Bandaid's day flags, in the order the sis_class_meetings columns expect. */
-    private const DAY_FIELDS = ['MON', 'TUES', 'WED', 'THURS', 'FRI', 'SAT', 'SUN'];
+    private const FIELD_TO_DAY_COLUMN = [
+        'MON' => 'meets_monday',
+        'TUES' => 'meets_tuesday',
+        'WED' => 'meets_wednesday',
+        'THURS' => 'meets_thursday',
+        'FRI' => 'meets_friday',
+        'SAT' => 'meets_saturday',
+        'SUN' => 'meets_sunday',
+    ];
 
     /**
      * @param iterable<object|array> $classRecords raw records from Bandaid
@@ -77,18 +88,18 @@ class ClassRecordTransformer {
                 'emplid' => $r['INSTRUCTOR_EMPLID'],
                 'role' => $r['INSTRUCTOR_ROLE'],
             ])
-            ->unique(fn(array $i) => $i['emplid'] . '-' . $i['role'])
+            ->unique(fn(array $instructor) => $instructor['emplid'] . '-' . $instructor['role'])
             ->values()
             ->all();
     }
 
     /**
-     * Rows sharing a time range are one meeting, not several. The SIS splits a
-     * MWF class into an "MW" row and an "F" row, and sometimes emits an "MW" row
-     * alongside a redundant "W" one. Combining day flags within a time range
-     * resolves both without having to tell them apart. Rows with genuinely
-     * different times, such as a MWF lecture plus a Thursday evening session,
-     * stay separate.
+     * Rows sharing a time range are one meeting, not several. The SIS
+     * splits a MWF class into an "MW" row and an "F" row, and sometimes
+     * emits an "MW" row alongside a redundant "W" one. Combining day flags
+     * within a time range resolves both without having to tell them apart.
+     * Rows with genuinely different times, such as a MWF lecture plus a
+     * Thursday evening session, stay separate.
      *
      * @param Collection<array> $rows
      */
@@ -96,12 +107,12 @@ class ClassRecordTransformer {
         return $rows
             ->filter(fn(array $r) => $r['TIME_START'] && $r['TIME_START'] !== self::NEVER_MEETS)
             ->groupBy(fn(array $r) => $r['TIME_START'] . '-' . $r['TIME_END'])
-            ->map(function (Collection $sameTime) {
-                $first = $sameTime->first();
+            ->map(function (Collection $rowsAtSameTime) {
+                $first = $rowsAtSameTime->first();
 
                 $days = [];
-                foreach (self::DAY_FIELDS as $index => $field) {
-                    $days[SisClassMeeting::DAY_COLUMNS[$index]] = $sameTime->contains(fn(array $r) => (bool) $r[$field]);
+                foreach (self::FIELD_TO_DAY_COLUMN as $field => $column) {
+                    $days[$column] = $rowsAtSameTime->contains(fn(array $r) => (bool) $r[$field]);
                 }
 
                 return [

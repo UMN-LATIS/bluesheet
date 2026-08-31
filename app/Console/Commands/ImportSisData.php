@@ -5,17 +5,22 @@ namespace App\Console\Commands;
 use App\Group;
 use App\Library\Bandaid;
 use App\Library\Sis\ClassRecordTransformer;
-use App\SisAppointment;
-use App\SisClassSection;
-use App\SisDepartment;
-use App\SisEmployee;
-use App\SisTerm;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
+/**
+ * Rebuilds the sis_ mirror from scratch on every run: fill fresh _tmp copies
+ * of the tables beside the live ones, one department at a time, then swap
+ * the copies in with a single RENAME TABLE. Until the swap nothing touches
+ * the live tables, so a failure anywhere aborts the run with the previous
+ * mirror still in place. At worst a leftover _tmp table is dropped at the
+ * start of the next run.
+ */
 class ImportSisData extends Command {
-    protected $signature = 'import:sis {--dept= : limit to a single dept_id, for testing}';
+    protected $signature = 'import:sis';
 
     protected $description = 'Mirror Bandaid terms, departments, people and classes into the sis_ tables';
 
@@ -23,49 +28,61 @@ class ImportSisData extends Command {
      * Bandaid's names endpoint takes a batch of emplids. A few thousand people
      * across CLA split into a handful of requests at this size.
      */
-    private const NAMES_CHUNK = 500;
+    private const NAMES_CHUNK_SIZE = 500;
 
-    /** Bluesheet covers the Twin Cities campus; other campuses are not stored. */
+    /** Bluesheet covers only the Twin Cities campus. */
     private const INSTITUTION = 'UMNTC';
+
+    /** Every table here is rebuilt and swapped in together. */
+    private const TABLES = [
+        'sis_terms',
+        'sis_departments',
+        'sis_appointments',
+        'sis_employees',
+        'sis_class_sections',
+        'sis_class_instructors',
+        'sis_class_meetings',
+    ];
 
     private Bandaid $bandaid;
     private ClassRecordTransformer $transformer;
-
-    /** Every emplid seen, from appointments and from class rosters alike. */
-    private array $emplids = [];
 
     public function handle(): int {
         $this->bandaid = new Bandaid();
         $this->transformer = new ClassRecordTransformer();
 
-        $departments = $this->departments();
+        $departments = $this->deptIdsToImport();
 
         if ($departments->isEmpty()) {
             $this->error('No groups have a numeric dept_id. Nothing to import.');
             return Command::FAILURE;
         }
 
-        $this->importTerms();
-        $this->importDepartments($departments->keys());
+        try {
+            $this->buildTmpTables();
 
-        $outcomes = ['imported' => 0, 'empty' => 0, 'failed' => 0];
-        foreach ($departments as $deptId => $groupNames) {
-            $outcomes[$this->importDepartment((string) $deptId, $groupNames)]++;
+            $this->importTerms();
+            $this->importDepartments($departments->keys());
+            $emplids = $this->importClassesAndAppointments($departments);
+            $this->importEmployees($emplids);
+
+            // an empty build never replaces a populated mirror
+            $sectionCount = DB::table('sis_class_sections_tmp')->count();
+            if ($sectionCount === 0) {
+                $this->error('Bandaid returned no class sections at all, previous data kept.');
+                return Command::FAILURE;
+            }
+
+            $this->swapInTmpTables();
+        } catch (\Throwable $e) {
+            Log::error("import:sis failed: {$e->getMessage()}");
+            $this->error("Import failed, previous data kept: {$e->getMessage()}");
+            return Command::FAILURE;
         }
 
-        $this->importEmployees();
+        $this->info("Done. {$sectionCount} sections across {$departments->count()} departments.");
 
-        if ($outcomes['empty'] > 0) {
-            $this->warn("{$outcomes['empty']} department(s) returned no classes and kept their previous data.");
-        }
-
-        if ($outcomes['failed'] > 0) {
-            $this->warn("{$outcomes['failed']} department(s) failed and kept their previous data.");
-        }
-
-        $this->info("Done. {$outcomes['imported']} of {$departments->count()} departments imported.");
-
-        return $outcomes['imported'] === 0 ? Command::FAILURE : Command::SUCCESS;
+        return Command::SUCCESS;
     }
 
     /**
@@ -76,26 +93,31 @@ class ImportSisData extends Command {
      * dropped in silence, because a typo there means that department never
      * imports and nothing else would say so.
      *
-     * @return \Illuminate\Support\Collection<string, string> dept_id => group names
+     * @return Collection<string, string> dept_id => group names
      */
-    private function departments() {
-        if ($single = $this->option('dept')) {
-            return collect([$single => "--dept={$single}"]);
-        }
-
+    private function deptIdsToImport() {
         $groups = Group::whereNotNull('dept_id')->get(['id', 'group_title', 'dept_id']);
 
-        [$usable, $unusable] = $groups->partition(
+        [$usableGroups, $unusableGroups] = $groups->partition(
             fn(Group $group) => is_numeric(trim((string) $group->dept_id))
         );
 
-        foreach ($unusable as $group) {
+        foreach ($unusableGroups as $group) {
             $this->warn("  skipping group {$group->id} \"{$group->group_title}\": dept_id \"{$group->dept_id}\" is not a number");
         }
 
-        return $usable
+        return $usableGroups
             ->groupBy(fn(Group $group) => trim((string) $group->dept_id))
             ->map(fn($groups) => $groups->pluck('group_title')->implode(', '));
+    }
+
+    private function buildTmpTables(): void {
+        foreach (self::TABLES as $table) {
+            // _old is a leftover only when a previous run died mid-swap
+            Schema::dropIfExists("{$table}_old");
+            Schema::dropIfExists("{$table}_tmp");
+            DB::statement("CREATE TABLE {$table}_tmp LIKE {$table}");
+        }
     }
 
     /**
@@ -119,15 +141,11 @@ class ImportSisData extends Command {
             ])
             ->values();
 
-        DB::transaction(function () use ($terms) {
-            SisTerm::query()->delete();
-            $terms->chunk(500)->each(fn($chunk) => SisTerm::insert($chunk->all()));
-        });
-
+        $this->insertInChunks('sis_terms_tmp', $terms);
         $this->info("Terms: {$terms->count()}");
     }
 
-    /** @param \Illuminate\Support\Collection<int, string> $deptIds */
+    /** @param Collection<int, string> $deptIds */
     private function importDepartments($deptIds): void {
         $departments = collect($this->bandaid->getDepartments($deptIds->all()))->map(fn($dept) => [
             'dept_id' => $dept->DEPT_ID,
@@ -139,157 +157,153 @@ class ImportSisData extends Command {
             'campus_description' => $dept->CAMPUS_DESCRIPTION ?? null,
             'created_at' => now(),
             'updated_at' => now(),
-        ]);
+        ])->values();
 
-        DB::transaction(function () use ($departments) {
-            SisDepartment::query()->delete();
-            $departments->chunk(500)->each(fn($chunk) => SisDepartment::insert($chunk->all()));
-        });
-
+        $this->insertInChunks('sis_departments_tmp', $departments);
         $this->info("Departments: {$departments->count()}");
     }
 
     /**
-     * Refreshes one department, returning 'imported', 'empty' or 'failed'.
+     * Fetches and writes one department at a time, so memory holds at most one
+     * department's classes. An empty answer for a department is stored as
+     * empty: Bandaid is the source of truth, and about half of CLA's dept ids
+     * genuinely own no classes.
      *
-     * Fetches outside the transaction so a Bandaid timeout never holds one
-     * open, then replaces the department's rows inside one.
-     *
-     * An unknown department id is not an error at Bandaid: it answers 200 with
-     * an empty array, exactly as it would for a real department with nothing on
-     * the books. Since the mirror covers every term Bandaid holds, an empty
-     * result for a department that already has rows means the id is wrong or
-     * Bandaid is having a bad day, never that the department stopped teaching.
-     * Replacing on that answer would delete a real schedule, so it is skipped.
+     * @param Collection<string, string> $departments dept_id => group names
+     * @return Collection<int, string> every emplid seen in rosters and appointments
      */
-    private function importDepartment(string $deptId, string $groupNames): string {
-        try {
+    private function importClassesAndAppointments(Collection $departments): Collection {
+        $emplids = collect();
+
+        foreach ($departments as $deptId => $groupNames) {
             $jobs = $this->bandaid->getEmployeesForDepartment((int) $deptId);
-            $classRecords = $this->bandaid->getDeptClassList((int) $deptId);
-        } catch (\Throwable $e) {
-            Log::error("import:sis could not fetch department {$deptId}: {$e->getMessage()}");
-            $this->error("  {$deptId}: fetch failed, previous data kept");
-            return 'failed';
+            $classRecords = collect($this->bandaid->getDeptClassList((int) $deptId))
+                ->filter(fn($record) => $record->INSTITUTION === self::INSTITUTION);
+
+            $sections = $this->transformer->transform($classRecords);
+            $this->importSections((string) $deptId, $sections);
+
+            $appointments = $this->toAppointmentRows((string) $deptId, $jobs);
+            $this->insertInChunks('sis_appointments_tmp', $appointments);
+
+            $rosterEmplids = $sections->flatMap(
+                fn(array $record) => array_column($record['instructors'], 'emplid')
+            );
+            $emplids = $emplids->concat($rosterEmplids)->concat($appointments->pluck('emplid'));
+
+            $meetings = $sections->sum(fn(array $s) => count($s['meetings']));
+            $this->line("  {$deptId} ({$groupNames}): {$sections->count()} sections, {$meetings} meetings, {$appointments->count()} appointments");
         }
 
-        $classRecords = array_values(array_filter(
-            $classRecords,
-            fn($record) => $record->INSTITUTION === self::INSTITUTION
-        ));
-
-        if (empty($classRecords) && empty($jobs)) {
-            $existing = SisClassSection::where('academic_org', (int) $deptId)->count();
-            $this->warn("  {$deptId} ({$groupNames}): Bandaid returned nothing"
-                . ($existing > 0 ? ", keeping {$existing} existing sections" : ', and none is stored'));
-            return 'empty';
-        }
-
-        $sections = $this->transformer->transform($classRecords);
-
-        try {
-            DB::transaction(function () use ($deptId, $jobs, $sections) {
-                $this->replaceAppointments($deptId, $jobs);
-                $this->replaceSections($deptId, $sections);
-            });
-        } catch (\Throwable $e) {
-            Log::error("import:sis could not write department {$deptId}: {$e->getMessage()}");
-            $this->error("  {$deptId}: write failed, previous data kept");
-            return 'failed';
-        }
-
-        $meetings = $sections->sum(fn(array $s) => count($s['meetings']));
-        $this->line("  {$deptId}: {$sections->count()} sections, {$meetings} meetings, " . count($jobs) . ' appointments');
-
-        return 'imported';
+        return $emplids->unique()->values();
     }
 
-    private function replaceAppointments(string $deptId, array $jobs): void {
-        SisAppointment::where('dept_id', $deptId)->delete();
+    /** @param Collection<int, array> $sections one department's class records */
+    private function importSections(string $deptId, Collection $sections): void {
+        $now = now();
+        $stamp = fn(array $row) => [...$row, 'created_at' => $now, 'updated_at' => $now];
 
-        $rows = collect($jobs)
-            ->filter(fn($job) => $job->EMPLID)
-            ->map(function ($job) use ($deptId) {
-                $this->emplids[$job->EMPLID] = true;
+        $this->insertInChunks(
+            'sis_class_sections_tmp',
+            $sections->map(fn(array $record) => $stamp($record['section']))
+        );
 
-                return [
-                    'emplid' => $job->EMPLID,
-                    'dept_id' => $deptId,
-                    'dept_name' => $job->DEPTNAME ?? null,
-                    'job_code' => $job->JOBCODE ?? '',
-                    'position_desc' => $job->POSITION_DESCR ?? null,
-                    'category' => $job->CATEGORY ?? null,
-                    'job_indicator' => $job->JOB_INDICATOR ?? null,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-            })
-            // the feed repeats a person once per job, and occasionally repeats a
-            // job with its detail fields blank; the unique key would reject those
-            ->unique(fn(array $r) => implode('-', [$r['emplid'], $r['dept_id'], $r['job_code'], $r['job_indicator']]))
-            ->values();
+        // a bulk insert returns no ids, so read them back by the natural key
+        $sectionIds = DB::table('sis_class_sections_tmp')
+            ->where('academic_org', (int) $deptId)
+            ->get(['id', 'term_code', 'class_number'])
+            ->mapWithKeys(fn($s) => [$this->sectionKey($s->term_code, $s->class_number) => $s->id]);
 
-        $rows->chunk(500)->each(fn($chunk) => SisAppointment::insert($chunk->all()));
-    }
-
-    /** @param \Illuminate\Support\Collection<int, array> $sections */
-    private function replaceSections(string $deptId, $sections): void {
-        // cascade takes instructors and meetings with them
-        SisClassSection::where('academic_org', (int) $deptId)->delete();
-
+        $instructors = collect();
+        $meetings = collect();
         foreach ($sections as $record) {
-            $section = SisClassSection::create($record['section']);
+            $section = $record['section'];
+            $sectionId = $sectionIds[$this->sectionKey($section['term_code'], $section['class_number'])];
 
             foreach ($record['instructors'] as $instructor) {
-                $this->emplids[$instructor['emplid']] = true;
+                $instructors->push($stamp([...$instructor, 'sis_class_section_id' => $sectionId]));
             }
 
-            $section->instructors()->createMany($record['instructors']);
-            $section->meetings()->createMany($record['meetings']);
+            foreach ($record['meetings'] as $meeting) {
+                $meetings->push($stamp([...$meeting, 'sis_class_section_id' => $sectionId]));
+            }
         }
+
+        $this->insertInChunks('sis_class_instructors_tmp', $instructors);
+        $this->insertInChunks('sis_class_meetings_tmp', $meetings);
+    }
+
+    private function sectionKey(int|string $termCode, int|string $classNumber): string {
+        return "{$termCode}-{$classNumber}";
+    }
+
+    private function toAppointmentRows(string $deptId, array $jobs): Collection {
+        return collect($jobs)
+            ->filter(fn($job) => $job->EMPLID)
+            ->map(fn($job) => [
+                'emplid' => $job->EMPLID,
+                'dept_id' => $deptId,
+                'dept_name' => $job->DEPTNAME ?? null,
+                'job_code' => $job->JOBCODE ?? '',
+                'position_desc' => $job->POSITION_DESCR ?? null,
+                'category' => $job->CATEGORY ?? null,
+                'job_indicator' => $job->JOB_INDICATOR ?? null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ])
+            // the feed repeats a person once per job, and sometimes repeats a
+            // job with its detail fields blank. The unique key would reject those.
+            ->unique(fn(array $r) => implode('-', [$r['emplid'], $r['dept_id'], $r['job_code'], $r['job_indicator']]))
+            ->values();
     }
 
     /**
-     * Runs last, because the emplid set is only complete once appointments and
-     * class rosters have both been read. Resolving from that union is what picks
+     * Resolving names from the union of appointment and roster emplids picks
      * up someone teaching for a department they hold no appointment in.
+     *
+     * @param Collection<int, string> $emplids
      */
-    private function importEmployees(): void {
-        $emplids = array_keys($this->emplids);
-
-        if (empty($emplids)) {
-            $this->warn('No emplids seen, skipping employee lookup.');
-            return;
-        }
-
+    private function importEmployees(Collection $emplids): void {
         $written = 0;
-        foreach (array_chunk($emplids, self::NAMES_CHUNK) as $chunk) {
-            try {
-                $names = $this->bandaid->getNames($chunk);
-            } catch (\Throwable $e) {
-                Log::error("import:sis could not resolve names: {$e->getMessage()}");
-                $this->error('  names lookup failed for one chunk, previous rows kept');
-                continue;
-            }
+        foreach ($emplids->chunk(self::NAMES_CHUNK_SIZE) as $chunk) {
+            $rows = collect($this->bandaid->getNames($chunk->values()->all()))
+                ->map(fn($name) => [
+                    'emplid' => $name->EMPLID,
+                    'full_name' => $name->FULL_NAME ?? $name->NAME ?? null,
+                    'first_name' => $name->FIRST_NAME ?? null,
+                    'last_name' => $name->LAST_NAME ?? null,
+                    'internet_id' => $name->INTERNET_ID ?? null,
+                    'umndid' => $name->UMNDID ?? null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ])
+                ->unique('emplid')
+                ->values();
 
-            $rows = collect($names)->map(fn($name) => [
-                'emplid' => $name->EMPLID,
-                'full_name' => $name->FULL_NAME ?? $name->NAME ?? null,
-                'first_name' => $name->FIRST_NAME ?? null,
-                'last_name' => $name->LAST_NAME ?? null,
-                'internet_id' => $name->INTERNET_ID ?? null,
-                'umndid' => $name->UMNDID ?? null,
-                'updated_at' => now(),
-                'created_at' => now(),
-            ])->unique('emplid')->values();
-
-            SisEmployee::upsert(
-                $rows->all(),
-                ['emplid'],
-                ['full_name', 'first_name', 'last_name', 'internet_id', 'umndid', 'updated_at']
-            );
+            $this->insertInChunks('sis_employees_tmp', $rows);
             $written += $rows->count();
         }
 
-        $this->info("Employees: {$written} of " . count($emplids) . ' emplids resolved');
+        $this->info("Employees: {$written} of {$emplids->count()} emplids resolved");
+    }
+
+    /**
+     * One RENAME TABLE statement swaps every table at once, so readers never
+     * see a half-replaced mirror. The displaced live tables are dropped after.
+     */
+    private function swapInTmpTables(): void {
+        $renames = collect(self::TABLES)
+            ->map(fn(string $table) => "{$table} TO {$table}_old, {$table}_tmp TO {$table}")
+            ->implode(', ');
+
+        DB::statement("RENAME TABLE {$renames}");
+
+        foreach (self::TABLES as $table) {
+            Schema::dropIfExists("{$table}_old");
+        }
+    }
+
+    private function insertInChunks(string $table, Collection $rows): void {
+        $rows->chunk(500)->each(fn(Collection $chunk) => DB::table($table)->insert($chunk->all()));
     }
 }

@@ -7,9 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * A person assigned to teach a section, with their role.
- * like `PI` for primary instructor, `TA` for teaching assistant, and
- * `SI` for secondary (supplemental?) instructor.
+ * A person assigned to teach a section, with their role: `PI` for
+ * primary instructor, `TA` for teaching assistant.
  */
 class SisClassInstructor extends Model {
     use HasFactory;

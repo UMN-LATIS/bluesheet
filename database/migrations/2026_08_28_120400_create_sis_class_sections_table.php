@@ -9,13 +9,9 @@ return new class extends Migration {
         Schema::create('sis_class_sections', function (Blueprint $table) {
             $table->id();
 
-            // Bandaid returns one row per class per instructor per meeting pattern, like a single real section ARTH 1001 001 FA26, would have 4 rows:
-            // ARTH 1001 001 FA26, Prof A, MWF 10:00-10:50
-            // ARTH 1001 001 FA26, Prof B, MWF 10:00-10:50
-            // ARTH 1001 001 FA26, Prof A, TR 18:00-19:15
-            // ARTH 1001 001 FA26, Prof B, TR 18:00-19:15
-            // To avoid section dupes, we put instructors and meetings
-            // into separate tables
+            // Bandaid returns one row per class per instructor per meeting
+            // pattern. Sections are stored once here, with instructors and
+            // meetings split into their own tables.
             $table->integer('term_code');
             $table->integer('class_number');
 
@@ -34,9 +30,8 @@ return new class extends Migration {
             $table->integer('waitlist_total')->default(0);
             $table->boolean('is_cancelled')->default(false);
 
-            // slash-delimited, e.g. "AFRO 4406-001/GWSS 4406-001". Stored unparsed:
-            // the calendar will need it to avoid drawing one class twice
-            // TODO: consider normalizing into separate table
+            // slash-delimited ("AFRO 4406-001/GWSS 4406-001"), stored unparsed
+            // TODO: consider normalizing into a separate table
             $table->string('crosslist')->nullable();
 
             $table->timestamps();

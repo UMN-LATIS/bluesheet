@@ -13,9 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * because it never meets (asynchronous), as with independent study,
  * or because the SIS has not scheduled it yet.
  *
- * Rows the SIS reports at the same time range are consolidated into
- * one, for example:
- * "MW 9-10a, F 9-10a" becomes a single "MWF 9-10a"
+ * Same-time rows are merged by ClassRecordTransformer before insert.
  */
 class SisClassMeeting extends Model {
     use HasFactory;

@@ -34,7 +34,7 @@ class SisAppointment extends Model {
         return $this->belongsTo(SisDepartment::class, 'dept_id', 'dept_id');
     }
 
-    /** Primary appointments, as opposed to secondary ones such as a chair role. */
+    /** Primary appointments, not secondary ones such as a chair role. */
     public function scopePrimary($query) {
         return $query->where('job_indicator', 'P');
     }

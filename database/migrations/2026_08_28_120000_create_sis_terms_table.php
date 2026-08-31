@@ -16,7 +16,8 @@ return new class extends Migration {
             $table->date('ends_on');
             $table->timestamps();
 
-            // the same term code repeats across campuses and careers with different dates
+            // the same term code repeats across campuses and careers with
+            // different dates
             $table->unique(['term_code', 'institution', 'academic_career']);
         });
     }

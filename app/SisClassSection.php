@@ -61,7 +61,7 @@ class SisClassSection extends Model {
         return $query->where('academic_org', $academicOrg)->where('term_code', $termCode);
     }
 
-    /** Sections that appear on a weekly calendar: scheduled, and not cancelled. */
+    /** Not cancelled, with at least one meeting row. */
     public function scopeScheduled($query) {
         return $query->where('is_cancelled', false)->has('meetings');
     }
