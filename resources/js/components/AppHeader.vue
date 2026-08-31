@@ -1,5 +1,5 @@
 <template>
-  <AppHeader class="app-header" menuBreakpoint="xl">
+  <ClaAppHeader class="app-header" menuBreakpoint="xl">
     <template #app-link>
       <router-link :to="{ name: 'home' }"> BlueSheet </router-link>
     </template>
@@ -49,7 +49,7 @@
         <a href="/shibboleth-logout" class="nav-link">Logout</a>
       </NavbarItem>
     </template>
-  </AppHeader>
+  </ClaAppHeader>
 
   <UserLookup v-if="findUser" :show="findUser" @close="findUser = false" />
   <CreateGroup
@@ -60,7 +60,10 @@
 </template>
 
 <script setup lang="ts">
-import { AppHeader, NavbarItem } from "@umn-latis/cla-vue-template";
+import {
+  AppHeader as ClaAppHeader,
+  NavbarItem,
+} from "@umn-latis/cla-vue-template";
 import UserLookup from "@/components/UserLookup.vue";
 import CreateGroup from "@/components/CreateGroup.vue";
 import { $can } from "@/utils";
