@@ -2,39 +2,21 @@
 
 namespace Database\Seeders;
 
+use App\User;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Role;
 
-class TestGroupsModelHasRolesTableSeeder extends Seeder
-{
+class TestGroupsModelHasRolesTableSeeder extends Seeder {
+    public function run(): void {
+        $admin = User::firstWhere('umndid', 'admin');
+        $roleIds = Role::whereIn('name', ['basic user', 'view user', 'site admin'])->pluck('id');
 
-    /**
-     * Auto generated seed file
-     *
-     * @return void
-     */
-    public function run()
-    {
-        \DB::table('model_has_roles')->insert(array (
-            0 =>
-            array (
-                'role_id' => 1,
-                'model_type' => 'App\\User',
-                'model_id' => 1,
-            ),
-            1 =>
-            array (
-                'role_id' => 2,
-                'model_type' => 'App\\User',
-                'model_id' => 1,
-            ),
-            2 =>
-            array (
-                'role_id' => 4,
-                'model_type' => 'App\\User',
-                'model_id' => 1,
-            ),
-        ));
+        $modelRoles = $roleIds->map(fn ($roleId) => [
+            'role_id' => $roleId,
+            'model_type' => 'App\\User',
+            'model_id' => $admin->id,
+        ])->all();
 
-
+        \DB::table('model_has_roles')->upsert($modelRoles, ['role_id', 'model_type', 'model_id']);
     }
 }
