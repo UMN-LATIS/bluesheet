@@ -2,7 +2,7 @@
   <Modal
     :show="true"
     title="Request a Change"
-    @close="$emit('close')"
+    @update:show="$emit('close')"
   >
     <form @submit.prevent="handleSubmit">
       <div class="tw-flex tw-flex-col tw-gap-4">

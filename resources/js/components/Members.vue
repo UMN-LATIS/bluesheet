@@ -23,7 +23,7 @@
         Filter List
       </button>
     </div>
-    <Modal :show="showEmailList" @close="showEmailList = !showEmailList">
+    <Modal v-model:show="showEmailList">
       <div class="row">
         <div class="col-md-12">
           <p>Email list:</p>

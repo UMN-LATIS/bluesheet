@@ -1,6 +1,6 @@
 <template>
   <div>
-    <Modal :show="showError" @close="showError = !error">
+    <Modal v-model:show="showError">
       <div v-if="saveError" class="alert alert-danger col-sm-12" role="alert">
         {{ saveError }}
       </div>
@@ -144,7 +144,7 @@
       </div>
     </div>
 
-    <Modal :show="addMember" @close="addMember = !addMember">
+    <Modal v-model:show="addMember">
       <div class="row">
         <label for="nameLookup" class="col-sm-3 col-form-label">Name:</label>
         <div class="col-sm-6">
