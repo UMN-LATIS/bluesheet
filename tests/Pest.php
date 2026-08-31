@@ -90,6 +90,7 @@ function getMockBandaidResponses($additionalReponses = []) {
         "{$BANDAID_API}/classes/terms*" => mockResponse("Bandaid/mockGetTerms.json"),
         "{$BANDAID_API}/classes/list*" => mockResponse("Bandaid/mockGetDeptClassList.json"),
         "{$BANDAID_API}/department/*/employees" => mockResponse("Bandaid/mockGetEmployeesForDept.json"),
+        "{$BANDAID_API}/names*" => mockResponse("Bandaid/mockGetNames.json"),
         ...$additionalReponses,
     ];
 }

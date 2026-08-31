@@ -5,8 +5,8 @@ namespace App\Console;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Illuminate\Support\Facades\App;
-class Kernel extends ConsoleKernel
-{
+
+class Kernel extends ConsoleKernel {
     /**
      * The Artisan commands provided by your application.
      *
@@ -22,17 +22,21 @@ class Kernel extends ConsoleKernel
      * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
      * @return void
      */
-    protected function schedule(Schedule $schedule)
-    {
+    protected function schedule(Schedule $schedule) {
         $schedule->command('sync:users')
-                ->daily();
-        
+            ->daily();
+
+        $schedule->command('import:sis')
+            ->dailyAt('05:30')
+            ->timezone('America/Chicago');
+
         $schedule->command('import:leaves')
-                ->dailyAt('01:00');
-        
-        
+            ->dailyAt('05:45')
+            ->timezone('America/Chicago');
+
+
         if (App::environment('production')) {
-            $schedule->command('email:favorites')->dailyAt('08:30')->timezone('America/Chicago');;
+            $schedule->command('email:favorites')->dailyAt('08:30')->timezone('America/Chicago');
             // send a reminder email on the 10th of January and July.
             $schedule->command('email:periodicUpdate')
                 ->when(function () {
@@ -41,11 +45,10 @@ class Kernel extends ConsoleKernel
                         ||
                         \Carbon\Carbon::now()->isSameDay($this->findSecondTuesdayOfMonth("July"))
                     );
-                })->at('09:30')->timezone('America/Chicago');;    
+                })->at('09:30')->timezone('America/Chicago');
         }
-        
     }
-    
+
     private function findSecondTuesdayOfMonth(string $month): object {
         return \Carbon\Carbon::parse("second tuesday of " . $month);
     }
@@ -55,9 +58,8 @@ class Kernel extends ConsoleKernel
      *
      * @return void
      */
-    protected function commands()
-    {
-        $this->load(__DIR__.'/Commands');
+    protected function commands() {
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }

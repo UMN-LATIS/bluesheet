@@ -1,0 +1,47 @@
+[
+  {
+    "id": 1,
+    "EMPLID": 100,
+    "NAME": "Faculty,Test A",
+    "FIRST_NAME": "Test A",
+    "LAST_NAME": "Faculty",
+    "MIDDLE_NAME": "",
+    "INTERNET_ID": "faculty100"
+  },
+  {
+    "id": 2,
+    "EMPLID": 101,
+    "NAME": "Faculty,Test B",
+    "FIRST_NAME": "Test B",
+    "LAST_NAME": "Faculty",
+    "MIDDLE_NAME": "",
+    "INTERNET_ID": "faculty101"
+  },
+  {
+    "id": 3,
+    "EMPLID": 102,
+    "NAME": "Faculty,Test C",
+    "FIRST_NAME": "Test C",
+    "LAST_NAME": "Faculty",
+    "MIDDLE_NAME": "",
+    "INTERNET_ID": "faculty102"
+  },
+  {
+    "id": 4,
+    "EMPLID": 103,
+    "NAME": "Faculty,Test D",
+    "FIRST_NAME": "Test D",
+    "LAST_NAME": "Faculty",
+    "MIDDLE_NAME": "",
+    "INTERNET_ID": "faculty103"
+  },
+  {
+    "id": 5,
+    "EMPLID": 1674106,
+    "NAME": "Faculty,Test E",
+    "FIRST_NAME": "Test E",
+    "LAST_NAME": "Faculty",
+    "MIDDLE_NAME": "",
+    "INTERNET_ID": "faculty1674106"
+  }
+]

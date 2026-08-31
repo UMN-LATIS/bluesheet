@@ -30,12 +30,13 @@ class Bandaid {
         $this->baseUri = config('bandaid.baseUri');
     }
 
+    // TODO: remove this cache (callers should read the sis_ tables)
     public function cachedGet($url) {
         if ($value = Cache::get($url)) {
             return $value;
         }
 
-        $response = Http::withHeaders($this->headers)->get($this->baseUri . $url);
+        $response = Http::withHeaders($this->headers)->get($this->baseUri . $url)->throw();
 
         $value = json_decode($response->body());
 
@@ -54,7 +55,8 @@ class Bandaid {
             ->post(
                 $this->baseUri . $url,
                 $body
-            );
+            )
+            ->throw();
 
         $value = json_decode($response->body());
         Cache::put($cacheKey, $value, 600);
