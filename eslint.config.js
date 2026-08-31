@@ -1,6 +1,7 @@
 import pluginVue from "eslint-plugin-vue";
 import tseslint from "typescript-eslint";
 import pluginCypress from "eslint-plugin-cypress";
+import configPrettier from "eslint-config-prettier/flat";
 
 export default tseslint.config(
   {
@@ -50,4 +51,7 @@ export default tseslint.config(
     files: ["**/cypress/**/*.{js,ts}"],
     ...pluginCypress.configs.recommended,
   },
+  // Must stay last: switches off the formatting rules Prettier owns, so the two
+  // tools stop overwriting each other on save.
+  configPrettier,
 );
