@@ -1,85 +1,14 @@
 <template>
   <div>
-    <AppHeader class="app-header" menuBreakpoint="xl">
-      <template #app-link>
-        <router-link :to="{ name: 'home' }">BlueSheet</router-link>
-      </template>
-      <template #navbar-links>
-        <NavbarItem>
-          <router-link :to="{ name: 'home' }">Home</router-link>
-        </NavbarItem>
-        <NavbarItem>
-          <router-link :to="{ name: 'user' }" class="nav-link"
-            >My Groups <i class="fas fa-user"></i>
-          </router-link>
-        </NavbarItem>
-        <NavbarItem v-if="$can('create groups')">
-          <a class="nav-link" href="#" @click.prevent="createGroup = true"
-            >Create Group <i class="fas fa-plus"></i
-          ></a>
-        </NavbarItem>
-        <NavbarItem v-if="$can('view groups')">
-          <router-link :to="{ name: 'groupList' }" class="nav-link"
-            >Browse Groups <i class="fas fa-search"></i
-          ></router-link>
-        </NavbarItem>
-        <NavbarItem v-if="$can('view groups')">
-          <router-link :to="{ name: 'roleList' }" class="nav-link"
-            >Browse Roles <i class="fas fa-search"></i
-          ></router-link>
-        </NavbarItem>
-        <NavbarItem v-if="$can('view reports')">
-          <router-link :to="{ name: 'reportList' }" class="nav-link"
-            >View Reports <i class="fas fa-table"></i
-          ></router-link>
-        </NavbarItem>
-        <NavbarItem v-if="$can('view users')">
-          <a class="nav-link" href="#" @click.prevent="findUser = true"
-            >User Lookup <i class="fas fa-users"></i
-          ></a>
-        </NavbarItem>
-        <NavbarItem>
-          <a
-            class="nav-link"
-            href="https://umn-latis.github.io/bluesheet/"
-            target="_blank"
-            >Help <i class="fas fa-question-circle"></i
-          ></a>
-        </NavbarItem>
-        <NavbarItem>
-          <a href="/shibboleth-logout" class="nav-link">Logout</a>
-        </NavbarItem>
-      </template>
-    </AppHeader>
-
-    <router-view :key="$route.fullPath" />
-
-    <AppFooter />
-
-    <UserLookup v-if="findUser" :show="findUser" @close="findUser = false" />
-    <CreateGroup
-      v-if="createGroup"
-      :show="createGroup"
-      @close="createGroup = false"
-    />
-
-    <Teleport to="body">
-      <ErrorModal />
-    </Teleport>
+    <RouterView :key="$route.fullPath" />
+    <ErrorModal />
   </div>
 </template>
 
 <script setup lang="ts">
-import { AppHeader, NavbarItem, AppFooter } from "@umn-latis/cla-vue-template";
-import UserLookup from "@/components/UserLookup.vue";
-import CreateGroup from "@/components/CreateGroup.vue";
-import { $can } from "@/utils";
-import { onMounted, ref } from "vue";
+import { onMounted } from "vue";
 import { useUserStore } from "@/stores/useUserStore";
 import ErrorModal from "@/components/ErrorModal.vue";
-
-const findUser = ref(false);
-const createGroup = ref(false);
 
 const userStore = useUserStore();
 

@@ -1,10 +1,13 @@
 <template>
+  <AppHeader />
   <PostIt class="wide-layout__post-it">
     <slot />
   </PostIt>
+  <AppFooter />
 </template>
 <script setup lang="ts">
-import { PostIt } from "@umn-latis/cla-vue-template";
+import { AppFooter, PostIt } from "@umn-latis/cla-vue-template";
+import AppHeader from "@/components/AppHeader.vue";
 </script>
 <style>
 .wide-layout__post-it {
