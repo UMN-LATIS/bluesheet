@@ -1,87 +1,77 @@
 <template>
-  <div class="tw-relative tw-p-4">
-    <header class="tw-mb-8 tw-flex tw-items-start tw-justify-between tw-gap-4">
-      <div>
-        <h1>Term Planning</h1>
-        <p class="tw-text-neutral-500">
-          <template v-if="term">
-            {{ term.name }} · {{ placed.shownCount }} of
-            {{ placed.totalCount }} meetings shown
-          </template>
-          <template v-else>
-            A week grid of the classes a department offers in one term.
-          </template>
-        </p>
-      </div>
-      <button
-        type="button"
-        class="tw-cursor-pointer tw-rounded-md tw-border tw-border-solid tw-border-neutral-300 tw-bg-white tw-px-3 tw-py-1 tw-text-sm"
-        :aria-expanded="isSidebarShown"
-        @click="isSidebarShown = !isSidebarShown"
-      >
-        {{ isSidebarShown ? "Hide filters" : "Show filters" }}
-      </button>
-    </header>
+  <FullScreenLayout>
+    <!-- Breadcrumb row: filled in by the next phase. -->
+    <div
+      class="tw-flex tw-h-9 tw-flex-none tw-items-center tw-justify-between tw-border-0 tw-border-b tw-border-solid tw-border-neutral-200 tw-bg-white tw-px-3 tw-text-sm"
+    >
+      <span class="tw-text-neutral-600">Term Planning</span>
+      <span v-if="term" class="tw-text-neutral-600">{{ term.name }}</span>
+    </div>
 
     <!--
-      The side panels sit in wrappers that add no height of their own, so
-      the row is exactly as tall as the chips and grid, and each panel fills
-      that height and scrolls inside it. Without the wrapper, a long list
-      would stretch the row instead.
+      Three columns filling the rest of the viewport. Each column fills the
+      row's height and scrolls inside itself; the page never scrolls.
     -->
-    <div class="tw-flex tw-gap-4">
-      <div v-if="isSidebarShown" class="tw-relative tw-w-80 tw-flex-none">
-        <ScheduleSidebar
-          class="tw-absolute tw-inset-0"
-          :options="filterOptions"
-          :schedule="schedule"
-        />
-      </div>
+    <div class="tw-flex tw-min-h-0 tw-flex-1">
+      <ScheduleSidebar
+        class="tw-w-80 tw-flex-none tw-border-0 tw-border-r tw-border-solid tw-border-neutral-200"
+        :options="filterOptions"
+        :schedule="schedule"
+      />
 
       <!-- min-w-0 lets the grid scroll sideways inside a flex row instead of stretching it. -->
-      <div class="tw-min-w-0 tw-flex-1">
-        <ActiveFilterBar
-          :options="filterOptions"
-          :schedule="schedule"
-          :shownCount="visibleSections.length"
-          :totalCount="allSections.length"
-        />
+      <div class="tw-flex tw-min-w-0 tw-flex-1 tw-flex-col">
+        <div
+          class="tw-flex tw-min-h-9 tw-flex-none tw-items-center tw-gap-3 tw-border-0 tw-border-b tw-border-solid tw-border-neutral-200 tw-bg-white tw-px-3 tw-py-1 tw-text-xs tw-text-neutral-600"
+        >
+          <span v-if="term" class="tw-flex-none">
+            {{ placed.shownCount }} of {{ placed.totalCount }} meetings shown
+          </span>
+          <ActiveFilterBar
+            :options="filterOptions"
+            :schedule="schedule"
+            :shownCount="visibleSections.length"
+            :totalCount="allSections.length"
+          />
+        </div>
 
-        <ScheduleGrid :schedule="schedule" :toneOf="toneOf">
-          <template #block="{ meeting, width }">
-            <SectionBlock
-              v-if="sectionOf(meeting.id)"
-              :section="sectionOf(meeting.id)!"
-              :width="width"
-              :startMinute="meeting.startMinute"
-              :endMinute="meeting.endMinute"
-            />
-            <!-- A meeting drawn on the grid has no class on it yet. -->
-            <MeetingTimes
-              v-else
-              :startMinute="meeting.startMinute"
-              :endMinute="meeting.endMinute"
-            />
-          </template>
-        </ScheduleGrid>
+        <div class="tw-min-h-0 tw-flex-1 tw-overflow-auto tw-bg-white">
+          <ScheduleGrid :schedule="schedule" :toneOf="toneOf">
+            <template #block="{ meeting, width }">
+              <SectionBlock
+                v-if="sectionOf(meeting.id)"
+                :section="sectionOf(meeting.id)!"
+                :width="width"
+                :startMinute="meeting.startMinute"
+                :endMinute="meeting.endMinute"
+              />
+              <!-- A meeting drawn on the grid has no class on it yet. -->
+              <MeetingTimes
+                v-else
+                :startMinute="meeting.startMinute"
+                :endMinute="meeting.endMinute"
+              />
+            </template>
+          </ScheduleGrid>
+        </div>
       </div>
 
-      <div v-if="selectedSection" class="tw-relative tw-w-96 tw-flex-none">
-        <SectionSheet
-          class="tw-absolute tw-inset-0"
-          :section="selectedSection"
-          @close="schedule.dispatch({ type: 'deselected' })"
-        />
-      </div>
+      <SectionSheet
+        v-if="selectedSection"
+        class="tw-w-96 tw-flex-none tw-border-0 tw-border-l tw-border-solid tw-border-neutral-200"
+        :section="selectedSection"
+        @close="schedule.dispatch({ type: 'deselected' })"
+      />
     </div>
-  </div>
+  </FullScreenLayout>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import dayjs from "dayjs";
 import { isEqual, omit } from "lodash-es";
+import FullScreenLayout from "@/layouts/FullScreenLayout.vue";
 import ActiveFilterBar from "./components/ActiveFilterBar.vue";
 import MeetingTimes from "./components/MeetingTimes.vue";
 import ScheduleGrid from "./components/ScheduleGrid.vue";
@@ -187,8 +177,6 @@ watch(
   },
   { immediate: true },
 );
-
-const isSidebarShown = ref(true);
 
 // A meeting drawn locally (local-N) has no section, so selecting it stores
 // an id but opens no sheet.

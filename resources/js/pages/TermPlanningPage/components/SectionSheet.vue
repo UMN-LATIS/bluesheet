@@ -7,7 +7,7 @@
   -->
   <aside
     aria-label="Section details"
-    class="tw-overflow-y-auto tw-rounded-md tw-border tw-border-solid tw-border-neutral-200 tw-bg-white tw-p-4"
+    class="tw-min-h-0 tw-overflow-y-auto tw-bg-white tw-p-4"
   >
     <div>
       <div class="tw-mb-4 tw-flex tw-items-start tw-justify-between tw-gap-2">

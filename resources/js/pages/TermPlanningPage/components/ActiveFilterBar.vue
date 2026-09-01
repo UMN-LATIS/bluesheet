@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="facetsInUse.length > 0"
-    class="tw-mb-2 tw-flex tw-flex-wrap tw-items-center tw-gap-2 tw-text-xs"
+    class="tw-flex tw-flex-wrap tw-items-center tw-gap-2 tw-text-xs"
   >
     <span class="tw-mr-2 tw-text-neutral-500">
       {{ shownCount }} of {{ totalCount }} sections

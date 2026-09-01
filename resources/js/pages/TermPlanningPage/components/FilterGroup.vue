@@ -1,15 +1,16 @@
 <template>
   <!--
-    One group is one flex item in the sidebar's column. Its basis is its
-    natural height and it may shrink, so when the groups together outgrow
-    the column each gives up room in proportion to its size: the long
-    Courses list shrinks most, the five-row Type list hardly at all. The
-    header never scrolls away, because only the body below it is the scroll
-    box.
+    One group is one flex item in the sidebar's column, and the open groups
+    divide the column between them. Each grows in proportion to its row
+    count up to a cap, so a five-row Type list takes a small share and the
+    long lists split the rest evenly rather than the longest (259 sections)
+    swallowing the column. `min-h-8` is the header's height: whatever the
+    split, no header is ever squeezed out of view. Only the body scrolls.
   -->
   <section
-    class="tw-flex tw-min-h-0 tw-flex-col"
-    :class="isOpen ? 'tw-shrink' : 'tw-flex-none'"
+    class="tw-flex tw-min-h-8 tw-flex-col"
+    :class="isOpen ? 'tw-shrink tw-basis-0' : 'tw-flex-none'"
+    :style="isOpen ? { flexGrow: Math.min(count, GROW_CAP) } : undefined"
   >
     <div
       class="tw-flex tw-h-8 tw-flex-none tw-items-center tw-gap-2 tw-border-0 tw-border-y tw-border-solid tw-border-neutral-200 tw-bg-neutral-100 tw-pr-3 tw-text-xs tw-text-neutral-700"
@@ -56,6 +57,9 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{ clear: [] }>();
+
+/** Rows beyond this earn a group no more of the column. */
+const GROW_CAP = 10;
 
 const isOpen = ref(true);
 </script>

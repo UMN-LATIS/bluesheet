@@ -1,7 +1,7 @@
 <template>
   <aside
     aria-label="Filters"
-    class="tw-flex tw-flex-col tw-rounded-md tw-border tw-border-solid tw-border-neutral-200 tw-bg-white"
+    class="tw-flex tw-min-h-0 tw-flex-col tw-bg-white"
   >
     <!-- Outside the scroll box below, so it is in reach however far the lists go. -->
     <div class="tw-flex-none tw-p-3">

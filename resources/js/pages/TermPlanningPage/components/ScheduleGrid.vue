@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="tw-overflow-x-auto tw-rounded-md tw-border tw-border-solid tw-border-neutral-200 tw-bg-white"
-  >
+  <div class="tw-bg-white">
     <!--
       A day's name sticks to the right of the gutter as its column scrolls
       past, so the columns are still identifiable once one is wider than the
