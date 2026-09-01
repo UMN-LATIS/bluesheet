@@ -81,10 +81,31 @@ export function layOutDay(
   };
 }
 
-export const lanesOf = (layout: DayLayout): LaneAssignment =>
-  Object.fromEntries(
-    layout.placed.map(({ meeting, lane }) => [meeting.id, lane]),
-  );
+/**
+ * The lane every meeting in the week currently holds, to be handed back to
+ * `layOutDay` for as long as a gesture lasts. Ids are unique across days, so
+ * one flat record covers the whole week.
+ */
+export function lockLanes(meetings: Meeting[]): LaneAssignment {
+  const byDay = new Map<number, Meeting[]>();
+
+  for (const meeting of meetings) {
+    byDay.set(meeting.dayIndex, [
+      ...(byDay.get(meeting.dayIndex) ?? []),
+      meeting,
+    ]);
+  }
+
+  const locked: LaneAssignment = {};
+
+  for (const inOneDay of byDay.values()) {
+    for (const { meeting, lane } of packByStart(inOneDay)) {
+      locked[meeting.id] = lane;
+    }
+  }
+
+  return locked;
+}
 
 /**
  * Gives each meeting the first lane free by the time it starts, taking them
@@ -118,17 +139,25 @@ function packByStart(
 
 /**
  * Keeps every meeting where it already was. One carried in from another day
- * mid-gesture has no remembered lane, so it takes a fresh one on the right
- * rather than displacing anything.
+ * mid-gesture has no remembered lane here, so it takes a fresh one on the
+ * right rather than displacing anything.
  */
 function holdLanes(
   meetings: Meeting[],
   lockedLanes: LaneAssignment,
 ): { meeting: Meeting; lane: number }[] {
-  let spare = Math.max(-1, ...Object.values(lockedLanes)) + 1;
-
-  return meetings.map((meeting) => ({
+  const held = meetings.map((meeting) => ({
     meeting,
-    lane: lockedLanes[meeting.id] ?? spare++,
+    lane: lockedLanes[meeting.id],
+  }));
+
+  // Counted from the lanes held in this day alone. The record covers the whole
+  // week, so its highest lane may belong to some other, busier day.
+  let spare =
+    held.reduce((highest, { lane }) => Math.max(highest, lane ?? -1), -1) + 1;
+
+  return held.map(({ meeting, lane }) => ({
+    meeting,
+    lane: lane ?? spare++,
   }));
 }

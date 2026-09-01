@@ -10,6 +10,7 @@
  */
 
 import type { TimeRange } from "../types";
+import { lockLanes } from "../helpers/dayLayout";
 import { END_MINUTE, SNAP_MINUTES, START_MINUTE } from "../helpers/timeScale";
 import type {
   EditorEvent,
@@ -60,6 +61,7 @@ export function update(state: EditorState, event: EditorEvent): EditorState {
           // Remembering where in the block it was picked up is what stops the
           // meeting jumping so its top sits under the pointer.
           grabbedAfterStart: event.minute - meeting.startMinute,
+          lockedLanes: lockLanes(state.meetings),
         },
       };
     }
@@ -72,6 +74,7 @@ export function update(state: EditorState, event: EditorEvent): EditorState {
               status: "resizing",
               meetingId: event.meetingId,
               edge: event.edge,
+              lockedLanes: lockLanes(state.meetings),
             },
           }
         : state;

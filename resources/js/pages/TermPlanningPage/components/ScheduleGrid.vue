@@ -24,7 +24,7 @@
         ref="days"
         class="tw-flex tw-items-start"
         @pointerdown="onPointerDown"
-        @pointermove="dispatchAt('pointerMoved', $event)"
+        @pointermove="onPointerMove"
         @pointerup="dispatch({ type: 'released' })"
         @pointercancel="dispatch({ type: 'cancelled' })"
       >
@@ -33,9 +33,7 @@
           :key="day"
           :label="day"
           :dayIndex="dayIndex"
-          :meetings="selectMeetingsOn(state, dayIndex)"
-          :draft="selectDrawingIn(state, dayIndex)"
-          :activeMeetingId="selectActiveMeetingId(state)"
+          :view="selectDayView(state, dayIndex)"
         />
       </div>
     </div>
@@ -49,12 +47,7 @@ import StandardPeriodsColumn from "./StandardPeriodsColumn.vue";
 import TimeAxis from "./TimeAxis.vue";
 import { A_PERIODS, B_PERIODS } from "../constants/standardMeetingTimes";
 import { useScheduleEditor } from "../useScheduleEditor/useScheduleEditor";
-import {
-  selectDrawingIn,
-  selectMeetingsOn,
-  selectActiveMeetingId,
-} from "../useScheduleEditor/selectors";
-import type { EditorEvent } from "../useScheduleEditor/types";
+import { selectDayView } from "../useScheduleEditor/selectors";
 import { minuteAt, snapToGrid } from "../helpers/timeScale";
 
 const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri"];
@@ -70,47 +63,42 @@ const { state, dispatch } = useScheduleEditor();
 function onPointerDown(event: PointerEvent) {
   if (event.button !== 0) return;
 
+  const at = positionOf(event);
+  if (!at) return;
+
   // Capturing on the container means the rest of the gesture arrives here even
   // once the pointer leaves the grid entirely.
   days.value?.setPointerCapture(event.pointerId);
 
   const target = event.target as HTMLElement;
-  const pressedBlock = target.closest<HTMLElement>("[data-meeting-id]");
-  const pressedEdge = target.closest<HTMLElement>("[data-resize-edge]");
+  const meetingId =
+    target.closest<HTMLElement>("[data-meeting-id]")?.dataset.meetingId;
+  const edge =
+    target.closest<HTMLElement>("[data-resize-edge]")?.dataset.resizeEdge;
 
-  if (!pressedBlock) {
-    dispatchAt("pressedEmptySpace", event);
-  } else if (pressedEdge) {
-    dispatchAt("pressedMeetingEdge", event, {
-      meetingId: pressedBlock.dataset.meetingId,
-      edge: pressedEdge.dataset.resizeEdge,
-    });
+  if (!meetingId) {
+    dispatch({ type: "pressedEmptySpace", ...at });
+  } else if (edge === "start" || edge === "end") {
+    dispatch({ type: "pressedMeetingEdge", meetingId, edge, ...at });
   } else {
-    dispatchAt("pressedMeeting", event, {
-      meetingId: pressedBlock.dataset.meetingId,
-    });
+    dispatch({ type: "pressedMeeting", meetingId, ...at });
   }
 }
 
-/** Turns a pointer event into the day and minute it names, then dispatches. */
-function dispatchAt(
-  type:
-    | "pressedEmptySpace"
-    | "pressedMeeting"
-    | "pressedMeetingEdge"
-    | "pointerMoved",
-  event: PointerEvent,
-  extra: Record<string, unknown> = {},
-) {
-  const column = columnUnder(event.clientX);
-  if (!column) return;
+function onPointerMove(event: PointerEvent) {
+  const at = positionOf(event);
+  if (at) dispatch({ type: "pointerMoved", ...at });
+}
 
-  dispatch({
-    type,
+/** The day and minute a pointer event landed on, in the grid's own terms. */
+function positionOf(event: PointerEvent) {
+  const column = columnUnder(event.clientX);
+  if (!column) return null;
+
+  return {
     dayIndex: column.dayIndex,
     minute: snapToGrid(minuteAt(event.clientY - column.top)),
-    ...extra,
-  } as EditorEvent);
+  };
 }
 
 /**
