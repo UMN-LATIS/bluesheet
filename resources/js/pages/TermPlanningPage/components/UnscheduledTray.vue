@@ -43,7 +43,7 @@
             })
           "
         >
-          <span class="tw-font-mono tw-font-semibold">
+          <span class="tw-font-semibold">
             {{ section.subject }} {{ section.catalogNumber }} ·
             {{ section.section }}
           </span>

@@ -81,7 +81,7 @@
         v-model="search"
         type="search"
         placeholder="Search courses, people, sections"
-        class="tw-w-full tw-rounded-md tw-border tw-border-solid tw-border-neutral-300 tw-px-3 tw-py-2 tw-text-sm placeholder:tw-text-neutral-400"
+        class="tw-w-full tw-rounded-md tw-border tw-border-solid tw-border-neutral-300 tw-px-3 tw-py-1.5 tw-text-xs placeholder:tw-text-neutral-400"
       />
     </div>
 
@@ -113,7 +113,7 @@
               "
             >
               <span
-                class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-neutral-700"
+                class="tw-font-semibold tw-uppercase tw-tracking-wide tw-text-neutral-600"
               >
                 {{ level.label }}
               </span>
@@ -126,11 +126,9 @@
                 :isChecked="isChecked('course', item.value)"
                 @toggle="toggle('course', [item.value], $event)"
               >
-                <span class="tw-block tw-font-mono tw-font-semibold">
-                  {{ item.code }}
-                </span>
+                <span class="tw-block">{{ item.code }}</span>
                 <span
-                  class="tw-block tw-truncate tw-text-xs tw-text-neutral-600"
+                  class="tw-block tw-truncate tw-text-[11px] tw-text-neutral-500"
                 >
                   {{ item.title }}
                 </span>
@@ -170,7 +168,7 @@
               </span>
               <span
                 v-if="item.emplid !== null"
-                class="tw-block tw-truncate tw-text-xs tw-text-neutral-500"
+                class="tw-block tw-truncate tw-text-[11px] tw-text-neutral-500"
               >
                 {{ item.emplid }}
                 <template v-if="item.internetId">
@@ -196,7 +194,7 @@
               :isChecked="isChecked('section', item.value)"
               @toggle="toggle('section', [item.value], $event)"
             >
-              <span class="tw-font-mono">{{ item.label }}</span>
+              {{ item.label }}
               <template #annotation>
                 {{ item.component }}
                 <template v-if="item.instructorLastName">
@@ -221,7 +219,7 @@
               :isChecked="isChecked('component', item.value)"
               @toggle="toggle('component', [item.value], $event)"
             >
-              <span class="tw-font-mono">{{ item.value }}</span>
+              {{ item.value }}
               <template #annotation>{{ item.sectionCount }}</template>
             </FilterRow>
           </template>
