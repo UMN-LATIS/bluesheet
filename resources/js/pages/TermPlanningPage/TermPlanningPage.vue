@@ -5,22 +5,47 @@
     >
       <Breadcrumbs :crumbs="crumbs" />
 
-      <label class="tw-m-0 tw-flex tw-items-center tw-gap-2 tw-font-normal">
-        <span class="tw-sr-only">Term</span>
-        <select
-          class="tw-rounded tw-border tw-border-solid tw-border-neutral-300 tw-bg-white tw-py-0.5 tw-pl-2 tw-pr-7 tw-text-sm"
-          :value="term?.id"
-          @change="goToTerm(($event.target as HTMLSelectElement).value)"
+      <div class="tw-flex tw-items-center tw-gap-3">
+        <!-- Segmented control: two buttons, the pressed one filled. -->
+        <div
+          role="group"
+          aria-label="View"
+          class="tw-inline-flex tw-text-xs tw-font-semibold"
         >
-          <option
-            v-for="option in termOptions"
-            :key="option.id"
-            :value="option.id"
+          <button
+            v-for="option in VIEW_OPTIONS"
+            :key="option.value"
+            type="button"
+            class="tw-cursor-pointer tw-border tw-border-solid tw-border-bs-blue tw-px-2.5 tw-py-1 first:tw-rounded-l last:tw--ml-px last:tw-rounded-r"
+            :class="
+              view === option.value
+                ? 'tw-bg-bs-blue tw-text-white'
+                : 'tw-bg-white tw-text-bs-blue hover:tw-bg-blue-50'
+            "
+            :aria-pressed="view === option.value"
+            @click="view = option.value"
           >
-            {{ option.name }}
-          </option>
-        </select>
-      </label>
+            {{ option.label }}
+          </button>
+        </div>
+
+        <label class="tw-m-0 tw-flex tw-items-center tw-gap-2 tw-font-normal">
+          <span class="tw-sr-only">Term</span>
+          <select
+            class="tw-rounded tw-border tw-border-solid tw-border-neutral-300 tw-bg-white tw-py-0.5 tw-pl-2 tw-pr-7 tw-text-sm"
+            :value="term?.id"
+            @change="goToTerm(($event.target as HTMLSelectElement).value)"
+          >
+            <option
+              v-for="option in termOptions"
+              :key="option.id"
+              :value="option.id"
+            >
+              {{ option.name }}
+            </option>
+          </select>
+        </label>
+      </div>
     </div>
 
     <!--
@@ -58,11 +83,15 @@
             :shownCount="visibleSections.length"
             :totalCount="allSections.length"
           />
-          <MeetingTypeKey class="tw-ml-auto tw-flex-none" />
+          <MeetingTypeKey
+            v-if="view === 'week'"
+            class="tw-ml-auto tw-flex-none"
+          />
         </div>
 
         <!-- Sideways scrolling lands on a day's edge; see DayColumn for the target. -->
         <div
+          v-if="view === 'week'"
           class="tw-min-h-0 tw-flex-1 tw-snap-x tw-snap-mandatory tw-overflow-auto tw-bg-white"
         >
           <ScheduleGrid :schedule="schedule" :componentOf="componentOf">
@@ -82,6 +111,9 @@
               />
             </template>
           </ScheduleGrid>
+        </div>
+        <div v-else class="tw-min-h-0 tw-flex-1 tw-overflow-auto tw-bg-white">
+          <CoverageHeatmap :meetings="shownMeetings" :dayNames="DAY_NAMES" />
         </div>
 
         <UnscheduledTray
@@ -110,6 +142,7 @@ import { isEqual, omit } from "lodash-es";
 import Breadcrumbs, { type Crumb } from "@/components/Breadcrumbs.vue";
 import FullScreenLayout from "@/layouts/FullScreenLayout.vue";
 import ActiveFilterBar from "./components/ActiveFilterBar.vue";
+import CoverageHeatmap from "./components/CoverageHeatmap.vue";
 import MeetingTimes from "./components/MeetingTimes.vue";
 import MeetingTypeKey from "./components/MeetingTypeKey.vue";
 import ScheduleGrid from "./components/ScheduleGrid.vue";
@@ -126,7 +159,7 @@ import { useGroupQuery } from "./queries/useGroupQuery";
 import { useSisSectionsQuery } from "./queries/useSisSectionsQuery";
 import { useSisTermsQuery } from "./queries/useSisTermsQuery";
 import { FILTER_FACETS, type Meeting } from "./types";
-import { useScheduleEditor } from "./useScheduleEditor";
+import { mergeSchedule, useScheduleEditor } from "./useScheduleEditor";
 import type { Effect } from "./useScheduleEditor/types";
 
 const props = defineProps<{
@@ -165,6 +198,16 @@ const goToTerm = (termCode: string) =>
 const groupQuery = useGroupQuery(props.groupId);
 
 const isSidebarCollapsed = ref(false);
+
+const VIEW_OPTIONS = [
+  { value: "week", label: "Week" },
+  { value: "heatmap", label: "Heatmap" },
+] as const;
+
+const view = ref<(typeof VIEW_OPTIONS)[number]["value"]>("week");
+
+/** The grid's days, which the heatmap's columns mirror. */
+const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 
 const crumbs = computed<Crumb[]>(() => [
   { label: "My Groups", to: { name: "user" } },
@@ -237,6 +280,11 @@ watch(
     }
   },
   { immediate: true },
+);
+
+/** What the week view draws, local edits included, so the heatmap agrees with it. */
+const shownMeetings = computed(() =>
+  mergeSchedule(schedule.base.value, schedule.state.value),
 );
 
 // A meeting drawn locally (local-N) has no section, so selecting it stores

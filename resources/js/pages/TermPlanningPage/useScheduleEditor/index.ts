@@ -4,3 +4,4 @@
  */
 
 export { useScheduleEditor, type ScheduleEditor } from "./useScheduleEditor";
+export { mergeSchedule } from "./mergeSchedule";
