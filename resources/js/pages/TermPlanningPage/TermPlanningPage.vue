@@ -19,6 +19,8 @@
           v-if="sectionOf(meeting.id)"
           :section="sectionOf(meeting.id)!"
           :width="width"
+          :startMinute="meeting.startMinute"
+          :endMinute="meeting.endMinute"
         />
         <!-- A meeting drawn on the grid has no class on it yet. -->
         <MeetingTimes

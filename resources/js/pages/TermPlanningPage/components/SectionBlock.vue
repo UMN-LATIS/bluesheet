@@ -2,11 +2,15 @@
   <div class="tw-overflow-hidden">
     <div class="tw-truncate tw-font-semibold">{{ heading }}</div>
     <div class="tw-truncate">{{ byline }}</div>
+    <div v-if="hasRoomForTimes" class="tw-truncate tw-opacity-70">
+      {{ timeRange }}
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
+import { formatClock } from "../helpers/timeScale";
 import type { SisSection } from "../types";
 
 /**
@@ -17,6 +21,13 @@ const props = defineProps<{
   section: SisSection;
   /** The lane width the day's packing left this block, in pixels. */
   width: number;
+  /**
+   * When the block meets, as the grid has it rather than as the section
+   * stores it, so a block dragged to a new time prints the time it now
+   * shows at.
+   */
+  startMinute: number;
+  endMinute: number;
 }>();
 
 /**
@@ -47,4 +58,22 @@ const byline = computed(() => {
 
   return isWide.value ? `${props.section.component} ${name}` : name;
 });
+
+/**
+ * Three stacked lines and the block's padding need about this much height.
+ * A shorter meeting keeps its identity and drops its times, which its place
+ * on the grid gives anyway.
+ */
+const THREE_LINE_MINUTES = 50;
+
+const hasRoomForTimes = computed(
+  () => props.endMinute - props.startMinute >= THREE_LINE_MINUTES,
+);
+
+/** A narrow lane has room for when the class starts, and no more. */
+const timeRange = computed(() =>
+  isWide.value
+    ? `${formatClock(props.startMinute)} – ${formatClock(props.endMinute)}`
+    : formatClock(props.startMinute),
+);
 </script>
