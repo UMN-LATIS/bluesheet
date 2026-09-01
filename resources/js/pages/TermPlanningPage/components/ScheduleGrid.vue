@@ -15,16 +15,24 @@
         <TimeAxis />
       </div>
 
-      <DayColumn v-for="day in DAY_NAMES" :key="day" :label="day" />
+      <DayColumn
+        v-for="(day, dayIndex) in DAY_NAMES"
+        :key="day"
+        :label="day"
+        :meetings="meetingsOn(dayIndex)"
+        @create="addMeeting(dayIndex, $event)"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from "vue";
 import DayColumn from "./DayColumn.vue";
 import StandardPeriodsColumn from "./StandardPeriodsColumn.vue";
 import TimeAxis from "./TimeAxis.vue";
 import { A_PERIODS, B_PERIODS } from "../constants/standardMeetingTimes";
+import type { Meeting, TimeRange } from "../types";
 
 const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 
@@ -32,4 +40,13 @@ const STANDARD_SCHEDULES = [
   { name: "A", tone: "blue", periods: A_PERIODS },
   { name: "B", tone: "green", periods: B_PERIODS },
 ] as const;
+
+const meetings = ref<Meeting[]>([]);
+
+const meetingsOn = (dayIndex: number) =>
+  meetings.value.filter((meeting) => meeting.dayIndex === dayIndex);
+
+function addMeeting(dayIndex: number, range: TimeRange) {
+  meetings.value.push({ id: crypto.randomUUID(), dayIndex, ...range });
+}
 </script>

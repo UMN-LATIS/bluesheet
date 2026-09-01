@@ -30,6 +30,24 @@ export const heightOf = (startMinute: number, endMinute: number) =>
 
 export const COLUMN_HEIGHT = `${(END_MINUTE - START_MINUTE) * PIXELS_PER_MINUTE + EDGE_SPACE * 2}px`;
 
+/**
+ * The grain the grid snaps to when someone drags out a time. Five minutes,
+ * because every standard class period begins on a five, so snapping this
+ * finely can still land exactly on one.
+ */
+export const SNAP_MINUTES = 5;
+
+/** The inverse of `topOf`: which minute a distance down a column names. */
+export function minuteAt(offsetY: number): number {
+  return (offsetY - EDGE_SPACE) / PIXELS_PER_MINUTE + START_MINUTE;
+}
+
+/** To the nearest snap point, and never outside the hours the grid draws. */
+export function snapToGrid(minute: number): number {
+  const snapped = Math.round(minute / SNAP_MINUTES) * SNAP_MINUTES;
+  return Math.min(Math.max(snapped, START_MINUTE), END_MINUTE);
+}
+
 /** "9:05" — no meridiem, since the clock beside it already gives the half. */
 export function formatClock(minute: number): string {
   const hour = Math.floor(minute / 60);
