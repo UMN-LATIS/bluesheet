@@ -15,7 +15,11 @@ class GroupSectionController extends Controller {
      * on the schedule grid.
      *
      * Cancelled sections are left out: a term that shows them looks fuller
-     * than it is.
+     * than it is. So are independent-study sections (component IND):
+     * directed readings, directed research, and the like are one
+     * placeholder section per instructor with no meeting time, and in the
+     * pilot department they were two thirds of the term. Nothing about them
+     * can be planned on a grid.
      */
     public function index(Request $request, Group $group) {
         $this->authorize('viewAnyCoursesForGroup', [Course::class, $group]);
@@ -31,6 +35,7 @@ class GroupSectionController extends Controller {
         $sections = SisClassSection::query()
             ->forDepartmentTerm((int) $group->sis_dept_id, $validated['term'])
             ->where('is_cancelled', false)
+            ->where('component', '!=', 'IND')
             ->with(['meetings', 'instructors.employee'])
             ->orderBy('subject')
             ->orderBy('catalog_number')

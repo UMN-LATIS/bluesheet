@@ -41,8 +41,16 @@
         <div
           class="tw-flex tw-min-h-9 tw-flex-none tw-items-center tw-gap-3 tw-border-0 tw-border-b tw-border-solid tw-border-neutral-200 tw-bg-white tw-px-3 tw-py-1 tw-text-xs tw-text-neutral-600"
         >
-          <span v-if="term" class="tw-flex-none">
-            {{ placed.shownCount }} of {{ placed.totalCount }} meetings shown
+          <!-- Only when there is something the grid could not draw. -->
+          <span
+            v-if="placed.outsideGridCount > 0"
+            class="tw-flex-none tw-text-amber-700"
+          >
+            {{ placed.outsideGridCount }}
+            {{
+              placed.outsideGridCount === 1 ? "meeting falls" : "meetings fall"
+            }}
+            outside Mon–Fri, 8am–9pm
           </span>
           <ActiveFilterBar
             :options="filterOptions"

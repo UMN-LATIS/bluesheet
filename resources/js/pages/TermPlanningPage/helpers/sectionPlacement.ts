@@ -15,21 +15,19 @@ export interface PlacedSections {
   sectionsByMeetingId: Map<string, SisSection>;
   /** Sections with no meeting time, which the tray lists instead. */
   unscheduled: SisSection[];
-  /** Blocks on the grid. */
-  shownCount: number;
   /**
-   * Shown plus everything the grid cannot draw yet: weekend meetings, times
-   * outside its hours, and sections with no set time (one each). The header
-   * prints both, so missing data reads as a known gap rather than a bug.
+   * Meetings the grid has no room for: weekend days, or times outside its
+   * hours. The page says so when this is not zero, so a missing block reads
+   * as a known gap rather than a bug.
    */
-  totalCount: number;
+  outsideGridCount: number;
 }
 
 export function placeSections(sections: SisSection[]): PlacedSections {
   const meetings: Meeting[] = [];
   const sectionsByMeetingId = new Map<string, SisSection>();
   const unscheduled: SisSection[] = [];
-  let hiddenCount = 0;
+  let outsideGridCount = 0;
 
   for (const section of sections) {
     // A crosslisted class is one block, drawn by its primary; the partner
@@ -38,7 +36,6 @@ export function placeSections(sections: SisSection[]): PlacedSections {
 
     if (section.meetings.length === 0) {
       unscheduled.push(section);
-      hiddenCount += 1;
       continue;
     }
 
@@ -50,7 +47,7 @@ export function placeSections(sections: SisSection[]): PlacedSections {
       for (const day of pattern.days) {
         const dayIndex = GRID_DAYS.indexOf(day);
         if (dayIndex === -1 || !fitsHours) {
-          hiddenCount += 1;
+          outsideGridCount += 1;
           continue;
         }
 
@@ -67,7 +64,6 @@ export function placeSections(sections: SisSection[]): PlacedSections {
     meetings,
     sectionsByMeetingId,
     unscheduled,
-    shownCount: meetings.length,
-    totalCount: meetings.length + hiddenCount,
+    outsideGridCount,
   };
 }

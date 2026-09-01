@@ -40,8 +40,7 @@ describe("placeSections", () => {
       { id: "s1:0:wed", dayIndex: 2, startMinute: 610, endMinute: 660 },
     ]);
     expect(placed.sectionsByMeetingId.get("s1:0:mon")?.id).toBe(1);
-    expect(placed.shownCount).toBe(2);
-    expect(placed.totalCount).toBe(2);
+    expect(placed.outsideGridCount).toBe(0);
   });
 
   it("a crosslisted class draws once, under its primary", () => {
@@ -67,16 +66,15 @@ describe("placeSections", () => {
     ]);
 
     expect(placed.meetings.map(({ id }) => id)).toEqual(["s1:0:tue"]);
-    // The partner is the same block, so it adds nothing to either count.
-    expect(placed.totalCount).toBe(1);
+    expect(placed.sectionsByMeetingId.get("s1:0:tue")?.id).toBe(1);
   });
 
-  it("a section with no set time is counted, not drawn", () => {
+  it("a section with no set time goes to the tray, not the grid", () => {
     const placed = placeSections([section(1, [])]);
 
     expect(placed.meetings).toEqual([]);
-    expect(placed.shownCount).toBe(0);
-    expect(placed.totalCount).toBe(1);
+    expect(placed.unscheduled.map(({ id }) => id)).toEqual([1]);
+    expect(placed.outsideGridCount).toBe(0);
   });
 
   it("weekend days are counted, not drawn", () => {
@@ -87,7 +85,7 @@ describe("placeSections", () => {
     ]);
 
     expect(placed.meetings.map(({ id }) => id)).toEqual(["s1:0:fri"]);
-    expect(placed.totalCount).toBe(2);
+    expect(placed.outsideGridCount).toBe(1);
   });
 
   it("meetings outside the grid's hours are counted, not drawn", () => {
@@ -96,6 +94,6 @@ describe("placeSections", () => {
     ]);
 
     expect(placed.meetings).toEqual([]);
-    expect(placed.totalCount).toBe(1);
+    expect(placed.outsideGridCount).toBe(1);
   });
 });
