@@ -25,6 +25,7 @@ import EligibilityReportPage from "./pages/reports/EligibilityReport.vue";
 import DeptLeavesReportPage from "./pages/reports/DeptLeavesReportPage.vue";
 import UnitReportPage from "./pages/reports/UnitReport.vue";
 import CoursePlanningPage from "@/pages/CoursePlanningPage/CoursePlanningPage.vue";
+import TermPlanningPage from "@/pages/TermPlanningPage/TermPlanningPage.vue";
 import { parseIntFromRouteParam as parseIntFromParam } from "@/utils";
 
 // test routes
@@ -159,6 +160,15 @@ export const router = createRouter({
     {
       path: "/reports/schedulingReport/:groupId",
       redirect: (to) => `/course-planning/groups/${to.params.groupId}`,
+    },
+    {
+      name: "termPlanning",
+      path: "/term-planning/groups/:groupId/:termCode?",
+      component: TermPlanningPage,
+      props: (route) => ({
+        groupId: parseIntFromParam(route.params.groupId),
+        termCode: parseIntFromParam(route.params.termCode),
+      }),
     },
     {
       name: "error",

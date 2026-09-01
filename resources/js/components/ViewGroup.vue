@@ -76,13 +76,22 @@
               <CheckIcon />
             </dd>
           </template>
-          <template v-if="canViewGroupLeaves && group.dept_id">
-            <dt>Reports</dt>
-            <dd>
-              <router-link :to="`/course-planning/groups/${group.id}`">
-                Faculty Leaves Planning Report
-              </router-link>
-            </dd>
+          <template
+            v-if="(canViewGroupLeaves || canViewGroupCourses) && group.dept_id"
+          >
+            <dt>Planning</dt>
+            <div>
+              <dd v-if="canViewGroupLeaves">
+                <router-link :to="`/course-planning/groups/${group.id}`">
+                  Faculty Leaves Planning Report
+                </router-link>
+              </dd>
+              <dd v-if="canViewGroupCourses">
+                <router-link :to="`/term-planning/groups/${group.id}`">
+                  Term Planning
+                </router-link>
+              </dd>
+            </div>
           </template>
           <template v-if="activeChildGroups.length || canCreateSubgroup">
             <dt>Subgroups</dt>
@@ -192,6 +201,7 @@ const allRoles = ref<T.MemberRole[]>([]);
 const userStore = useUserStore();
 const permissionsStore = usePermissionsStore();
 const canViewGroupLeaves = ref(false);
+const canViewGroupCourses = ref(false);
 const canCreateSubgroup = ref(false);
 const isAddingSubgroup = ref(false);
 
@@ -203,6 +213,9 @@ watch(
     canViewGroupLeaves.value = await permissionsStore.canViewAnyLeavesForGroup(
       props.group.id,
     );
+
+    canViewGroupCourses.value =
+      await permissionsStore.canViewAnyCoursesForGroup(props.group.id);
 
     canCreateSubgroup.value = await permissionsStore.canCreateSubgroupForGroup(
       props.group.id,
