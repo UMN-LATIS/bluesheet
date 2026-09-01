@@ -8,6 +8,9 @@ import type { Meeting, TimeRange } from "../types";
 /** Which end of a meeting is being dragged while it is resized. */
 export type MeetingEdge = "start" | "end";
 
+/** Where a meeting sits: one weekday, and a time range within it. */
+export type Placement = { dayIndex: number } & TimeRange;
+
 /**
  * What the pointer is in the middle of doing, if anything.
  *
@@ -32,8 +35,17 @@ export type Interaction =
       dayIndex: number;
     } & TimeRange);
 
+/**
+ * Only the local edits live here. The schedule itself — the sections the
+ * server returned — stays in the query cache, and `mergeSchedule` lays these
+ * edits over it. So a refetch can swap the base out underneath without
+ * touching anything the user has done.
+ */
 export interface EditorState {
-  meetings: Meeting[];
+  /** Meetings drawn on the grid; they exist nowhere but this browser. */
+  drawn: Meeting[];
+  /** Base meetings the user has dragged or resized, keyed by meeting id. */
+  overrides: Record<string, Placement>;
   interaction: Interaction;
   /** Names meetings that exist only in the browser so far. */
   nextLocalId: number;

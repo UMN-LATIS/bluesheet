@@ -5,16 +5,21 @@
  * means can be read, and tested, without a browser.
  *
  * The schedule does not change until a gesture ends: `pointerMoved` writes
- * only the interaction's draft, and `released` is the one place `meetings`
- * is written.
+ * only the interaction's draft, and `released` is the one place the edits
+ * are written.
+ *
+ * `base` is the server's schedule, passed in rather than held here, so the
+ * state carries only what this browser changed. It is context, not state:
+ * `update` reads it to find the meeting under a press, and never writes it.
  *
  * Nothing here needs to reach the network yet. When saving arrives this grows
  * the shape the asset editor already uses, returning `{ state, effects }` with
  * the effects run outside.
  */
 
-import type { TimeRange } from "../types";
+import type { Meeting, TimeRange } from "../types";
 import { END_MINUTE, snapToGrid, START_MINUTE } from "../helpers/timeScale";
+import { mergeSchedule } from "./mergeSchedule";
 import type {
   EditorEvent,
   EditorState,
@@ -33,12 +38,17 @@ const CLICK_DURATION = 50;
 const MIN_DURATION = 15;
 
 export const initialState = (): EditorState => ({
-  meetings: [],
+  drawn: [],
+  overrides: {},
   interaction: { status: "idle" },
   nextLocalId: 1,
 });
 
-export function update(state: EditorState, event: EditorEvent): EditorState {
+export function update(
+  state: EditorState,
+  event: EditorEvent,
+  base: Meeting[],
+): EditorState {
   switch (event.type) {
     case "pressedEmptySpace": {
       const minute = snapToGrid(event.minute);
@@ -54,8 +64,12 @@ export function update(state: EditorState, event: EditorEvent): EditorState {
       };
     }
 
+    // Presses land on the merged schedule: a meeting already moved once is
+    // grabbed where the user last put it, not where the server has it.
     case "pressedMeeting": {
-      const meeting = state.meetings.find(({ id }) => id === event.meetingId);
+      const meeting = mergeSchedule(base, state).find(
+        ({ id }) => id === event.meetingId,
+      );
       if (!meeting) return state;
 
       return {
@@ -74,7 +88,9 @@ export function update(state: EditorState, event: EditorEvent): EditorState {
     }
 
     case "pressedMeetingEdge": {
-      const meeting = state.meetings.find(({ id }) => id === event.meetingId);
+      const meeting = mergeSchedule(base, state).find(
+        ({ id }) => id === event.meetingId,
+      );
       if (!meeting) return state;
 
       return {
@@ -158,7 +174,7 @@ function pointerMoved(
   }
 }
 
-/** The one writer of `meetings`: a gesture's draft becomes the schedule. */
+/** The one writer of the edits: a gesture's draft becomes the schedule. */
 function commit(state: EditorState): EditorState {
   const { interaction } = state;
 
@@ -169,21 +185,36 @@ function commit(state: EditorState): EditorState {
     case "drawing":
       return commitDrawing(state, interaction);
 
+    // A meeting drawn here is rewritten in place; one from the server keeps
+    // its base row and gains an override.
     case "moving":
-    case "resizing":
-      return {
-        ...toIdle(state),
-        meetings: state.meetings.map((meeting) =>
-          meeting.id === interaction.meetingId
-            ? {
-                ...meeting,
-                dayIndex: interaction.dayIndex,
-                startMinute: interaction.startMinute,
-                endMinute: interaction.endMinute,
-              }
-            : meeting,
-        ),
+    case "resizing": {
+      const placement = {
+        dayIndex: interaction.dayIndex,
+        startMinute: interaction.startMinute,
+        endMinute: interaction.endMinute,
       };
+
+      const isDrawn = state.drawn.some(
+        ({ id }) => id === interaction.meetingId,
+      );
+      return isDrawn
+        ? {
+            ...toIdle(state),
+            drawn: state.drawn.map((meeting) =>
+              meeting.id === interaction.meetingId
+                ? { ...meeting, ...placement }
+                : meeting,
+            ),
+          }
+        : {
+            ...toIdle(state),
+            overrides: {
+              ...state.overrides,
+              [interaction.meetingId]: placement,
+            },
+          };
+    }
 
     default:
       return assertNever(interaction);
@@ -203,8 +234,9 @@ function commitDrawing(
     : { startMinute: drawing.startMinute, endMinute: drawing.endMinute };
 
   return {
-    meetings: [
-      ...state.meetings,
+    ...state,
+    drawn: [
+      ...state.drawn,
       {
         id: `local-${state.nextLocalId}`,
         dayIndex: drawing.dayIndex,

@@ -12,8 +12,9 @@
 </template>
 
 <script setup lang="ts">
+import { shallowRef } from "vue";
 import ScheduleGrid from "./components/ScheduleGrid.vue";
-import { useScheduleEditor } from "./useScheduleEditor/useScheduleEditor";
+import { useScheduleEditor } from "./useScheduleEditor";
 
 defineProps<{
   groupId: number;
@@ -21,6 +22,7 @@ defineProps<{
 }>();
 
 // Held here rather than inside the grid, so that the toolbar, sidebar and
-// detail sheet still to come all read and change the same schedule.
-const schedule = useScheduleEditor();
+// detail sheet still to come all read and change the same schedule. The base
+// becomes the fetched sections once the queries land.
+const schedule = useScheduleEditor(shallowRef([]));
 </script>

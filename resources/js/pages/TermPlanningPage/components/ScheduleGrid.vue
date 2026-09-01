@@ -77,7 +77,9 @@ const props = defineProps<{
 
 const days = ref<HTMLElement | null>(null);
 const state = computed(() => props.schedule.state.value);
-const week = computed(() => selectWeekView(state.value, DAY_NAMES.length));
+const week = computed(() =>
+  selectWeekView(props.schedule.base.value, state.value, DAY_NAMES.length),
+);
 const dispatch = (event: EditorEvent) => props.schedule.dispatch(event);
 
 function onPointerDown(event: PointerEvent) {

@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { initialState, update } from "./update";
+import type { Meeting } from "../types";
 import type { EditorEvent, EditorState } from "./types";
 
-const after = (events: EditorEvent[], state: EditorState = initialState()) =>
-  events.reduce(update, state);
+const after = (
+  events: EditorEvent[],
+  state: EditorState = initialState(),
+  base: Meeting[] = [],
+) => events.reduce((current, event) => update(current, event, base), state);
 
 /** A committed meeting drawn out on `dayIndex` from `from` to `to`. */
 const draw = (dayIndex: number, from: number, to: number): EditorEvent[] => [
@@ -19,7 +23,7 @@ describe("drawing", () => {
       { type: "released" },
     ]);
 
-    expect(state.meetings).toEqual([
+    expect(state.drawn).toEqual([
       { id: "local-1", dayIndex: 0, startMinute: 600, endMinute: 650 },
     ]);
   });
@@ -27,7 +31,7 @@ describe("drawing", () => {
   it("a drag creates the dragged range", () => {
     const state = after(draw(2, 600, 675));
 
-    expect(state.meetings).toEqual([
+    expect(state.drawn).toEqual([
       { id: "local-1", dayIndex: 2, startMinute: 600, endMinute: 675 },
     ]);
     expect(state.nextLocalId).toBe(2);
@@ -36,7 +40,7 @@ describe("drawing", () => {
   it("a drag shorter than the minimum duration counts as a click", () => {
     const state = after(draw(0, 600, 610));
 
-    expect(state.meetings[0]).toMatchObject({
+    expect(state.drawn[0]).toMatchObject({
       startMinute: 600,
       endMinute: 650,
     });
@@ -45,7 +49,7 @@ describe("drawing", () => {
   it("snaps the fractional minutes the grid measures", () => {
     const state = after(draw(0, 601.4, 658.2));
 
-    expect(state.meetings[0]).toMatchObject({
+    expect(state.drawn[0]).toMatchObject({
       startMinute: 600,
       endMinute: 660,
     });
@@ -58,7 +62,7 @@ describe("drawing", () => {
       { type: "cancelled" },
     ]);
 
-    expect(state.meetings).toEqual([]);
+    expect(state.drawn).toEqual([]);
     expect(state.interaction).toEqual({ status: "idle" });
   });
 });
@@ -73,7 +77,7 @@ describe("moving", () => {
   it("leaves the schedule untouched until release", () => {
     const state = after(grabbed, oneMeeting);
 
-    expect(state.meetings).toEqual(oneMeeting.meetings);
+    expect(state.drawn).toEqual(oneMeeting.drawn);
     expect(state.interaction).toMatchObject({
       status: "moving",
       dayIndex: 2,
@@ -85,7 +89,7 @@ describe("moving", () => {
   it("release commits the draft's day and range", () => {
     const state = after([...grabbed, { type: "released" }], oneMeeting);
 
-    expect(state.meetings).toEqual([
+    expect(state.drawn).toEqual([
       { id: "local-1", dayIndex: 2, startMinute: 700, endMinute: 750 },
     ]);
     expect(state.interaction).toEqual({ status: "idle" });
@@ -94,7 +98,7 @@ describe("moving", () => {
   it("cancel reverts to where the meeting was", () => {
     const state = after([...grabbed, { type: "cancelled" }], oneMeeting);
 
-    expect(state.meetings).toEqual(oneMeeting.meetings);
+    expect(state.drawn).toEqual(oneMeeting.drawn);
     expect(state.interaction).toEqual({ status: "idle" });
   });
 
@@ -108,7 +112,7 @@ describe("moving", () => {
       oneMeeting,
     );
 
-    expect(state.meetings[0]).toMatchObject({
+    expect(state.drawn[0]).toMatchObject({
       startMinute: 1030,
       endMinute: 1080,
     });
@@ -133,7 +137,7 @@ describe("resizing", () => {
       oneMeeting,
     );
 
-    expect(state.meetings).toEqual([
+    expect(state.drawn).toEqual([
       { id: "local-1", dayIndex: 1, startMinute: 540, endMinute: 645 },
     ]);
   });
@@ -153,7 +157,7 @@ describe("resizing", () => {
       oneMeeting,
     );
 
-    expect(state.meetings).toEqual(oneMeeting.meetings);
+    expect(state.drawn).toEqual(oneMeeting.drawn);
   });
 
   it("the two ends cannot cross", () => {
@@ -171,7 +175,7 @@ describe("resizing", () => {
       oneMeeting,
     );
 
-    expect(state.meetings[0]).toMatchObject({
+    expect(state.drawn[0]).toMatchObject({
       startMinute: 540,
       endMinute: 555,
     });
@@ -193,9 +197,70 @@ describe("resizing", () => {
       first,
     );
 
-    expect(state.meetings[0]).toMatchObject({
+    expect(state.drawn[0]).toMatchObject({
       startMinute: 480,
       endMinute: 530,
+    });
+  });
+});
+
+describe("editing the server's schedule", () => {
+  const base: Meeting[] = [
+    { id: "s1:0:mon", dayIndex: 0, startMinute: 540, endMinute: 590 },
+  ];
+
+  const move = (toDay: number, toMinute: number): EditorEvent[] => [
+    { type: "pressedMeeting", meetingId: "s1:0:mon", minute: 550 },
+    { type: "pointerMoved", dayIndex: toDay, minute: toMinute },
+    { type: "released" },
+  ];
+
+  it("moving a base meeting writes an override, not a drawn meeting", () => {
+    const state = after(move(2, 710), initialState(), base);
+
+    expect(state.drawn).toEqual([]);
+    expect(state.overrides).toEqual({
+      "s1:0:mon": { dayIndex: 2, startMinute: 700, endMinute: 750 },
+    });
+  });
+
+  it("a second grab picks the meeting up where the user last put it", () => {
+    const moved = after(move(2, 710), initialState(), base);
+    const state = after(
+      [
+        // A press with no drag: the commit re-writes the current placement.
+        { type: "pressedMeeting", meetingId: "s1:0:mon", minute: 710 },
+        { type: "released" },
+      ],
+      moved,
+      base,
+    );
+
+    expect(state.overrides["s1:0:mon"]).toMatchObject({
+      dayIndex: 2,
+      startMinute: 700,
+      endMinute: 750,
+    });
+  });
+
+  it("resizing a base meeting also lands in the overrides", () => {
+    const state = after(
+      [
+        {
+          type: "pressedMeetingEdge",
+          meetingId: "s1:0:mon",
+          edge: "end",
+          minute: 590,
+        },
+        { type: "pointerMoved", dayIndex: 0, minute: 645 },
+        { type: "released" },
+      ],
+      initialState(),
+      base,
+    );
+
+    expect(state.overrides).toEqual({
+      "s1:0:mon": { dayIndex: 0, startMinute: 540, endMinute: 645 },
     });
   });
 });

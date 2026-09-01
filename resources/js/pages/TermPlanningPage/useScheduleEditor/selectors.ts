@@ -3,8 +3,9 @@
  * from one of these, so the state's shape stays private to this directory.
  */
 
-import type { TimeRange } from "../types";
+import type { Meeting, TimeRange } from "../types";
 import { type DayLayout, layOutDay } from "../helpers/dayLayout";
+import { mergeSchedule } from "./mergeSchedule";
 import type { EditorState, Interaction } from "./types";
 
 /** Everything one day column draws. */
@@ -24,20 +25,25 @@ export interface DayView {
 
 /** One `DayView` per day, index-aligned with the grid's columns. */
 export function selectWeekView(
+  base: Meeting[],
   state: EditorState,
   dayCount: number,
 ): DayView[] {
+  const merged = mergeSchedule(base, state);
+
   return Array.from({ length: dayCount }, (_, dayIndex) =>
-    selectDayView(state, dayIndex),
+    selectDayView(merged, state, dayIndex),
   );
 }
 
-function selectDayView(state: EditorState, dayIndex: number): DayView {
+function selectDayView(
+  merged: Meeting[],
+  state: EditorState,
+  dayIndex: number,
+): DayView {
   const { interaction } = state;
 
-  const meetings = state.meetings.filter(
-    (meeting) => meeting.dayIndex === dayIndex,
-  );
+  const meetings = merged.filter((meeting) => meeting.dayIndex === dayIndex);
 
   return {
     layout: withLiveResize(layOutDay(meetings), interaction),
