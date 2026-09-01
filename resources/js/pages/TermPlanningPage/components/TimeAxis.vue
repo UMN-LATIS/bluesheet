@@ -7,7 +7,7 @@
       <div
         v-for="minute in HOUR_MARKS"
         :key="minute"
-        class="-tw-translate-y-1/2 tw-absolute tw-right-1.5 tw-whitespace-nowrap tw-text-[11px] tw-text-neutral-400"
+        class="-tw-translate-y-1/2 tw-absolute tw-right-1.5 tw-whitespace-nowrap tw-text-[11px] tw-leading-none tw-text-neutral-400"
         :style="{ top: topOf(minute) }"
       >
         {{ formatHour(minute) }}
