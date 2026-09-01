@@ -10,6 +10,13 @@ export interface Meeting extends TimeRange {
   dayIndex: number;
 }
 
+/**
+ * How a block is coloured. "discussion" covers the meetings a class splits
+ * into, which the SIS calls DIS and LAB. A block with no tone has no class
+ * on it yet.
+ */
+export type BlockTone = "lecture" | "discussion";
+
 /*
  * What the /api/sis endpoints return, mirroring the resources in
  * app/Http/Resources/Sis. The payloads arrive ready to render: instructors

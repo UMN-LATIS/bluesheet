@@ -15,12 +15,17 @@ export interface DayView {
    * A block in flight over this day: one being drawn out, or one the pointer
    * is carrying. It spans the full column rather than taking a lane, since it
    * is not placed until it is let go of.
+   *
+   * `meetingId` is null while a block is drawn out, since no meeting exists
+   * to name yet.
    */
-  overlay: TimeRange | null;
+  overlay: (TimeRange & { meetingId: string | null }) | null;
   /** The placed block being resized here, drawn at its live range. */
   activeMeetingId: string | null;
   /** The placed block whose meeting the pointer is carrying, drawn faded. */
   ghostMeetingId: string | null;
+  /** The block the last gesture placed, which flashes once where it landed. */
+  justPlacedMeetingId: string | null;
 }
 
 /** One `DayView` per day, index-aligned with the grid's columns. */
@@ -52,6 +57,11 @@ function selectDayView(
       interaction.status === "resizing" ? interaction.meetingId : null,
     ghostMeetingId:
       interaction.status === "moving" ? interaction.meetingId : null,
+    // Named only in the day it landed in, so a move across days does not
+    // flash the column it left.
+    justPlacedMeetingId: meetings.some(({ id }) => id === state.lastPlacedId)
+      ? state.lastPlacedId
+      : null,
   };
 }
 
@@ -86,12 +96,16 @@ function withLiveResize(
 function overlayIn(
   interaction: Interaction,
   dayIndex: number,
-): TimeRange | null {
+): DayView["overlay"] {
   const isOverThisDay =
     (interaction.status === "drawing" || interaction.status === "moving") &&
     interaction.dayIndex === dayIndex;
 
-  return isOverThisDay
-    ? { startMinute: interaction.startMinute, endMinute: interaction.endMinute }
-    : null;
+  if (!isOverThisDay) return null;
+
+  return {
+    startMinute: interaction.startMinute,
+    endMinute: interaction.endMinute,
+    meetingId: interaction.status === "moving" ? interaction.meetingId : null,
+  };
 }

@@ -2,9 +2,18 @@
   <div
     class="tw-overflow-x-auto tw-rounded-md tw-border tw-border-solid tw-border-neutral-200 tw-bg-white"
   >
-    <div class="tw-flex tw-w-max tw-min-w-full tw-items-start">
+    <!--
+      A day's name sticks to the right of the gutter as its column scrolls
+      past, so the columns are still identifiable once one is wider than the
+      screen. `DayColumn` positions the name against this measurement.
+    -->
+    <div
+      class="tw-flex tw-w-max tw-min-w-full tw-items-start"
+      :style="{ '--day-label-offset': `${gutterWidth}px` }"
+    >
       <!-- The gutter stays put while the days scroll past it. -->
       <div
+        ref="gutter"
         class="tw-sticky tw-left-0 tw-z-10 tw-flex tw-flex-none tw-border-0 tw-border-r tw-border-solid tw-border-neutral-200 tw-bg-white"
       >
         <StandardPeriodsColumn
@@ -34,6 +43,7 @@
           :label="day"
           :dayIndex="dayIndex"
           :view="week[dayIndex]"
+          :toneOf="toneOf"
         >
           <!--
             Forwarded only when the page actually supplied content, so that
@@ -50,10 +60,12 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { useElementSize } from "@vueuse/core";
 import DayColumn from "./DayColumn.vue";
 import StandardPeriodsColumn from "./StandardPeriodsColumn.vue";
 import TimeAxis from "./TimeAxis.vue";
 import { A_PERIODS, B_PERIODS } from "../constants/standardMeetingTimes";
+import type { BlockTone, Meeting } from "../types";
 import type { ScheduleEditor } from "../useScheduleEditor/useScheduleEditor";
 import { selectWeekView } from "../useScheduleEditor/selectors";
 import type { EditorEvent } from "../useScheduleEditor/types";
@@ -73,9 +85,13 @@ const props = defineProps<{
    * on the page reads the same one.
    */
   schedule: ScheduleEditor;
+  /** Answers nothing for a meeting with no class on it, which draws grey. */
+  toneOf?: (meeting: Meeting) => BlockTone | undefined;
 }>();
 
 const days = ref<HTMLElement | null>(null);
+const gutter = ref<HTMLElement | null>(null);
+const { width: gutterWidth } = useElementSize(gutter);
 const state = computed(() => props.schedule.state.value);
 const week = computed(() =>
   selectWeekView(props.schedule.base.value, state.value, DAY_NAMES.length),

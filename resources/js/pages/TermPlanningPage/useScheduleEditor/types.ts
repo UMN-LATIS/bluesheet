@@ -47,6 +47,12 @@ export interface EditorState {
   /** Base meetings the user has dragged or resized, keyed by meeting id. */
   overrides: Record<string, Placement>;
   interaction: Interaction;
+  /**
+   * The meeting the last gesture placed, which the grid flashes so a drop
+   * is visible. Cleared by the next press, so dropping one meeting twice
+   * flashes twice.
+   */
+  lastPlacedId: string | null;
   /** Names meetings that exist only in the browser so far. */
   nextLocalId: number;
 }

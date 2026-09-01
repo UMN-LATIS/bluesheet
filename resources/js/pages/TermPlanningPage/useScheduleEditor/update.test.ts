@@ -204,6 +204,33 @@ describe("resizing", () => {
   });
 });
 
+describe("naming the meeting a gesture placed", () => {
+  it("a drawn meeting is named on release", () => {
+    expect(after(draw(0, 600, 675)).lastPlacedId).toBe("local-1");
+  });
+
+  it("the next press clears it, so a second drop flashes again", () => {
+    const drawn = after(draw(0, 600, 675));
+    const pressed = after(
+      [{ type: "pressedMeeting", meetingId: "local-1", minute: 610 }],
+      drawn,
+    );
+
+    expect(pressed.lastPlacedId).toBeNull();
+    expect(after([{ type: "released" }], pressed).lastPlacedId).toBe("local-1");
+  });
+
+  it("a cancelled gesture places nothing", () => {
+    const state = after([
+      { type: "pressedEmptySpace", dayIndex: 0, minute: 600 },
+      { type: "pointerMoved", dayIndex: 0, minute: 700 },
+      { type: "cancelled" },
+    ]);
+
+    expect(state.lastPlacedId).toBeNull();
+  });
+});
+
 describe("editing the server's schedule", () => {
   const base: Meeting[] = [
     { id: "s1:0:mon", dayIndex: 0, startMinute: 540, endMinute: 590 },

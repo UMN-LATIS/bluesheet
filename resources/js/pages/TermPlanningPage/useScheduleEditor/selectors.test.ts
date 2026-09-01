@@ -41,7 +41,38 @@ describe("selectWeekView while a meeting is carried", () => {
 
     expect(monday.ghostMeetingId).toBe("mon-9");
     expect(monday.overlay).toBeNull();
-    expect(tuesday.overlay).toEqual({ startMinute: 700, endMinute: 750 });
+    // The overlay names its meeting so the block can be labelled like the
+    // one the pointer picked up.
+    expect(tuesday.overlay).toEqual({
+      startMinute: 700,
+      endMinute: 750,
+      meetingId: "mon-9",
+    });
+  });
+});
+
+describe("selectWeekView while a meeting is drawn out", () => {
+  it("the overlay names no meeting, since none exists yet", () => {
+    const [monday] = selectWeekView(
+      base,
+      {
+        ...atRest,
+        interaction: {
+          status: "drawing",
+          dayIndex: 0,
+          anchorMinute: 700,
+          startMinute: 700,
+          endMinute: 750,
+        },
+      },
+      5,
+    );
+
+    expect(monday.overlay).toEqual({
+      startMinute: 700,
+      endMinute: 750,
+      meetingId: null,
+    });
   });
 });
 

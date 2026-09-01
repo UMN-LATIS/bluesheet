@@ -1,7 +1,7 @@
 <template>
   <div
     class="tw-absolute tw-box-border tw-rounded tw-border tw-border-solid tw-px-1.5 tw-py-1 tw-text-[11px] tw-leading-tight"
-    :class="appearance"
+    :class="[appearance, { 'just-placed': isJustPlaced }]"
     :style="{
       top: topOf(startMinute),
       height: heightOf(startMinute, endMinute),
@@ -50,6 +50,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import MeetingTimes from "./MeetingTimes.vue";
+import type { BlockTone } from "../types";
 import { heightOf, topOf } from "../helpers/timeScale";
 
 const props = defineProps<{
@@ -58,22 +59,45 @@ const props = defineProps<{
   /** Its lane within the day, in pixels from the column's left edge. */
   left: number;
   width: number;
-  /** An uncommitted block: one being drawn out, or one the pointer carries. */
+  /** A block being drawn out, before any meeting exists for it. */
   isDraft?: boolean;
   /** While one of its edges is being dragged by the pointer. */
   isActive?: boolean;
   /** Left in place, faded, while the pointer carries its meeting elsewhere. */
   isGhost?: boolean;
+  /** The copy under the pointer during a move, drawn where it would land. */
+  isCarried?: boolean;
+  /** Just placed by a gesture, and flashing once to show where it landed. */
+  isJustPlaced?: boolean;
+  /** Absent on a block with no class on it, which draws grey. */
+  tone?: BlockTone;
 }>();
+
+/**
+ * Blue against amber rather than against green: the two stay distinguishable
+ * to a viewer who cannot separate red from green.
+ */
+const TONE_COLOURS: Record<BlockTone, string> = {
+  lecture: "tw-border-blue-500 tw-bg-blue-100 tw-text-blue-900",
+  discussion: "tw-border-amber-500 tw-bg-amber-100 tw-text-amber-900",
+};
+
+const UNTONED = "tw-border-slate-400 tw-bg-slate-100 tw-text-slate-900";
 
 const appearance = computed(() => {
   if (props.isDraft) {
     return "tw-border-dashed tw-border-umn-maroon tw-bg-umn-maroon/10 tw-text-umn-maroon";
   }
 
-  const solid = "tw-border-blue-500 tw-bg-blue-100 tw-text-blue-900";
+  const solid = props.tone ? TONE_COLOURS[props.tone] : UNTONED;
 
   if (props.isGhost) return `${solid} tw-opacity-40`;
+
+  // Faded, since it is not placed until it is let go of, but still above its
+  // neighbours so the block being positioned is never behind one it crosses.
+  if (props.isCarried) {
+    return `${solid} tw-z-20 tw-cursor-grabbing tw-opacity-70 tw-shadow-lg`;
+  }
 
   // Lifted above its neighbours while resized, so it is never hidden behind
   // one it grows to overlap.
@@ -82,3 +106,29 @@ const appearance = computed(() => {
     : `${solid} tw-cursor-grab`;
 });
 </script>
+
+<style scoped>
+/*
+ * A dropped block is often one of many that look alike, so it says where it
+ * landed by brightening and shedding a ring once.
+ */
+.just-placed {
+  animation: just-placed 600ms ease-out;
+}
+
+/* currentColor so the ring matches whichever tone the block is drawn in. */
+@keyframes just-placed {
+  from {
+    box-shadow: 0 0 0 3px currentColor;
+  }
+  to {
+    box-shadow: 0 0 0 7px transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .just-placed {
+    animation: none;
+  }
+}
+</style>

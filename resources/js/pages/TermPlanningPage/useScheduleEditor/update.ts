@@ -41,6 +41,7 @@ export const initialState = (): EditorState => ({
   drawn: [],
   overrides: {},
   interaction: { status: "idle" },
+  lastPlacedId: null,
   nextLocalId: 1,
 });
 
@@ -54,6 +55,7 @@ export function update(
       const minute = snapToGrid(event.minute);
       return {
         ...state,
+        lastPlacedId: null,
         interaction: {
           status: "drawing",
           dayIndex: event.dayIndex,
@@ -74,6 +76,7 @@ export function update(
 
       return {
         ...state,
+        lastPlacedId: null,
         interaction: {
           status: "moving",
           meetingId: meeting.id,
@@ -95,6 +98,7 @@ export function update(
 
       return {
         ...state,
+        lastPlacedId: null,
         interaction: {
           status: "resizing",
           meetingId: meeting.id,
@@ -198,9 +202,11 @@ function commit(state: EditorState): EditorState {
       const isDrawn = state.drawn.some(
         ({ id }) => id === interaction.meetingId,
       );
+      const placed = { ...toIdle(state), lastPlacedId: interaction.meetingId };
+
       return isDrawn
         ? {
-            ...toIdle(state),
+            ...placed,
             drawn: state.drawn.map((meeting) =>
               meeting.id === interaction.meetingId
                 ? { ...meeting, ...placement }
@@ -208,7 +214,7 @@ function commit(state: EditorState): EditorState {
             ),
           }
         : {
-            ...toIdle(state),
+            ...placed,
             overrides: {
               ...state.overrides,
               [interaction.meetingId]: placement,
@@ -233,17 +239,13 @@ function commitDrawing(
     ? placeWithinDay(drawing.startMinute, CLICK_DURATION)
     : { startMinute: drawing.startMinute, endMinute: drawing.endMinute };
 
+  const id = `local-${state.nextLocalId}`;
+
   return {
     ...state,
-    drawn: [
-      ...state.drawn,
-      {
-        id: `local-${state.nextLocalId}`,
-        dayIndex: drawing.dayIndex,
-        ...range,
-      },
-    ],
+    drawn: [...state.drawn, { id, dayIndex: drawing.dayIndex, ...range }],
     interaction: { status: "idle" },
+    lastPlacedId: id,
     nextLocalId: state.nextLocalId + 1,
   };
 }

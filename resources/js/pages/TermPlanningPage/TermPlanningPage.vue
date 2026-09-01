@@ -13,7 +13,7 @@
       </p>
     </header>
 
-    <ScheduleGrid :schedule="schedule">
+    <ScheduleGrid :schedule="schedule" :toneOf="toneOf">
       <template #block="{ meeting, width }">
         <SectionBlock
           v-if="sectionOf(meeting.id)"
@@ -43,6 +43,7 @@ import { currentTerm } from "./helpers/currentTerm";
 import { placeSections } from "./helpers/sectionPlacement";
 import { useSisSectionsQuery } from "./queries/useSisSectionsQuery";
 import { useSisTermsQuery } from "./queries/useSisTermsQuery";
+import type { BlockTone, Meeting } from "./types";
 import { useScheduleEditor } from "./useScheduleEditor";
 
 const props = defineProps<{
@@ -70,6 +71,14 @@ const placed = computed(() => placeSections(sectionsQuery.data.value ?? []));
 
 const sectionOf = (meetingId: string) =>
   placed.value.sectionsByMeetingId.get(meetingId);
+
+/** DIS and LAB are both meetings a class splits into, so they share a tone. */
+const toneOf = (meeting: Meeting): BlockTone | undefined => {
+  const component = sectionOf(meeting.id)?.component;
+  if (component === "LEC") return "lecture";
+
+  return component === "DIS" || component === "LAB" ? "discussion" : undefined;
+};
 
 // Held here rather than inside the grid, so that the toolbar, sidebar and
 // detail sheet still to come all read and change the same schedule.

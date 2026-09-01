@@ -10,7 +10,14 @@
     class="tw-flex-none tw-border-0 tw-border-r tw-border-solid tw-border-neutral-200 last:tw-border-r-0"
     :style="{ width: `${view.layout.width}px` }"
   >
-    <ColumnHeader>{{ label }}</ColumnHeader>
+    <ColumnHeader>
+      <!-- Held clear of the gutter as the column scrolls under it. -->
+      <span
+        class="tw-sticky"
+        :style="{ left: 'var(--day-label-offset, 0px)' }"
+        >{{ label }}</span
+      >
+    </ColumnHeader>
     <div
       class="tw-relative tw-cursor-cell tw-select-none"
       :data-day-index="dayIndex"
@@ -43,6 +50,8 @@
         :width="placed.width"
         :isActive="placed.meeting.id === view.activeMeetingId"
         :isGhost="placed.meeting.id === view.ghostMeetingId"
+        :isJustPlaced="placed.meeting.id === view.justPlacedMeetingId"
+        :tone="toneOf?.(placed.meeting)"
       >
         <!-- The width goes with it, since how much a block can say depends
              on how much room the day's busiest hour left it. -->
@@ -64,15 +73,30 @@
         :endMinute="view.overlay.endMinute"
         :left="0"
         :width="view.layout.width"
-        isDraft
-      />
+        :isDraft="!carriedMeeting"
+        :isCarried="Boolean(carriedMeeting)"
+        :tone="carriedMeeting ? toneOf?.(carriedMeeting) : undefined"
+      >
+        <!-- A carried meeting keeps the label it had where it was picked
+             up, so the pointer is holding the same block the eye left. -->
+        <template v-if="$slots.block && carriedMeeting" #default>
+          <slot
+            name="block"
+            :meeting="carriedMeeting"
+            :width="view.layout.width"
+            :isActive="false"
+          />
+        </template>
+      </MeetingBlock>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import ColumnHeader from "./ColumnHeader.vue";
 import MeetingBlock from "./MeetingBlock.vue";
+import type { BlockTone, Meeting } from "../types";
 import type { DayView } from "../useScheduleEditor/selectors";
 import {
   COLUMN_HEIGHT,
@@ -81,9 +105,24 @@ import {
   topOf,
 } from "../helpers/timeScale";
 
-defineProps<{
+const props = defineProps<{
   label: string;
   dayIndex: number;
   view: DayView;
+  /** Answers nothing for a meeting with no class on it, which draws grey. */
+  toneOf?: (meeting: Meeting) => BlockTone | undefined;
 }>();
+
+/** The meeting the pointer is carrying, at the time it now hovers over. */
+const carriedMeeting = computed<Meeting | null>(() => {
+  const { overlay } = props.view;
+  if (!overlay?.meetingId) return null;
+
+  return {
+    id: overlay.meetingId,
+    dayIndex: props.dayIndex,
+    startMinute: overlay.startMinute,
+    endMinute: overlay.endMinute,
+  };
+});
 </script>
