@@ -309,7 +309,7 @@ describe("selecting", () => {
   it("a press and release with no move selects the meeting", () => {
     const state = after(click(), initialState(), base);
 
-    expect(state.selectedMeetingId).toBe("s1:0:mon");
+    expect(state.selection).toEqual({ kind: "meeting", meetingId: "s1:0:mon" });
     expect(state.overrides).toEqual({});
     expect(state.lastPlacedId).toBeNull();
   });
@@ -325,7 +325,7 @@ describe("selecting", () => {
       base,
     );
 
-    expect(state.selectedMeetingId).toBe("s1:0:mon");
+    expect(state.selection).toEqual({ kind: "meeting", meetingId: "s1:0:mon" });
     expect(state.overrides).toEqual({});
     expect(state.interaction).toEqual({ status: "idle" });
   });
@@ -342,7 +342,7 @@ describe("selecting", () => {
     );
 
     expect(state.overrides["s1:0:mon"]).toBeDefined();
-    expect(state.selectedMeetingId).toBeNull();
+    expect(state.selection).toBeNull();
   });
 
   it("crossing into another day carries it however small the vertical move", () => {
@@ -357,7 +357,7 @@ describe("selecting", () => {
     );
 
     expect(state.overrides["s1:0:mon"]).toMatchObject({ dayIndex: 1 });
-    expect(state.selectedMeetingId).toBeNull();
+    expect(state.selection).toBeNull();
   });
 
   it("a press, move, and release commits the drag and leaves selection unchanged", () => {
@@ -374,21 +374,21 @@ describe("selecting", () => {
     expect(state.overrides).toEqual({
       "s1:0:mon": { dayIndex: 2, startMinute: 700, endMinute: 750 },
     });
-    expect(state.selectedMeetingId).toBeNull();
+    expect(state.selection).toBeNull();
   });
 
   it("deselected clears the selection", () => {
     const selected = after(click(), initialState(), base);
     const state = after([{ type: "deselected" }], selected, base);
 
-    expect(state.selectedMeetingId).toBeNull();
+    expect(state.selection).toBeNull();
   });
 
   it("cancelled at rest clears the selection", () => {
     const selected = after(click(), initialState(), base);
     const state = after([{ type: "cancelled" }], selected, base);
 
-    expect(state.selectedMeetingId).toBeNull();
+    expect(state.selection).toBeNull();
   });
 
   it("cancelled mid-drag keeps the selection and discards the drag", () => {
@@ -403,7 +403,7 @@ describe("selecting", () => {
       base,
     );
 
-    expect(state.selectedMeetingId).toBe("s1:0:mon");
+    expect(state.selection).toEqual({ kind: "meeting", meetingId: "s1:0:mon" });
     expect(state.overrides).toEqual({});
     expect(state.interaction).toEqual({ status: "idle" });
   });
@@ -474,7 +474,7 @@ describe("filtering", () => {
     );
     const state = after([twoCourses], selected);
 
-    expect(state.selectedMeetingId).toBe("local-1");
+    expect(state.selection).toEqual({ kind: "meeting", meetingId: "local-1" });
     expect(state.drawn).toEqual(selected.drawn);
   });
 

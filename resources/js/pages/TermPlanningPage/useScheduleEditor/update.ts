@@ -65,7 +65,7 @@ export const initialState = (): EditorState => ({
   overrides: {},
   interaction: { status: "idle" },
   lastPlacedId: null,
-  selectedMeetingId: null,
+  selection: null,
   filters: emptyFilters(),
   nextLocalId: 1,
 });
@@ -171,11 +171,17 @@ function reduce(
     // discard, so Escape clears the selection instead.
     case "cancelled":
       return state.interaction.status === "idle"
-        ? { ...state, selectedMeetingId: null }
+        ? { ...state, selection: null }
         : toIdle(state);
 
     case "deselected":
-      return { ...state, selectedMeetingId: null };
+      return { ...state, selection: null };
+
+    case "selectedSection":
+      return {
+        ...state,
+        selection: { kind: "section", sectionId: event.sectionId },
+      };
 
     case "filterValuesAdded":
       return withFacet(state, event.facet, (checked) => [
@@ -312,7 +318,10 @@ function commit(state: EditorState): EditorState {
     // Never carried past the drag-start distance, so releasing here is a
     // click: it selects the meeting instead of writing a placement.
     case "pressed":
-      return { ...toIdle(state), selectedMeetingId: interaction.meetingId };
+      return {
+        ...toIdle(state),
+        selection: { kind: "meeting", meetingId: interaction.meetingId },
+      };
 
     // Moving and resizing both write the draft's placement; neither touches
     // what is selected. A meeting drawn here is rewritten in place; one from

@@ -14,7 +14,7 @@ const atRest: EditorState = {
   overrides: {},
   interaction: { status: "idle" },
   lastPlacedId: null,
-  selectedMeetingId: null,
+  selection: null,
   filters: { course: [], person: [], section: [], component: [] },
   nextLocalId: 1,
 };
@@ -180,7 +180,10 @@ describe("selectWeekView over local edits", () => {
 
 describe("selectWeekView with a meeting selected", () => {
   it("names the selected meeting only in the day that holds it", () => {
-    const selected: EditorState = { ...atRest, selectedMeetingId: "tue-9" };
+    const selected: EditorState = {
+      ...atRest,
+      selection: { kind: "meeting", meetingId: "tue-9" },
+    };
 
     const [monday, tuesday] = selectWeekView(base, selected, 5);
 

@@ -52,6 +52,10 @@ function selectDayView(
 
   const meetings = merged.filter((meeting) => meeting.dayIndex === dayIndex);
 
+  // A selected tray section has no block, so no day shows a selection.
+  const selectedMeetingId =
+    state.selection?.kind === "meeting" ? state.selection.meetingId : null;
+
   return {
     layout: withLiveResize(layOutDay(meetings), interaction),
     overlay: overlayIn(interaction, dayIndex),
@@ -64,8 +68,8 @@ function selectDayView(
     justPlacedMeetingId: meetings.some(({ id }) => id === state.lastPlacedId)
       ? state.lastPlacedId
       : null,
-    selectedMeetingId: meetings.some(({ id }) => id === state.selectedMeetingId)
-      ? state.selectedMeetingId
+    selectedMeetingId: meetings.some(({ id }) => id === selectedMeetingId)
+      ? selectedMeetingId
       : null,
   };
 }

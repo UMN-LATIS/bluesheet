@@ -72,6 +72,13 @@
             </template>
           </ScheduleGrid>
         </div>
+
+        <UnscheduledTray
+          class="tw-flex-none tw-border-0 tw-border-t tw-border-solid tw-border-neutral-200"
+          :sections="placed.unscheduled"
+          :selectedSectionId="selectedSection?.id ?? null"
+          :schedule="schedule"
+        />
       </div>
 
       <SectionSheet
@@ -98,6 +105,7 @@ import ScheduleGrid from "./components/ScheduleGrid.vue";
 import ScheduleSidebar from "./components/ScheduleSidebar.vue";
 import SectionBlock from "./components/SectionBlock.vue";
 import SectionSheet from "./components/SectionSheet.vue";
+import UnscheduledTray from "./components/UnscheduledTray.vue";
 import { currentTerm } from "./helpers/currentTerm";
 import { buildFilterOptions } from "./helpers/filterOptions";
 import { decodeFilters, encodeFilters } from "./helpers/filterQuery";
@@ -223,7 +231,11 @@ watch(
 // A meeting drawn locally (local-N) has no section, so selecting it stores
 // an id but opens no sheet.
 const selectedSection = computed(() => {
-  const id = schedule.state.value.selectedMeetingId;
-  return id ? (sectionOf(id) ?? null) : null;
+  const { selection } = schedule.state.value;
+  if (!selection) return null;
+
+  return selection.kind === "meeting"
+    ? (sectionOf(selection.meetingId) ?? null)
+    : (allSections.value.find(({ id }) => id === selection.sectionId) ?? null);
 });
 </script>

@@ -53,6 +53,16 @@ export type Interaction =
     } & TimeRange);
 
 /**
+ * What can be selected. A block on the grid is known by its meeting, since
+ * that is all the editor knows about it; a section with no meeting time has
+ * no block, so its chip in the tray selects it by section id. The page
+ * resolves either to a section for the sheet.
+ */
+export type Selection =
+  | { kind: "meeting"; meetingId: string }
+  | { kind: "section"; sectionId: number };
+
+/**
  * Only the local edits live here. The schedule itself — the sections the
  * server returned — stays in the query cache, and `mergeSchedule` lays these
  * edits over it. So a refetch can swap the base out underneath without
@@ -70,12 +80,8 @@ export interface EditorState {
    * flashes twice.
    */
   lastPlacedId: string | null;
-  /**
-   * The meeting whose block the user clicked, which the page opens a detail
-   * sheet for. Keyed by meeting rather than section, since the editor only
-   * knows meetings; the page maps a meeting id to its section.
-   */
-  selectedMeetingId: string | null;
+  /** What the user clicked, which the page opens a detail sheet for. */
+  selection: Selection | null;
   /**
    * What the sidebar has checked. Kept here rather than applied here: the
    * page filters the sections payload with it before the meetings become
@@ -107,6 +113,8 @@ export type EditorEvent =
   | { type: "cancelled" }
   /** The detail sheet's close button. */
   | { type: "deselected" }
+  /** A chip in the no-set-time tray. */
+  | { type: "selectedSection"; sectionId: number }
   /** A checkbox checked, or a whole course level's checkboxes at once. */
   | { type: "filterValuesAdded"; facet: FilterFacet; values: string[] }
   /** A checkbox unchecked, a chip's ×, or a whole course level at once. */

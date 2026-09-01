@@ -13,6 +13,8 @@ const GRID_DAYS: SisDay[] = ["mon", "tue", "wed", "thu", "fri"];
 export interface PlacedSections {
   meetings: Meeting[];
   sectionsByMeetingId: Map<string, SisSection>;
+  /** Sections with no meeting time, which the tray lists instead. */
+  unscheduled: SisSection[];
   /** Blocks on the grid. */
   shownCount: number;
   /**
@@ -26,6 +28,7 @@ export interface PlacedSections {
 export function placeSections(sections: SisSection[]): PlacedSections {
   const meetings: Meeting[] = [];
   const sectionsByMeetingId = new Map<string, SisSection>();
+  const unscheduled: SisSection[] = [];
   let hiddenCount = 0;
 
   for (const section of sections) {
@@ -33,8 +36,8 @@ export function placeSections(sections: SisSection[]): PlacedSections {
     // sections are the same class under another number.
     if (section.crosslist && !section.crosslist.isPrimary) continue;
 
-    // Bound for the no-set-time tray, in a later slice.
     if (section.meetings.length === 0) {
+      unscheduled.push(section);
       hiddenCount += 1;
       continue;
     }
@@ -63,6 +66,7 @@ export function placeSections(sections: SisSection[]): PlacedSections {
   return {
     meetings,
     sectionsByMeetingId,
+    unscheduled,
     shownCount: meetings.length,
     totalCount: meetings.length + hiddenCount,
   };
