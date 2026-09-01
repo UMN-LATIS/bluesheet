@@ -48,6 +48,12 @@ export function snapToGrid(minute: number): number {
   return Math.min(Math.max(snapped, START_MINUTE), END_MINUTE);
 }
 
+/** "10:10" → 610: the 24-hour clock times the SIS sends, as grid minutes. */
+export function minutesFromClock(clock: string): number {
+  const [hours, minutes] = clock.split(":").map(Number);
+  return hours * 60 + minutes;
+}
+
 /** "9:05" — no meridiem, since the clock beside it already gives the half. */
 export function formatClock(minute: number): string {
   const hour = Math.floor(minute / 60);
