@@ -42,6 +42,7 @@
         :left="placed.left"
         :width="placed.width"
         :isActive="placed.meeting.id === view.activeMeetingId"
+        :isGhost="placed.meeting.id === view.ghostMeetingId"
       >
         <!-- The width goes with it, since how much a block can say depends
              on how much room the day's busiest hour left it. -->
@@ -58,9 +59,9 @@
       <!-- Spans the day rather than taking a lane: it is not placed until it
            is let go of, and the full width keeps its times readable. -->
       <MeetingBlock
-        v-if="view.drawing"
-        :startMinute="view.drawing.startMinute"
-        :endMinute="view.drawing.endMinute"
+        v-if="view.overlay"
+        :startMinute="view.overlay.startMinute"
+        :endMinute="view.overlay.endMinute"
         :left="0"
         :width="view.layout.width"
         isDraft

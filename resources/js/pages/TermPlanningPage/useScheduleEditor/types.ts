@@ -3,23 +3,19 @@
  * that can change it. Reading this file tells you the whole surface.
  */
 
-import type { LaneAssignment } from "../helpers/dayLayout";
 import type { Meeting, TimeRange } from "../types";
 
 /** Which end of a meeting is being dragged while it is resized. */
 export type MeetingEdge = "start" | "end";
 
 /**
- * The lanes meetings sat in when a gesture began, kept for as long as it
- * lasts. Without them the lanes would be worked out afresh on every pointer
- * move, reordering the moment a meeting's start crossed a neighbour's and
- * sliding the block out from under the hand dragging it.
+ * What the pointer is in the middle of doing, if anything.
+ *
+ * Each gesture accumulates its in-flight edit here and leaves `meetings` at
+ * rest until `released` commits it. So lanes hold still with nothing pinning
+ * them, a carried meeting's origin block stays visible where it was, and
+ * `cancelled` reverts by plain discard.
  */
-interface HeldLanes {
-  lockedLanes: LaneAssignment;
-}
-
-/** What the pointer is in the middle of doing, if anything. */
 export type Interaction =
   | { status: "idle" }
   | ({ status: "drawing"; dayIndex: number; anchorMinute: number } & TimeRange)
@@ -27,8 +23,14 @@ export type Interaction =
       status: "moving";
       meetingId: string;
       grabbedAfterStart: number;
-    } & HeldLanes)
-  | ({ status: "resizing"; meetingId: string; edge: MeetingEdge } & HeldLanes);
+      dayIndex: number;
+    } & TimeRange)
+  | ({
+      status: "resizing";
+      meetingId: string;
+      edge: MeetingEdge;
+      dayIndex: number;
+    } & TimeRange);
 
 export interface EditorState {
   meetings: Meeting[];
@@ -40,7 +42,8 @@ export interface EditorState {
 /**
  * Something that happened, named in the past tense. The grid measures the
  * page and reports the day and minute a pointer landed on; deciding what that
- * means belongs to `update`.
+ * means — snapping included, so minutes arrive fractional — belongs to
+ * `update`.
  */
 export type EditorEvent =
   | { type: "pressedEmptySpace"; dayIndex: number; minute: number }

@@ -33,7 +33,7 @@
           :key="day"
           :label="day"
           :dayIndex="dayIndex"
-          :view="selectDayView(state, dayIndex)"
+          :view="week[dayIndex]"
         >
           <!--
             Forwarded only when the page actually supplied content, so that
@@ -49,15 +49,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import DayColumn from "./DayColumn.vue";
 import StandardPeriodsColumn from "./StandardPeriodsColumn.vue";
 import TimeAxis from "./TimeAxis.vue";
 import { A_PERIODS, B_PERIODS } from "../constants/standardMeetingTimes";
 import type { ScheduleEditor } from "../useScheduleEditor/useScheduleEditor";
-import { selectDayView } from "../useScheduleEditor/selectors";
+import { selectWeekView } from "../useScheduleEditor/selectors";
 import type { EditorEvent } from "../useScheduleEditor/types";
-import { minuteAt, snapToGrid } from "../helpers/timeScale";
+import { dayIndexAt } from "../helpers/dayLayout";
+import { minuteAt } from "../helpers/timeScale";
 
 const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 
@@ -76,6 +77,7 @@ const props = defineProps<{
 
 const days = ref<HTMLElement | null>(null);
 const state = computed(() => props.schedule.state.value);
+const week = computed(() => selectWeekView(state.value, DAY_NAMES.length));
 const dispatch = (event: EditorEvent) => props.schedule.dispatch(event);
 
 function onPointerDown(event: PointerEvent) {
@@ -103,43 +105,47 @@ function onPointerDown(event: PointerEvent) {
   }
 }
 
+// On the window rather than the grid: the grid never holds focus, and the
+// key should work however far the captured pointer has wandered.
+function onKeyDown(event: KeyboardEvent) {
+  if (event.key !== "Escape") return;
+  if (state.value.interaction.status === "idle") return;
+  dispatch({ type: "cancelled" });
+}
+
+onMounted(() => window.addEventListener("keydown", onKeyDown));
+onBeforeUnmount(() => window.removeEventListener("keydown", onKeyDown));
+
 function onPointerMove(event: PointerEvent) {
+  // Nothing to decide while idle, so plain hover never measures the DOM.
+  if (state.value.interaction.status === "idle") return;
+
   const at = positionOf(event);
   if (at) dispatch({ type: "pointerMoved", ...at });
 }
 
-/** The day and minute a pointer event landed on, in the grid's own terms. */
+/**
+ * The day and minute a pointer event landed on, in the grid's own terms.
+ *
+ * One rect fixes the frame — measured per event, so scrolling mid-drag
+ * cannot leave stale positions behind — and the widths the layout itself
+ * reported locate the day, so the mapping cannot disagree with what is
+ * drawn. The minute is handed on as measured; `update` snaps it.
+ */
 function positionOf(event: PointerEvent) {
-  const column = columnUnder(event.clientX);
-  if (!column) return null;
+  const firstBody = days.value?.querySelector<HTMLElement>("[data-day-index]");
+  if (!firstBody) return null;
+
+  // Day bodies share a top edge and sit below the column headers, so the
+  // first one's corner anchors both axes.
+  const { left, top } = firstBody.getBoundingClientRect();
 
   return {
-    dayIndex: column.dayIndex,
-    minute: snapToGrid(minuteAt(event.clientY - column.top)),
+    dayIndex: dayIndexAt(
+      event.clientX - left,
+      week.value.map((day) => day.layout.width),
+    ),
+    minute: minuteAt(event.clientY - top),
   };
-}
-
-/**
- * Which day the pointer is over. Measured on every call rather than cached,
- * so scrolling the grid mid-drag cannot leave stale positions behind. Past
- * either end it holds to the outermost day rather than letting a meeting
- * escape the week.
- */
-function columnUnder(clientX: number) {
-  const bodies = Array.from(
-    days.value?.querySelectorAll<HTMLElement>("[data-day-index]") ?? [],
-  ).map((element) => {
-    // A DOMRect keeps its values on the prototype, so spreading one yields an
-    // empty object. The fields have to be read across by hand.
-    const { left, right, top } = element.getBoundingClientRect();
-    return { dayIndex: Number(element.dataset.dayIndex), left, right, top };
-  });
-
-  if (!bodies.length) return null;
-
-  return (
-    bodies.find((body) => clientX >= body.left && clientX < body.right) ??
-    (clientX < bodies[0].left ? bodies[0] : bodies[bodies.length - 1])
-  );
 }
 </script>

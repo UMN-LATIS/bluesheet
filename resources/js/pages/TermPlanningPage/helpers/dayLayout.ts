@@ -45,21 +45,8 @@ export interface DayLayout {
   placed: PlacedMeeting[];
 }
 
-/** Which lane each meeting holds, for pinning them through a gesture. */
-export type LaneAssignment = Record<string, number>;
-
-/**
- * @param lockedLanes lanes to hold meetings in rather than working them out
- *   afresh. Passed while a gesture is under way: repacking on every pointer
- *   move would slide blocks sideways under the hand that is dragging one.
- */
-export function layOutDay(
-  meetings: Meeting[],
-  lockedLanes?: LaneAssignment,
-): DayLayout {
-  const lanes = lockedLanes
-    ? holdLanes(meetings, lockedLanes)
-    : packByStart(meetings);
+export function layOutDay(meetings: Meeting[]): DayLayout {
+  const lanes = packByStart(meetings);
 
   const laneCount = lanes.reduce(
     (count, { lane }) => Math.max(count, lane + 1),
@@ -84,29 +71,18 @@ export function layOutDay(
 }
 
 /**
- * The lane every meeting in the week currently holds, to be handed back to
- * `layOutDay` for as long as a gesture lasts. Ids are unique across days, so
- * one flat record covers the whole week.
+ * Which day an x-offset across the week's columns lands in. Past either end
+ * it answers the outermost day, so a meeting cannot escape the week.
  */
-export function lockLanes(meetings: Meeting[]): LaneAssignment {
-  const byDay = new Map<number, Meeting[]>();
+export function dayIndexAt(offsetX: number, dayWidths: number[]): number {
+  let right = 0;
 
-  for (const meeting of meetings) {
-    byDay.set(meeting.dayIndex, [
-      ...(byDay.get(meeting.dayIndex) ?? []),
-      meeting,
-    ]);
+  for (const [dayIndex, width] of dayWidths.entries()) {
+    right += width;
+    if (offsetX < right) return dayIndex;
   }
 
-  const locked: LaneAssignment = {};
-
-  for (const inOneDay of byDay.values()) {
-    for (const { meeting, lane } of packByStart(inOneDay)) {
-      locked[meeting.id] = lane;
-    }
-  }
-
-  return locked;
+  return dayWidths.length - 1;
 }
 
 /**
@@ -137,29 +113,4 @@ function packByStart(
 
     return { meeting, lane };
   });
-}
-
-/**
- * Keeps every meeting where it already was. One carried in from another day
- * mid-gesture has no remembered lane here, so it takes a fresh one on the
- * right rather than displacing anything.
- */
-function holdLanes(
-  meetings: Meeting[],
-  lockedLanes: LaneAssignment,
-): { meeting: Meeting; lane: number }[] {
-  const held = meetings.map((meeting) => ({
-    meeting,
-    lane: lockedLanes[meeting.id],
-  }));
-
-  // Counted from the lanes held in this day alone. The record covers the whole
-  // week, so its highest lane may belong to some other, busier day.
-  let spare =
-    held.reduce((highest, { lane }) => Math.max(highest, lane ?? -1), -1) + 1;
-
-  return held.map(({ meeting, lane }) => ({
-    meeting,
-    lane: lane ?? spare++,
-  }));
 }

@@ -4,56 +4,88 @@
  */
 
 import type { TimeRange } from "../types";
-import {
-  type DayLayout,
-  type LaneAssignment,
-  layOutDay,
-} from "../helpers/dayLayout";
+import { type DayLayout, layOutDay } from "../helpers/dayLayout";
 import type { EditorState, Interaction } from "./types";
 
 /** Everything one day column draws. */
 export interface DayView {
   layout: DayLayout;
-  /** The meeting being drawn out here, while the pointer is still down. */
-  drawing: TimeRange | null;
-  /** The meeting the pointer is carrying or lengthening, anywhere in the week. */
+  /**
+   * A block in flight over this day: one being drawn out, or one the pointer
+   * is carrying. It spans the full column rather than taking a lane, since it
+   * is not placed until it is let go of.
+   */
+  overlay: TimeRange | null;
+  /** The placed block being resized here, drawn at its live range. */
   activeMeetingId: string | null;
+  /** The placed block whose meeting the pointer is carrying, drawn faded. */
+  ghostMeetingId: string | null;
 }
 
-export function selectDayView(state: EditorState, dayIndex: number): DayView {
+/** One `DayView` per day, index-aligned with the grid's columns. */
+export function selectWeekView(
+  state: EditorState,
+  dayCount: number,
+): DayView[] {
+  return Array.from({ length: dayCount }, (_, dayIndex) =>
+    selectDayView(state, dayIndex),
+  );
+}
+
+function selectDayView(state: EditorState, dayIndex: number): DayView {
+  const { interaction } = state;
+
   const meetings = state.meetings.filter(
     (meeting) => meeting.dayIndex === dayIndex,
   );
 
   return {
-    layout: layOutDay(meetings, heldLanes(state.interaction)),
-    drawing: drawingIn(state.interaction, dayIndex),
-    activeMeetingId: activeMeetingId(state.interaction),
+    layout: withLiveResize(layOutDay(meetings), interaction),
+    overlay: overlayIn(interaction, dayIndex),
+    activeMeetingId:
+      interaction.status === "resizing" ? interaction.meetingId : null,
+    ghostMeetingId:
+      interaction.status === "moving" ? interaction.meetingId : null,
   };
 }
 
 /**
- * Lanes are worked out afresh while the grid is at rest, and held to those
- * recorded at the start of a gesture for as long as it lasts.
+ * A resized meeting keeps the lane the at-rest packing gave it and draws at
+ * the draft's range, so its neighbours hold still while one block grows.
  */
-function heldLanes(interaction: Interaction): LaneAssignment | undefined {
-  return interaction.status === "moving" || interaction.status === "resizing"
-    ? interaction.lockedLanes
-    : undefined;
+function withLiveResize(
+  layout: DayLayout,
+  interaction: Interaction,
+): DayLayout {
+  if (interaction.status !== "resizing") return layout;
+
+  return {
+    ...layout,
+    placed: layout.placed.map((placed) =>
+      placed.meeting.id === interaction.meetingId
+        ? {
+            ...placed,
+            meeting: {
+              ...placed.meeting,
+              startMinute: interaction.startMinute,
+              endMinute: interaction.endMinute,
+            },
+          }
+        : placed,
+    ),
+  };
 }
 
-function drawingIn(
+/** The drawing draft, or the carried meeting, while it is over this day. */
+function overlayIn(
   interaction: Interaction,
   dayIndex: number,
 ): TimeRange | null {
-  return interaction.status === "drawing" && interaction.dayIndex === dayIndex
-    ? interaction
-    : null;
-}
+  const isOverThisDay =
+    (interaction.status === "drawing" || interaction.status === "moving") &&
+    interaction.dayIndex === dayIndex;
 
-/** Both gestures count: either one lifts a meeting above its neighbours. */
-function activeMeetingId(interaction: Interaction): string | null {
-  return interaction.status === "moving" || interaction.status === "resizing"
-    ? interaction.meetingId
+  return isOverThisDay
+    ? { startMinute: interaction.startMinute, endMinute: interaction.endMinute }
     : null;
 }

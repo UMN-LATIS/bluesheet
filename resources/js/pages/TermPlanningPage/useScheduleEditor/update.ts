@@ -4,14 +4,17 @@
  * Pure — no DOM, no clock, no randomness — so every rule about what a gesture
  * means can be read, and tested, without a browser.
  *
+ * The schedule does not change until a gesture ends: `pointerMoved` writes
+ * only the interaction's draft, and `released` is the one place `meetings`
+ * is written.
+ *
  * Nothing here needs to reach the network yet. When saving arrives this grows
  * the shape the asset editor already uses, returning `{ state, effects }` with
  * the effects run outside.
  */
 
 import type { TimeRange } from "../types";
-import { lockLanes } from "../helpers/dayLayout";
-import { END_MINUTE, SNAP_MINUTES, START_MINUTE } from "../helpers/timeScale";
+import { END_MINUTE, snapToGrid, START_MINUTE } from "../helpers/timeScale";
 import type {
   EditorEvent,
   EditorState,
@@ -23,9 +26,9 @@ import type {
 const CLICK_DURATION = 50;
 
 /**
- * The shortest a meeting can be dragged. Not a scheduling rule — it keeps the
- * block tall enough to still show its times and to offer an edge to grab, so
- * a resize can never shrink one past the point of being editable.
+ * The shortest a meeting can be. Not a scheduling rule — it keeps the block
+ * tall enough to still show its times and to offer an edge to grab, so a
+ * meeting can never shrink past the point of being editable.
  */
 const MIN_DURATION = 15;
 
@@ -37,17 +40,19 @@ export const initialState = (): EditorState => ({
 
 export function update(state: EditorState, event: EditorEvent): EditorState {
   switch (event.type) {
-    case "pressedEmptySpace":
+    case "pressedEmptySpace": {
+      const minute = snapToGrid(event.minute);
       return {
         ...state,
         interaction: {
           status: "drawing",
           dayIndex: event.dayIndex,
-          anchorMinute: event.minute,
-          startMinute: event.minute,
-          endMinute: event.minute,
+          anchorMinute: minute,
+          startMinute: minute,
+          endMinute: minute,
         },
       };
+    }
 
     case "pressedMeeting": {
       const meeting = state.meetings.find(({ id }) => id === event.meetingId);
@@ -61,31 +66,35 @@ export function update(state: EditorState, event: EditorEvent): EditorState {
           // Remembering where in the block it was picked up is what stops the
           // meeting jumping so its top sits under the pointer.
           grabbedAfterStart: event.minute - meeting.startMinute,
-          lockedLanes: lockLanes(state.meetings),
+          dayIndex: meeting.dayIndex,
+          startMinute: meeting.startMinute,
+          endMinute: meeting.endMinute,
         },
       };
     }
 
-    case "pressedMeetingEdge":
-      return state.meetings.some(({ id }) => id === event.meetingId)
-        ? {
-            ...state,
-            interaction: {
-              status: "resizing",
-              meetingId: event.meetingId,
-              edge: event.edge,
-              lockedLanes: lockLanes(state.meetings),
-            },
-          }
-        : state;
+    case "pressedMeetingEdge": {
+      const meeting = state.meetings.find(({ id }) => id === event.meetingId);
+      if (!meeting) return state;
+
+      return {
+        ...state,
+        interaction: {
+          status: "resizing",
+          meetingId: meeting.id,
+          edge: event.edge,
+          dayIndex: meeting.dayIndex,
+          startMinute: meeting.startMinute,
+          endMinute: meeting.endMinute,
+        },
+      };
+    }
 
     case "pointerMoved":
       return pointerMoved(state, event.dayIndex, event.minute);
 
     case "released":
-      return state.interaction.status === "drawing"
-        ? commitDrawing(state, state.interaction)
-        : toIdle(state);
+      return commit(state);
 
     case "cancelled":
       return toIdle(state);
@@ -108,31 +117,29 @@ function pointerMoved(
 
     // A new meeting stays in the day it began in, so a wavering hand cannot
     // smear one across the week. Only its time follows the pointer.
-    case "drawing":
+    case "drawing": {
+      const snapped = snapToGrid(minute);
       return {
         ...state,
         interaction: {
           ...interaction,
-          startMinute: Math.min(interaction.anchorMinute, minute),
-          endMinute: Math.max(interaction.anchorMinute, minute),
+          startMinute: Math.min(interaction.anchorMinute, snapped),
+          endMinute: Math.max(interaction.anchorMinute, snapped),
         },
       };
+    }
 
     case "moving":
       return {
         ...state,
-        meetings: state.meetings.map((meeting) =>
-          meeting.id === interaction.meetingId
-            ? {
-                ...meeting,
-                dayIndex,
-                ...placeWithinDay(
-                  minute - interaction.grabbedAfterStart,
-                  meeting.endMinute - meeting.startMinute,
-                ),
-              }
-            : meeting,
-        ),
+        interaction: {
+          ...interaction,
+          dayIndex,
+          ...placeWithinDay(
+            snapToGrid(minute - interaction.grabbedAfterStart),
+            interaction.endMinute - interaction.startMinute,
+          ),
+        },
       };
 
     // Dragging an edge changes the length, so the meeting stays in its day
@@ -140,9 +147,40 @@ function pointerMoved(
     case "resizing":
       return {
         ...state,
+        interaction: {
+          ...interaction,
+          ...dragEdge(interaction, interaction.edge, snapToGrid(minute)),
+        },
+      };
+
+    default:
+      return assertNever(interaction);
+  }
+}
+
+/** The one writer of `meetings`: a gesture's draft becomes the schedule. */
+function commit(state: EditorState): EditorState {
+  const { interaction } = state;
+
+  switch (interaction.status) {
+    case "idle":
+      return state;
+
+    case "drawing":
+      return commitDrawing(state, interaction);
+
+    case "moving":
+    case "resizing":
+      return {
+        ...toIdle(state),
         meetings: state.meetings.map((meeting) =>
           meeting.id === interaction.meetingId
-            ? { ...meeting, ...dragEdge(meeting, interaction.edge, minute) }
+            ? {
+                ...meeting,
+                dayIndex: interaction.dayIndex,
+                startMinute: interaction.startMinute,
+                endMinute: interaction.endMinute,
+              }
             : meeting,
         ),
       };
@@ -156,12 +194,13 @@ function commitDrawing(
   state: EditorState,
   drawing: Extract<Interaction, { status: "drawing" }>,
 ): EditorState {
-  const isClick = drawing.endMinute - drawing.startMinute < SNAP_MINUTES;
+  // A drag too short to make a readable meeting was a click. This is also
+  // what keeps every meeting at least MIN_DURATION long, so the resize
+  // clamps below can never see a shorter one.
+  const isClick = drawing.endMinute - drawing.startMinute < MIN_DURATION;
   const range = isClick
     ? placeWithinDay(drawing.startMinute, CLICK_DURATION)
     : { startMinute: drawing.startMinute, endMinute: drawing.endMinute };
-
-  if (range.endMinute <= range.startMinute) return toIdle(state);
 
   return {
     meetings: [
@@ -192,6 +231,8 @@ function dragEdge(
   edge: MeetingEdge,
   minute: number,
 ): TimeRange {
+  // The bounds cannot invert: no meeting is shorter than MIN_DURATION, so
+  // endMinute - MIN_DURATION never falls before the start of the day.
   return edge === "start"
     ? {
         ...range,

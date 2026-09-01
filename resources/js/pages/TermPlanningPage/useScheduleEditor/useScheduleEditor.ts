@@ -15,7 +15,8 @@ import { initialState, update } from "./update";
 import type { EditorEvent, EditorState } from "./types";
 
 export interface ScheduleEditor {
-  state: Ref<EditorState>;
+  /** Read-only from outside: `dispatch` is the only way to change it. */
+  state: Readonly<Ref<EditorState>>;
   dispatch: (event: EditorEvent) => void;
 }
 

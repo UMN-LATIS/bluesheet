@@ -60,10 +60,12 @@ const props = defineProps<{
   /** Its lane within the day, in pixels from the column's left edge. */
   left: number;
   width: number;
-  /** While the pointer is still down drawing it out, before it is committed. */
+  /** An uncommitted block: one being drawn out, or one the pointer carries. */
   isDraft?: boolean;
-  /** While it is being carried or lengthened by the pointer. */
+  /** While one of its edges is being dragged by the pointer. */
   isActive?: boolean;
+  /** Left in place, faded, while the pointer carries its meeting elsewhere. */
+  isGhost?: boolean;
 }>();
 
 /**
@@ -84,8 +86,10 @@ const appearance = computed(() => {
 
   const solid = "tw-border-blue-500 tw-bg-blue-100 tw-text-blue-900";
 
-  // Lifted above its neighbours while carried, so it is never hidden behind
-  // one it is passing over.
+  if (props.isGhost) return `${solid} tw-opacity-40`;
+
+  // Lifted above its neighbours while resized, so it is never hidden behind
+  // one it grows to overlap.
   return props.isActive
     ? `${solid} tw-z-20 tw-cursor-grabbing tw-shadow-lg`
     : `${solid} tw-cursor-grab`;
