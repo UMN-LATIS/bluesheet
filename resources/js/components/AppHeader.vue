@@ -13,7 +13,7 @@
         </router-link>
       </NavbarItem>
       <NavbarItem v-if="$can('create groups')">
-        <button class="nav-link" @click="createGroup = true">
+        <button type="button" class="nav-link" @click="createGroup = true">
           Create Group <i class="fas fa-plus"></i>
         </button>
       </NavbarItem>

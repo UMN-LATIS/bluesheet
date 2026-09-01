@@ -8,7 +8,11 @@
     @close="handleNativeClose"
     @mousedown.self="$emit('close')"
   >
-    <div class="modal-content">
+    <!-- `v-if` keeps closed modals cheap: some callers render many Modal
+         instances with only `show` toggled, and without it every hidden
+         modal's slot content mounts (and holds state) from page load.
+         Cost: the body empties at close, so the dialog fades out empty. -->
+    <div v-if="show" class="modal-content">
       <div v-if="title" class="modal-header">
         <h5 :id="titleId" class="modal-title">{{ title }}</h5>
         <button
