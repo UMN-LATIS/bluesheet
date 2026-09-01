@@ -1,13 +1,13 @@
 <template>
-  <span class="tw-font-semibold">{{ formatClock(startMinute) }}</span>
+  <span class="tw-font-semibold">{{ formatClockWithHalf(startMinute) }}</span>
   <span v-if="hasRoomForEndTime" class="tw-opacity-70">{{
-    formatClock(endMinute)
+    formatClockWithHalf(endMinute)
   }}</span>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { formatClock } from "../helpers/timeScale";
+import { formatClockWithHalf } from "../helpers/timeScale";
 
 /**
  * A block's start and end times, stacked so `MeetingBlock`'s container can

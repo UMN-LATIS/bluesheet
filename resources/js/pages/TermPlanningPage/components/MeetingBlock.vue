@@ -15,7 +15,7 @@
 
       The two times sit at the top and bottom, as they do beside the standard
       periods, so where each is printed matches the moment it names. Stacking
-      them also keeps the end time legible once lanes narrow to 44px, where a
+      them also keeps the end time legible at a day's narrowest lane, where a
       single line of "10:00 – 11:45" would be cut off after the start.
     -->
     <div

@@ -2,7 +2,15 @@
   <div class="tw-overflow-hidden">
     <div class="tw-truncate tw-font-semibold">{{ heading }}</div>
     <div class="tw-truncate">{{ byline }}</div>
-    <div v-if="hasRoomForTimes" class="tw-truncate tw-opacity-70">
+    <!--
+      A step smaller than the lines above it: the range is the block's least
+      important line, and at the block's own 11px the widest of them,
+      "11:15 – 12:05", overruns the narrowest lane by three pixels.
+    -->
+    <div
+      v-if="hasRoomForTimes"
+      class="tw-truncate tw-text-[10px] tw-opacity-70"
+    >
       {{ timeRange }}
     </div>
   </div>
@@ -10,7 +18,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { formatClock } from "../helpers/timeScale";
+import { formatClockWithHalf } from "../helpers/timeScale";
 import type { SisSection } from "../types";
 
 /**
@@ -70,10 +78,9 @@ const hasRoomForTimes = computed(
   () => props.endMinute - props.startMinute >= THREE_LINE_MINUTES,
 );
 
-/** A narrow lane has room for when the class starts, and no more. */
-const timeRange = computed(() =>
-  isWide.value
-    ? `${formatClock(props.startMinute)} – ${formatClock(props.endMinute)}`
-    : formatClock(props.startMinute),
+/** When the class runs, both ends, the way a calendar states a booking. */
+const timeRange = computed(
+  () =>
+    `${formatClockWithHalf(props.startMinute)} – ${formatClockWithHalf(props.endMinute)}`,
 );
 </script>

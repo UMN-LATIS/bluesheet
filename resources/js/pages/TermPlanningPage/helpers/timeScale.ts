@@ -62,6 +62,14 @@ export function formatClock(minute: number): string {
   return `${hour % 12 || 12}:${String(minute % 60).padStart(2, "0")}`;
 }
 
+/**
+ * "9:05a" — for a block out on the grid, where the clock is columns away
+ * and a whole "AM" would cost room the block needs for its class.
+ */
+export function formatClockWithHalf(minute: number): string {
+  return `${formatClock(minute)}${Math.floor(minute / 60) < 12 ? "a" : "p"}`;
+}
+
 /** "9:05 AM" — for tooltips and anywhere the hour is not already in view. */
 export function formatTime(minute: number): string {
   return `${formatClock(minute)} ${Math.floor(minute / 60) < 12 ? "AM" : "PM"}`;
