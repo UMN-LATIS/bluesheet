@@ -69,6 +69,8 @@ const props = defineProps<{
   isCarried?: boolean;
   /** Just placed by a gesture, and flashing once to show where it landed. */
   isJustPlaced?: boolean;
+  /** The block the user clicked, whose detail sheet is open. */
+  isSelected?: boolean;
   /** Absent on a block with no class on it, which draws grey. */
   tone?: BlockTone;
 }>();
@@ -89,7 +91,12 @@ const appearance = computed(() => {
     return "tw-border-dashed tw-border-umn-maroon tw-bg-umn-maroon/10 tw-text-umn-maroon";
   }
 
-  const solid = props.tone ? TONE_COLOURS[props.tone] : UNTONED;
+  const toned = props.tone ? TONE_COLOURS[props.tone] : UNTONED;
+  // An outline rather than a border or shadow, so the block's box size
+  // holds still and the ring does not compete with the just-placed flash.
+  const solid = props.isSelected
+    ? `${toned} tw-outline tw-outline-2 tw-outline-offset-1 tw-outline-current`
+    : toned;
 
   if (props.isGhost) return `${solid} tw-opacity-40`;
 

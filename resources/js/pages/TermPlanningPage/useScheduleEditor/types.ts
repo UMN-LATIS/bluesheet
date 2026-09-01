@@ -22,6 +22,18 @@ export type Placement = { dayIndex: number } & TimeRange;
 export type Interaction =
   | { status: "idle" }
   | ({ status: "drawing"; dayIndex: number; anchorMinute: number } & TimeRange)
+  /**
+   * A block is held but not yet carried. Release now is a click, which
+   * selects the meeting. Moving far enough turns it into `moving`.
+   */
+  | {
+      status: "pressed";
+      meetingId: string;
+      grabbedAfterStart: number;
+      /** Where the press landed, which a drag must leave before it counts. */
+      dayIndex: number;
+      minute: number;
+    }
   | ({
       status: "moving";
       meetingId: string;
@@ -53,6 +65,12 @@ export interface EditorState {
    * flashes twice.
    */
   lastPlacedId: string | null;
+  /**
+   * The meeting whose block the user clicked, which the page opens a detail
+   * sheet for. Keyed by meeting rather than section, since the editor only
+   * knows meetings; the page maps a meeting id to its section.
+   */
+  selectedMeetingId: string | null;
   /** Names meetings that exist only in the browser so far. */
   nextLocalId: number;
 }
@@ -74,4 +92,7 @@ export type EditorEvent =
     }
   | { type: "pointerMoved"; dayIndex: number; minute: number }
   | { type: "released" }
-  | { type: "cancelled" };
+  /** Escape. Mid-gesture this discards the gesture. At rest it clears the selection. */
+  | { type: "cancelled" }
+  /** The detail sheet's close button. */
+  | { type: "deselected" };

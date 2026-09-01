@@ -37,11 +37,20 @@ const CLICK_DURATION = 50;
  */
 const MIN_DURATION = 15;
 
+/**
+ * How far a pressed block must be dragged before it is carried, in the
+ * grid's minutes because that is the unit the grid reports. At the current
+ * scale one minute is one pixel, so this is an ordinary drag-start
+ * distance. Below it a wavering hand is still a click.
+ */
+const DRAG_START_MINUTES = 10;
+
 export const initialState = (): EditorState => ({
   drawn: [],
   overrides: {},
   interaction: { status: "idle" },
   lastPlacedId: null,
+  selectedMeetingId: null,
   nextLocalId: 1,
 });
 
@@ -78,14 +87,13 @@ export function update(
         ...state,
         lastPlacedId: null,
         interaction: {
-          status: "moving",
+          status: "pressed",
           meetingId: meeting.id,
           // Remembering where in the block it was picked up is what stops the
-          // meeting jumping so its top sits under the pointer.
+          // meeting jumping so its top sits under the pointer once carried.
           grabbedAfterStart: event.minute - meeting.startMinute,
           dayIndex: meeting.dayIndex,
-          startMinute: meeting.startMinute,
-          endMinute: meeting.endMinute,
+          minute: event.minute,
         },
       };
     }
@@ -111,13 +119,20 @@ export function update(
     }
 
     case "pointerMoved":
-      return pointerMoved(state, event.dayIndex, event.minute);
+      return pointerMoved(state, event.dayIndex, event.minute, base);
 
     case "released":
       return commit(state);
 
+    // Mid-gesture this is a plain discard; at rest there is no gesture to
+    // discard, so Escape clears the selection instead.
     case "cancelled":
-      return toIdle(state);
+      return state.interaction.status === "idle"
+        ? { ...state, selectedMeetingId: null }
+        : toIdle(state);
+
+    case "deselected":
+      return { ...state, selectedMeetingId: null };
 
     default:
       return assertNever(event);
@@ -128,6 +143,7 @@ function pointerMoved(
   state: EditorState,
   dayIndex: number,
   minute: number,
+  base: Meeting[],
 ): EditorState {
   const { interaction } = state;
 
@@ -147,6 +163,38 @@ function pointerMoved(
           endMinute: Math.max(interaction.anchorMinute, snapped),
         },
       };
+    }
+
+    // A click still under the drag-start distance stays a press; apply the
+    // same move once it clears the threshold, by promoting to `moving` and
+    // running this event again so the carrying logic below is not repeated.
+    case "pressed": {
+      const hasLeftPress =
+        dayIndex !== interaction.dayIndex ||
+        Math.abs(minute - interaction.minute) >= DRAG_START_MINUTES;
+      if (!hasLeftPress) return state;
+
+      const meeting = mergeSchedule(base, state).find(
+        ({ id }) => id === interaction.meetingId,
+      );
+      if (!meeting) return state;
+
+      return pointerMoved(
+        {
+          ...state,
+          interaction: {
+            status: "moving",
+            meetingId: interaction.meetingId,
+            grabbedAfterStart: interaction.grabbedAfterStart,
+            dayIndex: interaction.dayIndex,
+            startMinute: meeting.startMinute,
+            endMinute: meeting.endMinute,
+          },
+        },
+        dayIndex,
+        minute,
+        base,
+      );
     }
 
     case "moving":
@@ -189,8 +237,14 @@ function commit(state: EditorState): EditorState {
     case "drawing":
       return commitDrawing(state, interaction);
 
-    // A meeting drawn here is rewritten in place; one from the server keeps
-    // its base row and gains an override.
+    // Never carried past the drag-start distance, so releasing here is a
+    // click: it selects the meeting instead of writing a placement.
+    case "pressed":
+      return { ...toIdle(state), selectedMeetingId: interaction.meetingId };
+
+    // Moving and resizing both write the draft's placement; neither touches
+    // what is selected. A meeting drawn here is rewritten in place; one from
+    // the server keeps its base row and gains an override.
     case "moving":
     case "resizing": {
       const placement = {

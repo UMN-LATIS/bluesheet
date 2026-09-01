@@ -212,7 +212,10 @@ describe("naming the meeting a gesture placed", () => {
   it("the next press clears it, so a second drop flashes again", () => {
     const drawn = after(draw(0, 600, 675));
     const pressed = after(
-      [{ type: "pressedMeeting", meetingId: "local-1", minute: 610 }],
+      [
+        { type: "pressedMeeting", meetingId: "local-1", minute: 610 },
+        { type: "pointerMoved", dayIndex: 0, minute: 700 },
+      ],
       drawn,
     );
 
@@ -289,5 +292,118 @@ describe("editing the server's schedule", () => {
     expect(state.overrides).toEqual({
       "s1:0:mon": { dayIndex: 0, startMinute: 540, endMinute: 645 },
     });
+  });
+});
+
+describe("selecting", () => {
+  const base: Meeting[] = [
+    { id: "s1:0:mon", dayIndex: 0, startMinute: 540, endMinute: 590 },
+  ];
+
+  const click = (): EditorEvent[] => [
+    { type: "pressedMeeting", meetingId: "s1:0:mon", minute: 550 },
+    { type: "released" },
+  ];
+
+  it("a press and release with no move selects the meeting", () => {
+    const state = after(click(), initialState(), base);
+
+    expect(state.selectedMeetingId).toBe("s1:0:mon");
+    expect(state.overrides).toEqual({});
+    expect(state.lastPlacedId).toBeNull();
+  });
+
+  it("a wobble under the drag threshold is still a click", () => {
+    const state = after(
+      [
+        { type: "pressedMeeting", meetingId: "s1:0:mon", minute: 550 },
+        { type: "pointerMoved", dayIndex: 0, minute: 556 },
+        { type: "released" },
+      ],
+      initialState(),
+      base,
+    );
+
+    expect(state.selectedMeetingId).toBe("s1:0:mon");
+    expect(state.overrides).toEqual({});
+    expect(state.interaction).toEqual({ status: "idle" });
+  });
+
+  it("moving past the threshold carries the block", () => {
+    const state = after(
+      [
+        { type: "pressedMeeting", meetingId: "s1:0:mon", minute: 550 },
+        { type: "pointerMoved", dayIndex: 0, minute: 575 },
+        { type: "released" },
+      ],
+      initialState(),
+      base,
+    );
+
+    expect(state.overrides["s1:0:mon"]).toBeDefined();
+    expect(state.selectedMeetingId).toBeNull();
+  });
+
+  it("crossing into another day carries it however small the vertical move", () => {
+    const state = after(
+      [
+        { type: "pressedMeeting", meetingId: "s1:0:mon", minute: 550 },
+        { type: "pointerMoved", dayIndex: 1, minute: 551 },
+        { type: "released" },
+      ],
+      initialState(),
+      base,
+    );
+
+    expect(state.overrides["s1:0:mon"]).toMatchObject({ dayIndex: 1 });
+    expect(state.selectedMeetingId).toBeNull();
+  });
+
+  it("a press, move, and release commits the drag and leaves selection unchanged", () => {
+    const state = after(
+      [
+        { type: "pressedMeeting", meetingId: "s1:0:mon", minute: 550 },
+        { type: "pointerMoved", dayIndex: 2, minute: 710 },
+        { type: "released" },
+      ],
+      initialState(),
+      base,
+    );
+
+    expect(state.overrides).toEqual({
+      "s1:0:mon": { dayIndex: 2, startMinute: 700, endMinute: 750 },
+    });
+    expect(state.selectedMeetingId).toBeNull();
+  });
+
+  it("deselected clears the selection", () => {
+    const selected = after(click(), initialState(), base);
+    const state = after([{ type: "deselected" }], selected, base);
+
+    expect(state.selectedMeetingId).toBeNull();
+  });
+
+  it("cancelled at rest clears the selection", () => {
+    const selected = after(click(), initialState(), base);
+    const state = after([{ type: "cancelled" }], selected, base);
+
+    expect(state.selectedMeetingId).toBeNull();
+  });
+
+  it("cancelled mid-drag keeps the selection and discards the drag", () => {
+    const selected = after(click(), initialState(), base);
+    const state = after(
+      [
+        { type: "pressedMeeting", meetingId: "s1:0:mon", minute: 550 },
+        { type: "pointerMoved", dayIndex: 2, minute: 710 },
+        { type: "cancelled" },
+      ],
+      selected,
+      base,
+    );
+
+    expect(state.selectedMeetingId).toBe("s1:0:mon");
+    expect(state.overrides).toEqual({});
+    expect(state.interaction).toEqual({ status: "idle" });
   });
 });

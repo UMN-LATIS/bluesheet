@@ -124,10 +124,11 @@ function onPointerDown(event: PointerEvent) {
 }
 
 // On the window rather than the grid: the grid never holds focus, and the
-// key should work however far the captured pointer has wandered.
+// key should work however far the captured pointer has wandered. Always
+// dispatched; `update` decides whether that discards a gesture or clears
+// the selection.
 function onKeyDown(event: KeyboardEvent) {
   if (event.key !== "Escape") return;
-  if (state.value.interaction.status === "idle") return;
   dispatch({ type: "cancelled" });
 }
 

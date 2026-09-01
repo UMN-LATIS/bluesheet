@@ -26,6 +26,8 @@ export interface DayView {
   ghostMeetingId: string | null;
   /** The block the last gesture placed, which flashes once where it landed. */
   justPlacedMeetingId: string | null;
+  /** The selected meeting's id when it lies in this day, else null. */
+  selectedMeetingId: string | null;
 }
 
 /** One `DayView` per day, index-aligned with the grid's columns. */
@@ -61,6 +63,9 @@ function selectDayView(
     // flash the column it left.
     justPlacedMeetingId: meetings.some(({ id }) => id === state.lastPlacedId)
       ? state.lastPlacedId
+      : null,
+    selectedMeetingId: meetings.some(({ id }) => id === state.selectedMeetingId)
+      ? state.selectedMeetingId
       : null,
   };
 }

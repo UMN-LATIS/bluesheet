@@ -59,6 +59,7 @@
         :isActive="placed.meeting.id === view.activeMeetingId"
         :isGhost="placed.meeting.id === view.ghostMeetingId"
         :isJustPlaced="placed.meeting.id === view.justPlacedMeetingId"
+        :isSelected="placed.meeting.id === view.selectedMeetingId"
         :tone="toneOf?.(placed.meeting)"
       >
         <!-- The width goes with it, since how much a block can say depends

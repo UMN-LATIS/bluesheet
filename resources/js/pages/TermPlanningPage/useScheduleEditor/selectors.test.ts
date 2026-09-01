@@ -13,6 +13,8 @@ const atRest: EditorState = {
   drawn: [],
   overrides: {},
   interaction: { status: "idle" },
+  lastPlacedId: null,
+  selectedMeetingId: null,
   nextLocalId: 1,
 };
 
@@ -48,6 +50,26 @@ describe("selectWeekView while a meeting is carried", () => {
       endMinute: 750,
       meetingId: "mon-9",
     });
+  });
+});
+
+describe("selectWeekView while a meeting is pressed", () => {
+  it("draws no overlay and no ghost, since nothing is carried yet", () => {
+    const pressed: EditorState = {
+      ...atRest,
+      interaction: {
+        status: "pressed",
+        meetingId: "mon-9",
+        grabbedAfterStart: 10,
+        dayIndex: 0,
+        minute: 550,
+      },
+    };
+
+    const [monday] = selectWeekView(base, pressed, 5);
+
+    expect(monday.overlay).toBeNull();
+    expect(monday.ghostMeetingId).toBeNull();
   });
 });
 
@@ -152,5 +174,16 @@ describe("selectWeekView over local edits", () => {
       "tue-9",
       "local-1",
     ]);
+  });
+});
+
+describe("selectWeekView with a meeting selected", () => {
+  it("names the selected meeting only in the day that holds it", () => {
+    const selected: EditorState = { ...atRest, selectedMeetingId: "tue-9" };
+
+    const [monday, tuesday] = selectWeekView(base, selected, 5);
+
+    expect(monday.selectedMeetingId).toBeNull();
+    expect(tuesday.selectedMeetingId).toBe("tue-9");
   });
 });
