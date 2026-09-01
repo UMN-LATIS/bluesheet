@@ -12,12 +12,17 @@
   >
     <ColumnHeader>
       <!--
-        Held clear of the gutter as the column scrolls under it, with a gap
-        so the name does not sit against the gutter's edge.
+        Pinned at both edges, so a column keeps its name whether it is
+        leaving to the left or still arriving from the right. The left bound
+        clears the gutter; both leave a gap rather than sitting against an
+        edge.
       -->
       <span
         class="tw-sticky"
-        :style="{ left: 'calc(var(--day-label-offset, 0px) + 0.5rem)' }"
+        :style="{
+          left: 'calc(var(--day-label-offset, 0px) + 0.5rem)',
+          right: '0.5rem',
+        }"
         >{{ label }}</span
       >
     </ColumnHeader>
