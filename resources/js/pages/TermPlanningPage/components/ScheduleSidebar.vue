@@ -17,19 +17,18 @@
       />
     </div>
 
-    <div class="tw-min-h-0 tw-flex-1 tw-overflow-y-auto">
+    <div class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col">
       <FilterGroup
         v-if="courseLevels.length > 0"
         title="Courses"
         :count="courseCount"
         :checkedCount="filters.course.length"
-        isOpenAtFirst
         @clear="clearFacet('course')"
       >
         <template v-for="level in courseLevels" :key="level.label">
-          <!-- Pinned just under the group header, whose height is h-8. -->
+          <!-- Pinned to the top of the group's scroll box as its courses go past. -->
           <div
-            class="tw-sticky tw-top-8 tw-z-10 tw-border-0 tw-border-b tw-border-solid tw-border-neutral-100 tw-bg-neutral-50"
+            class="tw-sticky tw-top-0 tw-z-10 tw-border-0 tw-border-b tw-border-solid tw-border-neutral-100 tw-bg-neutral-50"
           >
             <FilterRow
               :isChecked="level.checkedCount === level.courses.length"
@@ -84,7 +83,6 @@
         title="Faculty"
         :count="people.length"
         :checkedCount="filters.person.length"
-        isOpenAtFirst
         @clear="clearFacet('person')"
       >
         <FilterRows :items="people">
