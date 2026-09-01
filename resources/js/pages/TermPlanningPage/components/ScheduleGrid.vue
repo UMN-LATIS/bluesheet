@@ -35,7 +35,7 @@
           :dayIndex="dayIndex"
           :meetings="selectMeetingsOn(state, dayIndex)"
           :draft="selectDrawingIn(state, dayIndex)"
-          :draggingId="selectMovingMeetingId(state)"
+          :activeMeetingId="selectActiveMeetingId(state)"
         />
       </div>
     </div>
@@ -52,7 +52,7 @@ import { useScheduleEditor } from "../useScheduleEditor/useScheduleEditor";
 import {
   selectDrawingIn,
   selectMeetingsOn,
-  selectMovingMeetingId,
+  selectActiveMeetingId,
 } from "../useScheduleEditor/selectors";
 import type { EditorEvent } from "../useScheduleEditor/types";
 import { minuteAt, snapToGrid } from "../helpers/timeScale";

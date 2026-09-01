@@ -1,10 +1,12 @@
 <template>
   <div
-    class="tw-absolute tw-inset-x-1 tw-box-border tw-rounded tw-border tw-border-solid tw-px-1.5 tw-py-1 tw-text-[11px] tw-leading-tight"
+    class="tw-absolute tw-box-border tw-rounded tw-border tw-border-solid tw-px-1.5 tw-py-1 tw-text-[11px] tw-leading-tight"
     :class="appearance"
     :style="{
       top: topOf(startMinute),
       height: heightOf(startMinute, endMinute),
+      left: `${left}px`,
+      width: `${width}px`,
     }"
   >
     <!-- Clipping happens here rather than on the block, so the grips below can
@@ -39,10 +41,13 @@ import { formatClock, heightOf, topOf } from "../helpers/timeScale";
 const props = defineProps<{
   startMinute: number;
   endMinute: number;
+  /** Its lane within the day, in pixels from the column's left edge. */
+  left: number;
+  width: number;
   /** While the pointer is still down drawing it out, before it is committed. */
   isDraft?: boolean;
-  /** While it is being carried to a new day or time. */
-  isDragging?: boolean;
+  /** While it is being carried or lengthened by the pointer. */
+  isActive?: boolean;
 }>();
 
 const appearance = computed(() => {
@@ -54,7 +59,7 @@ const appearance = computed(() => {
 
   // Lifted above its neighbours while carried, so it is never hidden behind
   // one it is passing over.
-  return props.isDragging
+  return props.isActive
     ? `${solid} tw-z-20 tw-cursor-grabbing tw-shadow-lg`
     : `${solid} tw-cursor-grab`;
 });

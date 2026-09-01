@@ -7,7 +7,8 @@
     appear as soon as a style is set.
   -->
   <div
-    class="tw-w-[250px] tw-flex-none tw-border-0 tw-border-r tw-border-solid tw-border-neutral-200 last:tw-border-r-0"
+    class="tw-flex-none tw-border-0 tw-border-r tw-border-solid tw-border-neutral-200 last:tw-border-r-0"
+    :style="{ width: `${layout.width}px` }"
   >
     <ColumnHeader>{{ label }}</ColumnHeader>
     <div
@@ -33,18 +34,24 @@
       />
 
       <MeetingBlock
-        v-for="meeting in meetings"
-        :key="meeting.id"
-        :data-meeting-id="meeting.id"
-        :startMinute="meeting.startMinute"
-        :endMinute="meeting.endMinute"
-        :isDragging="meeting.id === draggingId"
+        v-for="placed in layout.placed"
+        :key="placed.meeting.id"
+        :data-meeting-id="placed.meeting.id"
+        :startMinute="placed.meeting.startMinute"
+        :endMinute="placed.meeting.endMinute"
+        :left="placed.left"
+        :width="placed.width"
+        :isActive="placed.meeting.id === activeMeetingId"
       />
 
+      <!-- Spans the day rather than taking a lane: it is not placed until it
+           is let go of, and the full width keeps its times readable. -->
       <MeetingBlock
         v-if="draft"
         :startMinute="draft.startMinute"
         :endMinute="draft.endMinute"
+        :left="0"
+        :width="layout.width"
         isDraft
       />
     </div>
@@ -52,9 +59,11 @@
 </template>
 
 <script setup lang="ts">
+import { computed, ref, watch } from "vue";
 import ColumnHeader from "./ColumnHeader.vue";
 import MeetingBlock from "./MeetingBlock.vue";
 import type { Meeting, TimeRange } from "../types";
+import { type LaneAssignment, lanesOf, layOutDay } from "../helpers/dayLayout";
 import {
   COLUMN_HEIGHT,
   HALF_HOUR_MARKS,
@@ -62,12 +71,32 @@ import {
   topOf,
 } from "../helpers/timeScale";
 
-defineProps<{
+const props = defineProps<{
   label: string;
   dayIndex: number;
   meetings: Meeting[];
   /** The meeting being drawn out here, while the pointer is still down. */
   draft: TimeRange | null;
-  draggingId: string | null;
+  /** The meeting the pointer is carrying or lengthening, anywhere in the week. */
+  activeMeetingId: string | null;
 }>();
+
+/**
+ * Lanes are worked out afresh whenever the day is at rest, but held still for
+ * as long as a gesture lasts. Repacking mid-drag would reorder the lanes the
+ * moment a meeting's start crossed one of its neighbours', sliding the block
+ * out from under the pointer and shunting untouched meetings sideways.
+ */
+const heldLanes = ref<LaneAssignment | null>(null);
+
+watch(
+  () => props.activeMeetingId,
+  (active) => {
+    heldLanes.value = active ? lanesOf(layOutDay(props.meetings)) : null;
+  },
+);
+
+const layout = computed(() =>
+  layOutDay(props.meetings, heldLanes.value ?? undefined),
+);
 </script>

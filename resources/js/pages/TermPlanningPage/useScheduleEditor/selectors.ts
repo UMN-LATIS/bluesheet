@@ -25,9 +25,15 @@ export function selectDrawingIn(
     : null;
 }
 
-/** The meeting being carried, if one is, so the view can lift it. */
-export function selectMovingMeetingId(state: EditorState): string | null {
-  return state.interaction.status === "moving"
-    ? state.interaction.meetingId
+/**
+ * The meeting currently under the pointer's control, if any. Both gestures
+ * count: a resize shifts overlaps just as a move does, so the lanes need
+ * holding still for either.
+ */
+export function selectActiveMeetingId(state: EditorState): string | null {
+  const { interaction } = state;
+
+  return interaction.status === "moving" || interaction.status === "resizing"
+    ? interaction.meetingId
     : null;
 }
