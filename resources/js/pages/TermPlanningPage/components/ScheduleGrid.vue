@@ -97,19 +97,22 @@ function onPointerDown(event: PointerEvent) {
   const at = positionOf(event);
   if (!at) return;
 
-  // Capturing on the container means the rest of the gesture arrives here even
-  // once the pointer leaves the grid entirely.
-  days.value?.setPointerCapture(event.pointerId);
-
   const target = event.target as HTMLElement;
   const meetingId =
     target.closest<HTMLElement>("[data-meeting-id]")?.dataset.meetingId;
   const edge =
     target.closest<HTMLElement>("[data-resize-edge]")?.dataset.resizeEdge;
 
-  if (!meetingId) {
-    dispatch({ type: "pressedEmptySpace", ...at });
-  } else if (edge === "start" || edge === "end") {
+  // Drawing a new meeting on empty space is switched off until there is a
+  // way to create the section it would belong to (epic slice 6). The editor
+  // still understands `pressedEmptySpace`; the grid just does not send it.
+  if (!meetingId) return;
+
+  // Capturing on the container means the rest of the gesture arrives here even
+  // once the pointer leaves the grid entirely.
+  days.value?.setPointerCapture(event.pointerId);
+
+  if (edge === "start" || edge === "end") {
     dispatch({ type: "pressedMeetingEdge", meetingId, edge, ...at });
   } else {
     dispatch({ type: "pressedMeeting", meetingId, ...at });

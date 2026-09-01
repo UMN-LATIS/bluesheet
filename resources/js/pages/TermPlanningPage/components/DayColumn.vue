@@ -32,7 +32,7 @@
       >
     </ColumnHeader>
     <div
-      class="tw-relative tw-cursor-cell tw-select-none"
+      class="tw-relative tw-select-none"
       :data-day-index="dayIndex"
       :style="{ height: COLUMN_HEIGHT }"
     >
