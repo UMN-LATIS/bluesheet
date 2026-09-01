@@ -74,22 +74,31 @@ function onPointerDown(event: PointerEvent) {
   // once the pointer leaves the grid entirely.
   days.value?.setPointerCapture(event.pointerId);
 
-  const pressedBlock = (event.target as HTMLElement).closest<HTMLElement>(
-    "[data-meeting-id]",
-  );
+  const target = event.target as HTMLElement;
+  const pressedBlock = target.closest<HTMLElement>("[data-meeting-id]");
+  const pressedEdge = target.closest<HTMLElement>("[data-resize-edge]");
 
-  if (pressedBlock) {
+  if (!pressedBlock) {
+    dispatchAt("pressedEmptySpace", event);
+  } else if (pressedEdge) {
+    dispatchAt("pressedMeetingEdge", event, {
+      meetingId: pressedBlock.dataset.meetingId,
+      edge: pressedEdge.dataset.resizeEdge,
+    });
+  } else {
     dispatchAt("pressedMeeting", event, {
       meetingId: pressedBlock.dataset.meetingId,
     });
-  } else {
-    dispatchAt("pressedEmptySpace", event);
   }
 }
 
 /** Turns a pointer event into the day and minute it names, then dispatches. */
 function dispatchAt(
-  type: "pressedEmptySpace" | "pressedMeeting" | "pointerMoved",
+  type:
+    | "pressedEmptySpace"
+    | "pressedMeeting"
+    | "pressedMeetingEdge"
+    | "pointerMoved",
   event: PointerEvent,
   extra: Record<string, unknown> = {},
 ) {

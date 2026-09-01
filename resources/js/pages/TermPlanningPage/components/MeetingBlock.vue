@@ -1,14 +1,34 @@
 <template>
   <div
-    class="tw-absolute tw-inset-x-1 tw-box-border tw-overflow-hidden tw-rounded tw-border tw-border-solid tw-px-1.5 tw-py-1 tw-text-[11px] tw-leading-tight"
+    class="tw-absolute tw-inset-x-1 tw-box-border tw-rounded tw-border tw-border-solid tw-px-1.5 tw-py-1 tw-text-[11px] tw-leading-tight"
     :class="appearance"
     :style="{
       top: topOf(startMinute),
       height: heightOf(startMinute, endMinute),
     }"
   >
-    <span class="tw-font-semibold">{{ formatClock(startMinute) }}</span>
-    <span class="tw-opacity-70"> – {{ formatClock(endMinute) }}</span>
+    <!-- Clipping happens here rather than on the block, so the grips below can
+         reach past its edges. -->
+    <div class="tw-overflow-hidden tw-whitespace-nowrap">
+      <span class="tw-font-semibold">{{ formatClock(startMinute) }}</span>
+      <span class="tw-opacity-70"> – {{ formatClock(endMinute) }}</span>
+    </div>
+
+    <!--
+      Grips for lengthening the meeting. Each straddles its edge — half over
+      the block, half over the column outside it — so aiming a little wide
+      still catches the edge instead of drawing a new meeting underneath.
+      The 8px over 4px geometry follows FullCalendar's time grid.
+    -->
+    <template v-if="!isDraft">
+      <div
+        v-for="edge in ['start', 'end']"
+        :key="edge"
+        :data-resize-edge="edge"
+        class="tw-absolute tw-inset-x-0 tw-z-10 tw-h-2 tw-cursor-ns-resize"
+        :class="edge === 'start' ? '-tw-top-1' : '-tw-bottom-1'"
+      />
+    </template>
   </div>
 </template>
 
