@@ -5,9 +5,14 @@
     edge therefore reads `tw-border-0 tw-border-<side> tw-border-solid`:
     without the zero, the three sides left at their initial `medium` width
     appear as soon as a style is set.
+
+    Each day is a snap target for the page's sideways scroll, and its snap
+    edge sits past the sticky gutter (whose width the grid measures into
+    --day-label-offset), so a snapped day starts where the gutter ends
+    rather than under it.
   -->
   <div
-    class="tw-flex-none tw-border-0 tw-border-r tw-border-solid tw-border-neutral-200 last:tw-border-r-0"
+    class="tw-flex-none tw-snap-start tw-scroll-ml-[var(--day-label-offset,0px)] tw-border-0 tw-border-r tw-border-solid tw-border-neutral-200 last:tw-border-r-0"
     :style="{ width: `${view.layout.width}px` }"
   >
     <ColumnHeader>

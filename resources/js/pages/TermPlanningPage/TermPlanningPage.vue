@@ -61,7 +61,10 @@
           <MeetingTypeKey class="tw-ml-auto tw-flex-none" />
         </div>
 
-        <div class="tw-min-h-0 tw-flex-1 tw-overflow-auto tw-bg-white">
+        <!-- Sideways scrolling lands on a day's edge; see DayColumn for the target. -->
+        <div
+          class="tw-min-h-0 tw-flex-1 tw-snap-x tw-snap-mandatory tw-overflow-auto tw-bg-white"
+        >
           <ScheduleGrid :schedule="schedule" :componentOf="componentOf">
             <template #block="{ meeting, width }">
               <SectionBlock
