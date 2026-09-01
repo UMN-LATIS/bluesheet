@@ -1,6 +1,6 @@
 <template>
   <div>
-    <Modal :show="showError" @close="showError = !error">
+    <Modal :show="showError" @close="showError = false">
       <div v-if="saveError" class="alert alert-danger col-sm-12" role="alert">
         {{ saveError }}
       </div>
