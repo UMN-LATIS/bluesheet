@@ -9,11 +9,22 @@
       width: `${width}px`,
     }"
   >
-    <!-- Clipping happens here rather than on the block, so the grips below can
-         reach past its edges. -->
-    <div class="tw-overflow-hidden tw-whitespace-nowrap">
+    <!--
+      Clipping happens here rather than on the block, so the grips below can
+      reach past its edges.
+
+      The two times sit at the top and bottom, as they do beside the standard
+      periods, so where each is printed matches the moment it names. Stacking
+      them also keeps the end time legible once lanes narrow to 44px, where a
+      single line of "10:00 – 11:45" would be cut off after the start.
+    -->
+    <div
+      class="tw-flex tw-h-full tw-flex-col tw-justify-between tw-overflow-hidden tw-whitespace-nowrap"
+    >
       <span class="tw-font-semibold">{{ formatClock(startMinute) }}</span>
-      <span class="tw-opacity-70"> – {{ formatClock(endMinute) }}</span>
+      <span v-if="hasRoomForEndTime" class="tw-opacity-70">{{
+        formatClock(endMinute)
+      }}</span>
     </div>
 
     <!--
@@ -49,6 +60,17 @@ const props = defineProps<{
   /** While it is being carried or lengthened by the pointer. */
   isActive?: boolean;
 }>();
+
+/**
+ * Two stacked lines and the block's padding need about this much height. A
+ * shorter meeting shows only when it starts, rather than printing an end time
+ * half cut off.
+ */
+const TWO_LINE_MINUTES = 34;
+
+const hasRoomForEndTime = computed(
+  () => props.endMinute - props.startMinute >= TWO_LINE_MINUTES,
+);
 
 const appearance = computed(() => {
   if (props.isDraft) {
