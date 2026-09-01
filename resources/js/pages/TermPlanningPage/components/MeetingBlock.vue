@@ -1,6 +1,6 @@
 <template>
   <div
-    class="tw-absolute tw-box-border tw-rounded tw-border tw-border-solid tw-px-1.5 tw-py-1 tw-text-[11px] tw-leading-tight"
+    class="tw-absolute tw-box-border tw-rounded-sm tw-border tw-border-solid tw-border-neutral-200 tw-px-1.5 tw-py-1 tw-text-[11px] tw-leading-tight tw-text-neutral-800"
     :class="[appearance, { 'just-placed': isJustPlaced }]"
     :style="{
       top: topOf(startMinute),
@@ -50,7 +50,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import MeetingTimes from "./MeetingTimes.vue";
-import type { BlockTone } from "../types";
+import { colourOfType } from "../constants/meetingTypeColours";
 import { heightOf, topOf } from "../helpers/timeScale";
 
 const props = defineProps<{
@@ -71,31 +71,20 @@ const props = defineProps<{
   isJustPlaced?: boolean;
   /** The block the user clicked, whose detail sheet is open. */
   isSelected?: boolean;
-  /** Absent on a block with no class on it, which draws grey. */
-  tone?: BlockTone;
+  /** The SIS component code of the class on it; absent on a block with none. */
+  component?: string;
 }>();
-
-/**
- * Blue against amber rather than against green: the two stay distinguishable
- * to a viewer who cannot separate red from green.
- */
-const TONE_COLOURS: Record<BlockTone, string> = {
-  lecture: "tw-border-blue-500 tw-bg-blue-100 tw-text-blue-900",
-  discussion: "tw-border-amber-500 tw-bg-amber-100 tw-text-amber-900",
-};
-
-const UNTONED = "tw-border-slate-400 tw-bg-slate-100 tw-text-slate-900";
 
 const appearance = computed(() => {
   if (props.isDraft) {
     return "tw-border-dashed tw-border-umn-maroon tw-bg-umn-maroon/10 tw-text-umn-maroon";
   }
 
-  const toned = props.tone ? TONE_COLOURS[props.tone] : UNTONED;
+  const toned = colourOfType(props.component).block;
   // An outline rather than a border or shadow, so the block's box size
   // holds still and the ring does not compete with the just-placed flash.
   const solid = props.isSelected
-    ? `${toned} tw-outline tw-outline-2 tw-outline-offset-1 tw-outline-current`
+    ? `${toned} tw-outline tw-outline-2 tw-outline-offset-1`
     : toned;
 
   if (props.isGhost) return `${solid} tw-opacity-40`;

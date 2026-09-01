@@ -9,10 +9,14 @@
       class="tw-flex tw-w-max tw-min-w-full tw-items-start"
       :style="{ '--day-label-offset': `${gutterWidth}px` }"
     >
-      <!-- The gutter stays put while the days scroll past it. -->
+      <!--
+        The gutter stays put while the days scroll past it. z-40, above the
+        day headers, so its own header owns the corner where the two sticky
+        axes meet.
+      -->
       <div
         ref="gutter"
-        class="tw-sticky tw-left-0 tw-z-10 tw-flex tw-flex-none tw-border-0 tw-border-r tw-border-solid tw-border-neutral-200 tw-bg-white"
+        class="tw-sticky tw-left-0 tw-z-40 tw-flex tw-flex-none tw-border-0 tw-border-r tw-border-solid tw-border-neutral-200 tw-bg-white"
       >
         <TimeAxis />
       </div>
@@ -36,7 +40,7 @@
           :label="day"
           :dayIndex="dayIndex"
           :view="week[dayIndex]"
-          :toneOf="toneOf"
+          :componentOf="componentOf"
         >
           <!--
             Forwarded only when the page actually supplied content, so that
@@ -56,7 +60,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useElementSize } from "@vueuse/core";
 import DayColumn from "./DayColumn.vue";
 import TimeAxis from "./TimeAxis.vue";
-import type { BlockTone, Meeting } from "../types";
+import type { Meeting } from "../types";
 import type { ScheduleEditor } from "../useScheduleEditor/useScheduleEditor";
 import { selectWeekView } from "../useScheduleEditor/selectors";
 import type { EditorEvent } from "../useScheduleEditor/types";
@@ -71,8 +75,11 @@ const props = defineProps<{
    * on the page reads the same one.
    */
   schedule: ScheduleEditor;
-  /** Answers nothing for a meeting with no class on it, which draws grey. */
-  toneOf?: (meeting: Meeting) => BlockTone | undefined;
+  /**
+   * The SIS component code (LEC, DIS, …) of the class on a meeting, which
+   * picks the block's colour. Undefined for a meeting with no class yet.
+   */
+  componentOf?: (meeting: Meeting) => string | undefined;
 }>();
 
 const days = ref<HTMLElement | null>(null);

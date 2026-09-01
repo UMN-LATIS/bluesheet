@@ -50,10 +50,11 @@
             :shownCount="visibleSections.length"
             :totalCount="allSections.length"
           />
+          <MeetingTypeKey class="tw-ml-auto tw-flex-none" />
         </div>
 
         <div class="tw-min-h-0 tw-flex-1 tw-overflow-auto tw-bg-white">
-          <ScheduleGrid :schedule="schedule" :toneOf="toneOf">
+          <ScheduleGrid :schedule="schedule" :componentOf="componentOf">
             <template #block="{ meeting, width }">
               <SectionBlock
                 v-if="sectionOf(meeting.id)"
@@ -92,6 +93,7 @@ import Breadcrumbs, { type Crumb } from "@/components/Breadcrumbs.vue";
 import FullScreenLayout from "@/layouts/FullScreenLayout.vue";
 import ActiveFilterBar from "./components/ActiveFilterBar.vue";
 import MeetingTimes from "./components/MeetingTimes.vue";
+import MeetingTypeKey from "./components/MeetingTypeKey.vue";
 import ScheduleGrid from "./components/ScheduleGrid.vue";
 import ScheduleSidebar from "./components/ScheduleSidebar.vue";
 import SectionBlock from "./components/SectionBlock.vue";
@@ -104,7 +106,7 @@ import { placeSections } from "./helpers/sectionPlacement";
 import { useGroupQuery } from "./queries/useGroupQuery";
 import { useSisSectionsQuery } from "./queries/useSisSectionsQuery";
 import { useSisTermsQuery } from "./queries/useSisTermsQuery";
-import { type BlockTone, FILTER_FACETS, type Meeting } from "./types";
+import { FILTER_FACETS, type Meeting } from "./types";
 import { useScheduleEditor } from "./useScheduleEditor";
 import type { Effect } from "./useScheduleEditor/types";
 
@@ -178,13 +180,7 @@ const placed = computed(() => placeSections(visibleSections.value));
 const sectionOf = (meetingId: string) =>
   placed.value.sectionsByMeetingId.get(meetingId);
 
-/** DIS and LAB are both meetings a class splits into, so they share a tone. */
-const toneOf = (meeting: Meeting): BlockTone | undefined => {
-  const component = sectionOf(meeting.id)?.component;
-  if (component === "LEC") return "lecture";
-
-  return component === "DIS" || component === "LAB" ? "discussion" : undefined;
-};
+const componentOf = (meeting: Meeting) => sectionOf(meeting.id)?.component;
 
 /**
  * The editor's effects, run here because the page owns the router. `replace`

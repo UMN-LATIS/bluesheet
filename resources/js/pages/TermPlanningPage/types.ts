@@ -11,13 +11,6 @@ export interface Meeting extends TimeRange {
 }
 
 /**
- * How a block is coloured. "discussion" covers the meetings a class splits
- * into, which the SIS calls DIS and LAB. A block with no tone has no class
- * on it yet.
- */
-export type BlockTone = "lecture" | "discussion";
-
-/**
  * The kinds of thing a section can be narrowed by. Each is a list in the
  * sidebar and a run of chips in the filter bar.
  */

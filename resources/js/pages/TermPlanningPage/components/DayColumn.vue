@@ -60,7 +60,7 @@
         :isGhost="placed.meeting.id === view.ghostMeetingId"
         :isJustPlaced="placed.meeting.id === view.justPlacedMeetingId"
         :isSelected="placed.meeting.id === view.selectedMeetingId"
-        :tone="toneOf?.(placed.meeting)"
+        :component="componentOf?.(placed.meeting)"
       >
         <!-- The width goes with it, since how much a block can say depends
              on how much room the day's busiest hour left it. -->
@@ -84,7 +84,7 @@
         :width="view.layout.width"
         :isDraft="!carriedMeeting"
         :isCarried="Boolean(carriedMeeting)"
-        :tone="carriedMeeting ? toneOf?.(carriedMeeting) : undefined"
+        :component="carriedMeeting ? componentOf?.(carriedMeeting) : undefined"
       >
         <!-- A carried meeting keeps the label it had where it was picked
              up, so the pointer is holding the same block the eye left. -->
@@ -105,7 +105,7 @@
 import { computed } from "vue";
 import ColumnHeader from "./ColumnHeader.vue";
 import MeetingBlock from "./MeetingBlock.vue";
-import type { BlockTone, Meeting } from "../types";
+import type { Meeting } from "../types";
 import type { DayView } from "../useScheduleEditor/selectors";
 import {
   COLUMN_HEIGHT,
@@ -118,8 +118,8 @@ const props = defineProps<{
   label: string;
   dayIndex: number;
   view: DayView;
-  /** Answers nothing for a meeting with no class on it, which draws grey. */
-  toneOf?: (meeting: Meeting) => BlockTone | undefined;
+  /** The class's SIS component code, for the block's colour; see ScheduleGrid. */
+  componentOf?: (meeting: Meeting) => string | undefined;
 }>();
 
 /** The meeting the pointer is carrying, at the time it now hovers over. */
