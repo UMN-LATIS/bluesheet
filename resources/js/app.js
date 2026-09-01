@@ -8,6 +8,7 @@ import "./bootstrap";
 
 import { createApp } from "vue";
 import { createPinia } from "pinia";
+import { VueQueryPlugin } from "@tanstack/vue-query";
 import VTooltip from "v-tooltip";
 import { router } from "./router";
 import App from "./App.vue";
@@ -19,6 +20,10 @@ import "../sass/utils.css";
 
 const pinia = createPinia();
 
-const app = createApp(App).use(pinia).use(router).use(VTooltip);
+const app = createApp(App)
+  .use(pinia)
+  .use(router)
+  .use(VTooltip)
+  .use(VueQueryPlugin);
 
 app.mount("#app");

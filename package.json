@@ -17,6 +17,7 @@
   "dependencies": {
     "@floating-ui/vue": "^1.1.11",
     "@headlessui/vue": "^1.7.23",
+    "@tanstack/vue-query": "^5.102.8",
     "@umn-latis/cla-vue-template": "^3.1.1",
     "@vitejs/plugin-vue": "^6.0.6",
     "@vueuse/core": "^10.11.1",
