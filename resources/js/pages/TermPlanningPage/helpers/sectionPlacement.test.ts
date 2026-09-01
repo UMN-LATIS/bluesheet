@@ -92,7 +92,7 @@ describe("placeSections", () => {
 
   it("meetings outside the grid's hours are counted, not drawn", () => {
     const placed = placeSections([
-      section(1, [{ days: ["mon"], startTime: "18:30", endTime: "21:00" }]),
+      section(1, [{ days: ["mon"], startTime: "21:30", endTime: "22:30" }]),
     ]);
 
     expect(placed.meetings).toEqual([]);

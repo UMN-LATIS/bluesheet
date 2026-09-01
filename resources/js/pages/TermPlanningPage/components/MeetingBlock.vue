@@ -25,10 +25,7 @@
            component's. Its own times are what a caller with nothing to say
            gets. -->
       <slot>
-        <span class="tw-font-semibold">{{ formatClock(startMinute) }}</span>
-        <span v-if="hasRoomForEndTime" class="tw-opacity-70">{{
-          formatClock(endMinute)
-        }}</span>
+        <MeetingTimes :startMinute="startMinute" :endMinute="endMinute" />
       </slot>
     </div>
 
@@ -52,7 +49,8 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { formatClock, heightOf, topOf } from "../helpers/timeScale";
+import MeetingTimes from "./MeetingTimes.vue";
+import { heightOf, topOf } from "../helpers/timeScale";
 
 const props = defineProps<{
   startMinute: number;
@@ -67,17 +65,6 @@ const props = defineProps<{
   /** Left in place, faded, while the pointer carries its meeting elsewhere. */
   isGhost?: boolean;
 }>();
-
-/**
- * Two stacked lines and the block's padding need about this much height. A
- * shorter meeting shows only when it starts, rather than printing an end time
- * half cut off.
- */
-const TWO_LINE_MINUTES = 34;
-
-const hasRoomForEndTime = computed(
-  () => props.endMinute - props.startMinute >= TWO_LINE_MINUTES,
-);
 
 const appearance = computed(() => {
   if (props.isDraft) {

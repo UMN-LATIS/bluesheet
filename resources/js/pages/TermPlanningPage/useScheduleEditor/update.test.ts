@@ -106,15 +106,15 @@ describe("moving", () => {
     const state = after(
       [
         { type: "pressedMeeting", meetingId: "local-1", minute: 550 },
-        { type: "pointerMoved", dayIndex: 0, minute: 1075 },
+        { type: "pointerMoved", dayIndex: 0, minute: 1255 },
         { type: "released" },
       ],
       oneMeeting,
     );
 
     expect(state.drawn[0]).toMatchObject({
-      startMinute: 1030,
-      endMinute: 1080,
+      startMinute: 1210,
+      endMinute: 1260,
     });
   });
 });

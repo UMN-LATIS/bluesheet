@@ -40,6 +40,8 @@ export interface SisInstructor {
   emplid: number;
   role: string;
   name: string | null;
+  /** Sent separately: a narrow block cannot split a full name safely. */
+  lastName: string | null;
   internetId: string | null;
 }
 

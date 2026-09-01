@@ -6,8 +6,10 @@
  * the same way, so the clock, the standard periods, and the days stay in step.
  */
 
+// 8 to 21 covers every timed Anthropology meeting in the pilot data; about
+// a tenth of them are evening classes, too many to leave off the grid.
 export const FIRST_HOUR = 8;
-export const LAST_HOUR = 18;
+export const LAST_HOUR = 21;
 
 const PIXELS_PER_MINUTE = 1;
 
