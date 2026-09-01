@@ -1,9 +1,15 @@
 <template>
   <div class="tw-p-4">
-    <table class="tw-w-full tw-border-separate tw-border-spacing-1 tw-text-sm">
+    <!--
+      Cells are a fixed width, set on their contents so the table cannot shrink
+      them: the sheet opening beside the table must not move the cell that was
+      just clicked, or the pointer finds itself over a different one. At 88px
+      the five days still fit beside an open sheet on a 1280px screen.
+    -->
+    <table class="tw-border-separate tw-border-spacing-1 tw-text-sm">
       <thead>
         <tr>
-          <th class="tw-w-16"></th>
+          <th class="tw-w-14"></th>
           <th
             v-for="day in dayNames"
             :key="day"
@@ -31,10 +37,9 @@
             <button
               v-if="count > 0"
               type="button"
-              class="tw-h-full tw-w-full tw-cursor-pointer tw-rounded tw-border-none tw-text-center tw-text-sm tw-font-medium tw-tabular-nums hover:tw-brightness-95"
+              class="heat-cell tw-h-full tw-w-[88px] tw-cursor-pointer tw-rounded tw-border-none tw-text-center tw-text-sm tw-font-medium tw-tabular-nums"
               :class="{
-                'tw-outline tw-outline-2 tw-outline-offset-1 tw-outline-neutral-800':
-                  isSelected(dayIndex, row.startMinute),
+                'heat-cell--selected': isSelected(dayIndex, row.startMinute),
               }"
               :style="cellStyle(count)"
               :aria-pressed="isSelected(dayIndex, row.startMinute)"
@@ -49,7 +54,10 @@
             >
               {{ count }}
             </button>
-            <div v-else class="tw-h-full tw-rounded tw-bg-neutral-100" />
+            <div
+              v-else
+              class="tw-h-full tw-w-[88px] tw-rounded tw-bg-neutral-100"
+            />
           </td>
         </tr>
       </tbody>
@@ -103,3 +111,27 @@ const cellStyle = (count: number) => {
   };
 };
 </script>
+
+<style scoped>
+/*
+ * Hover and selection are drawn inside the cell, as inset rings with a white
+ * gap, so they read on the darkest maroon and never spill into the gutter
+ * between cells, where an outline would look like it belonged to the
+ * neighbour. The selected ring is the heavier of the two.
+ */
+.heat-cell:hover,
+.heat-cell:focus-visible {
+  box-shadow:
+    inset 0 0 0 2px white,
+    inset 0 0 0 4px rgb(115 115 115);
+  outline: none;
+}
+
+.heat-cell--selected,
+.heat-cell--selected:hover {
+  box-shadow:
+    inset 0 0 0 2px white,
+    inset 0 0 0 5px rgb(23 23 23);
+  font-weight: 700;
+}
+</style>
