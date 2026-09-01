@@ -17,6 +17,30 @@ export interface Meeting extends TimeRange {
  */
 export type BlockTone = "lecture" | "discussion";
 
+/**
+ * The kinds of thing a section can be narrowed by. Each is a list in the
+ * sidebar and a run of chips in the filter bar.
+ */
+export type FilterFacet = "course" | "person" | "section" | "component";
+
+/** Every facet, in the order the sidebar lists them and the chips read. */
+export const FILTER_FACETS: FilterFacet[] = [
+  "course",
+  "person",
+  "section",
+  "component",
+];
+
+/**
+ * What is checked, per facet. Nothing checked in a facet means that facet
+ * does not narrow anything. Values are strings throughout, emplids and
+ * section ids included, so the shape round-trips through a URL unchanged.
+ */
+export type ScheduleFilters = Record<FilterFacet, string[]>;
+
+/** The `person` value that names sections with no instructor. */
+export const TBA_PERSON = "tba";
+
 /*
  * What the /api/sis endpoints return, mirroring the resources in
  * app/Http/Resources/Sis. The payloads arrive ready to render: instructors

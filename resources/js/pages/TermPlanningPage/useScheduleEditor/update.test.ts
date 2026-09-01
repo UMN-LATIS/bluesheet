@@ -7,7 +7,8 @@ const after = (
   events: EditorEvent[],
   state: EditorState = initialState(),
   base: Meeting[] = [],
-) => events.reduce((current, event) => update(current, event, base), state);
+) =>
+  events.reduce((current, event) => update(current, event, base).state, state);
 
 /** A committed meeting drawn out on `dayIndex` from `from` to `to`. */
 const draw = (dayIndex: number, from: number, to: number): EditorEvent[] => [
@@ -405,5 +406,105 @@ describe("selecting", () => {
     expect(state.selectedMeetingId).toBe("s1:0:mon");
     expect(state.overrides).toEqual({});
     expect(state.interaction).toEqual({ status: "idle" });
+  });
+});
+
+describe("filtering", () => {
+  const twoCourses: EditorEvent = {
+    type: "filterValuesAdded",
+    facet: "course",
+    values: ["HIST-1082", "HIST-1301W"],
+  };
+
+  it("adding checks values, once each", () => {
+    const state = after([
+      twoCourses,
+      { type: "filterValuesAdded", facet: "course", values: ["HIST-1082"] },
+      { type: "filterValuesAdded", facet: "person", values: ["tba"] },
+    ]);
+
+    expect(state.filters).toEqual({
+      course: ["HIST-1082", "HIST-1301W"],
+      person: ["tba"],
+      section: [],
+      component: [],
+    });
+  });
+
+  it("removing unchecks only the named values in that facet", () => {
+    const state = after([
+      twoCourses,
+      { type: "filterValuesAdded", facet: "person", values: ["1"] },
+      { type: "filterValuesRemoved", facet: "course", values: ["HIST-1082"] },
+    ]);
+
+    expect(state.filters.course).toEqual(["HIST-1301W"]);
+    expect(state.filters.person).toEqual(["1"]);
+  });
+
+  it("clearing empties every facet", () => {
+    const state = after([
+      twoCourses,
+      { type: "filterValuesAdded", facet: "component", values: ["LEC"] },
+      { type: "filtersCleared" },
+    ]);
+
+    expect(state.filters).toEqual(initialState().filters);
+  });
+
+  it("replacing sets the filters exactly as given", () => {
+    const filters = {
+      course: ["ANTH-1001"],
+      person: [],
+      section: ["4821"],
+      component: [],
+    };
+    const state = after([twoCourses, { type: "filtersReplaced", filters }]);
+
+    expect(state.filters).toEqual(filters);
+  });
+
+  it("leaves the selection and the schedule alone", () => {
+    const selected = after(
+      [
+        { type: "pressedMeeting", meetingId: "local-1", minute: 550 },
+        { type: "released" },
+      ],
+      after(draw(0, 540, 590)),
+    );
+    const state = after([twoCourses], selected);
+
+    expect(state.selectedMeetingId).toBe("local-1");
+    expect(state.drawn).toEqual(selected.drawn);
+  });
+
+  describe("effects", () => {
+    it("a change the user makes is synced to the URL", () => {
+      const step = update(initialState(), twoCourses, []);
+
+      expect(step.effects).toEqual([
+        { type: "syncFiltersToUrl", filters: step.state.filters },
+      ]);
+    });
+
+    it("a change that came from the URL is not echoed back", () => {
+      const step = update(
+        initialState(),
+        { type: "filtersReplaced", filters: initialState().filters },
+        [],
+      );
+
+      expect(step.effects).toEqual([]);
+    });
+
+    it("gestures have no effects", () => {
+      const step = update(
+        initialState(),
+        { type: "pressedEmptySpace", dayIndex: 0, minute: 600 },
+        [],
+      );
+
+      expect(step.effects).toEqual([]);
+    });
   });
 });

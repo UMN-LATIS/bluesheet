@@ -15,6 +15,7 @@ const atRest: EditorState = {
   interaction: { status: "idle" },
   lastPlacedId: null,
   selectedMeetingId: null,
+  filters: { course: [], person: [], section: [], component: [] },
   nextLocalId: 1,
 };
 

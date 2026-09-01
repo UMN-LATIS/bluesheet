@@ -9,15 +9,17 @@
  * as a ref. The editor state holds only what this browser changed, so a
  * refetch replaces the base without disturbing the user's edits.
  *
- * This is the seam where effects will be run once the grid talks to the
- * server — the effect runner dispatches its results back through `dispatch`,
- * exactly as it does in the asset editor.
+ * Effects run here, right after the state they came from is stored, through
+ * the `runEffect` the page supplies. The page owns the router and, later,
+ * the API client, so it is the one that knows what an effect means. An
+ * effect's outcome comes back through `dispatch` like any other event,
+ * exactly as in the asset editor.
  */
 
 import { type Ref, ref } from "vue";
 import type { Meeting } from "../types";
 import { initialState, update } from "./update";
-import type { EditorEvent, EditorState } from "./types";
+import type { EditorEvent, EditorState, Effect } from "./types";
 
 export interface ScheduleEditor {
   /** Read-only from outside: `dispatch` is the only way to change it. */
@@ -29,11 +31,14 @@ export interface ScheduleEditor {
 
 export function useScheduleEditor(
   base: Readonly<Ref<Meeting[]>>,
+  runEffect: (effect: Effect) => void,
 ): ScheduleEditor {
   const state = ref(initialState());
 
   const dispatch = (event: EditorEvent) => {
-    state.value = update(state.value, event, base.value);
+    const step = update(state.value, event, base.value);
+    state.value = step.state;
+    step.effects.forEach(runEffect);
   };
 
   return { state, base, dispatch };

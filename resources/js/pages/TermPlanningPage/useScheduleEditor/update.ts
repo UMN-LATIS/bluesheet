@@ -12,19 +12,27 @@
  * state carries only what this browser changed. It is context, not state:
  * `update` reads it to find the meeting under a press, and never writes it.
  *
- * Nothing here needs to reach the network yet. When saving arrives this grows
- * the shape the asset editor already uses, returning `{ state, effects }` with
- * the effects run outside.
+ * `update` returns `{ state, effects }`, the shape the asset editor uses:
+ * `reduce` decides the next state, `effectsOf` decides what should happen
+ * outside as a result, and `useScheduleEditor` runs those effects. Nothing
+ * here reaches the network yet; the URL is the only effect so far.
  */
 
-import type { Meeting, TimeRange } from "../types";
+import type {
+  FilterFacet,
+  Meeting,
+  ScheduleFilters,
+  TimeRange,
+} from "../types";
 import { END_MINUTE, snapToGrid, START_MINUTE } from "../helpers/timeScale";
 import { mergeSchedule } from "./mergeSchedule";
 import type {
   EditorEvent,
   EditorState,
+  Effect,
   Interaction,
   MeetingEdge,
+  Step,
 } from "./types";
 
 /** What a press with no drag creates: one standard fifty-minute period. */
@@ -45,16 +53,51 @@ const MIN_DURATION = 15;
  */
 const DRAG_START_MINUTES = 10;
 
+export const emptyFilters = (): ScheduleFilters => ({
+  course: [],
+  person: [],
+  section: [],
+  component: [],
+});
+
 export const initialState = (): EditorState => ({
   drawn: [],
   overrides: {},
   interaction: { status: "idle" },
   lastPlacedId: null,
   selectedMeetingId: null,
+  filters: emptyFilters(),
   nextLocalId: 1,
 });
 
 export function update(
+  state: EditorState,
+  event: EditorEvent,
+  base: Meeting[],
+): Step {
+  const next = reduce(state, event, base);
+
+  return { state: next, effects: effectsOf(event, next) };
+}
+
+/**
+ * The user changing a filter is what the URL should follow. A filter that
+ * arrived from the URL is already there, so echoing it back would only set
+ * the two sides chasing each other.
+ */
+function effectsOf(event: EditorEvent, state: EditorState): Effect[] {
+  switch (event.type) {
+    case "filterValuesAdded":
+    case "filterValuesRemoved":
+    case "filtersCleared":
+      return [{ type: "syncFiltersToUrl", filters: state.filters }];
+
+    default:
+      return [];
+  }
+}
+
+function reduce(
   state: EditorState,
   event: EditorEvent,
   base: Meeting[],
@@ -134,9 +177,38 @@ export function update(
     case "deselected":
       return { ...state, selectedMeetingId: null };
 
+    case "filterValuesAdded":
+      return withFacet(state, event.facet, (checked) => [
+        ...checked,
+        ...event.values.filter((value) => !checked.includes(value)),
+      ]);
+
+    case "filterValuesRemoved":
+      return withFacet(state, event.facet, (checked) =>
+        checked.filter((value) => !event.values.includes(value)),
+      );
+
+    case "filtersCleared":
+      return { ...state, filters: emptyFilters() };
+
+    case "filtersReplaced":
+      return { ...state, filters: event.filters };
+
     default:
       return assertNever(event);
   }
+}
+
+/** Rewrites one facet's checked values and leaves the other facets alone. */
+function withFacet(
+  state: EditorState,
+  facet: FilterFacet,
+  change: (checked: string[]) => string[],
+): EditorState {
+  return {
+    ...state,
+    filters: { ...state.filters, [facet]: change(state.filters[facet]) },
+  };
 }
 
 function pointerMoved(

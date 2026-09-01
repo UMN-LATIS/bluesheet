@@ -3,7 +3,12 @@
  * that can change it. Reading this file tells you the whole surface.
  */
 
-import type { Meeting, TimeRange } from "../types";
+import type {
+  FilterFacet,
+  Meeting,
+  ScheduleFilters,
+  TimeRange,
+} from "../types";
 
 /** Which end of a meeting is being dragged while it is resized. */
 export type MeetingEdge = "start" | "end";
@@ -71,6 +76,12 @@ export interface EditorState {
    * knows meetings; the page maps a meeting id to its section.
    */
   selectedMeetingId: string | null;
+  /**
+   * What the sidebar has checked. Kept here rather than applied here: the
+   * page filters the sections payload with it before the meetings become
+   * `base`, so the editor never needs to know what a section is.
+   */
+  filters: ScheduleFilters;
   /** Names meetings that exist only in the browser so far. */
   nextLocalId: number;
 }
@@ -95,4 +106,24 @@ export type EditorEvent =
   /** Escape. Mid-gesture this discards the gesture. At rest it clears the selection. */
   | { type: "cancelled" }
   /** The detail sheet's close button. */
-  | { type: "deselected" };
+  | { type: "deselected" }
+  /** A checkbox checked, or a whole course level's checkboxes at once. */
+  | { type: "filterValuesAdded"; facet: FilterFacet; values: string[] }
+  /** A checkbox unchecked, a chip's ×, or a whole course level at once. */
+  | { type: "filterValuesRemoved"; facet: FilterFacet; values: string[] }
+  | { type: "filtersCleared" }
+  /** The URL changed underneath the page: initial load, back button, pasted link. */
+  | { type: "filtersReplaced"; filters: ScheduleFilters };
+
+/**
+ * Something `update` wants done outside itself. Named for the outcome, not
+ * the mechanism: the page decides that "sync to the URL" means
+ * `router.replace`, so `update` never imports the router.
+ */
+export type Effect = { type: "syncFiltersToUrl"; filters: ScheduleFilters };
+
+/** What one event produces: the next state, and any effects to run. */
+export interface Step {
+  state: EditorState;
+  effects: Effect[];
+}
