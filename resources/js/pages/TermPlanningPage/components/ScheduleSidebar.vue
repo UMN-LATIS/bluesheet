@@ -1,9 +1,10 @@
 <template>
   <aside
     aria-label="Filters"
-    class="tw-rounded-md tw-border tw-border-solid tw-border-neutral-200 tw-bg-white"
+    class="tw-flex tw-flex-col tw-rounded-md tw-border tw-border-solid tw-border-neutral-200 tw-bg-white"
   >
-    <div class="tw-p-3">
+    <!-- Outside the scroll box below, so it is in reach however far the lists go. -->
+    <div class="tw-flex-none tw-p-3">
       <label class="tw-sr-only" for="schedule-filter-search">
         Search courses, people, sections
       </label>
@@ -16,128 +17,161 @@
       />
     </div>
 
-    <FilterGroup
-      v-if="courseLevels.length > 0"
-      title="Courses"
-      :count="courseCount"
-      isOpenAtFirst
-    >
-      <template v-for="level in courseLevels" :key="level.label">
-        <div class="tw-bg-neutral-50">
-          <FilterRow
-            :isChecked="level.checkedCount === level.courses.length"
-            :isIndeterminate="
-              level.checkedCount > 0 &&
-              level.checkedCount < level.courses.length
-            "
-            @toggle="
-              toggle(
-                'course',
-                level.courses.map(({ value }) => value),
-                $event,
-              )
-            "
+    <div class="tw-min-h-0 tw-flex-1 tw-overflow-y-auto">
+      <FilterGroup
+        v-if="courseLevels.length > 0"
+        title="Courses"
+        :count="courseCount"
+        :checkedCount="filters.course.length"
+        isOpenAtFirst
+        @clear="clearFacet('course')"
+      >
+        <template v-for="level in courseLevels" :key="level.label">
+          <!-- Pinned just under the group header, whose height is h-8. -->
+          <div
+            class="tw-sticky tw-top-8 tw-z-10 tw-flex tw-items-center tw-border-0 tw-border-b tw-border-solid tw-border-neutral-100 tw-bg-neutral-50"
           >
-            <span
-              class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-neutral-700"
+            <button
+              type="button"
+              class="tw-flex tw-h-full tw-w-7 tw-flex-none tw-cursor-pointer tw-items-center tw-justify-center tw-self-stretch tw-border-none tw-bg-transparent tw-text-[0.6rem] tw-text-neutral-500"
+              :aria-label="`${isLevelOpen(level.label) ? 'Collapse' : 'Expand'} ${level.label}`"
+              :aria-expanded="isLevelOpen(level.label)"
+              @click="toggleLevel(level.label)"
             >
-              {{ level.label }}
-            </span>
-            <template #annotation>{{ level.courses.length }}</template>
-          </FilterRow>
-        </div>
-        <FilterRows :items="level.courses">
-          <template #default="{ item }">
+              {{ isLevelOpen(level.label) ? "▼" : "▶" }}
+            </button>
             <FilterRow
-              :isChecked="isChecked('course', item.value)"
-              @toggle="toggle('course', [item.value], $event)"
+              class="tw-flex-1 tw-pl-0"
+              :isChecked="level.checkedCount === level.courses.length"
+              :isIndeterminate="
+                level.checkedCount > 0 &&
+                level.checkedCount < level.courses.length
+              "
+              @toggle="
+                toggle(
+                  'course',
+                  level.courses.map(({ value }) => value),
+                  $event,
+                )
+              "
             >
-              <span class="tw-flex tw-items-baseline tw-gap-2">
-                <span class="tw-flex-none tw-font-mono tw-font-semibold">
+              <span
+                class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-neutral-700"
+              >
+                {{ level.label }}
+              </span>
+              <template #annotation>{{ level.courses.length }}</template>
+            </FilterRow>
+          </div>
+          <FilterRows v-if="isLevelOpen(level.label)" :items="level.courses">
+            <template #default="{ item }">
+              <FilterRow
+                :isChecked="isChecked('course', item.value)"
+                @toggle="toggle('course', [item.value], $event)"
+              >
+                <span class="tw-block tw-font-mono tw-font-semibold">
                   {{ item.code }}
                 </span>
-                <span class="tw-truncate tw-text-neutral-600">
+                <span
+                  class="tw-block tw-truncate tw-text-xs tw-text-neutral-600"
+                >
                   {{ item.title }}
                 </span>
-              </span>
-              <template #annotation>
-                <template v-if="item.credits !== null">
-                  {{ item.credits }} cr ·
+                <template #annotation>
+                  <template v-if="item.credits !== null">
+                    {{ item.credits }} cr ·
+                  </template>
+                  {{ item.sectionCount }}
                 </template>
-                {{ item.sectionCount }}
+              </FilterRow>
+            </template>
+          </FilterRows>
+        </template>
+      </FilterGroup>
+
+      <FilterGroup
+        v-if="people.length > 0"
+        title="Faculty"
+        :count="people.length"
+        :checkedCount="filters.person.length"
+        isOpenAtFirst
+        @clear="clearFacet('person')"
+      >
+        <FilterRows :items="people">
+          <template #default="{ item }">
+            <FilterRow
+              :isChecked="isChecked('person', item.value)"
+              @toggle="toggle('person', [item.value], $event)"
+            >
+              <span
+                class="tw-block tw-truncate"
+                :class="{
+                  'tw-font-semibold tw-text-umn-maroon':
+                    item.value === TBA_PERSON,
+                }"
+              >
+                {{ item.name }}
+              </span>
+              <span
+                v-if="item.emplid !== null"
+                class="tw-block tw-truncate tw-text-xs tw-text-neutral-500"
+              >
+                {{ item.emplid }}
+                <template v-if="item.internetId">
+                  • {{ item.internetId }}@umn.edu
+                </template>
+              </span>
+              <template #annotation>{{ item.sectionCount }} sec</template>
+            </FilterRow>
+          </template>
+        </FilterRows>
+      </FilterGroup>
+
+      <FilterGroup
+        v-if="sections.length > 0"
+        title="Sections"
+        :count="sections.length"
+        :checkedCount="filters.section.length"
+        @clear="clearFacet('section')"
+      >
+        <FilterRows :items="sections">
+          <template #default="{ item }">
+            <FilterRow
+              :isChecked="isChecked('section', item.value)"
+              @toggle="toggle('section', [item.value], $event)"
+            >
+              <span class="tw-font-mono">{{ item.label }}</span>
+              <template #annotation>
+                {{ item.component }}
+                <template v-if="item.instructorLastName">
+                  · {{ item.instructorLastName }}
+                </template>
               </template>
             </FilterRow>
           </template>
         </FilterRows>
-      </template>
-    </FilterGroup>
+      </FilterGroup>
 
-    <FilterGroup
-      v-if="people.length > 0"
-      title="Faculty"
-      :count="people.length"
-      isOpenAtFirst
-    >
-      <FilterRows :items="people">
-        <template #default="{ item }">
-          <FilterRow
-            :isChecked="isChecked('person', item.value)"
-            @toggle="toggle('person', [item.value], $event)"
-          >
-            <span
-              :class="{
-                'tw-font-semibold tw-text-umn-maroon':
-                  item.value === TBA_PERSON,
-              }"
+      <FilterGroup
+        v-if="components.length > 0"
+        title="Type"
+        :count="components.length"
+        :checkedCount="filters.component.length"
+        @clear="clearFacet('component')"
+      >
+        <FilterRows :items="components">
+          <template #default="{ item }">
+            <FilterRow
+              :isChecked="isChecked('component', item.value)"
+              @toggle="toggle('component', [item.value], $event)"
             >
-              {{ item.name }}
-            </span>
-            <template #annotation>{{ item.sectionCount }} sec</template>
-          </FilterRow>
-        </template>
-      </FilterRows>
-    </FilterGroup>
-
-    <FilterGroup
-      v-if="sections.length > 0"
-      title="Sections"
-      :count="sections.length"
-    >
-      <FilterRows :items="sections">
-        <template #default="{ item }">
-          <FilterRow
-            :isChecked="isChecked('section', item.value)"
-            @toggle="toggle('section', [item.value], $event)"
-          >
-            <span class="tw-font-mono">{{ item.label }}</span>
-            <template #annotation>
-              {{ item.component }}
-              <template v-if="item.instructorLastName">
-                · {{ item.instructorLastName }}
-              </template>
-            </template>
-          </FilterRow>
-        </template>
-      </FilterRows>
-    </FilterGroup>
-
-    <FilterGroup
-      v-if="components.length > 0"
-      title="Type"
-      :count="components.length"
-    >
-      <FilterRows :items="components">
-        <template #default="{ item }">
-          <FilterRow
-            :isChecked="isChecked('component', item.value)"
-            @toggle="toggle('component', [item.value], $event)"
-          >
-            <span class="tw-font-mono">{{ item.value }}</span>
-            <template #annotation>{{ item.sectionCount }}</template>
-          </FilterRow>
-        </template>
-      </FilterRows>
-    </FilterGroup>
+              <span class="tw-font-mono">{{ item.value }}</span>
+              <template #annotation>{{ item.sectionCount }}</template>
+            </FilterRow>
+          </template>
+        </FilterRows>
+      </FilterGroup>
+    </div>
   </aside>
 </template>
 
@@ -157,7 +191,8 @@ import type { ScheduleEditor } from "../useScheduleEditor";
 /**
  * The lists a user narrows the grid with. Every checkbox here is a filter
  * event on the schedule; the sidebar keeps nothing of its own but the search
- * text, which only decides which rows are in view.
+ * text and which levels are folded, both of which only decide what is in
+ * view.
  */
 const props = defineProps<{
   options: FilterOptions;
@@ -177,6 +212,24 @@ const toggle = (facet: FilterFacet, values: string[], isNowChecked: boolean) =>
     facet,
     values,
   });
+
+const clearFacet = (facet: FilterFacet) =>
+  props.schedule.dispatch({
+    type: "filterValuesRemoved",
+    facet,
+    values: filters.value[facet],
+  });
+
+/** Levels start open; only the ones a user has folded are remembered. */
+const foldedLevels = ref<string[]>([]);
+
+const isLevelOpen = (label: string) => !foldedLevels.value.includes(label);
+
+const toggleLevel = (label: string) => {
+  foldedLevels.value = isLevelOpen(label)
+    ? [...foldedLevels.value, label]
+    : foldedLevels.value.filter((folded) => folded !== label);
+};
 
 /**
  * A row stays in view while it is checked, whatever the search says, so
@@ -216,7 +269,11 @@ const people = computed(() => {
   const { tba, faculty } = props.options;
   const listed: PersonOption[] = tba ? [tba, ...faculty] : faculty;
   return listed.filter((person) =>
-    isInView("person", person.value, person.name),
+    isInView(
+      "person",
+      person.value,
+      `${person.name} ${person.emplid ?? ""} ${person.internetId ?? ""}`,
+    ),
   );
 });
 

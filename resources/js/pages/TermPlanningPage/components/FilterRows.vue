@@ -5,12 +5,12 @@
     </li>
   </ul>
   <button
-    v-if="hasMore"
+    v-if="canExpand"
     type="button"
-    class="tw-block tw-w-full tw-cursor-pointer tw-border-none tw-bg-transparent tw-py-2 tw-text-center tw-text-sm tw-text-umn-maroon hover:tw-underline"
-    @click="isExpanded = true"
+    :class="TOGGLE_CLASS"
+    @click="isExpanded = !isExpanded"
   >
-    Show all {{ items.length }}
+    {{ isExpanded ? "Show fewer" : `Show all ${items.length}` }}
   </button>
 </template>
 
@@ -29,13 +29,16 @@ const props = defineProps<{
 /** Enough rows to recognise the list, few enough to see the next group. */
 const INITIAL_ROW_COUNT = 6;
 
+const TOGGLE_CLASS =
+  "tw-block tw-w-full tw-cursor-pointer tw-border-none tw-bg-transparent tw-py-2 tw-text-center tw-text-sm tw-text-umn-maroon hover:tw-underline";
+
 const isExpanded = ref(false);
 
-const hasMore = computed(
-  () => !isExpanded.value && props.items.length > INITIAL_ROW_COUNT,
-);
+const canExpand = computed(() => props.items.length > INITIAL_ROW_COUNT);
 
 const visible = computed(() =>
-  hasMore.value ? props.items.slice(0, INITIAL_ROW_COUNT) : props.items,
+  canExpand.value && !isExpanded.value
+    ? props.items.slice(0, INITIAL_ROW_COUNT)
+    : props.items,
 );
 </script>

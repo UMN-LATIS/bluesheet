@@ -16,11 +16,6 @@
         ref="gutter"
         class="tw-sticky tw-left-0 tw-z-10 tw-flex tw-flex-none tw-border-0 tw-border-r tw-border-solid tw-border-neutral-200 tw-bg-white"
       >
-        <StandardPeriodsColumn
-          v-for="standard in STANDARD_SCHEDULES"
-          :key="standard.name"
-          v-bind="standard"
-        />
         <TimeAxis />
       </div>
 
@@ -62,9 +57,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useElementSize } from "@vueuse/core";
 import DayColumn from "./DayColumn.vue";
-import StandardPeriodsColumn from "./StandardPeriodsColumn.vue";
 import TimeAxis from "./TimeAxis.vue";
-import { A_PERIODS, B_PERIODS } from "../constants/standardMeetingTimes";
 import type { BlockTone, Meeting } from "../types";
 import type { ScheduleEditor } from "../useScheduleEditor/useScheduleEditor";
 import { selectWeekView } from "../useScheduleEditor/selectors";
@@ -73,11 +66,6 @@ import { dayIndexAt } from "../helpers/dayLayout";
 import { minuteAt } from "../helpers/timeScale";
 
 const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-
-const STANDARD_SCHEDULES = [
-  { name: "A", tone: "blue", periods: A_PERIODS },
-  { name: "B", tone: "green", periods: B_PERIODS },
-] as const;
 
 const props = defineProps<{
   /**

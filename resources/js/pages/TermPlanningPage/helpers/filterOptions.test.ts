@@ -135,6 +135,17 @@ describe("buildFilterOptions", () => {
       expect(options.faculty[0].sectionCount).toBe(2);
     });
 
+    it("carries the emplid and internet id for the detail line", () => {
+      const options = buildFilterOptions([
+        section(1, { instructors: [instructor(1)] }),
+      ]);
+
+      expect(options.faculty[0]).toMatchObject({
+        emplid: 1,
+        internetId: "garci001",
+      });
+    });
+
     it("forms shortName from the first initial and last name", () => {
       const options = buildFilterOptions([
         section(1, {
@@ -212,6 +223,8 @@ describe("buildFilterOptions", () => {
         value: TBA_PERSON,
         name: "TBA",
         shortName: "TBA",
+        emplid: null,
+        internetId: null,
         sectionCount: 2,
       });
     });

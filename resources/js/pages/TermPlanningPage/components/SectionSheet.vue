@@ -1,21 +1,15 @@
 <template>
   <!--
-    Absolute against the page wrapper, not fixed against the viewport, so
-    the sheet stays below the app header instead of floating over it.
-    Sticky inside that keeps the panel in view while the grid scrolls past
-    underneath it, and the panel takes the viewport's full height so a
-    short section still reads as a docked sheet rather than a floating
-    card. Preflight is disabled project-wide (see DayColumn.vue), so the
-    border needs `tw-border-0 tw-border-l tw-border-solid` to show only
-    its left edge.
+    Docked beside the grid as a column of its own, not floated over it, so
+    the grid gives up width and scrolls sideways rather than losing its last
+    days under the sheet. The page sizes this element; the sheet only fills
+    it and scrolls inside when a section runs long.
   -->
   <aside
     aria-label="Section details"
-    class="tw-pointer-events-none tw-absolute tw-inset-y-0 tw-right-0 tw-z-30 tw-w-96 tw-max-w-full"
+    class="tw-overflow-y-auto tw-rounded-md tw-border tw-border-solid tw-border-neutral-200 tw-bg-white tw-p-4"
   >
-    <div
-      class="tw-pointer-events-auto tw-sticky tw-top-0 tw-h-screen tw-overflow-y-auto tw-border-0 tw-border-l tw-border-solid tw-border-neutral-200 tw-bg-white tw-p-4 tw-shadow-xl"
-    >
+    <div>
       <div class="tw-mb-4 tw-flex tw-items-start tw-justify-between tw-gap-2">
         <div>
           <p class="tw-m-0 tw-text-xs tw-text-neutral-500">

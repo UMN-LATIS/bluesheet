@@ -23,17 +23,20 @@
       </button>
     </header>
 
-    <div class="tw-flex tw-items-start tw-gap-4">
-      <!--
-        Sticky rather than fixed, so it scrolls with the page header and only
-        pins once the grid is taller than the window.
-      -->
-      <ScheduleSidebar
-        v-if="isSidebarShown"
-        class="tw-sticky tw-top-4 tw-max-h-[calc(100vh-2rem)] tw-w-80 tw-flex-none tw-overflow-y-auto"
-        :options="filterOptions"
-        :schedule="schedule"
-      />
+    <!--
+      The side panels sit in wrappers that add no height of their own, so
+      the row is exactly as tall as the chips and grid, and each panel fills
+      that height and scrolls inside it. Without the wrapper, a long list
+      would stretch the row instead.
+    -->
+    <div class="tw-flex tw-gap-4">
+      <div v-if="isSidebarShown" class="tw-relative tw-w-80 tw-flex-none">
+        <ScheduleSidebar
+          class="tw-absolute tw-inset-0"
+          :options="filterOptions"
+          :schedule="schedule"
+        />
+      </div>
 
       <!-- min-w-0 lets the grid scroll sideways inside a flex row instead of stretching it. -->
       <div class="tw-min-w-0 tw-flex-1">
@@ -62,13 +65,15 @@
           </template>
         </ScheduleGrid>
       </div>
-    </div>
 
-    <SectionSheet
-      v-if="selectedSection"
-      :section="selectedSection"
-      @close="schedule.dispatch({ type: 'deselected' })"
-    />
+      <div v-if="selectedSection" class="tw-relative tw-w-96 tw-flex-none">
+        <SectionSheet
+          class="tw-absolute tw-inset-0"
+          :section="selectedSection"
+          @close="schedule.dispatch({ type: 'deselected' })"
+        />
+      </div>
+    </div>
   </div>
 </template>
 

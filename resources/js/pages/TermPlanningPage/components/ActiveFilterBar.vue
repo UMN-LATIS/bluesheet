@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="facetsInUse.length > 0"
-    class="tw-mb-2 tw-flex tw-flex-wrap tw-items-center tw-gap-2 tw-text-sm"
+    class="tw-mb-2 tw-flex tw-flex-wrap tw-items-center tw-gap-2 tw-text-xs"
   >
     <span class="tw-mr-2 tw-text-neutral-500">
       {{ shownCount }} of {{ totalCount }} sections
@@ -11,19 +11,19 @@
       <!-- Chips within a facet are alternatives; facets narrow each other. -->
       <span
         v-if="index > 0"
-        class="tw-text-xs tw-font-semibold tw-uppercase tw-text-neutral-500"
+        class="tw-font-semibold tw-uppercase tw-text-neutral-500"
       >
         and
       </span>
       <span
         v-for="value in filters[facet]"
         :key="value"
-        class="tw-inline-flex tw-items-center tw-gap-1 tw-rounded-full tw-border tw-border-solid tw-border-neutral-400 tw-py-1 tw-pl-3 tw-pr-1"
+        class="tw-inline-flex tw-items-center tw-gap-1 tw-rounded-full tw-border tw-border-solid tw-border-neutral-400 tw-py-0.5 tw-pl-2.5 tw-pr-0.5"
       >
         {{ optionLabel(options, facet, value) }}
         <button
           type="button"
-          class="tw-flex tw-h-5 tw-w-5 tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-leading-none tw-text-neutral-600 hover:tw-bg-neutral-200"
+          class="tw-flex tw-h-4 tw-w-4 tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-leading-none tw-text-neutral-600 hover:tw-bg-neutral-200"
           :aria-label="`Remove ${optionLabel(options, facet, value)}`"
           @click="
             schedule.dispatch({

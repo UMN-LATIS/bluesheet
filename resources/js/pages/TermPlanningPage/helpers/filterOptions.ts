@@ -31,6 +31,9 @@ export interface PersonOption {
   name: string;
   /** For a chip: first initial and last name, e.g. "A. García". "TBA" for the TBA row. */
   shortName: string;
+  /** Both null on the TBA row, which stands for nobody in particular. */
+  emplid: number | null;
+  internetId: string | null;
   sectionCount: number;
 }
 
@@ -154,6 +157,7 @@ function buildFaculty(sections: SisSection[]): {
       name: string;
       shortName: string;
       lastName: string | null;
+      internetId: string | null;
       sectionIds: Set<number>;
     }
   >();
@@ -181,6 +185,7 @@ function buildFaculty(sections: SisSection[]): {
           name,
           shortName,
           lastName: instructor.lastName,
+          internetId: instructor.internetId,
           sectionIds: new Set(),
         };
         draftsByEmplid.set(instructor.emplid, draft);
@@ -195,6 +200,8 @@ function buildFaculty(sections: SisSection[]): {
         value: String(emplid),
         name: draft.name,
         shortName: draft.shortName,
+        emplid,
+        internetId: draft.internetId,
         sectionCount: draft.sectionIds.size,
       },
       lastName: draft.lastName,
@@ -218,6 +225,8 @@ function buildFaculty(sections: SisSection[]): {
           value: TBA_PERSON,
           name: "TBA",
           shortName: "TBA",
+          emplid: null,
+          internetId: null,
           sectionCount: tbaSectionCount,
         }
       : null;
