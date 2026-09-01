@@ -11,10 +11,13 @@
     :style="{ width: `${view.layout.width}px` }"
   >
     <ColumnHeader>
-      <!-- Held clear of the gutter as the column scrolls under it. -->
+      <!--
+        Held clear of the gutter as the column scrolls under it, with a gap
+        so the name does not sit against the gutter's edge.
+      -->
       <span
         class="tw-sticky"
-        :style="{ left: 'var(--day-label-offset, 0px)' }"
+        :style="{ left: 'calc(var(--day-label-offset, 0px) + 0.5rem)' }"
         >{{ label }}</span
       >
     </ColumnHeader>
