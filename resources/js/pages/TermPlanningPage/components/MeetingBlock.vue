@@ -21,10 +21,15 @@
     <div
       class="tw-flex tw-h-full tw-flex-col tw-justify-between tw-overflow-hidden tw-whitespace-nowrap"
     >
-      <span class="tw-font-semibold">{{ formatClock(startMinute) }}</span>
-      <span v-if="hasRoomForEndTime" class="tw-opacity-70">{{
-        formatClock(endMinute)
-      }}</span>
+      <!-- What a block says is the caller's business; where it sits is this
+           component's. Its own times are what a caller with nothing to say
+           gets. -->
+      <slot>
+        <span class="tw-font-semibold">{{ formatClock(startMinute) }}</span>
+        <span v-if="hasRoomForEndTime" class="tw-opacity-70">{{
+          formatClock(endMinute)
+        }}</span>
+      </slot>
     </div>
 
     <!--

@@ -7,15 +7,20 @@
       </p>
     </header>
 
-    <ScheduleGrid />
+    <ScheduleGrid :schedule="schedule" />
   </div>
 </template>
 
 <script setup lang="ts">
 import ScheduleGrid from "./components/ScheduleGrid.vue";
+import { useScheduleEditor } from "./useScheduleEditor/useScheduleEditor";
 
 defineProps<{
   groupId: number;
   termCode: number | null;
 }>();
+
+// Held here rather than inside the grid, so that the toolbar, sidebar and
+// detail sheet still to come all read and change the same schedule.
+const schedule = useScheduleEditor();
 </script>

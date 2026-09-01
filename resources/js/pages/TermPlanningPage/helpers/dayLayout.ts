@@ -72,11 +72,13 @@ export function layOutDay(
 
   return {
     width: laneCount * laneWidth + CREATE_GUTTER,
+    // Whole pixels: blocks render crisply, and the width a caller is handed
+    // to decide what will fit reads as a number rather than 82.33333333.
     placed: lanes.map(({ meeting, lane }) => ({
       meeting,
       lane,
-      left: lane * laneWidth,
-      width: laneWidth - LANE_GAP,
+      left: Math.round(lane * laneWidth),
+      width: Math.round(laneWidth - LANE_GAP),
     })),
   };
 }
