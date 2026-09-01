@@ -49,6 +49,9 @@ class SisSectionResource extends JsonResource {
             'emplid' => $instructor->emplid,
             'role' => $instructor->role,
             'name' => $instructor->employee?->full_name,
+            // On its own because a grid block too narrow for the full name
+            // cannot split one client-side: "de la Cruz" has no safe seam.
+            'lastName' => $instructor->employee?->last_name,
             'internetId' => $instructor->employee?->internet_id,
         ];
     }

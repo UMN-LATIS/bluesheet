@@ -150,6 +150,7 @@ describe('GET /api/sis/groups/:groupId/sections', function () {
         $section = sectionInGroupDept();
         $employee = SisEmployee::factory()->create([
             'full_name' => 'Ana García',
+            'last_name' => 'García',
             'internet_id' => 'garci123',
         ]);
         SisClassInstructor::factory()->create([
@@ -165,6 +166,7 @@ describe('GET /api/sis/groups/:groupId/sections', function () {
             'emplid' => $employee->emplid,
             'role' => 'PI',
             'name' => 'Ana García',
+            'lastName' => 'García',
             'internetId' => 'garci123',
         ]]);
     });
