@@ -29,19 +29,9 @@
         <template v-for="level in courseLevels" :key="level.label">
           <!-- Pinned just under the group header, whose height is h-8. -->
           <div
-            class="tw-sticky tw-top-8 tw-z-10 tw-flex tw-items-center tw-border-0 tw-border-b tw-border-solid tw-border-neutral-100 tw-bg-neutral-50"
+            class="tw-sticky tw-top-8 tw-z-10 tw-border-0 tw-border-b tw-border-solid tw-border-neutral-100 tw-bg-neutral-50"
           >
-            <button
-              type="button"
-              class="tw-flex tw-h-full tw-w-7 tw-flex-none tw-cursor-pointer tw-items-center tw-justify-center tw-self-stretch tw-border-none tw-bg-transparent tw-text-[0.6rem] tw-text-neutral-500"
-              :aria-label="`${isLevelOpen(level.label) ? 'Collapse' : 'Expand'} ${level.label}`"
-              :aria-expanded="isLevelOpen(level.label)"
-              @click="toggleLevel(level.label)"
-            >
-              {{ isLevelOpen(level.label) ? "▼" : "▶" }}
-            </button>
             <FilterRow
-              class="tw-flex-1 tw-pl-0"
               :isChecked="level.checkedCount === level.courses.length"
               :isIndeterminate="
                 level.checkedCount > 0 &&
@@ -63,7 +53,7 @@
               <template #annotation>{{ level.courses.length }}</template>
             </FilterRow>
           </div>
-          <FilterRows v-if="isLevelOpen(level.label)" :items="level.courses">
+          <FilterRows :items="level.courses">
             <template #default="{ item }">
               <FilterRow
                 :isChecked="isChecked('course', item.value)"
@@ -191,8 +181,7 @@ import type { ScheduleEditor } from "../useScheduleEditor";
 /**
  * The lists a user narrows the grid with. Every checkbox here is a filter
  * event on the schedule; the sidebar keeps nothing of its own but the search
- * text and which levels are folded, both of which only decide what is in
- * view.
+ * text, which only decides which rows are in view.
  */
 const props = defineProps<{
   options: FilterOptions;
@@ -219,17 +208,6 @@ const clearFacet = (facet: FilterFacet) =>
     facet,
     values: filters.value[facet],
   });
-
-/** Levels start open; only the ones a user has folded are remembered. */
-const foldedLevels = ref<string[]>([]);
-
-const isLevelOpen = (label: string) => !foldedLevels.value.includes(label);
-
-const toggleLevel = (label: string) => {
-  foldedLevels.value = isLevelOpen(label)
-    ? [...foldedLevels.value, label]
-    : foldedLevels.value.filter((folded) => folded !== label);
-};
 
 /**
  * A row stays in view while it is checked, whatever the search says, so
