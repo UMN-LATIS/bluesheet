@@ -1,11 +1,26 @@
 <template>
   <FullScreenLayout>
-    <!-- Breadcrumb row: filled in by the next phase. -->
     <div
       class="tw-flex tw-h-9 tw-flex-none tw-items-center tw-justify-between tw-border-0 tw-border-b tw-border-solid tw-border-neutral-200 tw-bg-white tw-px-3 tw-text-sm"
     >
-      <span class="tw-text-neutral-600">Term Planning</span>
-      <span v-if="term" class="tw-text-neutral-600">{{ term.name }}</span>
+      <Breadcrumbs :crumbs="crumbs" />
+
+      <label class="tw-m-0 tw-flex tw-items-center tw-gap-2 tw-font-normal">
+        <span class="tw-sr-only">Term</span>
+        <select
+          class="tw-rounded tw-border tw-border-solid tw-border-neutral-300 tw-bg-white tw-py-0.5 tw-pl-2 tw-pr-7 tw-text-sm"
+          :value="term?.id"
+          @change="goToTerm(($event.target as HTMLSelectElement).value)"
+        >
+          <option
+            v-for="option in termOptions"
+            :key="option.id"
+            :value="option.id"
+          >
+            {{ option.name }}
+          </option>
+        </select>
+      </label>
     </div>
 
     <!--
@@ -14,7 +29,9 @@
     -->
     <div class="tw-flex tw-min-h-0 tw-flex-1">
       <ScheduleSidebar
-        class="tw-w-80 tw-flex-none tw-border-0 tw-border-r tw-border-solid tw-border-neutral-200"
+        v-model:isCollapsed="isSidebarCollapsed"
+        class="tw-flex-none tw-border-0 tw-border-r tw-border-solid tw-border-neutral-200"
+        :class="isSidebarCollapsed ? 'tw-w-10' : 'tw-w-80'"
         :options="filterOptions"
         :schedule="schedule"
       />
@@ -67,10 +84,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import dayjs from "dayjs";
 import { isEqual, omit } from "lodash-es";
+import Breadcrumbs, { type Crumb } from "@/components/Breadcrumbs.vue";
 import FullScreenLayout from "@/layouts/FullScreenLayout.vue";
 import ActiveFilterBar from "./components/ActiveFilterBar.vue";
 import MeetingTimes from "./components/MeetingTimes.vue";
@@ -83,6 +101,7 @@ import { buildFilterOptions } from "./helpers/filterOptions";
 import { decodeFilters, encodeFilters } from "./helpers/filterQuery";
 import { filterSections } from "./helpers/scheduleFilters";
 import { placeSections } from "./helpers/sectionPlacement";
+import { useGroupQuery } from "./queries/useGroupQuery";
 import { useSisSectionsQuery } from "./queries/useSisSectionsQuery";
 import { useSisTermsQuery } from "./queries/useSisTermsQuery";
 import { type BlockTone, FILTER_FACETS, type Meeting } from "./types";
@@ -107,6 +126,33 @@ const term = computed(() => {
     ? currentTerm(terms, dayjs().format("YYYY-MM-DD"))
     : (terms.find(({ id }) => id === props.termCode) ?? null);
 });
+
+/** Newest first, since planning looks forward. */
+const termOptions = computed(() =>
+  [...(termsQuery.data.value ?? [])].sort((a, b) => b.id - a.id),
+);
+
+// The filters ride along in the query, so a view narrowed to one person
+// stays narrowed when the term changes.
+const goToTerm = (termCode: string) =>
+  router.push({
+    name: "termPlanning",
+    params: { groupId: props.groupId, termCode },
+    query: route.query,
+  });
+
+const groupQuery = useGroupQuery(props.groupId);
+
+const isSidebarCollapsed = ref(false);
+
+const crumbs = computed<Crumb[]>(() => [
+  { label: "My Groups", to: { name: "user" } },
+  {
+    label: groupQuery.data.value?.group_title ?? "",
+    to: { name: "group", params: { groupId: props.groupId } },
+  },
+  { label: "Term Planning" },
+]);
 
 const sectionsQuery = useSisSectionsQuery(
   props.groupId,

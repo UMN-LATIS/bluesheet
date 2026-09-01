@@ -1,9 +1,77 @@
 <template>
+  <!--
+    Collapsed, the sidebar is a rail: the same column, narrowed to its
+    expand button, so the control to bring the filters back sits exactly
+    where the filters were. A badge on the rail says how many filter values
+    are still narrowing the grid while the sidebar is out of view.
+  -->
   <aside
+    v-if="isCollapsed"
+    aria-label="Filters, collapsed"
+    class="tw-flex tw-min-h-0 tw-flex-col tw-items-center tw-gap-2 tw-bg-white tw-py-1.5"
+  >
+    <button
+      type="button"
+      :class="ICON_BUTTON_CLASS"
+      aria-label="Show filters"
+      title="Show filters"
+      @click="isCollapsed = false"
+    >
+      <i class="fas fa-angle-double-right" aria-hidden="true" />
+    </button>
+    <span
+      v-if="activeFilterCount > 0"
+      class="tw-rounded-full tw-bg-umn-maroon tw-px-1.5 tw-text-[0.65rem] tw-font-semibold tw-leading-4 tw-text-white"
+      :title="`${activeFilterCount} active filters`"
+    >
+      {{ activeFilterCount }}
+    </span>
+  </aside>
+
+  <aside
+    v-else
     aria-label="Filters"
     class="tw-flex tw-min-h-0 tw-flex-col tw-bg-white"
   >
-    <!-- Outside the scroll box below, so it is in reach however far the lists go. -->
+    <!--
+      Same height as the toolbar over the grid, so the two read as one band.
+      "New" is a placeholder until a plan can be edited (epic slice 6).
+    -->
+    <div
+      class="tw-flex tw-h-9 tw-flex-none tw-items-center tw-justify-between tw-border-0 tw-border-b tw-border-solid tw-border-neutral-200 tw-px-1.5"
+    >
+      <button
+        type="button"
+        :class="ICON_BUTTON_CLASS"
+        aria-label="Hide filters"
+        title="Hide filters"
+        @click="isCollapsed = true"
+      >
+        <i class="fas fa-angle-double-left" aria-hidden="true" />
+      </button>
+
+      <span
+        class="tw-inline-flex tw-text-xs"
+        title="Available once a plan can be edited"
+      >
+        <button
+          type="button"
+          disabled
+          class="tw-rounded-l tw-border tw-border-solid tw-border-bs-blue tw-bg-bs-blue tw-px-2.5 tw-py-1 tw-font-semibold tw-text-white disabled:tw-cursor-not-allowed disabled:tw-opacity-50"
+        >
+          <i class="fas fa-plus tw-mr-1" aria-hidden="true" />New
+        </button>
+        <button
+          type="button"
+          disabled
+          aria-label="More ways to create"
+          class="tw--ml-px tw-rounded-r tw-border tw-border-solid tw-border-bs-blue tw-bg-bs-blue tw-px-1.5 tw-py-1 tw-text-white disabled:tw-cursor-not-allowed disabled:tw-opacity-50"
+        >
+          <i class="fas fa-caret-down" aria-hidden="true" />
+        </button>
+      </span>
+    </div>
+
     <div class="tw-flex-none tw-p-3">
       <label class="tw-sr-only" for="schedule-filter-search">
         Search courses, people, sections
@@ -186,9 +254,19 @@ const props = defineProps<{
   schedule: ScheduleEditor;
 }>();
 
+/** Whether the sidebar is folded to its rail. The page sizes the column. */
+const isCollapsed = defineModel<boolean>("isCollapsed", { default: false });
+
+const ICON_BUTTON_CLASS =
+  "tw-flex tw-h-7 tw-w-7 tw-cursor-pointer tw-items-center tw-justify-center tw-rounded tw-border-none tw-bg-transparent tw-text-neutral-500 hover:tw-bg-neutral-100 hover:tw-text-neutral-800";
+
 const search = ref("");
 
 const filters = computed(() => props.schedule.state.value.filters);
+
+const activeFilterCount = computed(() =>
+  Object.values(filters.value).reduce((sum, values) => sum + values.length, 0),
+);
 
 const isChecked = (facet: FilterFacet, value: string) =>
   filters.value[facet].includes(value);
