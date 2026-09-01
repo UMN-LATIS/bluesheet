@@ -39,18 +39,21 @@ const props = defineProps<{
 }>();
 
 /**
- * Two lanes of a day's base width. At or above it — a day with little
- * overlap — a block can spell out its section number and component; below,
- * the catalog number and a last name are all that fit.
+ * Two lanes of a day's base width. At or above it a block has room to name
+ * the kind of meeting it is as well as who teaches it; below, the lane goes
+ * to the instructor's name, which is the longer of the two.
  */
 const WIDE_LANE_WIDTH = 120;
 
 const isWide = computed(() => props.width >= WIDE_LANE_WIDTH);
 
-const heading = computed(() =>
-  isWide.value
-    ? `${props.section.catalogNumber} · ${props.section.section}`
-    : props.section.catalogNumber,
+/**
+ * Both halves of what a scheduler calls a class: "3005W · 001". Two
+ * sections of one course sit side by side in the same hour, so the catalog
+ * number alone does not say which block is which.
+ */
+const heading = computed(
+  () => `${props.section.catalogNumber} · ${props.section.section}`,
 );
 
 /** The principal instructor: the one a scheduler scans the grid for. */
