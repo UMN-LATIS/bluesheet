@@ -60,7 +60,9 @@ export type Interaction =
  */
 export type Selection =
   | { kind: "meeting"; meetingId: string }
-  | { kind: "section"; sectionId: number };
+  | { kind: "section"; sectionId: number }
+  /** A cell of the coverage heatmap: one hour of one day. */
+  | { kind: "hour"; dayIndex: number; startMinute: number };
 
 /**
  * Only the local edits live here. The schedule itself — the sections the
@@ -113,8 +115,10 @@ export type EditorEvent =
   | { type: "cancelled" }
   /** The detail sheet's close button. */
   | { type: "deselected" }
-  /** A chip in the no-set-time tray. */
+  /** A chip in the no-set-time tray, or a row in the hour sheet. */
   | { type: "selectedSection"; sectionId: number }
+  /** A cell of the coverage heatmap. */
+  | { type: "selectedHour"; dayIndex: number; startMinute: number }
   /** A checkbox checked, or a whole course level's checkboxes at once. */
   | { type: "filterValuesAdded"; facet: FilterFacet; values: string[] }
   /** A checkbox unchecked, a chip's ×, or a whole course level at once. */

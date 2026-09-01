@@ -183,6 +183,16 @@ function reduce(
         selection: { kind: "section", sectionId: event.sectionId },
       };
 
+    case "selectedHour":
+      return {
+        ...state,
+        selection: {
+          kind: "hour",
+          dayIndex: event.dayIndex,
+          startMinute: event.startMinute,
+        },
+      };
+
     case "filterValuesAdded":
       return withFacet(state, event.facet, (checked) => [
         ...checked,

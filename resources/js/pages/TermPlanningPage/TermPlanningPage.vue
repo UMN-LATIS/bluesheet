@@ -113,7 +113,11 @@
           </ScheduleGrid>
         </div>
         <div v-else class="tw-min-h-0 tw-flex-1 tw-overflow-auto tw-bg-white">
-          <CoverageHeatmap :meetings="shownMeetings" :dayNames="DAY_NAMES" />
+          <CoverageHeatmap
+            :meetings="shownMeetings"
+            :dayNames="DAY_NAMES"
+            :schedule="schedule"
+          />
         </div>
 
         <UnscheduledTray
@@ -124,8 +128,17 @@
         />
       </div>
 
+      <HourSheet
+        v-if="selectedHour"
+        class="tw-w-96 tw-flex-none tw-border-0 tw-border-l tw-border-solid tw-border-neutral-200"
+        :dayName="DAY_NAMES[selectedHour.dayIndex]"
+        :startMinute="selectedHour.startMinute"
+        :entries="hourEntries"
+        :schedule="schedule"
+        @close="schedule.dispatch({ type: 'deselected' })"
+      />
       <SectionSheet
-        v-if="selectedSection"
+        v-else-if="selectedSection"
         class="tw-w-96 tw-flex-none tw-border-0 tw-border-l tw-border-solid tw-border-neutral-200"
         :section="selectedSection"
         @close="schedule.dispatch({ type: 'deselected' })"
@@ -143,6 +156,7 @@ import Breadcrumbs, { type Crumb } from "@/components/Breadcrumbs.vue";
 import FullScreenLayout from "@/layouts/FullScreenLayout.vue";
 import ActiveFilterBar from "./components/ActiveFilterBar.vue";
 import CoverageHeatmap from "./components/CoverageHeatmap.vue";
+import HourSheet, { type HourEntry } from "./components/HourSheet.vue";
 import MeetingTimes from "./components/MeetingTimes.vue";
 import MeetingTypeKey from "./components/MeetingTypeKey.vue";
 import ScheduleGrid from "./components/ScheduleGrid.vue";
@@ -287,11 +301,36 @@ const shownMeetings = computed(() =>
   mergeSchedule(schedule.base.value, schedule.state.value),
 );
 
+const selectedHour = computed(() => {
+  const { selection } = schedule.state.value;
+  return selection?.kind === "hour" ? selection : null;
+});
+
+/** The sections whose meetings overlap the selected hour, as the grid shows them. */
+const hourEntries = computed<HourEntry[]>(() => {
+  const hour = selectedHour.value;
+  if (!hour) return [];
+
+  return shownMeetings.value
+    .filter(
+      (meeting) =>
+        meeting.dayIndex === hour.dayIndex &&
+        meeting.startMinute < hour.startMinute + 60 &&
+        meeting.endMinute > hour.startMinute,
+    )
+    .flatMap((meeting) => {
+      // A meeting drawn locally has no section to list.
+      const section = sectionOf(meeting.id);
+      return section ? [{ ...meeting, meetingId: meeting.id, section }] : [];
+    })
+    .sort((a, b) => a.startMinute - b.startMinute);
+});
+
 // A meeting drawn locally (local-N) has no section, so selecting it stores
 // an id but opens no sheet.
 const selectedSection = computed(() => {
   const { selection } = schedule.state.value;
-  if (!selection) return null;
+  if (!selection || selection.kind === "hour") return null;
 
   return selection.kind === "meeting"
     ? (sectionOf(selection.meetingId) ?? null)
