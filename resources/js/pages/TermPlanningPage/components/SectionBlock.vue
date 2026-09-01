@@ -1,16 +1,8 @@
 <template>
-  <div class="tw-overflow-hidden">
+  <div class="tw-overflow-hidden tw-leading-tight">
     <div class="tw-truncate tw-font-semibold">{{ heading }}</div>
     <div class="tw-truncate">{{ byline }}</div>
-    <!--
-      A step smaller than the lines above it: the range is the block's least
-      important line, and at the block's own 11px the widest of them,
-      "11:15 – 12:05", overruns the narrowest lane by three pixels.
-    -->
-    <div
-      v-if="hasRoomForTimes"
-      class="tw-truncate tw-text-[10px] tw-opacity-70"
-    >
+    <div v-if="hasRoomForTimes" class="tw-truncate tw-opacity-50">
       {{ timeRange }}
     </div>
   </div>
@@ -18,7 +10,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { formatClockWithHalf } from "../helpers/timeScale";
+import { formatTimeRange } from "../helpers/timeScale";
 import type { SisSection } from "../types";
 
 /**
@@ -53,7 +45,8 @@ const isWide = computed(() => props.width >= WIDE_LANE_WIDTH);
  * number alone does not say which block is which.
  */
 const heading = computed(
-  () => `${props.section.catalogNumber} · ${props.section.section}`,
+  () =>
+    `${props.section.subject} ${props.section.catalogNumber} · ${props.section.section}`,
 );
 
 /** The principal instructor: the one a scheduler scans the grid for. */
@@ -81,9 +74,7 @@ const hasRoomForTimes = computed(
   () => props.endMinute - props.startMinute >= THREE_LINE_MINUTES,
 );
 
-/** When the class runs, both ends, the way a calendar states a booking. */
-const timeRange = computed(
-  () =>
-    `${formatClockWithHalf(props.startMinute)} – ${formatClockWithHalf(props.endMinute)}`,
+const timeRange = computed(() =>
+  formatTimeRange(props.startMinute, props.endMinute),
 );
 </script>

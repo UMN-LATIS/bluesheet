@@ -62,12 +62,39 @@ export function formatClock(minute: number): string {
   return `${hour % 12 || 12}:${String(minute % 60).padStart(2, "0")}`;
 }
 
+/** Which half of the day a minute falls in, as one letter. */
+const halfOfDay = (minute: number) =>
+  Math.floor(minute / 60) < 12 ? "a" : "p";
+
+/** "9:05", and "9" on the hour, where every character costs lane width. */
+const formatClockBrief = (minute: number) =>
+  minute % 60 === 0
+    ? `${Math.floor(minute / 60) % 12 || 12}`
+    : formatClock(minute);
+
 /**
- * "9:05a" — for a block out on the grid, where the clock is columns away
- * and a whole "AM" would cost room the block needs for its class.
+ * "9:05a", "12p" — for a block out on the grid, where the clock is columns
+ * away and a whole "AM" would cost room the block needs for its class.
  */
 export function formatClockWithHalf(minute: number): string {
-  return `${formatClock(minute)}${Math.floor(minute / 60) < 12 ? "a" : "p"}`;
+  return `${formatClockBrief(minute)}${halfOfDay(minute)}`;
+}
+
+/**
+ * "9 – 11a", "11:15a – 1:15p" — when a class runs, in as few characters as
+ * say it unambiguously.
+ *
+ * A class contained in one half of the day marks only its end: a class
+ * cannot end before it starts, so a reader seeing "9 – 11a" has no second
+ * reading available.
+ */
+export function formatTimeRange(startMinute: number, endMinute: number) {
+  const start =
+    halfOfDay(startMinute) === halfOfDay(endMinute)
+      ? formatClockBrief(startMinute)
+      : formatClockWithHalf(startMinute);
+
+  return `${start} – ${formatClockWithHalf(endMinute)}`;
 }
 
 /** "9:05 AM" — for tooltips and anywhere the hour is not already in view. */

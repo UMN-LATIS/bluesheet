@@ -22,11 +22,12 @@ export const BASE_DAY_WIDTH = 250;
 
 /**
  * The narrowest a meeting goes before the day widens to make room. Set by
- * the longest thing a block prints: "11:15a – 12:05p" needs 88px of lane
- * once the block's padding and border are paid for, and the rest is slack
- * for fonts that render a little wider than this machine's.
+ * the longest thing a block prints, its full name: "ANTH-3005W-001" needs
+ * 107px of lane once the block's padding and border are paid for, and the
+ * rest is slack for fonts rendering wider than this machine's, which bold
+ * type does more of.
  */
-export const MIN_LANE_WIDTH = 92;
+export const MIN_LANE_WIDTH = 112;
 
 /** Hairline between neighbouring lanes, so two blocks never look like one. */
 const LANE_GAP = 1;
