@@ -143,7 +143,9 @@
       <ul class="tw-m-0 tw-list-none tw-p-0">
         <template v-if="activeFacet === 'course'">
           <template v-for="level in courseLevels" :key="level.label">
-            <li>
+            <!-- Sticky, so a scroller a long way down a level still knows
+                 which one they are reading. -->
+            <li class="tw-sticky tw-top-0 tw-z-10 tw-bg-surface-bright">
               <FilterRow
                 isGroupHeading
                 :isChecked="level.checkedCount === level.courses.length"
