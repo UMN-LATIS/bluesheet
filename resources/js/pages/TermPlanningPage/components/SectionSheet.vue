@@ -543,12 +543,12 @@
     >
       <button
         type="button"
-        class="tw-min-h-11 tw-rounded-full tw-border-none tw-bg-primary tw-px-5.5 tw-text-[13px] tw-font-bold tw-text-on-primary disabled:tw-cursor-default disabled:tw-bg-surface-container-high disabled:tw-text-on-surface-variant"
+        class="tw-min-h-11 tw-rounded-full tw-border-none tw-bg-primary tw-px-6 tw-text-[13px] tw-font-bold tw-text-on-primary disabled:tw-cursor-default disabled:tw-bg-surface-container-high disabled:tw-text-on-surface-variant"
         :class="{ 'tw-cursor-pointer': isDirty && problems.length === 0 }"
         :disabled="!isDirty || problems.length > 0"
         @click="schedule.saveDraft(section.id)"
       >
-        Save changes
+        Save
       </button>
       <button
         v-if="isDirty"
