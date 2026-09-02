@@ -44,7 +44,7 @@
         </button>
       </div>
 
-      <h2 class="tw-m-0 tw-font-mono tw-text-base tw-font-bold">
+      <h2 class="tw-m-0 tw-text-base tw-font-bold">
         {{ draft.subject }} {{ draft.catalogNumber }} · {{ draft.section }}
         <!-- How many other numbers this same class is listed under. -->
         <span v-if="partners.length > 0" class="tw-text-neutral-400">
@@ -64,7 +64,7 @@
           :id="fieldId('section')"
           :value="draft.section"
           type="text"
-          :class="[INPUT_CLASS, 'tw-w-24 tw-font-mono']"
+          :class="[INPUT_CLASS, 'tw-w-24']"
           @input="edit({ section: valueOf($event) })"
         />
       </div>
@@ -264,9 +264,7 @@
           :key="`${partner.subject}${partner.catalogNumber}`"
           class="tw-mb-1 tw-flex tw-items-baseline tw-justify-between tw-gap-2 tw-rounded tw-border tw-border-solid tw-border-neutral-200 tw-px-2.5 tw-py-1.5"
         >
-          <span class="tw-font-mono">
-            {{ partner.subject }} {{ partner.catalogNumber }}
-          </span>
+          <span>{{ partner.subject }} {{ partner.catalogNumber }}</span>
           <span class="tw-text-xs tw-text-neutral-500">
             {{
               partner.subject === section.subject

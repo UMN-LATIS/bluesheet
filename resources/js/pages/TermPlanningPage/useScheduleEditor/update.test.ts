@@ -829,6 +829,26 @@ describe("days and times in the sheet", () => {
     ]);
   });
 
+  it("saving collapses a day that ended up meeting twice at once", () => {
+    const state = after(
+      [
+        // "Add meeting time" lands on Monday, which the section already has.
+        { type: "meetingPatternAdded", sectionId: 1 },
+        { type: "draftSaved", sectionId: 1 },
+      ],
+      initialState(),
+      contextOf(
+        plannedSection(1, [
+          { days: ["mon", "wed"], startTime: "09:45", endTime: "11:00" },
+        ]),
+      ),
+    );
+
+    expect(state.sectionEdits[1].meetings).toEqual([
+      { days: ["mon", "wed"], startTime: "09:45", endTime: "11:00" },
+    ]);
+  });
+
   it("saving a move keeps the sheet on the section, at its new block", () => {
     const selected = after(
       [

@@ -9,7 +9,7 @@
  */
 
 import { GRID_DAYS } from "../helpers/sectionPlacement";
-import { clockFromMinutes } from "../helpers/timeScale";
+import { clockFromMinutes, minutesFromClock } from "../helpers/timeScale";
 import type { SisDay, SisSectionMeeting } from "../types";
 import { WEEK_DAYS } from "../types";
 import type { Placement } from "./types";
@@ -113,6 +113,73 @@ export function withPlacement(
       ? { ...pattern, days: inWeekOrder([...pattern.days, day]) }
       : pattern,
   );
+}
+
+/**
+ * The patterns with any overlap on a day merged into the one stretch it
+ * really is. Two blocks on one day at overlapping times are a class meeting
+ * itself twice, which is not something a schedule can mean, so a save says
+ * it once: Mon 9:00-11:00 and Mon 9:45-11:00 become Mon 9:00-11:00.
+ *
+ * Worked out a day at a time, so merging Wednesday's two blocks cannot
+ * quietly move Monday. Ranges that merely touch are left alone: 9 to 10 and
+ * 10 to 11 do not overlap.
+ *
+ * Days that end up meeting at the same times are then stated as one pattern,
+ * which is also how two patterns saying the same thing become one.
+ */
+export function withoutOverlaps(
+  patterns: SisSectionMeeting[],
+): SisSectionMeeting[] {
+  const byTimes = new Map<string, SisDay[]>();
+
+  for (const day of daysMet(patterns)) {
+    for (const range of merged(rangesOn(patterns, day))) {
+      const key = `${range.startTime}-${range.endTime}`;
+      byTimes.set(key, [...(byTimes.get(key) ?? []), day]);
+    }
+  }
+
+  return [...byTimes.entries()]
+    .map(([key, days]) => {
+      const [startTime, endTime] = key.split("-");
+      return { days: inWeekOrder(days), startTime, endTime };
+    })
+    .sort(
+      (a, b) => minutesFromClock(a.startTime) - minutesFromClock(b.startTime),
+    );
+}
+
+/** Every day the section meets, in week order and each of them once. */
+const daysMet = (patterns: SisSectionMeeting[]) =>
+  inWeekOrder(patterns.flatMap((pattern) => pattern.days));
+
+/** What the section meets at on one day, earliest first. */
+const rangesOn = (patterns: SisSectionMeeting[], day: SisDay) =>
+  patterns
+    .filter((pattern) => pattern.days.includes(day))
+    .map(({ startTime, endTime }) => ({ startTime, endTime }))
+    .sort(
+      (a, b) => minutesFromClock(a.startTime) - minutesFromClock(b.startTime),
+    );
+
+/** One day's ranges with the overlapping ones run together. */
+function merged(ranges: { startTime: string; endTime: string }[]) {
+  return ranges.reduce<typeof ranges>((kept, range) => {
+    const last = kept[kept.length - 1];
+    const overlaps =
+      last &&
+      minutesFromClock(range.startTime) < minutesFromClock(last.endTime);
+
+    if (!overlaps) return [...kept, range];
+
+    const endTime =
+      minutesFromClock(range.endTime) > minutesFromClock(last.endTime)
+        ? range.endTime
+        : last.endTime;
+
+    return [...kept.slice(0, -1), { ...last, endTime }];
+  }, []);
 }
 
 /** Days as a week reads them, and each of them once. */

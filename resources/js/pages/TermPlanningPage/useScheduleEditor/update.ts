@@ -34,6 +34,7 @@ import { GRID_DAYS, meetingIdOf } from "../helpers/sectionPlacement";
 import {
   DEFAULT_PATTERN,
   withDayToggled,
+  withoutOverlaps,
   withPlacement,
   withTimes,
 } from "./meetingPatterns";
@@ -246,10 +247,17 @@ function reduce(
     // The draft is stated in full, so saving is a plain merge: a field the
     // form never touched keeps whatever the section already said.
     case "draftSaved": {
-      const edit = {
+      const saved = {
         ...state.sectionEdits[event.sectionId],
         ...state.drafts[event.sectionId],
       };
+
+      // Two blocks on one day at overlapping times are not something the
+      // schedule can mean, and the sheet's "Add meeting time" makes one easy
+      // to create. Saying it once is part of saving it.
+      const edit = saved.meetings
+        ? { ...saved, meetings: withoutOverlaps(saved.meetings) }
+        : saved;
 
       return keepingSelection(
         {
