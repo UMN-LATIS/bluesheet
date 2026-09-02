@@ -1,7 +1,6 @@
 /**
- * What a page needs to own a schedule editor. The grid and the editor's own
- * files reach inside; everything else imports from here.
+ * What a page needs to own a schedule editor. Everything outside this
+ * directory imports from here, and `ScheduleEditor` is the whole surface.
  */
 
 export { useScheduleEditor, type ScheduleEditor } from "./useScheduleEditor";
-export { mergeSchedule } from "./mergeSchedule";

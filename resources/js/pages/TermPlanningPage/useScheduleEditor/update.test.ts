@@ -3,12 +3,26 @@ import { initialState, update } from "./update";
 import type { Meeting } from "../types";
 import type { EditorEvent, EditorState } from "./types";
 
+/**
+ * A stand-in for `crypto.randomUUID` that counts, so a placeholder meeting
+ * has a name worth asserting on. One counter per run of events.
+ */
+const countingUuids = () => {
+  let count = 0;
+  return { createUuid: () => `local-${++count}` };
+};
+
 const after = (
   events: EditorEvent[],
   state: EditorState = initialState(),
   base: Meeting[] = [],
-) =>
-  events.reduce((current, event) => update(current, event, base).state, state);
+) => {
+  const deps = countingUuids();
+  return events.reduce(
+    (current, event) => update(current, event, base, deps).state,
+    state,
+  );
+};
 
 /** A committed meeting drawn out on `dayIndex` from `from` to `to`. */
 const draw = (dayIndex: number, from: number, to: number): EditorEvent[] => [
@@ -24,7 +38,7 @@ describe("drawing", () => {
       { type: "released" },
     ]);
 
-    expect(state.drawn).toEqual([
+    expect(state.placeholderMeetings).toEqual([
       { id: "local-1", dayIndex: 0, startMinute: 600, endMinute: 650 },
     ]);
   });
@@ -32,16 +46,15 @@ describe("drawing", () => {
   it("a drag creates the dragged range", () => {
     const state = after(draw(2, 600, 675));
 
-    expect(state.drawn).toEqual([
+    expect(state.placeholderMeetings).toEqual([
       { id: "local-1", dayIndex: 2, startMinute: 600, endMinute: 675 },
     ]);
-    expect(state.nextLocalId).toBe(2);
   });
 
   it("a drag shorter than the minimum duration counts as a click", () => {
     const state = after(draw(0, 600, 610));
 
-    expect(state.drawn[0]).toMatchObject({
+    expect(state.placeholderMeetings[0]).toMatchObject({
       startMinute: 600,
       endMinute: 650,
     });
@@ -50,7 +63,7 @@ describe("drawing", () => {
   it("snaps the fractional minutes the grid measures", () => {
     const state = after(draw(0, 601.4, 658.2));
 
-    expect(state.drawn[0]).toMatchObject({
+    expect(state.placeholderMeetings[0]).toMatchObject({
       startMinute: 600,
       endMinute: 660,
     });
@@ -63,7 +76,7 @@ describe("drawing", () => {
       { type: "cancelled" },
     ]);
 
-    expect(state.drawn).toEqual([]);
+    expect(state.placeholderMeetings).toEqual([]);
     expect(state.interaction).toEqual({ status: "idle" });
   });
 });
@@ -78,7 +91,7 @@ describe("moving", () => {
   it("leaves the schedule untouched until release", () => {
     const state = after(grabbed, oneMeeting);
 
-    expect(state.drawn).toEqual(oneMeeting.drawn);
+    expect(state.placeholderMeetings).toEqual(oneMeeting.placeholderMeetings);
     expect(state.interaction).toMatchObject({
       status: "moving",
       dayIndex: 2,
@@ -90,7 +103,7 @@ describe("moving", () => {
   it("release commits the draft's day and range", () => {
     const state = after([...grabbed, { type: "released" }], oneMeeting);
 
-    expect(state.drawn).toEqual([
+    expect(state.placeholderMeetings).toEqual([
       { id: "local-1", dayIndex: 2, startMinute: 700, endMinute: 750 },
     ]);
     expect(state.interaction).toEqual({ status: "idle" });
@@ -99,7 +112,7 @@ describe("moving", () => {
   it("cancel reverts to where the meeting was", () => {
     const state = after([...grabbed, { type: "cancelled" }], oneMeeting);
 
-    expect(state.drawn).toEqual(oneMeeting.drawn);
+    expect(state.placeholderMeetings).toEqual(oneMeeting.placeholderMeetings);
     expect(state.interaction).toEqual({ status: "idle" });
   });
 
@@ -113,7 +126,7 @@ describe("moving", () => {
       oneMeeting,
     );
 
-    expect(state.drawn[0]).toMatchObject({
+    expect(state.placeholderMeetings[0]).toMatchObject({
       startMinute: 1210,
       endMinute: 1260,
     });
@@ -138,7 +151,7 @@ describe("resizing", () => {
       oneMeeting,
     );
 
-    expect(state.drawn).toEqual([
+    expect(state.placeholderMeetings).toEqual([
       { id: "local-1", dayIndex: 1, startMinute: 540, endMinute: 645 },
     ]);
   });
@@ -158,7 +171,7 @@ describe("resizing", () => {
       oneMeeting,
     );
 
-    expect(state.drawn).toEqual(oneMeeting.drawn);
+    expect(state.placeholderMeetings).toEqual(oneMeeting.placeholderMeetings);
   });
 
   it("the two ends cannot cross", () => {
@@ -176,7 +189,7 @@ describe("resizing", () => {
       oneMeeting,
     );
 
-    expect(state.drawn[0]).toMatchObject({
+    expect(state.placeholderMeetings[0]).toMatchObject({
       startMinute: 540,
       endMinute: 555,
     });
@@ -198,7 +211,7 @@ describe("resizing", () => {
       first,
     );
 
-    expect(state.drawn[0]).toMatchObject({
+    expect(state.placeholderMeetings[0]).toMatchObject({
       startMinute: 480,
       endMinute: 530,
     });
@@ -249,7 +262,7 @@ describe("editing the server's schedule", () => {
   it("moving a base meeting writes an override, not a drawn meeting", () => {
     const state = after(move(2, 710), initialState(), base);
 
-    expect(state.drawn).toEqual([]);
+    expect(state.placeholderMeetings).toEqual([]);
     expect(state.overrides).toEqual({
       "s1:0:mon": { dayIndex: 2, startMinute: 700, endMinute: 750 },
     });
@@ -475,12 +488,12 @@ describe("filtering", () => {
     const state = after([twoCourses], selected);
 
     expect(state.selection).toEqual({ kind: "meeting", meetingId: "local-1" });
-    expect(state.drawn).toEqual(selected.drawn);
+    expect(state.placeholderMeetings).toEqual(selected.placeholderMeetings);
   });
 
   describe("effects", () => {
     it("a change the user makes is synced to the URL", () => {
-      const step = update(initialState(), twoCourses, []);
+      const step = update(initialState(), twoCourses, [], countingUuids());
 
       expect(step.effects).toEqual([
         { type: "syncFiltersToUrl", filters: step.state.filters },
@@ -492,6 +505,7 @@ describe("filtering", () => {
         initialState(),
         { type: "filtersReplaced", filters: initialState().filters },
         [],
+        countingUuids(),
       );
 
       expect(step.effects).toEqual([]);
@@ -502,6 +516,7 @@ describe("filtering", () => {
         initialState(),
         { type: "pressedEmptySpace", dayIndex: 0, minute: 600 },
         [],
+        countingUuids(),
       );
 
       expect(step.effects).toEqual([]);

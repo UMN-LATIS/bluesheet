@@ -36,12 +36,7 @@
             },
           ]"
           :aria-pressed="section.id === selectedSectionId"
-          @click="
-            schedule.dispatch({
-              type: 'selectedSection',
-              sectionId: section.id,
-            })
-          "
+          @click="schedule.selectSection(section.id)"
         >
           <span class="tw-font-semibold">
             {{ section.subject }} {{ section.catalogNumber }} ·

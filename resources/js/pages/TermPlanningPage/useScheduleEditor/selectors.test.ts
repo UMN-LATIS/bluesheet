@@ -10,13 +10,12 @@ const base: Meeting[] = [
 ];
 
 const atRest: EditorState = {
-  drawn: [],
+  placeholderMeetings: [],
   overrides: {},
   interaction: { status: "idle" },
   lastPlacedId: null,
   selection: null,
   filters: { course: [], person: [], section: [], component: [] },
-  nextLocalId: 1,
 };
 
 describe("selectWeekView while a meeting is carried", () => {
@@ -166,7 +165,9 @@ describe("selectWeekView over local edits", () => {
   it("drawn meetings pack alongside the base's", () => {
     const drawn: EditorState = {
       ...atRest,
-      drawn: [{ id: "local-1", dayIndex: 1, startMinute: 560, endMinute: 610 }],
+      placeholderMeetings: [
+        { id: "local-1", dayIndex: 1, startMinute: 560, endMinute: 610 },
+      ],
     };
 
     const tuesday = selectWeekView(base, drawn, 5)[1];

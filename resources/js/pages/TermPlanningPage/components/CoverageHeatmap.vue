@@ -44,13 +44,7 @@
               :style="cellStyle(count)"
               :aria-pressed="isSelected(dayIndex, row.startMinute)"
               :title="`${dayNames[dayIndex]} ${formatHour(row.startMinute)}: ${count} at once`"
-              @click="
-                schedule.dispatch({
-                  type: 'selectedHour',
-                  dayIndex,
-                  startMinute: row.startMinute,
-                })
-              "
+              @click="schedule.selectHour(dayIndex, row.startMinute)"
             >
               {{ count }}
             </button>
@@ -88,7 +82,7 @@ const props = defineProps<{
  * sections, so the sheet's back link and the ring point at the same hour.
  */
 const isSelected = (dayIndex: number, startMinute: number) => {
-  const { selection } = props.schedule.state.value;
+  const selection = props.schedule.selection;
   const hour =
     selection?.kind === "hour"
       ? selection

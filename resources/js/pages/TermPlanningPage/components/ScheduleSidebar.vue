@@ -260,7 +260,7 @@ const ICON_BUTTON_CLASS =
 
 const search = ref("");
 
-const filters = computed(() => props.schedule.state.value.filters);
+const filters = computed(() => props.schedule.filters);
 
 const activeFilterCount = computed(() =>
   Object.values(filters.value).reduce((sum, values) => sum + values.length, 0),
@@ -270,18 +270,12 @@ const isChecked = (facet: FilterFacet, value: string) =>
   filters.value[facet].includes(value);
 
 const toggle = (facet: FilterFacet, values: string[], isNowChecked: boolean) =>
-  props.schedule.dispatch({
-    type: isNowChecked ? "filterValuesAdded" : "filterValuesRemoved",
-    facet,
-    values,
-  });
+  isNowChecked
+    ? props.schedule.addFilterValues(facet, values)
+    : props.schedule.removeFilterValues(facet, values);
 
 const clearFacet = (facet: FilterFacet) =>
-  props.schedule.dispatch({
-    type: "filterValuesRemoved",
-    facet,
-    values: filters.value[facet],
-  });
+  props.schedule.removeFilterValues(facet, filters.value[facet]);
 
 /**
  * A row stays in view while it is checked, whatever the search says, so

@@ -27,12 +27,13 @@ import type {
 import { END_MINUTE, snapToGrid, START_MINUTE } from "../helpers/timeScale";
 import { mergeSchedule } from "./mergeSchedule";
 import type {
+  EditorDeps,
   EditorEvent,
   EditorState,
   Effect,
   Interaction,
   MeetingEdge,
-  Step,
+  Next,
 } from "./types";
 
 /** What a press with no drag creates: one standard fifty-minute period. */
@@ -61,23 +62,23 @@ export const emptyFilters = (): ScheduleFilters => ({
 });
 
 export const initialState = (): EditorState => ({
-  drawn: [],
+  placeholderMeetings: [],
   overrides: {},
   interaction: { status: "idle" },
   lastPlacedId: null,
   selection: null,
   filters: emptyFilters(),
-  nextLocalId: 1,
 });
 
 export function update(
   state: EditorState,
   event: EditorEvent,
   base: Meeting[],
-): Step {
-  const next = reduce(state, event, base);
+  deps: EditorDeps,
+): Next {
+  const nextState = reduce(state, event, base, deps);
 
-  return { state: next, effects: effectsOf(event, next) };
+  return { state: nextState, effects: effectsOf(event, nextState) };
 }
 
 /**
@@ -101,6 +102,7 @@ function reduce(
   state: EditorState,
   event: EditorEvent,
   base: Meeting[],
+  deps: EditorDeps,
 ): EditorState {
   switch (event.type) {
     case "pressedEmptySpace": {
@@ -165,7 +167,7 @@ function reduce(
       return pointerMoved(state, event.dayIndex, event.minute, base);
 
     case "released":
-      return commit(state);
+      return commit(state, deps);
 
     // Mid-gesture this is a plain discard; at rest there is no gesture to
     // discard, so Escape clears the selection instead.
@@ -319,7 +321,7 @@ function pointerMoved(
 }
 
 /** The one writer of the edits: a gesture's draft becomes the schedule. */
-function commit(state: EditorState): EditorState {
+function commit(state: EditorState, deps: EditorDeps): EditorState {
   const { interaction } = state;
 
   switch (interaction.status) {
@@ -327,7 +329,7 @@ function commit(state: EditorState): EditorState {
       return state;
 
     case "drawing":
-      return commitDrawing(state, interaction);
+      return commitDrawing(state, interaction, deps);
 
     // Never carried past the drag-start distance, so releasing here is a
     // click: it selects the meeting instead of writing a placement.
@@ -348,15 +350,15 @@ function commit(state: EditorState): EditorState {
         endMinute: interaction.endMinute,
       };
 
-      const isDrawn = state.drawn.some(
+      const isPlaceholder = state.placeholderMeetings.some(
         ({ id }) => id === interaction.meetingId,
       );
       const placed = { ...toIdle(state), lastPlacedId: interaction.meetingId };
 
-      return isDrawn
+      return isPlaceholder
         ? {
             ...placed,
-            drawn: state.drawn.map((meeting) =>
+            placeholderMeetings: state.placeholderMeetings.map((meeting) =>
               meeting.id === interaction.meetingId
                 ? { ...meeting, ...placement }
                 : meeting,
@@ -379,6 +381,7 @@ function commit(state: EditorState): EditorState {
 function commitDrawing(
   state: EditorState,
   drawing: Extract<Interaction, { status: "drawing" }>,
+  deps: EditorDeps,
 ): EditorState {
   // A drag too short to make a readable meeting was a click. This is also
   // what keeps every meeting at least MIN_DURATION long, so the resize
@@ -388,14 +391,16 @@ function commitDrawing(
     ? placeWithinDay(drawing.startMinute, CLICK_DURATION)
     : { startMinute: drawing.startMinute, endMinute: drawing.endMinute };
 
-  const id = `local-${state.nextLocalId}`;
+  const id = deps.createUuid();
 
   return {
     ...state,
-    drawn: [...state.drawn, { id, dayIndex: drawing.dayIndex, ...range }],
+    placeholderMeetings: [
+      ...state.placeholderMeetings,
+      { id, dayIndex: drawing.dayIndex, ...range },
+    ],
     interaction: { status: "idle" },
     lastPlacedId: id,
-    nextLocalId: state.nextLocalId + 1,
   };
 }
 

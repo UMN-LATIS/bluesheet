@@ -41,10 +41,10 @@
           class="tw-flex tw-w-full tw-cursor-pointer tw-items-baseline tw-justify-between tw-gap-3 tw-rounded-sm tw-border tw-border-solid tw-border-neutral-200 tw-px-2.5 tw-py-1.5 tw-text-left tw-text-xs tw-text-neutral-800 hover:tw-border-neutral-400"
           :class="colourOfType(entry.section.component).block"
           @click="
-            schedule.dispatch({
-              type: 'selectedSection',
-              sectionId: entry.section.id,
-              from: { kind: 'hour', dayIndex, startMinute },
+            schedule.selectSection(entry.section.id, {
+              kind: 'hour',
+              dayIndex,
+              startMinute,
             })
           "
         >

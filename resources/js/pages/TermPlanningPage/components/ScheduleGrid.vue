@@ -31,8 +31,8 @@
         class="tw-flex tw-items-start"
         @pointerdown="onPointerDown"
         @pointermove="onPointerMove"
-        @pointerup="dispatch({ type: 'released' })"
-        @pointercancel="dispatch({ type: 'cancelled' })"
+        @pointerup="schedule.release()"
+        @pointercancel="schedule.cancel()"
       >
         <DayColumn
           v-for="(day, dayIndex) in DAY_NAMES"
@@ -61,9 +61,7 @@ import { useElementSize } from "@vueuse/core";
 import DayColumn from "./DayColumn.vue";
 import TimeAxis from "./TimeAxis.vue";
 import type { Meeting } from "../types";
-import type { ScheduleEditor } from "../useScheduleEditor/useScheduleEditor";
-import { selectWeekView } from "../useScheduleEditor/selectors";
-import type { EditorEvent } from "../useScheduleEditor/types";
+import type { ScheduleEditor } from "../useScheduleEditor";
 import { dayIndexAt } from "../helpers/dayLayout";
 import { minuteAt } from "../helpers/timeScale";
 
@@ -85,11 +83,7 @@ const props = defineProps<{
 const days = ref<HTMLElement | null>(null);
 const gutter = ref<HTMLElement | null>(null);
 const { width: gutterWidth } = useElementSize(gutter);
-const state = computed(() => props.schedule.state.value);
-const week = computed(() =>
-  selectWeekView(props.schedule.base.value, state.value, DAY_NAMES.length),
-);
-const dispatch = (event: EditorEvent) => props.schedule.dispatch(event);
+const week = computed(() => props.schedule.weekView(DAY_NAMES.length));
 
 function onPointerDown(event: PointerEvent) {
   if (event.button !== 0) return;
@@ -113,9 +107,9 @@ function onPointerDown(event: PointerEvent) {
   days.value?.setPointerCapture(event.pointerId);
 
   if (edge === "start" || edge === "end") {
-    dispatch({ type: "pressedMeetingEdge", meetingId, edge, ...at });
+    props.schedule.pressMeetingEdge(meetingId, edge, at.minute);
   } else {
-    dispatch({ type: "pressedMeeting", meetingId, ...at });
+    props.schedule.pressMeeting(meetingId, at.minute);
   }
 }
 
@@ -125,7 +119,7 @@ function onPointerDown(event: PointerEvent) {
 // the selection.
 function onKeyDown(event: KeyboardEvent) {
   if (event.key !== "Escape") return;
-  dispatch({ type: "cancelled" });
+  props.schedule.cancel();
 }
 
 onMounted(() => window.addEventListener("keydown", onKeyDown));
@@ -133,10 +127,10 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeyDown));
 
 function onPointerMove(event: PointerEvent) {
   // Nothing to decide while idle, so plain hover never measures the DOM.
-  if (state.value.interaction.status === "idle") return;
+  if (!props.schedule.isGestureInFlight) return;
 
   const at = positionOf(event);
-  if (at) dispatch({ type: "pointerMoved", ...at });
+  if (at) props.schedule.movePointer(at.dayIndex, at.minute);
 }
 
 /**

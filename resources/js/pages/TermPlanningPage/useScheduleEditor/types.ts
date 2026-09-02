@@ -85,8 +85,11 @@ export interface HourSelection {
  * touching anything the user has done.
  */
 export interface EditorState {
-  /** Meetings drawn on the grid; they exist nowhere but this browser. */
-  drawn: Meeting[];
+  /**
+   * Times held on the grid with no class in them yet: drawn on empty space,
+   * belonging to no section. They exist nowhere but this browser.
+   */
+  placeholderMeetings: Meeting[];
   /** Base meetings the user has dragged or resized, keyed by meeting id. */
   overrides: Record<string, Placement>;
   interaction: Interaction;
@@ -104,8 +107,6 @@ export interface EditorState {
    * `base`, so the editor never needs to know what a section is.
    */
   filters: ScheduleFilters;
-  /** Names meetings that exist only in the browser so far. */
-  nextLocalId: number;
 }
 
 /**
@@ -149,7 +150,16 @@ export type EditorEvent =
 export type Effect = { type: "syncFiltersToUrl"; filters: ScheduleFilters };
 
 /** What one event produces: the next state, and any effects to run. */
-export interface Step {
+export interface Next {
   state: EditorState;
   effects: Effect[];
+}
+
+/**
+ * The impure needs, injected so `update` stays deterministic. A placeholder
+ * meeting has no section and so no natural key, which is the one thing here
+ * that has to be named out of thin air.
+ */
+export interface EditorDeps {
+  createUuid: () => string;
 }

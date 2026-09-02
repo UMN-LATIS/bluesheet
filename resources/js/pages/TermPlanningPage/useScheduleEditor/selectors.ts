@@ -1,6 +1,7 @@
 /**
- * Reads over the editor state. Every derived value a component needs comes
- * from one of these, so the state's shape stays private to this directory.
+ * The reads that take real work. The trivial ones are computeds on the
+ * editor surface in `useScheduleEditor`; either way the state's shape stays
+ * private to this directory.
  */
 
 import type { Meeting, TimeRange } from "../types";

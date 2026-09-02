@@ -25,13 +25,7 @@
           type="button"
           class="tw-flex tw-h-4 tw-w-4 tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-leading-none tw-text-neutral-600 hover:tw-bg-neutral-200"
           :aria-label="`Remove ${optionLabel(options, facet, value)}`"
-          @click="
-            schedule.dispatch({
-              type: 'filterValuesRemoved',
-              facet,
-              values: [value],
-            })
-          "
+          @click="schedule.removeFilterValues(facet, [value])"
         >
           ×
         </button>
@@ -41,7 +35,7 @@
     <button
       type="button"
       class="tw-ml-2 tw-cursor-pointer tw-border-none tw-bg-transparent tw-font-semibold tw-text-umn-maroon hover:tw-underline"
-      @click="schedule.dispatch({ type: 'filtersCleared' })"
+      @click="schedule.clearFilters()"
     >
       Clear all
     </button>
@@ -67,7 +61,7 @@ const props = defineProps<{
   totalCount: number;
 }>();
 
-const filters = computed(() => props.schedule.state.value.filters);
+const filters = computed(() => props.schedule.filters);
 
 const facetsInUse = computed(() =>
   FILTER_FACETS.filter((facet) => filters.value[facet].length > 0),

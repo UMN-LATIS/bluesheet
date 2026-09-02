@@ -113,7 +113,7 @@
         </div>
         <div v-else class="tw-min-h-0 tw-flex-1 tw-overflow-auto tw-bg-white">
           <CoverageHeatmap
-            :meetings="shownMeetings"
+            :meetings="schedule.meetings"
             :dayNames="DAY_NAMES"
             :schedule="schedule"
           />
@@ -135,7 +135,7 @@
         :startMinute="selectedHour.startMinute"
         :entries="hourEntries"
         :schedule="schedule"
-        @close="schedule.dispatch({ type: 'deselected' })"
+        @close="schedule.deselect()"
       />
       <SectionSheet
         v-else-if="selectedSection"
@@ -144,13 +144,12 @@
         :returnTo="sectionReturnTo && hourLabel(sectionReturnTo)"
         @back="
           sectionReturnTo &&
-          schedule.dispatch({
-            type: 'selectedHour',
-            dayIndex: sectionReturnTo.dayIndex,
-            startMinute: sectionReturnTo.startMinute,
-          })
+          schedule.selectHour(
+            sectionReturnTo.dayIndex,
+            sectionReturnTo.startMinute,
+          )
         "
-        @close="schedule.dispatch({ type: 'deselected' })"
+        @close="schedule.deselect()"
       />
     </div>
   </FullScreenLayout>
@@ -182,7 +181,7 @@ import { useGroupQuery } from "./queries/useGroupQuery";
 import { useSisSectionsQuery } from "./queries/useSisSectionsQuery";
 import { useSisTermsQuery } from "./queries/useSisTermsQuery";
 import { FILTER_FACETS, type Meeting } from "./types";
-import { mergeSchedule, useScheduleEditor } from "./useScheduleEditor";
+import { useScheduleEditor } from "./useScheduleEditor";
 import type { Effect, HourSelection } from "./useScheduleEditor/types";
 import { formatTimeRange } from "./helpers/timeScale";
 
@@ -258,7 +257,7 @@ const filterOptions = computed(() => buildFilterOptions(allSections.value));
 // what is checked; the page applies it here, before the meetings become the
 // editor's base, so a hidden section simply leaves the schedule.
 const visibleSections = computed(() =>
-  filterSections(allSections.value, schedule.state.value.filters),
+  filterSections(allSections.value, schedule.filters),
 );
 
 const placed = computed(() => placeSections(visibleSections.value));
@@ -299,20 +298,15 @@ watch(
   () => route.query,
   (query) => {
     const fromUrl = decodeFilters(query);
-    if (!isEqual(fromUrl, schedule.state.value.filters)) {
-      schedule.dispatch({ type: "filtersReplaced", filters: fromUrl });
+    if (!isEqual(fromUrl, schedule.filters)) {
+      schedule.replaceFilters(fromUrl);
     }
   },
   { immediate: true },
 );
 
-/** What the week view draws, local edits included, so the heatmap agrees with it. */
-const shownMeetings = computed(() =>
-  mergeSchedule(schedule.base.value, schedule.state.value),
-);
-
 const selectedHour = computed(() => {
-  const { selection } = schedule.state.value;
+  const selection = schedule.selection;
   return selection?.kind === "hour" ? selection : null;
 });
 
@@ -322,7 +316,7 @@ const hourLabel = (hour: HourSelection) =>
 
 /** The hour list a selected section was picked from, if it was. */
 const sectionReturnTo = computed<HourSelection | null>(() => {
-  const { selection } = schedule.state.value;
+  const selection = schedule.selection;
   return selection?.kind === "section" ? (selection.from ?? null) : null;
 });
 
@@ -331,7 +325,7 @@ const hourEntries = computed<HourEntry[]>(() => {
   const hour = selectedHour.value;
   if (!hour) return [];
 
-  return shownMeetings.value
+  return schedule.meetings
     .filter(
       (meeting) =>
         meeting.dayIndex === hour.dayIndex &&
@@ -349,7 +343,7 @@ const hourEntries = computed<HourEntry[]>(() => {
 // A meeting drawn locally (local-N) has no section, so selecting it stores
 // an id but opens no sheet.
 const selectedSection = computed(() => {
-  const { selection } = schedule.state.value;
+  const selection = schedule.selection;
   if (!selection || selection.kind === "hour") return null;
 
   return selection.kind === "meeting"
