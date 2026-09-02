@@ -43,6 +43,39 @@
             <slot name="block" v-bind="blockProps" />
           </template>
         </DayColumn>
+
+        <!--
+          Sections with no meeting time, as a day of their own at the end of
+          the week. A dashed edge and a dimmer surface say it is not a day on
+          the clock, but it belongs in the row: "what is still unplaced" is
+          the same kind of question as "what is on Friday", and answering it
+          in a tray under the grid put it out of the eye's path.
+        -->
+        <div
+          class="tw-flex-none tw-border-0 tw-border-l tw-border-dashed tw-border-outline-variant tw-bg-surface"
+          :style="{ width: `${ASYNC_COLUMN_WIDTH}px` }"
+        >
+          <ColumnHeader class="!tw-bg-surface">
+            <span
+              class="tw-text-[12.5px] tw-font-bold tw-uppercase tw-tracking-[0.04em] tw-text-on-surface"
+            >
+              Async
+            </span>
+            <span class="tw-text-[11px] tw-text-on-surface-variant">
+              {{ unscheduled.length }}
+            </span>
+          </ColumnHeader>
+          <div
+            class="scrollbar-always-visible tw-overflow-y-auto tw-p-3"
+            :style="{ height: COLUMN_HEIGHT }"
+          >
+            <AsyncSectionChips
+              :sections="unscheduled"
+              :selectedSectionId="selectedSectionId"
+              :schedule="schedule"
+            />
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -51,14 +84,23 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useElementSize } from "@vueuse/core";
+import AsyncSectionChips from "./AsyncSectionChips.vue";
+import ColumnHeader from "./ColumnHeader.vue";
 import DayColumn from "./DayColumn.vue";
 import TimeAxis from "./TimeAxis.vue";
-import type { Meeting } from "../types";
+import type { Meeting, PlannedSection } from "../types";
 import type { ScheduleEditor } from "../useScheduleEditor";
 import { dayIndexAt } from "../helpers/dayLayout";
-import { minuteAt } from "../helpers/timeScale";
+import { COLUMN_HEIGHT, minuteAt } from "../helpers/timeScale";
+import { WEEKDAY_NAMES } from "../helpers/scheduleDays";
 
-const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+const DAY_NAMES = WEEKDAY_NAMES;
+
+/**
+ * Wide enough for two chips side by side, which is what stops a column of
+ * two hundred unplaced sections from reading as one long ragged list.
+ */
+const ASYNC_COLUMN_WIDTH = 282;
 
 const props = defineProps<{
   schedule: ScheduleEditor;
@@ -67,6 +109,10 @@ const props = defineProps<{
    * meeting's class, which picks its color.
    */
   componentOf?: (meeting: Meeting) => string | undefined;
+  /** The sections with no meeting time, drawn as the week's last column. */
+  unscheduled: PlannedSection[];
+  /** Which section the sheet is open on, so its chip can show it. */
+  selectedSectionId: number | null;
 }>();
 
 const days = ref<HTMLElement | null>(null);

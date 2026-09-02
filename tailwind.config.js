@@ -5,6 +5,15 @@ export default {
   content: ["./resources/js/**/*.{vue,js,ts,jsx,tsx}"],
   theme: {
     extend: {
+      // Where the term planning screen's layout changes, rather than device
+      // sizes. `roomy` is enough width to dock a filter panel and a detail
+      // sheet either side of a week of lanes; `cramped` is the point below
+      // which a week cannot be read at all. The same two numbers drive the
+      // behavior that CSS cannot express, in TermPlanningPage/useScreenSize.ts.
+      screens: {
+        cramped: "700px",
+        roomy: "1200px",
+      },
       colors: {
         "umn-maroon": "#7a0019",
         "umn-gold": "#ffcc33",

@@ -1,25 +1,68 @@
 <template>
   <FullScreenLayout>
-    <div
-      class="tw-flex tw-h-9 tw-flex-none tw-items-center tw-justify-between tw-bg-surface tw-px-3 tw-text-sm tw-text-on-surface tw-border-b tw-border tw-border-outline-variant"
-    >
-      <Breadcrumbs :crumbs="crumbs" />
+    <template #bar>
+      <div class="tw-flex tw-min-w-0 tw-items-baseline tw-gap-2">
+        <span
+          class="tw-truncate tw-text-[15px] tw-font-semibold tw-tracking-tight cramped:tw-text-base roomy:tw-text-[17px]"
+        >
+          Term Planning
+        </span>
+        <router-link
+          v-if="groupQuery.data.value"
+          :to="{ name: 'group', params: { groupId } }"
+          class="tw-hidden tw-truncate tw-text-[13px] tw-text-on-surface-variant tw-no-underline hover:tw-text-on-surface hover:tw-underline cramped:tw-block"
+        >
+          {{ groupQuery.data.value.group_title }}
+        </router-link>
+      </div>
 
-      <div class="tw-flex tw-items-center tw-gap-3">
+      <div class="tw-ml-auto tw-flex tw-flex-none tw-items-center tw-gap-2.5">
+        <!--
+          Only where a panel has to be summoned. Docked, the filters are
+          already on screen and a button to reveal them would say nothing.
+        -->
+        <button
+          v-if="arePanelsOverlaid"
+          type="button"
+          class="tw-flex tw-min-h-11 tw-cursor-pointer tw-items-center tw-gap-1.5 tw-rounded-full tw-border tw-border-solid tw-bg-surface-bright tw-px-3 tw-text-xs tw-font-semibold hover:tw-bg-surface roomy:tw-min-h-0 roomy:tw-py-1.5"
+          :class="
+            activeFilterCount > 0
+              ? 'tw-border-primary tw-text-primary'
+              : 'tw-border-outline tw-text-on-surface'
+          "
+          :aria-expanded="isFilterPanelOpen"
+          aria-label="Filters"
+          @click="isFilterPanelOpen = true"
+        >
+          <FilterIcon aria-hidden="true" />
+          <!-- The icon carries the meaning where the bar is tight; the
+               button keeps its name for a screen reader either way. -->
+          <span class="tw-hidden cramped:tw-inline">Filters</span>
+          <span
+            v-if="activeFilterCount > 0"
+            class="tw-rounded-full tw-bg-primary tw-px-1.5 tw-text-[10px] tw-leading-4 tw-text-on-primary"
+          >
+            {{ activeFilterCount }}
+          </span>
+        </button>
+
+        <!-- A week of lanes cannot be read on a phone, so the day list is
+             the only view offered and there is nothing to switch between. -->
         <div
+          v-if="!isSmall"
           role="group"
           aria-label="View"
-          class="tw-inline-flex tw-text-xs tw-font-semibold"
+          class="tw-inline-flex tw-gap-0.5 tw-rounded-full tw-bg-outline-variant tw-p-0.5"
         >
           <button
             v-for="option in VIEW_OPTIONS"
             :key="option.value"
             type="button"
-            class="tw-cursor-pointer tw-border tw-border-solid tw-border-primary tw-px-3 tw-py-1 first:tw-rounded-l-full last:tw--ml-px last:tw-rounded-r-full"
+            class="tw-cursor-pointer tw-rounded-full tw-border-none tw-px-3.5 tw-py-1.5 tw-text-xs tw-font-semibold"
             :class="
               view === option.value
-                ? 'tw-bg-primary tw-text-on-primary'
-                : 'tw-bg-surface-bright tw-text-primary hover:tw-bg-primary-container'
+                ? 'tw-bg-surface-bright tw-text-on-surface tw-shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
+                : 'tw-bg-transparent tw-text-on-surface-variant hover:tw-text-on-surface'
             "
             :aria-pressed="view === option.value"
             @click="view = option.value"
@@ -28,10 +71,10 @@
           </button>
         </div>
 
-        <label class="tw-m-0 tw-flex tw-items-center tw-gap-2 tw-font-normal">
+        <label class="tw-m-0 tw-flex tw-items-center tw-font-normal">
           <span class="tw-sr-only">Term</span>
           <select
-            class="tw-rounded-lg tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-py-0.5 tw-pl-2 tw-pr-7 tw-text-sm tw-text-on-surface"
+            class="tw-min-h-11 tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-py-1.5 tw-pl-3.5 tw-pr-8 tw-text-[13px] tw-font-semibold tw-text-on-surface roomy:tw-min-h-0"
             :value="term?.id"
             @change="goToTerm(($event.target as HTMLSelectElement).value)"
           >
@@ -45,28 +88,43 @@
           </select>
         </label>
       </div>
-    </div>
+    </template>
 
-    <div class="tw-flex tw-min-h-0 tw-flex-1">
-      <ScheduleSidebar
-        v-model:isCollapsed="isSidebarCollapsed"
-        class="tw-flex-none tw-border-0 tw-border-r tw-border-solid tw-border-outline-variant"
-        :class="isSidebarCollapsed ? 'tw-w-10' : 'tw-w-80'"
-        :options="filterOptions"
-        :schedule="schedule"
-      />
+    <!--
+      The panes float as cards on the recessed page. `relative` is what the
+      two overlaid panels are positioned against, so they cover the canvas
+      and not the bar above it.
+    -->
+    <div
+      class="tw-relative tw-flex tw-min-h-0 tw-flex-1 tw-gap-3 tw-px-3 tw-pb-3 roomy:tw-px-4 roomy:tw-pb-4"
+    >
+      <div v-if="isLarge" :class="[PANE_CLASS, 'tw-w-[304px] tw-flex-none']">
+        <ScheduleSidebar :options="filterOptions" :schedule="schedule" />
+      </div>
 
-      <!--
-        min-w-0 lets the grid scroll sideways
-        inside a flex row instead of stretching it.
-      -->
-      <div class="tw-flex tw-min-w-0 tw-flex-1 tw-flex-col">
+      <section
+        :aria-label="`${VIEW_LABELS[activeView]} schedule`"
+        :class="[
+          PANE_CLASS,
+          'tw-flex tw-min-h-0 tw-min-w-0 tw-flex-1 tw-flex-col',
+        ]"
+      >
+        <!--
+          The week is the only view that needs a line of its own to say how
+          much of the term it managed to draw. The day view says it in its
+          own summary strip, and the heatmap counts nothing.
+        -->
         <div
-          class="tw-flex tw-min-h-9 tw-flex-none tw-items-center tw-gap-3 tw-bg-surface tw-px-3 tw-py-1 tw-text-xs tw-text-on-surface-variant"
+          v-if="activeView === 'week'"
+          class="tw-flex tw-h-[46px] tw-flex-none tw-items-center tw-gap-3 tw-border-0 tw-border-b tw-border-solid tw-border-surface-container tw-px-4 tw-text-[12.5px]"
         >
+          <span class="tw-flex-none">
+            <span class="tw-font-semibold">{{ scheduledCount }}</span>
+            of {{ visibleSections.length }} sections scheduled
+          </span>
           <span
             v-if="placed.outsideGridCount > 0"
-            class="tw-flex-none tw-text-amber-700"
+            class="tw-truncate tw-text-xs tw-text-amber-700"
           >
             {{ placed.outsideGridCount }}
             {{
@@ -74,23 +132,30 @@
             }}
             outside Mon–Fri, 8am–9pm
           </span>
-          <ActiveFilterBar
-            :options="filterOptions"
-            :schedule="schedule"
-            :shownCount="visibleSections.length"
-            :totalCount="allSections.length"
-          />
-          <MeetingTypeKey
-            v-if="view === 'week'"
-            class="tw-ml-auto tw-flex-none"
-          />
         </div>
 
+        <DayView
+          v-if="activeView === 'day'"
+          :dayIndex="currentDayIndex"
+          :meetings="schedule.meetings"
+          :sectionOf="sectionOf"
+          :unscheduled="placed.unscheduled"
+          :counts="dayCounts"
+          :schedule="schedule"
+          :size="size"
+          @selectDay="currentDayIndex = $event"
+        />
+
         <div
-          v-if="view === 'week'"
-          class="tw-min-h-0 tw-flex-1 tw-overflow-auto tw-bg-surface-bright"
+          v-else-if="activeView === 'week'"
+          class="scrollbar-always-visible tw-min-h-0 tw-flex-1 tw-overflow-auto tw-bg-surface-bright"
         >
-          <ScheduleGrid :schedule="schedule" :componentOf="componentOf">
+          <ScheduleGrid
+            :schedule="schedule"
+            :componentOf="componentOf"
+            :unscheduled="placed.unscheduled"
+            :selectedSectionId="selectedSection?.id ?? null"
+          >
             <template #block="{ meeting, width }">
               <SectionBlock
                 v-if="sectionOf(meeting.id)"
@@ -100,7 +165,6 @@
                 :startMinute="meeting.startMinute"
                 :endMinute="meeting.endMinute"
               />
-              <!-- A meeting drawn on the grid has no class on it yet. -->
               <MeetingTimes
                 v-else
                 :startMinute="meeting.startMinute"
@@ -109,52 +173,86 @@
             </template>
           </ScheduleGrid>
         </div>
+
         <div
           v-else
-          class="tw-min-h-0 tw-flex-1 tw-overflow-auto tw-bg-surface-bright"
+          class="scrollbar-always-visible tw-min-h-0 tw-flex-1 tw-overflow-auto tw-bg-surface-bright"
         >
           <CoverageHeatmap
             :meetings="schedule.meetings"
-            :dayNames="DAY_NAMES"
+            :dayNames="WEEKDAY_NAMES"
             :schedule="schedule"
           />
         </div>
+      </section>
 
-        <UnscheduledTray
-          class="tw-flex-none"
-          :sections="placed.unscheduled"
-          :selectedSectionId="selectedSection?.id ?? null"
-          :schedule="schedule"
+      <!--
+        Docked beside the canvas where there is room for it, and lifted over
+        the canvas where there is not. The panel itself is the same either
+        way; only this mount changes.
+      -->
+      <div
+        v-if="openSheet && isLarge"
+        :class="[PANE_CLASS, 'tw-w-[404px] tw-flex-none']"
+      >
+        <component
+          :is="openSheet.is"
+          v-bind="openSheet.props"
+          v-on="openSheet.on"
         />
       </div>
 
-      <HourSheet
-        v-if="selectedHour"
-        class="tw-w-96 tw-flex-none tw-border-0 tw-border-l tw-border-solid tw-border-outline-variant"
-        :dayIndex="selectedHour.dayIndex"
-        :dayName="DAY_NAMES[selectedHour.dayIndex]"
-        :startMinute="selectedHour.startMinute"
-        :entries="hourEntries"
-        :schedule="schedule"
-        @close="schedule.deselect()"
-      />
-      <SectionSheet
-        v-else-if="selectedSection"
-        class="tw-w-96 tw-flex-none tw-border-0 tw-border-l tw-border-solid tw-border-outline-variant"
-        :section="selectedSection"
-        :schedule="schedule"
-        :sections="localSections"
-        :roster="roster"
-        :returnTo="sectionReturnTo && hourLabel(sectionReturnTo)"
-        @back="
-          sectionReturnTo &&
-          schedule.selectHour(
-            sectionReturnTo.dayIndex,
-            sectionReturnTo.startMinute,
-          )
-        "
-        @close="schedule.deselect()"
-      />
+      <template v-if="openSheet && !isLarge">
+        <div
+          v-if="isSmall"
+          class="tw-fixed tw-inset-0 tw-z-50 tw-bg-surface-bright"
+        >
+          <component
+            :is="openSheet.is"
+            v-bind="{ ...openSheet.props, hasHandle: true }"
+            v-on="openSheet.on"
+          />
+        </div>
+        <div
+          v-else
+          :class="[
+            PANE_CLASS,
+            'tw-absolute tw-inset-y-0 tw-right-3 tw-z-50 tw-w-[380px] tw-shadow-[-18px_0_44px_rgba(38,38,38,0.16)]',
+          ]"
+        >
+          <component
+            :is="openSheet.is"
+            v-bind="openSheet.props"
+            v-on="openSheet.on"
+          />
+        </div>
+      </template>
+
+      <!-- Summoned, so it closes again; a click on the canvas behind it is
+           how a panel opened by mistake gets out of the way. -->
+      <template v-if="isFilterPanelOpen && !isLarge">
+        <div
+          class="tw-absolute tw-inset-0 tw-z-40 tw-bg-black/20"
+          @click="isFilterPanelOpen = false"
+        />
+        <div
+          :class="[
+            isSmall
+              ? 'tw-fixed tw-inset-0 tw-z-50 tw-bg-surface-bright'
+              : [
+                  PANE_CLASS,
+                  'tw-absolute tw-inset-y-0 tw-left-3 tw-z-50 tw-w-[304px] tw-shadow-[18px_0_44px_rgba(38,38,38,0.16)]',
+                ],
+          ]"
+        >
+          <ScheduleSidebar
+            :options="filterOptions"
+            :schedule="schedule"
+            isDismissible
+            @close="isFilterPanelOpen = false"
+          />
+        </div>
+      </template>
     </div>
   </FullScreenLayout>
 </template>
@@ -164,23 +262,24 @@ import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import dayjs from "dayjs";
 import { isEqual, omit } from "lodash-es";
-import Breadcrumbs, { type Crumb } from "@/components/Breadcrumbs.vue";
 import FullScreenLayout from "@/layouts/FullScreenLayout.vue";
-import ActiveFilterBar from "./components/ActiveFilterBar.vue";
+import { FilterIcon } from "@/icons";
 import CoverageHeatmap from "./components/CoverageHeatmap.vue";
+import DayView from "./components/DayView.vue";
 import HourSheet, { type HourEntry } from "./components/HourSheet.vue";
 import MeetingTimes from "./components/MeetingTimes.vue";
-import MeetingTypeKey from "./components/MeetingTypeKey.vue";
 import ScheduleGrid from "./components/ScheduleGrid.vue";
 import ScheduleSidebar from "./components/ScheduleSidebar.vue";
 import SectionBlock from "./components/SectionBlock.vue";
 import SectionSheet from "./components/SectionSheet.vue";
-import UnscheduledTray from "./components/UnscheduledTray.vue";
 import { currentTerm } from "./helpers/currentTerm";
+import { bandsForDay } from "./helpers/dayBands";
 import { buildFilterOptions } from "./helpers/filterOptions";
 import { decodeFilters, encodeFilters } from "./helpers/filterQuery";
 import { filterSections } from "./helpers/scheduleFilters";
+import { ASYNC_DAY_INDEX, WEEKDAY_NAMES } from "./helpers/scheduleDays";
 import { placeSections } from "./helpers/sectionPlacement";
+import { formatTimeRange } from "./helpers/timeScale";
 import { useGroupQuery } from "./queries/useGroupQuery";
 import { useSisEmployeesQuery } from "./queries/useSisEmployeesQuery";
 import { useSisSectionsQuery } from "./queries/useSisSectionsQuery";
@@ -188,7 +287,7 @@ import { useSisTermsQuery } from "./queries/useSisTermsQuery";
 import { FILTER_FACETS, type Meeting } from "./types";
 import { useScheduleEditor } from "./useScheduleEditor";
 import type { Effect, HourSelection } from "./useScheduleEditor/types";
-import { formatTimeRange } from "./helpers/timeScale";
+import { useScreenSize } from "./useScreenSize";
 
 const props = defineProps<{
   groupId: number;
@@ -198,8 +297,57 @@ const props = defineProps<{
 const route = useRoute();
 const router = useRouter();
 
+const { size, isLarge, isSmall, arePanelsOverlaid } = useScreenSize();
+
+/** Every pane is a card lifted off the page's own recessed surface. */
+const PANE_CLASS =
+  "tw-overflow-hidden tw-rounded-[14px] tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-shadow-[0_1px_2px_rgba(0,0,0,0.04)]";
+
+const VIEW_OPTIONS = [
+  { value: "day", label: "Day" },
+  { value: "week", label: "Week" },
+  { value: "heatmap", label: "Heatmap" },
+] as const;
+
+type ScheduleView = (typeof VIEW_OPTIONS)[number]["value"];
+
+const VIEW_LABELS: Record<ScheduleView, string> = {
+  day: "Day",
+  week: "Week",
+  heatmap: "Coverage",
+};
+
+/**
+ * The day list leads: it is the view that answers "what is on Monday" without
+ * asking the reader to measure anything, and it is the only one a phone can
+ * show.
+ */
+const view = ref<ScheduleView>("day");
+
+const activeView = computed<ScheduleView>(() =>
+  isSmall.value ? "day" : view.value,
+);
+
+/** Monday through Friday, then the sections with no meeting time. */
+const currentDayIndex = ref(todaysColumn());
+
+/** Today, when the week is on; otherwise the week's first day. */
+function todaysColumn(): number {
+  const weekday = dayjs().day() - 1;
+  return weekday >= 0 && weekday < WEEKDAY_NAMES.length ? weekday : 0;
+}
+
+const isFilterPanelOpen = ref(false);
+
+// A panel summoned on a narrow screen has no business staying open once the
+// window is wide enough to dock it.
+watch(isLarge, (isDocked) => {
+  if (isDocked) isFilterPanelOpen.value = false;
+});
+
 const termsQuery = useSisTermsQuery();
 
+/** The term the URL names, or failing that the one we are in today. */
 const term = computed(() => {
   const terms = termsQuery.data.value ?? [];
 
@@ -208,11 +356,13 @@ const term = computed(() => {
     : (terms.find(({ id }) => id === props.termCode) ?? null);
 });
 
+/** Newest first, since planning looks forward. */
 const termOptions = computed(() =>
   [...(termsQuery.data.value ?? [])].sort((a, b) => b.id - a.id),
 );
 
-// keep the query so the filters survive a term change
+// The filters ride along in the query, so a view narrowed to one person
+// stays narrowed when the term changes.
 const goToTerm = (termCode: string) =>
   router.push({
     name: "termPlanning",
@@ -224,27 +374,8 @@ const groupQuery = useGroupQuery(props.groupId);
 
 const employeesQuery = useSisEmployeesQuery(props.groupId);
 
+/** Who a section can be assigned to: the department's own people. */
 const roster = computed(() => employeesQuery.data.value ?? []);
-
-const isSidebarCollapsed = ref(false);
-
-const VIEW_OPTIONS = [
-  { value: "week", label: "Week" },
-  { value: "heatmap", label: "Heatmap" },
-] as const;
-
-const view = ref<(typeof VIEW_OPTIONS)[number]["value"]>("week");
-
-const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-
-const crumbs = computed<Crumb[]>(() => [
-  { label: "My Groups", to: { name: "user" } },
-  {
-    label: groupQuery.data.value?.group_title ?? "",
-    to: { name: "group", params: { groupId: props.groupId } },
-  },
-  { label: "Term Planning" },
-]);
 
 const sectionsQuery = useSisSectionsQuery(
   props.groupId,
@@ -254,30 +385,60 @@ const sectionsQuery = useSisSectionsQuery(
 const allSections = computed(() => sectionsQuery.data.value ?? []);
 
 /**
- * Sections with this browser's unsaved edits
- * applied; every view below reads these.
+ * Every section as the user sees it, this browser's unsaved edits included.
+ * Everything below is built from these rather than from the payload, so an
+ * edit reaches every view at once.
  */
 const localSections = computed(() => schedule.localSections(allSections.value));
 
 /** Lists and counts cover the whole term, whatever is checked. */
 const filterOptions = computed(() => buildFilterOptions(localSections.value));
 
-// `schedule` is declared below; reading it here is fine because these are
-// all computeds, evaluated only once everything exists.
+// `localSections` and the filters are read from `schedule`, declared below,
+// and `schedule` is built from `placed`. That is not a cycle: all of them are
+// computeds, nothing is read until the template renders, and by then they all
+// exist. The editor stores what is checked; the page applies it here, before
+// the sections are placed, so a hidden section simply leaves the schedule.
 const visibleSections = computed(() =>
   filterSections(localSections.value, schedule.filters),
 );
 
 const placed = computed(() => placeSections(visibleSections.value));
 
+/** What the week view managed to draw, which is the rest of what is shown. */
+const scheduledCount = computed(
+  () => visibleSections.value.length - placed.value.unscheduled.length,
+);
+
 const sectionOf = (meetingId: string) =>
   placed.value.sectionsByMeetingId.get(meetingId);
 
 const componentOf = (meeting: Meeting) => sectionOf(meeting.id)?.component;
 
+/** One per day tab: the classes each weekday holds, then the unplaced ones. */
+const dayCounts = computed(() => {
+  const counts = WEEKDAY_NAMES.map(
+    (_, dayIndex) =>
+      bandsForDay(schedule.meetings, sectionOf, dayIndex).flatMap(
+        ({ items }) => items,
+      ).length,
+  );
+
+  counts[ASYNC_DAY_INDEX] = placed.value.unscheduled.length;
+  return counts;
+});
+
+const activeFilterCount = computed(() =>
+  Object.values(schedule.filters).reduce(
+    (sum, values) => sum + values.length,
+    0,
+  ),
+);
+
 /**
- * `replace`, not `push`: the back button
- * should leave the page, not undo checkboxes.
+ * The editor's effects, run here because the page owns the router. `replace`
+ * rather than `push`: stepping back through every checkbox would make the
+ * back button useless for leaving the page.
  */
 const runEffect = (effect: Effect) => {
   switch (effect.type) {
@@ -291,6 +452,8 @@ const runEffect = (effect: Effect) => {
   }
 };
 
+// Held here rather than inside a view, so that the filters panel, every
+// view, and the detail sheet all read and change the same schedule.
 const schedule = useScheduleEditor(
   computed(() => ({
     meetings: placed.value.meetings,
@@ -299,8 +462,9 @@ const schedule = useScheduleEditor(
   runEffect,
 );
 
-// URL to filters (first load, back button). The equality check stops this
-// watch and `runEffect` from feeding each other forever.
+// The other direction of the URL sync: a pasted link on first load, or the
+// back button. Comparing first is what stops this and `runEffect` from
+// answering each other forever.
 watch(
   () => route.query,
   (query) => {
@@ -319,13 +483,15 @@ const selectedHour = computed(() => {
 
 /** "Tue · 2 – 3p": how both sheets name an hour. */
 const hourLabel = (hour: HourSelection) =>
-  `${DAY_NAMES[hour.dayIndex]} · ${formatTimeRange(hour.startMinute, hour.startMinute + 60)}`;
+  `${WEEKDAY_NAMES[hour.dayIndex]} · ${formatTimeRange(hour.startMinute, hour.startMinute + 60)}`;
 
+/** The hour list a selected section was picked from, if it was. */
 const sectionReturnTo = computed<HourSelection | null>(() => {
   const selection = schedule.selection;
   return selection?.kind === "section" ? (selection.from ?? null) : null;
 });
 
+/** The sections whose meetings overlap the selected hour, as the grid shows them. */
 const hourEntries = computed<HourEntry[]>(() => {
   const hour = selectedHour.value;
   if (!hour) return [];
@@ -345,7 +511,8 @@ const hourEntries = computed<HourEntry[]>(() => {
     .sort((a, b) => a.startMinute - b.startMinute);
 });
 
-// a locally drawn meeting has no section, so no sheet opens for it
+// A meeting drawn locally (local-N) has no section, so selecting it stores
+// an id but opens no sheet.
 const selectedSection = computed(() => {
   const selection = schedule.selection;
   if (!selection || selection.kind === "hour") return null;
@@ -354,5 +521,49 @@ const selectedSection = computed(() => {
     ? (sectionOf(selection.meetingId) ?? null)
     : (localSections.value.find(({ id }) => id === selection.sectionId) ??
         null);
+});
+
+/**
+ * Which panel the right-hand mount is holding, if any. Both sheets take the
+ * same place on the page and only one can be open, so the mount is described
+ * once here and the three breakpoints each render it their own way.
+ */
+const openSheet = computed(() => {
+  if (selectedHour.value) {
+    return {
+      is: HourSheet,
+      props: {
+        dayIndex: selectedHour.value.dayIndex,
+        dayName: WEEKDAY_NAMES[selectedHour.value.dayIndex],
+        startMinute: selectedHour.value.startMinute,
+        entries: hourEntries.value,
+        schedule,
+      },
+      on: { close: () => schedule.deselect() },
+    };
+  }
+
+  if (!selectedSection.value) return null;
+
+  return {
+    is: SectionSheet,
+    props: {
+      section: selectedSection.value,
+      schedule,
+      sections: localSections.value,
+      roster: roster.value,
+      returnTo: sectionReturnTo.value && hourLabel(sectionReturnTo.value),
+      termName: term.value?.name,
+    },
+    on: {
+      back: () =>
+        sectionReturnTo.value &&
+        schedule.selectHour(
+          sectionReturnTo.value.dayIndex,
+          sectionReturnTo.value.startMinute,
+        ),
+      close: () => schedule.deselect(),
+    },
+  };
 });
 </script>

@@ -265,6 +265,21 @@ function reduce(
     case "draftCancelled":
       return withoutDraft(state, event.sectionId);
 
+    // Straight into the saved edits rather than the draft: the sheet has
+    // already asked, so there is nothing left for Save to confirm. The
+    // half-typed form goes with it, since none of it can apply now.
+    case "sectionCancelled":
+      return {
+        ...withoutDraft(state, event.sectionId),
+        sectionEdits: {
+          ...state.sectionEdits,
+          [event.sectionId]: {
+            ...state.sectionEdits[event.sectionId],
+            isCancelled: true,
+          },
+        },
+      };
+
     case "sectionEditsReverted":
       return withoutEntry(
         withoutDraft(state, event.sectionId),

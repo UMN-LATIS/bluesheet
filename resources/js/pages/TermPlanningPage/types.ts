@@ -91,6 +91,12 @@ export type Delivery = "onCampus" | "blended" | "online";
 export type PlannedSection = SisSection & {
   delivery: Delivery;
   notes: string;
+  /**
+   * Struck from the term by a scheduler here. The section stays in every list
+   * and keeps its place, marked, because nothing on this page reaches the SIS
+   * yet and "Revert to SIS" has to stay within reach of the thing it undoes.
+   */
+  isCancelled: boolean;
 };
 
 export interface SisSection {

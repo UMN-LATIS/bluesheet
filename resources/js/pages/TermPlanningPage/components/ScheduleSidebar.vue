@@ -1,48 +1,24 @@
 <template>
   <aside
-    v-if="isCollapsed"
-    aria-label="Filters, collapsed"
-    class="tw-flex tw-min-h-0 tw-flex-col tw-items-center tw-gap-2 tw-bg-surface tw-py-1.5"
-  >
-    <button
-      type="button"
-      :class="ICON_BUTTON_CLASS"
-      aria-label="Show filters"
-      title="Show filters"
-      @click="isCollapsed = false"
-    >
-      <i class="fas fa-angle-double-right" aria-hidden="true" />
-    </button>
-    <span
-      v-if="activeFilterCount > 0"
-      class="tw-rounded-full tw-bg-umn-maroon tw-px-1.5 tw-text-[0.65rem] tw-font-semibold tw-leading-4 tw-text-white"
-      :title="`${activeFilterCount} active filters`"
-    >
-      {{ activeFilterCount }}
-    </span>
-  </aside>
-
-  <aside
-    v-else
     aria-label="Filters"
-    class="tw-flex tw-min-h-0 tw-flex-col tw-bg-surface"
+    class="tw-flex tw-h-full tw-w-full tw-flex-col tw-min-h-0 tw-bg-surface-bright"
   >
-    <!--
-      Same height as the toolbar over the grid, so the two read as one band.
-    -->
-    <div class="tw-flex tw-h-9 tw-flex-none tw-items-center tw-px-1.5">
+    <div
+      v-if="isDismissible"
+      class="tw-flex tw-flex-none tw-items-center tw-gap-2 tw-px-3.5 tw-pt-3"
+    >
+      <span class="tw-text-[13px] tw-font-bold">Filters</span>
       <button
         type="button"
-        :class="ICON_BUTTON_CLASS"
-        aria-label="Hide filters"
-        title="Hide filters"
-        @click="isCollapsed = true"
+        class="tw-ml-auto tw-flex tw-h-11 tw-w-11 tw-flex-none tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-text-xl tw-leading-none tw-text-on-surface-variant hover:tw-bg-surface-container hover:tw-text-on-surface"
+        aria-label="Close filters"
+        @click="emit('close')"
       >
-        <i class="fas fa-angle-double-left" aria-hidden="true" />
+        ×
       </button>
     </div>
 
-    <div class="tw-flex-none tw-p-3">
+    <div class="tw-flex-none tw-p-3.5 tw-pb-0">
       <label class="tw-sr-only" for="schedule-filter-search">
         Search courses, people, sections
       </label>
@@ -51,157 +27,193 @@
         v-model="search"
         type="search"
         placeholder="Search courses, people, sections"
-        class="tw-w-full tw-rounded-lg tw-border tw-border-solid tw-border-transparent tw-bg-surface-bright tw-px-3 tw-py-1.5 tw-text-xs tw-text-on-surface placeholder:tw-text-on-surface-variant focus:tw-border-primary focus:tw-outline-none"
+        class="tw-w-full tw-min-h-11 tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-bg-surface tw-px-4 tw-text-[13px] tw-text-on-surface placeholder:tw-text-on-surface-variant focus:tw-border-primary focus:tw-bg-surface-bright focus:tw-outline-none"
       />
     </div>
 
-    <!-- scrolls when several short groups outgrow the column -->
-    <div class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-overflow-y-auto">
-      <FilterGroup
-        v-if="courseLevels.length > 0"
-        title="Courses"
-        :count="courseCount"
-        :checkedCount="filters.course.length"
-        @clear="clearFacet('course')"
+    <div class="tw-flex-none tw-grid tw-grid-cols-2 tw-gap-2 tw-p-3.5 tw-pb-0">
+      <button
+        v-for="tile in tiles"
+        :key="tile.facet"
+        type="button"
+        class="tw-relative tw-flex tw-min-h-14 tw-cursor-pointer tw-flex-col tw-items-start tw-gap-px tw-rounded-[10px] tw-border tw-border-solid tw-p-2 tw-px-3 tw-text-left"
+        :class="
+          activeFacet === tile.facet
+            ? 'tw-border-primary tw-bg-primary-container'
+            : 'tw-border-surface-container tw-bg-surface'
+        "
+        :aria-pressed="activeFacet === tile.facet"
+        @click="activeFacet = tile.facet"
       >
-        <template v-for="level in courseLevels" :key="level.label">
-          <div class="tw-sticky tw-top-0 tw-z-10 tw-bg-surface">
-            <FilterRow
-              :isChecked="level.checkedCount === level.courses.length"
-              :isIndeterminate="
-                level.checkedCount > 0 &&
-                level.checkedCount < level.courses.length
-              "
-              @toggle="
-                toggle(
-                  'course',
-                  level.courses.map(({ value }) => value),
-                  $event,
-                )
-              "
-            >
-              <span
-                class="tw-font-semibold tw-uppercase tw-tracking-wide tw-text-neutral-600"
+        <span
+          v-if="filters[tile.facet].length > 0"
+          class="tw-absolute tw-right-1.5 tw-top-1.5 tw-rounded-full tw-bg-brand tw-px-1.5 tw-text-[10px] tw-font-semibold tw-leading-4 tw-text-white"
+          :title="`${filters[tile.facet].length} filters active`"
+        >
+          {{ filters[tile.facet].length }}
+        </span>
+        <span
+          class="tw-text-[21px] tw-font-semibold tw-leading-tight tw-tracking-tight tw-text-on-surface"
+        >
+          {{ tile.count }}
+        </span>
+        <span
+          class="tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-surface-variant"
+        >
+          {{ tile.label }}
+        </span>
+      </button>
+    </div>
+
+    <div
+      v-if="options.tba && options.tba.sectionCount > 0"
+      class="tw-mx-3.5 tw-mt-3 tw-flex tw-flex-none tw-items-center tw-gap-2 tw-rounded-[10px] tw-bg-brand/[0.06] tw-px-3 tw-py-2"
+    >
+      <span
+        class="tw-h-[7px] tw-w-[7px] tw-flex-none tw-rounded-full tw-bg-brand"
+        aria-hidden="true"
+      />
+      <span class="tw-text-[11.5px] tw-text-on-surface">
+        {{ options.tba.sectionCount }}
+        {{ options.tba.sectionCount === 1 ? "section" : "sections" }} still
+        unassigned
+      </span>
+      <button
+        type="button"
+        class="tw-ml-auto tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[11.5px] tw-font-semibold tw-text-primary hover:tw-underline"
+        @click="showUnassigned"
+      >
+        Show
+      </button>
+    </div>
+
+    <div
+      class="tw-flex tw-flex-none tw-items-center tw-gap-2 tw-px-4 tw-pb-1.5 tw-pt-4"
+    >
+      <span
+        class="tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-surface-variant"
+      >
+        {{ listHeader.title }}
+      </span>
+      <button
+        v-if="filters[activeFacet].length > 0"
+        type="button"
+        class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[11px] tw-font-semibold tw-text-brand hover:tw-underline"
+        @click="clearFacet(activeFacet)"
+      >
+        Clear
+      </button>
+      <span class="tw-ml-auto tw-text-[11px] tw-text-on-surface-variant">
+        {{ listHeader.countPhrase }}
+      </span>
+    </div>
+
+    <div
+      class="scrollbar-always-visible tw-min-h-0 tw-flex-1 tw-overflow-y-auto tw-px-2.5 tw-pb-3"
+    >
+      <ul class="tw-m-0 tw-list-none tw-p-0">
+        <template v-if="activeFacet === 'course'">
+          <template v-for="level in courseLevels" :key="level.label">
+            <li>
+              <FilterRow
+                isGroupHeading
+                :isChecked="level.checkedCount === level.courses.length"
+                :isIndeterminate="
+                  level.checkedCount > 0 &&
+                  level.checkedCount < level.courses.length
+                "
+                @toggle="
+                  toggle(
+                    'course',
+                    level.courses.map(({ value }) => value),
+                    $event,
+                  )
+                "
               >
                 {{ level.label }}
-              </span>
-              <template #annotation>{{ level.courses.length }}</template>
-            </FilterRow>
-          </div>
-          <FilterRows :items="level.courses">
-            <template #default="{ item }">
-              <FilterRow
-                :isChecked="isChecked('course', item.value)"
-                @toggle="toggle('course', [item.value], $event)"
-              >
-                <span class="tw-block">{{ item.code }}</span>
-                <span
-                  class="tw-block tw-truncate tw-text-[11px] tw-text-neutral-500"
-                >
-                  {{ item.title }}
-                </span>
-                <template #annotation>
-                  <template v-if="item.credits !== null">
-                    {{ item.credits }} cr ·
-                  </template>
-                  {{ item.sectionCount }}
-                </template>
+                <template #annotation>{{ level.courses.length }}</template>
               </FilterRow>
-            </template>
-          </FilterRows>
+            </li>
+            <li v-for="course in level.courses" :key="course.value">
+              <FilterRow
+                isIndented
+                :isChecked="isChecked('course', course.value)"
+                @toggle="toggle('course', [course.value], $event)"
+              >
+                {{ course.code }}
+                <template #secondary>{{ course.title }}</template>
+                <template #annotation>{{ course.sectionCount }} sec</template>
+              </FilterRow>
+            </li>
+          </template>
         </template>
-      </FilterGroup>
 
-      <FilterGroup
-        v-if="people.length > 0"
-        title="Faculty"
-        :count="people.length"
-        :checkedCount="filters.person.length"
-        @clear="clearFacet('person')"
-      >
-        <FilterRows :items="people">
-          <template #default="{ item }">
+        <template v-else-if="activeFacet === 'person'">
+          <li v-for="person in people" :key="person.value">
             <FilterRow
-              :isChecked="isChecked('person', item.value)"
-              @toggle="toggle('person', [item.value], $event)"
+              :isChecked="isChecked('person', person.value)"
+              @toggle="toggle('person', [person.value], $event)"
             >
               <span
-                class="tw-block tw-truncate"
                 :class="{
-                  'tw-font-semibold tw-text-umn-maroon':
-                    item.value === TBA_PERSON,
+                  'tw-font-semibold tw-text-brand': person.value === TBA_PERSON,
                 }"
               >
-                {{ item.name }}
+                {{ person.name }}
               </span>
-              <span
-                v-if="item.emplid !== null"
-                class="tw-block tw-truncate tw-text-[11px] tw-text-neutral-500"
-              >
-                {{ item.emplid }}
-                <template v-if="item.internetId">
-                  • {{ item.internetId }}@umn.edu
-                </template>
-              </span>
-              <template #annotation>{{ item.sectionCount }} sec</template>
-            </FilterRow>
-          </template>
-        </FilterRows>
-      </FilterGroup>
-
-      <FilterGroup
-        v-if="sections.length > 0"
-        title="Sections"
-        :count="sections.length"
-        :checkedCount="filters.section.length"
-        @clear="clearFacet('section')"
-      >
-        <FilterRows :items="sections">
-          <template #default="{ item }">
-            <FilterRow
-              :isChecked="isChecked('section', item.value)"
-              @toggle="toggle('section', [item.value], $event)"
-            >
-              {{ item.label }}
-              <template #annotation>
-                {{ item.component }}
-                <template v-if="item.instructorLastName">
-                  · {{ item.instructorLastName }}
-                </template>
+              <template v-if="person.internetId" #secondary>
+                {{ person.internetId }}@umn.edu
               </template>
+              <template v-else-if="person.value === TBA_PERSON" #secondary>
+                No instructor assigned
+              </template>
+              <template #annotation>{{ person.sectionCount }} sec</template>
             </FilterRow>
-          </template>
-        </FilterRows>
-      </FilterGroup>
+          </li>
+        </template>
 
-      <FilterGroup
-        v-if="components.length > 0"
-        title="Type"
-        :count="components.length"
-        :checkedCount="filters.component.length"
-        @clear="clearFacet('component')"
-      >
-        <FilterRows :items="components">
-          <template #default="{ item }">
+        <template v-else-if="activeFacet === 'section'">
+          <li v-for="section in sections" :key="section.value">
             <FilterRow
-              :isChecked="isChecked('component', item.value)"
-              @toggle="toggle('component', [item.value], $event)"
+              :isChecked="isChecked('section', section.value)"
+              @toggle="toggle('section', [section.value], $event)"
             >
-              {{ item.value }}
-              <template #annotation>{{ item.sectionCount }}</template>
+              {{ section.label }}
+              <template #secondary>
+                {{ section.component
+                }}<template v-if="section.instructorLastName">
+                  · {{ section.instructorLastName }}</template
+                >
+              </template>
+              <template #annotation>{{ section.days }}</template>
             </FilterRow>
-          </template>
-        </FilterRows>
-      </FilterGroup>
+          </li>
+        </template>
+
+        <template v-else-if="activeFacet === 'component'">
+          <li v-for="component in components" :key="component.value">
+            <FilterRow
+              :isChecked="isChecked('component', component.value)"
+              :swatch="colorOfType(component.value).dot"
+              @toggle="toggle('component', [component.value], $event)"
+            >
+              {{ component.value }}
+              <template #secondary>{{
+                labelOfComponent(component.value)
+              }}</template>
+              <template #annotation>{{ component.sectionCount }}</template>
+            </FilterRow>
+          </li>
+        </template>
+      </ul>
     </div>
   </aside>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import FilterGroup from "./FilterGroup.vue";
 import FilterRow from "./FilterRow.vue";
-import FilterRows from "./FilterRows.vue";
+import { colorOfType, labelOfComponent } from "../constants/meetingTypeColors";
 import type {
   CourseOption,
   FilterOptions,
@@ -213,20 +225,16 @@ import type { ScheduleEditor } from "../useScheduleEditor";
 const props = defineProps<{
   options: FilterOptions;
   schedule: ScheduleEditor;
+  /** Mounted as an overlay that can be closed, rather than docked. */
+  isDismissible?: boolean;
 }>();
 
-const isCollapsed = defineModel<boolean>("isCollapsed", { default: false });
-
-const ICON_BUTTON_CLASS =
-  "tw-flex tw-h-7 tw-w-7 tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-text-on-surface-variant hover:tw-bg-surface-container-high hover:tw-text-on-surface";
+const emit = defineEmits<{ close: [] }>();
 
 const search = ref("");
+const activeFacet = ref<FilterFacet>("course");
 
 const filters = computed(() => props.schedule.filters);
-
-const activeFilterCount = computed(() =>
-  Object.values(filters.value).reduce((sum, values) => sum + values.length, 0),
-);
 
 const isChecked = (facet: FilterFacet, value: string) =>
   filters.value[facet].includes(value);
@@ -239,6 +247,11 @@ const toggle = (facet: FilterFacet, values: string[], isNowChecked: boolean) =>
 const clearFacet = (facet: FilterFacet) =>
   props.schedule.removeFilterValues(facet, filters.value[facet]);
 
+const showUnassigned = () => {
+  activeFacet.value = "person";
+  props.schedule.addFilterValues("person", [TBA_PERSON]);
+};
+
 // a checked row stays in view whatever the search says, so it can be unchecked
 const isInView = (facet: FilterFacet, value: string, text: string) => {
   const query = search.value.trim().toLowerCase();
@@ -248,6 +261,49 @@ const isInView = (facet: FilterFacet, value: string, text: string) => {
     text.toLowerCase().includes(query)
   );
 };
+
+// term totals for the tiles and the list header, so the search box never
+// changes what a scheduler expects those numbers to mean
+const courseCount = computed(() =>
+  props.options.courseLevels.reduce(
+    (sum, level) => sum + level.courses.length,
+    0,
+  ),
+);
+const facultyCount = computed(
+  () => props.options.faculty.length + (props.options.tba ? 1 : 0),
+);
+const sectionCount = computed(() => props.options.sections.length);
+const componentCount = computed(() => props.options.components.length);
+
+const tiles = computed(() => [
+  { facet: "course" as const, label: "Courses", count: courseCount.value },
+  { facet: "person" as const, label: "Faculty", count: facultyCount.value },
+  { facet: "section" as const, label: "Sections", count: sectionCount.value },
+  { facet: "component" as const, label: "Types", count: componentCount.value },
+]);
+
+const listHeader = computed(
+  () =>
+    ({
+      course: {
+        title: "Courses",
+        countPhrase: `${courseCount.value} in this term`,
+      },
+      person: {
+        title: "Faculty",
+        countPhrase: `${facultyCount.value} on the roster`,
+      },
+      section: {
+        title: "Sections",
+        countPhrase: `${sectionCount.value} in this term`,
+      },
+      component: {
+        title: "Meeting type",
+        countPhrase: "the key to the schedule",
+      },
+    })[activeFacet.value],
+);
 
 const courseLevels = computed(() =>
   props.options.courseLevels
@@ -263,10 +319,6 @@ const courseLevels = computed(() =>
       };
     })
     .filter((level) => level.courses.length > 0),
-);
-
-const courseCount = computed(() =>
-  courseLevels.value.reduce((sum, level) => sum + level.courses.length, 0),
 );
 
 /** TBA heads the list: it is the row a scheduler most often needs to find. */

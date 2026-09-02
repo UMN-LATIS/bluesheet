@@ -27,6 +27,7 @@ export interface SectionEdit {
   instructors?: SisInstructor[];
   enrollmentCap?: number;
   notes?: string;
+  isCancelled?: boolean;
 }
 
 export type MeetingEdge = "start" | "end";
@@ -155,6 +156,11 @@ export type EditorEvent =
   | { type: "madeAsynchronous"; sectionId: number }
   | { type: "draftSaved"; sectionId: number }
   | { type: "draftCancelled"; sectionId: number }
+  /**
+   * The section is struck from the term. Confirmed in the sheet before it is
+   * dispatched, and undone only by reverting the section.
+   */
+  | { type: "sectionCancelled"; sectionId: number }
   | { type: "sectionEditsReverted"; sectionId: number };
 
 /** Work for the page to do outside `update`, which never imports the router. */

@@ -37,8 +37,11 @@
       <li v-for="entry in entries" :key="entry.meetingId">
         <button
           type="button"
-          class="tw-flex tw-w-full tw-cursor-pointer tw-items-baseline tw-justify-between tw-gap-3 tw-rounded-lg tw-border tw-border-solid tw-border-outline-variant tw-px-2.5 tw-py-1.5 tw-text-left tw-text-xs tw-text-on-surface hover:tw-border-outline"
-          :class="colorOfType(entry.section.component).block"
+          class="tw-flex tw-w-full tw-cursor-pointer tw-items-baseline tw-justify-between tw-gap-3 tw-rounded-lg tw-border tw-border-l-[3px] tw-border-solid tw-border-outline-variant tw-px-2.5 tw-py-1.5 tw-text-left tw-text-xs tw-text-on-surface hover:tw-border-outline"
+          :class="[
+            colorOfType(entry.section.component).tint,
+            colorOfType(entry.section.component).rail,
+          ]"
           @click="
             schedule.selectSection(entry.section.id, {
               kind: 'hour',

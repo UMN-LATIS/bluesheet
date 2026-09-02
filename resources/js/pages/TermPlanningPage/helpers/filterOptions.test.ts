@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildFilterOptions, optionLabel } from "./filterOptions";
+import { buildFilterOptions } from "./filterOptions";
 import type { SisInstructor, SisSection } from "../types";
 import { TBA_PERSON } from "../types";
 
@@ -277,45 +277,5 @@ describe("buildFilterOptions", () => {
         { value: "LAB", sectionCount: 1 },
       ]);
     });
-  });
-});
-
-describe("optionLabel", () => {
-  const options = buildFilterOptions([
-    section(1, {
-      courseCode: "ANTH-1001",
-      subject: "ANTH",
-      catalogNumber: "1001",
-      section: "001",
-      component: "LEC",
-      instructors: [
-        instructor(1, { role: "PI", name: "Ana García", lastName: "García" }),
-      ],
-    }),
-    section(2, { courseCode: "ANTH-1002", instructors: [] }),
-  ]);
-
-  it("prints a course's code", () => {
-    expect(optionLabel(options, "course", "ANTH-1001")).toBe("ANTH 1001");
-  });
-
-  it("prints a person's shortName, TBA included", () => {
-    expect(optionLabel(options, "person", "1")).toBe("A. García");
-    expect(optionLabel(options, "person", TBA_PERSON)).toBe("TBA");
-  });
-
-  it("prints a section's label", () => {
-    expect(optionLabel(options, "section", "1")).toBe("ANTH 1001 · 001");
-  });
-
-  it("prints a component's value", () => {
-    expect(optionLabel(options, "component", "LEC")).toBe("LEC");
-  });
-
-  it("falls back to the raw value when the options do not know it", () => {
-    expect(optionLabel(options, "course", "ANTH-9999")).toBe("ANTH-9999");
-    expect(optionLabel(options, "person", "9999")).toBe("9999");
-    expect(optionLabel(options, "section", "9999")).toBe("9999");
-    expect(optionLabel(options, "component", "SEM")).toBe("SEM");
   });
 });

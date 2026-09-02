@@ -3,8 +3,9 @@
  * scheduleFilters.
  */
 
-import type { FilterFacet, SisInstructor, SisSection } from "../types";
+import type { SisInstructor, SisSection } from "../types";
 import { TBA_PERSON } from "../types";
+import { daysMetLabel } from "./scheduleDays";
 
 export interface CourseOption {
   /** The filter value: `section.courseCode`, e.g. "HIST-1082". */
@@ -49,6 +50,8 @@ export interface SectionOption {
    * null when there is none.
    */
   instructorLastName: string | null;
+  /** Which days it meets, as "MW" or "TTh"; "Async" when it meets on none. */
+  days: string;
 }
 
 export interface ComponentOption {
@@ -262,6 +265,7 @@ function buildSections(sections: SisSection[]): SectionOption[] {
       label: `${section.subject} ${section.catalogNumber} · ${section.section}`,
       component: section.component,
       instructorLastName: leadInstructorLastName(section.instructors),
+      days: daysMetLabel(section.meetings),
     }));
 }
 
@@ -293,42 +297,4 @@ export function buildFilterOptions(sections: SisSection[]): FilterOptions {
     sections: buildSections(sections),
     components: buildComponents(sections),
   };
-}
-
-/**
- * The text a chip prints for one checked value. Falls back to the raw value
- * when the options do not know it (e.g. a stale URL).
- */
-export function optionLabel(
-  options: FilterOptions,
-  facet: FilterFacet,
-  value: string,
-): string {
-  switch (facet) {
-    case "course": {
-      const course = options.courseLevels
-        .flatMap((level) => level.courses)
-        .find((candidate) => candidate.value === value);
-      return course?.code ?? value;
-    }
-    case "person": {
-      if (options.tba?.value === value) return options.tba.shortName;
-      const person = options.faculty.find(
-        (candidate) => candidate.value === value,
-      );
-      return person?.shortName ?? value;
-    }
-    case "section": {
-      const section = options.sections.find(
-        (candidate) => candidate.value === value,
-      );
-      return section?.label ?? value;
-    }
-    case "component": {
-      const component = options.components.find(
-        (candidate) => candidate.value === value,
-      );
-      return component?.value ?? value;
-    }
-  }
 }

@@ -184,10 +184,12 @@ describe("selectLocalSection", () => {
     const bare = { ...section } as Partial<typeof section>;
     delete bare.delivery;
     delete bare.notes;
+    delete bare.isCancelled;
 
     expect(selectLocalSection(bare as typeof section, atRest)).toMatchObject({
       delivery: "onCampus",
       notes: "",
+      isCancelled: false,
     });
   });
 });

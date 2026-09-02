@@ -13,13 +13,22 @@
         keeps its name in view while scrolling.
       -->
       <span
-        class="tw-sticky"
+        class="tw-sticky tw-flex tw-items-baseline tw-gap-2"
         :style="{
           left: 'calc(var(--day-label-offset, 0px) + 0.5rem)',
           right: '0.5rem',
         }"
-        >{{ label }}</span
       >
+        <span
+          class="tw-text-[12.5px] tw-font-bold tw-uppercase tw-tracking-[0.04em] tw-text-on-surface"
+        >
+          {{ label }}
+        </span>
+        <span class="tw-text-[11px] tw-text-on-surface-variant">
+          {{ view.layout.placed.length }}
+          {{ view.layout.placed.length === 1 ? "class" : "classes" }}
+        </span>
+      </span>
     </ColumnHeader>
     <div
       class="tw-relative tw-select-none"

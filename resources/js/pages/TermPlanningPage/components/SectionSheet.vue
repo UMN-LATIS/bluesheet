@@ -1,11 +1,18 @@
 <template>
   <aside
     aria-label="Section details"
-    class="tw-flex tw-min-h-0 tw-flex-col tw-bg-surface-bright tw-text-on-surface"
+    class="tw-flex tw-h-full tw-w-full tw-flex-col tw-min-h-0 tw-bg-surface-bright tw-text-on-surface"
   >
+    <!-- Marks the sheet as a panel dragged up over a phone screen. -->
+    <div v-if="hasHandle" class="tw-flex-none tw-pt-2">
+      <div
+        class="tw-mx-auto tw-h-1 tw-w-10 tw-rounded-full tw-bg-outline-variant"
+      />
+    </div>
+
     <div
-      class="tw-flex-none tw-border-0 tw-border-l-4 tw-border-solid tw-px-4 tw-pb-2.5 tw-pt-3"
-      :class="colorOfType(draft.component).swatch"
+      class="tw-flex-none tw-border-0 tw-border-b tw-border-solid tw-border-surface-container tw-px-[18px] tw-pb-3 tw-pt-3.5"
+      :class="{ 'tw-bg-brand/[0.06]': draft.isCancelled }"
     >
       <button
         v-if="returnTo"
@@ -17,40 +24,58 @@
         {{ returnTo }}
       </button>
 
-      <div class="tw-flex tw-items-start tw-justify-between tw-gap-2">
-        <p
-          class="tw-m-0 tw-truncate tw-text-xs tw-text-on-surface-variant"
-          :title="section.title"
+      <div class="tw-flex tw-items-center tw-gap-2">
+        <span
+          class="tw-inline-flex tw-h-5 tw-items-center tw-rounded-full tw-border tw-border-solid tw-px-2.5 tw-text-[10px] tw-font-bold tw-tracking-[0.07em] tw-text-on-surface"
+          :class="colorOfType(draft.component).badge"
         >
-          {{ section.title }}
-        </p>
+          {{ draft.component }}
+        </span>
+        <span
+          v-if="draft.isCancelled"
+          class="tw-inline-flex tw-h-5 tw-items-center tw-rounded-full tw-bg-brand tw-px-2 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-wide tw-text-white"
+        >
+          Cancelled
+        </span>
+        <span class="tw-text-[11.5px] tw-text-on-surface-variant">
+          {{ deliveryLabel(draft.delivery) }}
+        </span>
         <button
           v-if="!returnTo"
           type="button"
           aria-label="Close"
-          class="tw--mr-1 tw-flex tw-h-6 tw-w-6 tw-flex-none tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-text-xl tw-leading-none tw-text-on-surface-variant hover:tw-bg-surface-container-high hover:tw-text-on-surface"
+          class="tw-ml-auto tw-flex tw-h-11 tw-w-11 tw-flex-none tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-text-xl tw-leading-none tw-text-on-surface-variant hover:tw-bg-surface-container hover:tw-text-on-surface"
           @click="emit('close')"
         >
           ×
         </button>
       </div>
 
-      <h2 class="tw-m-0 tw-text-base tw-font-bold">
+      <h2 class="tw-m-0 tw-mt-1 tw-text-[19px] tw-font-bold tw-tracking-tight">
         {{ draft.subject }} {{ draft.catalogNumber }} · {{ draft.section }}
         <!-- How many other numbers this same class is listed under. -->
         <span v-if="partners.length > 0" class="tw-text-on-surface-variant">
           [+{{ partners.length }}]
         </span>
       </h2>
+
+      <p
+        class="tw-m-0 tw-truncate tw-text-[12.5px] tw-text-on-surface-variant"
+        :title="section.title"
+      >
+        {{ section.title }}
+      </p>
+
+      <p class="tw-m-0 tw-mt-2 tw-text-[11.5px] tw-text-on-surface-variant">
+        {{ metaLine }}
+      </p>
     </div>
 
     <div
-      class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-gap-4 tw-overflow-y-auto tw-p-4 tw-text-sm"
+      class="scrollbar-always-visible tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-gap-5 tw-overflow-y-auto tw-p-[18px]"
     >
       <div>
-        <label :for="fieldId('section')" :class="LABEL_CLASS">
-          Section number
-        </label>
+        <label :for="fieldId('section')" :class="LABEL_CLASS">Section</label>
         <input
           :id="fieldId('section')"
           :value="draft.section"
@@ -61,139 +86,139 @@
       </div>
 
       <div>
-        <span :class="LABEL_CLASS">Component</span>
-        <SegmentedControl
-          label="Component"
-          :options="componentOptions"
-          :chosen="[draft.component]"
-          @choose="(code) => edit({ component: code })"
-        />
+        <span :class="LABEL_CLASS">Meets</span>
+        <div class="tw-flex tw-flex-col tw-gap-4">
+          <div
+            v-for="(pattern, patternIndex) in patterns"
+            :key="patternIndex"
+            class="tw-flex tw-flex-col tw-gap-2"
+          >
+            <div
+              v-if="patterns.length > 1"
+              class="tw-flex tw-items-center tw-justify-between tw-gap-2"
+            >
+              <span
+                class="tw-text-[11px] tw-font-semibold tw-text-on-surface-variant"
+              >
+                Meeting {{ patternIndex + 1 }}
+              </span>
+              <button
+                type="button"
+                class="tw-flex tw-h-7 tw-w-7 tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-text-xs tw-text-on-surface-variant hover:tw-bg-surface-container hover:tw-text-on-surface"
+                :aria-label="`Remove meeting time ${patternIndex + 1}`"
+                @click="schedule.removeMeetingPattern(section.id, patternIndex)"
+              >
+                ×
+              </button>
+            </div>
+
+            <SegmentedControl
+              label="Days"
+              :options="DAY_OPTIONS"
+              :chosen="pattern?.days ?? [ASYNC]"
+              @choose="(day) => pressDay(patternIndex, day)"
+            />
+
+            <!-- No pattern is the Async state, which has no time to show. -->
+            <template v-if="pattern">
+              <div class="tw-flex tw-items-center tw-gap-2">
+                <input
+                  :value="pattern.startTime"
+                  type="time"
+                  :aria-label="`Start time ${patternIndex + 1}`"
+                  :class="INPUT_CLASS"
+                  @input="
+                    schedule.editMeetingTime(section.id, patternIndex, {
+                      startTime: valueOf($event),
+                    })
+                  "
+                />
+                <span class="tw-text-sm tw-text-on-surface-variant">to</span>
+                <input
+                  :value="pattern.endTime"
+                  type="time"
+                  :aria-label="`End time ${patternIndex + 1}`"
+                  :class="INPUT_CLASS"
+                  @input="
+                    schedule.editMeetingTime(section.id, patternIndex, {
+                      endTime: valueOf($event),
+                    })
+                  "
+                />
+              </div>
+              <p
+                v-if="problemWith(patternIndex)"
+                class="tw-m-0 tw-text-xs tw-text-red-700"
+              >
+                {{ problemWith(patternIndex) }}
+              </p>
+              <p v-else class="tw-m-0 tw-text-xs tw-text-on-surface-variant">
+                {{ durationOf(pattern) }} minutes
+              </p>
+            </template>
+          </div>
+
+          <button
+            v-if="patterns.length > 0"
+            type="button"
+            class="tw-cursor-pointer tw-self-start tw-border-none tw-bg-transparent tw-p-0 tw-text-xs tw-font-semibold tw-text-primary hover:tw-underline"
+            @click="schedule.addMeetingPattern(section.id)"
+          >
+            Add meeting
+          </button>
+        </div>
       </div>
+
+      <div class="tw-h-px tw-bg-surface-container" />
 
       <div>
-        <span :class="LABEL_CLASS">Delivery</span>
-        <SegmentedControl
-          label="Delivery"
-          :options="DELIVERY_OPTIONS"
-          :chosen="[draft.delivery]"
-          @choose="(how) => edit({ delivery: how as Delivery })"
-        />
-      </div>
-
-      <div
-        v-for="(pattern, patternIndex) in patterns"
-        :key="patternIndex"
-        class="tw-flex tw-flex-col tw-gap-4"
-      >
-        <div>
-          <div class="tw-flex tw-items-baseline tw-justify-between">
-            <span :class="LABEL_CLASS">
-              Days<template v-if="patterns.length > 1">
-                · {{ patternIndex + 1 }}</template
-              >
+        <span :class="LABEL_CLASS">Taught by</span>
+        <div class="tw-flex tw-flex-col tw-gap-2">
+          <div
+            v-for="instructor in primaryInstructors"
+            :key="instructor.emplid"
+            class="tw-flex tw-items-center tw-gap-2.5 tw-rounded-[10px] tw-border tw-border-solid tw-border-outline-variant tw-p-2 tw-pl-3"
+          >
+            <span
+              class="tw-flex tw-h-7 tw-w-7 tw-flex-none tw-items-center tw-justify-center tw-rounded-full tw-bg-surface-container tw-text-[10px] tw-font-bold tw-text-on-surface-variant"
+            >
+              {{ initialsOf(instructor) }}
             </span>
+            <div class="tw-min-w-0 tw-flex-1">
+              <p class="tw-m-0 tw-truncate tw-text-[13.5px] tw-text-on-surface">
+                {{ instructor.name ?? "TBA" }}
+              </p>
+              <p class="tw-m-0 tw-text-[11px] tw-text-on-surface-variant">
+                Instructor of record
+              </p>
+            </div>
             <button
-              v-if="patterns.length > 1"
               type="button"
-              class="tw-flex tw-h-5 tw-w-5 tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-text-xs tw-text-on-surface-variant hover:tw-bg-surface-container-high hover:tw-text-on-surface"
-              :aria-label="`Remove meeting time ${patternIndex + 1}`"
-              @click="schedule.removeMeetingPattern(section.id, patternIndex)"
+              class="tw-flex tw-h-11 tw-w-11 tw-flex-none tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-text-on-surface-variant hover:tw-bg-surface-container hover:tw-text-on-surface"
+              :aria-label="`Remove ${instructor.name ?? 'instructor'}`"
+              @click="removeInstructor(instructor.emplid)"
             >
               ×
             </button>
           </div>
-          <SegmentedControl
-            label="Days"
-            :options="DAY_OPTIONS"
-            :chosen="pattern?.days ?? [ASYNC]"
-            @choose="(day) => pressDay(patternIndex, day)"
-          />
-        </div>
-
-        <!-- No pattern is the Async state, which has no time to show. -->
-        <div v-if="pattern">
-          <span :class="LABEL_CLASS">Time</span>
-          <div class="tw-flex tw-items-center tw-gap-2">
-            <input
-              :value="pattern.startTime"
-              type="time"
-              :aria-label="`Start time ${patternIndex + 1}`"
-              :class="INPUT_CLASS"
-              @input="
-                schedule.editMeetingTime(section.id, patternIndex, {
-                  startTime: valueOf($event),
-                })
-              "
-            />
-            <span class="tw-text-xs tw-text-on-surface-variant">to</span>
-            <input
-              :value="pattern.endTime"
-              type="time"
-              :aria-label="`End time ${patternIndex + 1}`"
-              :class="INPUT_CLASS"
-              @input="
-                schedule.editMeetingTime(section.id, patternIndex, {
-                  endTime: valueOf($event),
-                })
-              "
-            />
-          </div>
           <p
-            v-if="problemWith(patternIndex)"
-            class="tw-m-0 tw-mt-1.5 tw-text-xs tw-text-red-700"
+            v-if="primaryInstructors.length === 0"
+            class="tw-m-0 tw-text-[13px] tw-text-on-surface-variant"
           >
-            {{ problemWith(patternIndex) }}
-          </p>
-          <p
-            v-else
-            class="tw-m-0 tw-mt-1.5 tw-text-xs tw-text-on-surface-variant"
-          >
-            {{ durationOf(pattern) }} minutes
+            TBA
           </p>
         </div>
-      </div>
 
-      <button
-        v-if="patterns.length > 0"
-        type="button"
-        class="tw--mt-2 tw-cursor-pointer tw-self-start tw-border-none tw-bg-transparent tw-p-0 tw-text-xs tw-font-semibold tw-text-primary hover:tw-underline"
-        @click="schedule.addMeetingPattern(section.id)"
-      >
-        Add meeting time
-      </button>
-
-      <div>
-        <span :class="LABEL_CLASS">Instructors</span>
-        <div
-          v-for="instructor in draft.instructors"
-          :key="instructor.emplid"
-          class="tw-mb-1 tw-flex tw-items-center tw-justify-between tw-gap-2 tw-rounded-lg tw-bg-surface-container tw-px-3 tw-py-2"
+        <button
+          v-if="!isAddingInstructor"
+          type="button"
+          class="tw-mt-2 tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[12.5px] tw-font-semibold tw-text-primary hover:tw-underline"
+          @click="isAddingInstructor = true"
         >
-          <span>
-            {{ instructor.name ?? "TBA" }}
-            <span
-              v-if="instructor.role !== PRIMARY_ROLE"
-              class="tw-text-xs tw-text-on-surface-variant"
-            >
-              {{ instructor.role }}
-            </span>
-          </span>
-          <button
-            type="button"
-            class="tw-flex tw-h-5 tw-w-5 tw-flex-none tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-text-on-surface-variant hover:tw-bg-surface-container-high hover:tw-text-on-surface"
-            :aria-label="`Remove ${instructor.name ?? 'instructor'}`"
-            @click="removeInstructor(instructor.emplid)"
-          >
-            ×
-          </button>
-        </div>
-        <p
-          v-if="draft.instructors.length === 0"
-          class="tw-m-0 tw-mb-1 tw-text-on-surface-variant"
-        >
-          TBA
-        </p>
+          Add instructor
+        </button>
         <ComboBox
+          v-else
           label="Add instructor"
           placeholder="Add instructor…"
           :showLabel="false"
@@ -201,15 +226,18 @@
           :modelValue="null"
           strategy="fixed"
           teleportTo="body"
-          @update:modelValue="addInstructor"
+          class="tw-mt-2"
+          @update:modelValue="(option) => addPerson(option, PRIMARY_ROLE)"
         />
       </div>
+
+      <div class="tw-h-px tw-bg-surface-container" />
 
       <div>
         <label :for="fieldId('cap')" :class="LABEL_CLASS">
           Enrollment cap
         </label>
-        <div class="tw-flex tw-items-baseline tw-gap-3">
+        <div class="tw-flex tw-items-center tw-gap-3">
           <input
             :id="fieldId('cap')"
             :value="capText"
@@ -218,8 +246,11 @@
             :class="[INPUT_CLASS, 'tw-w-24']"
             @input="editCap(valueOf($event))"
           />
-          <span class="tw-text-xs tw-text-on-surface-variant">
-            {{ section.enrollmentTotal }} enrolled
+          <span class="tw-text-[13px] tw-text-on-surface-variant">
+            <span class="tw-font-semibold tw-text-on-surface">
+              {{ section.enrollmentTotal }}
+            </span>
+            enrolled
             <template v-if="combinedCap !== null">
               · combined cap {{ combinedCap }}
             </template>
@@ -227,92 +258,370 @@
         </div>
       </div>
 
-      <div>
-        <label :for="fieldId('notes')" :class="LABEL_CLASS">Notes</label>
-        <textarea
-          :id="fieldId('notes')"
-          :value="draft.notes"
-          rows="3"
-          placeholder="Internal to the department"
-          :class="[INPUT_CLASS, 'tw-w-full']"
-          @input="edit({ notes: valueOf($event) })"
-        />
-      </div>
+      <div class="tw-h-px tw-bg-surface-container" />
 
-      <div v-if="partners.length > 0">
-        <span :class="LABEL_CLASS">Cross-listed as</span>
-        <div
-          v-for="partner in partners"
-          :key="`${partner.subject}${partner.catalogNumber}`"
-          class="tw-mb-1 tw-flex tw-items-baseline tw-justify-between tw-gap-2 tw-rounded-lg tw-bg-surface-container tw-px-3 tw-py-2"
-        >
-          <span>{{ partner.subject }} {{ partner.catalogNumber }}</span>
-          <span class="tw-text-xs tw-text-on-surface-variant">
-            {{
-              partner.subject === section.subject
-                ? "same subject"
-                : "other subject"
-            }}
-          </span>
+      <div class="tw-flex tw-flex-col tw-gap-3.5">
+        <div>
+          <button
+            type="button"
+            class="tw-flex tw-w-full tw-min-h-11 tw-cursor-pointer tw-items-center tw-gap-2 tw-border-none tw-bg-transparent tw-p-0 tw-text-[11.5px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-surface-variant"
+            :aria-expanded="isComponentOpen"
+            @click="isComponentOpen = !isComponentOpen"
+          >
+            Component & delivery
+            <span
+              class="tw-text-[11px] tw-font-normal tw-normal-case tw-tracking-normal tw-text-on-surface-variant"
+            >
+              {{ componentSummary }}
+            </span>
+            <span
+              class="tw-ml-auto tw-text-[11px] tw-font-semibold tw-normal-case tw-tracking-normal tw-text-primary"
+            >
+              {{ isComponentOpen ? "Hide" : "Show" }}
+            </span>
+          </button>
+          <div v-if="isComponentOpen" class="tw-mt-2 tw-flex tw-gap-3">
+            <div class="tw-min-w-0 tw-flex-1">
+              <label
+                :for="fieldId('component')"
+                class="tw-mb-1.5 tw-block tw-text-[11px] tw-text-on-surface-variant"
+              >
+                Component
+              </label>
+              <select
+                :id="fieldId('component')"
+                :value="draft.component"
+                :class="[INPUT_CLASS, 'tw-w-full']"
+                @change="edit({ component: valueOf($event) })"
+              >
+                <option
+                  v-for="code in componentCodes"
+                  :key="code"
+                  :value="code"
+                >
+                  {{ code }} — {{ labelOfComponent(code) }}
+                </option>
+              </select>
+            </div>
+            <div class="tw-min-w-0 tw-flex-1">
+              <label
+                :for="fieldId('delivery')"
+                class="tw-mb-1.5 tw-block tw-text-[11px] tw-text-on-surface-variant"
+              >
+                Delivery
+              </label>
+              <select
+                :id="fieldId('delivery')"
+                :value="draft.delivery"
+                :class="[INPUT_CLASS, 'tw-w-full']"
+                @change="edit({ delivery: valueOf($event) as Delivery })"
+              >
+                <option
+                  v-for="option in DELIVERY_OPTIONS"
+                  :key="option.value"
+                  :value="option.value"
+                >
+                  {{ option.label }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="tw-h-px tw-bg-surface-container" />
+
+        <div>
+          <button
+            type="button"
+            class="tw-flex tw-w-full tw-min-h-11 tw-cursor-pointer tw-items-center tw-gap-2 tw-border-none tw-bg-transparent tw-p-0 tw-text-[11.5px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-surface-variant"
+            :aria-expanded="isCrosslistOpen"
+            @click="isCrosslistOpen = !isCrosslistOpen"
+          >
+            Cross-listings
+            <span
+              class="tw-text-[11px] tw-font-normal tw-normal-case tw-tracking-normal tw-text-on-surface-variant"
+            >
+              {{ crosslistSummary }}
+            </span>
+            <span
+              class="tw-ml-auto tw-text-[11px] tw-font-semibold tw-normal-case tw-tracking-normal tw-text-primary"
+            >
+              {{ isCrosslistOpen ? "Hide" : "Show" }}
+            </span>
+          </button>
+          <div v-if="isCrosslistOpen" class="tw-mt-2">
+            <p
+              v-if="partners.length === 0"
+              class="tw-m-0 tw-text-[12.5px] tw-text-on-surface-variant"
+            >
+              This section is not listed under another number.
+            </p>
+            <div v-else class="tw-flex tw-flex-col tw-gap-1.5">
+              <div
+                v-for="partner in partners"
+                :key="`${partner.subject}${partner.catalogNumber}${partner.section}`"
+                class="tw-flex tw-items-baseline tw-justify-between tw-gap-2 tw-rounded-lg tw-bg-surface-container tw-px-3 tw-py-2 tw-text-[13px]"
+              >
+                <span>
+                  {{ partner.subject }} {{ partner.catalogNumber }} ·
+                  {{ partner.section }}
+                </span>
+                <span class="tw-text-[11px] tw-text-on-surface-variant">
+                  {{
+                    partner.subject === section.subject
+                      ? "same subject"
+                      : "other subject"
+                  }}
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              disabled
+              title="Cross-listings come from the SIS import and cannot be added here yet"
+              class="tw-mt-2 tw-cursor-default tw-border-none tw-bg-transparent tw-p-0 tw-text-[12.5px] tw-font-semibold tw-text-on-surface-variant"
+            >
+              Add cross-listing
+            </button>
+          </div>
+        </div>
+
+        <div class="tw-h-px tw-bg-surface-container" />
+
+        <div>
+          <button
+            type="button"
+            class="tw-flex tw-w-full tw-min-h-11 tw-cursor-pointer tw-items-center tw-gap-2 tw-border-none tw-bg-transparent tw-p-0 tw-text-[11.5px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-surface-variant"
+            :aria-expanded="isAssistantsOpen"
+            @click="isAssistantsOpen = !isAssistantsOpen"
+          >
+            Teaching assistants
+            <span
+              class="tw-text-[11px] tw-font-normal tw-normal-case tw-tracking-normal tw-text-on-surface-variant"
+            >
+              {{ assistantsSummary }}
+            </span>
+            <span
+              class="tw-ml-auto tw-text-[11px] tw-font-semibold tw-normal-case tw-tracking-normal tw-text-primary"
+            >
+              {{ isAssistantsOpen ? "Hide" : "Show" }}
+            </span>
+          </button>
+          <div v-if="isAssistantsOpen" class="tw-mt-2">
+            <div class="tw-flex tw-flex-col tw-gap-2">
+              <div
+                v-for="instructor in assistantInstructors"
+                :key="instructor.emplid"
+                class="tw-flex tw-items-center tw-gap-2.5 tw-rounded-[10px] tw-border tw-border-solid tw-border-outline-variant tw-p-2 tw-pl-3"
+              >
+                <span
+                  class="tw-flex tw-h-7 tw-w-7 tw-flex-none tw-items-center tw-justify-center tw-rounded-full tw-bg-surface-container tw-text-[10px] tw-font-bold tw-text-on-surface-variant"
+                >
+                  {{ initialsOf(instructor) }}
+                </span>
+                <div class="tw-min-w-0 tw-flex-1">
+                  <p
+                    class="tw-m-0 tw-truncate tw-text-[13.5px] tw-text-on-surface"
+                  >
+                    {{ instructor.name ?? "TBA" }}
+                  </p>
+                  <p class="tw-m-0 tw-text-[11px] tw-text-on-surface-variant">
+                    {{ instructor.role }}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  class="tw-flex tw-h-11 tw-w-11 tw-flex-none tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-text-on-surface-variant hover:tw-bg-surface-container hover:tw-text-on-surface"
+                  :aria-label="`Remove ${instructor.name ?? 'instructor'}`"
+                  @click="removeInstructor(instructor.emplid)"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
+            <button
+              v-if="!isAddingAssistant"
+              type="button"
+              class="tw-mt-2 tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[12.5px] tw-font-semibold tw-text-primary hover:tw-underline"
+              @click="isAddingAssistant = true"
+            >
+              Add assistant
+            </button>
+            <ComboBox
+              v-else
+              label="Add assistant"
+              placeholder="Add assistant…"
+              :showLabel="false"
+              :options="rosterOptions"
+              :modelValue="null"
+              strategy="fixed"
+              teleportTo="body"
+              class="tw-mt-2"
+              @update:modelValue="(option) => addPerson(option, TA_ROLE)"
+            />
+          </div>
+        </div>
+
+        <div class="tw-h-px tw-bg-surface-container" />
+
+        <div>
+          <button
+            type="button"
+            class="tw-flex tw-w-full tw-min-h-11 tw-cursor-pointer tw-items-center tw-gap-2 tw-border-none tw-bg-transparent tw-p-0 tw-text-[11.5px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-surface-variant"
+            :aria-expanded="isNotesOpen"
+            @click="isNotesOpen = !isNotesOpen"
+          >
+            Notes
+            <span
+              class="tw-text-[11px] tw-font-normal tw-normal-case tw-tracking-normal tw-text-on-surface-variant"
+            >
+              {{ notesSummary }}
+            </span>
+            <span
+              class="tw-ml-auto tw-text-[11px] tw-font-semibold tw-normal-case tw-tracking-normal tw-text-primary"
+            >
+              {{ isNotesOpen ? "Hide" : "Show" }}
+            </span>
+          </button>
+          <div v-if="isNotesOpen" class="tw-mt-2">
+            <textarea
+              :id="fieldId('notes')"
+              :value="draft.notes"
+              rows="3"
+              placeholder="Internal to the department"
+              :class="[INPUT_CLASS, 'tw-w-full tw-py-2.5']"
+              @input="edit({ notes: valueOf($event) })"
+            />
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="tw-flex-none tw-bg-surface-container tw-px-4 tw-py-3">
-      <p
-        v-for="problem in generalProblems"
-        :key="problem.message"
-        class="tw-m-0 tw-mb-2 tw-text-xs tw-text-red-700"
-      >
-        {{ problem.message }}
+    <div
+      v-if="isConfirmingCancel"
+      role="alertdialog"
+      class="tw-flex tw-flex-none tw-flex-col tw-gap-2 tw-border-0 tw-border-t tw-border-solid tw-border-outline-variant tw-bg-brand/[0.06] tw-px-[18px] tw-py-3.5"
+    >
+      <p class="tw-m-0 tw-text-[13.5px] tw-font-bold">
+        Cancel {{ draft.subject }} {{ draft.catalogNumber }} ·
+        {{ draft.section }}?
       </p>
-
+      <p class="tw-m-0 tw-text-[12.5px] tw-leading-normal">
+        It stays in the SIS, marked cancelled for {{ termName ?? "this term" }}.
+        The registrar notifies the {{ section.enrollmentTotal }} enrolled
+        students.
+      </p>
       <div class="tw-flex tw-items-center tw-gap-3">
         <button
           type="button"
-          class="tw-rounded-full tw-border-none tw-bg-primary tw-px-4 tw-py-1.5 tw-text-xs tw-font-semibold tw-text-on-primary disabled:tw-cursor-default disabled:tw-bg-surface-container-high disabled:tw-text-on-surface-variant"
-          :class="{ 'tw-cursor-pointer': isDirty && problems.length === 0 }"
-          :disabled="!isDirty || problems.length > 0"
-          @click="schedule.saveDraft(section.id)"
+          class="tw-min-h-11 tw-cursor-pointer tw-rounded-full tw-border-none tw-bg-brand tw-px-5 tw-text-[13px] tw-font-bold tw-text-white"
+          @click="confirmCancelSection"
         >
-          Save
+          Cancel section
         </button>
         <button
-          v-if="isDirty"
           type="button"
-          class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-xs tw-font-semibold tw-text-on-surface-variant hover:tw-underline"
-          @click="schedule.cancelDraft(section.id)"
+          class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[13px] tw-font-semibold tw-text-on-surface-variant hover:tw-underline"
+          @click="isConfirmingCancel = false"
         >
-          Cancel
+          Keep it
         </button>
-        <span class="tw-ml-auto tw-text-xs tw-text-on-surface-variant">
-          {{ section.credits ?? "—" }} credits · class {{ section.classNumber }}
-        </span>
       </div>
+    </div>
 
+    <p
+      v-for="problem in generalProblems"
+      :key="problem.message"
+      class="tw-m-0 tw-px-[18px] tw-pt-2 tw-text-xs tw-text-red-700"
+    >
+      {{ problem.message }}
+    </p>
+
+    <div
+      class="tw-flex tw-flex-none tw-items-center tw-gap-2.5 tw-border-0 tw-border-t tw-border-solid tw-border-surface-container tw-bg-surface-bright tw-px-[18px] tw-pb-3 tw-pt-2.5"
+    >
       <button
-        v-if="schedule.hasEdits(section.id)"
         type="button"
-        class="tw-mt-2 tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-xs tw-font-semibold tw-text-brand hover:tw-underline"
-        @click="schedule.revertSection(section.id)"
+        class="tw-min-h-11 tw-rounded-full tw-border-none tw-bg-primary tw-px-5.5 tw-text-[13px] tw-font-bold tw-text-on-primary disabled:tw-cursor-default disabled:tw-bg-surface-container-high disabled:tw-text-on-surface-variant"
+        :class="{ 'tw-cursor-pointer': isDirty && problems.length === 0 }"
+        :disabled="!isDirty || problems.length > 0"
+        @click="schedule.saveDraft(section.id)"
       >
-        Revert to SIS
+        Save changes
       </button>
+      <button
+        v-if="isDirty"
+        type="button"
+        class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[13px] tw-font-semibold tw-text-on-surface-variant hover:tw-underline"
+        @click="schedule.cancelDraft(section.id)"
+      >
+        Discard
+      </button>
+
+      <div
+        ref="menuContainerRef"
+        class="tw-relative tw-ml-auto"
+        @keydown.escape="isMenuOpen = false"
+      >
+        <button
+          type="button"
+          aria-label="More options"
+          aria-haspopup="menu"
+          :aria-expanded="isMenuOpen"
+          class="tw-flex tw-h-11 tw-w-11 tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-text-on-surface-variant hover:tw-border-outline hover:tw-text-on-surface"
+          @click="isMenuOpen = !isMenuOpen"
+        >
+          <VDotsIcon class="tw-h-4 tw-w-4" />
+        </button>
+        <div
+          v-if="isMenuOpen"
+          role="menu"
+          class="tw-absolute tw-bottom-[52px] tw-right-0 tw-z-[60] tw-w-[212px] tw-rounded-[10px] tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-p-1.5 tw-shadow-[0_10px_28px_rgba(38,38,38,0.18)]"
+        >
+          <button
+            type="button"
+            role="menuitem"
+            class="tw-block tw-w-full tw-min-h-11 tw-cursor-pointer tw-rounded-[7px] tw-border-none tw-bg-transparent tw-px-2.5 tw-text-left tw-text-[13px] tw-font-semibold tw-text-on-surface hover:tw-bg-surface disabled:tw-cursor-default disabled:tw-text-on-surface-variant disabled:hover:tw-bg-transparent"
+            :disabled="!schedule.hasEdits(section.id)"
+            @click="revertFromMenu"
+          >
+            Revert to SIS
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            class="tw-block tw-w-full tw-min-h-11 tw-cursor-pointer tw-rounded-[7px] tw-border-none tw-bg-transparent tw-px-2.5 tw-text-left tw-text-[13px] tw-font-semibold tw-text-brand hover:tw-bg-brand/[0.06] disabled:tw-cursor-default disabled:tw-text-on-surface-variant disabled:hover:tw-bg-transparent"
+            :disabled="draft.isCancelled"
+            :title="
+              draft.isCancelled
+                ? 'This section is already cancelled'
+                : undefined
+            "
+            @click="startCancelFromMenu"
+          >
+            Cancel section…
+          </button>
+        </div>
+      </div>
     </div>
   </aside>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
+import { onClickOutside } from "@vueuse/core";
 import SegmentedControl, { type SegmentedOption } from "./SegmentedControl.vue";
 import { ComboBox, type ComboBoxOptionType } from "@/components/ComboBox";
-import { colorOfType } from "../constants/meetingTypeColors";
+import { VDotsIcon } from "@/icons";
+import { colorOfType, labelOfComponent } from "../constants/meetingTypeColors";
 import { minutesFromClock } from "../helpers/timeScale";
 import type {
   Delivery,
   PlannedSection,
   SisDay,
   SisEmployee,
+  SisInstructor,
   SisSectionMeeting,
 } from "../types";
 import type { ScheduleEditor } from "../useScheduleEditor";
@@ -325,15 +634,19 @@ const props = defineProps<{
   roster: SisEmployee[];
   /** Names the list this sheet was opened from, e.g. "Tue · 2 – 3p", if any. */
   returnTo?: string | null;
+  /** Draws the grab handle that marks a sheet pulled up over a small screen. */
+  hasHandle?: boolean;
+  /** Names the term in the cancel prompt, e.g. "Fall 2026". */
+  termName?: string;
 }>();
 
 const emit = defineEmits<{ close: []; back: [] }>();
 
 const LABEL_CLASS =
-  "tw-m-0 tw-mb-1.5 tw-block tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-on-surface-variant";
+  "tw-m-0 tw-mb-2 tw-block tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-surface-variant";
 
 const INPUT_CLASS =
-  "tw-rounded-lg tw-border tw-border-solid tw-border-transparent tw-bg-surface-container tw-px-3 tw-py-1.5 tw-text-sm tw-text-on-surface focus:tw-border-primary focus:tw-bg-surface-bright focus:tw-outline-none";
+  "tw-min-h-11 tw-rounded-[10px] tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-px-3 tw-text-sm tw-text-on-surface focus:tw-border-primary focus:tw-outline-none";
 
 const COMPONENT_CODES = ["LEC", "DIS", "LAB", "FWK", "IND"];
 
@@ -346,6 +659,9 @@ const DELIVERY_OPTIONS: SegmentedOption[] = [
 /** The SIS instructor-of-record role. */
 const PRIMARY_ROLE = "PI";
 
+/** The role recorded when someone is added from the teaching assistants list. */
+const TA_ROLE = "TA";
+
 const ASYNC = "async";
 
 const DAY_OPTIONS: SegmentedOption[] = [
@@ -354,8 +670,22 @@ const DAY_OPTIONS: SegmentedOption[] = [
   { value: "wed", label: "W" },
   { value: "thu", label: "Th" },
   { value: "fri", label: "F" },
-  { value: ASYNC, label: "Async" },
+  { value: ASYNC, label: "Async", isDashed: true },
 ];
+
+const isAddingInstructor = ref(false);
+const isAddingAssistant = ref(false);
+const isComponentOpen = ref(false);
+const isCrosslistOpen = ref(false);
+const isAssistantsOpen = ref(false);
+const isNotesOpen = ref(false);
+const isConfirmingCancel = ref(false);
+const isMenuOpen = ref(false);
+
+const menuContainerRef = ref<HTMLElement | null>(null);
+onClickOutside(menuContainerRef, () => {
+  isMenuOpen.value = false;
+});
 
 const fieldId = (field: string) => `section-${props.section.id}-${field}`;
 
@@ -367,14 +697,22 @@ const edit = (change: Parameters<ScheduleEditor["editSection"]>[1]) =>
   props.schedule.editSection(props.section.id, change);
 
 const valueOf = (event: Event) =>
-  (event.target as HTMLInputElement | HTMLTextAreaElement).value;
+  (event.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement)
+    .value;
+
+const deliveryLabel = (delivery: Delivery) =>
+  DELIVERY_OPTIONS.find((option) => option.value === delivery)?.label ??
+  delivery;
 
 /** A code the import has never sent still shows, rather than reading as LEC. */
-const componentOptions = computed<SegmentedOption[]>(() =>
-  (COMPONENT_CODES.includes(draft.value.component)
+const componentCodes = computed(() =>
+  COMPONENT_CODES.includes(draft.value.component)
     ? COMPONENT_CODES
-    : [...COMPONENT_CODES, draft.value.component]
-  ).map((code) => ({ value: code, label: code })),
+    : [...COMPONENT_CODES, draft.value.component],
+);
+
+const componentSummary = computed(
+  () => `${draft.value.component} · ${deliveryLabel(draft.value.delivery)}`,
 );
 
 // one empty group when there are none, so the day buttons still show
@@ -400,17 +738,33 @@ const generalProblems = computed(() =>
   problems.value.filter(({ patternIndex }) => patternIndex === undefined),
 );
 
+const problemWith = (patternIndex: number) =>
+  problems.value.find((problem) => problem.patternIndex === patternIndex)
+    ?.message;
+
 // an emptied cap is NaN, not 0, so the field stays blank while retyped
 const capText = computed(() =>
   Number.isNaN(draft.value.enrollmentCap) ? "" : draft.value.enrollmentCap,
 );
 
+/** Falls back to the saved cap while the field is blank mid-edit. */
+const capForDisplay = computed(() =>
+  Number.isNaN(draft.value.enrollmentCap)
+    ? props.section.enrollmentCap
+    : draft.value.enrollmentCap,
+);
+
 const editCap = (raw: string) =>
   edit({ enrollmentCap: raw.trim() === "" ? NaN : Number(raw) });
 
-const problemWith = (patternIndex: number) =>
-  problems.value.find((problem) => problem.patternIndex === patternIndex)
-    ?.message;
+const metaLine = computed(() =>
+  [
+    `${props.section.credits ?? "—"} credits`,
+    `class ${props.section.classNumber}`,
+    `${props.section.enrollmentTotal} of ${capForDisplay.value} seats filled`,
+    props.schedule.hasEdits(props.section.id) ? "edited here" : "matches SIS",
+  ].join(" · "),
+);
 
 const rosterOptions = computed<ComboBoxOptionType[]>(() =>
   props.roster
@@ -427,7 +781,7 @@ const rosterOptions = computed<ComboBoxOptionType[]>(() =>
     })),
 );
 
-function addInstructor(option: ComboBoxOptionType | null) {
+function addPerson(option: ComboBoxOptionType | null, role: string) {
   const person = props.roster.find(({ emplid }) => emplid === option?.id);
   if (!person) return;
 
@@ -436,7 +790,7 @@ function addInstructor(option: ComboBoxOptionType | null) {
       ...draft.value.instructors,
       {
         emplid: person.emplid,
-        role: PRIMARY_ROLE,
+        role,
         name: person.name,
         lastName: person.lastName,
         internetId: person.internetId,
@@ -452,7 +806,52 @@ const removeInstructor = (emplid: number) =>
     ),
   });
 
+/** The instructor(s) of record, or the first instructor when none is marked PI. */
+const primaryInstructors = computed(() => {
+  const primaries = draft.value.instructors.filter(
+    (instructor) => instructor.role === PRIMARY_ROLE,
+  );
+  return primaries.length > 0 ? primaries : draft.value.instructors.slice(0, 1);
+});
+
+/**
+ * Everyone the section carries who is not already listed as teaching it.
+ * Measured against whoever the list above actually shows rather than against
+ * the role, because a section the SIS sent with no instructor of record falls
+ * back to its first instructor, and that person must not then appear twice.
+ */
+const assistantInstructors = computed(() =>
+  draft.value.instructors.filter(
+    (instructor) =>
+      !primaryInstructors.value.some(
+        (primary) => primary.emplid === instructor.emplid,
+      ),
+  ),
+);
+
+const assistantsSummary = computed(() =>
+  String(assistantInstructors.value.length),
+);
+
+function initialsOf(instructor: SisInstructor): string {
+  const name = instructor.name?.trim();
+  if (!name) return "?";
+
+  const first = name.charAt(0);
+  const last = instructor.lastName?.trim().charAt(0) ?? "";
+  return (first + last).toUpperCase();
+}
+
+const notesSummary = computed(() => {
+  const firstLine = draft.value.notes.trim().split("\n")[0];
+  return firstLine ? firstLine : "Empty";
+});
+
 const partners = computed(() => props.section.crosslist?.partners ?? []);
+
+const crosslistSummary = computed(() =>
+  partners.value.length === 0 ? "None" : String(partners.value.length),
+);
 
 /** Null unless every partner is in this term's payload. */
 const combinedCap = computed(() => {
@@ -474,4 +873,19 @@ const combinedCap = computed(() => {
     draft.value.enrollmentCap,
   );
 });
+
+function confirmCancelSection() {
+  props.schedule.cancelSection(props.section.id);
+  isConfirmingCancel.value = false;
+}
+
+function revertFromMenu() {
+  props.schedule.revertSection(props.section.id);
+  isMenuOpen.value = false;
+}
+
+function startCancelFromMenu() {
+  isMenuOpen.value = false;
+  isConfirmingCancel.value = true;
+}
 </script>

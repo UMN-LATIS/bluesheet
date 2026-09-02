@@ -1,6 +1,6 @@
 <template>
   <div
-    class="tw-absolute tw-box-border tw-rounded-md tw-border tw-border-solid tw-border-outline-variant tw-px-1.5 tw-py-1 tw-text-[11px] tw-leading-tight tw-text-on-surface"
+    class="tw-absolute tw-box-border tw-rounded-lg tw-border-0 tw-border-l-[3px] tw-border-solid tw-px-2 tw-py-[5px] tw-text-[11px] tw-leading-[1.3] tw-text-on-surface"
     :class="[appearance, { 'just-placed': isJustPlaced }]"
     :style="{
       top: topOf(startMinute),
@@ -67,10 +67,13 @@ const appearance = computed(() => {
     return "tw-border-dashed tw-border-brand tw-bg-brand/10 tw-text-brand";
   }
 
-  const toned = colorOfType(props.component).block;
-  // an outline, so the box size holds still
+  const type = colorOfType(props.component);
+  const toned = `${type.tint} ${type.rail}`;
+  // Blue rather than the block's own color: the ring means "the sheet is
+  // open on this one", which is what blue means everywhere else in the app.
+  // An outline, so the box size holds still.
   const solid = props.isSelected
-    ? `${toned} tw-outline tw-outline-2 tw-outline-offset-1`
+    ? `${toned} tw-z-[5] tw-outline tw-outline-2 tw-outline-offset-0 tw-outline-primary tw-shadow-[0_4px_12px_rgba(29,104,167,0.18)]`
     : toned;
 
   if (props.isGhost) return `${solid} tw-opacity-40`;

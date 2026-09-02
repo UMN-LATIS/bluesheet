@@ -24,5 +24,6 @@ export const plannedSection = (
   crosslist: null,
   delivery: "onCampus",
   notes: "",
+  isCancelled: false,
   ...extra,
 });

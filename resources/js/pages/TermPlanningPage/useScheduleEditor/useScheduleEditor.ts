@@ -118,6 +118,8 @@ export function useScheduleEditor(
       dispatch({ type: "draftSaved", sectionId }),
     cancelDraft: (sectionId: number) =>
       dispatch({ type: "draftCancelled", sectionId }),
+    cancelSection: (sectionId: number) =>
+      dispatch({ type: "sectionCancelled", sectionId }),
     revertSection: (sectionId: number) =>
       dispatch({ type: "sectionEditsReverted", sectionId }),
   });

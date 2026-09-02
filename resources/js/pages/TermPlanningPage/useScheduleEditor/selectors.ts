@@ -11,6 +11,7 @@ export function selectLocalSection(
   return {
     delivery: "onCampus",
     notes: "",
+    isCancelled: false,
     ...section,
     ...state.sectionEdits[section.id],
   };
