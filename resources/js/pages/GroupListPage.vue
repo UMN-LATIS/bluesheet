@@ -150,7 +150,12 @@ export default {
   watch: {
     parent: function () {
       // a new folder gets its own listing, so the old search term goes with it
-      this.searchTerm = "";
+      if (this.searchTerm) {
+        // clearing it is enough: the searchTerm watcher reloads the list
+        this.searchTerm = "";
+        return;
+      }
+
       this.loadGroups();
     },
     searchTerm: function () {

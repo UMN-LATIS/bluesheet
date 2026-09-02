@@ -187,7 +187,9 @@ function updateQueryParams(queryObject: Record<string, unknown>) {
   // pass a string so qs stays the only query serializer: initPage
   // reads the URL back with qs.parse, and existing links use its
   // bracket-indexed arrays
-  router.replace(`${route.path}?${stringifiedQuery}`);
+  router.replace(
+    stringifiedQuery ? `${route.path}?${stringifiedQuery}` : route.path,
+  );
 }
 
 // keep url in sync with filters

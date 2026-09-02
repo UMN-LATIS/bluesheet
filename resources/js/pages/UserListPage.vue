@@ -146,11 +146,16 @@ export default {
       if (this.users) {
         this.loadUsers(this.users);
       }
-      if (!this.groupId) return;
+
+      const requestedGroupId = this.groupId;
+      if (!requestedGroupId) return;
 
       axios
-        .get("/api/group/" + this.groupId + "/members")
+        .get("/api/group/" + requestedGroupId + "/members")
         .then((res) => {
+          // drop a response superseded by a newer group
+          if (requestedGroupId !== this.groupId) return;
+
           const activeMemberUserIds = res.data
             .filter(
               (member) =>
@@ -166,11 +171,18 @@ export default {
         });
     },
     loadUsers(userList) {
+      const { users: requestedUsers, groupId: requestedGroupId } = this;
+
       axios
         .post("/api/user/lookup", {
           users: userList,
         })
         .then((res) => {
+          // drop a response superseded by a newer navigation. The lookup is
+          // the second request of a chain, so an older one can land last.
+          if (requestedUsers !== this.users) return;
+          if (requestedGroupId !== this.groupId) return;
+
           this.loadedUsers = res.data.users;
         })
         .catch((err) => {
