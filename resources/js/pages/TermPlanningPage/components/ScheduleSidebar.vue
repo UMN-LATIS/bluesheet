@@ -65,6 +65,23 @@
       </button>
     </div>
 
+    <div
+      v-if="activeFilterCount > 0"
+      class="tw-flex tw-flex-none tw-items-center tw-gap-2 tw-px-3.5 tw-pt-3"
+    >
+      <span class="tw-text-[11.5px] tw-text-on-surface-variant">
+        {{ activeFilterCount }}
+        {{ activeFilterCount === 1 ? "filter" : "filters" }} active
+      </span>
+      <button
+        type="button"
+        class="tw-ml-auto tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[11.5px] tw-font-semibold tw-text-primary hover:tw-underline"
+        @click="schedule.clearFilters()"
+      >
+        Clear all
+      </button>
+    </div>
+
     <!--
       Narrowing a term is not changing it, so every control here keeps working
       on a read-only term. This one goes: it asks for work nobody can do.
@@ -102,7 +119,7 @@
       <button
         v-if="filters[activeFacet].length > 0"
         type="button"
-        class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[11px] tw-font-semibold tw-text-brand hover:tw-underline"
+        class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[11px] tw-font-semibold tw-text-primary hover:tw-underline"
         @click="clearFacet(activeFacet)"
       >
         Clear
@@ -247,6 +264,11 @@ const toggle = (facet: FilterFacet, values: string[], isNowChecked: boolean) =>
   isNowChecked
     ? props.schedule.addFilterValues(facet, values)
     : props.schedule.removeFilterValues(facet, values);
+
+/** Across every facet, not just the list in view. */
+const activeFilterCount = computed(() =>
+  Object.values(filters.value).reduce((sum, values) => sum + values.length, 0),
+);
 
 const clearFacet = (facet: FilterFacet) =>
   props.schedule.removeFilterValues(facet, filters.value[facet]);

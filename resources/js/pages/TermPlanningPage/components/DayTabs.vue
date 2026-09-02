@@ -59,9 +59,16 @@ const props = defineProps<{
 
 const emit = defineEmits<{ select: [dayIndex: number] }>();
 
+/**
+ * Always the noun, never a bare number: "MON 14" reads as Monday the 14th.
+ * Async counts sections rather than classes, as the summary strip under the
+ * tabs does, since what it holds are the classes with no day at all.
+ */
 const countLabel = (index: number): string => {
   const count = props.counts[index] ?? 0;
-  if (index !== props.dayIndex || props.size !== "large") return String(count);
-  return `${count} ${count === 1 ? "class" : "classes"}`;
+
+  return isAsyncDay(index)
+    ? `${count} ${count === 1 ? "section" : "sections"}`
+    : `${count} ${count === 1 ? "class" : "classes"}`;
 };
 </script>

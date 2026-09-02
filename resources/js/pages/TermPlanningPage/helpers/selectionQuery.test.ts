@@ -35,7 +35,9 @@ describe("encodeSelection", () => {
   it("names the section a selected grid block belongs to", () => {
     const selection = { kind: "meeting", meetingId: "412-mon-10:10" } as const;
 
-    expect(encodeSelection(selection, () => 412)).toEqual({ section: "412" });
+    expect(encodeSelection(selection, () => 412)).toEqual({
+      sectionId: "412",
+    });
   });
 
   it("writes nothing for a block belonging to no section", () => {
@@ -51,9 +53,15 @@ describe("decodeSelection", () => {
   });
 
   it("ignores a section id that is not one", () => {
-    expect(decodeSelection({ section: "abc" })).toBeNull();
-    expect(decodeSelection({ section: "1.5" })).toBeNull();
-    expect(decodeSelection({ section: "-3" })).toBeNull();
+    expect(decodeSelection({ sectionId: "abc" })).toBeNull();
+    expect(decodeSelection({ sectionId: "1.5" })).toBeNull();
+    expect(decodeSelection({ sectionId: "-3" })).toBeNull();
+  });
+
+  // `section` is a filter facet, and checking a section in the filters must
+  // not open its sheet.
+  it("ignores the section filter's own key", () => {
+    expect(decodeSelection({ section: "PSY 1001 · 001" })).toBeNull();
   });
 
   it("ignores an hour off the grid or misspelled", () => {
@@ -63,7 +71,7 @@ describe("decodeSelection", () => {
   });
 
   it("keeps the section when its hour cannot be read", () => {
-    expect(decodeSelection({ section: "412", hour: "nope" })).toEqual({
+    expect(decodeSelection({ sectionId: "412", hour: "nope" })).toEqual({
       kind: "section",
       sectionId: 412,
     });

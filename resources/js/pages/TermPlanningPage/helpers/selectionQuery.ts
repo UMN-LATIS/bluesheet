@@ -10,8 +10,12 @@ import {
 } from "./timeScale";
 import type { HourSelection, Selection } from "../useScheduleEditor/types";
 
-/** Every key this module owns; they are cleared and written together. */
-export const SELECTION_KEYS = ["section", "hour"];
+/**
+ * Every key this module owns; they are cleared and written together.
+ * `sectionId` rather than `section`: that name is already a filter facet, and
+ * a sheet opened on a section must not also check it in the filters.
+ */
+export const SELECTION_KEYS = ["sectionId", "hour"];
 
 /**
  * What a link can name. A grid block is left out: it stands for the section it
@@ -32,12 +36,12 @@ export function encodeSelection(
     case "meeting": {
       // A time drawn on empty space belongs to no section, so it names nothing.
       const sectionId = sectionIdOfMeeting(selection.meetingId);
-      return sectionId === null ? {} : { section: String(sectionId) };
+      return sectionId === null ? {} : { sectionId: String(sectionId) };
     }
 
     case "section":
       return {
-        section: String(selection.sectionId),
+        sectionId: String(selection.sectionId),
         // Both keys: the hour the sheet's back link returns to.
         ...(selection.from ? { hour: encodeHour(selection.from) } : {}),
       };
@@ -46,7 +50,7 @@ export function encodeSelection(
 
 export function decodeSelection(query: LocationQuery): SheetSelection | null {
   const hour = decodeHour(single(query.hour));
-  const sectionId = decodeSectionId(single(query.section));
+  const sectionId = decodeSectionId(single(query.sectionId));
 
   if (sectionId === null) return hour;
 

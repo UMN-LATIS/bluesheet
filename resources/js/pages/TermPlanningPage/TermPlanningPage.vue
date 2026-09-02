@@ -83,7 +83,7 @@
               :key="option.id"
               :value="option.id"
             >
-              {{ option.name }}{{ isLocked(option) ? " — view only" : "" }}
+              {{ option.name }}{{ isCurrent(option) ? " – Current" : "" }}
             </option>
           </select>
         </label>
@@ -429,7 +429,12 @@ const term = computed(() => {
  */
 const termLock = computed(() => lockOfTerm(term.value, today()));
 
-const isLocked = (option: SisTerm) => lockOfTerm(option, today()) !== null;
+/** The term today falls inside, which is the one worth marking in the list. */
+const isCurrent = (option: SisTerm) =>
+  option.startDate !== null &&
+  option.endDate !== null &&
+  option.startDate <= today() &&
+  today() <= option.endDate;
 
 /** Newest first, since planning looks forward. */
 const termOptions = computed(() =>
