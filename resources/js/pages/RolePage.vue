@@ -117,18 +117,19 @@ watch(
 
 watch(
   () => props.roleId,
-  async (roleId, _previousRoleId, onCleanup) => {
-    // drop the response if roleId changed again while it was in flight
-    let isStale = false;
-    onCleanup(() => {
-      isStale = true;
-    });
+  async (roleId) => {
+    // the previous role must leave the screen first: the favorite button
+    // and the folder filter would otherwise act on it while the new one loads
+    state.role = null;
+    state.parentOrganizationId = null;
 
     const [role, parentOrganizations] = await Promise.all([
       roleStore.fetchRole(roleId),
       roleStore.fetchParentOrganizations(),
     ]);
-    if (isStale) return;
+
+    // drop a response superseded by a newer role
+    if (roleId !== props.roleId) return;
 
     state.role = role;
     state.parentOrganizations = remapParents(parentOrganizations);

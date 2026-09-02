@@ -7,6 +7,10 @@ import { loadEnv } from "vite";
 // mode "" so Vite reads only .env and .env.local, no .env.<mode>
 const { APP_URL } = loadEnv("", process.cwd(), "APP_");
 
+if (!APP_URL) {
+  throw new Error("Cypress needs APP_URL in .env to know which app to test.");
+}
+
 export default defineConfig({
   chromeWebSecurity: false,
   defaultCommandTimeout: 5000,

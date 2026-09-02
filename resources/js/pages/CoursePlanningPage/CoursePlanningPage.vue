@@ -141,9 +141,12 @@ const router = useRouter();
 const isLoadingComplete = ref(false);
 const isShowingFilters = ref(false);
 
-async function initPage() {
+async function initPage(groupId: number) {
   isLoadingComplete.value = false;
-  await coursePlanningStore.initGroup(props.groupId);
+  await coursePlanningStore.initGroup(groupId);
+
+  // drop a run superseded by a newer group
+  if (groupId !== props.groupId) return;
 
   // parse query params and set filters
   const parsedQuery = qs.parse(window.location.search, {
@@ -278,6 +281,15 @@ watch(
 );
 
 const searchInputRaw = ref("");
+
+// `initGroup` resets the store's filters, so the search box clears with them
+watch(
+  () => props.groupId,
+  () => {
+    searchInputRaw.value = "";
+  },
+);
+
 watch(
   searchInputRaw,
   () => coursePlanningStore.setSearchFilter(searchInputRaw.value),
