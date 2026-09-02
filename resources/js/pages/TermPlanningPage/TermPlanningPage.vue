@@ -259,9 +259,9 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute, useRouter, type LocationQueryRaw } from "vue-router";
 import dayjs from "dayjs";
-import { isEqual, omit } from "lodash-es";
+import { isEqual, omit, pick } from "lodash-es";
 import FullScreenLayout from "@/layouts/FullScreenLayout.vue";
 import { FilterIcon } from "@/icons";
 import CoverageHeatmap from "./components/CoverageHeatmap.vue";
@@ -276,6 +276,18 @@ import { currentTerm } from "./helpers/currentTerm";
 import { bandsForDay } from "./helpers/dayBands";
 import { buildFilterOptions } from "./helpers/filterOptions";
 import { decodeFilters, encodeFilters } from "./helpers/filterQuery";
+import {
+  decodeSelection,
+  encodeSelection,
+  SELECTION_KEYS,
+  type SheetSelection,
+} from "./helpers/selectionQuery";
+import {
+  decodeDayIndex,
+  decodeView,
+  encodeDayIndex,
+  type ScheduleView,
+} from "./helpers/viewQuery";
 import { filterSections } from "./helpers/scheduleFilters";
 import { ASYNC_DAY_INDEX, WEEKDAY_NAMES } from "./helpers/scheduleDays";
 import { placeSections } from "./helpers/sectionPlacement";
@@ -303,13 +315,11 @@ const { size, isLarge, isSmall, arePanelsOverlaid } = useScreenSize();
 const PANE_CLASS =
   "tw-overflow-hidden tw-rounded-[14px] tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-shadow-[0_1px_2px_rgba(0,0,0,0.04)]";
 
-const VIEW_OPTIONS = [
+const VIEW_OPTIONS: { value: ScheduleView; label: string }[] = [
   { value: "day", label: "Day" },
   { value: "week", label: "Week" },
   { value: "heatmap", label: "Heatmap" },
-] as const;
-
-type ScheduleView = (typeof VIEW_OPTIONS)[number]["value"];
+];
 
 const VIEW_LABELS: Record<ScheduleView, string> = {
   day: "Day",
@@ -318,18 +328,34 @@ const VIEW_LABELS: Record<ScheduleView, string> = {
 };
 
 /**
- * The day list leads: it is the view that answers "what is on Monday" without
- * asking the reader to measure anything, and it is the only one a phone can
- * show.
+ * The view lives in the URL rather than in a ref, so a link carries the page
+ * as its sender left it. `replace` throughout, as with the filters below:
+ * stepping back through every switch of a tab would make the back button
+ * useless for leaving the page.
  */
-const view = ref<ScheduleView>("day");
+const view = computed<ScheduleView>({
+  get: () => decodeView(route.query.view),
+  set: (nextView) =>
+    replaceQuery(
+      // The day list shows one day at a time, so a link to it has to say which.
+      nextView === "day"
+        ? { view: nextView, day: encodeDayIndex(currentDayIndex.value) }
+        : { view: nextView },
+    ),
+});
 
 const activeView = computed<ScheduleView>(() =>
   isSmall.value ? "day" : view.value,
 );
 
 /** Monday through Friday, then the sections with no meeting time. */
-const currentDayIndex = ref(todaysColumn());
+const currentDayIndex = computed<number>({
+  get: () => decodeDayIndex(route.query.day) ?? todaysColumn(),
+  set: (dayIndex) => replaceQuery({ day: encodeDayIndex(dayIndex) }),
+});
+
+const replaceQuery = (changes: LocationQueryRaw) =>
+  router.replace({ query: { ...route.query, ...changes } });
 
 /** Today, when the week is on; otherwise the week's first day. */
 function todaysColumn(): number {
@@ -475,6 +501,46 @@ watch(
   },
   { immediate: true },
 );
+
+/** What the URL would say about the open sheet, given what is selected now. */
+const selectionQuery = computed(() =>
+  encodeSelection(
+    schedule.selection,
+    (meetingId) => sectionOf(meetingId)?.id ?? null,
+  ),
+);
+
+// Out to the URL: a sheet opened or closed here. Comparing against the query
+// itself, rather than against the selection, is what keeps a selected grid
+// block from being rewritten as a plain section selection on the way back in.
+watch(selectionQuery, (query) => {
+  if (isEqual(query, pick(route.query, SELECTION_KEYS))) return;
+
+  router.replace({
+    query: { ...omit(route.query, SELECTION_KEYS), ...query },
+  });
+});
+
+// And in from the URL: a pasted link on first load, or the back button. A key
+// the page cannot read leaves nothing selected, and the watch above then
+// clears it from the URL.
+watch(
+  () => route.query,
+  (query) => {
+    if (isEqual(pick(query, SELECTION_KEYS), selectionQuery.value)) return;
+
+    applySelection(decodeSelection(query));
+  },
+  { immediate: true },
+);
+
+function applySelection(selection: SheetSelection | null) {
+  if (!selection) return schedule.deselect();
+
+  return selection.kind === "hour"
+    ? schedule.selectHour(selection.dayIndex, selection.startMinute)
+    : schedule.selectSection(selection.sectionId, selection.from);
+}
 
 const selectedHour = computed(() => {
   const selection = schedule.selection;

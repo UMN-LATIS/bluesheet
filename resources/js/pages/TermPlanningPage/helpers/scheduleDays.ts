@@ -18,6 +18,9 @@ export const ASYNC_DAY_INDEX = WEEKDAY_NAMES.length;
 
 export const DAY_TAB_NAMES = [...WEEKDAY_NAMES, "Async"];
 
+/** How a day tab names itself in the URL, the Async tab included. */
+export const DAY_TAB_CODES: string[] = [...WEEKDAY_CODES, "async"];
+
 export const isAsyncDay = (dayIndex: number) => dayIndex === ASYNC_DAY_INDEX;
 
 /**
