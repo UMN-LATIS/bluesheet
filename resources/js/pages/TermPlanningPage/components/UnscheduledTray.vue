@@ -29,7 +29,7 @@
           type="button"
           class="tw-flex tw-cursor-pointer tw-items-center tw-gap-1.5 tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-py-0.5 tw-pl-2.5 tw-pr-1 tw-text-[11px] tw-leading-tight tw-text-on-surface hover:tw-border-outline"
           :class="[
-            colourOfType(section.component).block,
+            colorOfType(section.component).block,
             {
               'tw-outline tw-outline-2 tw-outline-offset-1':
                 section.id === selectedSectionId,
@@ -67,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { colourOfType } from "../constants/meetingTypeColours";
+import { colorOfType } from "../constants/meetingTypeColors";
 import type { SisInstructor, SisSection } from "../types";
 import type { ScheduleEditor } from "../useScheduleEditor";
 

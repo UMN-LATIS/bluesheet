@@ -145,7 +145,7 @@ function selectDayView(
 
 /**
  * A resized meeting keeps the lane the at-rest packing gave it and draws at
- * the draft's range, so its neighbours hold still while one block grows.
+ * the draft's range, so its neighbors hold still while one block grows.
  */
 function withLiveResize(
   layout: DayLayout,

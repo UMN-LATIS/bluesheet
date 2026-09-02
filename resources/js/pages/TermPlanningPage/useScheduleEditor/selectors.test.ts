@@ -67,7 +67,7 @@ describe("selectWeekView while a meeting is carried", () => {
 
     expect(monday.ghostMeetingId).toBe("mon-9");
     expect(monday.overlay).toBeNull();
-    // The overlay names its meeting so the block can be labelled like the
+    // The overlay names its meeting so the block can be labeled like the
     // one the pointer picked up.
     expect(tuesday.overlay).toEqual({
       startMinute: 700,

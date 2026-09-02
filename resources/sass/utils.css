@@ -15,7 +15,7 @@
  * Setting a width on `::-webkit-scrollbar` is what does it: Chrome documents
  * that doing so "effectively turns it into a classic scrollbar", always
  * drawn. The standard `scrollbar-width` and `scrollbar-color` cannot,
- * because they colour and size a scrollbar without saying whether the
+ * because they color and size a scrollbar without saying whether the
  * platform overlays it. Do not add `scrollbar-color` here: Chrome 121+
  * ignores these rules entirely once it is set to anything but `auto`.
  *

@@ -11,7 +11,7 @@
   >
     <div
       class="tw-flex-none tw-border-0 tw-border-l-4 tw-border-solid tw-px-4 tw-pb-2.5 tw-pt-3"
-      :class="colourOfType(draft.component).swatch"
+      :class="colorOfType(draft.component).swatch"
     >
       <!--
         Opened from a list (an hour of the heatmap), the sheet is one level
@@ -333,7 +333,7 @@
 import { computed } from "vue";
 import SegmentedControl, { type SegmentedOption } from "./SegmentedControl.vue";
 import { ComboBox, type ComboBoxOptionType } from "@/components/ComboBox";
-import { colourOfType } from "../constants/meetingTypeColours";
+import { colorOfType } from "../constants/meetingTypeColors";
 import { minutesFromClock } from "../helpers/timeScale";
 import type {
   Delivery,

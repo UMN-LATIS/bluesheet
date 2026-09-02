@@ -76,7 +76,7 @@ describe("placeSections", () => {
     expect(placed.outsideGridCount).toBe(1);
   });
 
-  it("a block is named for where it sits, so a rewrite cannot rename its neighbours", () => {
+  it("a block is named for where it sits, so a rewrite cannot rename its neighbors", () => {
     const twoPatterns = [
       { days: ["mon"], startTime: "09:00", endTime: "09:50" },
       { days: ["wed"], startTime: "13:00", endTime: "13:50" },

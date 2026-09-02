@@ -75,7 +75,7 @@ const props = defineProps<{
   schedule: ScheduleEditor;
   /**
    * The SIS component code (LEC, DIS, …) of the class on a meeting, which
-   * picks the block's colour. Undefined for a meeting with no class yet.
+   * picks the block's color. Undefined for a meeting with no class yet.
    */
   componentOf?: (meeting: Meeting) => string | undefined;
 }>();

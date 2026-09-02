@@ -1,7 +1,7 @@
 <template>
   <ul
     class="tw-m-0 tw-flex tw-list-none tw-items-center tw-gap-3 tw-p-0"
-    aria-label="Block colours"
+    aria-label="Block colors"
   >
     <li
       v-for="entry in entries"
@@ -20,10 +20,10 @@
 
 <script setup lang="ts">
 import {
-  MEETING_TYPE_COLOURS,
-  OTHER_TYPE_COLOUR,
-} from "../constants/meetingTypeColours";
+  MEETING_TYPE_COLORS,
+  OTHER_TYPE_COLOR,
+} from "../constants/meetingTypeColors";
 
 /** Reads from the same table the blocks paint from, so the two cannot drift. */
-const entries = [...Object.values(MEETING_TYPE_COLOURS), OTHER_TYPE_COLOUR];
+const entries = [...Object.values(MEETING_TYPE_COLORS), OTHER_TYPE_COLOR];
 </script>

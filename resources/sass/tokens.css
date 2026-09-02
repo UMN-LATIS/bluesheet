@@ -1,16 +1,16 @@
 /**
- * Semantic colour tokens, named the way Material Design 3 names them and
+ * Semantic color tokens, named the way Material Design 3 names them and
  * valued the way BlueSheet looks. A component asks for the role it wants
  * ("the muted text on a surface") rather than for a number on a ramp, so a
  * later theme can answer differently without every component being edited.
  *
  * Naming, as in MD3:
- *   - "on-" prefix: the text and icon colour to use ON that background
+ *   - "on-" prefix: the text and icon color to use ON that background
  *   - "-container": the tonal, softer variant, for backgrounds
  *   - "-variant": the lower-emphasis alternative
  *
- * The surfaces are a warm neutral ramp rather than a grey one, because the
- * app's page background has always been warm (#f9f7f6) and a cool grey
+ * The surfaces are a warm neutral ramp rather than a gray one, because the
+ * app's page background has always been warm (#f9f7f6) and a cool gray
  * beside it reads as dirty. Depth is tone, not shadow: a raised thing is
  * brighter than what it sits on, which is what lets a screen full of panes
  * separate without a hairline around every one of them.
@@ -34,7 +34,7 @@
   --outline-variant: #e2ddd7;
 
   /* Interactive. Blue means "you can act on this" everywhere in BlueSheet,
-   * which is why the meeting-type colours on the grid leave blue alone. */
+   * which is why the meeting-type colors on the grid leave blue alone. */
   --primary: #1d68a7;
   --on-primary: #ffffff;
   --primary-container: #dcebf8;

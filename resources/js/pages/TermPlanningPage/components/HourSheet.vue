@@ -39,7 +39,7 @@
         <button
           type="button"
           class="tw-flex tw-w-full tw-cursor-pointer tw-items-baseline tw-justify-between tw-gap-3 tw-rounded-lg tw-border tw-border-solid tw-border-outline-variant tw-px-2.5 tw-py-1.5 tw-text-left tw-text-xs tw-text-on-surface hover:tw-border-outline"
-          :class="colourOfType(entry.section.component).block"
+          :class="colorOfType(entry.section.component).block"
           @click="
             schedule.selectSection(entry.section.id, {
               kind: 'hour',
@@ -76,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import { colourOfType } from "../constants/meetingTypeColours";
+import { colorOfType } from "../constants/meetingTypeColors";
 import { formatTimeRange } from "../helpers/timeScale";
 import type { SisSection, TimeRange } from "../types";
 import type { ScheduleEditor } from "../useScheduleEditor";

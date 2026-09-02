@@ -118,7 +118,7 @@ const props = defineProps<{
   label: string;
   dayIndex: number;
   view: DayView;
-  /** The class's SIS component code, for the block's colour; see ScheduleGrid. */
+  /** The class's SIS component code, for the block's color; see ScheduleGrid. */
   componentOf?: (meeting: Meeting) => string | undefined;
 }>();
 

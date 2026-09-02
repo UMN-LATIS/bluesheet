@@ -50,7 +50,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import MeetingTimes from "./MeetingTimes.vue";
-import { colourOfType } from "../constants/meetingTypeColours";
+import { colorOfType } from "../constants/meetingTypeColors";
 import { heightOf, topOf } from "../helpers/timeScale";
 
 const props = defineProps<{
@@ -80,7 +80,7 @@ const appearance = computed(() => {
     return "tw-border-dashed tw-border-brand tw-bg-brand/10 tw-text-brand";
   }
 
-  const toned = colourOfType(props.component).block;
+  const toned = colorOfType(props.component).block;
   // An outline rather than a border or shadow, so the block's box size
   // holds still and the ring does not compete with the just-placed flash.
   const solid = props.isSelected
@@ -90,12 +90,12 @@ const appearance = computed(() => {
   if (props.isGhost) return `${solid} tw-opacity-40`;
 
   // Faded, since it is not placed until it is let go of, but still above its
-  // neighbours so the block being positioned is never behind one it crosses.
+  // neighbors so the block being positioned is never behind one it crosses.
   if (props.isCarried) {
     return `${solid} tw-z-20 tw-cursor-grabbing tw-opacity-70 tw-shadow-lg`;
   }
 
-  // Lifted above its neighbours while resized, so it is never hidden behind
+  // Lifted above its neighbors while resized, so it is never hidden behind
   // one it grows to overlap.
   return props.isActive
     ? `${solid} tw-z-20 tw-cursor-grabbing tw-shadow-lg`

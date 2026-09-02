@@ -11,7 +11,7 @@ import { END_MINUTE, START_MINUTE } from "./timeScale";
 export interface HourlyCoverage {
   /** One row per hour of the grid, each with one count per day. */
   rows: { startMinute: number; counts: number[] }[];
-  /** The largest count anywhere, which the colour scale is drawn against. */
+  /** The largest count anywhere, which the color scale is drawn against. */
   peak: number;
 }
 

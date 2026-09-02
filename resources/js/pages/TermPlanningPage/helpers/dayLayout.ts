@@ -29,7 +29,7 @@ export const BASE_DAY_WIDTH = 250;
  */
 export const MIN_LANE_WIDTH = 112;
 
-/** Hairline between neighbouring lanes, so two blocks never look like one. */
+/** Hairline between neighboring lanes, so two blocks never look like one. */
 const LANE_GAP = 1;
 
 /**

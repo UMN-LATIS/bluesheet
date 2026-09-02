@@ -118,7 +118,7 @@ const cellStyle = (count: number) => {
  * Hover and selection are drawn inside the cell, as inset rings with a white
  * gap, so they read on the darkest maroon and never spill into the gutter
  * between cells, where an outline would look like it belonged to the
- * neighbour. The selected ring is the heavier of the two.
+ * neighbor. The selected ring is the heavier of the two.
  */
 .heat-cell:hover,
 .heat-cell:focus-visible {

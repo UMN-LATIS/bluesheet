@@ -104,7 +104,7 @@ describe("drawing", () => {
     const state = after([
       { type: "pressedEmptySpace", dayIndex: 0, minute: 600 },
       { type: "pointerMoved", dayIndex: 0, minute: 700 },
-      { type: "cancelled" },
+      { type: "canceled" },
     ]);
 
     expect(state.placeholderMeetings).toEqual([]);
@@ -147,7 +147,7 @@ describe("moving", () => {
   });
 
   it("cancel reverts to where the meeting was", () => {
-    const state = after([...grabbed, { type: "cancelled" }], oneMeeting);
+    const state = after([...grabbed, { type: "canceled" }], oneMeeting);
 
     expect(state.placeholderMeetings).toEqual(oneMeeting.placeholderMeetings);
     expect(state.interaction).toEqual({ status: "idle" });
@@ -209,7 +209,7 @@ describe("resizing", () => {
           minute: 590,
         },
         { type: "pointerMoved", dayIndex: 1, minute: 645 },
-        { type: "cancelled" },
+        { type: "canceled" },
       ],
       oneMeeting,
     );
@@ -280,11 +280,11 @@ describe("naming the meeting a gesture placed", () => {
     expect(after([{ type: "released" }], pressed).lastPlacedId).toBe("local-1");
   });
 
-  it("a cancelled gesture places nothing", () => {
+  it("a canceled gesture places nothing", () => {
     const state = after([
       { type: "pressedEmptySpace", dayIndex: 0, minute: 600 },
       { type: "pointerMoved", dayIndex: 0, minute: 700 },
-      { type: "cancelled" },
+      { type: "canceled" },
     ]);
 
     expect(state.lastPlacedId).toBeNull();
@@ -486,20 +486,20 @@ describe("selecting", () => {
     expect(state.selection).toBeNull();
   });
 
-  it("cancelled at rest clears the selection", () => {
+  it("canceled at rest clears the selection", () => {
     const selected = after(click(), initialState(), base);
-    const state = after([{ type: "cancelled" }], selected, base);
+    const state = after([{ type: "canceled" }], selected, base);
 
     expect(state.selection).toBeNull();
   });
 
-  it("cancelled mid-drag keeps the selection and discards the drag", () => {
+  it("canceled mid-drag keeps the selection and discards the drag", () => {
     const selected = after(click(), initialState(), base);
     const state = after(
       [
         { type: "pressedMeeting", meetingId: "s1:mon:0900", minute: 550 },
         { type: "pointerMoved", dayIndex: 2, minute: 710 },
-        { type: "cancelled" },
+        { type: "canceled" },
       ],
       selected,
       base,

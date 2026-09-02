@@ -187,7 +187,7 @@ function reduce(
 
     // Mid-gesture this is a plain discard; at rest there is no gesture to
     // discard, so Escape clears the selection instead.
-    case "cancelled":
+    case "canceled":
       return state.interaction.status === "idle"
         ? { ...state, selection: null }
         : toIdle(state);

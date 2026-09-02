@@ -104,7 +104,7 @@ export function useScheduleEditor(
       dispatch({ type: "pointerMoved", dayIndex, minute }),
     release: () => dispatch({ type: "released" }),
     /** Escape. Mid-gesture this discards the gesture. At rest it clears the selection. */
-    cancel: () => dispatch({ type: "cancelled" }),
+    cancel: () => dispatch({ type: "canceled" }),
     deselect: () => dispatch({ type: "deselected" }),
     selectSection: (sectionId: number, from?: HourSelection) =>
       dispatch({

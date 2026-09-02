@@ -52,7 +52,7 @@ export type Placement = { dayIndex: number } & TimeRange;
  * Each gesture accumulates its in-flight edit here and leaves `meetings` at
  * rest until `released` commits it. So lanes hold still with nothing pinning
  * them, a carried meeting's origin block stays visible where it was, and
- * `cancelled` reverts by plain discard.
+ * `canceled` reverts by plain discard.
  */
 export type Interaction =
   | { status: "idle" }
@@ -170,7 +170,7 @@ export type EditorEvent =
   | { type: "pointerMoved"; dayIndex: number; minute: number }
   | { type: "released" }
   /** Escape. Mid-gesture this discards the gesture. At rest it clears the selection. */
-  | { type: "cancelled" }
+  | { type: "canceled" }
   /** The detail sheet's close button. */
   | { type: "deselected" }
   /** A chip in the no-set-time tray, or a row in the hour sheet (which names the hour it came from). */
