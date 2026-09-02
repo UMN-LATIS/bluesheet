@@ -30,7 +30,6 @@
       Nothing meets in this hour.
     </p>
 
-    <!-- Each row opens the section's own sheet, in place of this one. -->
     <ul
       v-else
       class="tw-m-0 tw-flex tw-list-none tw-flex-col tw-gap-1.5 tw-p-0"
@@ -81,16 +80,15 @@ import { formatTimeRange } from "../helpers/timeScale";
 import type { SisSection, TimeRange } from "../types";
 import type { ScheduleEditor } from "../useScheduleEditor";
 
-/** A section's meeting that falls in the chosen hour, at the time the grid shows it. */
+/**
+ * A section's meeting that falls in the
+ * chosen hour, at the time the grid shows it.
+ */
 export interface HourEntry extends TimeRange {
   meetingId: string;
   section: SisSection;
 }
 
-/**
- * What a heatmap cell stands for: the sections meeting in one hour of one
- * day. Read-only, like the section sheet; it answers "who is that 5?".
- */
 defineProps<{
   dayIndex: number;
   dayName: string;

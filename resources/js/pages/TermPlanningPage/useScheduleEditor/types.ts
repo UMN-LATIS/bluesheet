@@ -1,8 +1,3 @@
-/**
- * The dictionary: every state the schedule editor can be in, and every event
- * that can change it. Reading this file tells you the whole surface.
- */
-
 import type {
   Delivery,
   FilterFacet,
@@ -16,20 +11,14 @@ import type {
 } from "../types";
 
 /**
- * What `update` reads and never writes: the schedule as it currently stands,
- * this browser's edits already in it. Context, not state, so nothing the
- * server sent is stored here twice.
+ * Read by `update`, never written: the schedule as it stands, edits applied.
  */
 export interface ScheduleContext {
   meetings: Meeting[];
   sections: PlannedSection[];
 }
 
-/**
- * One section's unsaved changes. Sparse: a field that is absent has not been
- * changed, so the SIS value shows through. Every field is stated in full
- * rather than as a delta, so laying an edit over a section is a plain spread.
- */
+/** Sparse: an absent field is unchanged. */
 export interface SectionEdit {
   section?: string;
   component?: string;
@@ -40,32 +29,25 @@ export interface SectionEdit {
   notes?: string;
 }
 
-/** Which end of a meeting is being dragged while it is resized. */
 export type MeetingEdge = "start" | "end";
 
-/** Where a meeting sits: one weekday, and a time range within it. */
 export type Placement = { dayIndex: number } & TimeRange;
 
 /**
- * What the pointer is in the middle of doing, if anything.
- *
- * Each gesture accumulates its in-flight edit here and leaves `meetings` at
- * rest until `released` commits it. So lanes hold still with nothing pinning
- * them, a carried meeting's origin block stays visible where it was, and
- * `canceled` reverts by plain discard.
+ * The gesture in progress; its draft is
+ * written to the schedule only on `released`.
  */
 export type Interaction =
   | { status: "idle" }
   | ({ status: "drawing"; dayIndex: number; anchorMinute: number } & TimeRange)
   /**
-   * A block is held but not yet carried. Release now is a click, which
-   * selects the meeting. Moving far enough turns it into `moving`.
+   * Held, not yet carried: release is a click,
+   * moving far enough becomes `moving`.
    */
   | {
       status: "pressed";
       meetingId: string;
       grabbedAfterStart: number;
-      /** Where the press landed, which a drag must leave before it counts. */
       dayIndex: number;
       minute: number;
     }
@@ -82,20 +64,14 @@ export type Interaction =
       dayIndex: number;
     } & TimeRange);
 
-/**
- * What can be selected. A block on the grid is known by its meeting, since
- * that is all the editor knows about it; a section with no meeting time has
- * no block, so its chip in the tray selects it by section id. The page
- * resolves either to a section for the sheet.
- */
+/** A grid block by meeting id, a tray chip by section id, or a heatmap hour. */
 export type Selection =
   | { kind: "meeting"; meetingId: string }
   | {
       kind: "section";
       sectionId: number;
       /**
-       * The hour whose list this section was picked from, when it was. The
-       * sheet offers a way back to that list rather than a plain close.
+       * The hour list this section was picked from, for the sheet's back link.
        */
       from?: HourSelection;
     }
@@ -108,56 +84,25 @@ export interface HourSelection {
   startMinute: number;
 }
 
-/**
- * Only the local edits live here. The schedule itself — the sections the
- * server returned — stays in the query cache, and `selectLocalSection` lays
- * these edits over it. So a refetch can swap the sections out underneath
- * without touching anything the user has done.
- */
+/** Only this browser's edits; the server's sections stay in the query cache. */
 export interface EditorState {
-  /**
-   * Times held on the grid with no class in them yet: drawn on empty space,
-   * belonging to no section. They exist nowhere but this browser.
-   */
+  /** Times drawn on empty space, belonging to no section. */
   placeholderMeetings: Meeting[];
-  /**
-   * Every unsaved change to a section, keyed by section id. A drag writes
-   * here and so does the sheet, so there is one answer to where a section
-   * meets rather than two that have to be reconciled.
-   */
   sectionEdits: Record<number, SectionEdit>;
   /**
-   * What the sheet's form holds, per section, before it is saved. Kept apart
-   * from `sectionEdits` because a form being filled in is not yet a statement
-   * about the schedule: nothing here reaches the grid until Save.
-   *
-   * One per section rather than one in all, so clicking another block never
-   * throws away a half-finished form.
+   * The sheet's unsaved form per section;
+   * nothing here reaches the grid until Save.
    */
   drafts: Record<number, SectionEdit>;
   interaction: Interaction;
-  /**
-   * The meeting the last gesture placed, which the grid flashes so a drop
-   * is visible. Cleared by the next press, so dropping one meeting twice
-   * flashes twice.
-   */
+  /** Flashed by the grid; cleared by the next press. */
   lastPlacedId: string | null;
-  /** What the user clicked, which the page opens a detail sheet for. */
   selection: Selection | null;
-  /**
-   * What the sidebar has checked. Kept here rather than applied here: the
-   * page filters the sections with it before they are placed, so a hidden
-   * section simply leaves the context.
-   */
+  /** Applied by the page before placing, not here. */
   filters: ScheduleFilters;
 }
 
-/**
- * Something that happened, named in the past tense. The grid measures the
- * page and reports the day and minute a pointer landed on; deciding what that
- * means — snapping included, so minutes arrive fractional — belongs to
- * `update`.
- */
+/** Past-tense facts from the UI; minutes arrive unsnapped. */
 export type EditorEvent =
   | { type: "pressedEmptySpace"; dayIndex: number; minute: number }
   | { type: "pressedMeeting"; meetingId: string; minute: number }
@@ -169,22 +114,26 @@ export type EditorEvent =
     }
   | { type: "pointerMoved"; dayIndex: number; minute: number }
   | { type: "released" }
-  /** Escape. Mid-gesture this discards the gesture. At rest it clears the selection. */
+  /**
+   * Escape. Mid-gesture this discards the
+   * gesture. At rest it clears the selection.
+   */
   | { type: "canceled" }
-  /** The detail sheet's close button. */
   | { type: "deselected" }
-  /** A chip in the no-set-time tray, or a row in the hour sheet (which names the hour it came from). */
+  /**
+   * A chip in the no-set-time tray, or a row in the hour sheet (which names the
+   * hour it came from).
+   */
   | { type: "selectedSection"; sectionId: number; from?: HourSelection }
-  /** A cell of the coverage heatmap. */
   | { type: "selectedHour"; dayIndex: number; startMinute: number }
-  /** A checkbox checked, or a whole course level's checkboxes at once. */
   | { type: "filterValuesAdded"; facet: FilterFacet; values: string[] }
-  /** A checkbox unchecked, a chip's ×, or a whole course level at once. */
   | { type: "filterValuesRemoved"; facet: FilterFacet; values: string[] }
   | { type: "filtersCleared" }
-  /** The URL changed underneath the page: initial load, back button, pasted link. */
+  /**
+   * The URL changed underneath the page:
+   * initial load, back button, pasted link.
+   */
   | { type: "filtersReplaced"; filters: ScheduleFilters }
-  /** A field in the detail sheet changed, which writes the section's draft. */
   | { type: "sectionFieldEdited"; sectionId: number; change: SectionEdit }
   /** A day pressed in the sheet. An index past the last pattern starts one. */
   | {
@@ -204,31 +153,19 @@ export type EditorEvent =
   | { type: "meetingPatternRemoved"; sectionId: number; patternIndex: number }
   /** The Async day: the section keeps no meeting time at all. */
   | { type: "madeAsynchronous"; sectionId: number }
-  /** The sheet's Save: the draft becomes what the plan says. */
   | { type: "draftSaved"; sectionId: number }
-  /** The sheet's Cancel: the form is thrown away and the plan is unchanged. */
   | { type: "draftCancelled"; sectionId: number }
-  /** Revert to SIS: this browser's edits to one section are dropped. */
   | { type: "sectionEditsReverted"; sectionId: number };
 
-/**
- * Something `update` wants done outside itself. Named for the outcome, not
- * the mechanism: the page decides that "sync to the URL" means
- * `router.replace`, so `update` never imports the router.
- */
+/** Work for the page to do outside `update`, which never imports the router. */
 export type Effect = { type: "syncFiltersToUrl"; filters: ScheduleFilters };
 
-/** What one event produces: the next state, and any effects to run. */
 export interface Next {
   state: EditorState;
   effects: Effect[];
 }
 
-/**
- * The impure needs, injected so `update` stays deterministic. A placeholder
- * meeting has no section and so no natural key, which is the one thing here
- * that has to be named out of thin air.
- */
+/** Injected so `update` stays deterministic. */
 export interface EditorDeps {
   createUuid: () => string;
 }

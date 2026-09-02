@@ -99,9 +99,8 @@ class Group extends Model implements AuditableContract {
     }
 
     /**
-     * The SIS department this group stands for, or null when it stands for
-     * none. `dept_id` is free text, so it also holds typos and placeholder
-     * notes, and only a numeric value matches a department in the SIS.
+     * `dept_id` is free text and may hold notes or typos; only a numeric
+     * value names an SIS department. Null otherwise.
      */
     public function getSisDeptIdAttribute(): ?string {
         $deptId = trim((string) $this->dept_id);

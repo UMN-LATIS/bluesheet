@@ -1,10 +1,7 @@
 <template>
   <!--
-    This project disables Tailwind's preflight, so nothing gives elements a
-    default border-style or zeroes their border-width. A box that wants one
-    edge therefore reads `tw-border-0 tw-border-<side> tw-border-solid`:
-    without the zero, the three sides left at their initial `medium` width
-    appear as soon as a style is set.
+    Tailwind preflight is off here, so `tw-border-0` must precede any
+    single-side border or the other three sides appear at `medium` width.
   -->
   <div
     class="tw-flex-none tw-border-0 tw-border-r tw-border-solid tw-border-outline-variant last:tw-border-r-0"
@@ -12,10 +9,8 @@
   >
     <ColumnHeader>
       <!--
-        Pinned at both edges, so a column keeps its name whether it is
-        leaving to the left or still arriving from the right. The left bound
-        clears the gutter; both leave a gap rather than sitting against an
-        edge.
+        Sticky at both edges, so a wide column
+        keeps its name in view while scrolling.
       -->
       <span
         class="tw-sticky"
@@ -31,16 +26,12 @@
       :data-day-index="dayIndex"
       :style="{ height: COLUMN_HEIGHT }"
     >
-      <!-- The rules are backgrounds rather than borders: a hairline needs no
-           box, and this sidesteps the border-style problem entirely. -->
       <div
         v-for="minute in HOUR_MARKS"
         :key="`hour-${minute}`"
         class="tw-absolute tw-inset-x-0 tw-h-px tw-bg-outline-variant"
         :style="{ top: topOf(minute) }"
       />
-      <!-- Fainter than the hour lines, so they help read a time without
-           competing with them. -->
       <div
         v-for="minute in HALF_HOUR_MARKS"
         :key="`half-${minute}`"
@@ -62,8 +53,6 @@
         :isSelected="placed.meeting.id === view.selectedMeetingId"
         :component="componentOf?.(placed.meeting)"
       >
-        <!-- The width goes with it, since how much a block can say depends
-             on how much room the day's busiest hour left it. -->
         <template v-if="$slots.block" #default>
           <slot
             name="block"
@@ -74,8 +63,7 @@
         </template>
       </MeetingBlock>
 
-      <!-- Spans the day rather than taking a lane: it is not placed until it
-           is let go of, and the full width keeps its times readable. -->
+      <!-- the in-flight block spans the day; it has no lane until released -->
       <MeetingBlock
         v-if="view.overlay"
         :startMinute="view.overlay.startMinute"
@@ -86,8 +74,6 @@
         :isCarried="Boolean(carriedMeeting)"
         :component="carriedMeeting ? componentOf?.(carriedMeeting) : undefined"
       >
-        <!-- A carried meeting keeps the label it had where it was picked
-             up, so the pointer is holding the same block the eye left. -->
         <template v-if="$slots.block && carriedMeeting" #default>
           <slot
             name="block"
@@ -118,7 +104,10 @@ const props = defineProps<{
   label: string;
   dayIndex: number;
   view: DayView;
-  /** The class's SIS component code, for the block's color; see ScheduleGrid. */
+  /**
+   * SIS component code (LEC, DIS, …) of the
+   * meeting's class, which picks the block color.
+   */
   componentOf?: (meeting: Meeting) => string | undefined;
 }>();
 

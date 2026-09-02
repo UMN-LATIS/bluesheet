@@ -1,10 +1,7 @@
 <template>
   <!--
-    For pages that are an application screen rather than a document: the
-    page owns the whole viewport and lays itself out inside `main`, which
-    never scrolls as a whole. The bar keeps the University header's gold rule
-    and maroon mark but at a fraction of its height, so the screen below
-    gets the room.
+    A viewport-filling layout for app-like
+    screens; `main` never scrolls as a whole.
   -->
   <div class="tw-flex tw-h-screen tw-flex-col tw-bg-umn-neutral-50">
     <header

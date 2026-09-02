@@ -14,8 +14,7 @@ class SisAppointmentFactory extends Factory {
     protected $model = SisAppointment::class;
 
     public function definition() {
-        // These two foreign keys point at business keys rather than at the
-        // rows' ids, which is why they are resolved by hand.
+        // emplid and dept_id are business keys, not row ids
         return [
             'emplid' => fn() => SisEmployee::factory()->create()->emplid,
             'dept_id' => fn() => SisDepartment::factory()->create()->dept_id,

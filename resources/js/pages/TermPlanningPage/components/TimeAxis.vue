@@ -2,8 +2,6 @@
   <div class="tw-w-14 tw-flex-none">
     <ColumnHeader />
     <div class="tw-relative" :style="{ height: COLUMN_HEIGHT }">
-      <!-- Each label straddles its own hour line, so it reads as a boundary
-           between hours rather than as a heading for the space below it. -->
       <div
         v-for="minute in HOUR_MARKS"
         :key="minute"

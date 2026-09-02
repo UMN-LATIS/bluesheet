@@ -9,23 +9,14 @@ import type {
   SectionEdit,
 } from "./types";
 
-/** Nothing on the grid, for the tests that draw their own blocks. */
 const emptyContext: ScheduleContext = { meetings: [], sections: [] };
 
-/**
- * The context the page hands in: sections with this browser's edits already
- * in them, placed. Built through `placeSections` so the block ids under test
- * are the ones the grid really uses.
- */
+/** Built through `placeSections`, so block ids match the grid's. */
 const contextOf = (...sections: ReturnType<typeof plannedSection>[]) => ({
   meetings: placeSections(sections).meetings,
   sections,
 });
 
-/**
- * A stand-in for `crypto.randomUUID` that counts, so a placeholder meeting
- * has a name worth asserting on. One counter per run of events.
- */
 const countingUuids = () => {
   let count = 0;
   return { createUuid: () => `local-${++count}` };

@@ -9,21 +9,12 @@
 import { computed } from "vue";
 import { formatClockWithHalf } from "../helpers/timeScale";
 
-/**
- * A block's start and end times, stacked so `MeetingBlock`'s container can
- * pin one to each edge. The fallback content for a block with no class on
- * it, and what the page shows on a meeting drawn but not yet assigned.
- */
 const props = defineProps<{
   startMinute: number;
   endMinute: number;
 }>();
 
-/**
- * Two stacked lines and the block's padding need about this much height. A
- * shorter meeting shows only when it starts, rather than printing an end time
- * half cut off.
- */
+/** Below this many minutes tall, only the start time fits. */
 const TWO_LINE_MINUTES = 34;
 
 const hasRoomForEndTime = computed(

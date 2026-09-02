@@ -7,7 +7,6 @@
 </template>
 
 <script setup lang="ts" generic="T extends { value: string }">
-/** The rows of one filter group, each drawn by the caller's slot. */
 defineProps<{
   items: T[];
 }>();

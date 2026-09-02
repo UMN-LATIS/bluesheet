@@ -48,15 +48,9 @@ import { type FilterOptions, optionLabel } from "../helpers/filterOptions";
 import { FILTER_FACETS } from "../types";
 import type { ScheduleEditor } from "../useScheduleEditor";
 
-/**
- * What is narrowing the grid right now, as chips a user can remove one at a
- * time. Sits above the grid rather than in the sidebar, so it is visible
- * when the sidebar is hidden.
- */
 const props = defineProps<{
   options: FilterOptions;
   schedule: ScheduleEditor;
-  /** Sections passing the filters, and sections in the term. */
   shownCount: number;
   totalCount: number;
 }>();

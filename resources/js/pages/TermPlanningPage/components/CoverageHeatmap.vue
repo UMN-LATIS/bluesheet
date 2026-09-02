@@ -1,10 +1,8 @@
 <template>
   <div class="tw-p-4">
     <!--
-      Cells are a fixed width, set on their contents so the table cannot shrink
-      them: the sheet opening beside the table must not move the cell that was
-      just clicked, or the pointer finds itself over a different one. At 88px
-      the five days still fit beside an open sheet on a 1280px screen.
+      Fixed cell width, so the sheet opening beside the table does not shift
+      the cell that was just clicked out from under the pointer.
     -->
     <table class="tw-border-separate tw-border-spacing-1 tw-text-sm">
       <thead>
@@ -33,7 +31,6 @@
             :key="dayIndex"
             class="tw-h-11 tw-p-0"
           >
-            <!-- A busy cell opens the list of sections behind its number. -->
             <button
               v-if="count > 0"
               type="button"
@@ -66,21 +63,13 @@ import { formatHour } from "../helpers/timeScale";
 import type { Meeting } from "../types";
 import type { ScheduleEditor } from "../useScheduleEditor";
 
-/**
- * The whole term on one screen, for reading coverage rather than editing.
- * Takes the same meetings the week view draws, filters and local edits
- * included, so the two views always agree.
- */
 const props = defineProps<{
   meetings: Meeting[];
   dayNames: string[];
   schedule: ScheduleEditor;
 }>();
 
-/**
- * The cell stays marked while the user is a level down in one of its
- * sections, so the sheet's back link and the ring point at the same hour.
- */
+// still marked while a section picked from this hour is open
 const isSelected = (dayIndex: number, startMinute: number) => {
   const selection = props.schedule.selection;
   const hour =
@@ -97,11 +86,7 @@ const coverage = computed(() =>
   coverageByHour(props.meetings, props.dayNames.length),
 );
 
-/**
- * One hue, the University's maroon, from faint to full against the peak.
- * The floor keeps a count of one visible; text switches to white once the
- * cell is dark enough to need it.
- */
+// the alpha floor keeps a count of one visible; text goes white on dark cells
 const cellStyle = (count: number) => {
   if (count === 0 || coverage.value.peak === 0) return undefined;
 
@@ -115,10 +100,8 @@ const cellStyle = (count: number) => {
 
 <style scoped>
 /*
- * Hover and selection are drawn inside the cell, as inset rings with a white
- * gap, so they read on the darkest maroon and never spill into the gutter
- * between cells, where an outline would look like it belonged to the
- * neighbor. The selected ring is the heavier of the two.
+ * inset rings, so they show on the darkest
+ * cells and never bleed into the gutter
  */
 .heat-cell:hover,
 .heat-cell:focus-visible {

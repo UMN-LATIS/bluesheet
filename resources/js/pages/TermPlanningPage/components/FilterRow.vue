@@ -1,9 +1,4 @@
 <template>
-  <!--
-    The whole row is the label, so a click anywhere on it toggles the box.
-    `indeterminate` is a DOM property with no attribute form, which is why it
-    is bound rather than written as an attribute.
-  -->
   <label
     class="tw-m-0 tw-flex tw-cursor-pointer tw-items-center tw-gap-3 tw-px-3 tw-py-1.5 tw-text-xs tw-font-normal tw-text-neutral-800 hover:tw-bg-neutral-50"
   >
@@ -24,7 +19,6 @@
 <script setup lang="ts">
 defineProps<{
   isChecked: boolean;
-  /** Some, but not all, of the rows this one stands for are checked. */
   isIndeterminate?: boolean;
 }>();
 

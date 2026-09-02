@@ -1,8 +1,4 @@
-/**
- * The URL form of the schedule filters: one query key per facet, the
- * checked values joined by commas. Keeps the filters shareable in a link
- * and lets a page reload restore what was checked.
- */
+/** Filters as URL query: one key per facet, values comma-joined. */
 
 import type { LocationQuery, LocationQueryValue } from "vue-router";
 import { FILTER_FACETS, type ScheduleFilters } from "../types";
@@ -32,7 +28,6 @@ export function decodeFilters(query: LocationQuery): ScheduleFilters {
   return filters;
 }
 
-/** One query key's raw value, split into its comma-separated, non-empty parts. */
 function valuesOf(
   raw: LocationQueryValue | LocationQueryValue[] | undefined,
 ): string[] {

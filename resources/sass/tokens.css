@@ -1,20 +1,7 @@
 /**
- * Semantic color tokens, named the way Material Design 3 names them and
- * valued the way BlueSheet looks. A component asks for the role it wants
- * ("the muted text on a surface") rather than for a number on a ramp, so a
- * later theme can answer differently without every component being edited.
- *
- * Naming, as in MD3:
- *   - "on-" prefix: the text and icon color to use ON that background
- *   - "-container": the tonal, softer variant, for backgrounds
- *   - "-variant": the lower-emphasis alternative
- *
- * The surfaces are a warm neutral ramp rather than a gray one, because the
- * app's page background has always been warm (#f9f7f6) and a cool gray
- * beside it reads as dirty. Depth is tone, not shadow: a raised thing is
- * brighter than what it sits on, which is what lets a screen full of panes
- * separate without a hairline around every one of them.
- *
+ * Semantic color tokens named as in Material Design 3: "on-" is text on
+ * that background, "-container" a softer tonal variant, "-variant" lower
+ * emphasis. Surfaces are a warm ramp to match the page background.
  * @see https://m3.material.io/styles/color/roles
  */
 :root {

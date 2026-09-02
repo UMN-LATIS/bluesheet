@@ -1,17 +1,10 @@
-/**
- * How busy each hour of each day is: the most meetings running at the same
- * moment within that hour. This is the measure the week view's column
- * packing uses to decide how many lanes a day needs, so the peak here is
- * the number behind the widest column there.
- */
+/** Per hour per day, the most meetings running at one moment. */
 
 import type { Meeting } from "../types";
 import { END_MINUTE, START_MINUTE } from "./timeScale";
 
 export interface HourlyCoverage {
-  /** One row per hour of the grid, each with one count per day. */
   rows: { startMinute: number; counts: number[] }[];
-  /** The largest count anywhere, which the color scale is drawn against. */
   peak: number;
 }
 
@@ -38,12 +31,8 @@ export function coverageByHour(
   return { rows, peak };
 }
 
-/**
- * The most meetings overlapping at one moment inside a window. Sweeps the
- * starts and ends in time order; a meeting ending as another starts does
- * not count as overlapping it, which is why ends sort before starts at the
- * same minute.
- */
+// ends sort before starts at the same minute: a meeting ending as another
+// starts does not overlap it
 function peakConcurrency(
   meetings: Meeting[],
   windowStart: number,

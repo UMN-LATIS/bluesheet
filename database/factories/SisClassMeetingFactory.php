@@ -27,7 +27,6 @@ class SisClassMeetingFactory extends Factory {
         ];
     }
 
-    /** A meeting the SIS has not scheduled a time for. */
     public function withoutTimes(): static {
         return $this->state([
             'starts_at' => null,

@@ -1,10 +1,8 @@
 import type { SisTerm } from "../types";
 
 /**
- * The term the page opens on when the URL names none: the one whose dates
- * contain `today`, or between terms — winter break, most of summer — the
- * next one to start. Dates are compared as "YYYY-MM-DD" strings, which
- * order the same way the days do.
+ * The term containing `today`, or else the next to start. Dates are
+ * "YYYY-MM-DD" strings, which sort the same way the days do.
  */
 export function currentTerm(terms: SisTerm[], today: string): SisTerm | null {
   const dated = terms

@@ -19,8 +19,7 @@ export default {
         "bs-blue": "#3490dc",
         "bs-blue-dark": "#1d68a7",
 
-        // Semantic roles, valued in resources/sass/tokens.css. Ask for the
-        // role rather than the ramp: `tw-bg-surface`, `tw-text-on-surface-variant`.
+        // Semantic roles, valued in resources/sass/tokens.css.
         surface: {
           DEFAULT: "var(--surface)",
           bright: "var(--surface-bright)",

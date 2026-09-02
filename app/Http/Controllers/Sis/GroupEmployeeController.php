@@ -11,11 +11,8 @@ use Illuminate\Support\Collection;
 
 class GroupEmployeeController extends Controller {
     /**
-     * The people appointed to a group's department, for the faculty list
-     * and its filters.
-     *
-     * Drawn from appointments rather than from who teaches, so that faculty
-     * on leave or between assignments still appear.
+     * Everyone appointed to the department, not only those teaching, so
+     * faculty on leave still appear.
      */
     public function index(Group $group) {
         $this->authorize('viewAnyCoursesForGroup', [Course::class, $group]);
@@ -33,12 +30,7 @@ class GroupEmployeeController extends Controller {
     }
 
     /**
-     * Someone can hold several jobs in one department, a chair who also
-     * holds a professorship being the usual case, and the roster lists them
-     * once. Their primary appointment is the one that describes them.
-     *
-     * @param Collection<SisAppointment> $appointments
-     * @return Collection<SisAppointment>
+     * One row per person, preferring the primary appointment (job_indicator P).
      */
     private static function onePerPerson(Collection $appointments): Collection {
         return $appointments

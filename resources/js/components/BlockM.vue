@@ -1,10 +1,7 @@
 <template>
   <!--
-    The University's Block M on its own, for places too small for the full
-    wordmark. The path is the `block_m` group from the wordmark SVG that
-    @umn-latis/cla-vue-template ships, which has no way to render the M
-    without the rest. Sized by the parent through height or width, and
-    coloured with `currentColor`.
+    The `block_m` group from @umn-latis/cla-vue-template's wordmark SVG,
+    which cannot render the M alone. Sized by the parent, colored by currentColor.
   -->
   <svg
     viewBox="0 3.26 58.3 34.7"

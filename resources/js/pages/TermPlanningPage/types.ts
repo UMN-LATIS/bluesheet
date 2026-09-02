@@ -1,10 +1,8 @@
-/** A stretch of one day, which is all a meeting is until it carries a class. */
 export interface TimeRange {
   startMinute: number;
   endMinute: number;
 }
 
-/** A meeting placed on the grid: a time range on one weekday. */
 export interface Meeting extends TimeRange {
   id: string;
   dayIndex: number;
@@ -12,10 +10,6 @@ export interface Meeting extends TimeRange {
   sectionId: number | null;
 }
 
-/**
- * The kinds of thing a section can be narrowed by. Each is a list in the
- * sidebar and a run of chips in the filter bar.
- */
 export type FilterFacet = "course" | "person" | "section" | "component";
 
 /** Every facet, in the order the sidebar lists them and the chips read. */
@@ -26,27 +20,16 @@ export const FILTER_FACETS: FilterFacet[] = [
   "component",
 ];
 
-/**
- * What is checked, per facet. Nothing checked in a facet means that facet
- * does not narrow anything. Values are strings throughout, emplids and
- * section ids included, so the shape round-trips through a URL unchanged.
- */
+/** Checked values per facet, as strings so they round-trip through the URL. */
 export type ScheduleFilters = Record<FilterFacet, string[]>;
 
 /** The `person` value that names sections with no instructor. */
 export const TBA_PERSON = "tba";
 
-/*
- * What the /api/sis endpoints return, mirroring the resources in
- * app/Http/Resources/Sis. The payloads arrive ready to render: instructors
- * are embedded, the crosslist is parsed, and meeting rows without times are
- * already dropped.
- */
+/* What /api/sis returns; see app/Http/Resources/Sis. */
 
-/** A weekday as the SIS names it. */
 export type SisDay = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 
-/** Every weekday, in the order a week runs, which is how days are listed. */
 export const WEEK_DAYS: SisDay[] = [
   "mon",
   "tue",
@@ -85,11 +68,12 @@ export interface SisInstructor {
 export interface SisCrosslist {
   raw: string;
   partners: { subject: string; catalogNumber: string; section: string }[];
-  /** True on the section that owns the shared block: the listing's first entry. */
+  /**
+   * True on the section that owns the shared block: the listing's first entry.
+   */
   isPrimary: boolean;
 }
 
-/** Someone on the department roster, who a section can be assigned to. */
 export interface SisEmployee {
   emplid: number;
   name: string | null;
@@ -103,10 +87,7 @@ export interface SisEmployee {
 /** How a section is taught, which the SIS has no column for. */
 export type Delivery = "onCampus" | "blended" | "online";
 
-/**
- * A section as the plan holds it: the SIS row plus the fields a plan adds.
- * Named for `planned_sections`, the table these two are headed for.
- */
+/** The SIS section plus the fields a plan adds. */
 export type PlannedSection = SisSection & {
   delivery: Delivery;
   notes: string;

@@ -1,10 +1,4 @@
 <template>
-  <!--
-    Docked beside the grid as a column of its own, not floated over it, so
-    the grid gives up width and scrolls sideways rather than losing its last
-    days under the sheet. The page sizes this element; the header and the
-    footer hold still while the form between them scrolls.
-  -->
   <aside
     aria-label="Section details"
     class="tw-flex tw-min-h-0 tw-flex-col tw-bg-surface-bright tw-text-on-surface"
@@ -13,10 +7,6 @@
       class="tw-flex-none tw-border-0 tw-border-l-4 tw-border-solid tw-px-4 tw-pb-2.5 tw-pt-3"
       :class="colorOfType(draft.component).swatch"
     >
-      <!--
-        Opened from a list (an hour of the heatmap), the sheet is one level
-        down, so its way out is back up to that list rather than closing.
-      -->
       <button
         v-if="returnTo"
         type="button"
@@ -90,12 +80,6 @@
         />
       </div>
 
-      <!--
-        One group per meeting pattern. Almost every section has exactly one,
-        so the common case reads as a plain Days and Time pair; a section that
-        meets at different hours on different days gets a group each, and a
-        drag on the grid can split one pattern into two.
-      -->
       <div
         v-for="(pattern, patternIndex) in patterns"
         :key="patternIndex"
@@ -187,7 +171,6 @@
         >
           <span>
             {{ instructor.name ?? "TBA" }}
-            <!-- The usual role is unremarkable; a TA or a second instructor is not. -->
             <span
               v-if="instructor.role !== PRIMARY_ROLE"
               class="tw-text-xs tw-text-on-surface-variant"
@@ -237,11 +220,6 @@
           />
           <span class="tw-text-xs tw-text-on-surface-variant">
             {{ section.enrollmentTotal }} enrolled
-            <!--
-              Only when every partner's cap is known. Most cross-lists reach
-              into departments the import does not hold, and a sum missing one
-              of them would read as a real, smaller number.
-            -->
             <template v-if="combinedCap !== null">
               · combined cap {{ combinedCap }}
             </template>
@@ -281,11 +259,6 @@
     </div>
 
     <div class="tw-flex-none tw-bg-surface-container tw-px-4 tw-py-3">
-      <!--
-        Whatever holds Save back that is not about one meeting time, said
-        where the button is rather than beside the field, since the button is
-        where the user is looking when nothing happens.
-      -->
       <p
         v-for="problem in generalProblems"
         :key="problem.message"
@@ -349,7 +322,6 @@ const props = defineProps<{
   schedule: ScheduleEditor;
   /** The term's sections, for reading a cross-list partner's cap. */
   sections: PlannedSection[];
-  /** The department roster, which is who a section can be assigned to. */
   roster: SisEmployee[];
   /** Names the list this sheet was opened from, e.g. "Tue · 2 – 3p", if any. */
   returnTo?: string | null;
@@ -357,19 +329,12 @@ const props = defineProps<{
 
 const emit = defineEmits<{ close: []; back: [] }>();
 
-/** Shared by every row's label, styled like a form field's. */
 const LABEL_CLASS =
   "tw-m-0 tw-mb-1.5 tw-block tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-on-surface-variant";
 
-/**
- * Filled rather than outlined: the form sits on a bright surface, so a
- * field reads as a place to type by being a shade darker than the page
- * instead of by being drawn around.
- */
 const INPUT_CLASS =
   "tw-rounded-lg tw-border tw-border-solid tw-border-transparent tw-bg-surface-container tw-px-3 tw-py-1.5 tw-text-sm tw-text-on-surface focus:tw-border-primary focus:tw-bg-surface-bright focus:tw-outline-none";
 
-/** The codes the imported SIS data uses; anything else joins them on sight. */
 const COMPONENT_CODES = ["LEC", "DIS", "LAB", "FWK", "IND"];
 
 const DELIVERY_OPTIONS: SegmentedOption[] = [
@@ -378,13 +343,9 @@ const DELIVERY_OPTIONS: SegmentedOption[] = [
   { value: "online", label: "Online" },
 ];
 
-/**
- * What the SIS calls the instructor of record. Someone added here takes it,
- * and it is the role the sheet leaves unsaid.
- */
+/** The SIS instructor-of-record role. */
 const PRIMARY_ROLE = "PI";
 
-/** The value of the Days button that stands for no meeting time at all. */
 const ASYNC = "async";
 
 const DAY_OPTIONS: SegmentedOption[] = [
@@ -396,10 +357,8 @@ const DAY_OPTIONS: SegmentedOption[] = [
   { value: ASYNC, label: "Async" },
 ];
 
-/** Unique per section, so two sheets in one page cannot share a label. */
 const fieldId = (field: string) => `section-${props.section.id}-${field}`;
 
-/** What the form holds: the section with any unsaved keystrokes over it. */
 const draft = computed(() => props.schedule.draftSection(props.section));
 
 const isDirty = computed(() => props.schedule.isDraftDirty(props.section));
@@ -418,15 +377,11 @@ const componentOptions = computed<SegmentedOption[]>(() =>
   ).map((code) => ({ value: code, label: code })),
 );
 
-/**
- * One group per pattern, and one empty group when there are none, so a
- * section with no set time still shows the days to press to give it one.
- */
+// one empty group when there are none, so the day buttons still show
 const patterns = computed(() =>
   draft.value.meetings.length === 0 ? [undefined] : draft.value.meetings,
 );
 
-/** Async is a day like the others here: the one that means none of them. */
 const pressDay = (patternIndex: number, day: string) =>
   day === ASYNC
     ? props.schedule.makeAsynchronous(props.section.id)
@@ -445,10 +400,7 @@ const generalProblems = computed(() =>
   problems.value.filter(({ patternIndex }) => patternIndex === undefined),
 );
 
-/**
- * An emptied cap is held as NaN rather than snapped to zero, so the field
- * stays empty while it is being retyped and Save waits for a real number.
- */
+// an emptied cap is NaN, not 0, so the field stays blank while retyped
 const capText = computed(() =>
   Number.isNaN(draft.value.enrollmentCap) ? "" : draft.value.enrollmentCap,
 );
@@ -460,7 +412,6 @@ const problemWith = (patternIndex: number) =>
   problems.value.find((problem) => problem.patternIndex === patternIndex)
     ?.message;
 
-/** Anyone already on the section is not offered again. */
 const rosterOptions = computed<ComboBoxOptionType[]>(() =>
   props.roster
     .filter(
@@ -503,11 +454,7 @@ const removeInstructor = (emplid: number) =>
 
 const partners = computed(() => props.section.crosslist?.partners ?? []);
 
-/**
- * What the shared classroom holds in total, when every partner is a section
- * this page knows about. A partner in another department is not in the
- * payload, so its cap cannot be read and no total is offered.
- */
+/** Null unless every partner is in this term's payload. */
 const combinedCap = computed(() => {
   if (partners.value.length === 0) return null;
 

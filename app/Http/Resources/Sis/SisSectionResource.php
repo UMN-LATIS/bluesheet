@@ -7,10 +7,6 @@ use App\SisClassInstructor;
 use App\SisClassMeeting;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/**
- * Everything the schedule grid needs to draw and label one section, so the
- * client never has to join instructors or employees back onto it.
- */
 class SisSectionResource extends JsonResource {
     private const DAY_NAMES = [
         'meets_monday' => 'mon',
@@ -49,18 +45,16 @@ class SisSectionResource extends JsonResource {
             'emplid' => $instructor->emplid,
             'role' => $instructor->role,
             'name' => $instructor->employee?->full_name,
-            // On its own because a grid block too narrow for the full name
-            // cannot split one client-side: "de la Cruz" has no safe seam.
+            // sent separately: a client cannot
+            // split "de la Cruz" out of a full name
             'lastName' => $instructor->employee?->last_name,
             'internetId' => $instructor->employee?->internet_id,
         ];
     }
 
     /**
-     * A meeting without times cannot be placed on the grid, and an empty
-     * `meetings` array is how the client recognizes a section for the
-     * no-set-time tray. Passing the row through would give it a second,
-     * needless way to reach the same conclusion.
+     * Untimed meetings are dropped, so an empty `meetings` array is the
+     * client's only sign of no set time.
      */
     private static function hasTimes(SisClassMeeting $meeting): bool {
         return $meeting->starts_at !== null && $meeting->ends_at !== null;

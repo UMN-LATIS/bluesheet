@@ -1,41 +1,20 @@
 /**
- * Arranges one day's meetings side by side, so that meetings sharing an hour
- * sit in their own lanes instead of hiding one another.
- *
- * Lanes divide the day evenly until they would grow too narrow to read, after
- * which the day itself widens and the grid scrolls sideways. A department
- * teaching eight classes at noon gets a wide Tuesday rather than eight
- * slivers.
- *
- * Every meeting in a day takes the same width, set by the day's busiest
- * moment, so the lanes line up top to bottom and the eye can follow one down
- * the column. A lone nine o'clock class is therefore as narrow as the noon
- * crowd that set the width.
- *
- * Pure: no DOM, so the arrangement can be reasoned about on its own.
+ * Lays out one day's meetings in lanes. Lanes divide the day evenly until
+ * they would be too narrow to read, after which the day itself widens.
  */
 
 import type { Meeting } from "../types";
 
-/** A day's width while its meetings still divide it comfortably. */
 export const BASE_DAY_WIDTH = 250;
 
-/**
- * The narrowest a meeting goes before the day widens to make room. Set by
- * the longest thing a block prints, its full name: "ANTH-3005W-001" needs
- * 107px of lane once the block's padding and border are paid for, and the
- * rest is slack for fonts rendering wider than this machine's, which bold
- * type does more of.
- */
+/** What "ANTH-3005W-001" needs in a block, plus slack for wider fonts. */
 export const MIN_LANE_WIDTH = 112;
 
-/** Hairline between neighboring lanes, so two blocks never look like one. */
 const LANE_GAP = 1;
 
 /**
- * Empty strip kept clear down the right of every day. Once lanes fill a
- * column there is otherwise nowhere left to press at a busy hour, and a new
- * meeting could not be started there at all.
+ * Space kept free at the right of every day,
+ * so a busy hour still has somewhere to press.
  */
 export const CREATE_GUTTER = 32;
 
@@ -65,8 +44,6 @@ export function layOutDay(meetings: Meeting[]): DayLayout {
 
   return {
     width: laneCount * laneWidth + CREATE_GUTTER,
-    // Whole pixels: blocks render crisply, and the width a caller is handed
-    // to decide what will fit reads as a number rather than 82.33333333.
     placed: lanes.map(({ meeting, lane }) => ({
       meeting,
       lane,
@@ -76,10 +53,7 @@ export function layOutDay(meetings: Meeting[]): DayLayout {
   };
 }
 
-/**
- * Which day an x-offset across the week's columns lands in. Past either end
- * it answers the outermost day, so a meeting cannot escape the week.
- */
+/** Past either end, the outermost day. */
 export function dayIndexAt(offsetX: number, dayWidths: number[]): number {
   let right = 0;
 
@@ -92,13 +66,8 @@ export function dayIndexAt(offsetX: number, dayWidths: number[]): number {
 }
 
 /**
- * Gives each meeting the first lane free by the time it starts, taking them
- * in order of start.
- *
- * Working in that order is what makes the count of lanes come out equal to
- * the number of meetings running at the busiest moment: a meeting only opens
- * a new lane when every existing one is still occupied, which is to say when
- * it is itself part of the crowd that needs the room.
+ * First-fit by start time, which yields exactly
+ * as many lanes as the busiest moment needs.
  */
 function packByStart(
   meetings: Meeting[],
@@ -110,8 +79,7 @@ function packByStart(
   const laneEnds: number[] = [];
 
   return inOrder.map((meeting) => {
-    // Touching is not overlapping: a lane a nine o'clock class has just left
-    // is free for a ten o'clock one.
+    // touching is not overlapping
     const free = laneEnds.findIndex((end) => end <= meeting.startMinute);
     const lane = free === -1 ? laneEnds.length : free;
 

@@ -39,8 +39,6 @@ const testRoutes: RouteRecordRaw[] = [
 export const router = createRouter({
   history: createWebHistory(),
 
-  // Restore the scroll position on back/forward, go to the top otherwise.
-  // The removed `<RouterView>` key did this as a side effect of remounting.
   scrollBehavior: (to, from, savedPosition) => savedPosition ?? { top: 0 },
 
   routes: [

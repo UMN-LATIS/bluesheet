@@ -6,7 +6,6 @@
       <Breadcrumbs :crumbs="crumbs" />
 
       <div class="tw-flex tw-items-center tw-gap-3">
-        <!-- Segmented control: two buttons, the pressed one filled. -->
         <div
           role="group"
           aria-label="View"
@@ -48,10 +47,6 @@
       </div>
     </div>
 
-    <!--
-      Three columns filling the rest of the viewport. Each column fills the
-      row's height and scrolls inside itself; the page never scrolls.
-    -->
     <div class="tw-flex tw-min-h-0 tw-flex-1">
       <ScheduleSidebar
         v-model:isCollapsed="isSidebarCollapsed"
@@ -61,12 +56,14 @@
         :schedule="schedule"
       />
 
-      <!-- min-w-0 lets the grid scroll sideways inside a flex row instead of stretching it. -->
+      <!--
+        min-w-0 lets the grid scroll sideways
+        inside a flex row instead of stretching it.
+      -->
       <div class="tw-flex tw-min-w-0 tw-flex-1 tw-flex-col">
         <div
           class="tw-flex tw-min-h-9 tw-flex-none tw-items-center tw-gap-3 tw-bg-surface tw-px-3 tw-py-1 tw-text-xs tw-text-on-surface-variant"
         >
-          <!-- Only when there is something the grid could not draw. -->
           <span
             v-if="placed.outsideGridCount > 0"
             class="tw-flex-none tw-text-amber-700"
@@ -203,7 +200,6 @@ const router = useRouter();
 
 const termsQuery = useSisTermsQuery();
 
-/** The term the URL names, or failing that the one we are in today. */
 const term = computed(() => {
   const terms = termsQuery.data.value ?? [];
 
@@ -212,13 +208,11 @@ const term = computed(() => {
     : (terms.find(({ id }) => id === props.termCode) ?? null);
 });
 
-/** Newest first, since planning looks forward. */
 const termOptions = computed(() =>
   [...(termsQuery.data.value ?? [])].sort((a, b) => b.id - a.id),
 );
 
-// The filters ride along in the query, so a view narrowed to one person
-// stays narrowed when the term changes.
+// keep the query so the filters survive a term change
 const goToTerm = (termCode: string) =>
   router.push({
     name: "termPlanning",
@@ -230,7 +224,6 @@ const groupQuery = useGroupQuery(props.groupId);
 
 const employeesQuery = useSisEmployeesQuery(props.groupId);
 
-/** Who a section can be assigned to: the department's own people. */
 const roster = computed(() => employeesQuery.data.value ?? []);
 
 const isSidebarCollapsed = ref(false);
@@ -242,7 +235,6 @@ const VIEW_OPTIONS = [
 
 const view = ref<(typeof VIEW_OPTIONS)[number]["value"]>("week");
 
-/** The grid's days, which the heatmap's columns mirror. */
 const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 
 const crumbs = computed<Crumb[]>(() => [
@@ -262,20 +254,16 @@ const sectionsQuery = useSisSectionsQuery(
 const allSections = computed(() => sectionsQuery.data.value ?? []);
 
 /**
- * Every section as the user sees it, this browser's unsaved edits included.
- * Everything below is built from these rather than from the payload, so an
- * edit reaches the grid, the heatmap, the tray and the sheet at once.
+ * Sections with this browser's unsaved edits
+ * applied; every view below reads these.
  */
 const localSections = computed(() => schedule.localSections(allSections.value));
 
 /** Lists and counts cover the whole term, whatever is checked. */
 const filterOptions = computed(() => buildFilterOptions(localSections.value));
 
-// `localSections` and the filters are read from `schedule`, declared below,
-// and `schedule` is built from `placed`. That is not a cycle: all of them are
-// computeds, nothing is read until the template renders, and by then they all
-// exist. The editor stores what is checked; the page applies it here, before
-// the sections are placed, so a hidden section simply leaves the schedule.
+// `schedule` is declared below; reading it here is fine because these are
+// all computeds, evaluated only once everything exists.
 const visibleSections = computed(() =>
   filterSections(localSections.value, schedule.filters),
 );
@@ -288,9 +276,8 @@ const sectionOf = (meetingId: string) =>
 const componentOf = (meeting: Meeting) => sectionOf(meeting.id)?.component;
 
 /**
- * The editor's effects, run here because the page owns the router. `replace`
- * rather than `push`: stepping back through every checkbox would make the
- * back button useless for leaving the page.
+ * `replace`, not `push`: the back button
+ * should leave the page, not undo checkboxes.
  */
 const runEffect = (effect: Effect) => {
   switch (effect.type) {
@@ -304,8 +291,6 @@ const runEffect = (effect: Effect) => {
   }
 };
 
-// Held here rather than inside the grid, so that the sidebar, the filter
-// bar, and the detail sheet all read and change the same schedule.
 const schedule = useScheduleEditor(
   computed(() => ({
     meetings: placed.value.meetings,
@@ -314,9 +299,8 @@ const schedule = useScheduleEditor(
   runEffect,
 );
 
-// The other direction of the URL sync: a pasted link on first load, or the
-// back button. Comparing first is what stops this and `runEffect` from
-// answering each other forever.
+// URL to filters (first load, back button). The equality check stops this
+// watch and `runEffect` from feeding each other forever.
 watch(
   () => route.query,
   (query) => {
@@ -337,13 +321,11 @@ const selectedHour = computed(() => {
 const hourLabel = (hour: HourSelection) =>
   `${DAY_NAMES[hour.dayIndex]} · ${formatTimeRange(hour.startMinute, hour.startMinute + 60)}`;
 
-/** The hour list a selected section was picked from, if it was. */
 const sectionReturnTo = computed<HourSelection | null>(() => {
   const selection = schedule.selection;
   return selection?.kind === "section" ? (selection.from ?? null) : null;
 });
 
-/** The sections whose meetings overlap the selected hour, as the grid shows them. */
 const hourEntries = computed<HourEntry[]>(() => {
   const hour = selectedHour.value;
   if (!hour) return [];
@@ -363,8 +345,7 @@ const hourEntries = computed<HourEntry[]>(() => {
     .sort((a, b) => a.startMinute - b.startMinute);
 });
 
-// A meeting drawn locally (local-N) has no section, so selecting it stores
-// an id but opens no sheet.
+// a locally drawn meeting has no section, so no sheet opens for it
 const selectedSection = computed(() => {
   const selection = schedule.selection;
   if (!selection || selection.kind === "hour") return null;

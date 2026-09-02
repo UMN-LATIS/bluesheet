@@ -5,17 +5,10 @@ namespace App\Library\Sis;
 use App\SisClassSection;
 
 /**
- * Reads the slash-delimited crosslist string the SIS stores on a section,
- * such as "AFRO 4406-001/GWSS 4406-001".
- *
- * One classroom shared by two departments arrives as two sections, each
- * listing both. A schedule that drew both would show the room double-booked,
- * so exactly one section is elected to own the block: the one whose subject
- * and catalog number sort first. The election has to happen here rather than
- * in the client, because the partner usually belongs to another department
- * and so never appears in the same payload.
- *
- * Performs no I/O.
+ * Parses the SIS crosslist string, e.g. "AFRO 4406-001/GWSS 4406-001".
+ * One section per listed department arrives; the first by subject and
+ * catalog number owns the grid block. Elected here, not in the client,
+ * because partner sections are usually outside the client's payload.
  */
 class Crosslist {
     /** "AFRO 4406-001" — subject, catalog number, section. */
@@ -51,9 +44,8 @@ class Crosslist {
     }
 
     /**
-     * Entries that don't match the expected shape are dropped. A section left
-     * with fewer than two entries is treated as not crosslisted, which draws
-     * it normally: showing a block twice beats losing it entirely.
+     * Malformed entries are dropped; fewer than two left means not
+     * crosslisted, so the section still draws (twice beats not at all).
      *
      * @return array<array{subject: string, catalogNumber: string, section: string}>
      */
@@ -73,7 +65,10 @@ class Crosslist {
         return $entries;
     }
 
-    /** The entry that owns the block, by subject then catalog number then section. */
+    /**
+     * The entry that owns the block, by subject
+     * then catalog number then section.
+     */
     private static function first(array $entries): array {
         usort($entries, fn(array $a, array $b) => [$a['subject'], $a['catalogNumber'], $a['section']]
             <=> [$b['subject'], $b['catalogNumber'], $b['section']]);

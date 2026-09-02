@@ -1,19 +1,11 @@
 /**
- * Color on this page means one thing: what kind of meeting a block is. The
- * lecture is the warm primary; discussion and lab are a cool pair, alike in
- * weight and near in hue, since to a scheduler they are the same kind of
- * thing (the meetings a class splits into). Blue is left alone on purpose,
- * because everywhere else in the app blue means "you can click this".
- *
- * Every class here is written out in full so Tailwind can see it.
+ * Block colors by meeting type. Blue is avoided: elsewhere in the app it
+ * means "clickable". Classes are written out in full so Tailwind can see them.
  */
 export interface MeetingTypeColor {
   label: string;
-  /** Classes for a block: its edge, fill, and the ring it wears when selected. */
   block: string;
-  /** Classes for the key's swatch and a tray chip's edge. */
   swatch: string;
-  /** The fill alone, for tinting a surface that belongs to this kind of meeting. */
   tint: string;
 }
 
@@ -41,7 +33,6 @@ const LAB: MeetingTypeColor = {
   tint: "tw-bg-violet-50",
 };
 
-/** Everything else the SIS names: IND, FWK, and a block with no class yet. */
 export const OTHER_TYPE_COLOR: MeetingTypeColor = {
   label: "Other",
   block:
@@ -50,7 +41,6 @@ export const OTHER_TYPE_COLOR: MeetingTypeColor = {
   tint: "tw-bg-surface-container",
 };
 
-/** Keyed by the SIS component code, in the order the key lists them. */
 export const MEETING_TYPE_COLORS: Record<string, MeetingTypeColor> = {
   LEC: LECTURE,
   DIS: DISCUSSION,

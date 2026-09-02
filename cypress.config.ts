@@ -1,10 +1,8 @@
 import { defineConfig } from "cypress";
 import { loadEnv } from "vite";
 
-// Read APP_URL from .env so Cypress targets this checkout's app. Each
-// worktree runs on its own APP_PORT, and a hardcoded `http://localhost`
-// points at whichever container currently holds port 80.
-// mode "" so Vite reads only .env and .env.local, no .env.<mode>
+// Each worktree's app runs on its own port, so read APP_URL from .env.
+// Mode "" makes Vite read only .env and .env.local, not .env.<mode>.
 const { APP_URL } = loadEnv("", process.cwd(), "APP_");
 
 if (!APP_URL) {

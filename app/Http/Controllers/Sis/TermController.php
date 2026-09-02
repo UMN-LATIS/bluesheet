@@ -8,12 +8,8 @@ use App\SisTerm;
 
 class TermController extends Controller {
     /**
-     * Every term the SIS has told us about, most recent first.
-     *
-     * One term code yields a row per academic career, all with the same
-     * name but differing dates, so the undergraduate row stands for the
-     * term. Graduate shares its dates; medicine, which does not, is a
-     * knowing omission.
+     * One row per term code: the SIS has one per academic career, and the
+     * undergraduate row stands for the term.
      */
     public function index() {
         $terms = SisTerm::undergrad()

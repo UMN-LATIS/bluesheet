@@ -1,18 +1,13 @@
 <template>
   <div class="tw-bg-surface-bright">
-    <!--
-      A day's name sticks to the right of the gutter as its column scrolls
-      past, so the columns are still identifiable once one is wider than the
-      screen. `DayColumn` positions the name against this measurement.
-    -->
+    <!-- --day-label-offset: where DayColumn pins a scrolling day's name -->
     <div
       class="tw-flex tw-w-max tw-min-w-full tw-items-start"
       :style="{ '--day-label-offset': `${gutterWidth}px` }"
     >
       <!--
-        The gutter stays put while the days scroll past it. z-40, above the
-        day headers, so its own header owns the corner where the two sticky
-        axes meet.
+        z-40, above the day headers, so the gutter owns the corner where both
+        sticky axes meet
       -->
       <div
         ref="gutter"
@@ -22,9 +17,8 @@
       </div>
 
       <!--
-        Every pointer gesture is handled here rather than in the columns, since
-        a meeting can be carried from one day into another. The columns below
-        only draw.
+        pointer events live here, not in the
+        columns, since a drag can cross days
       -->
       <div
         ref="days"
@@ -43,8 +37,7 @@
           :componentOf="componentOf"
         >
           <!--
-            Forwarded only when the page actually supplied content, so that
-            a grid used without the slot still falls back to showing times.
+            forwarded only when supplied, so DayColumn's fallback still applies
           -->
           <template v-if="$slots.block" #block="blockProps">
             <slot name="block" v-bind="blockProps" />
@@ -68,14 +61,10 @@ import { minuteAt } from "../helpers/timeScale";
 const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 
 const props = defineProps<{
-  /**
-   * The schedule to draw and to change. The page owns it, so anything else
-   * on the page reads the same one.
-   */
   schedule: ScheduleEditor;
   /**
-   * The SIS component code (LEC, DIS, …) of the class on a meeting, which
-   * picks the block's color. Undefined for a meeting with no class yet.
+   * SIS component code (LEC, DIS, …) of a
+   * meeting's class, which picks its color.
    */
   componentOf?: (meeting: Meeting) => string | undefined;
 }>();
@@ -97,13 +86,10 @@ function onPointerDown(event: PointerEvent) {
   const edge =
     target.closest<HTMLElement>("[data-resize-edge]")?.dataset.resizeEdge;
 
-  // Drawing a new meeting on empty space is switched off until there is a
-  // way to create the section it would belong to (epic slice 6). The editor
-  // still understands `pressedEmptySpace`; the grid just does not send it.
+  // TODO: drawing on empty space, once a section can be created for it
   if (!meetingId) return;
 
-  // Capturing on the container means the rest of the gesture arrives here even
-  // once the pointer leaves the grid entirely.
+  // capture, so the gesture keeps arriving after the pointer leaves the grid
   days.value?.setPointerCapture(event.pointerId);
 
   if (edge === "start" || edge === "end") {
@@ -113,10 +99,7 @@ function onPointerDown(event: PointerEvent) {
   }
 }
 
-// On the window rather than the grid: the grid never holds focus, and the
-// key should work however far the captured pointer has wandered. Always
-// dispatched; `update` decides whether that discards a gesture or clears
-// the selection.
+// on the window: the grid never holds focus
 function onKeyDown(event: KeyboardEvent) {
   if (event.key !== "Escape") return;
   props.schedule.cancel();
@@ -134,19 +117,13 @@ function onPointerMove(event: PointerEvent) {
 }
 
 /**
- * The day and minute a pointer event landed on, in the grid's own terms.
- *
- * One rect fixes the frame — measured per event, so scrolling mid-drag
- * cannot leave stale positions behind — and the widths the layout itself
- * reported locate the day, so the mapping cannot disagree with what is
- * drawn. The minute is handed on as measured; `update` snaps it.
+ * The day and minute under a pointer event. Measured per event, so a
+ * scroll mid-drag cannot leave stale positions; snapping is `update`'s job.
  */
 function positionOf(event: PointerEvent) {
   const firstBody = days.value?.querySelector<HTMLElement>("[data-day-index]");
   if (!firstBody) return null;
 
-  // Day bodies share a top edge and sit below the column headers, so the
-  // first one's corner anchors both axes.
   const { left, top } = firstBody.getBoundingClientRect();
 
   return {

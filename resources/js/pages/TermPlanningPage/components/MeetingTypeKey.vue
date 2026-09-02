@@ -24,6 +24,5 @@ import {
   OTHER_TYPE_COLOR,
 } from "../constants/meetingTypeColors";
 
-/** Reads from the same table the blocks paint from, so the two cannot drift. */
 const entries = [...Object.values(MEETING_TYPE_COLORS), OTHER_TYPE_COLOR];
 </script>

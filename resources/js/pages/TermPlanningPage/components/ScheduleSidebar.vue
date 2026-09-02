@@ -1,10 +1,4 @@
 <template>
-  <!--
-    Collapsed, the sidebar is a rail: the same column, narrowed to its
-    expand button, so the control to bring the filters back sits exactly
-    where the filters were. A badge on the rail says how many filter values
-    are still narrowing the grid while the sidebar is out of view.
-  -->
   <aside
     v-if="isCollapsed"
     aria-label="Filters, collapsed"
@@ -33,7 +27,9 @@
     aria-label="Filters"
     class="tw-flex tw-min-h-0 tw-flex-col tw-bg-surface"
   >
-    <!-- Same height as the toolbar over the grid, so the two read as one band. -->
+    <!--
+      Same height as the toolbar over the grid, so the two read as one band.
+    -->
     <div class="tw-flex tw-h-9 tw-flex-none tw-items-center tw-px-1.5">
       <button
         type="button"
@@ -59,10 +55,7 @@
       />
     </div>
 
-    <!--
-      Short groups keep their full height, so several of them at once can
-      outgrow the column; then the column scrolls rather than clipping.
-    -->
+    <!-- scrolls when several short groups outgrow the column -->
     <div class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-overflow-y-auto">
       <FilterGroup
         v-if="courseLevels.length > 0"
@@ -72,7 +65,6 @@
         @clear="clearFacet('course')"
       >
         <template v-for="level in courseLevels" :key="level.label">
-          <!-- Pinned to the top of the group's scroll box as its courses go past. -->
           <div class="tw-sticky tw-top-0 tw-z-10 tw-bg-surface">
             <FilterRow
               :isChecked="level.checkedCount === level.courses.length"
@@ -218,17 +210,11 @@ import type {
 import { type FilterFacet, TBA_PERSON } from "../types";
 import type { ScheduleEditor } from "../useScheduleEditor";
 
-/**
- * The lists a user narrows the grid with. Every checkbox here is a filter
- * event on the schedule; the sidebar keeps nothing of its own but the search
- * text, which only decides which rows are in view.
- */
 const props = defineProps<{
   options: FilterOptions;
   schedule: ScheduleEditor;
 }>();
 
-/** Whether the sidebar is folded to its rail. The page sizes the column. */
 const isCollapsed = defineModel<boolean>("isCollapsed", { default: false });
 
 const ICON_BUTTON_CLASS =
@@ -253,10 +239,7 @@ const toggle = (facet: FilterFacet, values: string[], isNowChecked: boolean) =>
 const clearFacet = (facet: FilterFacet) =>
   props.schedule.removeFilterValues(facet, filters.value[facet]);
 
-/**
- * A row stays in view while it is checked, whatever the search says, so
- * the user can always see and undo what is narrowing the grid.
- */
+// a checked row stays in view whatever the search says, so it can be unchecked
 const isInView = (facet: FilterFacet, value: string, text: string) => {
   const query = search.value.trim().toLowerCase();
   return (

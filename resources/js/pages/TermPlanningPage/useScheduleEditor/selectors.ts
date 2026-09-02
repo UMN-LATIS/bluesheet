@@ -1,20 +1,9 @@
-/**
- * The reads that take real work. The trivial ones are computeds on the
- * editor surface in `useScheduleEditor`; either way the state's shape stays
- * private to this directory.
- */
-
 import type { Meeting, PlannedSection, SisSection, TimeRange } from "../types";
 import { isEqual } from "lodash-es";
 import { type DayLayout, layOutDay } from "../helpers/dayLayout";
 import type { EditorState, Interaction, ScheduleContext } from "./types";
 
-/**
- * The section as the user sees it: the SIS row with this browser's edits
- * over it. The one place server truth and local work meet, so every view of
- * the term (the grid, the heatmap, the tray, the sheet) is reading the same
- * section.
- */
+/** The SIS section with this browser's edits applied. */
 export function selectLocalSection(
   section: SisSection,
   state: EditorState,
@@ -27,10 +16,7 @@ export function selectLocalSection(
   };
 }
 
-/**
- * What the sheet's form shows: the local section with the draft over it.
- * Identical to the local section until a field is touched.
- */
+/** The local section with the sheet's draft applied. */
 export function selectDraftSection(
   section: SisSection,
   state: EditorState,
@@ -41,11 +27,7 @@ export function selectDraftSection(
   };
 }
 
-/**
- * Whether Save would change anything. Compared by value rather than tracked
- * by a flag, so typing a field back to what it was leaves the form clean and
- * a dirty state cannot get stuck.
- */
+// compared by value, so retyping the original leaves the form clean
 export function selectIsDraftDirty(
   section: SisSection,
   state: EditorState,
@@ -60,14 +42,9 @@ export function selectIsDraftDirty(
   );
 }
 
-/** Whether this section reads as anything other than what the SIS holds. */
 export const selectHasEdits = (sectionId: number, state: EditorState) =>
   state.sectionEdits[sectionId] !== undefined;
 
-/**
- * Every block on the grid: the placed sections, plus the placeholder times
- * held here that belong to no section.
- */
 export function selectMeetings(
   context: ScheduleContext,
   state: EditorState,
@@ -75,31 +52,20 @@ export function selectMeetings(
   return [...context.meetings, ...state.placeholderMeetings];
 }
 
-/** Everything one day column draws. */
 export interface DayView {
   layout: DayLayout;
   /**
-   * A block in flight over this day: one being drawn out, or one the pointer
-   * is carrying. It spans the full column rather than taking a lane, since it
-   * is not placed until it is let go of.
-   *
-   * `meetingId` and `sectionId` are null while a block is drawn out, since
-   * no meeting exists to name yet.
+   * A block being drawn or carried over this day; ids are null while drawing.
    */
   overlay:
     | (TimeRange & { meetingId: string | null; sectionId: number | null })
     | null;
-  /** The placed block being resized here, drawn at its live range. */
   activeMeetingId: string | null;
-  /** The placed block whose meeting the pointer is carrying, drawn faded. */
   ghostMeetingId: string | null;
-  /** The block the last gesture placed, which flashes once where it landed. */
   justPlacedMeetingId: string | null;
-  /** The selected meeting's id when it lies in this day, else null. */
   selectedMeetingId: string | null;
 }
 
-/** One `DayView` per day, index-aligned with the grid's columns. */
 export function selectWeekView(
   context: ScheduleContext,
   state: EditorState,
@@ -121,7 +87,6 @@ function selectDayView(
 
   const meetings = all.filter((meeting) => meeting.dayIndex === dayIndex);
 
-  // A selected tray section has no block, so no day shows a selection.
   const selectedMeetingId =
     state.selection?.kind === "meeting" ? state.selection.meetingId : null;
 
@@ -132,8 +97,8 @@ function selectDayView(
       interaction.status === "resizing" ? interaction.meetingId : null,
     ghostMeetingId:
       interaction.status === "moving" ? interaction.meetingId : null,
-    // Named only in the day it landed in, so a move across days does not
-    // flash the column it left.
+    // only in the day it landed in, so a cross-day
+    // move does not flash the old column
     justPlacedMeetingId: meetings.some(({ id }) => id === state.lastPlacedId)
       ? state.lastPlacedId
       : null,
@@ -144,8 +109,7 @@ function selectDayView(
 }
 
 /**
- * A resized meeting keeps the lane the at-rest packing gave it and draws at
- * the draft's range, so its neighbors hold still while one block grows.
+ * Draws the resized meeting at its draft range without repacking its neighbors.
  */
 function withLiveResize(
   layout: DayLayout,
@@ -170,7 +134,6 @@ function withLiveResize(
   };
 }
 
-/** The drawing draft, or the carried meeting, while it is over this day. */
 function overlayIn(
   interaction: Interaction,
   dayIndex: number,

@@ -10,17 +10,6 @@ use App\SisClassSection;
 use Illuminate\Http\Request;
 
 class GroupSectionController extends Controller {
-    /**
-     * The sections a group's department offers in one term, ready to draw
-     * on the schedule grid.
-     *
-     * Cancelled sections are left out: a term that shows them looks fuller
-     * than it is. So are independent-study sections (component IND):
-     * directed readings, directed research, and the like are one
-     * placeholder section per instructor with no meeting time, and in the
-     * pilot department they were two thirds of the term. Nothing about them
-     * can be planned on a grid.
-     */
     public function index(Request $request, Group $group) {
         $this->authorize('viewAnyCoursesForGroup', [Course::class, $group]);
 
@@ -35,6 +24,8 @@ class GroupSectionController extends Controller {
         $sections = SisClassSection::query()
             ->forDepartmentTerm((int) $group->sis_dept_id, $validated['term'])
             ->where('is_cancelled', false)
+            // independent study: one untimed placeholder per instructor,
+            // nothing a grid can plan
             ->where('component', '!=', 'IND')
             ->with(['meetings', 'instructors.employee'])
             ->orderBy('subject')

@@ -19,26 +19,14 @@
 </template>
 
 <script setup lang="ts">
-/**
- * A row of buttons standing in for a select or a set of checkboxes, so a
- * short list is readable at a glance and one press away.
- *
- * It reports which button was pressed and draws whichever are chosen. What a
- * press means is the caller's to decide, which is what lets one control serve
- * a single choice (component), a set (days), and a set with an exclusive
- * member in it (Async).
- */
-
 export interface SegmentedOption {
   value: string;
   label: string;
 }
 
 defineProps<{
-  /** Names the group for a screen reader, e.g. "Component". */
   label: string;
   options: SegmentedOption[];
-  /** The values drawn as pressed. */
   chosen: string[];
 }>();
 

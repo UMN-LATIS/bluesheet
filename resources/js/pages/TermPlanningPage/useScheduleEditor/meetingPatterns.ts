@@ -1,11 +1,6 @@
 /**
- * Rewrites a section's meeting patterns, which is what every change to when
- * a class meets comes down to. A drag on the grid and a day toggle in the
- * sheet are two ways of asking for the same rewrite, so both land here and
- * the schedule has one way of saying where a section meets.
- *
- * Pure, and pattern-shaped rather than block-shaped: the grid's meetings are
- * derived from these, never the other way round.
+ * Pure rewrites of a section's meeting patterns;
+ * the grid's blocks derive from these.
  */
 
 import { GRID_DAYS } from "../helpers/sectionPlacement";
@@ -14,10 +9,7 @@ import type { SisDay, SisSectionMeeting } from "../types";
 import { WEEK_DAYS } from "../types";
 import type { Placement } from "./types";
 
-/**
- * What a new pattern starts at: the most common meeting in the data, 244 of
- * them, and a standard 75-minute period.
- */
+/** The most common pattern in the data: a 75-minute period at 9:45. */
 export const DEFAULT_PATTERN: SisSectionMeeting = {
   days: [],
   startTime: "09:45",
@@ -25,12 +17,8 @@ export const DEFAULT_PATTERN: SisSectionMeeting = {
 };
 
 /**
- * The patterns with one day of one of them turned on or off.
- *
- * A pattern left with no days is dropped rather than kept as a time nothing
- * meets at, so unchecking the last day is the same statement as pressing
- * Async. An index past the end starts a pattern, which is how a section with
- * no set time gets its first one.
+ * A pattern left with no days is dropped. An
+ * index past the end starts a new pattern.
  */
 export function withDayToggled(
   patterns: SisSectionMeeting[],
@@ -56,7 +44,6 @@ export function withDayToggled(
   );
 }
 
-/** The patterns with one of them moved to a new start or end time. */
 export function withTimes(
   patterns: SisSectionMeeting[],
   patternIndex: number,
@@ -75,13 +62,8 @@ export interface PatternDay {
 }
 
 /**
- * The section's patterns with one of its days moved to where it was dropped.
- *
- * Dragging Wednesday out of an MWF pattern leaves MF behind and states
- * Wednesday separately, since the pattern is what says "these days, this
- * time" and Wednesday no longer agrees with it. Dropping it where the
- * section already meets at that hour joins that pattern instead of adding a
- * second one saying the same thing.
+ * Moving one day out of a pattern splits it off; dropping onto a time the
+ * section already meets at joins that pattern.
  */
 export function withPlacement(
   patterns: SisSectionMeeting[],
@@ -116,17 +98,8 @@ export function withPlacement(
 }
 
 /**
- * The patterns with any overlap on a day merged into the one stretch it
- * really is. Two blocks on one day at overlapping times are a class meeting
- * itself twice, which is not something a schedule can mean, so a save says
- * it once: Mon 9:00-11:00 and Mon 9:45-11:00 become Mon 9:00-11:00.
- *
- * Worked out a day at a time, so merging Wednesday's two blocks cannot
- * quietly move Monday. Ranges that merely touch are left alone: 9 to 10 and
- * 10 to 11 do not overlap.
- *
- * Days that end up meeting at the same times are then stated as one pattern,
- * which is also how two patterns saying the same thing become one.
+ * Merges overlapping ranges on a day (touching ones are left alone), then
+ * restates days with identical times as one pattern.
  */
 export function withoutOverlaps(
   patterns: SisSectionMeeting[],
@@ -150,11 +123,9 @@ export function withoutOverlaps(
     );
 }
 
-/** Every day the section meets, in week order and each of them once. */
 const daysMet = (patterns: SisSectionMeeting[]) =>
   inWeekOrder(patterns.flatMap((pattern) => pattern.days));
 
-/** What the section meets at on one day, earliest first. */
 const rangesOn = (patterns: SisSectionMeeting[], day: SisDay) =>
   patterns
     .filter((pattern) => pattern.days.includes(day))
@@ -163,7 +134,6 @@ const rangesOn = (patterns: SisSectionMeeting[], day: SisDay) =>
       (a, b) => minutesFromClock(a.startTime) - minutesFromClock(b.startTime),
     );
 
-/** One day's ranges with the overlapping ones run together. */
 function merged(ranges: { startTime: string; endTime: string }[]) {
   return ranges.reduce<typeof ranges>((kept, range) => {
     const last = kept[kept.length - 1];
@@ -182,7 +152,6 @@ function merged(ranges: { startTime: string; endTime: string }[]) {
   }, []);
 }
 
-/** Days as a week reads them, and each of them once. */
 function inWeekOrder(days: SisDay[]): SisDay[] {
   return WEEK_DAYS.filter((day) => days.includes(day));
 }

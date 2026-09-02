@@ -4,10 +4,7 @@ namespace App\Http\Resources\Sis;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/**
- * A person on the department roster, wrapping the appointment that placed
- * them there. See GroupEmployeeController for how that appointment is picked.
- */
+/** A roster entry, read off the appointment that placed the person there. */
 class SisEmployeeResource extends JsonResource {
     public function toArray($request) {
         return [

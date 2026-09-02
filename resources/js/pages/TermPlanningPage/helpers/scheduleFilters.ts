@@ -1,9 +1,4 @@
-/**
- * Narrows the sections the grid draws to the ones the sidebar's checked
- * facets allow. Within a facet, checked values are OR'd; across facets,
- * they're AND'd, so a section passes when every non-empty facet matches at
- * least one of its checked values.
- */
+/** Within a facet, checked values are OR'd; across facets, AND'd. */
 
 import {
   FILTER_FACETS,
@@ -12,7 +7,6 @@ import {
   TBA_PERSON,
 } from "../types";
 
-/** False when every facet is empty, so no filter is narrowing anything. */
 export function isFiltering(filters: ScheduleFilters): boolean {
   return FILTER_FACETS.some((facet) => filters[facet].length > 0);
 }
@@ -36,7 +30,6 @@ function matchesAllFacets(
   );
 }
 
-/** An empty facet narrows nothing; otherwise the section needs one match. */
 function matchesFacet(checked: string[], sectionValues: string[]): boolean {
   return (
     checked.length === 0 ||
@@ -44,7 +37,6 @@ function matchesFacet(checked: string[], sectionValues: string[]): boolean {
   );
 }
 
-/** Every instructor's emplid, regardless of role; TBA_PERSON if there are none. */
 function personValues(section: SisSection): string[] {
   if (section.instructors.length === 0) return [TBA_PERSON];
   return section.instructors.map((instructor) => String(instructor.emplid));

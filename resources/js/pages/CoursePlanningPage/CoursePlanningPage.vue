@@ -184,9 +184,8 @@ function updateQueryParams(queryObject: Record<string, unknown>) {
     encode: true,
   });
 
-  // pass a string so qs stays the only query serializer: initPage
-  // reads the URL back with qs.parse, and existing links use its
-  // bracket-indexed arrays
+  // a string, not a query object: vue-router would serialize arrays
+  // differently from the qs.parse that initPage reads them back with
   router.replace(`${route.path}?${stringifiedQuery}`);
 }
 

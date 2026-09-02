@@ -76,9 +76,7 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
 
     Route::get('lookup/department/{deptId?}', 'LookupController@departmentInfo');
 
-    // TODO: move callers to /api/sis/terms and retire this. Two term
-    // endpoints, one live from Bandaid and one from the sis_ tables, will
-    // not stay straight in anyone's head.
+    // TODO: move callers to /api/sis/terms and retire this
     Route::get('terms', [TermController::class, 'index']);
     Route::get('terms/payrollDates', [TermController::class, 'payrollDates']);
 

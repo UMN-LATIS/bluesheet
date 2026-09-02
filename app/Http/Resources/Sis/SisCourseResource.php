@@ -5,9 +5,8 @@ namespace App\Http\Resources\Sis;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * A course as it stays constant from term to term, wrapping one section
- * chosen to represent it. See GroupCourseController for how that section
- * is picked.
+ * A course, read off the one section chosen to represent it (see
+ * GroupCourseController).
  */
 class SisCourseResource extends JsonResource {
     public function toArray($request) {

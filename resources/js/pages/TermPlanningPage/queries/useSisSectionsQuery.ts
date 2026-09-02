@@ -3,10 +3,7 @@ import { computed, type Ref } from "vue";
 import { axios } from "@/utils";
 import type { SisSection } from "../types";
 
-/**
- * The group's sections for one term. Waits while `termCode` is null, which
- * it is until the terms payload has named the current term.
- */
+/** Disabled while `termCode` is null. */
 export function useSisSectionsQuery(
   groupId: number,
   termCode: Readonly<Ref<number | null>>,

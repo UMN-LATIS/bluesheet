@@ -1,8 +1,6 @@
 /**
- * Builds what the filter sidebar lists and what a filter chip prints, from
- * the term's loaded sections. Every section counts, crosslist partners
- * included: this module does not decide what is filtered out, only what the
- * filter controls can say.
+ * Options and counts include crosslist partners; filtering itself happens in
+ * scheduleFilters.
  */
 
 import type { FilterFacet, SisInstructor, SisSection } from "../types";
@@ -29,7 +27,10 @@ export interface PersonOption {
   value: string;
   /** Full name, e.g. "Ana García". "TBA" for the TBA row. */
   name: string;
-  /** For a chip: first initial and last name, e.g. "A. García". "TBA" for the TBA row. */
+  /**
+   * For a chip: first initial and last name,
+   * e.g. "A. García". "TBA" for the TBA row.
+   */
   shortName: string;
   /** Both null on the TBA row, which stands for nobody in particular. */
   emplid: number | null;
@@ -43,7 +44,10 @@ export interface SectionOption {
   /** e.g. "HIST 1082 · 001" */
   label: string;
   component: string;
-  /** The lead instructor's last name (role PI, else the first instructor), or null when there is none. */
+  /**
+   * The lead instructor's last name (role PI, else the first instructor), or
+   * null when there is none.
+   */
   instructorLastName: string | null;
 }
 
@@ -55,15 +59,20 @@ export interface ComponentOption {
 
 export interface FilterOptions {
   courseLevels: CourseLevel[];
-  /** Instructors holding role "PI" or "SI" on at least one section. TA rows are not listed. */
+  /**
+   * Instructors holding role "PI" or "SI" on at
+   * least one section. TA rows are not listed.
+   */
   faculty: PersonOption[];
-  /** Present when at least one section has no instructors; its count is how many. */
+  /**
+   * Present when at least one section has
+   * no instructors; its count is how many.
+   */
   tba: PersonOption | null;
   sections: SectionOption[];
   components: ComponentOption[];
 }
 
-/** A course option beside the fields it is grouped and sorted by. */
 interface CourseDraft {
   option: CourseOption;
   subject: string;
@@ -141,7 +150,6 @@ function facultyName(instructor: SisInstructor): string {
   );
 }
 
-/** A faculty option beside the last name it is sorted by. */
 interface FacultyDraft {
   option: PersonOption;
   lastName: string | null;
@@ -174,9 +182,6 @@ function buildFaculty(sections: SisSection[]): {
       let draft = draftsByEmplid.get(instructor.emplid);
       if (!draft) {
         const name = facultyName(instructor);
-        // "A. García" only when there's a real name to take the initial
-        // from and a last name to show; otherwise a fallback name already
-        // reads fine on its own.
         const shortName =
           instructor.name && instructor.lastName
             ? `${name[0]}. ${instructor.lastName}`
@@ -290,7 +295,10 @@ export function buildFilterOptions(sections: SisSection[]): FilterOptions {
   };
 }
 
-/** The text a chip prints for one checked value. Falls back to the raw value when the options do not know it (e.g. a stale URL). */
+/**
+ * The text a chip prints for one checked value. Falls back to the raw value
+ * when the options do not know it (e.g. a stale URL).
+ */
 export function optionLabel(
   options: FilterOptions,
   facet: FilterFacet,

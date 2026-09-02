@@ -19,7 +19,6 @@
       Every section shown has a meeting time.
     </p>
 
-    <!-- Three rows or so, then it scrolls: a department can have two hundred of these. -->
     <ul
       v-else
       class="scrollbar-always-visible tw-m-0 tw-flex tw-max-h-24 tw-list-none tw-flex-wrap tw-gap-1.5 tw-overflow-y-auto tw-p-0"
@@ -42,11 +41,6 @@
             {{ section.subject }} {{ section.catalogNumber }} ·
             {{ section.section }}
           </span>
-          <!--
-            Who teaches it, at a glance: initials when someone is assigned, an
-            empty dashed ring when nobody is. The ring is what a scheduler is
-            scanning this strip for.
-          -->
           <span
             v-if="initialsOf(section)"
             class="tw-flex tw-h-5 tw-w-5 tw-items-center tw-justify-center tw-rounded-full tw-bg-surface-container-high tw-text-[9px] tw-font-semibold tw-text-on-surface-variant"
@@ -71,11 +65,6 @@ import { colorOfType } from "../constants/meetingTypeColors";
 import type { SisInstructor, SisSection } from "../types";
 import type { ScheduleEditor } from "../useScheduleEditor";
 
-/**
- * The sections the grid cannot place because they have no meeting time.
- * Each is a chip that selects its section, so the sheet opens for it just
- * as it does for a block.
- */
 defineProps<{
   sections: SisSection[];
   selectedSectionId: number | null;

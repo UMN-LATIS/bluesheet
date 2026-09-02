@@ -1,20 +1,12 @@
-/**
- * Turns the sections the page holds into the meetings the grid draws, and
- * keeps the way back: each placed meeting's id looks up its section, so a
- * block can be labeled without the grid ever learning what a section is.
- */
-
 import type { Meeting, PlannedSection, SisDay } from "../types";
 import { WEEK_DAYS } from "../types";
 import { END_MINUTE, minutesFromClock, START_MINUTE } from "./timeScale";
 
-/** The days the grid has columns for, in column order. */
 export const GRID_DAYS: SisDay[] = WEEK_DAYS.slice(0, 5);
 
 /**
- * A block's name, derived rather than minted, so it survives any rewrite of
- * the section's patterns and any refetch. A section cannot meet twice on one
- * day at one time, which is what makes these three enough.
+ * Derived, not minted, so the id survives refetches; a section cannot meet
+ * twice at one day and time.
  */
 export const meetingIdOf = (
   sectionId: number,
@@ -25,13 +17,8 @@ export const meetingIdOf = (
 export interface PlacedSections {
   meetings: Meeting[];
   sectionsByMeetingId: Map<string, PlannedSection>;
-  /** Sections with no meeting time, which the tray lists instead. */
   unscheduled: PlannedSection[];
-  /**
-   * Meetings the grid has no room for: weekend days, or times outside its
-   * hours. The page says so when this is not zero, so a missing block reads
-   * as a known gap rather than a bug.
-   */
+  /** Meetings on weekends or outside the grid's hours, which are not drawn. */
   outsideGridCount: number;
 }
 
@@ -42,8 +29,7 @@ export function placeSections(sections: PlannedSection[]): PlacedSections {
   let outsideGridCount = 0;
 
   for (const section of sections) {
-    // A crosslisted class is one block, drawn by its primary; the partner
-    // sections are the same class under another number.
+    // a crosslisted class is drawn once, by its primary section
     if (section.crosslist && !section.crosslist.isPrimary) continue;
 
     if (section.meetings.length === 0) {

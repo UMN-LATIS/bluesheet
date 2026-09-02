@@ -1,12 +1,7 @@
 <template>
   <!--
-    One group is one flex item in the sidebar's column. A short group (a
-    handful of section types, or a search narrowed to a few names) is as
-    tall as its rows, so every row is in view. The long lists split the
-    rest of the column evenly, each scrolling inside itself, rather than
-    the longest (259 sections) swallowing the column. `min-h-8` is the
-    header's height: whatever the split, no header is ever squeezed out of
-    view.
+    Short groups take their natural height; long ones split the rest of
+    the column and scroll inside. `min-h-8` keeps every header in view.
   -->
   <section
     class="tw-flex tw-min-h-8 tw-flex-col"
@@ -55,15 +50,12 @@ import { ref } from "vue";
 
 defineProps<{
   title: string;
-  /** How many things the group lists in all, shown on the header. */
   count: number;
-  /** How many of them are checked; the Clear button appears once any are. */
   checkedCount: number;
 }>();
 
 const emit = defineEmits<{ clear: [] }>();
 
-/** A group with this many rows or fewer shows them all instead of scrolling. */
 const SHORT_GROUP_MAX_ROWS = 8;
 
 const isOpen = ref(true);

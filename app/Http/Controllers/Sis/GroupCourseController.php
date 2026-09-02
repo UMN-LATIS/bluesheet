@@ -11,13 +11,8 @@ use Illuminate\Support\Collection;
 
 class GroupCourseController extends Controller {
     /**
-     * Every course a group's department has ever taught, for the filter
-     * sidebar and the section picker.
-     *
-     * A course is identified by its code and component together, because
-     * one course commonly offers both lectures and discussions and they are
-     * scheduled as separate things. Title and credits drift over the years,
-     * so the most recent offering speaks for the course.
+     * Every course the department has ever taught, keyed by course code
+     * and component, with title and credits from its latest offering.
      */
     public function index(Group $group) {
         $this->authorize('viewAnyCoursesForGroup', [Course::class, $group]);
@@ -37,7 +32,6 @@ class GroupCourseController extends Controller {
 
     /**
      * @param Collection<SisClassSection> $offerings ordered most recent first
-     * @return Collection<SisClassSection>
      */
     private static function latestOfferings(Collection $offerings): Collection {
         return $offerings

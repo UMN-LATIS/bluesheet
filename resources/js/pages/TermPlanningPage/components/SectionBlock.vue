@@ -1,10 +1,5 @@
 <template>
   <div class="tw-relative tw-overflow-hidden tw-leading-tight">
-    <!--
-      This section no longer reads as the SIS has it. Local edits are lost on
-      refresh, so the grid has to say which of its blocks are the user's own
-      work rather than the term as it stands.
-    -->
     <span
       v-if="isEdited"
       class="tw-absolute tw-right-0 tw-top-0.5 tw-h-2 tw-w-2 tw-rounded-full tw-bg-accent tw-ring-1 tw-ring-inset tw-ring-black/20"
@@ -23,45 +18,28 @@ import { computed } from "vue";
 import { formatTimeRange } from "../helpers/timeScale";
 import type { SisSection } from "../types";
 
-/**
- * What one section's block says. Where it sits, and how it responds to the
- * pointer, stay `MeetingBlock`'s business.
- */
 const props = defineProps<{
   section: SisSection;
-  /** The lane width the day's packing left this block, in pixels. */
   width: number;
-  /**
-   * When the block meets, as the grid has it rather than as the section
-   * stores it, so a block dragged to a new time prints the time it now
-   * shows at.
-   */
+  /** As drawn on the grid, which may differ from the section's saved times. */
   startMinute: number;
   endMinute: number;
-  /** Whether this section carries edits made in this browser. */
   isEdited?: boolean;
 }>();
 
 /**
- * Two lanes of a day's base width. At or above it a block has room to name
- * the kind of meeting it is as well as who teaches it; below, the lane goes
- * to the instructor's name, which is the longer of the two.
+ * At or above this lane width there is room
+ * for the meeting type beside the instructor.
  */
 const WIDE_LANE_WIDTH = 120;
 
 const isWide = computed(() => props.width >= WIDE_LANE_WIDTH);
 
-/**
- * Both halves of what a scheduler calls a class: "3005W · 001". Two
- * sections of one course sit side by side in the same hour, so the catalog
- * number alone does not say which block is which.
- */
 const heading = computed(
   () =>
     `${props.section.subject} ${props.section.catalogNumber} · ${props.section.section}`,
 );
 
-/** The principal instructor: the one a scheduler scans the grid for. */
 const leadInstructor = computed(
   () =>
     props.section.instructors.find(({ role }) => role === "PI") ??
@@ -75,11 +53,7 @@ const byline = computed(() => {
   return isWide.value ? `${props.section.component} ${name}` : name;
 });
 
-/**
- * Three stacked lines and the block's padding need about this much height.
- * A shorter meeting keeps its identity and drops its times, which its place
- * on the grid gives anyway.
- */
+/** Below this many minutes tall, the times are dropped. */
 const THREE_LINE_MINUTES = 50;
 
 const hasRoomForTimes = computed(

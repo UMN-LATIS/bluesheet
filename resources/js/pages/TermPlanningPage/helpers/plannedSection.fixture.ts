@@ -1,8 +1,3 @@
-/**
- * A section for tests to build on, so each one states only the field it is
- * about. Not used by the app.
- */
-
 import type { PlannedSection, SisSectionMeeting } from "../types";
 
 export const plannedSection = (
