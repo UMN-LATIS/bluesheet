@@ -127,34 +127,42 @@ export default {
       department: true,
     };
   },
+  watch: {
+    users: "loadFromProps",
+    groupId: "loadFromProps",
+  },
   mounted() {
     usePageTitle('Users');
-    if (this.users) {
-      this.loadUsers(this.users);
-    }
-    if (this.groupId) {
-      axios.get("/api/group/" + this.groupId).then((res) => {
-        this.group = res.data;
-        this.group.members = [];
-        axios
-          .get("/api/group/" + this.groupId + "/members")
-          .then((res) => {
-            this.group.members = res.data;
-            var users = this.group.members
-              .filter(
-                (e) => e.end_date == null || dayjs(e.end_date).isAfter(dayjs()),
-              )
-              .map((elem) => elem.user.id);
-            this.loadUsers(users);
-          })
-          .catch((err) => {
-            this.error = err.response.data;
-          });
-      });
-    }
+    this.loadFromProps();
   },
   methods: {
     dayjs,
+    loadFromProps() {
+      if (this.users) {
+        this.loadUsers(this.users);
+      }
+      if (this.groupId) {
+        axios.get("/api/group/" + this.groupId).then((res) => {
+          this.group = res.data;
+          this.group.members = [];
+          axios
+            .get("/api/group/" + this.groupId + "/members")
+            .then((res) => {
+              this.group.members = res.data;
+              var users = this.group.members
+                .filter(
+                  (e) =>
+                    e.end_date == null || dayjs(e.end_date).isAfter(dayjs()),
+                )
+                .map((elem) => elem.user.id);
+              this.loadUsers(users);
+            })
+            .catch((err) => {
+              this.error = err.response.data;
+            });
+        });
+      }
+    },
     loadUsers(userList) {
       axios
         .post("/api/user/lookup", {

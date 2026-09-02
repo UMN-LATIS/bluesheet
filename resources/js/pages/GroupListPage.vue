@@ -148,6 +148,9 @@ export default {
     },
   },
   watch: {
+    parent: function () {
+      this.loadGroups();
+    },
     searchTerm: function () {
       if (this.searchTerm.length > 0) {
         this.filterListBySearchTerm();

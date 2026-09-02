@@ -101,7 +101,9 @@ const filteredMembers = computed(() => {
   );
 });
 
-const roleFavorited = userStore.isRoleFavorited(props.roleId);
+const roleFavorited = computed(() =>
+  userStore.currentRoleFavorites.some((r) => r.id === props.roleId),
+);
 
 watch(
   () => state.role,
