@@ -1,6 +1,6 @@
 <template>
   <div>
-    <RouterView :key="$route.fullPath" />
+    <RouterView />
     <Teleport to="body">
       <ErrorModal />
     </Teleport>
