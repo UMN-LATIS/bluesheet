@@ -10,7 +10,7 @@
       >
         <i
           class="fa-star"
-          :class="{ fas: roleFavorited, far: !roleFavorited }"
+          :class="{ fas: isRoleFavorited, far: !isRoleFavorited }"
         ></i>
         Favorite
       </button>
@@ -101,7 +101,9 @@ const filteredMembers = computed(() => {
   );
 });
 
-const roleFavorited = computed(() =>
+// not userStore.isRoleFavorited: it fixes roleId at call time,
+// and props.roleId changes when RouterView reuses this page
+const isRoleFavorited = computed(() =>
   userStore.currentRoleFavorites.some((r) => r.id === props.roleId),
 );
 
@@ -115,11 +117,18 @@ watch(
 
 watch(
   () => props.roleId,
-  async () => {
+  async (roleId, _previousRoleId, onCleanup) => {
+    // drop the response if roleId changed again while it was in flight
+    let isStale = false;
+    onCleanup(() => {
+      isStale = true;
+    });
+
     const [role, parentOrganizations] = await Promise.all([
-      roleStore.fetchRole(props.roleId),
+      roleStore.fetchRole(roleId),
       roleStore.fetchParentOrganizations(),
     ]);
+    if (isStale) return;
 
     state.role = role;
     state.parentOrganizations = remapParents(parentOrganizations);
