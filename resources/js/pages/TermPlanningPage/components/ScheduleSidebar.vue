@@ -59,7 +59,11 @@
       />
     </div>
 
-    <div class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col">
+    <!--
+      Short groups keep their full height, so several of them at once can
+      outgrow the column; then the column scrolls rather than clipping.
+    -->
+    <div class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-overflow-y-auto">
       <FilterGroup
         v-if="courseLevels.length > 0"
         title="Courses"

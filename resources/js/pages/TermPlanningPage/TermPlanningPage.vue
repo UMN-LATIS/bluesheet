@@ -1,7 +1,7 @@
 <template>
   <FullScreenLayout>
     <div
-      class="tw-flex tw-h-9 tw-flex-none tw-items-center tw-justify-between tw-bg-surface-bright tw-px-3 tw-text-sm tw-text-on-surface"
+      class="tw-flex tw-h-9 tw-flex-none tw-items-center tw-justify-between tw-bg-surface tw-px-3 tw-text-sm tw-text-on-surface tw-border-b tw-border tw-border-outline-variant"
     >
       <Breadcrumbs :crumbs="crumbs" />
 

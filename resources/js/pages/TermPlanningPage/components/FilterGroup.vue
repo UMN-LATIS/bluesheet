@@ -1,16 +1,18 @@
 <template>
   <!--
-    One group is one flex item in the sidebar's column, and the open groups
-    divide the column between them. Each grows in proportion to its row
-    count up to a cap, so a five-row Type list takes a small share and the
-    long lists split the rest evenly rather than the longest (259 sections)
-    swallowing the column. `min-h-8` is the header's height: whatever the
-    split, no header is ever squeezed out of view. Only the body scrolls.
+    One group is one flex item in the sidebar's column. A short group (a
+    handful of section types, or a search narrowed to a few names) is as
+    tall as its rows, so every row is in view. The long lists split the
+    rest of the column evenly, each scrolling inside itself, rather than
+    the longest (259 sections) swallowing the column. `min-h-8` is the
+    header's height: whatever the split, no header is ever squeezed out of
+    view.
   -->
   <section
     class="tw-flex tw-min-h-8 tw-flex-col"
-    :class="isOpen ? 'tw-shrink tw-basis-0' : 'tw-flex-none'"
-    :style="isOpen ? { flexGrow: Math.min(count, GROW_CAP) } : undefined"
+    :class="
+      isOpen && count > SHORT_GROUP_MAX_ROWS ? 'tw-flex-1' : 'tw-flex-none'
+    "
   >
     <div
       class="tw-flex tw-h-8 tw-flex-none tw-items-center tw-gap-2 tw-bg-surface-container-high tw-pr-3 tw-text-xs tw-text-on-surface"
@@ -61,8 +63,8 @@ defineProps<{
 
 const emit = defineEmits<{ clear: [] }>();
 
-/** Rows beyond this earn a group no more of the column. */
-const GROW_CAP = 10;
+/** A group with this many rows or fewer shows them all instead of scrolling. */
+const SHORT_GROUP_MAX_ROWS = 8;
 
 const isOpen = ref(true);
 </script>
