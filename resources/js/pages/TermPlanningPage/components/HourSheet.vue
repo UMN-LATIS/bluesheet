@@ -57,8 +57,17 @@
               {{ entry.section.component }} · {{ instructorOf(entry.section) }}
             </span>
           </span>
-          <span class="tw-flex-none tw-text-neutral-500">
-            {{ formatTimeRange(entry.startMinute, entry.endMinute) }}
+          <span class="tw-flex-none tw-text-right tw-text-neutral-500">
+            <span class="tw-block">
+              {{ formatTimeRange(entry.startMinute, entry.endMinute) }}
+            </span>
+            <span
+              class="tw-block tw-tabular-nums"
+              :title="`${entry.section.enrollmentTotal} enrolled of a cap of ${entry.section.enrollmentCap}`"
+            >
+              {{ entry.section.enrollmentTotal }} /
+              {{ entry.section.enrollmentCap }}
+            </span>
           </span>
         </button>
       </li>
