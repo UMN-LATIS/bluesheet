@@ -64,7 +64,7 @@
         uses: what it holds is a count of sections, not a density of hours.
       -->
       <div
-        class="tw-ml-1.5 tw-flex tw-w-[142px] tw-flex-none tw-flex-col tw-gap-1.5 tw-border-0 tw-border-l tw-border-dashed tw-border-outline-variant tw-pl-3"
+        class="tw-ml-1.5 tw-flex tw-w-[88px] tw-flex-none tw-flex-col tw-gap-1.5 tw-border-0 tw-border-l tw-border-dashed tw-border-outline-variant tw-pl-3 cramped:tw-w-[142px]"
       >
         <div
           class="tw-flex tw-h-6 tw-flex-none tw-items-center tw-justify-center tw-text-[12.5px] tw-font-bold tw-tracking-[0.04em] tw-text-on-surface-variant"
@@ -95,7 +95,7 @@
     </div>
 
     <div
-      class="tw-flex tw-flex-none tw-items-center tw-gap-3 tw-px-4 tw-pb-3.5 tw-pt-2.5"
+      class="tw-flex tw-flex-none tw-flex-wrap tw-items-center tw-gap-x-3 tw-gap-y-1.5 tw-px-4 tw-pb-3.5 tw-pt-2.5"
     >
       <span class="tw-text-[11px] tw-text-on-surface-variant">Fewer</span>
       <div class="tw-flex tw-gap-[3px]">

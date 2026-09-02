@@ -2,16 +2,16 @@
   <FullScreenLayout>
     <template #bar>
       <div class="tw-flex tw-min-w-0 tw-items-baseline tw-gap-2">
+        <!-- On a phone the department and the view switch say where you
+             are, and the bar has no width for a title as well. -->
         <span
-          class="tw-truncate tw-text-[15px] tw-font-semibold tw-tracking-tight cramped:tw-text-base roomy:tw-text-[17px]"
+          class="tw-hidden tw-truncate tw-text-[15px] tw-font-semibold tw-tracking-tight cramped:tw-block cramped:tw-text-base roomy:tw-text-[17px]"
         >
           Term Planning
         </span>
         <!-- A scheduler covering several departments moves between them
              here, rather than through the group page and back. -->
-        <label
-          class="tw-m-0 tw-hidden tw-min-w-0 tw-font-normal cramped:tw-block"
-        >
+        <label class="tw-m-0 tw-min-w-0 tw-font-normal">
           <span class="tw-sr-only">Department</span>
           <select
             class="tw-max-w-[15rem] tw-cursor-pointer tw-truncate tw-border-none tw-bg-transparent tw-p-0 tw-text-[13px] tw-text-on-surface-variant hover:tw-text-on-surface"
@@ -45,12 +45,10 @@
           "
           :aria-expanded="isFilterPanelOpen"
           aria-label="Filters"
+          title="Filters"
           @click="isFilterPanelOpen = true"
         >
           <FilterIcon aria-hidden="true" />
-          <!-- The icon carries the meaning where the bar is tight; the
-               button keeps its name for a screen reader either way. -->
-          <span class="tw-hidden cramped:tw-inline">Filters</span>
           <span
             v-if="activeFilterCount > 0"
             class="tw-rounded-full tw-bg-primary tw-px-1.5 tw-text-[10px] tw-leading-4 tw-text-on-primary"
@@ -59,25 +57,25 @@
           </span>
         </button>
 
-        <!-- A week of lanes cannot be read on a phone, so the day list is
-             the only view offered and there is nothing to switch between. -->
+        <!-- A week of lanes cannot be read on a phone, so that one option
+             drops out; the switch itself stays, since the day list and the
+             heatmap are both worth having there. -->
         <div
-          v-if="!isSmall"
           role="group"
           aria-label="View"
           class="tw-inline-flex tw-gap-0.5 tw-rounded-full tw-bg-outline-variant tw-p-0.5"
         >
           <button
-            v-for="option in VIEW_OPTIONS"
+            v-for="option in viewOptions"
             :key="option.value"
             type="button"
             class="tw-cursor-pointer tw-rounded-full tw-border-none tw-px-3.5 tw-py-1.5 tw-text-xs tw-font-semibold"
             :class="
-              view === option.value
+              activeView === option.value
                 ? 'tw-bg-surface-bright tw-text-on-surface tw-shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
                 : 'tw-bg-transparent tw-text-on-surface-variant hover:tw-text-on-surface'
             "
-            :aria-pressed="view === option.value"
+            :aria-pressed="activeView === option.value"
             @click="view = option.value"
           >
             {{ option.label }}
@@ -96,7 +94,7 @@
               :key="option.id"
               :value="option.id"
             >
-              {{ option.name }}{{ isCurrent(option) ? " – Current" : "" }}
+              {{ labelOfTerm(option) }}
             </option>
           </select>
         </label>
@@ -369,6 +367,10 @@ const VIEW_OPTIONS: { value: ScheduleView; label: string }[] = [
   { value: "heatmap", label: "Heatmap" },
 ];
 
+const viewOptions = computed(() =>
+  VIEW_OPTIONS.filter((option) => !(isSmall.value && option.value === "week")),
+);
+
 const VIEW_LABELS: Record<ScheduleView, string> = {
   day: "Day",
   week: "Week",
@@ -392,8 +394,9 @@ const view = computed<ScheduleView>({
     ),
 });
 
+/** The week is the one view a phone cannot draw; the day list stands in. */
 const activeView = computed<ScheduleView>(() =>
-  isSmall.value ? "day" : view.value,
+  isSmall.value && view.value === "week" ? "day" : view.value,
 );
 
 /** Monday through Friday, then the sections with no meeting time. */
@@ -486,9 +489,21 @@ const departmentOptions = computed<SisGroup[]>(() => {
     : departments;
 });
 
-/** "PSY - Psychology", or whichever half the group has. */
-const labelOfDepartment = ({ name, abbreviation }: SisGroup) =>
-  [abbreviation, name].filter(Boolean).join(" - ") || "Department";
+/**
+ * "PSY - Psychology", or the code alone where the bar is too tight to spell it
+ * out. Whichever half the group has, when it has only one.
+ */
+const labelOfDepartment = ({ name, abbreviation }: SisGroup) => {
+  if (isSmall.value && abbreviation) return abbreviation;
+
+  return [abbreviation, name].filter(Boolean).join(" - ") || "Department";
+};
+
+/** The term we are in is marked, unless the mark costs the bar too much. */
+const labelOfTerm = (option: SisTerm) =>
+  !isSmall.value && isCurrent(option)
+    ? `${option.name} – Current`
+    : option.name;
 
 // The filters and any open sheet name this department's own courses and
 // sections, so they are left behind. The view and the day are not: they are

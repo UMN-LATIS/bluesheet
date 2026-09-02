@@ -1,7 +1,8 @@
 <!--
-  A wrapping list of sections with no meeting time. The week grid's Async
-  column and the day view's Async tab both show the same list, so this makes
-  no assumptions about the width or height of whatever contains it.
+  The sections with no meeting time. The week grid's Async column and the day
+  view's Async tab both show the same list, so this makes no assumptions about
+  the width or height of whatever contains it: the column asks for three to a
+  row, and the tab, which is as wide as the canvas, lets them wrap.
 -->
 <template>
   <p
@@ -13,12 +14,17 @@
 
   <ul
     v-else
-    class="tw-m-0 tw-flex tw-list-none tw-flex-wrap tw-content-start tw-gap-1.5 tw-p-0"
+    class="tw-m-0 tw-list-none tw-gap-1.5 tw-p-0"
+    :class="
+      layout === 'columns'
+        ? 'tw-grid tw-grid-cols-3'
+        : 'tw-flex tw-flex-wrap tw-content-start'
+    "
   >
-    <li v-for="section in sections" :key="section.id">
+    <li v-for="section in sections" :key="section.id" class="tw-min-w-0">
       <button
         type="button"
-        class="tw-flex tw-cursor-pointer tw-items-center tw-gap-[7px] tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-border-l-[3px] tw-py-[3px] tw-pl-3 tw-pr-[5px] tw-text-[11px] tw-leading-tight tw-text-on-surface hover:tw-border-outline"
+        class="tw-flex tw-w-full tw-cursor-pointer tw-items-center tw-gap-[7px] tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-border-l-[3px] tw-py-[3px] tw-pl-3 tw-pr-[5px] tw-text-[11px] tw-leading-tight tw-text-on-surface hover:tw-border-outline"
         :class="[
           colorOfType(section.component).tint,
           colorOfType(section.component).rail,
@@ -34,7 +40,7 @@
         :aria-pressed="section.id === selectedSectionId"
         @click="schedule.selectSection(section.id)"
       >
-        <span class="tw-whitespace-nowrap tw-font-semibold">
+        <span class="tw-min-w-0 tw-truncate tw-font-semibold">
           {{ section.subject }} {{ section.catalogNumber }} ·
           {{ section.section }}
         </span>
@@ -62,11 +68,16 @@ import { colorOfType } from "../constants/meetingTypeColors";
 import type { PlannedSection, SisInstructor } from "../types";
 import type { ScheduleEditor } from "../useScheduleEditor";
 
-defineProps<{
-  sections: PlannedSection[];
-  selectedSectionId: number | null;
-  schedule: ScheduleEditor;
-}>();
+withDefaults(
+  defineProps<{
+    sections: PlannedSection[];
+    selectedSectionId: number | null;
+    schedule: ScheduleEditor;
+    /** "columns" fits three to a row, whatever the codes on them run to. */
+    layout?: "wrap" | "columns";
+  }>(),
+  { layout: "wrap" },
+);
 
 const leadInstructorOf = (section: PlannedSection): SisInstructor | undefined =>
   section.instructors.find(({ role }) => role === "PI") ??

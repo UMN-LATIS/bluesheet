@@ -55,11 +55,15 @@ const LAB: MeetingTypeColor = {
   badge: "tw-bg-violet-50 tw-border-violet-400",
 };
 
-/** Everything else the SIS names: IND, FWK, and a block with no class yet. */
+/**
+ * Everything else the SIS names: IND, FWK, and a block with no class yet. Its
+ * fill is a cool grey rather than white, or a field-work block would have no
+ * edge against the white of the grid it sits on.
+ */
 export const OTHER_TYPE_COLOR: MeetingTypeColor = {
   code: "",
   label: "Other",
-  tint: "tw-bg-surface-bright",
+  tint: "tw-bg-slate-100",
   rail: "tw-border-l-slate-300",
   dot: "tw-bg-slate-300",
   badge: "tw-bg-surface-container tw-border-outline",

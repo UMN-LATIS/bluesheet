@@ -74,6 +74,7 @@
               :sections="unscheduled"
               :selectedSectionId="selectedSectionId"
               :schedule="schedule"
+              layout="columns"
             />
           </div>
         </div>
