@@ -99,6 +99,7 @@
                 v-if="sectionOf(meeting.id)"
                 :section="sectionOf(meeting.id)!"
                 :width="width"
+                :isEdited="schedule.hasEdits(sectionOf(meeting.id)!.id)"
                 :startMinute="meeting.startMinute"
                 :endMinute="meeting.endMinute"
               />

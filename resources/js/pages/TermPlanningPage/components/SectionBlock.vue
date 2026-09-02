@@ -1,5 +1,15 @@
 <template>
-  <div class="tw-overflow-hidden tw-leading-tight">
+  <div class="tw-relative tw-overflow-hidden tw-leading-tight">
+    <!--
+      This section no longer reads as the SIS has it. Local edits are lost on
+      refresh, so the grid has to say which of its blocks are the user's own
+      work rather than the term as it stands.
+    -->
+    <span
+      v-if="isEdited"
+      class="tw-absolute tw-right-0 tw-top-0.5 tw-h-1.5 tw-w-1.5 tw-rounded-full tw-bg-neutral-700"
+      title="Edited here, not saved anywhere"
+    />
     <div class="tw-truncate tw-font-semibold">{{ heading }}</div>
     <div class="tw-truncate">{{ byline }}</div>
     <div v-if="hasRoomForTimes" class="tw-truncate tw-opacity-50">
@@ -28,6 +38,8 @@ const props = defineProps<{
    */
   startMinute: number;
   endMinute: number;
+  /** Whether this section carries edits made in this browser. */
+  isEdited?: boolean;
 }>();
 
 /**

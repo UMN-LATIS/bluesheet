@@ -54,7 +54,7 @@
     </div>
 
     <div
-      class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-gap-4 tw-overflow-y-auto tw-p-4"
+      class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-gap-4 tw-overflow-y-auto tw-p-4 tw-text-sm"
     >
       <div>
         <label :for="fieldId('section')" :class="LABEL_CLASS">

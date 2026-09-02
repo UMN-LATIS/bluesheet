@@ -18,6 +18,10 @@ dist
 cache
 .temp
 
+# Cypress writes these on every run
+/tests/cypress/screenshots
+/tests/cypress/videos
+
 # ignore phpunit caches
 .phpunit.*
 auth.json
