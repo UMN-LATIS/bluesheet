@@ -1,7 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { initialState, update } from "./update";
-import type { Meeting } from "../types";
-import type { EditorEvent, EditorState } from "./types";
+import { placeSections } from "../helpers/sectionPlacement";
+import { plannedSection } from "../helpers/plannedSection.fixture";
+import type { EditorEvent, EditorState, ScheduleContext } from "./types";
+
+/** Nothing on the grid, for the tests that draw their own blocks. */
+const emptyContext: ScheduleContext = { meetings: [], sections: [] };
+
+/**
+ * The context the page hands in: sections with this browser's edits already
+ * in them, placed. Built through `placeSections` so the block ids under test
+ * are the ones the grid really uses.
+ */
+const contextOf = (...sections: ReturnType<typeof plannedSection>[]) => ({
+  meetings: placeSections(sections).meetings,
+  sections,
+});
 
 /**
  * A stand-in for `crypto.randomUUID` that counts, so a placeholder meeting
@@ -15,11 +29,11 @@ const countingUuids = () => {
 const after = (
   events: EditorEvent[],
   state: EditorState = initialState(),
-  base: Meeting[] = [],
+  context: ScheduleContext = emptyContext,
 ) => {
   const deps = countingUuids();
   return events.reduce(
-    (current, event) => update(current, event, base, deps).state,
+    (current, event) => update(current, event, context, deps).state,
     state,
   );
 };
@@ -39,7 +53,13 @@ describe("drawing", () => {
     ]);
 
     expect(state.placeholderMeetings).toEqual([
-      { id: "local-1", dayIndex: 0, startMinute: 600, endMinute: 650 },
+      {
+        id: "local-1",
+        dayIndex: 0,
+        sectionId: null,
+        startMinute: 600,
+        endMinute: 650,
+      },
     ]);
   });
 
@@ -47,7 +67,13 @@ describe("drawing", () => {
     const state = after(draw(2, 600, 675));
 
     expect(state.placeholderMeetings).toEqual([
-      { id: "local-1", dayIndex: 2, startMinute: 600, endMinute: 675 },
+      {
+        id: "local-1",
+        dayIndex: 2,
+        sectionId: null,
+        startMinute: 600,
+        endMinute: 675,
+      },
     ]);
   });
 
@@ -104,7 +130,13 @@ describe("moving", () => {
     const state = after([...grabbed, { type: "released" }], oneMeeting);
 
     expect(state.placeholderMeetings).toEqual([
-      { id: "local-1", dayIndex: 2, startMinute: 700, endMinute: 750 },
+      {
+        id: "local-1",
+        dayIndex: 2,
+        sectionId: null,
+        startMinute: 700,
+        endMinute: 750,
+      },
     ]);
     expect(state.interaction).toEqual({ status: "idle" });
   });
@@ -152,7 +184,13 @@ describe("resizing", () => {
     );
 
     expect(state.placeholderMeetings).toEqual([
-      { id: "local-1", dayIndex: 1, startMinute: 540, endMinute: 645 },
+      {
+        id: "local-1",
+        dayIndex: 1,
+        sectionId: null,
+        startMinute: 540,
+        endMinute: 645,
+      },
     ]);
   });
 
@@ -248,89 +286,130 @@ describe("naming the meeting a gesture placed", () => {
   });
 });
 
-describe("editing the server's schedule", () => {
-  const base: Meeting[] = [
-    { id: "s1:0:mon", dayIndex: 0, startMinute: 540, endMinute: 590 },
-  ];
+describe("dragging a section's block", () => {
+  /** One section, Mon and Wed at 9, so a drag has a pattern to break up. */
+  const monAndWed = () =>
+    plannedSection(1, [
+      { days: ["mon", "wed"], startTime: "09:00", endTime: "09:50" },
+    ]);
 
-  const move = (toDay: number, toMinute: number): EditorEvent[] => [
-    { type: "pressedMeeting", meetingId: "s1:0:mon", minute: 550 },
+  const context = () => contextOf(monAndWed());
+
+  const move = (
+    meetingId: string,
+    toDay: number,
+    toMinute: number,
+  ): EditorEvent[] => [
+    { type: "pressedMeeting", meetingId, minute: 550 },
     { type: "pointerMoved", dayIndex: toDay, minute: toMinute },
     { type: "released" },
   ];
 
-  it("moving a base meeting writes an override, not a drawn meeting", () => {
-    const state = after(move(2, 710), initialState(), base);
+  it("writes the section's patterns, not a placement of its own", () => {
+    const state = after(move("s1:mon:0900", 3, 710), initialState(), context());
 
     expect(state.placeholderMeetings).toEqual([]);
-    expect(state.overrides).toEqual({
-      "s1:0:mon": { dayIndex: 2, startMinute: 700, endMinute: 750 },
+    expect(state.sectionEdits).toEqual({
+      1: {
+        meetings: [
+          { days: ["wed"], startTime: "09:00", endTime: "09:50" },
+          { days: ["thu"], startTime: "11:40", endTime: "12:30" },
+        ],
+      },
     });
   });
 
-  it("a second grab picks the meeting up where the user last put it", () => {
-    const moved = after(move(2, 710), initialState(), base);
+  it("a second grab picks the block up where the user last put it", () => {
+    const moved = after(move("s1:mon:0900", 3, 710), initialState(), context());
+    const afterMove = contextOf(
+      plannedSection(1, moved.sectionEdits[1].meetings!),
+    );
+
     const state = after(
       [
-        // A press with no drag: the commit re-writes the current placement.
-        { type: "pressedMeeting", meetingId: "s1:0:mon", minute: 710 },
+        // A press with no drag: the commit re-states the current placement.
+        { type: "pressedMeeting", meetingId: "s1:thu:1140", minute: 1180 },
         { type: "released" },
       ],
       moved,
-      base,
+      afterMove,
     );
 
-    expect(state.overrides["s1:0:mon"]).toMatchObject({
-      dayIndex: 2,
-      startMinute: 700,
-      endMinute: 750,
+    expect(state.selection).toEqual({
+      kind: "meeting",
+      meetingId: "s1:thu:1140",
     });
   });
 
-  it("resizing a base meeting also lands in the overrides", () => {
+  it("resizing states that day separately at its new length", () => {
     const state = after(
       [
         {
           type: "pressedMeetingEdge",
-          meetingId: "s1:0:mon",
+          meetingId: "s1:wed:0900",
           edge: "end",
           minute: 590,
         },
-        { type: "pointerMoved", dayIndex: 0, minute: 645 },
+        { type: "pointerMoved", dayIndex: 2, minute: 645 },
         { type: "released" },
       ],
       initialState(),
-      base,
+      context(),
     );
 
-    expect(state.overrides).toEqual({
-      "s1:0:mon": { dayIndex: 0, startMinute: 540, endMinute: 645 },
+    expect(state.sectionEdits[1].meetings).toEqual([
+      { days: ["mon"], startTime: "09:00", endTime: "09:50" },
+      { days: ["wed"], startTime: "09:00", endTime: "10:45" },
+    ]);
+  });
+
+  it("the drop flash and the selection follow the block to its new name", () => {
+    const selected = after(
+      [
+        { type: "pressedMeeting", meetingId: "s1:mon:0900", minute: 550 },
+        { type: "released" },
+      ],
+      initialState(),
+      context(),
+    );
+
+    const state = after(move("s1:mon:0900", 3, 710), selected, context());
+
+    expect(state.lastPlacedId).toBe("s1:thu:1140");
+    expect(state.selection).toEqual({
+      kind: "meeting",
+      meetingId: "s1:thu:1140",
     });
   });
 });
 
 describe("selecting", () => {
-  const base: Meeting[] = [
-    { id: "s1:0:mon", dayIndex: 0, startMinute: 540, endMinute: 590 },
-  ];
+  const base = contextOf(
+    plannedSection(1, [
+      { days: ["mon"], startTime: "09:00", endTime: "09:50" },
+    ]),
+  );
 
   const click = (): EditorEvent[] => [
-    { type: "pressedMeeting", meetingId: "s1:0:mon", minute: 550 },
+    { type: "pressedMeeting", meetingId: "s1:mon:0900", minute: 550 },
     { type: "released" },
   ];
 
   it("a press and release with no move selects the meeting", () => {
     const state = after(click(), initialState(), base);
 
-    expect(state.selection).toEqual({ kind: "meeting", meetingId: "s1:0:mon" });
-    expect(state.overrides).toEqual({});
+    expect(state.selection).toEqual({
+      kind: "meeting",
+      meetingId: "s1:mon:0900",
+    });
+    expect(state.sectionEdits).toEqual({});
     expect(state.lastPlacedId).toBeNull();
   });
 
   it("a wobble under the drag threshold is still a click", () => {
     const state = after(
       [
-        { type: "pressedMeeting", meetingId: "s1:0:mon", minute: 550 },
+        { type: "pressedMeeting", meetingId: "s1:mon:0900", minute: 550 },
         { type: "pointerMoved", dayIndex: 0, minute: 556 },
         { type: "released" },
       ],
@@ -338,15 +417,18 @@ describe("selecting", () => {
       base,
     );
 
-    expect(state.selection).toEqual({ kind: "meeting", meetingId: "s1:0:mon" });
-    expect(state.overrides).toEqual({});
+    expect(state.selection).toEqual({
+      kind: "meeting",
+      meetingId: "s1:mon:0900",
+    });
+    expect(state.sectionEdits).toEqual({});
     expect(state.interaction).toEqual({ status: "idle" });
   });
 
   it("moving past the threshold carries the block", () => {
     const state = after(
       [
-        { type: "pressedMeeting", meetingId: "s1:0:mon", minute: 550 },
+        { type: "pressedMeeting", meetingId: "s1:mon:0900", minute: 550 },
         { type: "pointerMoved", dayIndex: 0, minute: 575 },
         { type: "released" },
       ],
@@ -354,14 +436,14 @@ describe("selecting", () => {
       base,
     );
 
-    expect(state.overrides["s1:0:mon"]).toBeDefined();
+    expect(state.sectionEdits[1]).toBeDefined();
     expect(state.selection).toBeNull();
   });
 
   it("crossing into another day carries it however small the vertical move", () => {
     const state = after(
       [
-        { type: "pressedMeeting", meetingId: "s1:0:mon", minute: 550 },
+        { type: "pressedMeeting", meetingId: "s1:mon:0900", minute: 550 },
         { type: "pointerMoved", dayIndex: 1, minute: 551 },
         { type: "released" },
       ],
@@ -369,14 +451,16 @@ describe("selecting", () => {
       base,
     );
 
-    expect(state.overrides["s1:0:mon"]).toMatchObject({ dayIndex: 1 });
+    expect(state.sectionEdits[1].meetings).toEqual([
+      { days: ["tue"], startTime: "09:00", endTime: "09:50" },
+    ]);
     expect(state.selection).toBeNull();
   });
 
   it("a press, move, and release commits the drag and leaves selection unchanged", () => {
     const state = after(
       [
-        { type: "pressedMeeting", meetingId: "s1:0:mon", minute: 550 },
+        { type: "pressedMeeting", meetingId: "s1:mon:0900", minute: 550 },
         { type: "pointerMoved", dayIndex: 2, minute: 710 },
         { type: "released" },
       ],
@@ -384,9 +468,9 @@ describe("selecting", () => {
       base,
     );
 
-    expect(state.overrides).toEqual({
-      "s1:0:mon": { dayIndex: 2, startMinute: 700, endMinute: 750 },
-    });
+    expect(state.sectionEdits[1].meetings).toEqual([
+      { days: ["wed"], startTime: "11:40", endTime: "12:30" },
+    ]);
     expect(state.selection).toBeNull();
   });
 
@@ -408,7 +492,7 @@ describe("selecting", () => {
     const selected = after(click(), initialState(), base);
     const state = after(
       [
-        { type: "pressedMeeting", meetingId: "s1:0:mon", minute: 550 },
+        { type: "pressedMeeting", meetingId: "s1:mon:0900", minute: 550 },
         { type: "pointerMoved", dayIndex: 2, minute: 710 },
         { type: "cancelled" },
       ],
@@ -416,8 +500,11 @@ describe("selecting", () => {
       base,
     );
 
-    expect(state.selection).toEqual({ kind: "meeting", meetingId: "s1:0:mon" });
-    expect(state.overrides).toEqual({});
+    expect(state.selection).toEqual({
+      kind: "meeting",
+      meetingId: "s1:mon:0900",
+    });
+    expect(state.sectionEdits).toEqual({});
     expect(state.interaction).toEqual({ status: "idle" });
   });
 });
@@ -493,7 +580,12 @@ describe("filtering", () => {
 
   describe("effects", () => {
     it("a change the user makes is synced to the URL", () => {
-      const step = update(initialState(), twoCourses, [], countingUuids());
+      const step = update(
+        initialState(),
+        twoCourses,
+        emptyContext,
+        countingUuids(),
+      );
 
       expect(step.effects).toEqual([
         { type: "syncFiltersToUrl", filters: step.state.filters },
@@ -504,7 +596,7 @@ describe("filtering", () => {
       const step = update(
         initialState(),
         { type: "filtersReplaced", filters: initialState().filters },
-        [],
+        emptyContext,
         countingUuids(),
       );
 
@@ -515,7 +607,7 @@ describe("filtering", () => {
       const step = update(
         initialState(),
         { type: "pressedEmptySpace", dayIndex: 0, minute: 600 },
-        [],
+        emptyContext,
         countingUuids(),
       );
 

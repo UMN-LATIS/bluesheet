@@ -8,9 +8,10 @@
  * and a detail sheet can all read and change the same schedule without the
  * grid standing between them.
  *
- * The base is the server's schedule, owned by the query cache and passed in
- * as a ref. The editor state holds only what this browser changed, so a
- * refetch replaces the base without disturbing the user's edits.
+ * The context is the schedule as it currently stands, owned by the query
+ * cache and passed in as a ref. The editor state holds only what this
+ * browser changed, so a refetch replaces the context underneath without
+ * disturbing the user's edits.
  *
  * Effects run through the `runEffect` the page supplies, since the page owns
  * the router and, later, the API client. They are queued for the next
@@ -19,17 +20,26 @@
  */
 
 import { computed, reactive, type Ref, shallowRef } from "vue";
-import type { FilterFacet, Meeting, ScheduleFilters } from "../types";
-import { mergeSchedule } from "./mergeSchedule";
-import { selectWeekView } from "./selectors";
+import type { FilterFacet, ScheduleFilters, SisSection } from "../types";
+import {
+  selectLocalSection,
+  selectMeetings,
+  selectWeekView,
+} from "./selectors";
 import { initialState, update } from "./update";
-import type { EditorEvent, Effect, HourSelection, MeetingEdge } from "./types";
+import type {
+  EditorEvent,
+  Effect,
+  HourSelection,
+  MeetingEdge,
+  ScheduleContext,
+} from "./types";
 
 /** Everything a component may read or call. */
 export type ScheduleEditor = ReturnType<typeof useScheduleEditor>;
 
 export function useScheduleEditor(
-  base: Readonly<Ref<Meeting[]>>,
+  context: Readonly<Ref<ScheduleContext>>,
   runEffect: (effect: Effect) => void,
 ) {
   // Replaced whole and never mutated, so deep reactivity would be cost with
@@ -37,7 +47,7 @@ export function useScheduleEditor(
   const state = shallowRef(initialState());
 
   const dispatch = (event: EditorEvent) => {
-    const next = update(state.value, event, base.value, {
+    const next = update(state.value, event, context.value, {
       createUuid: () => crypto.randomUUID(),
     });
     state.value = next.state;
@@ -47,8 +57,15 @@ export function useScheduleEditor(
   // Reactive rather than a bag of refs, so no call site writes `.value` and
   // a template reads the editor as plainly as a component's own state.
   return reactive({
-    /** The schedule as the user sees it: the base with this browser's edits over it. */
-    meetings: computed(() => mergeSchedule(base.value, state.value)),
+    /** Every block the grid draws, placeholder times included. */
+    meetings: computed(() => selectMeetings(context.value, state.value)),
+    /**
+     * The sections as the user sees them: the SIS rows with this browser's
+     * edits over them. The page places these, so one edit reaches the grid,
+     * the heatmap, the tray and the sheet at once.
+     */
+    localSections: (sections: SisSection[]) =>
+      sections.map((section) => selectLocalSection(section, state.value)),
     filters: computed(() => state.value.filters),
     selection: computed(() => state.value.selection),
     /** Whether a gesture is under way, which is when a pointer move means something. */
@@ -57,7 +74,7 @@ export function useScheduleEditor(
     ),
     /** Everything the week grid's columns draw, one entry per day. */
     weekView: (dayCount: number) =>
-      selectWeekView(base.value, state.value, dayCount),
+      selectWeekView(context.value, state.value, dayCount),
 
     pressEmptySpace: (dayIndex: number, minute: number) =>
       dispatch({ type: "pressedEmptySpace", dayIndex, minute }),

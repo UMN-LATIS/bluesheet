@@ -132,6 +132,7 @@ const carriedMeeting = computed<Meeting | null>(() => {
     dayIndex: props.dayIndex,
     startMinute: overlay.startMinute,
     endMinute: overlay.endMinute,
+    sectionId: overlay.sectionId,
   };
 });
 </script>

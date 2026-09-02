@@ -1,31 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { placeSections } from "./sectionPlacement";
-import type { SisSection, SisSectionMeeting } from "../types";
-
-const section = (
-  id: number,
-  meetings: SisSectionMeeting[],
-  extra: Partial<SisSection> = {},
-): SisSection => ({
-  id,
-  classNumber: 50000 + id,
-  termId: 1269,
-  courseCode: "ANTH-1001",
-  subject: "ANTH",
-  catalogNumber: "1001",
-  section: "001",
-  title: "Understanding Cultures",
-  component: "LEC",
-  credits: 3,
-  enrollmentCap: 30,
-  enrollmentTotal: 20,
-  waitlistCap: 5,
-  waitlistTotal: 0,
-  instructors: [],
-  meetings,
-  crosslist: null,
-  ...extra,
-});
+import { plannedSection as section } from "./plannedSection.fixture";
+import type { SisSectionMeeting } from "../types";
 
 describe("placeSections", () => {
   it("spreads one meeting pattern over each day it meets", () => {
@@ -36,10 +12,22 @@ describe("placeSections", () => {
     ]);
 
     expect(placed.meetings).toEqual([
-      { id: "s1:0:mon", dayIndex: 0, startMinute: 610, endMinute: 660 },
-      { id: "s1:0:wed", dayIndex: 2, startMinute: 610, endMinute: 660 },
+      {
+        id: "s1:mon:1010",
+        dayIndex: 0,
+        startMinute: 610,
+        endMinute: 660,
+        sectionId: 1,
+      },
+      {
+        id: "s1:wed:1010",
+        dayIndex: 2,
+        startMinute: 610,
+        endMinute: 660,
+        sectionId: 1,
+      },
     ]);
-    expect(placed.sectionsByMeetingId.get("s1:0:mon")?.id).toBe(1);
+    expect(placed.sectionsByMeetingId.get("s1:mon:1010")?.id).toBe(1);
     expect(placed.outsideGridCount).toBe(0);
   });
 
@@ -65,8 +53,8 @@ describe("placeSections", () => {
       }),
     ]);
 
-    expect(placed.meetings.map(({ id }) => id)).toEqual(["s1:0:tue"]);
-    expect(placed.sectionsByMeetingId.get("s1:0:tue")?.id).toBe(1);
+    expect(placed.meetings.map(({ id }) => id)).toEqual(["s1:tue:1300"]);
+    expect(placed.sectionsByMeetingId.get("s1:tue:1300")?.id).toBe(1);
   });
 
   it("a section with no set time goes to the tray, not the grid", () => {
@@ -84,8 +72,27 @@ describe("placeSections", () => {
       ]),
     ]);
 
-    expect(placed.meetings.map(({ id }) => id)).toEqual(["s1:0:fri"]);
+    expect(placed.meetings.map(({ id }) => id)).toEqual(["s1:fri:0900"]);
     expect(placed.outsideGridCount).toBe(1);
+  });
+
+  it("a block is named for where it sits, so a rewrite cannot rename its neighbours", () => {
+    const twoPatterns = [
+      { days: ["mon"], startTime: "09:00", endTime: "09:50" },
+      { days: ["wed"], startTime: "13:00", endTime: "13:50" },
+    ] satisfies SisSectionMeeting[];
+
+    const placed = placeSections([section(1, twoPatterns)]);
+    const reordered = placeSections([section(1, [...twoPatterns].reverse())]);
+
+    expect(placed.meetings.map(({ id }) => id)).toEqual([
+      "s1:mon:0900",
+      "s1:wed:1300",
+    ]);
+    expect(reordered.meetings.map(({ id }) => id)).toEqual([
+      "s1:wed:1300",
+      "s1:mon:0900",
+    ]);
   });
 
   it("meetings outside the grid's hours are counted, not drawn", () => {

@@ -4,11 +4,40 @@
  */
 
 import type {
+  Delivery,
   FilterFacet,
   Meeting,
+  PlannedSection,
   ScheduleFilters,
+  SisInstructor,
+  SisSectionMeeting,
   TimeRange,
 } from "../types";
+
+/**
+ * What `update` reads and never writes: the schedule as it currently stands,
+ * this browser's edits already in it. Context, not state, so nothing the
+ * server sent is stored here twice.
+ */
+export interface ScheduleContext {
+  meetings: Meeting[];
+  sections: PlannedSection[];
+}
+
+/**
+ * One section's unsaved changes. Sparse: a field that is absent has not been
+ * changed, so the SIS value shows through. Every field is stated in full
+ * rather than as a delta, so laying an edit over a section is a plain spread.
+ */
+export interface SectionEdit {
+  section?: string;
+  component?: string;
+  delivery?: Delivery;
+  meetings?: SisSectionMeeting[];
+  instructors?: SisInstructor[];
+  enrollmentCap?: number;
+  notes?: string;
+}
 
 /** Which end of a meeting is being dragged while it is resized. */
 export type MeetingEdge = "start" | "end";
@@ -80,9 +109,9 @@ export interface HourSelection {
 
 /**
  * Only the local edits live here. The schedule itself — the sections the
- * server returned — stays in the query cache, and `mergeSchedule` lays these
- * edits over it. So a refetch can swap the base out underneath without
- * touching anything the user has done.
+ * server returned — stays in the query cache, and `selectLocalSection` lays
+ * these edits over it. So a refetch can swap the sections out underneath
+ * without touching anything the user has done.
  */
 export interface EditorState {
   /**
@@ -90,8 +119,12 @@ export interface EditorState {
    * belonging to no section. They exist nowhere but this browser.
    */
   placeholderMeetings: Meeting[];
-  /** Base meetings the user has dragged or resized, keyed by meeting id. */
-  overrides: Record<string, Placement>;
+  /**
+   * Every unsaved change to a section, keyed by section id. A drag writes
+   * here and so does the sheet, so there is one answer to where a section
+   * meets rather than two that have to be reconciled.
+   */
+  sectionEdits: Record<number, SectionEdit>;
   interaction: Interaction;
   /**
    * The meeting the last gesture placed, which the grid flashes so a drop
@@ -103,8 +136,8 @@ export interface EditorState {
   selection: Selection | null;
   /**
    * What the sidebar has checked. Kept here rather than applied here: the
-   * page filters the sections payload with it before the meetings become
-   * `base`, so the editor never needs to know what a section is.
+   * page filters the sections with it before they are placed, so a hidden
+   * section simply leaves the context.
    */
   filters: ScheduleFilters;
 }

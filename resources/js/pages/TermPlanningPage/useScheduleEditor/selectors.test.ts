@@ -1,17 +1,40 @@
 import { describe, expect, it } from "vitest";
 import { selectWeekView } from "./selectors";
 import type { Meeting } from "../types";
-import type { EditorState } from "./types";
+import { selectLocalSection } from "./selectors";
+import { plannedSection } from "../helpers/plannedSection.fixture";
+import type { EditorState, ScheduleContext } from "./types";
 
-const base: Meeting[] = [
-  { id: "mon-9", dayIndex: 0, startMinute: 540, endMinute: 590 },
-  { id: "mon-9b", dayIndex: 0, startMinute: 570, endMinute: 620 },
-  { id: "tue-9", dayIndex: 1, startMinute: 540, endMinute: 590 },
+const meetings: Meeting[] = [
+  {
+    id: "mon-9",
+    dayIndex: 0,
+    sectionId: null,
+    startMinute: 540,
+    endMinute: 590,
+  },
+  {
+    id: "mon-9b",
+    dayIndex: 0,
+    sectionId: null,
+    startMinute: 570,
+    endMinute: 620,
+  },
+  {
+    id: "tue-9",
+    dayIndex: 1,
+    sectionId: null,
+    startMinute: 540,
+    endMinute: 590,
+  },
 ];
+
+/** No sections: every test here is about blocks, not about what is in them. */
+const context: ScheduleContext = { meetings, sections: [] };
 
 const atRest: EditorState = {
   placeholderMeetings: [],
-  overrides: {},
+  sectionEdits: {},
   interaction: { status: "idle" },
   lastPlacedId: null,
   selection: null,
@@ -33,13 +56,13 @@ describe("selectWeekView while a meeting is carried", () => {
 
   it("every lane stays exactly as it was at rest", () => {
     const layouts = (state: EditorState) =>
-      selectWeekView(base, state, 5).map(({ layout }) => layout);
+      selectWeekView(context, state, 5).map(({ layout }) => layout);
 
     expect(layouts(carrying)).toEqual(layouts(atRest));
   });
 
   it("the origin block ghosts and the overlay draws in the target day", () => {
-    const [monday, tuesday] = selectWeekView(base, carrying, 5);
+    const [monday, tuesday] = selectWeekView(context, carrying, 5);
 
     expect(monday.ghostMeetingId).toBe("mon-9");
     expect(monday.overlay).toBeNull();
@@ -49,6 +72,7 @@ describe("selectWeekView while a meeting is carried", () => {
       startMinute: 700,
       endMinute: 750,
       meetingId: "mon-9",
+      sectionId: null,
     });
   });
 });
@@ -66,7 +90,7 @@ describe("selectWeekView while a meeting is pressed", () => {
       },
     };
 
-    const [monday] = selectWeekView(base, pressed, 5);
+    const [monday] = selectWeekView(context, pressed, 5);
 
     expect(monday.overlay).toBeNull();
     expect(monday.ghostMeetingId).toBeNull();
@@ -76,7 +100,7 @@ describe("selectWeekView while a meeting is pressed", () => {
 describe("selectWeekView while a meeting is drawn out", () => {
   it("the overlay names no meeting, since none exists yet", () => {
     const [monday] = selectWeekView(
-      base,
+      context,
       {
         ...atRest,
         interaction: {
@@ -94,6 +118,7 @@ describe("selectWeekView while a meeting is drawn out", () => {
       startMinute: 700,
       endMinute: 750,
       meetingId: null,
+      sectionId: null,
     });
   });
 });
@@ -101,7 +126,7 @@ describe("selectWeekView while a meeting is drawn out", () => {
 describe("selectWeekView while a meeting is resized", () => {
   it("the block draws at its live range in its at-rest lane", () => {
     const [monday] = selectWeekView(
-      base,
+      context,
       {
         ...atRest,
         interaction: {
@@ -120,7 +145,7 @@ describe("selectWeekView while a meeting is resized", () => {
       ({ meeting }) => meeting.id === "mon-9",
     );
     const atRestPlacement = selectWeekView(
-      base,
+      context,
       atRest,
       5,
     )[0].layout.placed.find(({ meeting }) => meeting.id === "mon-9");
@@ -132,45 +157,56 @@ describe("selectWeekView while a meeting is resized", () => {
   });
 });
 
+describe("selectLocalSection", () => {
+  const section = plannedSection(7, [
+    { days: ["mon"], startTime: "09:00", endTime: "09:50" },
+  ]);
+
+  it("shows the SIS section when nothing has been edited", () => {
+    expect(selectLocalSection(section, atRest)).toEqual(section);
+  });
+
+  it("lays an edit over it, field by field", () => {
+    const edited: EditorState = {
+      ...atRest,
+      sectionEdits: { 7: { enrollmentCap: 12, notes: "Reserved for majors" } },
+    };
+
+    expect(selectLocalSection(section, edited)).toEqual({
+      ...section,
+      enrollmentCap: 12,
+      notes: "Reserved for majors",
+    });
+  });
+
+  it("gives the plan's own fields a value the SIS never sends", () => {
+    const bare = { ...section } as Partial<typeof section>;
+    delete bare.delivery;
+    delete bare.notes;
+
+    expect(selectLocalSection(bare as typeof section, atRest)).toMatchObject({
+      delivery: "onCampus",
+      notes: "",
+    });
+  });
+});
+
 describe("selectWeekView over local edits", () => {
-  it("draws a base meeting where its override put it", () => {
-    const moved: EditorState = {
-      ...atRest,
-      overrides: {
-        "tue-9": { dayIndex: 3, startMinute: 700, endMinute: 750 },
-      },
-    };
-
-    const week = selectWeekView(base, moved, 5);
-    const ids = (dayIndex: number) =>
-      week[dayIndex].layout.placed.map(({ meeting }) => meeting.id);
-
-    expect(ids(1)).toEqual([]);
-    expect(ids(3)).toEqual(["tue-9"]);
-  });
-
-  it("an override outliving its meeting draws nothing", () => {
-    const orphaned: EditorState = {
-      ...atRest,
-      overrides: {
-        gone: { dayIndex: 2, startMinute: 700, endMinute: 750 },
-      },
-    };
-
-    const wednesday = selectWeekView(base, orphaned, 5)[2];
-
-    expect(wednesday.layout.placed).toEqual([]);
-  });
-
-  it("drawn meetings pack alongside the base's", () => {
+  it("placeholder times pack alongside the placed sections", () => {
     const drawn: EditorState = {
       ...atRest,
       placeholderMeetings: [
-        { id: "local-1", dayIndex: 1, startMinute: 560, endMinute: 610 },
+        {
+          id: "local-1",
+          dayIndex: 1,
+          sectionId: null,
+          startMinute: 560,
+          endMinute: 610,
+        },
       ],
     };
 
-    const tuesday = selectWeekView(base, drawn, 5)[1];
+    const tuesday = selectWeekView(context, drawn, 5)[1];
 
     expect(tuesday.layout.placed.map(({ meeting }) => meeting.id)).toEqual([
       "tue-9",
@@ -186,7 +222,7 @@ describe("selectWeekView with a meeting selected", () => {
       selection: { kind: "meeting", meetingId: "tue-9" },
     };
 
-    const [monday, tuesday] = selectWeekView(base, selected, 5);
+    const [monday, tuesday] = selectWeekView(context, selected, 5);
 
     expect(monday.selectedMeetingId).toBeNull();
     expect(tuesday.selectedMeetingId).toBe("tue-9");

@@ -4,10 +4,38 @@
  * private to this directory.
  */
 
-import type { Meeting, TimeRange } from "../types";
+import type { Meeting, PlannedSection, SisSection, TimeRange } from "../types";
 import { type DayLayout, layOutDay } from "../helpers/dayLayout";
-import { mergeSchedule } from "./mergeSchedule";
-import type { EditorState, Interaction } from "./types";
+import type { EditorState, Interaction, ScheduleContext } from "./types";
+
+/**
+ * The section as the user sees it: the SIS row with this browser's edits
+ * over it. The one place server truth and local work meet, so every view of
+ * the term (the grid, the heatmap, the tray, the sheet) is reading the same
+ * section.
+ */
+export function selectLocalSection(
+  section: SisSection,
+  state: EditorState,
+): PlannedSection {
+  return {
+    delivery: "onCampus",
+    notes: "",
+    ...section,
+    ...state.sectionEdits[section.id],
+  };
+}
+
+/**
+ * Every block on the grid: the placed sections, plus the placeholder times
+ * held here that belong to no section.
+ */
+export function selectMeetings(
+  context: ScheduleContext,
+  state: EditorState,
+): Meeting[] {
+  return [...context.meetings, ...state.placeholderMeetings];
+}
 
 /** Everything one day column draws. */
 export interface DayView {
@@ -17,10 +45,12 @@ export interface DayView {
    * is carrying. It spans the full column rather than taking a lane, since it
    * is not placed until it is let go of.
    *
-   * `meetingId` is null while a block is drawn out, since no meeting exists
-   * to name yet.
+   * `meetingId` and `sectionId` are null while a block is drawn out, since
+   * no meeting exists to name yet.
    */
-  overlay: (TimeRange & { meetingId: string | null }) | null;
+  overlay:
+    | (TimeRange & { meetingId: string | null; sectionId: number | null })
+    | null;
   /** The placed block being resized here, drawn at its live range. */
   activeMeetingId: string | null;
   /** The placed block whose meeting the pointer is carrying, drawn faded. */
@@ -33,25 +63,25 @@ export interface DayView {
 
 /** One `DayView` per day, index-aligned with the grid's columns. */
 export function selectWeekView(
-  base: Meeting[],
+  context: ScheduleContext,
   state: EditorState,
   dayCount: number,
 ): DayView[] {
-  const merged = mergeSchedule(base, state);
+  const meetings = selectMeetings(context, state);
 
   return Array.from({ length: dayCount }, (_, dayIndex) =>
-    selectDayView(merged, state, dayIndex),
+    selectDayView(meetings, state, dayIndex),
   );
 }
 
 function selectDayView(
-  merged: Meeting[],
+  all: Meeting[],
   state: EditorState,
   dayIndex: number,
 ): DayView {
   const { interaction } = state;
 
-  const meetings = merged.filter((meeting) => meeting.dayIndex === dayIndex);
+  const meetings = all.filter((meeting) => meeting.dayIndex === dayIndex);
 
   // A selected tray section has no block, so no day shows a selection.
   const selectedMeetingId =
@@ -59,7 +89,7 @@ function selectDayView(
 
   return {
     layout: withLiveResize(layOutDay(meetings), interaction),
-    overlay: overlayIn(interaction, dayIndex),
+    overlay: overlayIn(interaction, dayIndex, all),
     activeMeetingId:
       interaction.status === "resizing" ? interaction.meetingId : null,
     ghostMeetingId:
@@ -106,6 +136,7 @@ function withLiveResize(
 function overlayIn(
   interaction: Interaction,
   dayIndex: number,
+  all: Meeting[],
 ): DayView["overlay"] {
   const isOverThisDay =
     (interaction.status === "drawing" || interaction.status === "moving") &&
@@ -113,9 +144,13 @@ function overlayIn(
 
   if (!isOverThisDay) return null;
 
+  const meetingId =
+    interaction.status === "moving" ? interaction.meetingId : null;
+
   return {
     startMinute: interaction.startMinute,
     endMinute: interaction.endMinute,
-    meetingId: interaction.status === "moving" ? interaction.meetingId : null,
+    meetingId,
+    sectionId: all.find(({ id }) => id === meetingId)?.sectionId ?? null,
   };
 }

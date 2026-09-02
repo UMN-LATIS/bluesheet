@@ -56,6 +56,12 @@ export function minutesFromClock(clock: string): number {
   return hours * 60 + minutes;
 }
 
+/** 610 → "10:10": the inverse of `minutesFromClock`, in the SIS's own format. */
+export function clockFromMinutes(minute: number): string {
+  const hours = String(Math.floor(minute / 60)).padStart(2, "0");
+  return `${hours}:${String(minute % 60).padStart(2, "0")}`;
+}
+
 /** "9:05" — no meridiem, since the clock beside it already gives the half. */
 export function formatClock(minute: number): string {
   const hour = Math.floor(minute / 60);

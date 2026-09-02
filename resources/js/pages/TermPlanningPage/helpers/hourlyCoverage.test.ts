@@ -7,7 +7,7 @@ const meeting = (
   dayIndex: number,
   startMinute: number,
   endMinute: number,
-): Meeting => ({ id, dayIndex, startMinute, endMinute });
+): Meeting => ({ id, dayIndex, sectionId: null, startMinute, endMinute });
 
 const rowAt = (coverage: ReturnType<typeof coverageByHour>, hour: number) =>
   coverage.rows.find(({ startMinute }) => startMinute === hour * 60)!;

@@ -8,6 +8,8 @@ export interface TimeRange {
 export interface Meeting extends TimeRange {
   id: string;
   dayIndex: number;
+  /** The section this block belongs to, or null for a placeholder time. */
+  sectionId: number | null;
 }
 
 /**
@@ -44,6 +46,17 @@ export const TBA_PERSON = "tba";
 /** A weekday as the SIS names it. */
 export type SisDay = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 
+/** Every weekday, in the order a week runs, which is how days are listed. */
+export const WEEK_DAYS: SisDay[] = [
+  "mon",
+  "tue",
+  "wed",
+  "thu",
+  "fri",
+  "sat",
+  "sun",
+];
+
 export interface SisTerm {
   /** The term code, e.g. 1269. */
   id: number;
@@ -75,6 +88,18 @@ export interface SisCrosslist {
   /** True on the section that owns the shared block: the listing's first entry. */
   isPrimary: boolean;
 }
+
+/** How a section is taught, which the SIS has no column for. */
+export type Delivery = "onCampus" | "blended" | "online";
+
+/**
+ * A section as the plan holds it: the SIS row plus the fields a plan adds.
+ * Named for `planned_sections`, the table these two are headed for.
+ */
+export type PlannedSection = SisSection & {
+  delivery: Delivery;
+  notes: string;
+};
 
 export interface SisSection {
   id: number;

@@ -11,7 +11,7 @@ const meeting = (
   id: string,
   startMinute: number,
   endMinute: number,
-): Meeting => ({ id, dayIndex: 0, startMinute, endMinute });
+): Meeting => ({ id, dayIndex: 0, sectionId: null, startMinute, endMinute });
 
 describe("layOutDay", () => {
   it("back-to-back meetings share one lane", () => {

@@ -18,14 +18,16 @@
  * here reaches the network yet; the URL is the only effect so far.
  */
 
-import type {
-  FilterFacet,
-  Meeting,
-  ScheduleFilters,
-  TimeRange,
-} from "../types";
-import { END_MINUTE, snapToGrid, START_MINUTE } from "../helpers/timeScale";
-import { mergeSchedule } from "./mergeSchedule";
+import type { FilterFacet, ScheduleFilters, TimeRange } from "../types";
+import {
+  clockFromMinutes,
+  END_MINUTE,
+  snapToGrid,
+  START_MINUTE,
+} from "../helpers/timeScale";
+import { GRID_DAYS, meetingIdOf } from "../helpers/sectionPlacement";
+import { withPlacement } from "./meetingPatterns";
+import { selectMeetings } from "./selectors";
 import type {
   EditorDeps,
   EditorEvent,
@@ -34,6 +36,8 @@ import type {
   Interaction,
   MeetingEdge,
   Next,
+  Placement,
+  ScheduleContext,
 } from "./types";
 
 /** What a press with no drag creates: one standard fifty-minute period. */
@@ -63,7 +67,7 @@ export const emptyFilters = (): ScheduleFilters => ({
 
 export const initialState = (): EditorState => ({
   placeholderMeetings: [],
-  overrides: {},
+  sectionEdits: {},
   interaction: { status: "idle" },
   lastPlacedId: null,
   selection: null,
@@ -73,10 +77,10 @@ export const initialState = (): EditorState => ({
 export function update(
   state: EditorState,
   event: EditorEvent,
-  base: Meeting[],
+  context: ScheduleContext,
   deps: EditorDeps,
 ): Next {
-  const nextState = reduce(state, event, base, deps);
+  const nextState = reduce(state, event, context, deps);
 
   return { state: nextState, effects: effectsOf(event, nextState) };
 }
@@ -101,7 +105,7 @@ function effectsOf(event: EditorEvent, state: EditorState): Effect[] {
 function reduce(
   state: EditorState,
   event: EditorEvent,
-  base: Meeting[],
+  context: ScheduleContext,
   deps: EditorDeps,
 ): EditorState {
   switch (event.type) {
@@ -120,10 +124,10 @@ function reduce(
       };
     }
 
-    // Presses land on the merged schedule: a meeting already moved once is
+    // Presses land on the schedule as drawn: a meeting already moved once is
     // grabbed where the user last put it, not where the server has it.
     case "pressedMeeting": {
-      const meeting = mergeSchedule(base, state).find(
+      const meeting = selectMeetings(context, state).find(
         ({ id }) => id === event.meetingId,
       );
       if (!meeting) return state;
@@ -144,7 +148,7 @@ function reduce(
     }
 
     case "pressedMeetingEdge": {
-      const meeting = mergeSchedule(base, state).find(
+      const meeting = selectMeetings(context, state).find(
         ({ id }) => id === event.meetingId,
       );
       if (!meeting) return state;
@@ -164,10 +168,10 @@ function reduce(
     }
 
     case "pointerMoved":
-      return pointerMoved(state, event.dayIndex, event.minute, base);
+      return pointerMoved(state, event.dayIndex, event.minute, context);
 
     case "released":
-      return commit(state, deps);
+      return commit(state, context, deps);
 
     // Mid-gesture this is a plain discard; at rest there is no gesture to
     // discard, so Escape clears the selection instead.
@@ -237,7 +241,7 @@ function pointerMoved(
   state: EditorState,
   dayIndex: number,
   minute: number,
-  base: Meeting[],
+  context: ScheduleContext,
 ): EditorState {
   const { interaction } = state;
 
@@ -268,7 +272,7 @@ function pointerMoved(
         Math.abs(minute - interaction.minute) >= DRAG_START_MINUTES;
       if (!hasLeftPress) return state;
 
-      const meeting = mergeSchedule(base, state).find(
+      const meeting = selectMeetings(context, state).find(
         ({ id }) => id === interaction.meetingId,
       );
       if (!meeting) return state;
@@ -287,7 +291,7 @@ function pointerMoved(
         },
         dayIndex,
         minute,
-        base,
+        context,
       );
     }
 
@@ -321,7 +325,11 @@ function pointerMoved(
 }
 
 /** The one writer of the edits: a gesture's draft becomes the schedule. */
-function commit(state: EditorState, deps: EditorDeps): EditorState {
+function commit(
+  state: EditorState,
+  context: ScheduleContext,
+  deps: EditorDeps,
+): EditorState {
   const { interaction } = state;
 
   switch (interaction.status) {
@@ -339,9 +347,10 @@ function commit(state: EditorState, deps: EditorDeps): EditorState {
         selection: { kind: "meeting", meetingId: interaction.meetingId },
       };
 
-    // Moving and resizing both write the draft's placement; neither touches
-    // what is selected. A meeting drawn here is rewritten in place; one from
-    // the server keeps its base row and gains an override.
+    // Moving and resizing both write the gesture's draft. A placeholder time
+    // is rewritten in place; a section's block becomes a rewrite of that
+    // section's patterns, which is the one place the schedule says when a
+    // section meets.
     case "moving":
     case "resizing": {
       const placement = {
@@ -353,24 +362,23 @@ function commit(state: EditorState, deps: EditorDeps): EditorState {
       const isPlaceholder = state.placeholderMeetings.some(
         ({ id }) => id === interaction.meetingId,
       );
-      const placed = { ...toIdle(state), lastPlacedId: interaction.meetingId };
 
       return isPlaceholder
         ? {
-            ...placed,
+            ...toIdle(state),
+            lastPlacedId: interaction.meetingId,
             placeholderMeetings: state.placeholderMeetings.map((meeting) =>
               meeting.id === interaction.meetingId
                 ? { ...meeting, ...placement }
                 : meeting,
             ),
           }
-        : {
-            ...placed,
-            overrides: {
-              ...state.overrides,
-              [interaction.meetingId]: placement,
-            },
-          };
+        : withSectionPlacement(
+            state,
+            interaction.meetingId,
+            placement,
+            context,
+          );
     }
 
     default:
@@ -397,10 +405,57 @@ function commitDrawing(
     ...state,
     placeholderMeetings: [
       ...state.placeholderMeetings,
-      { id, dayIndex: drawing.dayIndex, ...range },
+      { id, dayIndex: drawing.dayIndex, sectionId: null, ...range },
     ],
     interaction: { status: "idle" },
     lastPlacedId: id,
+  };
+}
+
+/**
+ * A dropped block, written as its section's patterns. The block's name says
+ * where it sits, so moving it renames it, and the selection and the drop
+ * flash are carried over to the new name.
+ */
+function withSectionPlacement(
+  state: EditorState,
+  meetingId: string,
+  placement: Placement,
+  context: ScheduleContext,
+): EditorState {
+  const meeting = context.meetings.find(({ id }) => id === meetingId);
+  const section = context.sections.find(({ id }) => id === meeting?.sectionId);
+  if (!meeting || !section) return toIdle(state);
+
+  const meetings = withPlacement(
+    section.meetings,
+    {
+      day: GRID_DAYS[meeting.dayIndex],
+      startTime: clockFromMinutes(meeting.startMinute),
+    },
+    placement,
+  );
+
+  const placedId = meetingIdOf(
+    section.id,
+    GRID_DAYS[placement.dayIndex],
+    clockFromMinutes(placement.startMinute),
+  );
+
+  const wasSelected =
+    state.selection?.kind === "meeting" &&
+    state.selection.meetingId === meetingId;
+
+  return {
+    ...toIdle(state),
+    sectionEdits: {
+      ...state.sectionEdits,
+      [section.id]: { ...state.sectionEdits[section.id], meetings },
+    },
+    lastPlacedId: placedId,
+    selection: wasSelected
+      ? { kind: "meeting", meetingId: placedId }
+      : state.selection,
   };
 }
 

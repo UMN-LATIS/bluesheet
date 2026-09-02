@@ -17,10 +17,10 @@ export function isFiltering(filters: ScheduleFilters): boolean {
   return FILTER_FACETS.some((facet) => filters[facet].length > 0);
 }
 
-export function filterSections(
-  sections: SisSection[],
+export function filterSections<T extends SisSection>(
+  sections: T[],
   filters: ScheduleFilters,
-): SisSection[] {
+): T[] {
   return sections.filter((section) => matchesAllFacets(section, filters));
 }
 

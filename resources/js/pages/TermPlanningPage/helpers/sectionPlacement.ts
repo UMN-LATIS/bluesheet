@@ -1,20 +1,32 @@
 /**
- * Turns the sections the server returned into the meetings the grid draws,
- * and keeps the way back: each placed meeting's id looks up its section, so
- * a block can be labeled without the grid ever learning what a section is.
+ * Turns the sections the page holds into the meetings the grid draws, and
+ * keeps the way back: each placed meeting's id looks up its section, so a
+ * block can be labeled without the grid ever learning what a section is.
  */
 
-import type { Meeting, SisDay, SisSection } from "../types";
+import type { Meeting, PlannedSection, SisDay } from "../types";
+import { WEEK_DAYS } from "../types";
 import { END_MINUTE, minutesFromClock, START_MINUTE } from "./timeScale";
 
 /** The days the grid has columns for, in column order. */
-const GRID_DAYS: SisDay[] = ["mon", "tue", "wed", "thu", "fri"];
+export const GRID_DAYS: SisDay[] = WEEK_DAYS.slice(0, 5);
+
+/**
+ * A block's name, derived rather than minted, so it survives any rewrite of
+ * the section's patterns and any refetch. A section cannot meet twice on one
+ * day at one time, which is what makes these three enough.
+ */
+export const meetingIdOf = (
+  sectionId: number,
+  day: SisDay,
+  startTime: string,
+) => `s${sectionId}:${day}:${startTime.replace(":", "")}`;
 
 export interface PlacedSections {
   meetings: Meeting[];
-  sectionsByMeetingId: Map<string, SisSection>;
+  sectionsByMeetingId: Map<string, PlannedSection>;
   /** Sections with no meeting time, which the tray lists instead. */
-  unscheduled: SisSection[];
+  unscheduled: PlannedSection[];
   /**
    * Meetings the grid has no room for: weekend days, or times outside its
    * hours. The page says so when this is not zero, so a missing block reads
@@ -23,10 +35,10 @@ export interface PlacedSections {
   outsideGridCount: number;
 }
 
-export function placeSections(sections: SisSection[]): PlacedSections {
+export function placeSections(sections: PlannedSection[]): PlacedSections {
   const meetings: Meeting[] = [];
-  const sectionsByMeetingId = new Map<string, SisSection>();
-  const unscheduled: SisSection[] = [];
+  const sectionsByMeetingId = new Map<string, PlannedSection>();
+  const unscheduled: PlannedSection[] = [];
   let outsideGridCount = 0;
 
   for (const section of sections) {
@@ -39,7 +51,7 @@ export function placeSections(sections: SisSection[]): PlacedSections {
       continue;
     }
 
-    section.meetings.forEach((pattern, patternIndex) => {
+    for (const pattern of section.meetings) {
       const startMinute = minutesFromClock(pattern.startTime);
       const endMinute = minutesFromClock(pattern.endTime);
       const fitsHours = START_MINUTE <= startMinute && endMinute <= END_MINUTE;
@@ -51,13 +63,18 @@ export function placeSections(sections: SisSection[]): PlacedSections {
           continue;
         }
 
-        // Stable across refetches, so local overrides keyed by it survive.
-        const id = `s${section.id}:${patternIndex}:${day}`;
+        const id = meetingIdOf(section.id, day, pattern.startTime);
 
-        meetings.push({ id, dayIndex, startMinute, endMinute });
+        meetings.push({
+          id,
+          dayIndex,
+          startMinute,
+          endMinute,
+          sectionId: section.id,
+        });
         sectionsByMeetingId.set(id, section);
       }
-    });
+    }
   }
 
   return {
