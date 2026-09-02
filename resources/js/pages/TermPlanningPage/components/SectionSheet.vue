@@ -7,10 +7,11 @@
   -->
   <aside
     aria-label="Section details"
-    class="tw-flex tw-min-h-0 tw-flex-col tw-bg-white"
+    class="tw-flex tw-min-h-0 tw-flex-col tw-bg-surface-bright tw-text-on-surface"
   >
     <div
-      class="tw-flex-none tw-border-0 tw-border-b tw-border-solid tw-border-neutral-200 tw-px-4 tw-pb-2 tw-pt-3"
+      class="tw-flex-none tw-border-0 tw-border-l-4 tw-border-solid tw-px-4 tw-pb-2.5 tw-pt-3"
+      :class="colourOfType(draft.component).swatch"
     >
       <!--
         Opened from a list (an hour of the heatmap), the sheet is one level
@@ -19,7 +20,7 @@
       <button
         v-if="returnTo"
         type="button"
-        class="tw-mb-2 tw-flex tw-cursor-pointer tw-items-center tw-gap-1 tw-border-none tw-bg-transparent tw-p-0 tw-text-xs tw-font-semibold tw-text-bs-blue hover:tw-underline"
+        class="tw-mb-2 tw-flex tw-cursor-pointer tw-items-center tw-gap-1 tw-border-none tw-bg-transparent tw-p-0 tw-text-xs tw-font-semibold tw-text-primary hover:tw-underline"
         @click="emit('back')"
       >
         <i class="fas fa-chevron-left tw-text-[0.6rem]" aria-hidden="true" />
@@ -28,7 +29,7 @@
 
       <div class="tw-flex tw-items-start tw-justify-between tw-gap-2">
         <p
-          class="tw-m-0 tw-truncate tw-text-xs tw-text-neutral-500"
+          class="tw-m-0 tw-truncate tw-text-xs tw-text-on-surface-variant"
           :title="section.title"
         >
           {{ section.title }}
@@ -37,7 +38,7 @@
           v-if="!returnTo"
           type="button"
           aria-label="Close"
-          class="tw-flex-none tw-cursor-pointer tw-border-none tw-bg-transparent tw-text-xl tw-leading-none tw-text-neutral-500 hover:tw-text-neutral-800"
+          class="tw--mr-1 tw-flex tw-h-6 tw-w-6 tw-flex-none tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-text-xl tw-leading-none tw-text-on-surface-variant hover:tw-bg-surface-container-high hover:tw-text-on-surface"
           @click="emit('close')"
         >
           ×
@@ -47,7 +48,7 @@
       <h2 class="tw-m-0 tw-text-base tw-font-bold">
         {{ draft.subject }} {{ draft.catalogNumber }} · {{ draft.section }}
         <!-- How many other numbers this same class is listed under. -->
-        <span v-if="partners.length > 0" class="tw-text-neutral-400">
+        <span v-if="partners.length > 0" class="tw-text-on-surface-variant">
           [+{{ partners.length }}]
         </span>
       </h2>
@@ -110,7 +111,7 @@
             <button
               v-if="patterns.length > 1"
               type="button"
-              class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-xs tw-text-neutral-500 hover:tw-text-neutral-800"
+              class="tw-flex tw-h-5 tw-w-5 tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-text-xs tw-text-on-surface-variant hover:tw-bg-surface-container-high hover:tw-text-on-surface"
               :aria-label="`Remove meeting time ${patternIndex + 1}`"
               @click="schedule.removeMeetingPattern(section.id, patternIndex)"
             >
@@ -140,7 +141,7 @@
                 })
               "
             />
-            <span class="tw-text-xs tw-text-neutral-500">to</span>
+            <span class="tw-text-xs tw-text-on-surface-variant">to</span>
             <input
               :value="pattern.endTime"
               type="time"
@@ -155,11 +156,14 @@
           </div>
           <p
             v-if="problemWith(patternIndex)"
-            class="tw-m-0 tw-mt-1 tw-text-xs tw-text-red-700"
+            class="tw-m-0 tw-mt-1.5 tw-text-xs tw-text-red-700"
           >
             {{ problemWith(patternIndex) }}
           </p>
-          <p v-else class="tw-m-0 tw-mt-1 tw-text-xs tw-text-neutral-500">
+          <p
+            v-else
+            class="tw-m-0 tw-mt-1.5 tw-text-xs tw-text-on-surface-variant"
+          >
             {{ durationOf(pattern) }} minutes
           </p>
         </div>
@@ -168,7 +172,7 @@
       <button
         v-if="patterns.length > 0"
         type="button"
-        class="tw--mt-2 tw-self-start tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-xs tw-font-semibold tw-text-bs-blue hover:tw-underline"
+        class="tw--mt-2 tw-cursor-pointer tw-self-start tw-border-none tw-bg-transparent tw-p-0 tw-text-xs tw-font-semibold tw-text-primary hover:tw-underline"
         @click="schedule.addMeetingPattern(section.id)"
       >
         Add meeting time
@@ -179,21 +183,21 @@
         <div
           v-for="instructor in draft.instructors"
           :key="instructor.emplid"
-          class="tw-mb-1 tw-flex tw-items-center tw-justify-between tw-gap-2 tw-rounded tw-border tw-border-solid tw-border-neutral-200 tw-px-2.5 tw-py-1.5"
+          class="tw-mb-1 tw-flex tw-items-center tw-justify-between tw-gap-2 tw-rounded-lg tw-bg-surface-container tw-px-3 tw-py-2"
         >
           <span>
             {{ instructor.name ?? "TBA" }}
             <!-- The usual role is unremarkable; a TA or a second instructor is not. -->
             <span
               v-if="instructor.role !== PRIMARY_ROLE"
-              class="tw-text-xs tw-text-neutral-500"
+              class="tw-text-xs tw-text-on-surface-variant"
             >
               {{ instructor.role }}
             </span>
           </span>
           <button
             type="button"
-            class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-neutral-500 hover:tw-text-neutral-800"
+            class="tw-flex tw-h-5 tw-w-5 tw-flex-none tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-text-on-surface-variant hover:tw-bg-surface-container-high hover:tw-text-on-surface"
             :aria-label="`Remove ${instructor.name ?? 'instructor'}`"
             @click="removeInstructor(instructor.emplid)"
           >
@@ -202,7 +206,7 @@
         </div>
         <p
           v-if="draft.instructors.length === 0"
-          class="tw-m-0 tw-mb-1 tw-text-neutral-500"
+          class="tw-m-0 tw-mb-1 tw-text-on-surface-variant"
         >
           TBA
         </p>
@@ -231,7 +235,7 @@
             :class="[INPUT_CLASS, 'tw-w-24']"
             @input="editCap(valueOf($event))"
           />
-          <span class="tw-text-xs tw-text-neutral-500">
+          <span class="tw-text-xs tw-text-on-surface-variant">
             {{ section.enrollmentTotal }} enrolled
             <!--
               Only when every partner's cap is known. Most cross-lists reach
@@ -262,10 +266,10 @@
         <div
           v-for="partner in partners"
           :key="`${partner.subject}${partner.catalogNumber}`"
-          class="tw-mb-1 tw-flex tw-items-baseline tw-justify-between tw-gap-2 tw-rounded tw-border tw-border-solid tw-border-neutral-200 tw-px-2.5 tw-py-1.5"
+          class="tw-mb-1 tw-flex tw-items-baseline tw-justify-between tw-gap-2 tw-rounded-lg tw-bg-surface-container tw-px-3 tw-py-2"
         >
           <span>{{ partner.subject }} {{ partner.catalogNumber }}</span>
-          <span class="tw-text-xs tw-text-neutral-500">
+          <span class="tw-text-xs tw-text-on-surface-variant">
             {{
               partner.subject === section.subject
                 ? "same subject"
@@ -276,9 +280,7 @@
       </div>
     </div>
 
-    <div
-      class="tw-flex-none tw-border-0 tw-border-t tw-border-solid tw-border-neutral-200 tw-px-4 tw-py-3"
-    >
+    <div class="tw-flex-none tw-bg-surface-container tw-px-4 tw-py-3">
       <!--
         Whatever holds Save back that is not about one meeting time, said
         where the button is rather than beside the field, since the button is
@@ -295,7 +297,7 @@
       <div class="tw-flex tw-items-center tw-gap-3">
         <button
           type="button"
-          class="tw-rounded tw-border tw-border-solid tw-border-bs-blue tw-bg-bs-blue tw-px-3 tw-py-1 tw-text-xs tw-font-semibold tw-text-white disabled:tw-cursor-default disabled:tw-border-neutral-200 disabled:tw-bg-neutral-100 disabled:tw-text-neutral-400"
+          class="tw-rounded-full tw-border-none tw-bg-primary tw-px-4 tw-py-1.5 tw-text-xs tw-font-semibold tw-text-on-primary disabled:tw-cursor-default disabled:tw-bg-surface-container-high disabled:tw-text-on-surface-variant"
           :class="{ 'tw-cursor-pointer': isDirty && problems.length === 0 }"
           :disabled="!isDirty || problems.length > 0"
           @click="schedule.saveDraft(section.id)"
@@ -305,12 +307,12 @@
         <button
           v-if="isDirty"
           type="button"
-          class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-xs tw-font-semibold tw-text-neutral-600 hover:tw-underline"
+          class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-xs tw-font-semibold tw-text-on-surface-variant hover:tw-underline"
           @click="schedule.cancelDraft(section.id)"
         >
           Cancel
         </button>
-        <span class="tw-ml-auto tw-text-xs tw-text-neutral-500">
+        <span class="tw-ml-auto tw-text-xs tw-text-on-surface-variant">
           {{ section.credits ?? "—" }} credits · class {{ section.classNumber }}
         </span>
       </div>
@@ -318,7 +320,7 @@
       <button
         v-if="schedule.hasEdits(section.id)"
         type="button"
-        class="tw-mt-2 tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-xs tw-font-semibold tw-text-umn-maroon hover:tw-underline"
+        class="tw-mt-2 tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-xs tw-font-semibold tw-text-brand hover:tw-underline"
         @click="schedule.revertSection(section.id)"
       >
         Revert to SIS
@@ -331,6 +333,7 @@
 import { computed } from "vue";
 import SegmentedControl, { type SegmentedOption } from "./SegmentedControl.vue";
 import { ComboBox, type ComboBoxOptionType } from "@/components/ComboBox";
+import { colourOfType } from "../constants/meetingTypeColours";
 import { minutesFromClock } from "../helpers/timeScale";
 import type {
   Delivery,
@@ -356,10 +359,15 @@ const emit = defineEmits<{ close: []; back: [] }>();
 
 /** Shared by every row's label, styled like a form field's. */
 const LABEL_CLASS =
-  "tw-m-0 tw-mb-1 tw-block tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-neutral-500";
+  "tw-m-0 tw-mb-1.5 tw-block tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-on-surface-variant";
 
+/**
+ * Filled rather than outlined: the form sits on a bright surface, so a
+ * field reads as a place to type by being a shade darker than the page
+ * instead of by being drawn around.
+ */
 const INPUT_CLASS =
-  "tw-rounded tw-border tw-border-solid tw-border-neutral-300 tw-px-2 tw-py-1.5 tw-text-sm";
+  "tw-rounded-lg tw-border tw-border-solid tw-border-transparent tw-bg-surface-container tw-px-3 tw-py-1.5 tw-text-sm tw-text-on-surface focus:tw-border-primary focus:tw-bg-surface-bright focus:tw-outline-none";
 
 /** The codes the imported SIS data uses; anything else joins them on sight. */
 const COMPONENT_CODES = ["LEC", "DIS", "LAB", "FWK", "IND"];

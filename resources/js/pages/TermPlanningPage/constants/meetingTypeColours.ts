@@ -13,6 +13,8 @@ export interface MeetingTypeColour {
   block: string;
   /** Classes for the key's swatch and a tray chip's edge. */
   swatch: string;
+  /** The fill alone, for tinting a surface that belongs to this kind of meeting. */
+  tint: string;
 }
 
 const LECTURE: MeetingTypeColour = {
@@ -20,6 +22,7 @@ const LECTURE: MeetingTypeColour = {
   block:
     "tw-border-l-4 tw-border-l-amber-500 tw-bg-amber-50 tw-outline-amber-500",
   swatch: "tw-border-l-amber-500 tw-bg-amber-50",
+  tint: "tw-bg-amber-50",
 };
 
 const DISCUSSION: MeetingTypeColour = {
@@ -27,6 +30,7 @@ const DISCUSSION: MeetingTypeColour = {
   block:
     "tw-border-l-[3px] tw-border-l-indigo-400 tw-bg-indigo-50 tw-outline-indigo-400",
   swatch: "tw-border-l-indigo-400 tw-bg-indigo-50",
+  tint: "tw-bg-indigo-50",
 };
 
 const LAB: MeetingTypeColour = {
@@ -34,6 +38,7 @@ const LAB: MeetingTypeColour = {
   block:
     "tw-border-l-[3px] tw-border-l-violet-400 tw-bg-violet-50 tw-outline-violet-400",
   swatch: "tw-border-l-violet-400 tw-bg-violet-50",
+  tint: "tw-bg-violet-50",
 };
 
 /** Everything else the SIS names: IND, FWK, and a block with no class yet. */
@@ -42,6 +47,7 @@ export const OTHER_TYPE_COLOUR: MeetingTypeColour = {
   block:
     "tw-border-l-[3px] tw-border-l-slate-300 tw-bg-white tw-outline-slate-400",
   swatch: "tw-border-l-slate-300 tw-bg-white",
+  tint: "tw-bg-surface-container",
 };
 
 /** Keyed by the SIS component code, in the order the key lists them. */

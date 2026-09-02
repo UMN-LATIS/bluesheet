@@ -1,6 +1,6 @@
 <template>
   <div
-    class="tw-absolute tw-box-border tw-rounded-sm tw-border tw-border-solid tw-border-neutral-200 tw-px-1.5 tw-py-1 tw-text-[11px] tw-leading-tight tw-text-neutral-800"
+    class="tw-absolute tw-box-border tw-rounded-md tw-border tw-border-solid tw-border-outline-variant tw-px-1.5 tw-py-1 tw-text-[11px] tw-leading-tight tw-text-on-surface"
     :class="[appearance, { 'just-placed': isJustPlaced }]"
     :style="{
       top: topOf(startMinute),
@@ -77,7 +77,7 @@ const props = defineProps<{
 
 const appearance = computed(() => {
   if (props.isDraft) {
-    return "tw-border-dashed tw-border-umn-maroon tw-bg-umn-maroon/10 tw-text-umn-maroon";
+    return "tw-border-dashed tw-border-brand tw-bg-brand/10 tw-text-brand";
   }
 
   const toned = colourOfType(props.component).block;

@@ -1,7 +1,7 @@
 <template>
   <section
     aria-label="Sections with no set time"
-    class="tw-bg-white tw-px-3 tw-py-2"
+    class="tw-bg-surface tw-px-3 tw-py-2"
   >
     <h2
       class="tw-m-0 tw-mb-1.5 tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-neutral-500"
@@ -22,12 +22,12 @@
     <!-- Three rows or so, then it scrolls: a department can have two hundred of these. -->
     <ul
       v-else
-      class="tw-m-0 tw-flex tw-max-h-24 tw-list-none tw-flex-wrap tw-gap-1.5 tw-overflow-y-auto tw-p-0"
+      class="scrollbar-always-visible tw-m-0 tw-flex tw-max-h-24 tw-list-none tw-flex-wrap tw-gap-1.5 tw-overflow-y-auto tw-p-0"
     >
       <li v-for="section in sections" :key="section.id">
         <button
           type="button"
-          class="tw-flex tw-cursor-pointer tw-items-center tw-gap-1.5 tw-rounded-sm tw-border tw-border-solid tw-border-neutral-200 tw-py-0.5 tw-pl-1.5 tw-pr-1 tw-text-[11px] tw-leading-tight tw-text-neutral-800 hover:tw-border-neutral-400"
+          class="tw-flex tw-cursor-pointer tw-items-center tw-gap-1.5 tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-py-0.5 tw-pl-2.5 tw-pr-1 tw-text-[11px] tw-leading-tight tw-text-on-surface hover:tw-border-outline"
           :class="[
             colourOfType(section.component).block,
             {
@@ -49,14 +49,14 @@
           -->
           <span
             v-if="initialsOf(section)"
-            class="tw-flex tw-h-5 tw-w-5 tw-items-center tw-justify-center tw-rounded-full tw-bg-neutral-200 tw-text-[9px] tw-font-semibold tw-text-neutral-700"
+            class="tw-flex tw-h-5 tw-w-5 tw-items-center tw-justify-center tw-rounded-full tw-bg-surface-container-high tw-text-[9px] tw-font-semibold tw-text-on-surface-variant"
             :title="leadInstructorOf(section)?.name ?? undefined"
           >
             {{ initialsOf(section) }}
           </span>
           <span
             v-else
-            class="tw-h-5 tw-w-5 tw-rounded-full tw-border tw-border-dashed tw-border-neutral-400"
+            class="tw-h-5 tw-w-5 tw-rounded-full tw-border tw-border-dashed tw-border-outline"
             title="No instructor assigned"
             aria-label="No instructor assigned"
           />

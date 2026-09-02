@@ -7,7 +7,7 @@
     appear as soon as a style is set.
   -->
   <div
-    class="tw-flex-none tw-border-0 tw-border-r tw-border-solid tw-border-neutral-200 last:tw-border-r-0"
+    class="tw-flex-none tw-border-0 tw-border-r tw-border-solid tw-border-outline-variant last:tw-border-r-0"
     :style="{ width: `${view.layout.width}px` }"
   >
     <ColumnHeader>
@@ -36,7 +36,7 @@
       <div
         v-for="minute in HOUR_MARKS"
         :key="`hour-${minute}`"
-        class="tw-absolute tw-inset-x-0 tw-h-px tw-bg-neutral-200"
+        class="tw-absolute tw-inset-x-0 tw-h-px tw-bg-outline-variant"
         :style="{ top: topOf(minute) }"
       />
       <!-- Fainter than the hour lines, so they help read a time without
@@ -44,7 +44,7 @@
       <div
         v-for="minute in HALF_HOUR_MARKS"
         :key="`half-${minute}`"
-        class="tw-absolute tw-inset-x-0 tw-h-px tw-bg-neutral-100"
+        class="tw-absolute tw-inset-x-0 tw-h-px tw-bg-surface-container"
         :style="{ top: topOf(minute) }"
       />
 

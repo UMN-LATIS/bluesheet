@@ -6,3 +6,43 @@
   border-width: 1px;
   border-style: solid;
 }
+
+/**
+ * A scrollbar that is there before you scroll, for a list whose overflow is
+ * not otherwise obvious. macOS hides overlay scrollbars until a scroll
+ * begins, so a capped list reads as a complete one.
+ *
+ * Setting a width on `::-webkit-scrollbar` is what does it: Chrome documents
+ * that doing so "effectively turns it into a classic scrollbar", always
+ * drawn. The standard `scrollbar-width` and `scrollbar-color` cannot,
+ * because they colour and size a scrollbar without saying whether the
+ * platform overlays it. Do not add `scrollbar-color` here: Chrome 121+
+ * ignores these rules entirely once it is set to anything but `auto`.
+ *
+ * WebKit and Blink only, so Chrome, Edge and Safari. Firefox on macOS keeps
+ * its overlay scrollbar, and has no way to opt out.
+ *
+ * @see https://developer.chrome.com/docs/css-ui/scrollbar-styling
+ */
+.scrollbar-always-visible::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.scrollbar-always-visible::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* The transparent border insets the thumb, so it reads as a floating pill
+   rather than a bar filling the gutter edge to edge. */
+.scrollbar-always-visible::-webkit-scrollbar-thumb {
+  background: var(--outline-variant);
+  background-clip: content-box;
+  border: 3px solid transparent;
+  border-radius: 9999px;
+}
+
+.scrollbar-always-visible:hover::-webkit-scrollbar-thumb {
+  background: var(--outline);
+  background-clip: content-box;
+}

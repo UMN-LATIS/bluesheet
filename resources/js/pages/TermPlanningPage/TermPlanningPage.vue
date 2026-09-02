@@ -1,7 +1,7 @@
 <template>
   <FullScreenLayout>
     <div
-      class="tw-flex tw-h-9 tw-flex-none tw-items-center tw-justify-between tw-border-0 tw-border-b tw-border-solid tw-border-neutral-200 tw-bg-white tw-px-3 tw-text-sm"
+      class="tw-flex tw-h-9 tw-flex-none tw-items-center tw-justify-between tw-bg-surface-bright tw-px-3 tw-text-sm tw-text-on-surface"
     >
       <Breadcrumbs :crumbs="crumbs" />
 
@@ -16,11 +16,11 @@
             v-for="option in VIEW_OPTIONS"
             :key="option.value"
             type="button"
-            class="tw-cursor-pointer tw-border tw-border-solid tw-border-bs-blue tw-px-2.5 tw-py-1 first:tw-rounded-l last:tw--ml-px last:tw-rounded-r"
+            class="tw-cursor-pointer tw-border tw-border-solid tw-border-primary tw-px-3 tw-py-1 first:tw-rounded-l-full last:tw--ml-px last:tw-rounded-r-full"
             :class="
               view === option.value
-                ? 'tw-bg-bs-blue tw-text-white'
-                : 'tw-bg-white tw-text-bs-blue hover:tw-bg-blue-50'
+                ? 'tw-bg-primary tw-text-on-primary'
+                : 'tw-bg-surface-bright tw-text-primary hover:tw-bg-primary-container'
             "
             :aria-pressed="view === option.value"
             @click="view = option.value"
@@ -32,7 +32,7 @@
         <label class="tw-m-0 tw-flex tw-items-center tw-gap-2 tw-font-normal">
           <span class="tw-sr-only">Term</span>
           <select
-            class="tw-rounded tw-border tw-border-solid tw-border-neutral-300 tw-bg-white tw-py-0.5 tw-pl-2 tw-pr-7 tw-text-sm"
+            class="tw-rounded-lg tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-py-0.5 tw-pl-2 tw-pr-7 tw-text-sm tw-text-on-surface"
             :value="term?.id"
             @change="goToTerm(($event.target as HTMLSelectElement).value)"
           >
@@ -55,7 +55,7 @@
     <div class="tw-flex tw-min-h-0 tw-flex-1">
       <ScheduleSidebar
         v-model:isCollapsed="isSidebarCollapsed"
-        class="tw-flex-none tw-border-0 tw-border-r tw-border-solid tw-border-neutral-200"
+        class="tw-flex-none tw-border-0 tw-border-r tw-border-solid tw-border-outline-variant"
         :class="isSidebarCollapsed ? 'tw-w-10' : 'tw-w-80'"
         :options="filterOptions"
         :schedule="schedule"
@@ -64,7 +64,7 @@
       <!-- min-w-0 lets the grid scroll sideways inside a flex row instead of stretching it. -->
       <div class="tw-flex tw-min-w-0 tw-flex-1 tw-flex-col">
         <div
-          class="tw-flex tw-min-h-9 tw-flex-none tw-items-center tw-gap-3 tw-border-0 tw-border-b tw-border-solid tw-border-neutral-200 tw-bg-white tw-px-3 tw-py-1 tw-text-xs tw-text-neutral-600"
+          class="tw-flex tw-min-h-9 tw-flex-none tw-items-center tw-gap-3 tw-bg-surface tw-px-3 tw-py-1 tw-text-xs tw-text-on-surface-variant"
         >
           <!-- Only when there is something the grid could not draw. -->
           <span
@@ -91,7 +91,7 @@
 
         <div
           v-if="view === 'week'"
-          class="tw-min-h-0 tw-flex-1 tw-overflow-auto tw-bg-white"
+          class="tw-min-h-0 tw-flex-1 tw-overflow-auto tw-bg-surface-bright"
         >
           <ScheduleGrid :schedule="schedule" :componentOf="componentOf">
             <template #block="{ meeting, width }">
@@ -112,7 +112,10 @@
             </template>
           </ScheduleGrid>
         </div>
-        <div v-else class="tw-min-h-0 tw-flex-1 tw-overflow-auto tw-bg-white">
+        <div
+          v-else
+          class="tw-min-h-0 tw-flex-1 tw-overflow-auto tw-bg-surface-bright"
+        >
           <CoverageHeatmap
             :meetings="schedule.meetings"
             :dayNames="DAY_NAMES"
@@ -121,7 +124,7 @@
         </div>
 
         <UnscheduledTray
-          class="tw-flex-none tw-border-0 tw-border-t tw-border-solid tw-border-neutral-200"
+          class="tw-flex-none"
           :sections="placed.unscheduled"
           :selectedSectionId="selectedSection?.id ?? null"
           :schedule="schedule"
@@ -130,7 +133,7 @@
 
       <HourSheet
         v-if="selectedHour"
-        class="tw-w-96 tw-flex-none tw-border-0 tw-border-l tw-border-solid tw-border-neutral-200"
+        class="tw-w-96 tw-flex-none tw-border-0 tw-border-l tw-border-solid tw-border-outline-variant"
         :dayIndex="selectedHour.dayIndex"
         :dayName="DAY_NAMES[selectedHour.dayIndex]"
         :startMinute="selectedHour.startMinute"
@@ -140,7 +143,7 @@
       />
       <SectionSheet
         v-else-if="selectedSection"
-        class="tw-w-96 tw-flex-none tw-border-0 tw-border-l tw-border-solid tw-border-neutral-200"
+        class="tw-w-96 tw-flex-none tw-border-0 tw-border-l tw-border-solid tw-border-outline-variant"
         :section="selectedSection"
         :schedule="schedule"
         :sections="localSections"

@@ -4,11 +4,11 @@
       v-for="option in options"
       :key="option.value"
       type="button"
-      class="tw-min-w-9 tw-cursor-pointer tw-rounded tw-border tw-border-solid tw-px-2.5 tw-py-1.5 tw-text-xs tw-font-semibold"
+      class="tw-min-w-9 tw-cursor-pointer tw-rounded-full tw-border tw-border-solid tw-px-3 tw-py-1.5 tw-text-xs tw-font-semibold"
       :class="
         chosen.includes(option.value)
-          ? 'tw-border-neutral-900 tw-bg-neutral-900 tw-text-white'
-          : 'tw-border-neutral-300 tw-bg-white tw-text-neutral-700 hover:tw-border-neutral-500'
+          ? 'tw-border-primary tw-bg-primary-container tw-text-on-primary-container'
+          : 'tw-border-outline-variant tw-bg-surface-bright tw-text-on-surface-variant hover:tw-border-outline hover:tw-bg-surface-container'
       "
       :aria-pressed="chosen.includes(option.value)"
       @click="emit('choose', option.value)"

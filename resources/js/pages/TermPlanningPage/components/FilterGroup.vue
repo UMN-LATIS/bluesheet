@@ -13,7 +13,7 @@
     :style="isOpen ? { flexGrow: Math.min(count, GROW_CAP) } : undefined"
   >
     <div
-      class="tw-flex tw-h-8 tw-flex-none tw-items-center tw-gap-2 tw-border-0 tw-border-y tw-border-solid tw-border-neutral-200 tw-bg-neutral-100 tw-pr-3 tw-text-xs tw-text-neutral-700"
+      class="tw-flex tw-h-8 tw-flex-none tw-items-center tw-gap-2 tw-bg-surface-container-high tw-pr-3 tw-text-xs tw-text-on-surface"
     >
       <button
         type="button"
@@ -22,7 +22,7 @@
         @click="isOpen = !isOpen"
       >
         <span
-          class="tw-w-3 tw-text-[0.6rem] tw-text-neutral-500"
+          class="tw-w-3 tw-text-[0.6rem] tw-text-on-surface-variant"
           aria-hidden="true"
         >
           {{ isOpen ? "▼" : "▶" }}
@@ -32,14 +32,17 @@
       <button
         v-if="checkedCount > 0"
         type="button"
-        class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-font-semibold tw-text-umn-maroon hover:tw-underline"
+        class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-font-semibold tw-text-brand hover:tw-underline"
         @click="emit('clear')"
       >
         Clear
       </button>
-      <span class="tw-text-neutral-500">{{ count }}</span>
+      <span class="tw-text-on-surface-variant">{{ count }}</span>
     </div>
-    <div v-if="isOpen" class="tw-min-h-0 tw-flex-1 tw-overflow-y-auto">
+    <div
+      v-if="isOpen"
+      class="scrollbar-always-visible tw-min-h-0 tw-flex-1 tw-overflow-y-auto"
+    >
       <slot />
     </div>
   </section>

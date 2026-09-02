@@ -1,11 +1,11 @@
 <template>
   <aside
     aria-label="Sections in this hour"
-    class="tw-min-h-0 tw-overflow-y-auto tw-bg-white tw-p-4"
+    class="tw-min-h-0 tw-overflow-y-auto tw-bg-surface-bright tw-p-4 tw-text-on-surface"
   >
     <div class="tw-mb-4 tw-flex tw-items-start tw-justify-between tw-gap-2">
       <div>
-        <p class="tw-m-0 tw-text-xs tw-text-neutral-500">
+        <p class="tw-m-0 tw-text-xs tw-text-on-surface-variant">
           {{ entries.length }}
           {{ entries.length === 1 ? "section meets" : "sections meet" }}
         </p>
@@ -16,7 +16,7 @@
       <button
         type="button"
         aria-label="Close"
-        class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-text-xl tw-leading-none tw-text-neutral-500"
+        class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-text-xl tw-leading-none tw-text-on-surface-variant"
         @click="emit('close')"
       >
         ×
@@ -25,7 +25,7 @@
 
     <p
       v-if="entries.length === 0"
-      class="tw-m-0 tw-text-sm tw-text-neutral-500"
+      class="tw-m-0 tw-text-sm tw-text-on-surface-variant"
     >
       Nothing meets in this hour.
     </p>
@@ -38,7 +38,7 @@
       <li v-for="entry in entries" :key="entry.meetingId">
         <button
           type="button"
-          class="tw-flex tw-w-full tw-cursor-pointer tw-items-baseline tw-justify-between tw-gap-3 tw-rounded-sm tw-border tw-border-solid tw-border-neutral-200 tw-px-2.5 tw-py-1.5 tw-text-left tw-text-xs tw-text-neutral-800 hover:tw-border-neutral-400"
+          class="tw-flex tw-w-full tw-cursor-pointer tw-items-baseline tw-justify-between tw-gap-3 tw-rounded-lg tw-border tw-border-solid tw-border-outline-variant tw-px-2.5 tw-py-1.5 tw-text-left tw-text-xs tw-text-on-surface hover:tw-border-outline"
           :class="colourOfType(entry.section.component).block"
           @click="
             schedule.selectSection(entry.section.id, {
@@ -53,11 +53,11 @@
               {{ entry.section.subject }} {{ entry.section.catalogNumber }} ·
               {{ entry.section.section }}
             </span>
-            <span class="tw-block tw-truncate tw-text-neutral-600">
+            <span class="tw-block tw-truncate tw-text-on-surface-variant">
               {{ entry.section.component }} · {{ instructorOf(entry.section) }}
             </span>
           </span>
-          <span class="tw-flex-none tw-text-right tw-text-neutral-500">
+          <span class="tw-flex-none tw-text-right tw-text-on-surface-variant">
             <span class="tw-block">
               {{ formatTimeRange(entry.startMinute, entry.endMinute) }}
             </span>

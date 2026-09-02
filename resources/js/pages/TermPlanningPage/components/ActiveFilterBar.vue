@@ -18,12 +18,12 @@
       <span
         v-for="value in filters[facet]"
         :key="value"
-        class="tw-inline-flex tw-items-center tw-gap-1 tw-rounded-full tw-border tw-border-solid tw-border-neutral-400 tw-py-0.5 tw-pl-2.5 tw-pr-0.5"
+        class="tw-inline-flex tw-items-center tw-gap-1 tw-rounded-full tw-bg-primary-container tw-py-0.5 tw-pl-2.5 tw-pr-0.5 tw-text-on-primary-container"
       >
         {{ optionLabel(options, facet, value) }}
         <button
           type="button"
-          class="tw-flex tw-h-4 tw-w-4 tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-leading-none tw-text-neutral-600 hover:tw-bg-neutral-200"
+          class="tw-flex tw-h-4 tw-w-4 tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-leading-none tw-text-on-primary-container hover:tw-bg-surface-bright/60"
           :aria-label="`Remove ${optionLabel(options, facet, value)}`"
           @click="schedule.removeFilterValues(facet, [value])"
         >
@@ -34,7 +34,7 @@
 
     <button
       type="button"
-      class="tw-ml-2 tw-cursor-pointer tw-border-none tw-bg-transparent tw-font-semibold tw-text-umn-maroon hover:tw-underline"
+      class="tw-ml-2 tw-cursor-pointer tw-border-none tw-bg-transparent tw-font-semibold tw-text-brand hover:tw-underline"
       @click="schedule.clearFilters()"
     >
       Clear all

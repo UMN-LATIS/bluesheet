@@ -1,5 +1,5 @@
 <template>
-  <div class="tw-bg-white">
+  <div class="tw-bg-surface-bright">
     <!--
       A day's name sticks to the right of the gutter as its column scrolls
       past, so the columns are still identifiable once one is wider than the
@@ -16,7 +16,7 @@
       -->
       <div
         ref="gutter"
-        class="tw-sticky tw-left-0 tw-z-40 tw-flex tw-flex-none tw-border-0 tw-border-r tw-border-solid tw-border-neutral-200 tw-bg-white"
+        class="tw-sticky tw-left-0 tw-z-40 tw-flex tw-flex-none tw-border-0 tw-border-r tw-border-solid tw-border-outline-variant tw-bg-surface-bright"
       >
         <TimeAxis />
       </div>

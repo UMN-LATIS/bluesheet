@@ -7,7 +7,7 @@
     -->
     <span
       v-if="isEdited"
-      class="tw-absolute tw-right-0 tw-top-0.5 tw-h-1.5 tw-w-1.5 tw-rounded-full tw-bg-neutral-700"
+      class="tw-absolute tw-right-0 tw-top-0.5 tw-h-2 tw-w-2 tw-rounded-full tw-bg-accent tw-ring-1 tw-ring-inset tw-ring-black/20"
       title="Edited here, not saved anywhere"
     />
     <div class="tw-truncate tw-font-semibold">{{ heading }}</div>

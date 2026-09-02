@@ -9,7 +9,7 @@
       class="tw-flex tw-items-center tw-gap-1.5"
     >
       <span
-        class="tw-h-3 tw-w-4 tw-rounded-sm tw-border tw-border-solid tw-border-neutral-200 tw-border-l-[3px]"
+        class="tw-h-3 tw-w-4 tw-rounded tw-border tw-border-solid tw-border-outline-variant tw-border-l-[3px]"
         :class="entry.swatch"
         aria-hidden="true"
       />

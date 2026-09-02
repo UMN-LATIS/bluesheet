@@ -8,7 +8,7 @@
   <aside
     v-if="isCollapsed"
     aria-label="Filters, collapsed"
-    class="tw-flex tw-min-h-0 tw-flex-col tw-items-center tw-gap-2 tw-bg-white tw-py-1.5"
+    class="tw-flex tw-min-h-0 tw-flex-col tw-items-center tw-gap-2 tw-bg-surface tw-py-1.5"
   >
     <button
       type="button"
@@ -31,15 +31,10 @@
   <aside
     v-else
     aria-label="Filters"
-    class="tw-flex tw-min-h-0 tw-flex-col tw-bg-white"
+    class="tw-flex tw-min-h-0 tw-flex-col tw-bg-surface"
   >
-    <!--
-      Same height as the toolbar over the grid, so the two read as one band.
-      "New" is a placeholder until a plan can be edited (epic slice 6).
-    -->
-    <div
-      class="tw-flex tw-h-9 tw-flex-none tw-items-center tw-justify-between tw-border-0 tw-border-b tw-border-solid tw-border-neutral-200 tw-px-1.5"
-    >
+    <!-- Same height as the toolbar over the grid, so the two read as one band. -->
+    <div class="tw-flex tw-h-9 tw-flex-none tw-items-center tw-px-1.5">
       <button
         type="button"
         :class="ICON_BUTTON_CLASS"
@@ -49,27 +44,6 @@
       >
         <i class="fas fa-angle-double-left" aria-hidden="true" />
       </button>
-
-      <span
-        class="tw-inline-flex tw-text-xs"
-        title="Available once a plan can be edited"
-      >
-        <button
-          type="button"
-          disabled
-          class="tw-rounded-l tw-border tw-border-solid tw-border-bs-blue tw-bg-bs-blue tw-px-2.5 tw-py-1 tw-font-semibold tw-text-white disabled:tw-cursor-not-allowed disabled:tw-opacity-50"
-        >
-          <i class="fas fa-plus tw-mr-1" aria-hidden="true" />New
-        </button>
-        <button
-          type="button"
-          disabled
-          aria-label="More ways to create"
-          class="tw--ml-px tw-rounded-r tw-border tw-border-solid tw-border-bs-blue tw-bg-bs-blue tw-px-1.5 tw-py-1 tw-text-white disabled:tw-cursor-not-allowed disabled:tw-opacity-50"
-        >
-          <i class="fas fa-caret-down" aria-hidden="true" />
-        </button>
-      </span>
     </div>
 
     <div class="tw-flex-none tw-p-3">
@@ -81,7 +55,7 @@
         v-model="search"
         type="search"
         placeholder="Search courses, people, sections"
-        class="tw-w-full tw-rounded-md tw-border tw-border-solid tw-border-neutral-300 tw-px-3 tw-py-1.5 tw-text-xs placeholder:tw-text-neutral-400"
+        class="tw-w-full tw-rounded-lg tw-border tw-border-solid tw-border-transparent tw-bg-surface-bright tw-px-3 tw-py-1.5 tw-text-xs tw-text-on-surface placeholder:tw-text-on-surface-variant focus:tw-border-primary focus:tw-outline-none"
       />
     </div>
 
@@ -95,9 +69,7 @@
       >
         <template v-for="level in courseLevels" :key="level.label">
           <!-- Pinned to the top of the group's scroll box as its courses go past. -->
-          <div
-            class="tw-sticky tw-top-0 tw-z-10 tw-border-0 tw-border-b tw-border-solid tw-border-neutral-100 tw-bg-neutral-50"
-          >
+          <div class="tw-sticky tw-top-0 tw-z-10 tw-bg-surface">
             <FilterRow
               :isChecked="level.checkedCount === level.courses.length"
               :isIndeterminate="
@@ -256,7 +228,7 @@ const props = defineProps<{
 const isCollapsed = defineModel<boolean>("isCollapsed", { default: false });
 
 const ICON_BUTTON_CLASS =
-  "tw-flex tw-h-7 tw-w-7 tw-cursor-pointer tw-items-center tw-justify-center tw-rounded tw-border-none tw-bg-transparent tw-text-neutral-500 hover:tw-bg-neutral-100 hover:tw-text-neutral-800";
+  "tw-flex tw-h-7 tw-w-7 tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-text-on-surface-variant hover:tw-bg-surface-container-high hover:tw-text-on-surface";
 
 const search = ref("");
 

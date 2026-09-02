@@ -16,6 +16,7 @@ import App from "./App.vue";
 // Global CSS
 import "@umn-latis/cla-vue-template/dist/index.css";
 import "../sass/app.scss";
+import "../sass/tokens.css";
 import "../sass/utils.css";
 
 const pinia = createPinia();
