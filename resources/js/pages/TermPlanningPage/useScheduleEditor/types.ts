@@ -60,9 +60,23 @@ export type Interaction =
  */
 export type Selection =
   | { kind: "meeting"; meetingId: string }
-  | { kind: "section"; sectionId: number }
-  /** A cell of the coverage heatmap: one hour of one day. */
-  | { kind: "hour"; dayIndex: number; startMinute: number };
+  | {
+      kind: "section";
+      sectionId: number;
+      /**
+       * The hour whose list this section was picked from, when it was. The
+       * sheet offers a way back to that list rather than a plain close.
+       */
+      from?: HourSelection;
+    }
+  | HourSelection;
+
+/** A cell of the coverage heatmap: one hour of one day. */
+export interface HourSelection {
+  kind: "hour";
+  dayIndex: number;
+  startMinute: number;
+}
 
 /**
  * Only the local edits live here. The schedule itself — the sections the
@@ -115,8 +129,8 @@ export type EditorEvent =
   | { type: "cancelled" }
   /** The detail sheet's close button. */
   | { type: "deselected" }
-  /** A chip in the no-set-time tray, or a row in the hour sheet. */
-  | { type: "selectedSection"; sectionId: number }
+  /** A chip in the no-set-time tray, or a row in the hour sheet (which names the hour it came from). */
+  | { type: "selectedSection"; sectionId: number; from?: HourSelection }
   /** A cell of the coverage heatmap. */
   | { type: "selectedHour"; dayIndex: number; startMinute: number }
   /** A checkbox checked, or a whole course level's checkboxes at once. */

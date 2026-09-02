@@ -83,13 +83,20 @@ const props = defineProps<{
   schedule: ScheduleEditor;
 }>();
 
+/**
+ * The cell stays marked while the user is a level down in one of its
+ * sections, so the sheet's back link and the ring point at the same hour.
+ */
 const isSelected = (dayIndex: number, startMinute: number) => {
   const { selection } = props.schedule.state.value;
-  return (
-    selection?.kind === "hour" &&
-    selection.dayIndex === dayIndex &&
-    selection.startMinute === startMinute
-  );
+  const hour =
+    selection?.kind === "hour"
+      ? selection
+      : selection?.kind === "section"
+        ? selection.from
+        : undefined;
+
+  return hour?.dayIndex === dayIndex && hour?.startMinute === startMinute;
 };
 
 const coverage = computed(() =>

@@ -131,6 +131,7 @@
       <HourSheet
         v-if="selectedHour"
         class="tw-w-96 tw-flex-none tw-border-0 tw-border-l tw-border-solid tw-border-neutral-200"
+        :dayIndex="selectedHour.dayIndex"
         :dayName="DAY_NAMES[selectedHour.dayIndex]"
         :startMinute="selectedHour.startMinute"
         :entries="hourEntries"
@@ -141,6 +142,15 @@
         v-else-if="selectedSection"
         class="tw-w-96 tw-flex-none tw-border-0 tw-border-l tw-border-solid tw-border-neutral-200"
         :section="selectedSection"
+        :returnTo="sectionReturnTo && hourLabel(sectionReturnTo)"
+        @back="
+          sectionReturnTo &&
+          schedule.dispatch({
+            type: 'selectedHour',
+            dayIndex: sectionReturnTo.dayIndex,
+            startMinute: sectionReturnTo.startMinute,
+          })
+        "
         @close="schedule.dispatch({ type: 'deselected' })"
       />
     </div>
@@ -174,7 +184,8 @@ import { useSisSectionsQuery } from "./queries/useSisSectionsQuery";
 import { useSisTermsQuery } from "./queries/useSisTermsQuery";
 import { FILTER_FACETS, type Meeting } from "./types";
 import { mergeSchedule, useScheduleEditor } from "./useScheduleEditor";
-import type { Effect } from "./useScheduleEditor/types";
+import type { Effect, HourSelection } from "./useScheduleEditor/types";
+import { formatTimeRange } from "./helpers/timeScale";
 
 const props = defineProps<{
   groupId: number;
@@ -304,6 +315,16 @@ const shownMeetings = computed(() =>
 const selectedHour = computed(() => {
   const { selection } = schedule.state.value;
   return selection?.kind === "hour" ? selection : null;
+});
+
+/** "Tue · 2 – 3p": how both sheets name an hour. */
+const hourLabel = (hour: HourSelection) =>
+  `${DAY_NAMES[hour.dayIndex]} · ${formatTimeRange(hour.startMinute, hour.startMinute + 60)}`;
+
+/** The hour list a selected section was picked from, if it was. */
+const sectionReturnTo = computed<HourSelection | null>(() => {
+  const { selection } = schedule.state.value;
+  return selection?.kind === "section" ? (selection.from ?? null) : null;
 });
 
 /** The sections whose meetings overlap the selected hour, as the grid shows them. */

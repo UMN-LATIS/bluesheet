@@ -180,7 +180,11 @@ function reduce(
     case "selectedSection":
       return {
         ...state,
-        selection: { kind: "section", sectionId: event.sectionId },
+        selection: {
+          kind: "section",
+          sectionId: event.sectionId,
+          ...(event.from ? { from: event.from } : {}),
+        },
       };
 
     case "selectedHour":

@@ -44,6 +44,7 @@
             schedule.dispatch({
               type: 'selectedSection',
               sectionId: entry.section.id,
+              from: { kind: 'hour', dayIndex, startMinute },
             })
           "
         >
@@ -82,6 +83,7 @@ export interface HourEntry extends TimeRange {
  * day. Read-only, like the section sheet; it answers "who is that 5?".
  */
 defineProps<{
+  dayIndex: number;
   dayName: string;
   startMinute: number;
   entries: HourEntry[];

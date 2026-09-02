@@ -10,6 +10,20 @@
     class="tw-min-h-0 tw-overflow-y-auto tw-bg-white tw-p-4"
   >
     <div>
+      <!--
+        Opened from a list (an hour of the heatmap), the sheet is one level
+        down, so its way out is back up to that list rather than closing.
+      -->
+      <button
+        v-if="returnTo"
+        type="button"
+        class="tw-mb-2 tw-flex tw-cursor-pointer tw-items-center tw-gap-1 tw-border-none tw-bg-transparent tw-p-0 tw-text-xs tw-font-semibold tw-text-bs-blue hover:tw-underline"
+        @click="emit('back')"
+      >
+        <i class="fas fa-chevron-left tw-text-[0.6rem]" aria-hidden="true" />
+        {{ returnTo }}
+      </button>
+
       <div class="tw-mb-4 tw-flex tw-items-start tw-justify-between tw-gap-2">
         <div>
           <p class="tw-m-0 tw-text-xs tw-text-neutral-500">
@@ -21,6 +35,7 @@
           </h2>
         </div>
         <button
+          v-if="!returnTo"
           type="button"
           aria-label="Close"
           class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-text-xl tw-leading-none tw-text-neutral-500"
@@ -94,9 +109,11 @@ import type { SisDay, SisSection } from "../types";
 
 const props = defineProps<{
   section: SisSection;
+  /** Names the list this sheet was opened from, e.g. "Tue · 2 – 3p", if any. */
+  returnTo?: string | null;
 }>();
 
-const emit = defineEmits<{ close: [] }>();
+const emit = defineEmits<{ close: []; back: [] }>();
 
 /** Shared by every row's label, styled like a form field's. */
 const LABEL_CLASS =
