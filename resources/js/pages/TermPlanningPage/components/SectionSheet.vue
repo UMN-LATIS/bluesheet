@@ -176,11 +176,46 @@
 
       <div>
         <span :class="LABEL_CLASS">Instructors</span>
-        <div v-if="draft.instructors.length === 0">TBA</div>
-        <div v-for="instructor in draft.instructors" :key="instructor.emplid">
-          {{ instructor.name ?? "TBA" }}
-          <span class="tw-text-neutral-500">{{ instructor.role }}</span>
+        <div
+          v-for="instructor in draft.instructors"
+          :key="instructor.emplid"
+          class="tw-mb-1 tw-flex tw-items-center tw-justify-between tw-gap-2 tw-rounded tw-border tw-border-solid tw-border-neutral-200 tw-px-2.5 tw-py-1.5"
+        >
+          <span>
+            {{ instructor.name ?? "TBA" }}
+            <!-- The usual role is unremarkable; a TA or a second instructor is not. -->
+            <span
+              v-if="instructor.role !== PRIMARY_ROLE"
+              class="tw-text-xs tw-text-neutral-500"
+            >
+              {{ instructor.role }}
+            </span>
+          </span>
+          <button
+            type="button"
+            class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-neutral-500 hover:tw-text-neutral-800"
+            :aria-label="`Remove ${instructor.name ?? 'instructor'}`"
+            @click="removeInstructor(instructor.emplid)"
+          >
+            ×
+          </button>
         </div>
+        <p
+          v-if="draft.instructors.length === 0"
+          class="tw-m-0 tw-mb-1 tw-text-neutral-500"
+        >
+          TBA
+        </p>
+        <ComboBox
+          label="Add instructor"
+          placeholder="Add instructor…"
+          :showLabel="false"
+          :options="rosterOptions"
+          :modelValue="null"
+          strategy="fixed"
+          teleportTo="body"
+          @update:modelValue="addInstructor"
+        />
       </div>
 
       <div>
@@ -297,11 +332,13 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import SegmentedControl, { type SegmentedOption } from "./SegmentedControl.vue";
+import { ComboBox, type ComboBoxOptionType } from "@/components/ComboBox";
 import { minutesFromClock } from "../helpers/timeScale";
 import type {
   Delivery,
   PlannedSection,
   SisDay,
+  SisEmployee,
   SisSectionMeeting,
 } from "../types";
 import type { ScheduleEditor } from "../useScheduleEditor";
@@ -311,6 +348,8 @@ const props = defineProps<{
   schedule: ScheduleEditor;
   /** The term's sections, for reading a cross-list partner's cap. */
   sections: PlannedSection[];
+  /** The department roster, which is who a section can be assigned to. */
+  roster: SisEmployee[];
   /** Names the list this sheet was opened from, e.g. "Tue · 2 – 3p", if any. */
   returnTo?: string | null;
 }>();
@@ -332,6 +371,12 @@ const DELIVERY_OPTIONS: SegmentedOption[] = [
   { value: "blended", label: "Blended" },
   { value: "online", label: "Online" },
 ];
+
+/**
+ * What the SIS calls the instructor of record. Someone added here takes it,
+ * and it is the role the sheet leaves unsaid.
+ */
+const PRIMARY_ROLE = "PI";
 
 /** The value of the Days button that stands for no meeting time at all. */
 const ASYNC = "async";
@@ -408,6 +453,47 @@ const editCap = (raw: string) =>
 const problemWith = (patternIndex: number) =>
   problems.value.find((problem) => problem.patternIndex === patternIndex)
     ?.message;
+
+/** Anyone already on the section is not offered again. */
+const rosterOptions = computed<ComboBoxOptionType[]>(() =>
+  props.roster
+    .filter(
+      (person) =>
+        !draft.value.instructors.some(
+          (instructor) => instructor.emplid === person.emplid,
+        ),
+    )
+    .map((person) => ({
+      id: person.emplid,
+      label: person.name ?? String(person.emplid),
+      secondaryLabel: person.positionTitle ?? undefined,
+    })),
+);
+
+function addInstructor(option: ComboBoxOptionType | null) {
+  const person = props.roster.find(({ emplid }) => emplid === option?.id);
+  if (!person) return;
+
+  edit({
+    instructors: [
+      ...draft.value.instructors,
+      {
+        emplid: person.emplid,
+        role: PRIMARY_ROLE,
+        name: person.name,
+        lastName: person.lastName,
+        internetId: person.internetId,
+      },
+    ],
+  });
+}
+
+const removeInstructor = (emplid: number) =>
+  edit({
+    instructors: draft.value.instructors.filter(
+      (instructor) => instructor.emplid !== emplid,
+    ),
+  });
 
 const partners = computed(() => props.section.crosslist?.partners ?? []);
 

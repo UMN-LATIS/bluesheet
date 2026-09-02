@@ -143,6 +143,7 @@
         :section="selectedSection"
         :schedule="schedule"
         :sections="localSections"
+        :roster="roster"
         :returnTo="sectionReturnTo && hourLabel(sectionReturnTo)"
         @back="
           sectionReturnTo &&
@@ -180,6 +181,7 @@ import { decodeFilters, encodeFilters } from "./helpers/filterQuery";
 import { filterSections } from "./helpers/scheduleFilters";
 import { placeSections } from "./helpers/sectionPlacement";
 import { useGroupQuery } from "./queries/useGroupQuery";
+import { useSisEmployeesQuery } from "./queries/useSisEmployeesQuery";
 import { useSisSectionsQuery } from "./queries/useSisSectionsQuery";
 import { useSisTermsQuery } from "./queries/useSisTermsQuery";
 import { FILTER_FACETS, type Meeting } from "./types";
@@ -221,6 +223,11 @@ const goToTerm = (termCode: string) =>
   });
 
 const groupQuery = useGroupQuery(props.groupId);
+
+const employeesQuery = useSisEmployeesQuery(props.groupId);
+
+/** Who a section can be assigned to: the department's own people. */
+const roster = computed(() => employeesQuery.data.value ?? []);
 
 const isSidebarCollapsed = ref(false);
 
