@@ -6,12 +6,12 @@
       type="button"
       class="tw-min-w-9 tw-cursor-pointer tw-rounded tw-border tw-border-solid tw-px-2.5 tw-py-1.5 tw-text-xs tw-font-semibold"
       :class="
-        isChosen(option.value)
+        chosen.includes(option.value)
           ? 'tw-border-neutral-900 tw-bg-neutral-900 tw-text-white'
           : 'tw-border-neutral-300 tw-bg-white tw-text-neutral-700 hover:tw-border-neutral-500'
       "
-      :aria-pressed="isChosen(option.value)"
-      @click="choose(option.value)"
+      :aria-pressed="chosen.includes(option.value)"
+      @click="emit('choose', option.value)"
     >
       {{ option.label }}
     </button>
@@ -20,9 +20,13 @@
 
 <script setup lang="ts">
 /**
- * A row of buttons standing in for a select or a set of checkboxes, so the
- * whole of a short list is readable at a glance and one press away. Single
- * choice by default; `multiple` makes each button a toggle.
+ * A row of buttons standing in for a select or a set of checkboxes, so a
+ * short list is readable at a glance and one press away.
+ *
+ * It reports which button was pressed and draws whichever are chosen. What a
+ * press means is the caller's to decide, which is what lets one control serve
+ * a single choice (component), a set (days), and a set with an exclusive
+ * member in it (Async).
  */
 
 export interface SegmentedOption {
@@ -30,28 +34,13 @@ export interface SegmentedOption {
   label: string;
 }
 
-const props = defineProps<{
+defineProps<{
   /** Names the group for a screen reader, e.g. "Component". */
   label: string;
   options: SegmentedOption[];
-  multiple?: boolean;
+  /** The values drawn as pressed. */
+  chosen: string[];
 }>();
 
-/** A string for a single choice, a list of them when `multiple`. */
-const model = defineModel<string | string[]>({ required: true });
-
-const chosen = () => (Array.isArray(model.value) ? model.value : [model.value]);
-
-const isChosen = (value: string) => chosen().includes(value);
-
-function choose(value: string) {
-  if (!props.multiple) {
-    model.value = value;
-    return;
-  }
-
-  model.value = isChosen(value)
-    ? chosen().filter((held) => held !== value)
-    : [...chosen(), value];
-}
+const emit = defineEmits<{ choose: [value: string] }>();
 </script>

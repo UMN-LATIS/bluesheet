@@ -9,6 +9,7 @@ import type {
   Meeting,
   PlannedSection,
   ScheduleFilters,
+  SisDay,
   SisInstructor,
   SisSectionMeeting,
   TimeRange,
@@ -185,6 +186,24 @@ export type EditorEvent =
   | { type: "filtersReplaced"; filters: ScheduleFilters }
   /** A field in the detail sheet changed, which writes the section's draft. */
   | { type: "sectionFieldEdited"; sectionId: number; change: SectionEdit }
+  /** A day pressed in the sheet. An index past the last pattern starts one. */
+  | {
+      type: "meetingDayToggled";
+      sectionId: number;
+      patternIndex: number;
+      day: SisDay;
+    }
+  | {
+      type: "meetingTimeEdited";
+      sectionId: number;
+      patternIndex: number;
+      startTime?: string;
+      endTime?: string;
+    }
+  | { type: "meetingPatternAdded"; sectionId: number }
+  | { type: "meetingPatternRemoved"; sectionId: number; patternIndex: number }
+  /** The Async day: the section keeps no meeting time at all. */
+  | { type: "madeAsynchronous"; sectionId: number }
   /** The sheet's Save: the draft becomes what the plan says. */
   | { type: "draftSaved"; sectionId: number }
   /** The sheet's Cancel: the form is thrown away and the plan is unchanged. */

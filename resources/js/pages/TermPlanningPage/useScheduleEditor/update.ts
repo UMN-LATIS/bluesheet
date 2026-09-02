@@ -18,7 +18,12 @@
  * here reaches the network yet; the URL is the only effect so far.
  */
 
-import type { FilterFacet, ScheduleFilters, TimeRange } from "../types";
+import type {
+  FilterFacet,
+  ScheduleFilters,
+  SisSectionMeeting,
+  TimeRange,
+} from "../types";
 import {
   clockFromMinutes,
   END_MINUTE,
@@ -26,7 +31,12 @@ import {
   START_MINUTE,
 } from "../helpers/timeScale";
 import { GRID_DAYS, meetingIdOf } from "../helpers/sectionPlacement";
-import { withPlacement } from "./meetingPatterns";
+import {
+  DEFAULT_PATTERN,
+  withDayToggled,
+  withPlacement,
+  withTimes,
+} from "./meetingPatterns";
 import { selectMeetings } from "./selectors";
 import type {
   EditorDeps,
@@ -235,17 +245,49 @@ function reduce(
 
     // The draft is stated in full, so saving is a plain merge: a field the
     // form never touched keeps whatever the section already said.
-    case "draftSaved":
-      return {
-        ...withoutDraft(state, event.sectionId),
-        sectionEdits: {
-          ...state.sectionEdits,
-          [event.sectionId]: {
-            ...state.sectionEdits[event.sectionId],
-            ...state.drafts[event.sectionId],
-          },
-        },
+    case "draftSaved": {
+      const edit = {
+        ...state.sectionEdits[event.sectionId],
+        ...state.drafts[event.sectionId],
       };
+
+      return keepingSelection(
+        {
+          ...withoutDraft(state, event.sectionId),
+          sectionEdits: { ...state.sectionEdits, [event.sectionId]: edit },
+        },
+        context,
+        event.sectionId,
+        edit.meetings,
+      );
+    }
+
+    case "meetingDayToggled":
+      return withDraftPatterns(state, context, event.sectionId, (patterns) =>
+        withDayToggled(patterns, event.patternIndex, event.day),
+      );
+
+    case "meetingTimeEdited":
+      return withDraftPatterns(state, context, event.sectionId, (patterns) =>
+        withTimes(patterns, event.patternIndex, {
+          ...(event.startTime ? { startTime: event.startTime } : {}),
+          ...(event.endTime ? { endTime: event.endTime } : {}),
+        }),
+      );
+
+    case "meetingPatternAdded":
+      return withDraftPatterns(state, context, event.sectionId, (patterns) => [
+        ...patterns,
+        { ...DEFAULT_PATTERN, days: ["mon"] },
+      ]);
+
+    case "meetingPatternRemoved":
+      return withDraftPatterns(state, context, event.sectionId, (patterns) =>
+        patterns.filter((_, index) => index !== event.patternIndex),
+      );
+
+    case "madeAsynchronous":
+      return withDraftPatterns(state, context, event.sectionId, () => []);
 
     case "draftCancelled":
       return withoutDraft(state, event.sectionId);
@@ -261,6 +303,66 @@ function reduce(
     default:
       return assertNever(event);
   }
+}
+
+/**
+ * A save can move the blocks a section is drawn as, and a block is named for
+ * where it sits, so the one that was selected may no longer exist. Keep it
+ * when it does, and otherwise select the block the section now starts with,
+ * so the sheet stays open on what was being edited. A section left with no
+ * meeting time has no block at all, and is selected as itself.
+ */
+function keepingSelection(
+  state: EditorState,
+  context: ScheduleContext,
+  sectionId: number,
+  meetings: SisSectionMeeting[] | undefined,
+): EditorState {
+  const { selection } = state;
+  if (!meetings || selection?.kind !== "meeting") return state;
+
+  const wasThisSection =
+    context.meetings.find(({ id }) => id === selection.meetingId)?.sectionId ===
+    sectionId;
+  if (!wasThisSection) return state;
+
+  const ids = meetings.flatMap((pattern) =>
+    pattern.days.map((day) => meetingIdOf(sectionId, day, pattern.startTime)),
+  );
+  if (ids.includes(selection.meetingId)) return state;
+
+  return {
+    ...state,
+    selection:
+      ids.length > 0
+        ? { kind: "meeting", meetingId: ids[0] }
+        : { kind: "section", sectionId },
+  };
+}
+
+/**
+ * Rewrites the patterns the sheet's form is showing. A form that has not
+ * touched the times yet starts from the section's own, which is where the
+ * context is needed: the draft holds only what has been changed.
+ */
+function withDraftPatterns(
+  state: EditorState,
+  context: ScheduleContext,
+  sectionId: number,
+  change: (patterns: SisSectionMeeting[]) => SisSectionMeeting[],
+): EditorState {
+  const section = context.sections.find(({ id }) => id === sectionId);
+  const draft = state.drafts[sectionId];
+  const patterns = draft?.meetings ?? section?.meetings;
+  if (!patterns) return state;
+
+  return {
+    ...state,
+    drafts: {
+      ...state.drafts,
+      [sectionId]: { ...draft, meetings: change(patterns) },
+    },
+  };
 }
 
 const withoutDraft = (state: EditorState, sectionId: number): EditorState => ({

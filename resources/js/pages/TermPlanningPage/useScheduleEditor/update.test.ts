@@ -727,3 +727,158 @@ describe("the sheet's draft", () => {
     expect(state.drafts).toEqual({});
   });
 });
+
+describe("days and times in the sheet", () => {
+  const section = plannedSection(1, [
+    { days: ["mon", "wed"], startTime: "09:00", endTime: "09:50" },
+  ]);
+  const context = contextOf(section);
+
+  const draftPatterns = (state: EditorState) => state.drafts[1]?.meetings;
+
+  it("a day pressed for the first time starts from the section's own pattern", () => {
+    const state = after(
+      [
+        {
+          type: "meetingDayToggled",
+          sectionId: 1,
+          patternIndex: 0,
+          day: "fri",
+        },
+      ],
+      initialState(),
+      context,
+    );
+
+    expect(draftPatterns(state)).toEqual([
+      { days: ["mon", "wed", "fri"], startTime: "09:00", endTime: "09:50" },
+    ]);
+  });
+
+  it("unchecking the last day drops the pattern, which is what Async means", () => {
+    const state = after(
+      [
+        {
+          type: "meetingDayToggled",
+          sectionId: 1,
+          patternIndex: 0,
+          day: "mon",
+        },
+        {
+          type: "meetingDayToggled",
+          sectionId: 1,
+          patternIndex: 0,
+          day: "wed",
+        },
+      ],
+      initialState(),
+      context,
+    );
+
+    expect(draftPatterns(state)).toEqual([]);
+  });
+
+  it("a day pressed with no pattern left starts one at the default time", () => {
+    const async = after(
+      [{ type: "madeAsynchronous", sectionId: 1 }],
+      initialState(),
+      context,
+    );
+    const state = after(
+      [
+        {
+          type: "meetingDayToggled",
+          sectionId: 1,
+          patternIndex: 0,
+          day: "tue",
+        },
+      ],
+      async,
+      context,
+    );
+
+    expect(draftPatterns(state)).toEqual([
+      { days: ["tue"], startTime: "09:45", endTime: "11:00" },
+    ]);
+  });
+
+  it("a time change touches only the pattern it names", () => {
+    const twoPatterns = contextOf(
+      plannedSection(1, [
+        { days: ["mon"], startTime: "09:00", endTime: "09:50" },
+        { days: ["wed"], startTime: "13:00", endTime: "13:50" },
+      ]),
+    );
+
+    const state = after(
+      [
+        {
+          type: "meetingTimeEdited",
+          sectionId: 1,
+          patternIndex: 1,
+          endTime: "14:45",
+        },
+      ],
+      initialState(),
+      twoPatterns,
+    );
+
+    expect(draftPatterns(state)).toEqual([
+      { days: ["mon"], startTime: "09:00", endTime: "09:50" },
+      { days: ["wed"], startTime: "13:00", endTime: "14:45" },
+    ]);
+  });
+
+  it("saving a move keeps the sheet on the section, at its new block", () => {
+    const selected = after(
+      [
+        { type: "pressedMeeting", meetingId: "s1:mon:0900", minute: 550 },
+        { type: "released" },
+      ],
+      initialState(),
+      context,
+    );
+
+    const state = after(
+      [
+        { type: "madeAsynchronous", sectionId: 1 },
+        {
+          type: "meetingDayToggled",
+          sectionId: 1,
+          patternIndex: 0,
+          day: "thu",
+        },
+        { type: "draftSaved", sectionId: 1 },
+      ],
+      selected,
+      context,
+    );
+
+    expect(state.selection).toEqual({
+      kind: "meeting",
+      meetingId: "s1:thu:0945",
+    });
+  });
+
+  it("saving a section into the tray leaves the sheet open on the section", () => {
+    const selected = after(
+      [
+        { type: "pressedMeeting", meetingId: "s1:mon:0900", minute: 550 },
+        { type: "released" },
+      ],
+      initialState(),
+      context,
+    );
+
+    const state = after(
+      [
+        { type: "madeAsynchronous", sectionId: 1 },
+        { type: "draftSaved", sectionId: 1 },
+      ],
+      selected,
+      context,
+    );
+
+    expect(state.selection).toEqual({ kind: "section", sectionId: 1 });
+  });
+});

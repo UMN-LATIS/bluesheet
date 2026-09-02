@@ -21,7 +21,9 @@
 
 import { computed, reactive, type Ref, shallowRef } from "vue";
 import type { FilterFacet, ScheduleFilters, SisSection } from "../types";
+import { sectionProblems } from "./validation";
 import type { SectionEdit } from "./types";
+import type { SisDay } from "../types";
 import {
   selectDraftSection,
   selectHasEdits,
@@ -84,6 +86,9 @@ export function useScheduleEditor(
       selectIsDraftDirty(section, state.value),
     /** Whether a section reads as anything other than what the SIS holds. */
     hasEdits: (sectionId: number) => selectHasEdits(sectionId, state.value),
+    /** What the form gets wrong, which is what holds Save back. */
+    draftProblems: (section: SisSection) =>
+      sectionProblems(selectDraftSection(section, state.value)),
 
     /** Everything the week grid's columns draw, one entry per day. */
     weekView: (dayCount: number) =>
@@ -120,6 +125,25 @@ export function useScheduleEditor(
 
     editSection: (sectionId: number, change: SectionEdit) =>
       dispatch({ type: "sectionFieldEdited", sectionId, change }),
+    toggleMeetingDay: (sectionId: number, patternIndex: number, day: SisDay) =>
+      dispatch({ type: "meetingDayToggled", sectionId, patternIndex, day }),
+    editMeetingTime: (
+      sectionId: number,
+      patternIndex: number,
+      times: { startTime?: string; endTime?: string },
+    ) =>
+      dispatch({
+        type: "meetingTimeEdited",
+        sectionId,
+        patternIndex,
+        ...times,
+      }),
+    addMeetingPattern: (sectionId: number) =>
+      dispatch({ type: "meetingPatternAdded", sectionId }),
+    removeMeetingPattern: (sectionId: number, patternIndex: number) =>
+      dispatch({ type: "meetingPatternRemoved", sectionId, patternIndex }),
+    makeAsynchronous: (sectionId: number) =>
+      dispatch({ type: "madeAsynchronous", sectionId }),
     saveDraft: (sectionId: number) =>
       dispatch({ type: "draftSaved", sectionId }),
     cancelDraft: (sectionId: number) =>

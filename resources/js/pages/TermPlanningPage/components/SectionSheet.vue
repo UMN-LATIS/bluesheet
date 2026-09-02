@@ -72,27 +72,107 @@
       <div>
         <span :class="LABEL_CLASS">Component</span>
         <SegmentedControl
-          v-model="component"
           label="Component"
           :options="componentOptions"
+          :chosen="[draft.component]"
+          @choose="(code) => edit({ component: code })"
         />
       </div>
 
       <div>
         <span :class="LABEL_CLASS">Delivery</span>
         <SegmentedControl
-          v-model="delivery"
           label="Delivery"
           :options="DELIVERY_OPTIONS"
+          :chosen="[draft.delivery]"
+          @choose="(how) => edit({ delivery: how as Delivery })"
         />
       </div>
 
-      <div>
-        <span :class="LABEL_CLASS">Meets</span>
-        <div v-for="(line, index) in meetingLines" :key="index">
-          {{ line }}
+      <!--
+        One group per meeting pattern. Almost every section has exactly one,
+        so the common case reads as a plain Days and Time pair; a section that
+        meets at different hours on different days gets a group each, and a
+        drag on the grid can split one pattern into two.
+      -->
+      <div
+        v-for="(pattern, patternIndex) in patterns"
+        :key="patternIndex"
+        class="tw-flex tw-flex-col tw-gap-4"
+      >
+        <div>
+          <div class="tw-flex tw-items-baseline tw-justify-between">
+            <span :class="LABEL_CLASS">
+              Days<template v-if="patterns.length > 1">
+                · {{ patternIndex + 1 }}</template
+              >
+            </span>
+            <button
+              v-if="patterns.length > 1"
+              type="button"
+              class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-xs tw-text-neutral-500 hover:tw-text-neutral-800"
+              :aria-label="`Remove meeting time ${patternIndex + 1}`"
+              @click="schedule.removeMeetingPattern(section.id, patternIndex)"
+            >
+              ×
+            </button>
+          </div>
+          <SegmentedControl
+            label="Days"
+            :options="DAY_OPTIONS"
+            :chosen="pattern?.days ?? [ASYNC]"
+            @choose="(day) => pressDay(patternIndex, day)"
+          />
+        </div>
+
+        <!-- No pattern is the Async state, which has no time to show. -->
+        <div v-if="pattern">
+          <span :class="LABEL_CLASS">Time</span>
+          <div class="tw-flex tw-items-center tw-gap-2">
+            <input
+              :value="pattern.startTime"
+              type="time"
+              :aria-label="`Start time ${patternIndex + 1}`"
+              :class="INPUT_CLASS"
+              @input="
+                schedule.editMeetingTime(section.id, patternIndex, {
+                  startTime: valueOf($event),
+                })
+              "
+            />
+            <span class="tw-text-xs tw-text-neutral-500">to</span>
+            <input
+              :value="pattern.endTime"
+              type="time"
+              :aria-label="`End time ${patternIndex + 1}`"
+              :class="INPUT_CLASS"
+              @input="
+                schedule.editMeetingTime(section.id, patternIndex, {
+                  endTime: valueOf($event),
+                })
+              "
+            />
+          </div>
+          <p
+            v-if="problemWith(patternIndex)"
+            class="tw-m-0 tw-mt-1 tw-text-xs tw-text-red-700"
+          >
+            {{ problemWith(patternIndex) }}
+          </p>
+          <p v-else class="tw-m-0 tw-mt-1 tw-text-xs tw-text-neutral-500">
+            {{ durationOf(pattern) }} minutes
+          </p>
         </div>
       </div>
+
+      <button
+        v-if="patterns.length > 0"
+        type="button"
+        class="tw--mt-2 tw-self-start tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-xs tw-font-semibold tw-text-bs-blue hover:tw-underline"
+        @click="schedule.addMeetingPattern(section.id)"
+      >
+        Add meeting time
+      </button>
 
       <div>
         <span :class="LABEL_CLASS">Instructors</span>
@@ -110,11 +190,11 @@
         <div class="tw-flex tw-items-baseline tw-gap-3">
           <input
             :id="fieldId('cap')"
-            :value="draft.enrollmentCap"
+            :value="capText"
             type="number"
             min="0"
             :class="[INPUT_CLASS, 'tw-w-24']"
-            @input="edit({ enrollmentCap: Number(valueOf($event)) })"
+            @input="editCap(valueOf($event))"
           />
           <span class="tw-text-xs tw-text-neutral-500">
             {{ section.enrollmentTotal }} enrolled
@@ -166,12 +246,25 @@
     <div
       class="tw-flex-none tw-border-0 tw-border-t tw-border-solid tw-border-neutral-200 tw-px-4 tw-py-3"
     >
+      <!--
+        Whatever holds Save back that is not about one meeting time, said
+        where the button is rather than beside the field, since the button is
+        where the user is looking when nothing happens.
+      -->
+      <p
+        v-for="problem in generalProblems"
+        :key="problem.message"
+        class="tw-m-0 tw-mb-2 tw-text-xs tw-text-red-700"
+      >
+        {{ problem.message }}
+      </p>
+
       <div class="tw-flex tw-items-center tw-gap-3">
         <button
           type="button"
           class="tw-rounded tw-border tw-border-solid tw-border-bs-blue tw-bg-bs-blue tw-px-3 tw-py-1 tw-text-xs tw-font-semibold tw-text-white disabled:tw-cursor-default disabled:tw-border-neutral-200 disabled:tw-bg-neutral-100 disabled:tw-text-neutral-400"
-          :class="{ 'tw-cursor-pointer': isDirty }"
-          :disabled="!isDirty"
+          :class="{ 'tw-cursor-pointer': isDirty && problems.length === 0 }"
+          :disabled="!isDirty || problems.length > 0"
           @click="schedule.saveDraft(section.id)"
         >
           Save
@@ -204,8 +297,13 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import SegmentedControl, { type SegmentedOption } from "./SegmentedControl.vue";
-import { formatTimeRange, minutesFromClock } from "../helpers/timeScale";
-import type { Delivery, PlannedSection, SisDay } from "../types";
+import { minutesFromClock } from "../helpers/timeScale";
+import type {
+  Delivery,
+  PlannedSection,
+  SisDay,
+  SisSectionMeeting,
+} from "../types";
 import type { ScheduleEditor } from "../useScheduleEditor";
 
 const props = defineProps<{
@@ -235,15 +333,17 @@ const DELIVERY_OPTIONS: SegmentedOption[] = [
   { value: "online", label: "Online" },
 ];
 
-const DAY_LABELS: Record<SisDay, string> = {
-  mon: "Mon",
-  tue: "Tue",
-  wed: "Wed",
-  thu: "Thu",
-  fri: "Fri",
-  sat: "Sat",
-  sun: "Sun",
-};
+/** The value of the Days button that stands for no meeting time at all. */
+const ASYNC = "async";
+
+const DAY_OPTIONS: SegmentedOption[] = [
+  { value: "mon", label: "M" },
+  { value: "tue", label: "T" },
+  { value: "wed", label: "W" },
+  { value: "thu", label: "Th" },
+  { value: "fri", label: "F" },
+  { value: ASYNC, label: "Async" },
+];
 
 /** Unique per section, so two sheets in one page cannot share a label. */
 const fieldId = (field: string) => `section-${props.section.id}-${field}`;
@@ -259,16 +359,6 @@ const edit = (change: Parameters<ScheduleEditor["editSection"]>[1]) =>
 const valueOf = (event: Event) =>
   (event.target as HTMLInputElement | HTMLTextAreaElement).value;
 
-const component = computed({
-  get: () => draft.value.component,
-  set: (value: string | string[]) => edit({ component: value as string }),
-});
-
-const delivery = computed({
-  get: () => draft.value.delivery,
-  set: (value: string | string[]) => edit({ delivery: value as Delivery }),
-});
-
 /** A code the import has never sent still shows, rather than reading as LEC. */
 const componentOptions = computed<SegmentedOption[]>(() =>
   (COMPONENT_CODES.includes(draft.value.component)
@@ -277,18 +367,47 @@ const componentOptions = computed<SegmentedOption[]>(() =>
   ).map((code) => ({ value: code, label: code })),
 );
 
-const meetingLines = computed(() =>
-  draft.value.meetings.length === 0
-    ? ["No set time"]
-    : draft.value.meetings.map((pattern) => {
-        const days = pattern.days.map((day) => DAY_LABELS[day]).join(", ");
-        const range = formatTimeRange(
-          minutesFromClock(pattern.startTime),
-          minutesFromClock(pattern.endTime),
-        );
-        return `${days} ${range}`;
-      }),
+/**
+ * One group per pattern, and one empty group when there are none, so a
+ * section with no set time still shows the days to press to give it one.
+ */
+const patterns = computed(() =>
+  draft.value.meetings.length === 0 ? [undefined] : draft.value.meetings,
 );
+
+/** Async is a day like the others here: the one that means none of them. */
+const pressDay = (patternIndex: number, day: string) =>
+  day === ASYNC
+    ? props.schedule.makeAsynchronous(props.section.id)
+    : props.schedule.toggleMeetingDay(
+        props.section.id,
+        patternIndex,
+        day as SisDay,
+      );
+
+const durationOf = (pattern: SisSectionMeeting) =>
+  minutesFromClock(pattern.endTime) - minutesFromClock(pattern.startTime);
+
+const problems = computed(() => props.schedule.draftProblems(props.section));
+
+const generalProblems = computed(() =>
+  problems.value.filter(({ patternIndex }) => patternIndex === undefined),
+);
+
+/**
+ * An emptied cap is held as NaN rather than snapped to zero, so the field
+ * stays empty while it is being retyped and Save waits for a real number.
+ */
+const capText = computed(() =>
+  Number.isNaN(draft.value.enrollmentCap) ? "" : draft.value.enrollmentCap,
+);
+
+const editCap = (raw: string) =>
+  edit({ enrollmentCap: raw.trim() === "" ? NaN : Number(raw) });
+
+const problemWith = (patternIndex: number) =>
+  problems.value.find((problem) => problem.patternIndex === patternIndex)
+    ?.message;
 
 const partners = computed(() => props.section.crosslist?.partners ?? []);
 

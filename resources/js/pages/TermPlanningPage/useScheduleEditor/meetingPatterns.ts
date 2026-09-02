@@ -14,6 +14,59 @@ import type { SisDay, SisSectionMeeting } from "../types";
 import { WEEK_DAYS } from "../types";
 import type { Placement } from "./types";
 
+/**
+ * What a new pattern starts at: the most common meeting in the data, 244 of
+ * them, and a standard 75-minute period.
+ */
+export const DEFAULT_PATTERN: SisSectionMeeting = {
+  days: [],
+  startTime: "09:45",
+  endTime: "11:00",
+};
+
+/**
+ * The patterns with one day of one of them turned on or off.
+ *
+ * A pattern left with no days is dropped rather than kept as a time nothing
+ * meets at, so unchecking the last day is the same statement as pressing
+ * Async. An index past the end starts a pattern, which is how a section with
+ * no set time gets its first one.
+ */
+export function withDayToggled(
+  patterns: SisSectionMeeting[],
+  patternIndex: number,
+  day: SisDay,
+): SisSectionMeeting[] {
+  const pattern = patterns[patternIndex];
+
+  if (!pattern) {
+    return [...patterns, { ...DEFAULT_PATTERN, days: [day] }];
+  }
+
+  const days = pattern.days.includes(day)
+    ? pattern.days.filter((met) => met !== day)
+    : inWeekOrder([...pattern.days, day]);
+
+  return patterns.flatMap((held, index) =>
+    index === patternIndex
+      ? days.length === 0
+        ? []
+        : [{ ...held, days }]
+      : [held],
+  );
+}
+
+/** The patterns with one of them moved to a new start or end time. */
+export function withTimes(
+  patterns: SisSectionMeeting[],
+  patternIndex: number,
+  times: Partial<Pick<SisSectionMeeting, "startTime" | "endTime">>,
+): SisSectionMeeting[] {
+  return patterns.map((pattern, index) =>
+    index === patternIndex ? { ...pattern, ...times } : pattern,
+  );
+}
+
 /** Which block was dragged, in the terms the patterns are written in. */
 export interface PatternDay {
   day: SisDay;
