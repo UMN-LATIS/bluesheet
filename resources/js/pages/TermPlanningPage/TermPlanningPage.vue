@@ -213,7 +213,9 @@
           <CoverageHeatmap
             :meetings="schedule.meetings"
             :dayNames="WEEKDAY_NAMES"
+            :asyncCount="placed.unscheduled.length"
             :schedule="schedule"
+            @showAsync="showAsyncDay"
           />
         </div>
       </section>
@@ -402,6 +404,11 @@ const currentDayIndex = computed<number>({
 
 const replaceQuery = (changes: LocationQueryRaw) =>
   router.replace({ query: { ...route.query, ...changes } });
+
+// One replace rather than two writes: `view` and `day` land together, so
+// neither reads a query the other has not committed yet.
+const showAsyncDay = () =>
+  replaceQuery({ view: "day", day: encodeDayIndex(ASYNC_DAY_INDEX) });
 
 /** Today, when the week is on; otherwise the week's first day. */
 function todaysColumn(): number {
@@ -701,7 +708,13 @@ const openSheet = computed(() => {
         entries: hourEntries.value,
         schedule,
       },
-      on: { close: () => schedule.deselect() },
+      on: {
+        close: () => schedule.deselect(),
+        // The hour stays selected, so the sheet is still open beside the week.
+        showInWeek: () => {
+          view.value = "week";
+        },
+      },
     };
   }
 
