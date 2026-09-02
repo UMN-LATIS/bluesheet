@@ -41,6 +41,7 @@ const editing = ref(false);
 watch(
   () => props.groupId,
   () => {
+    editing.value = false;
     groupStore.fetchGroup(props.groupId);
   },
   { immediate: true },

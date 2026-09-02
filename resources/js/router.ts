@@ -37,6 +37,17 @@ const testRoutes: RouteRecordRaw[] = [
 
 export const router = createRouter({
   history: createWebHistory(),
+
+  // Restore the scroll position on back/forward, go to the top on a new page.
+  // The removed `<RouterView>` key did this as a side effect of remounting.
+  // A page that rewrites its own query string, like course planning filters,
+  // stays where the reader left it.
+  scrollBehavior: (to, from, savedPosition) => {
+    if (savedPosition) return savedPosition;
+    if (to.path === from.path) return false;
+    return { top: 0 };
+  },
+
   routes: [
     { name: "home", path: "/", component: LandingPage },
     {
@@ -187,9 +198,13 @@ router.onError((error) => {
 
 router.beforeResolve((to, from, next) => {
   // clear any errors in our error store
-  // this prevents the error modal from persisting across pages
-  const errorStore = useErrorStore();
-  errorStore.clearError();
+  // this prevents the error modal from persisting across pages.
+  // A page that replaces its own query string, like course planning
+  // filters, keeps its modal.
+  if (to.path !== from.path) {
+    const errorStore = useErrorStore();
+    errorStore.clearError();
+  }
 
   // scrub any '//' in the path
   const path = to.path.replace(/\/\//g, "/");

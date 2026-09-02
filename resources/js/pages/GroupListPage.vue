@@ -148,8 +148,18 @@ export default {
     },
   },
   watch: {
+    parent: function () {
+      // a new folder gets its own listing, so the old search term goes with it
+      if (this.searchTerm) {
+        // clearing it is enough: the searchTerm watcher reloads the list
+        this.searchTerm = "";
+        return;
+      }
+
+      this.loadGroups();
+    },
     searchTerm: function () {
-      if (this.searchTerm.length > 0) {
+      if (this.searchTerm) {
         this.filterListBySearchTerm();
       } else {
         this.loadGroups();
@@ -226,9 +236,14 @@ export default {
     },
 
     loadGroups() {
+      const requestedParent = this.parent;
+
       axios
         .get("/api/folder/" + (this.parent ? this.parent : ""))
         .then((res) => {
+          // drop a response superseded by a newer folder
+          if (requestedParent !== this.parent) return;
+
           this.groupList = res.data;
         });
 

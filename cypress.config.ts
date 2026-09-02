@@ -1,4 +1,15 @@
 import { defineConfig } from "cypress";
+import { loadEnv } from "vite";
+
+// Read APP_URL from .env so Cypress targets this checkout's app. Each
+// worktree runs on its own APP_PORT, and a hardcoded `http://localhost`
+// points at whichever container currently holds port 80.
+// mode "" so Vite reads only .env and .env.local, no .env.<mode>
+const { APP_URL } = loadEnv("", process.cwd(), "APP_");
+
+if (!APP_URL) {
+  throw new Error("Cypress needs APP_URL in .env to know which app to test.");
+}
 
 export default defineConfig({
   chromeWebSecurity: false,
@@ -12,7 +23,7 @@ export default defineConfig({
   viewportWidth: 1920,
   viewportHeight: 1080,
   e2e: {
-    baseUrl: "http://localhost",
+    baseUrl: APP_URL,
     specPattern: "tests/cypress/integration/**/*.{test,spec}.[jt]s",
     supportFile: "tests/cypress/support/index.ts",
     experimentalRunAllSpecs: true,
