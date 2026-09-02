@@ -78,7 +78,6 @@
       <Disclosure
         label="Component & delivery"
         :summary="`${section.component} · ${labelOfDelivery(section.delivery)}`"
-        isMuted
       >
         <div class="tw-flex tw-gap-5">
           <div class="tw-min-w-0 tw-flex-1">
@@ -102,7 +101,6 @@
       <Disclosure
         label="Cross-listings"
         :summary="partners.length === 0 ? 'None' : String(partners.length)"
-        isMuted
       >
         <p
           v-if="partners.length === 0"
@@ -127,7 +125,6 @@
       <Disclosure
         label="Teaching assistants"
         :summary="String(assistants.length)"
-        isMuted
       >
         <div v-if="assistants.length > 0" class="tw-flex tw-flex-col tw-gap-2">
           <PersonRecord
@@ -144,7 +141,7 @@
 
       <div class="tw-h-px tw-bg-surface-container" />
 
-      <Disclosure label="Notes" :summary="notesSummary" isMuted>
+      <Disclosure label="Notes" :summary="notesSummary">
         <p
           class="tw-m-0 tw-whitespace-pre-line tw-text-[12.5px]"
           :class="{ 'tw-text-on-surface-variant': section.notes.trim() === '' }"

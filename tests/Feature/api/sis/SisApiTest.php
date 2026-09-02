@@ -76,6 +76,37 @@ describe('GET /api/sis/terms', function () {
     });
 });
 
+describe('GET /api/sis/groups', function () {
+    it('returns the departments a scheduler can open, by name', function () {
+        actingAs($this->admin);
+        $res = getJson('/api/sis/groups');
+
+        expect($res->status())->toBe(200);
+        expect($res->json())->toContain([
+            'id' => $this->group->id,
+            'name' => $this->group->group_title,
+            'abbreviation' => $this->group->abbreviation,
+        ]);
+    });
+
+    it('leaves out a group that names no SIS department', function () {
+        $group = Group::factory()->create(['dept_id' => 'not a department']);
+
+        actingAs($this->admin);
+        $res = getJson('/api/sis/groups');
+
+        expect(collect($res->json())->pluck('id'))->not->toContain($group->id);
+    });
+
+    it('returns nothing to a user with no read privileges', function () {
+        actingAs($this->basicUser);
+        $res = getJson('/api/sis/groups');
+
+        expect($res->status())->toBe(200);
+        expect($res->json())->toBe([]);
+    });
+});
+
 describe('GET /api/sis/groups/:groupId/sections', function () {
     it('returns the department sections for the requested term', function () {
         $section = sectionInGroupDept(['subject' => 'AFRO', 'catalog_number' => '4406']);

@@ -19,6 +19,7 @@ use App\Http\Controllers\CoursePlanning\GroupPersonController;
 use App\Http\Controllers\CoursePlanning\GroupLeaveController;
 use App\Http\Controllers\CoursePlanning\GroupCourseController;
 use App\Http\Controllers\Sis\TermController as SisTermController;
+use App\Http\Controllers\Sis\GroupController as SisGroupController;
 use App\Http\Controllers\Sis\GroupSectionController as SisGroupSectionController;
 use App\Http\Controllers\Sis\GroupCourseController as SisGroupCourseController;
 use App\Http\Controllers\Sis\GroupEmployeeController as SisGroupEmployeeController;
@@ -122,6 +123,7 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
     // Read-only views of the SIS data cached in the sis_ tables.
     Route::prefix('sis')->group(function () {
         Route::get('/terms', [SisTermController::class, 'index']);
+        Route::get('/groups', [SisGroupController::class, 'index']);
         Route::get('/groups/{group}/sections', [SisGroupSectionController::class, 'index']);
         Route::get('/groups/{group}/courses', [SisGroupCourseController::class, 'index']);
         Route::get('/groups/{group}/employees', [SisGroupEmployeeController::class, 'index']);

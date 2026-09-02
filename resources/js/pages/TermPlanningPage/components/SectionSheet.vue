@@ -17,8 +17,7 @@
       <button
         v-if="returnTo"
         type="button"
-        class="tw-mb-2 tw-flex tw-cursor-pointer tw-items-center tw-gap-1 tw-border-none tw-bg-transparent tw-p-0 tw-text-xs tw-font-semibold hover:tw-underline"
-        :class="isLocked ? 'tw-text-on-surface-variant' : 'tw-text-primary'"
+        class="tw-mb-2 tw-flex tw-cursor-pointer tw-items-center tw-gap-1 tw-border-none tw-bg-transparent tw-p-0 tw-text-xs tw-font-semibold tw-text-primary hover:tw-underline"
         @click="emit('back')"
       >
         <i class="fas fa-chevron-left tw-text-[0.6rem]" aria-hidden="true" />
@@ -72,7 +71,7 @@
       </p>
     </div>
 
-    <SectionFacts v-if="isLocked" :section="section" />
+    <SectionFacts v-if="isReadOnly" :section="section" />
 
     <div
       v-else
@@ -472,16 +471,11 @@
       only place the lock can be named.
     -->
     <div
-      v-if="isLocked"
-      class="tw-flex tw-flex-none tw-items-center tw-gap-2.5 tw-border-0 tw-border-t tw-border-solid tw-border-outline-variant tw-bg-surface tw-px-[18px] tw-py-3"
+      v-if="isReadOnly"
+      class="tw-flex tw-flex-none tw-items-center tw-gap-2 tw-border-0 tw-border-t tw-border-solid tw-border-outline-variant tw-bg-surface tw-px-[18px] tw-py-3"
     >
       <LockIcon class="tw-h-4 tw-w-4 tw-flex-none tw-text-on-surface-variant" />
       <span class="tw-text-xs tw-font-bold">Read only</span>
-      <span
-        class="tw-min-w-0 tw-truncate tw-text-xs tw-text-on-surface-variant"
-      >
-        {{ lockReason }}
-      </span>
     </div>
 
     <div
@@ -595,11 +589,10 @@ const props = defineProps<{
   /** Names the term in the cancel prompt, e.g. "Fall 2026". */
   termName?: string;
   /**
-   * Why this term cannot be edited, e.g. "Fall 2025 is closed." Present is
-   * what makes the sheet read-only: every field becomes its value, and
-   * everything that would have written is gone rather than dimmed.
+   * A term that takes no edits: every field becomes its value, and everything
+   * that would have written is gone rather than dimmed.
    */
-  lockReason?: string;
+  isReadOnly?: boolean;
 }>();
 
 const emit = defineEmits<{ close: []; back: [] }>();
@@ -632,8 +625,6 @@ const menuContainerRef = ref<HTMLElement | null>(null);
 onClickOutside(menuContainerRef, () => {
   isMenuOpen.value = false;
 });
-
-const isLocked = computed(() => Boolean(props.lockReason));
 
 const fieldId = (field: string) => `section-${props.section.id}-${field}`;
 

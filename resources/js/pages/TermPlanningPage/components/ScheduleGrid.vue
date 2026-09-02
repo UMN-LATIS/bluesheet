@@ -98,10 +98,13 @@ import { WEEKDAY_NAMES } from "../helpers/scheduleDays";
 const DAY_NAMES = WEEKDAY_NAMES;
 
 /**
- * Wide enough for two chips side by side, which is what stops a column of
- * two hundred unplaced sections from reading as one long ragged list.
+ * Three chips to a row. A chip is a section code and a pair of initials, so
+ * about 140px at its longest; three of those, two 6px gaps, 24px of padding
+ * and the 12px this column's own scrollbar takes leaves 468. A narrower
+ * column stacks sixty unplaced sections into one long ragged list that
+ * scrolls, which is the thing the tray was moved out of the page to stop.
  */
-const ASYNC_COLUMN_WIDTH = 282;
+const ASYNC_COLUMN_WIDTH = 468;
 
 const props = defineProps<{
   schedule: ScheduleEditor;

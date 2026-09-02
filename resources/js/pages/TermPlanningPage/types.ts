@@ -40,6 +40,15 @@ export const WEEK_DAYS: SisDay[] = [
   "sun",
 ];
 
+/** A department a scheduler can open, as the group switcher lists it. */
+export interface SisGroup {
+  /** The BlueSheet group id, which is what the page's route names. */
+  id: number;
+  name: string | null;
+  /** The subject code a scheduler knows the department by, e.g. "PSY". */
+  abbreviation: string | null;
+}
+
 export interface SisTerm {
   /** The term code, e.g. 1269. */
   id: number;

@@ -1,9 +1,9 @@
 <!--
   A named part of the sheet that stays shut until asked for, with what it
-  holds legible on its header. The header keeps working on a locked term,
-  since looking is not changing; only its colour goes, because blue is the
-  sheet's editing colour and two blue words in an otherwise inert panel read
-  as the only live thing on it.
+  holds legible on its header. The header works on a read-only term too,
+  since looking is not changing, and it keeps its blue there: blue is what
+  marks a control, and a control that works and does not say so is worse than
+  one blue word in an otherwise inert panel.
 -->
 <template>
   <div>
@@ -20,8 +20,7 @@
         {{ summary }}
       </span>
       <span
-        class="tw-ml-auto tw-text-[11px] tw-font-semibold tw-normal-case tw-tracking-normal"
-        :class="isMuted ? 'tw-text-on-surface-variant' : 'tw-text-primary'"
+        class="tw-ml-auto tw-text-[11px] tw-font-semibold tw-normal-case tw-tracking-normal tw-text-primary"
       >
         {{ isOpen ? "Hide" : "Show" }}
       </span>
@@ -40,8 +39,6 @@ defineProps<{
   label: string;
   /** What the part holds, read without opening it: "DIS · On campus", "1". */
   summary: string;
-  /** Drops the editing colour where nothing on the panel can be edited. */
-  isMuted?: boolean;
 }>();
 
 const isOpen = ref(false);

@@ -7,13 +7,26 @@
         >
           Term Planning
         </span>
-        <router-link
-          v-if="groupQuery.data.value"
-          :to="{ name: 'group', params: { groupId } }"
-          class="tw-hidden tw-truncate tw-text-[13px] tw-text-on-surface-variant tw-no-underline hover:tw-text-on-surface hover:tw-underline cramped:tw-block"
+        <!-- A scheduler covering several departments moves between them
+             here, rather than through the group page and back. -->
+        <label
+          class="tw-m-0 tw-hidden tw-min-w-0 tw-font-normal cramped:tw-block"
         >
-          {{ groupQuery.data.value.group_title }}
-        </router-link>
+          <span class="tw-sr-only">Department</span>
+          <select
+            class="tw-max-w-[15rem] tw-cursor-pointer tw-truncate tw-border-none tw-bg-transparent tw-p-0 tw-text-[13px] tw-text-on-surface-variant hover:tw-text-on-surface"
+            :value="groupId"
+            @change="goToGroup(($event.target as HTMLSelectElement).value)"
+          >
+            <option
+              v-for="option in departmentOptions"
+              :key="option.id"
+              :value="option.id"
+            >
+              {{ labelOfDepartment(option) }}
+            </option>
+          </select>
+        </label>
       </div>
 
       <div class="tw-ml-auto tw-flex tw-flex-none tw-items-center tw-gap-2.5">
@@ -94,7 +107,7 @@
           the strip under it says the same thing at greater length.
         -->
         <span
-          v-if="termLock"
+          v-if="isReadOnly"
           class="tw-hidden tw-flex-none tw-items-center tw-gap-1.5 cramped:tw-inline-flex tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-container tw-py-1 tw-pl-2 tw-pr-2.5 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-surface-variant"
         >
           <LockIcon class="tw-h-3 tw-w-3 tw-flex-none" />
@@ -102,25 +115,6 @@
         </span>
       </div>
     </template>
-
-    <!--
-      Persistent, and not dismissible: a term being read-only is a state, not
-      a notice. The pill above names the cause in two words; this gives the
-      reason in a sentence.
-    -->
-    <div
-      v-if="termLock"
-      class="tw-mx-3 tw-mb-3 tw-flex tw-flex-none tw-items-center tw-gap-2.5 tw-rounded-[10px] tw-border tw-border-solid tw-border-outline-variant tw-bg-surface tw-px-3.5 tw-py-2.5 roomy:tw-mx-4"
-    >
-      <LockIcon
-        class="tw-h-4 tw-w-4 tw-flex-none tw-text-on-surface-variant"
-        aria-hidden="true"
-      />
-      <span class="tw-text-[13px] tw-font-bold">{{ termLock.headline }}</span>
-      <span class="tw-truncate tw-text-[13px] tw-text-on-surface-variant">
-        {{ termLock.detail }}
-      </span>
-    </div>
 
     <!--
       The panes float as cards on the recessed page. `relative` is what the
@@ -152,7 +146,7 @@
         >
           <!-- How much of the term is placed is a measure of work left to
                do, which a term nobody can edit is not asking for. -->
-          <span v-if="termLock" class="tw-flex-none">
+          <span v-if="isReadOnly" class="tw-flex-none">
             <span class="tw-font-semibold">{{ visibleSections.length }}</span>
             {{ visibleSections.length === 1 ? "section" : "sections" }}
           </span>
@@ -329,13 +323,19 @@ import {
 import { filterSections } from "./helpers/scheduleFilters";
 import { ASYNC_DAY_INDEX, WEEKDAY_NAMES } from "./helpers/scheduleDays";
 import { placeSections } from "./helpers/sectionPlacement";
-import { lockOfTerm } from "./helpers/termLock";
+import { isTermReadOnly } from "./helpers/termLock";
 import { formatTimeRange } from "./helpers/timeScale";
 import { useGroupQuery } from "./queries/useGroupQuery";
 import { useSisEmployeesQuery } from "./queries/useSisEmployeesQuery";
+import { useSisGroupsQuery } from "./queries/useSisGroupsQuery";
 import { useSisSectionsQuery } from "./queries/useSisSectionsQuery";
 import { useSisTermsQuery } from "./queries/useSisTermsQuery";
-import { FILTER_FACETS, type Meeting, type SisTerm } from "./types";
+import {
+  FILTER_FACETS,
+  type Meeting,
+  type SisGroup,
+  type SisTerm,
+} from "./types";
 import { useScheduleEditor } from "./useScheduleEditor";
 import type { Effect, HourSelection } from "./useScheduleEditor/types";
 import { useScreenSize } from "./useScreenSize";
@@ -347,6 +347,13 @@ const props = defineProps<{
 
 const route = useRoute();
 const router = useRouter();
+
+/**
+ * Reactive, not a plain `props.groupId`: switching department keeps this
+ * component mounted, so a query keyed on the value it opened with would go on
+ * showing the department the reader just left.
+ */
+const groupId = computed(() => props.groupId);
 
 const { size, isLarge, isSmall, arePanelsOverlaid } = useScreenSize();
 
@@ -423,11 +430,8 @@ const term = computed(() => {
     : (terms.find(({ id }) => id === props.termCode) ?? null);
 });
 
-/**
- * Why the term on screen cannot be edited, or null when it can be. Everything
- * read-only on this page hangs off this one value.
- */
-const termLock = computed(() => lockOfTerm(term.value, today()));
+/** Everything read-only on this page hangs off this one value. */
+const isReadOnly = computed(() => isTermReadOnly(term.value, today()));
 
 /** The term today falls inside, which is the one worth marking in the list. */
 const isCurrent = (option: SisTerm) =>
@@ -450,15 +454,52 @@ const goToTerm = (termCode: string) =>
     query: route.query,
   });
 
-const groupQuery = useGroupQuery(props.groupId);
+const groupQuery = useGroupQuery(groupId);
 
-const employeesQuery = useSisEmployeesQuery(props.groupId);
+const groupsQuery = useSisGroupsQuery();
+
+/**
+ * The department on screen leads the list even before it loads, so the
+ * control never reads as empty and never as some other department.
+ */
+const departmentOptions = computed<SisGroup[]>(() => {
+  const departments = groupsQuery.data.value ?? [];
+  if (departments.some(({ id }) => id === props.groupId)) return departments;
+
+  const current = groupQuery.data.value;
+  return current
+    ? [
+        {
+          id: props.groupId,
+          name: current.group_title,
+          abbreviation: current.abbreviation,
+        },
+        ...departments,
+      ]
+    : departments;
+});
+
+/** "PSY - Psychology", or whichever half the group has. */
+const labelOfDepartment = ({ name, abbreviation }: SisGroup) =>
+  [abbreviation, name].filter(Boolean).join(" - ") || "Department";
+
+// The filters and any open sheet name this department's own courses and
+// sections, so they are left behind. The view and the day are not: they are
+// how a scheduler reads any department.
+const goToGroup = (nextGroupId: string) =>
+  router.push({
+    name: "termPlanning",
+    params: { groupId: nextGroupId, termCode: props.termCode ?? undefined },
+    query: pick(route.query, ["view", "day"]),
+  });
+
+const employeesQuery = useSisEmployeesQuery(groupId);
 
 /** Who a section can be assigned to: the department's own people. */
 const roster = computed(() => employeesQuery.data.value ?? []);
 
 const sectionsQuery = useSisSectionsQuery(
-  props.groupId,
+  groupId,
   computed(() => term.value?.id ?? null),
 );
 
@@ -538,7 +579,7 @@ const schedule = useScheduleEditor(
   computed(() => ({
     meetings: placed.value.meetings,
     sections: localSections.value,
-    isReadOnly: termLock.value !== null,
+    isReadOnly: isReadOnly.value,
   })),
   runEffect,
 );
@@ -675,7 +716,7 @@ const openSheet = computed(() => {
       roster: roster.value,
       returnTo: sectionReturnTo.value && hourLabel(sectionReturnTo.value),
       termName: term.value?.name,
-      lockReason: termLock.value?.headline,
+      isReadOnly: isReadOnly.value,
     },
     on: {
       back: () =>
