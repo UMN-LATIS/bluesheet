@@ -125,6 +125,15 @@ export interface EditorState {
    * meets rather than two that have to be reconciled.
    */
   sectionEdits: Record<number, SectionEdit>;
+  /**
+   * What the sheet's form holds, per section, before it is saved. Kept apart
+   * from `sectionEdits` because a form being filled in is not yet a statement
+   * about the schedule: nothing here reaches the grid until Save.
+   *
+   * One per section rather than one in all, so clicking another block never
+   * throws away a half-finished form.
+   */
+  drafts: Record<number, SectionEdit>;
   interaction: Interaction;
   /**
    * The meeting the last gesture placed, which the grid flashes so a drop
@@ -173,7 +182,15 @@ export type EditorEvent =
   | { type: "filterValuesRemoved"; facet: FilterFacet; values: string[] }
   | { type: "filtersCleared" }
   /** The URL changed underneath the page: initial load, back button, pasted link. */
-  | { type: "filtersReplaced"; filters: ScheduleFilters };
+  | { type: "filtersReplaced"; filters: ScheduleFilters }
+  /** A field in the detail sheet changed, which writes the section's draft. */
+  | { type: "sectionFieldEdited"; sectionId: number; change: SectionEdit }
+  /** The sheet's Save: the draft becomes what the plan says. */
+  | { type: "draftSaved"; sectionId: number }
+  /** The sheet's Cancel: the form is thrown away and the plan is unchanged. */
+  | { type: "draftCancelled"; sectionId: number }
+  /** Revert to SIS: this browser's edits to one section are dropped. */
+  | { type: "sectionEditsReverted"; sectionId: number };
 
 /**
  * Something `update` wants done outside itself. Named for the outcome, not

@@ -21,7 +21,11 @@
 
 import { computed, reactive, type Ref, shallowRef } from "vue";
 import type { FilterFacet, ScheduleFilters, SisSection } from "../types";
+import type { SectionEdit } from "./types";
 import {
+  selectDraftSection,
+  selectHasEdits,
+  selectIsDraftDirty,
   selectLocalSection,
   selectMeetings,
   selectWeekView,
@@ -72,6 +76,15 @@ export function useScheduleEditor(
     isGestureInFlight: computed(
       () => state.value.interaction.status !== "idle",
     ),
+    /** The section as the sheet's form holds it, unsaved keystrokes included. */
+    draftSection: (section: SisSection) =>
+      selectDraftSection(section, state.value),
+    /** Whether the sheet's Save would change anything. */
+    isDraftDirty: (section: SisSection) =>
+      selectIsDraftDirty(section, state.value),
+    /** Whether a section reads as anything other than what the SIS holds. */
+    hasEdits: (sectionId: number) => selectHasEdits(sectionId, state.value),
+
     /** Everything the week grid's columns draw, one entry per day. */
     weekView: (dayCount: number) =>
       selectWeekView(context.value, state.value, dayCount),
@@ -104,5 +117,14 @@ export function useScheduleEditor(
     /** The URL changed underneath the page: initial load, back button, pasted link. */
     replaceFilters: (filters: ScheduleFilters) =>
       dispatch({ type: "filtersReplaced", filters }),
+
+    editSection: (sectionId: number, change: SectionEdit) =>
+      dispatch({ type: "sectionFieldEdited", sectionId, change }),
+    saveDraft: (sectionId: number) =>
+      dispatch({ type: "draftSaved", sectionId }),
+    cancelDraft: (sectionId: number) =>
+      dispatch({ type: "draftCancelled", sectionId }),
+    revertSection: (sectionId: number) =>
+      dispatch({ type: "sectionEditsReverted", sectionId }),
   });
 }

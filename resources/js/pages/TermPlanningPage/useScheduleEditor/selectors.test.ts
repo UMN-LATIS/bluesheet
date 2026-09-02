@@ -35,6 +35,7 @@ const context: ScheduleContext = { meetings, sections: [] };
 const atRest: EditorState = {
   placeholderMeetings: [],
   sectionEdits: {},
+  drafts: {},
   interaction: { status: "idle" },
   lastPlacedId: null,
   selection: null,

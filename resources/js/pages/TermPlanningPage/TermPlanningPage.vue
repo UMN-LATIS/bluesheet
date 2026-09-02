@@ -141,6 +141,8 @@
         v-else-if="selectedSection"
         class="tw-w-96 tw-flex-none tw-border-0 tw-border-l tw-border-solid tw-border-neutral-200"
         :section="selectedSection"
+        :schedule="schedule"
+        :sections="localSections"
         :returnTo="sectionReturnTo && hourLabel(sectionReturnTo)"
         @back="
           sectionReturnTo &&

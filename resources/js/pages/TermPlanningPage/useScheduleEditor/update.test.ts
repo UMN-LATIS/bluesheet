@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 import { initialState, update } from "./update";
 import { placeSections } from "../helpers/sectionPlacement";
 import { plannedSection } from "../helpers/plannedSection.fixture";
-import type { EditorEvent, EditorState, ScheduleContext } from "./types";
+import type {
+  EditorEvent,
+  EditorState,
+  ScheduleContext,
+  SectionEdit,
+} from "./types";
 
 /** Nothing on the grid, for the tests that draw their own blocks. */
 const emptyContext: ScheduleContext = { meetings: [], sections: [] };
@@ -613,5 +618,112 @@ describe("filtering", () => {
 
       expect(step.effects).toEqual([]);
     });
+  });
+});
+
+describe("the sheet's draft", () => {
+  const section = plannedSection(1, [
+    { days: ["mon"], startTime: "09:00", endTime: "09:50" },
+  ]);
+  const context = contextOf(section);
+
+  const edit = (change: SectionEdit): EditorEvent => ({
+    type: "sectionFieldEdited",
+    sectionId: 1,
+    change,
+  });
+
+  it("a keystroke reaches the draft and nothing else", () => {
+    const state = after([edit({ enrollmentCap: 12 })], initialState(), context);
+
+    expect(state.drafts).toEqual({ 1: { enrollmentCap: 12 } });
+    expect(state.sectionEdits).toEqual({});
+  });
+
+  it("later keystrokes add to the same draft", () => {
+    const state = after(
+      [edit({ enrollmentCap: 12 }), edit({ notes: "Majors only" })],
+      initialState(),
+      context,
+    );
+
+    expect(state.drafts[1]).toEqual({
+      enrollmentCap: 12,
+      notes: "Majors only",
+    });
+  });
+
+  it("saving moves the draft into the section's edits", () => {
+    const state = after(
+      [edit({ enrollmentCap: 12 }), { type: "draftSaved", sectionId: 1 }],
+      initialState(),
+      context,
+    );
+
+    expect(state.sectionEdits).toEqual({ 1: { enrollmentCap: 12 } });
+    expect(state.drafts).toEqual({});
+  });
+
+  it("saving keeps edits the form never touched", () => {
+    const saved = after(
+      [edit({ enrollmentCap: 12 }), { type: "draftSaved", sectionId: 1 }],
+      initialState(),
+      context,
+    );
+    const state = after(
+      [edit({ notes: "Majors only" }), { type: "draftSaved", sectionId: 1 }],
+      saved,
+      context,
+    );
+
+    expect(state.sectionEdits[1]).toEqual({
+      enrollmentCap: 12,
+      notes: "Majors only",
+    });
+  });
+
+  it("cancelling drops the form and leaves the schedule as it was", () => {
+    const state = after(
+      [edit({ enrollmentCap: 12 }), { type: "draftCancelled", sectionId: 1 }],
+      initialState(),
+      context,
+    );
+
+    expect(state.drafts).toEqual({});
+    expect(state.sectionEdits).toEqual({});
+  });
+
+  it("a draft for one section survives editing another", () => {
+    const state = after(
+      [
+        edit({ enrollmentCap: 12 }),
+        { type: "sectionFieldEdited", sectionId: 2, change: { notes: "x" } },
+      ],
+      initialState(),
+      context,
+    );
+
+    expect(state.drafts[1]).toEqual({ enrollmentCap: 12 });
+    expect(state.drafts[2]).toEqual({ notes: "x" });
+  });
+
+  it("reverting drops both the saved edits and any form still open over them", () => {
+    const edited = after(
+      [
+        edit({ enrollmentCap: 12 }),
+        { type: "draftSaved", sectionId: 1 },
+        edit({ notes: "Majors only" }),
+      ],
+      initialState(),
+      context,
+    );
+    const state = after(
+      [{ type: "sectionEditsReverted", sectionId: 1 }],
+      edited,
+      context,
+    );
+
+    expect(state.sectionEdits).toEqual({});
+    expect(state.drafts).toEqual({});
   });
 });

@@ -5,6 +5,7 @@
  */
 
 import type { Meeting, PlannedSection, SisSection, TimeRange } from "../types";
+import { isEqual } from "lodash-es";
 import { type DayLayout, layOutDay } from "../helpers/dayLayout";
 import type { EditorState, Interaction, ScheduleContext } from "./types";
 
@@ -25,6 +26,43 @@ export function selectLocalSection(
     ...state.sectionEdits[section.id],
   };
 }
+
+/**
+ * What the sheet's form shows: the local section with the draft over it.
+ * Identical to the local section until a field is touched.
+ */
+export function selectDraftSection(
+  section: SisSection,
+  state: EditorState,
+): PlannedSection {
+  return {
+    ...selectLocalSection(section, state),
+    ...state.drafts[section.id],
+  };
+}
+
+/**
+ * Whether Save would change anything. Compared by value rather than tracked
+ * by a flag, so typing a field back to what it was leaves the form clean and
+ * a dirty state cannot get stuck.
+ */
+export function selectIsDraftDirty(
+  section: SisSection,
+  state: EditorState,
+): boolean {
+  const draft = state.drafts[section.id];
+  if (!draft) return false;
+
+  const local = selectLocalSection(section, state);
+
+  return Object.entries(draft).some(
+    ([field, value]) => !isEqual(value, local[field as keyof PlannedSection]),
+  );
+}
+
+/** Whether this section reads as anything other than what the SIS holds. */
+export const selectHasEdits = (sectionId: number, state: EditorState) =>
+  state.sectionEdits[sectionId] !== undefined;
 
 /**
  * Every block on the grid: the placed sections, plus the placeholder times

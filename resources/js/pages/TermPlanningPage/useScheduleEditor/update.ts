@@ -68,6 +68,7 @@ export const emptyFilters = (): ScheduleFilters => ({
 export const initialState = (): EditorState => ({
   placeholderMeetings: [],
   sectionEdits: {},
+  drafts: {},
   interaction: { status: "idle" },
   lastPlacedId: null,
   selection: null,
@@ -220,10 +221,62 @@ function reduce(
     case "filtersReplaced":
       return { ...state, filters: event.filters };
 
+    case "sectionFieldEdited":
+      return {
+        ...state,
+        drafts: {
+          ...state.drafts,
+          [event.sectionId]: {
+            ...state.drafts[event.sectionId],
+            ...event.change,
+          },
+        },
+      };
+
+    // The draft is stated in full, so saving is a plain merge: a field the
+    // form never touched keeps whatever the section already said.
+    case "draftSaved":
+      return {
+        ...withoutDraft(state, event.sectionId),
+        sectionEdits: {
+          ...state.sectionEdits,
+          [event.sectionId]: {
+            ...state.sectionEdits[event.sectionId],
+            ...state.drafts[event.sectionId],
+          },
+        },
+      };
+
+    case "draftCancelled":
+      return withoutDraft(state, event.sectionId);
+
+    // Both go: the section reads as the SIS has it, and a form still open
+    // over it would put the edits straight back.
+    case "sectionEditsReverted":
+      return withoutEntry(
+        withoutDraft(state, event.sectionId),
+        event.sectionId,
+      );
+
     default:
       return assertNever(event);
   }
 }
+
+const withoutDraft = (state: EditorState, sectionId: number): EditorState => ({
+  ...state,
+  drafts: omitKey(state.drafts, sectionId),
+});
+
+const withoutEntry = (state: EditorState, sectionId: number): EditorState => ({
+  ...state,
+  sectionEdits: omitKey(state.sectionEdits, sectionId),
+});
+
+const omitKey = <T>(record: Record<number, T>, key: number) =>
+  Object.fromEntries(
+    Object.entries(record).filter(([held]) => Number(held) !== key),
+  );
 
 /** Rewrites one facet's checked values and leaves the other facets alone. */
 function withFacet(
