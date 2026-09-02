@@ -181,9 +181,9 @@ function updateQueryParams(queryObject: Record<string, unknown>) {
     encode: true,
   });
 
-  // A string location keeps the `qs` query shape, which bookmarked
-  // filter URLs depend on, instead of re-serializing through the
-  // router's own query encoder.
+  // pass a string so qs stays the only query serializer: initPage
+  // reads the URL back with qs.parse, and existing links use its
+  // bracket-indexed arrays
   router.replace(`${route.path}?${stringifiedQuery}`);
 }
 

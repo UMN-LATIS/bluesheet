@@ -128,16 +128,16 @@ export default {
     };
   },
   watch: {
-    users: "loadFromProps",
-    groupId: "loadFromProps",
+    users: "loadUsersFromProps",
+    groupId: "loadUsersFromProps",
   },
   mounted() {
     usePageTitle('Users');
-    this.loadFromProps();
+    this.loadUsersFromProps();
   },
   methods: {
     dayjs,
-    loadFromProps() {
+    loadUsersFromProps() {
       if (this.users) {
         this.loadUsers(this.users);
       }
