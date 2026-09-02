@@ -25,7 +25,7 @@
       Grips straddle each edge, half outside the block, so a slightly wide aim
       still catches it.
     -->
-    <template v-if="!isDraft">
+    <template v-if="!isDraft && !isReadOnly">
       <div
         v-for="edge in ['start', 'end']"
         :key="edge"
@@ -56,8 +56,9 @@ const props = defineProps<{
   isGhost?: boolean;
   isCarried?: boolean;
   isJustPlaced?: boolean;
-  /** SIS component code (LEC, DIS, …), if the block has a class. */
   isSelected?: boolean;
+  /** A block on a term nobody can edit: no grips, and it opens the sheet. */
+  isReadOnly?: boolean;
   /** The SIS component code of the class on it; absent on a block with none. */
   component?: string;
 }>();
@@ -71,10 +72,18 @@ const appearance = computed(() => {
   const toned = `${type.tint} ${type.rail}`;
   // Blue rather than the block's own color: the ring means "the sheet is
   // open on this one", which is what blue means everywhere else in the app.
-  // An outline, so the box size holds still.
+  // On a read-only term it falls back to ink, since nothing there can be
+  // acted on and blue would be the only thing claiming otherwise. An
+  // outline, so the box size holds still.
+  const ring = props.isReadOnly
+    ? "tw-outline-on-surface tw-shadow-[0_4px_12px_rgba(38,38,38,0.14)]"
+    : "tw-outline-primary tw-shadow-[0_4px_12px_rgba(29,104,167,0.18)]";
+
   const solid = props.isSelected
-    ? `${toned} tw-z-[5] tw-outline tw-outline-2 tw-outline-offset-0 tw-outline-primary tw-shadow-[0_4px_12px_rgba(29,104,167,0.18)]`
+    ? `${toned} tw-z-[5] tw-outline tw-outline-2 tw-outline-offset-0 ${ring}`
     : toned;
+
+  if (props.isReadOnly) return `${solid} tw-cursor-pointer`;
 
   if (props.isGhost) return `${solid} tw-opacity-40`;
 

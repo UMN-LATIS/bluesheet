@@ -83,12 +83,44 @@
               :key="option.id"
               :value="option.id"
             >
-              {{ option.name }}
+              {{ option.name }}{{ isLocked(option) ? " — view only" : "" }}
             </option>
           </select>
         </label>
+
+        <!--
+          Read-only is a property of the term, so it is named on the control
+          that picks one. Below `cramped` the bar has no width to spare, and
+          the strip under it says the same thing at greater length.
+        -->
+        <span
+          v-if="termLock"
+          class="tw-hidden tw-flex-none tw-items-center tw-gap-1.5 cramped:tw-inline-flex tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-container tw-py-1 tw-pl-2 tw-pr-2.5 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-surface-variant"
+        >
+          <LockIcon class="tw-h-3 tw-w-3 tw-flex-none" />
+          Read only
+        </span>
       </div>
     </template>
+
+    <!--
+      Persistent, and not dismissible: a term being read-only is a state, not
+      a notice. The pill above names the cause in two words; this gives the
+      reason in a sentence.
+    -->
+    <div
+      v-if="termLock"
+      class="tw-mx-3 tw-mb-3 tw-flex tw-flex-none tw-items-center tw-gap-2.5 tw-rounded-[10px] tw-border tw-border-solid tw-border-outline-variant tw-bg-surface tw-px-3.5 tw-py-2.5 roomy:tw-mx-4"
+    >
+      <LockIcon
+        class="tw-h-4 tw-w-4 tw-flex-none tw-text-on-surface-variant"
+        aria-hidden="true"
+      />
+      <span class="tw-text-[13px] tw-font-bold">{{ termLock.headline }}</span>
+      <span class="tw-truncate tw-text-[13px] tw-text-on-surface-variant">
+        {{ termLock.detail }}
+      </span>
+    </div>
 
     <!--
       The panes float as cards on the recessed page. `relative` is what the
@@ -118,7 +150,13 @@
           v-if="activeView === 'week'"
           class="tw-flex tw-h-[46px] tw-flex-none tw-items-center tw-gap-3 tw-border-0 tw-border-b tw-border-solid tw-border-surface-container tw-px-4 tw-text-[12.5px]"
         >
-          <span class="tw-flex-none">
+          <!-- How much of the term is placed is a measure of work left to
+               do, which a term nobody can edit is not asking for. -->
+          <span v-if="termLock" class="tw-flex-none">
+            <span class="tw-font-semibold">{{ visibleSections.length }}</span>
+            {{ visibleSections.length === 1 ? "section" : "sections" }}
+          </span>
+          <span v-else class="tw-flex-none">
             <span class="tw-font-semibold">{{ scheduledCount }}</span>
             of {{ visibleSections.length }} sections scheduled
           </span>
@@ -263,7 +301,7 @@ import { useRoute, useRouter, type LocationQueryRaw } from "vue-router";
 import dayjs from "dayjs";
 import { isEqual, omit, pick } from "lodash-es";
 import FullScreenLayout from "@/layouts/FullScreenLayout.vue";
-import { FilterIcon } from "@/icons";
+import { FilterIcon, LockIcon } from "@/icons";
 import CoverageHeatmap from "./components/CoverageHeatmap.vue";
 import DayView from "./components/DayView.vue";
 import HourSheet, { type HourEntry } from "./components/HourSheet.vue";
@@ -291,12 +329,13 @@ import {
 import { filterSections } from "./helpers/scheduleFilters";
 import { ASYNC_DAY_INDEX, WEEKDAY_NAMES } from "./helpers/scheduleDays";
 import { placeSections } from "./helpers/sectionPlacement";
+import { lockOfTerm } from "./helpers/termLock";
 import { formatTimeRange } from "./helpers/timeScale";
 import { useGroupQuery } from "./queries/useGroupQuery";
 import { useSisEmployeesQuery } from "./queries/useSisEmployeesQuery";
 import { useSisSectionsQuery } from "./queries/useSisSectionsQuery";
 import { useSisTermsQuery } from "./queries/useSisTermsQuery";
-import { FILTER_FACETS, type Meeting } from "./types";
+import { FILTER_FACETS, type Meeting, type SisTerm } from "./types";
 import { useScheduleEditor } from "./useScheduleEditor";
 import type { Effect, HourSelection } from "./useScheduleEditor/types";
 import { useScreenSize } from "./useScreenSize";
@@ -371,6 +410,8 @@ watch(isLarge, (isDocked) => {
   if (isDocked) isFilterPanelOpen.value = false;
 });
 
+const today = () => dayjs().format("YYYY-MM-DD");
+
 const termsQuery = useSisTermsQuery();
 
 /** The term the URL names, or failing that the one we are in today. */
@@ -378,9 +419,17 @@ const term = computed(() => {
   const terms = termsQuery.data.value ?? [];
 
   return props.termCode === null
-    ? currentTerm(terms, dayjs().format("YYYY-MM-DD"))
+    ? currentTerm(terms, today())
     : (terms.find(({ id }) => id === props.termCode) ?? null);
 });
+
+/**
+ * Why the term on screen cannot be edited, or null when it can be. Everything
+ * read-only on this page hangs off this one value.
+ */
+const termLock = computed(() => lockOfTerm(term.value, today()));
+
+const isLocked = (option: SisTerm) => lockOfTerm(option, today()) !== null;
 
 /** Newest first, since planning looks forward. */
 const termOptions = computed(() =>
@@ -484,6 +533,7 @@ const schedule = useScheduleEditor(
   computed(() => ({
     meetings: placed.value.meetings,
     sections: localSections.value,
+    isReadOnly: termLock.value !== null,
   })),
   runEffect,
 );
@@ -620,6 +670,7 @@ const openSheet = computed(() => {
       roster: roster.value,
       returnTo: sectionReturnTo.value && hourLabel(sectionReturnTo.value),
       termName: term.value?.name,
+      lockReason: termLock.value?.headline,
     },
     on: {
       back: () =>

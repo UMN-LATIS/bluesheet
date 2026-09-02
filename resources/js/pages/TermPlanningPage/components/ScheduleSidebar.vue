@@ -65,8 +65,12 @@
       </button>
     </div>
 
+    <!--
+      Narrowing a term is not changing it, so every control here keeps working
+      on a read-only term. This one goes: it asks for work nobody can do.
+    -->
     <div
-      v-if="options.tba && options.tba.sectionCount > 0"
+      v-if="options.tba && options.tba.sectionCount > 0 && !schedule.isReadOnly"
       class="tw-mx-3.5 tw-mt-3 tw-flex tw-flex-none tw-items-center tw-gap-2 tw-rounded-[10px] tw-bg-brand/[0.06] tw-px-3 tw-py-2"
     >
       <span

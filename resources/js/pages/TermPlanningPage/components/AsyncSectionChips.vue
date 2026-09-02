@@ -22,8 +22,13 @@
         :class="[
           colorOfType(section.component).tint,
           colorOfType(section.component).rail,
-          section.id === selectedSectionId &&
-            'tw-outline tw-outline-2 tw-outline-offset-0 tw-outline-primary',
+          section.id === selectedSectionId && [
+            'tw-outline tw-outline-2 tw-outline-offset-0',
+            // Ink where nothing can be acted on; see MeetingBlock.
+            schedule.isReadOnly
+              ? 'tw-outline-on-surface'
+              : 'tw-outline-primary',
+          ],
           section.isCancelled && 'tw-opacity-60',
         ]"
         :aria-pressed="section.id === selectedSectionId"

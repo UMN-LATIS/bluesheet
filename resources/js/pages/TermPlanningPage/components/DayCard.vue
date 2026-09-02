@@ -5,8 +5,11 @@
     :class="[
       color.tint,
       color.rail,
-      isSelected &&
-        'tw-outline tw-outline-2 tw-outline-offset-0 tw-outline-primary',
+      isSelected && [
+        'tw-outline tw-outline-2 tw-outline-offset-0',
+        // Ink where nothing can be acted on; see MeetingBlock.
+        isReadOnly ? 'tw-outline-on-surface' : 'tw-outline-primary',
+      ],
       isStacked
         ? 'tw-min-h-[62px] tw-flex-col tw-items-start tw-gap-0.5 tw-p-2.5 tw-px-3'
         : 'tw-min-h-14 tw-items-center tw-gap-2.5 tw-p-2.5 tw-px-3',
@@ -77,6 +80,7 @@ const props = defineProps<{
   size: ScreenSize;
   isSelected: boolean;
   isEdited: boolean;
+  isReadOnly?: boolean;
 }>();
 
 // The grid has room for a time axis; this list never does, so a card only

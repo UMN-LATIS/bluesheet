@@ -9,12 +9,19 @@ import type {
   SectionEdit,
 } from "./types";
 
-const emptyContext: ScheduleContext = { meetings: [], sections: [] };
+const emptyContext: ScheduleContext = {
+  meetings: [],
+  sections: [],
+  isReadOnly: false,
+};
 
 /** Built through `placeSections`, so block ids match the grid's. */
-const contextOf = (...sections: ReturnType<typeof plannedSection>[]) => ({
+const contextOf = (
+  ...sections: ReturnType<typeof plannedSection>[]
+): ScheduleContext => ({
   meetings: placeSections(sections).meetings,
   sections,
+  isReadOnly: false,
 });
 
 const countingUuids = () => {
@@ -891,5 +898,55 @@ describe("days and times in the sheet", () => {
     );
 
     expect(state.selection).toEqual({ kind: "section", sectionId: 1 });
+  });
+});
+
+describe("a read-only term", () => {
+  const section = plannedSection(1, [
+    { days: ["mon"], startTime: "09:00", endTime: "09:50" },
+  ]);
+
+  const lockedContext: ScheduleContext = {
+    ...contextOf(section),
+    isReadOnly: true,
+  };
+
+  const locked = (events: EditorEvent[]) =>
+    after(events, initialState(), lockedContext);
+
+  it("refuses an edit to a section", () => {
+    const state = locked([
+      { type: "sectionFieldEdited", sectionId: 1, change: { notes: "hi" } },
+    ]);
+
+    expect(state.drafts).toEqual({});
+  });
+
+  it("refuses a meeting drawn on empty space", () => {
+    expect(locked(draw(0, 600, 700)).placeholderMeetings).toEqual([]);
+  });
+
+  it("refuses to move a block, so pressing one only selects it", () => {
+    const state = locked([
+      { type: "pressedMeeting", meetingId: "s1:mon:0900", minute: 550 },
+      { type: "pointerMoved", dayIndex: 3, minute: 710 },
+      { type: "released" },
+    ]);
+
+    expect(state.sectionEdits).toEqual({});
+    expect(state.selection).toEqual({
+      kind: "meeting",
+      meetingId: "s1:mon:0900",
+    });
+  });
+
+  it("still selects, deselects, and filters", () => {
+    const state = locked([
+      { type: "selectedSection", sectionId: 1 },
+      { type: "filterValuesAdded", facet: "component", values: ["LEC"] },
+    ]);
+
+    expect(state.selection).toEqual({ kind: "section", sectionId: 1 });
+    expect(state.filters.component).toEqual(["LEC"]);
   });
 });

@@ -16,6 +16,12 @@ import type {
 export interface ScheduleContext {
   meetings: Meeting[];
   sections: PlannedSection[];
+  /**
+   * A closed term, or one the save endpoints cannot reach yet. Hiding the
+   * controls is not enforcement — keyboard, deep link, and stale tab all still
+   * reach `update` — so the refusal lives here too.
+   */
+  isReadOnly: boolean;
 }
 
 /** Sparse: an absent field is unchanged. */

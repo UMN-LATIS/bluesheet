@@ -62,12 +62,38 @@ export const initialState = (): EditorState => ({
   filters: emptyFilters(),
 });
 
+/**
+ * What a read-only term still answers. Default-deny: anything not named here
+ * is a write, whatever route it arrives by.
+ *
+ * `pressedMeeting` and `released` are on the list because together they are
+ * how the week grid selects a block. A press alone changes no data, and with
+ * `pointerMoved` refused it can never become a drag, so the release that
+ * follows can only ever select.
+ */
+const READING_EVENTS: EditorEvent["type"][] = [
+  "pressedMeeting",
+  "released",
+  "canceled",
+  "deselected",
+  "selectedSection",
+  "selectedHour",
+  "filterValuesAdded",
+  "filterValuesRemoved",
+  "filtersCleared",
+  "filtersReplaced",
+];
+
 export function update(
   state: EditorState,
   event: EditorEvent,
   context: ScheduleContext,
   deps: EditorDeps,
 ): Next {
+  if (context.isReadOnly && !READING_EVENTS.includes(event.type)) {
+    return { state, effects: [] };
+  }
+
   const nextState = reduce(state, event, context, deps);
 
   return { state: nextState, effects: effectsOf(event, nextState) };

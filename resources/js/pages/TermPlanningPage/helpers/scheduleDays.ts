@@ -1,4 +1,4 @@
-import type { SisDay } from "../types";
+import { WEEK_DAYS, type SisDay } from "../types";
 
 /**
  * The days a schedule is read along. Sections with no meeting time are a day
@@ -22,6 +22,22 @@ export const DAY_TAB_NAMES = [...WEEKDAY_NAMES, "Async"];
 export const DAY_TAB_CODES: string[] = [...WEEKDAY_CODES, "async"];
 
 export const isAsyncDay = (dayIndex: number) => dayIndex === ASYNC_DAY_INDEX;
+
+/** "Mon, Wed": the days one meeting pattern is on, in week order. */
+export const daysMetSpelled = (days: SisDay[]): string =>
+  WEEK_DAYS.filter((day) => days.includes(day))
+    .map((day) => DAY_NAMES[day])
+    .join(", ");
+
+const DAY_NAMES: Record<SisDay, string> = {
+  mon: "Mon",
+  tue: "Tue",
+  wed: "Wed",
+  thu: "Thu",
+  fri: "Fri",
+  sat: "Sat",
+  sun: "Sun",
+};
 
 /**
  * "MW", "TTh", or "Async": which days a section meets, as a scheduler writes

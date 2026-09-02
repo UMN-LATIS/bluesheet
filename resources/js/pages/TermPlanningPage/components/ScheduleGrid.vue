@@ -35,6 +35,7 @@
           :dayIndex="dayIndex"
           :view="week[dayIndex]"
           :componentOf="componentOf"
+          :isReadOnly="schedule.isReadOnly"
         >
           <!--
             forwarded only when supplied, so DayColumn's fallback still applies
@@ -138,7 +139,9 @@ function onPointerDown(event: PointerEvent) {
   // capture, so the gesture keeps arriving after the pointer leaves the grid
   days.value?.setPointerCapture(event.pointerId);
 
-  if (edge === "start" || edge === "end") {
+  // A read-only week keeps its blocks and loses its handles: the press below
+  // opens the sheet on release, and `update` refuses everything else.
+  if (!props.schedule.isReadOnly && (edge === "start" || edge === "end")) {
     props.schedule.pressMeetingEdge(meetingId, edge, at.minute);
   } else {
     props.schedule.pressMeeting(meetingId, at.minute);

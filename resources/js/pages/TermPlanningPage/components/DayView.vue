@@ -100,6 +100,7 @@
               :size="size"
               :isSelected="isItemSelected(item)"
               :isEdited="schedule.hasEdits(item.section.id)"
+              :isReadOnly="schedule.isReadOnly"
               @click="schedule.selectSection(item.section.id)"
             />
           </div>

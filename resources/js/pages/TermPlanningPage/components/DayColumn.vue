@@ -60,6 +60,7 @@
         :isGhost="placed.meeting.id === view.ghostMeetingId"
         :isJustPlaced="placed.meeting.id === view.justPlacedMeetingId"
         :isSelected="placed.meeting.id === view.selectedMeetingId"
+        :isReadOnly="isReadOnly"
         :component="componentOf?.(placed.meeting)"
       >
         <template v-if="$slots.block" #default>
@@ -118,6 +119,8 @@ const props = defineProps<{
    * meeting's class, which picks the block color.
    */
   componentOf?: (meeting: Meeting) => string | undefined;
+  /** Draws the blocks without their handles; see `MeetingBlock`. */
+  isReadOnly?: boolean;
 }>();
 
 /** The meeting the pointer is carrying, at the time it now hovers over. */

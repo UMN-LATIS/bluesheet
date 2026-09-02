@@ -47,6 +47,8 @@ export function useScheduleEditor(
     localSections: (sections: SisSection[]) =>
       sections.map((section) => selectLocalSection(section, state.value)),
     filters: computed(() => state.value.filters),
+    /** Whether this term takes edits at all; see `ScheduleContext`. */
+    isReadOnly: computed(() => context.value.isReadOnly),
     selection: computed(() => state.value.selection),
     isGestureInFlight: computed(
       () => state.value.interaction.status !== "idle",

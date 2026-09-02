@@ -30,7 +30,7 @@ const meetings: Meeting[] = [
 ];
 
 /** No sections: every test here is about blocks, not about what is in them. */
-const context: ScheduleContext = { meetings, sections: [] };
+const context: ScheduleContext = { meetings, sections: [], isReadOnly: false };
 
 const atRest: EditorState = {
   placeholderMeetings: [],

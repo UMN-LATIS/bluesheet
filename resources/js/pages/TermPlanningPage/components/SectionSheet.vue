@@ -17,7 +17,8 @@
       <button
         v-if="returnTo"
         type="button"
-        class="tw-mb-2 tw-flex tw-cursor-pointer tw-items-center tw-gap-1 tw-border-none tw-bg-transparent tw-p-0 tw-text-xs tw-font-semibold tw-text-primary hover:tw-underline"
+        class="tw-mb-2 tw-flex tw-cursor-pointer tw-items-center tw-gap-1 tw-border-none tw-bg-transparent tw-p-0 tw-text-xs tw-font-semibold hover:tw-underline"
+        :class="isLocked ? 'tw-text-on-surface-variant' : 'tw-text-primary'"
         @click="emit('back')"
       >
         <i class="fas fa-chevron-left tw-text-[0.6rem]" aria-hidden="true" />
@@ -38,7 +39,7 @@
           Cancelled
         </span>
         <span class="tw-text-[11.5px] tw-text-on-surface-variant">
-          {{ deliveryLabel(draft.delivery) }}
+          {{ labelOfDelivery(draft.delivery) }}
         </span>
         <button
           v-if="!returnTo"
@@ -71,7 +72,10 @@
       </p>
     </div>
 
+    <SectionFacts v-if="isLocked" :section="section" />
+
     <div
+      v-else
       class="scrollbar-always-visible tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-gap-5 tw-overflow-y-auto tw-p-[18px]"
     >
       <div>
@@ -175,7 +179,7 @@
         <span :class="LABEL_CLASS">Taught by</span>
         <div class="tw-flex tw-flex-col tw-gap-2">
           <div
-            v-for="instructor in primaryInstructors"
+            v-for="instructor in instructorsOnRecord"
             :key="instructor.emplid"
             class="tw-flex tw-items-center tw-gap-2.5 tw-rounded-[10px] tw-border tw-border-solid tw-border-outline-variant tw-p-2 tw-pl-3"
           >
@@ -202,7 +206,7 @@
             </button>
           </div>
           <p
-            v-if="primaryInstructors.length === 0"
+            v-if="instructorsOnRecord.length === 0"
             class="tw-m-0 tw-text-[13px] tw-text-on-surface-variant"
           >
             TBA
@@ -261,26 +265,8 @@
       <div class="tw-h-px tw-bg-surface-container" />
 
       <div class="tw-flex tw-flex-col tw-gap-3.5">
-        <div>
-          <button
-            type="button"
-            class="tw-flex tw-w-full tw-min-h-11 tw-cursor-pointer tw-items-center tw-gap-2 tw-border-none tw-bg-transparent tw-p-0 tw-text-[11.5px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-surface-variant"
-            :aria-expanded="isComponentOpen"
-            @click="isComponentOpen = !isComponentOpen"
-          >
-            Component & delivery
-            <span
-              class="tw-text-[11px] tw-font-normal tw-normal-case tw-tracking-normal tw-text-on-surface-variant"
-            >
-              {{ componentSummary }}
-            </span>
-            <span
-              class="tw-ml-auto tw-text-[11px] tw-font-semibold tw-normal-case tw-tracking-normal tw-text-primary"
-            >
-              {{ isComponentOpen ? "Hide" : "Show" }}
-            </span>
-          </button>
-          <div v-if="isComponentOpen" class="tw-mt-2 tw-flex tw-gap-3">
+        <Disclosure label="Component & delivery" :summary="componentSummary">
+          <div class="tw-flex tw-gap-3">
             <div class="tw-min-w-0 tw-flex-1">
               <label
                 :for="fieldId('component')"
@@ -326,175 +312,118 @@
               </select>
             </div>
           </div>
-        </div>
+        </Disclosure>
 
         <div class="tw-h-px tw-bg-surface-container" />
 
-        <div>
-          <button
-            type="button"
-            class="tw-flex tw-w-full tw-min-h-11 tw-cursor-pointer tw-items-center tw-gap-2 tw-border-none tw-bg-transparent tw-p-0 tw-text-[11.5px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-surface-variant"
-            :aria-expanded="isCrosslistOpen"
-            @click="isCrosslistOpen = !isCrosslistOpen"
+        <Disclosure label="Cross-listings" :summary="crosslistSummary">
+          <p
+            v-if="partners.length === 0"
+            class="tw-m-0 tw-text-[12.5px] tw-text-on-surface-variant"
           >
-            Cross-listings
-            <span
-              class="tw-text-[11px] tw-font-normal tw-normal-case tw-tracking-normal tw-text-on-surface-variant"
+            This section is not listed under another number.
+          </p>
+          <div v-else class="tw-flex tw-flex-col tw-gap-1.5">
+            <div
+              v-for="partner in partners"
+              :key="`${partner.subject}${partner.catalogNumber}${partner.section}`"
+              class="tw-flex tw-items-baseline tw-justify-between tw-gap-2 tw-rounded-lg tw-bg-surface-container tw-px-3 tw-py-2 tw-text-[13px]"
             >
-              {{ crosslistSummary }}
-            </span>
-            <span
-              class="tw-ml-auto tw-text-[11px] tw-font-semibold tw-normal-case tw-tracking-normal tw-text-primary"
-            >
-              {{ isCrosslistOpen ? "Hide" : "Show" }}
-            </span>
-          </button>
-          <div v-if="isCrosslistOpen" class="tw-mt-2">
-            <p
-              v-if="partners.length === 0"
-              class="tw-m-0 tw-text-[12.5px] tw-text-on-surface-variant"
-            >
-              This section is not listed under another number.
-            </p>
-            <div v-else class="tw-flex tw-flex-col tw-gap-1.5">
-              <div
-                v-for="partner in partners"
-                :key="`${partner.subject}${partner.catalogNumber}${partner.section}`"
-                class="tw-flex tw-items-baseline tw-justify-between tw-gap-2 tw-rounded-lg tw-bg-surface-container tw-px-3 tw-py-2 tw-text-[13px]"
-              >
-                <span>
-                  {{ partner.subject }} {{ partner.catalogNumber }} ·
-                  {{ partner.section }}
-                </span>
-                <span class="tw-text-[11px] tw-text-on-surface-variant">
-                  {{
-                    partner.subject === section.subject
-                      ? "same subject"
-                      : "other subject"
-                  }}
-                </span>
-              </div>
+              <span>
+                {{ partner.subject }} {{ partner.catalogNumber }} ·
+                {{ partner.section }}
+              </span>
+              <span class="tw-text-[11px] tw-text-on-surface-variant">
+                {{
+                  partner.subject === section.subject
+                    ? "same subject"
+                    : "other subject"
+                }}
+              </span>
             </div>
-            <button
-              type="button"
-              disabled
-              title="Cross-listings come from the SIS import and cannot be added here yet"
-              class="tw-mt-2 tw-cursor-default tw-border-none tw-bg-transparent tw-p-0 tw-text-[12.5px] tw-font-semibold tw-text-on-surface-variant"
-            >
-              Add cross-listing
-            </button>
           </div>
-        </div>
+          <button
+            type="button"
+            disabled
+            title="Cross-listings come from the SIS import and cannot be added here yet"
+            class="tw-mt-2 tw-cursor-default tw-border-none tw-bg-transparent tw-p-0 tw-text-[12.5px] tw-font-semibold tw-text-on-surface-variant"
+          >
+            Add cross-listing
+          </button>
+        </Disclosure>
 
         <div class="tw-h-px tw-bg-surface-container" />
 
-        <div>
-          <button
-            type="button"
-            class="tw-flex tw-w-full tw-min-h-11 tw-cursor-pointer tw-items-center tw-gap-2 tw-border-none tw-bg-transparent tw-p-0 tw-text-[11.5px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-surface-variant"
-            :aria-expanded="isAssistantsOpen"
-            @click="isAssistantsOpen = !isAssistantsOpen"
-          >
-            Teaching assistants
-            <span
-              class="tw-text-[11px] tw-font-normal tw-normal-case tw-tracking-normal tw-text-on-surface-variant"
+        <Disclosure
+          label="Teaching assistants"
+          :summary="String(assistants.length)"
+        >
+          <div class="tw-flex tw-flex-col tw-gap-2">
+            <div
+              v-for="instructor in assistants"
+              :key="instructor.emplid"
+              class="tw-flex tw-items-center tw-gap-2.5 tw-rounded-[10px] tw-border tw-border-solid tw-border-outline-variant tw-p-2 tw-pl-3"
             >
-              {{ assistantsSummary }}
-            </span>
-            <span
-              class="tw-ml-auto tw-text-[11px] tw-font-semibold tw-normal-case tw-tracking-normal tw-text-primary"
-            >
-              {{ isAssistantsOpen ? "Hide" : "Show" }}
-            </span>
-          </button>
-          <div v-if="isAssistantsOpen" class="tw-mt-2">
-            <div class="tw-flex tw-flex-col tw-gap-2">
-              <div
-                v-for="instructor in assistantInstructors"
-                :key="instructor.emplid"
-                class="tw-flex tw-items-center tw-gap-2.5 tw-rounded-[10px] tw-border tw-border-solid tw-border-outline-variant tw-p-2 tw-pl-3"
+              <span
+                class="tw-flex tw-h-7 tw-w-7 tw-flex-none tw-items-center tw-justify-center tw-rounded-full tw-bg-surface-container tw-text-[10px] tw-font-bold tw-text-on-surface-variant"
               >
-                <span
-                  class="tw-flex tw-h-7 tw-w-7 tw-flex-none tw-items-center tw-justify-center tw-rounded-full tw-bg-surface-container tw-text-[10px] tw-font-bold tw-text-on-surface-variant"
+                {{ initialsOf(instructor) }}
+              </span>
+              <div class="tw-min-w-0 tw-flex-1">
+                <p
+                  class="tw-m-0 tw-truncate tw-text-[13.5px] tw-text-on-surface"
                 >
-                  {{ initialsOf(instructor) }}
-                </span>
-                <div class="tw-min-w-0 tw-flex-1">
-                  <p
-                    class="tw-m-0 tw-truncate tw-text-[13.5px] tw-text-on-surface"
-                  >
-                    {{ instructor.name ?? "TBA" }}
-                  </p>
-                  <p class="tw-m-0 tw-text-[11px] tw-text-on-surface-variant">
-                    {{ instructor.role }}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  class="tw-flex tw-h-11 tw-w-11 tw-flex-none tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-text-on-surface-variant hover:tw-bg-surface-container hover:tw-text-on-surface"
-                  :aria-label="`Remove ${instructor.name ?? 'instructor'}`"
-                  @click="removeInstructor(instructor.emplid)"
-                >
-                  ×
-                </button>
+                  {{ instructor.name ?? "TBA" }}
+                </p>
+                <p class="tw-m-0 tw-text-[11px] tw-text-on-surface-variant">
+                  {{ instructor.role }}
+                </p>
               </div>
+              <button
+                type="button"
+                class="tw-flex tw-h-11 tw-w-11 tw-flex-none tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-text-on-surface-variant hover:tw-bg-surface-container hover:tw-text-on-surface"
+                :aria-label="`Remove ${instructor.name ?? 'instructor'}`"
+                @click="removeInstructor(instructor.emplid)"
+              >
+                ×
+              </button>
             </div>
-
-            <button
-              v-if="!isAddingAssistant"
-              type="button"
-              class="tw-mt-2 tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[12.5px] tw-font-semibold tw-text-primary hover:tw-underline"
-              @click="isAddingAssistant = true"
-            >
-              Add assistant
-            </button>
-            <ComboBox
-              v-else
-              label="Add assistant"
-              placeholder="Add assistant…"
-              :showLabel="false"
-              :options="rosterOptions"
-              :modelValue="null"
-              strategy="fixed"
-              teleportTo="body"
-              class="tw-mt-2"
-              @update:modelValue="(option) => addPerson(option, TA_ROLE)"
-            />
           </div>
-        </div>
+
+          <button
+            v-if="!isAddingAssistant"
+            type="button"
+            class="tw-mt-2 tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[12.5px] tw-font-semibold tw-text-primary hover:tw-underline"
+            @click="isAddingAssistant = true"
+          >
+            Add assistant
+          </button>
+          <ComboBox
+            v-else
+            label="Add assistant"
+            placeholder="Add assistant…"
+            :showLabel="false"
+            :options="rosterOptions"
+            :modelValue="null"
+            strategy="fixed"
+            teleportTo="body"
+            class="tw-mt-2"
+            @update:modelValue="(option) => addPerson(option, TA_ROLE)"
+          />
+        </Disclosure>
 
         <div class="tw-h-px tw-bg-surface-container" />
 
-        <div>
-          <button
-            type="button"
-            class="tw-flex tw-w-full tw-min-h-11 tw-cursor-pointer tw-items-center tw-gap-2 tw-border-none tw-bg-transparent tw-p-0 tw-text-[11.5px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-surface-variant"
-            :aria-expanded="isNotesOpen"
-            @click="isNotesOpen = !isNotesOpen"
-          >
-            Notes
-            <span
-              class="tw-text-[11px] tw-font-normal tw-normal-case tw-tracking-normal tw-text-on-surface-variant"
-            >
-              {{ notesSummary }}
-            </span>
-            <span
-              class="tw-ml-auto tw-text-[11px] tw-font-semibold tw-normal-case tw-tracking-normal tw-text-primary"
-            >
-              {{ isNotesOpen ? "Hide" : "Show" }}
-            </span>
-          </button>
-          <div v-if="isNotesOpen" class="tw-mt-2">
-            <textarea
-              :id="fieldId('notes')"
-              :value="draft.notes"
-              rows="3"
-              placeholder="Internal to the department"
-              :class="[INPUT_CLASS, 'tw-w-full tw-py-2.5']"
-              @input="edit({ notes: valueOf($event) })"
-            />
-          </div>
-        </div>
+        <Disclosure label="Notes" :summary="notesSummary">
+          <textarea
+            :id="fieldId('notes')"
+            :value="draft.notes"
+            rows="3"
+            placeholder="Internal to the department"
+            :class="[INPUT_CLASS, 'tw-w-full tw-py-2.5']"
+            @input="edit({ notes: valueOf($event) })"
+          />
+        </Disclosure>
       </div>
     </div>
 
@@ -538,7 +467,25 @@
       {{ problem.message }}
     </p>
 
+    <!--
+      Where Save stood. On a phone the sheet covers the screen, so this is the
+      only place the lock can be named.
+    -->
     <div
+      v-if="isLocked"
+      class="tw-flex tw-flex-none tw-items-center tw-gap-2.5 tw-border-0 tw-border-t tw-border-solid tw-border-outline-variant tw-bg-surface tw-px-[18px] tw-py-3"
+    >
+      <LockIcon class="tw-h-4 tw-w-4 tw-flex-none tw-text-on-surface-variant" />
+      <span class="tw-text-xs tw-font-bold">Read only</span>
+      <span
+        class="tw-min-w-0 tw-truncate tw-text-xs tw-text-on-surface-variant"
+      >
+        {{ lockReason }}
+      </span>
+    </div>
+
+    <div
+      v-else
       class="tw-flex tw-flex-none tw-items-center tw-gap-2.5 tw-border-0 tw-border-t tw-border-solid tw-border-surface-container tw-bg-surface-bright tw-px-[18px] tw-pb-3 tw-pt-2.5"
     >
       <button
@@ -611,17 +558,26 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { onClickOutside } from "@vueuse/core";
+import Disclosure from "./Disclosure.vue";
+import SectionFacts from "./SectionFacts.vue";
 import SegmentedControl, { type SegmentedOption } from "./SegmentedControl.vue";
 import { ComboBox, type ComboBoxOptionType } from "@/components/ComboBox";
-import { VDotsIcon } from "@/icons";
+import { LockIcon, VDotsIcon } from "@/icons";
 import { colorOfType, labelOfComponent } from "../constants/meetingTypeColors";
+import { DELIVERY_OPTIONS, labelOfDelivery } from "../constants/delivery";
+import {
+  assistantsOf,
+  initialsOf,
+  instructorsOfRecord,
+  PRIMARY_ROLE,
+  TA_ROLE,
+} from "../helpers/sectionPeople";
 import { minutesFromClock } from "../helpers/timeScale";
 import type {
   Delivery,
   PlannedSection,
   SisDay,
   SisEmployee,
-  SisInstructor,
   SisSectionMeeting,
 } from "../types";
 import type { ScheduleEditor } from "../useScheduleEditor";
@@ -638,6 +594,12 @@ const props = defineProps<{
   hasHandle?: boolean;
   /** Names the term in the cancel prompt, e.g. "Fall 2026". */
   termName?: string;
+  /**
+   * Why this term cannot be edited, e.g. "Fall 2025 is closed." Present is
+   * what makes the sheet read-only: every field becomes its value, and
+   * everything that would have written is gone rather than dimmed.
+   */
+  lockReason?: string;
 }>();
 
 const emit = defineEmits<{ close: []; back: [] }>();
@@ -649,18 +611,6 @@ const INPUT_CLASS =
   "tw-min-h-11 tw-rounded-[10px] tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-px-3 tw-text-sm tw-text-on-surface focus:tw-border-primary focus:tw-outline-none";
 
 const COMPONENT_CODES = ["LEC", "DIS", "LAB", "FWK", "IND"];
-
-const DELIVERY_OPTIONS: SegmentedOption[] = [
-  { value: "onCampus", label: "On campus" },
-  { value: "blended", label: "Blended" },
-  { value: "online", label: "Online" },
-];
-
-/** The SIS instructor-of-record role. */
-const PRIMARY_ROLE = "PI";
-
-/** The role recorded when someone is added from the teaching assistants list. */
-const TA_ROLE = "TA";
 
 const ASYNC = "async";
 
@@ -675,10 +625,6 @@ const DAY_OPTIONS: SegmentedOption[] = [
 
 const isAddingInstructor = ref(false);
 const isAddingAssistant = ref(false);
-const isComponentOpen = ref(false);
-const isCrosslistOpen = ref(false);
-const isAssistantsOpen = ref(false);
-const isNotesOpen = ref(false);
 const isConfirmingCancel = ref(false);
 const isMenuOpen = ref(false);
 
@@ -686,6 +632,8 @@ const menuContainerRef = ref<HTMLElement | null>(null);
 onClickOutside(menuContainerRef, () => {
   isMenuOpen.value = false;
 });
+
+const isLocked = computed(() => Boolean(props.lockReason));
 
 const fieldId = (field: string) => `section-${props.section.id}-${field}`;
 
@@ -700,10 +648,6 @@ const valueOf = (event: Event) =>
   (event.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement)
     .value;
 
-const deliveryLabel = (delivery: Delivery) =>
-  DELIVERY_OPTIONS.find((option) => option.value === delivery)?.label ??
-  delivery;
-
 /** A code the import has never sent still shows, rather than reading as LEC. */
 const componentCodes = computed(() =>
   COMPONENT_CODES.includes(draft.value.component)
@@ -712,7 +656,7 @@ const componentCodes = computed(() =>
 );
 
 const componentSummary = computed(
-  () => `${draft.value.component} · ${deliveryLabel(draft.value.delivery)}`,
+  () => `${draft.value.component} · ${labelOfDelivery(draft.value.delivery)}`,
 );
 
 // one empty group when there are none, so the day buttons still show
@@ -806,41 +750,11 @@ const removeInstructor = (emplid: number) =>
     ),
   });
 
-/** The instructor(s) of record, or the first instructor when none is marked PI. */
-const primaryInstructors = computed(() => {
-  const primaries = draft.value.instructors.filter(
-    (instructor) => instructor.role === PRIMARY_ROLE,
-  );
-  return primaries.length > 0 ? primaries : draft.value.instructors.slice(0, 1);
-});
-
-/**
- * Everyone the section carries who is not already listed as teaching it.
- * Measured against whoever the list above actually shows rather than against
- * the role, because a section the SIS sent with no instructor of record falls
- * back to its first instructor, and that person must not then appear twice.
- */
-const assistantInstructors = computed(() =>
-  draft.value.instructors.filter(
-    (instructor) =>
-      !primaryInstructors.value.some(
-        (primary) => primary.emplid === instructor.emplid,
-      ),
-  ),
+const instructorsOnRecord = computed(() =>
+  instructorsOfRecord(draft.value.instructors),
 );
 
-const assistantsSummary = computed(() =>
-  String(assistantInstructors.value.length),
-);
-
-function initialsOf(instructor: SisInstructor): string {
-  const name = instructor.name?.trim();
-  if (!name) return "?";
-
-  const first = name.charAt(0);
-  const last = instructor.lastName?.trim().charAt(0) ?? "";
-  return (first + last).toUpperCase();
-}
+const assistants = computed(() => assistantsOf(draft.value.instructors));
 
 const notesSummary = computed(() => {
   const firstLine = draft.value.notes.trim().split("\n")[0];
