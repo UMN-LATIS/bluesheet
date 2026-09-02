@@ -21,6 +21,13 @@ describe("Groups UI", () => {
       cy.contains("Welcome to BlueSheet");
     });
 
+    it("shows a folder's groups after navigating into the folder", () => {
+      cy.visit("/groups/");
+      cy.get("table").should("not.contain", "Anthropology");
+      cy.get("table").contains("CLA").click();
+      cy.get("table").contains("Anthropology");
+    });
+
     it("creates a group", () => {
       cy.visit("/");
       cy.get(".app-header").contains("Create Group").click();

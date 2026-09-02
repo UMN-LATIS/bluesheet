@@ -113,7 +113,8 @@
 </template>
 <script setup lang="ts">
 import WideLayout from "@/layouts/WideLayout.vue";
-import { computed, ref, watch, onMounted, nextTick } from "vue";
+import { computed, ref, watch, nextTick } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { PersonTable } from "./components/PersonTable";
 import { useCoursePlanningStore } from "./stores/useCoursePlanningStore";
 import { usePermissionsStore } from "@/stores/usePermissionsStore";
@@ -135,11 +136,17 @@ const props = defineProps<{
 
 const coursePlanningStore = useCoursePlanningStore();
 const permissionsStore = usePermissionsStore();
+const route = useRoute();
+const router = useRouter();
 const isLoadingComplete = ref(false);
 const isShowingFilters = ref(false);
 
-onMounted(async () => {
-  await coursePlanningStore.initGroup(props.groupId);
+async function initPage(groupId: number) {
+  isLoadingComplete.value = false;
+  await coursePlanningStore.initGroup(groupId);
+
+  // drop a run superseded by a newer group
+  if (groupId !== props.groupId) return;
 
   // parse query params and set filters
   const parsedQuery = qs.parse(window.location.search, {
@@ -157,7 +164,9 @@ onMounted(async () => {
 
   performance.mark("CoursePlanningPage:start");
   isLoadingComplete.value = true;
-});
+}
+
+watch(() => props.groupId, initPage, { immediate: true });
 
 const canViewPlannedCourses = ref(false);
 watch(
@@ -170,22 +179,15 @@ watch(
 );
 
 function updateQueryParams(queryObject: Record<string, unknown>) {
-  // manually updating the history state to avoid
-  // triggering a rerender with `router.replace()`
-  // (not sure why the rerender happens, but it does)
   const stringifiedQuery = qs.stringify(queryObject, {
     // some names have `&` in them, so we need to encode them
     encode: true,
   });
 
-  history.replaceState(
-    {
-      ...history.state,
-      current: `${window.location.pathname}?${stringifiedQuery}`,
-    },
-    "",
-    `?${stringifiedQuery}`,
-  );
+  // pass a string so qs stays the only query serializer: initPage
+  // reads the URL back with qs.parse, and existing links use its
+  // bracket-indexed arrays
+  router.replace(`${route.path}?${stringifiedQuery}`);
 }
 
 // keep url in sync with filters
@@ -279,6 +281,15 @@ watch(
 );
 
 const searchInputRaw = ref("");
+
+// `initGroup` resets the store's filters, so the search box clears with them
+watch(
+  () => props.groupId,
+  () => {
+    searchInputRaw.value = "";
+  },
+);
+
 watch(
   searchInputRaw,
   () => coursePlanningStore.setSearchFilter(searchInputRaw.value),

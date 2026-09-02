@@ -10,7 +10,7 @@
       >
         <i
           class="fa-star"
-          :class="{ fas: roleFavorited, far: !roleFavorited }"
+          :class="{ fas: isRoleFavorited, far: !isRoleFavorited }"
         ></i>
         Favorite
       </button>
@@ -101,7 +101,11 @@ const filteredMembers = computed(() => {
   );
 });
 
-const roleFavorited = userStore.isRoleFavorited(props.roleId);
+// not userStore.isRoleFavorited: it fixes roleId at call time,
+// and props.roleId changes when RouterView reuses this page
+const isRoleFavorited = computed(() =>
+  userStore.currentRoleFavorites.some((r) => r.id === props.roleId),
+);
 
 watch(
   () => state.role,
@@ -113,11 +117,19 @@ watch(
 
 watch(
   () => props.roleId,
-  async () => {
+  async (roleId) => {
+    // the previous role must leave the screen first: the favorite button
+    // and the folder filter would otherwise act on it while the new one loads
+    state.role = null;
+    state.parentOrganizationId = null;
+
     const [role, parentOrganizations] = await Promise.all([
-      roleStore.fetchRole(props.roleId),
+      roleStore.fetchRole(roleId),
       roleStore.fetchParentOrganizations(),
     ]);
+
+    // drop a response superseded by a newer role
+    if (roleId !== props.roleId) return;
 
     state.role = role;
     state.parentOrganizations = remapParents(parentOrganizations);

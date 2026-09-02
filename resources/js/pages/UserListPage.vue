@@ -127,34 +127,44 @@ export default {
       department: true,
     };
   },
+  computed: {
+    // a single watch source, so a navigation changing both props loads once
+    userListQuery() {
+      return { users: this.users, groupId: this.groupId };
+    },
+  },
+  watch: {
+    userListQuery: "loadUsersFromProps",
+  },
   mounted() {
     usePageTitle('Users');
-    if (this.users) {
-      this.loadUsers(this.users);
-    }
-    if (this.groupId) {
-      axios.get("/api/group/" + this.groupId).then((res) => {
-        this.group = res.data;
-        this.group.members = [];
-        axios
-          .get("/api/group/" + this.groupId + "/members")
-          .then((res) => {
-            this.group.members = res.data;
-            var users = this.group.members
-              .filter(
-                (e) => e.end_date == null || dayjs(e.end_date).isAfter(dayjs()),
-              )
-              .map((elem) => elem.user.id);
-            this.loadUsers(users);
-          })
-          .catch((err) => {
-            this.error = err.response.data;
-          });
-      });
-    }
+    this.loadUsersFromProps();
   },
   methods: {
     dayjs,
+    loadUsersFromProps() {
+      if (this.users) {
+        this.loadUsers(this.users);
+      }
+      if (!this.groupId) return;
+
+      axios
+        .get("/api/group/" + this.groupId + "/members")
+        .then((res) => {
+          const activeMemberUserIds = res.data
+            .filter(
+              (member) =>
+                member.end_date == null ||
+                dayjs(member.end_date).isAfter(dayjs()),
+            )
+            .map((member) => member.user.id);
+
+          this.loadUsers(activeMemberUserIds);
+        })
+        .catch((err) => {
+          this.error = err.response.data;
+        });
+    },
     loadUsers(userList) {
       axios
         .post("/api/user/lookup", {
