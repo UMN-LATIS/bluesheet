@@ -21,7 +21,6 @@
         class="tw-block tw-truncate"
         :class="{
           'tw-font-bold tw-uppercase tw-tracking-[0.07em]': isGroupHeading,
-          'tw-pl-3': isIndented,
         }"
       >
         <slot />
@@ -47,8 +46,6 @@ defineProps<{
   isIndeterminate?: boolean;
   /** A course-level row that bulk-toggles every course under it. */
   isGroupHeading?: boolean;
-  /** Nudges the primary text in, so it reads as nested under a heading row. */
-  isIndented?: boolean;
   /** A Tailwind bg class for a color square, e.g. from colorOfType(code).dot. */
   swatch?: string;
 }>();

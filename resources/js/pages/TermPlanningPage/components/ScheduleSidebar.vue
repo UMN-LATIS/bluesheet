@@ -52,11 +52,16 @@
         >
           {{ filters[tile.facet].length }}
         </span>
+        <!-- While searching, what the list will show out of what the term
+             holds: "5/57". No slash where the search matches everything. -->
         <span
           class="tw-text-[21px] tw-font-semibold tw-leading-tight tw-tracking-tight tw-text-on-surface"
+          >{{ tile.count }}&nbsp;<span
+            v-if="tile.count !== tile.total"
+            class="tw-text-[13px] tw-font-normal tw-text-on-surface-variant"
+            >/&nbsp;{{ tile.total }}</span
+          ></span
         >
-          {{ tile.count }}
-        </span>
         <span
           class="tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-surface-variant"
         >
@@ -124,7 +129,10 @@
       >
         Clear
       </button>
-      <span class="tw-ml-auto tw-text-[11px] tw-text-on-surface-variant">
+      <span
+        v-if="listHeader.countPhrase"
+        class="tw-ml-auto tw-text-[11px] tw-text-on-surface-variant"
+      >
         {{ listHeader.countPhrase }}
       </span>
     </div>
@@ -157,7 +165,6 @@
             </li>
             <li v-for="course in level.courses" :key="course.value">
               <FilterRow
-                isIndented
                 :isChecked="isChecked('course', course.value)"
                 @toggle="toggle('course', [course.value], $event)"
               >
@@ -180,7 +187,7 @@
                   'tw-font-semibold tw-text-brand': person.value === TBA_PERSON,
                 }"
               >
-                {{ person.name }}
+                {{ person.listName }}
               </span>
               <template v-if="person.internetId" #secondary>
                 {{ person.internetId }}@umn.edu
@@ -288,8 +295,8 @@ const isInView = (facet: FilterFacet, value: string, text: string) => {
   );
 };
 
-// term totals for the tiles and the list header, so the search box never
-// changes what a scheduler expects those numbers to mean
+// Term totals: what the list header reports, and the second half of a tile's
+// count while a search narrows it.
 const courseCount = computed(() =>
   props.options.courseLevels.reduce(
     (sum, level) => sum + level.courses.length,
@@ -302,12 +309,40 @@ const facultyCount = computed(
 const sectionCount = computed(() => props.options.sections.length);
 const componentCount = computed(() => props.options.components.length);
 
+/**
+ * `count` is what the list below would show, which the search narrows;
+ * `total` is what the term holds. They are equal when nothing is searched.
+ */
 const tiles = computed(() => [
-  { facet: "course" as const, label: "Courses", count: courseCount.value },
-  { facet: "person" as const, label: "Faculty", count: facultyCount.value },
-  { facet: "section" as const, label: "Sections", count: sectionCount.value },
-  { facet: "component" as const, label: "Types", count: componentCount.value },
+  {
+    facet: "course" as const,
+    label: "Courses",
+    count: shownCourseCount.value,
+    total: courseCount.value,
+  },
+  {
+    facet: "person" as const,
+    label: "Faculty",
+    count: people.value.length,
+    total: facultyCount.value,
+  },
+  {
+    facet: "section" as const,
+    label: "Sections",
+    count: sections.value.length,
+    total: sectionCount.value,
+  },
+  {
+    facet: "component" as const,
+    label: "Types",
+    count: components.value.length,
+    total: componentCount.value,
+  },
 ]);
+
+const shownCourseCount = computed(() =>
+  courseLevels.value.reduce((sum, level) => sum + level.courses.length, 0),
+);
 
 const listHeader = computed(
   () =>
@@ -324,10 +359,8 @@ const listHeader = computed(
         title: "Sections",
         countPhrase: `${sectionCount.value} in this term`,
       },
-      component: {
-        title: "Meeting type",
-        countPhrase: "the key to the schedule",
-      },
+      // No count phrase: the type list is short enough to read at a glance.
+      component: { title: "Meeting type", countPhrase: "" },
     })[activeFacet.value],
 );
 

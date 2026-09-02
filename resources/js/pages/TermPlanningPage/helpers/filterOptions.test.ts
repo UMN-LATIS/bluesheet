@@ -146,7 +146,7 @@ describe("buildFilterOptions", () => {
       });
     });
 
-    it("forms shortName from the first initial and last name", () => {
+    it("prints a listName with the last name first", () => {
       const options = buildFilterOptions([
         section(1, {
           instructors: [
@@ -159,7 +159,23 @@ describe("buildFilterOptions", () => {
         }),
       ]);
 
-      expect(options.faculty[0].shortName).toBe("A. García");
+      expect(options.faculty[0].listName).toBe("García, Ana");
+    });
+
+    it("keeps a multi-word surname whole, since the SIS sends it", () => {
+      const options = buildFilterOptions([
+        section(1, {
+          instructors: [
+            instructor(1, {
+              role: "PI",
+              name: "Ana de la Cruz",
+              lastName: "de la Cruz",
+            }),
+          ],
+        }),
+      ]);
+
+      expect(options.faculty[0].listName).toBe("de la Cruz, Ana");
     });
 
     it("falls back to the plain name when there is no last name to pair it with", () => {
@@ -172,7 +188,7 @@ describe("buildFilterOptions", () => {
       ]);
 
       expect(options.faculty[0].name).toBe("Ana García");
-      expect(options.faculty[0].shortName).toBe("Ana García");
+      expect(options.faculty[0].listName).toBe("Ana García");
     });
 
     it("falls back to lastName, then internetId, then emplid when name is missing", () => {
@@ -222,7 +238,7 @@ describe("buildFilterOptions", () => {
       expect(options.tba).toEqual({
         value: TBA_PERSON,
         name: "TBA",
-        shortName: "TBA",
+        listName: "TBA",
         emplid: null,
         internetId: null,
         sectionCount: 2,

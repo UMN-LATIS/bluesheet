@@ -29,10 +29,11 @@ export interface PersonOption {
   /** Full name, e.g. "Ana García". "TBA" for the TBA row. */
   name: string;
   /**
-   * For a chip: first initial and last name,
-   * e.g. "A. García". "TBA" for the TBA row.
+   * How the faculty list prints and orders a person: last name first, e.g.
+   * "García, Ana". The full name for anyone with no last name of their own,
+   * and "TBA" for the TBA row.
    */
-  shortName: string;
+  listName: string;
   /** Both null on the TBA row, which stands for nobody in particular. */
   emplid: number | null;
   internetId: string | null;
@@ -153,6 +154,19 @@ function facultyName(instructor: SisInstructor): string {
   );
 }
 
+/**
+ * "García, Ana". The last name is taken off the end of the full name rather
+ * than guessed at from it, which is why the SIS sends it separately: nothing
+ * here can tell that "de la Cruz" is one surname and "Ana Maria" two given
+ * names.
+ */
+function lastNameFirst(fullName: string, lastName: string | null): string {
+  if (lastName === null || !fullName.endsWith(lastName)) return fullName;
+
+  const givenNames = fullName.slice(0, -lastName.length).trim();
+  return givenNames === "" ? lastName : `${lastName}, ${givenNames}`;
+}
+
 interface FacultyDraft {
   option: PersonOption;
   lastName: string | null;
@@ -166,7 +180,7 @@ function buildFaculty(sections: SisSection[]): {
     number,
     {
       name: string;
-      shortName: string;
+      listName: string;
       lastName: string | null;
       internetId: string | null;
       sectionIds: Set<number>;
@@ -185,13 +199,9 @@ function buildFaculty(sections: SisSection[]): {
       let draft = draftsByEmplid.get(instructor.emplid);
       if (!draft) {
         const name = facultyName(instructor);
-        const shortName =
-          instructor.name && instructor.lastName
-            ? `${name[0]}. ${instructor.lastName}`
-            : name;
         draft = {
           name,
-          shortName,
+          listName: lastNameFirst(name, instructor.lastName),
           lastName: instructor.lastName,
           internetId: instructor.internetId,
           sectionIds: new Set(),
@@ -207,7 +217,7 @@ function buildFaculty(sections: SisSection[]): {
       option: {
         value: String(emplid),
         name: draft.name,
-        shortName: draft.shortName,
+        listName: draft.listName,
         emplid,
         internetId: draft.internetId,
         sectionCount: draft.sectionIds.size,
@@ -232,7 +242,7 @@ function buildFaculty(sections: SisSection[]): {
       ? {
           value: TBA_PERSON,
           name: "TBA",
-          shortName: "TBA",
+          listName: "TBA",
           emplid: null,
           internetId: null,
           sectionCount: tbaSectionCount,
