@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { initialState, update } from "./update";
+import { emptyFilters, initialState, update } from "./update";
 import { placeSections } from "../helpers/sectionPlacement";
 import { plannedSection } from "../helpers/plannedSection.fixture";
 import type {
@@ -531,7 +531,7 @@ describe("filtering", () => {
       course: ["HIST-1082", "HIST-1301W"],
       person: ["tba"],
       section: [],
-      component: [],
+      component: ["LEC"],
     });
   });
 
@@ -546,17 +546,21 @@ describe("filtering", () => {
     expect(state.filters.person).toEqual(["1"]);
   });
 
-  it("clearing empties every facet", () => {
+  it("the page opens on lectures alone", () => {
+    expect(initialState().filters.component).toEqual(["LEC"]);
+  });
+
+  it("clearing empties every facet, the opening lectures included", () => {
     const state = after([
       twoCourses,
-      { type: "filterValuesAdded", facet: "component", values: ["LEC"] },
+      { type: "filterValuesAdded", facet: "person", values: ["tba"] },
       { type: "filtersCleared" },
     ]);
 
-    expect(state.filters).toEqual(initialState().filters);
+    expect(state.filters).toEqual(emptyFilters());
   });
 
-  it("a URL naming courses sets those filters exactly", () => {
+  it("a URL sets the facets it names and defaults the ones it does not", () => {
     const state = after([
       twoCourses,
       { type: "urlChanged", query: { course: "ANTH-1001", section: "4821" } },
@@ -566,8 +570,17 @@ describe("filtering", () => {
       course: ["ANTH-1001"],
       person: [],
       section: ["4821"],
-      component: [],
+      component: ["LEC"],
     });
+  });
+
+  it("a URL naming an empty component asks for every type", () => {
+    const state = after([
+      twoCourses,
+      { type: "urlChanged", query: { component: "" } },
+    ]);
+
+    expect(state.filters.component).toEqual([]);
   });
 
   it("leaves the selection and the schedule alone", () => {
@@ -602,7 +615,11 @@ describe("the URL", () => {
     expect(step(checkTwoCourses).effects).toEqual([
       {
         type: "replaceUrlQuery",
-        query: { course: "ANTH-1001,HIST-1082", view: "week" },
+        query: {
+          course: "ANTH-1001,HIST-1082",
+          component: "LEC",
+          view: "week",
+        },
       },
     ]);
   });
@@ -630,7 +647,12 @@ describe("the URL", () => {
     ).toEqual([]);
     expect(
       step({ type: "viewSelected", view: "heatmap" }, onWednesday).effects,
-    ).toEqual([{ type: "replaceUrlQuery", query: { view: "heatmap" } }]);
+    ).toEqual([
+      {
+        type: "replaceUrlQuery",
+        query: { component: "LEC", view: "heatmap" },
+      },
+    ]);
   });
 
   it("the Async cell moves the view and the day together", () => {
@@ -638,7 +660,10 @@ describe("the URL", () => {
 
     expect(next.state.view).toBe("day");
     expect(next.effects).toEqual([
-      { type: "replaceUrlQuery", query: { view: "day", day: "async" } },
+      {
+        type: "replaceUrlQuery",
+        query: { component: "LEC", view: "day", day: "async" },
+      },
     ]);
   });
 

@@ -42,18 +42,40 @@
       <FieldLabel class="tw-mb-px">Taught by</FieldLabel>
       <div class="tw-flex tw-flex-col tw-gap-2">
         <PersonRecord
-          v-for="instructor in instructorsOfRecord(section.instructors)"
+          v-for="instructor in instructorsOnRecord"
           :key="instructor.emplid"
           :instructor="instructor"
           role="Instructor of record"
         />
         <p
-          v-if="section.instructors.length === 0"
+          v-if="instructorsOnRecord.length === 0"
           class="tw-m-0 tw-text-[13px] tw-text-on-surface-variant"
         >
           TBA
         </p>
       </div>
+    </div>
+
+    <FieldDivider />
+
+    <!--
+      Alongside the instructor of record rather than folded away below, since
+      a discussion or a lab is usually run by the people in this list and the
+      SIS names no instructor of record on it at all.
+    -->
+    <div>
+      <FieldLabel class="tw-mb-px">Teaching assistants</FieldLabel>
+      <div v-if="assistants.length > 0" class="tw-flex tw-flex-col tw-gap-2">
+        <PersonRecord
+          v-for="instructor in assistants"
+          :key="instructor.emplid"
+          :instructor="instructor"
+          :role="instructor.role"
+        />
+      </div>
+      <p v-else class="tw-m-0 tw-text-[13px] tw-text-on-surface-variant">
+        None
+      </p>
     </div>
 
     <FieldDivider />
@@ -124,25 +146,6 @@
 
       <FieldDivider />
 
-      <Disclosure
-        label="Teaching assistants"
-        :summary="String(assistants.length)"
-      >
-        <div v-if="assistants.length > 0" class="tw-flex tw-flex-col tw-gap-2">
-          <PersonRecord
-            v-for="instructor in assistants"
-            :key="instructor.emplid"
-            :instructor="instructor"
-            :role="instructor.role"
-          />
-        </div>
-        <p v-else class="tw-m-0 tw-text-[12.5px] tw-text-on-surface-variant">
-          Nobody else is listed on this section.
-        </p>
-      </Disclosure>
-
-      <FieldDivider />
-
       <Disclosure label="Notes" :summary="notesSummary">
         <p
           class="tw-m-0 tw-whitespace-pre-line tw-text-[12.5px]"
@@ -185,6 +188,10 @@ const timeOf = (pattern: SisSectionMeeting) =>
 
 const durationOf = (pattern: SisSectionMeeting) =>
   minutesFromClock(pattern.endTime) - minutesFromClock(pattern.startTime);
+
+const instructorsOnRecord = computed(() =>
+  instructorsOfRecord(props.section.instructors),
+);
 
 const assistants = computed(() => assistantsOf(props.section.instructors));
 

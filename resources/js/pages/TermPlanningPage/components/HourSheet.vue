@@ -110,6 +110,7 @@
 <script setup lang="ts">
 import { ArrowRightIcon } from "@/icons";
 import { colorOfType } from "../constants/meetingTypeColors";
+import { leadInstructorName } from "../helpers/sectionPeople";
 import { formatTimeRange } from "../helpers/timeScale";
 import type { SisSection, TimeRange } from "../types";
 import type { ScheduleEditor } from "../useScheduleEditor";
@@ -136,10 +137,6 @@ const emit = defineEmits<{ close: []; showInWeek: [] }>();
 const isOverCap = (section: SisSection) =>
   section.enrollmentTotal > section.enrollmentCap;
 
-const instructorOf = (section: SisSection) => {
-  const lead =
-    section.instructors.find(({ role }) => role === "PI") ??
-    section.instructors[0];
-  return lead?.lastName ?? lead?.name ?? "TBA";
-};
+const instructorOf = (section: SisSection) =>
+  leadInstructorName(section.instructors);
 </script>

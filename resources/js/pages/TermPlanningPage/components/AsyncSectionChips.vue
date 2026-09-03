@@ -65,6 +65,7 @@
 
 <script setup lang="ts">
 import { colorOfType } from "../constants/meetingTypeColors";
+import { instructorsOfRecord } from "../helpers/sectionPeople";
 import type { PlannedSection, SisInstructor } from "../types";
 import type { ScheduleEditor } from "../useScheduleEditor";
 
@@ -80,8 +81,7 @@ withDefaults(
 );
 
 const leadInstructorOf = (section: PlannedSection): SisInstructor | undefined =>
-  section.instructors.find(({ role }) => role === "PI") ??
-  section.instructors[0];
+  instructorsOfRecord(section.instructors)[0];
 
 /** "Ana García" → "AG". A last name alone gives its first letter. */
 const initialsOf = (section: PlannedSection): string | null => {

@@ -209,6 +209,50 @@
 
       <FieldDivider />
 
+      <!--
+        Alongside the instructor of record rather than folded away below, since
+        a discussion or a lab is usually run by the people in this list and the
+        SIS names no instructor of record on it at all.
+      -->
+      <div>
+        <FieldLabel>Teaching assistants</FieldLabel>
+        <div v-if="assistants.length > 0" class="tw-flex tw-flex-col tw-gap-2">
+          <PersonField
+            v-for="instructor in assistants"
+            :key="instructor.emplid"
+            :instructor="instructor"
+            :role="instructor.role"
+            @remove="removeInstructor(instructor.emplid)"
+          />
+        </div>
+        <p v-else class="tw-m-0 tw-text-[13px] tw-text-on-surface-variant">
+          None
+        </p>
+
+        <button
+          v-if="!isAddingAssistant"
+          type="button"
+          class="tw-mt-2 tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[12.5px] tw-font-semibold tw-text-primary hover:tw-underline"
+          @click="isAddingAssistant = true"
+        >
+          Add assistant
+        </button>
+        <ComboBox
+          v-else
+          label="Add assistant"
+          placeholder="Add assistant…"
+          :showLabel="false"
+          :options="rosterOptions"
+          :modelValue="null"
+          strategy="fixed"
+          teleportTo="body"
+          class="tw-mt-2"
+          @update:modelValue="(option) => addPerson(option, TA_ROLE)"
+        />
+      </div>
+
+      <FieldDivider />
+
       <div>
         <FieldLabel :for="fieldId('cap')">Enrollment cap</FieldLabel>
         <div class="tw-flex tw-items-center tw-gap-3">
@@ -314,44 +358,6 @@
           >
             Add cross-listing
           </button>
-        </Disclosure>
-
-        <FieldDivider />
-
-        <Disclosure
-          label="Teaching assistants"
-          :summary="String(assistants.length)"
-        >
-          <div class="tw-flex tw-flex-col tw-gap-2">
-            <PersonField
-              v-for="instructor in assistants"
-              :key="instructor.emplid"
-              :instructor="instructor"
-              :role="instructor.role"
-              @remove="removeInstructor(instructor.emplid)"
-            />
-          </div>
-
-          <button
-            v-if="!isAddingAssistant"
-            type="button"
-            class="tw-mt-2 tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[12.5px] tw-font-semibold tw-text-primary hover:tw-underline"
-            @click="isAddingAssistant = true"
-          >
-            Add assistant
-          </button>
-          <ComboBox
-            v-else
-            label="Add assistant"
-            placeholder="Add assistant…"
-            :showLabel="false"
-            :options="rosterOptions"
-            :modelValue="null"
-            strategy="fixed"
-            teleportTo="body"
-            class="tw-mt-2"
-            @update:modelValue="(option) => addPerson(option, TA_ROLE)"
-          />
         </Disclosure>
 
         <FieldDivider />

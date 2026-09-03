@@ -1,10 +1,12 @@
 /**
  * Color on this page means one thing: what kind of meeting a block is. The
- * lecture is the warm primary; discussion and lab are a cool pair, alike in
- * weight and near in hue, since to a scheduler they are the same kind of
- * thing (the meetings a class splits into). Blue is left alone on purpose,
- * because everywhere else in the app blue means "you can click this", and it
- * is what marks the one section a sheet is open on.
+ * lecture is the warm primary, and it is deliberately the heaviest of the
+ * three: a term is planned around its lectures, so a lecture block has to win
+ * the eye over the discussions and labs that hang off it. Those two are a
+ * cool pair, alike in weight and near in hue, since to a scheduler they are
+ * the same kind of thing (the meetings a class splits into). Blue is left
+ * alone on purpose, because everywhere else in the app blue means "you can
+ * click this", and it is what marks the one section a sheet is open on.
  *
  * The colors are named as roles rather than as a finished block, because the
  * same type appears at four sizes: a week block, a day card, an async chip,
@@ -31,10 +33,10 @@ export interface MeetingTypeColor {
 const LECTURE: MeetingTypeColor = {
   code: "LEC",
   label: "Lecture",
-  tint: "tw-bg-amber-50",
-  rail: "tw-border-l-amber-500",
-  dot: "tw-bg-amber-500",
-  badge: "tw-bg-amber-50 tw-border-amber-500",
+  tint: "tw-bg-amber-100",
+  rail: "tw-border-l-amber-600",
+  dot: "tw-bg-amber-600",
+  badge: "tw-bg-amber-100 tw-border-amber-600",
 };
 
 const DISCUSSION: MeetingTypeColor = {

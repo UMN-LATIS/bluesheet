@@ -7,8 +7,11 @@
     />
     <div class="tw-truncate tw-font-semibold">{{ heading }}</div>
     <div class="tw-truncate">
-      <span class="component-code">{{ section.component }} </span
+      <span class="component-code tw-me-1">{{ section.component }}</span
       >{{ instructorName }}
+    </div>
+    <div v-if="assistants" class="assistants tw-truncate tw-opacity-70">
+      TA {{ assistants }}
     </div>
     <div class="time-range tw-truncate tw-opacity-50">{{ timeRange }}</div>
   </div>
@@ -16,6 +19,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
+import { assistantNames, leadInstructorName } from "../helpers/sectionPeople";
 import { formatTimeRange } from "../helpers/timeScale";
 import type { SisSection } from "../types";
 
@@ -27,21 +31,16 @@ const props = defineProps<{
   isEdited?: boolean;
 }>();
 
+const instructorName = computed(() =>
+  leadInstructorName(props.section.instructors),
+);
+
+const assistants = computed(() => assistantNames(props.section.instructors));
+
 const heading = computed(
   () =>
     `${props.section.subject} ${props.section.catalogNumber} · ${props.section.section}`,
 );
-
-const leadInstructor = computed(
-  () =>
-    props.section.instructors.find(({ role }) => role === "PI") ??
-    props.section.instructors[0],
-);
-
-const instructorName = computed(() => {
-  const instructor = leadInstructor.value;
-  return instructor?.lastName ?? instructor?.name ?? "TBA";
-});
 
 const timeRange = computed(() =>
   formatTimeRange(props.startMinute, props.endMinute),
@@ -53,10 +52,12 @@ const timeRange = computed(() =>
  * What the block has room to say, asked of the block rather than measured in
  * script. Its content box runs 19px narrower and 10px shorter than the lane
  * and the class's length in minutes; see MeetingBlock. So the meeting type
- * joins the instructor at a 120px lane, and the times appear on a class of
- * 50 minutes or more.
+ * joins the instructor at a 120px lane, the times appear on a class of 50
+ * minutes or more, and the assistants, a fourth line at 14.3px each, need a
+ * class of 70 minutes to sit under the three above them.
  */
 .component-code,
+.assistants,
 .time-range {
   display: none;
 }
@@ -69,6 +70,12 @@ const timeRange = computed(() =>
 
 @container meeting-block (min-height: 40px) {
   .time-range {
+    display: block;
+  }
+}
+
+@container meeting-block (min-height: 60px) {
+  .assistants {
     display: block;
   }
 }

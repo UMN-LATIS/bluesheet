@@ -12,7 +12,11 @@ import type {
   TimeRange,
   UrlQuery,
 } from "../types";
-import { decodeFilters, encodeFilters } from "../helpers/filterQuery";
+import {
+  decodeFilters,
+  defaultFilters,
+  encodeFilters,
+} from "../helpers/filterQuery";
 import {
   decodeSelection,
   encodeSelection,
@@ -80,7 +84,7 @@ export const initialState = (dayIndex = 0): EditorState => ({
   interaction: { status: "idle" },
   lastPlacedId: null,
   selection: null,
-  filters: emptyFilters(),
+  filters: defaultFilters(),
   view: DEFAULT_VIEW,
   dayIndex,
 });

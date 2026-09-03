@@ -2,9 +2,13 @@
   <!--
     Tailwind preflight is off here, so `tw-border-0` must precede any
     single-side border or the other three sides appear at `medium` width.
+
+    The day rule is `outline` where the hour rules inside the column are
+    `outline-variant`: a week is read a day at a time, so the line that ends
+    a day has to carry more than the lines that divide it up.
   -->
   <div
-    class="tw-flex-none tw-border-0 tw-border-r tw-border-solid tw-border-outline-variant last:tw-border-r-0"
+    class="tw-flex-none tw-border-0 tw-border-r tw-border-solid tw-border-outline last:tw-border-r-0"
     :style="{ width: `${view.layout.width}px` }"
   >
     <ColumnHeader>

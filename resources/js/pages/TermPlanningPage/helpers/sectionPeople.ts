@@ -8,13 +8,18 @@ export const PRIMARY_ROLE = "PI";
 /** The role recorded when someone is added from the teaching assistants list. */
 export const TA_ROLE = "TA";
 
-/** The instructor(s) of record, or the first instructor when none is marked PI. */
+/**
+ * The instructor(s) of record: everyone marked PI, or else the first
+ * instructor who is not an assistant. Empty on a section the SIS sent with
+ * assistants alone, which is the usual shape of a discussion or a lab.
+ */
 export function instructorsOfRecord(
   instructors: SisInstructor[],
 ): SisInstructor[] {
   const primaries = instructors.filter(({ role }) => role === PRIMARY_ROLE);
+  if (primaries.length > 0) return primaries;
 
-  return primaries.length > 0 ? primaries : instructors.slice(0, 1);
+  return instructors.filter(({ role }) => role !== TA_ROLE).slice(0, 1);
 }
 
 /**
@@ -39,4 +44,23 @@ export function initialsOf(instructor: SisInstructor): string {
 
   const last = instructor.lastName?.trim().charAt(0) ?? "";
   return (name.charAt(0) + last).toUpperCase();
+}
+
+/** Last name where the SIS sent one, full name otherwise, "TBA" for nobody. */
+const shortNameOf = (instructor: SisInstructor | undefined): string =>
+  instructor?.lastName ?? instructor?.name ?? "TBA";
+
+/**
+ * The one name a block or card has room for: the first instructor of record,
+ * or "TBA" where the section has none.
+ */
+export const leadInstructorName = (instructors: SisInstructor[]): string =>
+  shortNameOf(instructorsOfRecord(instructors)[0]);
+
+/** The assistants a block or card names, or null where it has none to name. */
+export function assistantNames(instructors: SisInstructor[]): string | null {
+  const assistants = assistantsOf(instructors);
+  if (assistants.length === 0) return null;
+
+  return assistants.map(shortNameOf).join(", ");
 }

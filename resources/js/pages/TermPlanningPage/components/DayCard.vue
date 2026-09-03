@@ -39,6 +39,13 @@
         </span>
       </div>
       <div class="tw-w-full tw-truncate tw-text-xs">{{ instructorName }}</div>
+      <div
+        v-if="assistants"
+        class="tw-w-full tw-truncate tw-text-[11.5px] tw-text-on-surface-variant"
+      >
+        <span class="tw-font-bold tw-tracking-[0.06em]">TA</span>
+        {{ assistants }}
+      </div>
       <div class="tw-text-[11.5px] tw-text-on-surface-variant">
         {{ timeRange }}
       </div>
@@ -55,7 +62,8 @@
         <span
           class="tw-block tw-truncate tw-text-xs tw-text-on-surface-variant"
         >
-          {{ instructorName }} · {{ timeRange }}
+          {{ instructorName }} · {{ timeRange
+          }}<template v-if="assistants"> · TA {{ assistants }}</template>
         </span>
       </div>
       <span
@@ -71,8 +79,8 @@
 import { computed } from "vue";
 import { colorOfType } from "../constants/meetingTypeColors";
 import type { DayBandItem } from "../helpers/dayBands";
+import { assistantNames, leadInstructorName } from "../helpers/sectionPeople";
 import { formatTimeRange } from "../helpers/timeScale";
-import type { SisInstructor } from "../types";
 import type { ScreenSize } from "../useScreenSize";
 
 const props = defineProps<{
@@ -94,16 +102,13 @@ const code = computed(
     `${props.item.section.subject} ${props.item.section.catalogNumber} · ${props.item.section.section}`,
 );
 
-const leadInstructor = computed<SisInstructor | undefined>(
-  () =>
-    props.item.section.instructors.find(({ role }) => role === "PI") ??
-    props.item.section.instructors[0],
+const instructorName = computed(() =>
+  leadInstructorName(props.item.section.instructors),
 );
 
-const instructorName = computed(() => {
-  const instructor = leadInstructor.value;
-  return instructor?.lastName ?? instructor?.name ?? "TBA";
-});
+const assistants = computed(() =>
+  assistantNames(props.item.section.instructors),
+);
 
 const timeRange = computed(() =>
   formatTimeRange(props.item.startMinute, props.item.endMinute),
