@@ -12,7 +12,7 @@ export interface HourlyCoverage {
   rows: { startMinute: number; counts: number[] }[];
   /** Distinct sections meeting that day, so a column has an honest total. */
   dayTotals: number[];
-  /** The fullest hour, which the colour steps and the legend measure against. */
+  /** The fullest hour, which the color steps and the legend measure against. */
   busiest: { count: number; dayIndex: number; startMinute: number } | null;
 }
 

@@ -3,7 +3,7 @@
   The grid stretches to whatever pane it is given: the shape of the busy block
   is the point, and it has to be legible from across a desk.
 
-  Colour here is maroon alone. The darkest step is the colour this app uses
+  Color here is maroon alone. The darkest step is the color this app uses
   for destruction, which is right for once: dark means busy, and busy is the
   thing a scheduler came to fix.
 -->
@@ -60,7 +60,7 @@
       </div>
 
       <!--
-        Outside the colour scale and behind the same dashed rule the week
+        Outside the color scale and behind the same dashed rule the week
         uses: what it holds is a count of sections, not a density of hours.
       -->
       <div
