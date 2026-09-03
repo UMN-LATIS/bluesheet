@@ -97,4 +97,14 @@ class Group extends Model implements AuditableContract {
     public function courses() {
         return $this->hasMany(Course::class);
     }
+
+    /**
+     * `dept_id` is free text and may hold notes or typos; only a numeric
+     * value names an SIS department. Null otherwise.
+     */
+    public function getSisDeptIdAttribute(): ?string {
+        $deptId = trim((string) $this->dept_id);
+
+        return is_numeric($deptId) ? $deptId : null;
+    }
 }

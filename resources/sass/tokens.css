@@ -1,0 +1,36 @@
+/**
+ * Semantic color tokens named as in Material Design 3: "on-" is text on
+ * that background, "-container" a softer tonal variant, "-variant" lower
+ * emphasis. Surfaces are a warm ramp to match the page background.
+ * @see https://m3.material.io/styles/color/roles
+ */
+:root {
+  /* Backgrounds, dimmest to brightest. `surface` is the page and its
+   * chrome; `surface-bright` is a canvas raised off it, like the grid. */
+  --surface: #f6f4f2;
+  --surface-bright: #ffffff;
+  --surface-container: #efedea;
+  --surface-container-high: #e6e2de;
+
+  --on-surface: #262626;
+  --on-surface-variant: #6b6560;
+
+  /* Borders. `outline` is for something you can act on, like an input;
+   * `outline-variant` is decoration, and most lines on a page are that. */
+  --outline: #b8b1aa;
+  --outline-variant: #e2ddd7;
+
+  /* Interactive. Blue means "you can act on this" everywhere in BlueSheet,
+   * which is why the meeting-type colors on the grid leave blue alone. */
+  --primary: #1d68a7;
+  --on-primary: #ffffff;
+  --primary-container: #dcebf8;
+  --on-primary-container: #10456f;
+
+  /* The University's own two, kept for what is actually the University's:
+   * the header, and the one accent that marks a change as yours. */
+  --brand: #7a0019;
+  --on-brand: #ffffff;
+  --accent: #ffcc33;
+  --on-accent: #3d2f00;
+}

@@ -5,6 +5,15 @@ export default {
   content: ["./resources/js/**/*.{vue,js,ts,jsx,tsx}"],
   theme: {
     extend: {
+      // Where the term planning screen's layout changes, rather than device
+      // sizes. `roomy` is enough width to dock a filter panel and a detail
+      // sheet either side of a week of lanes; `cramped` is the point below
+      // which a week cannot be read at all. The same two numbers drive the
+      // behavior that CSS cannot express, in TermPlanningPage/useScreenSize.ts.
+      screens: {
+        cramped: "700px",
+        roomy: "1200px",
+      },
       colors: {
         "umn-maroon": "#7a0019",
         "umn-gold": "#ffcc33",
@@ -18,6 +27,30 @@ export default {
         "umn-neutral-900": "#1a1a1a",
         "bs-blue": "#3490dc",
         "bs-blue-dark": "#1d68a7",
+
+        // Semantic roles, valued in resources/sass/tokens.css.
+        surface: {
+          DEFAULT: "var(--surface)",
+          bright: "var(--surface-bright)",
+          container: "var(--surface-container)",
+          "container-high": "var(--surface-container-high)",
+        },
+        "on-surface": "var(--on-surface)",
+        "on-surface-variant": "var(--on-surface-variant)",
+        outline: {
+          DEFAULT: "var(--outline)",
+          variant: "var(--outline-variant)",
+        },
+        primary: {
+          DEFAULT: "var(--primary)",
+          container: "var(--primary-container)",
+        },
+        "on-primary": "var(--on-primary)",
+        "on-primary-container": "var(--on-primary-container)",
+        brand: "var(--brand)",
+        "on-brand": "var(--on-brand)",
+        accent: "var(--accent)",
+        "on-accent": "var(--on-accent)",
       },
       backgroundImage: {
         striped:

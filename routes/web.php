@@ -18,6 +18,11 @@ use App\Http\Controllers\CoursePlanning\GroupEnrollmentController;
 use App\Http\Controllers\CoursePlanning\GroupPersonController;
 use App\Http\Controllers\CoursePlanning\GroupLeaveController;
 use App\Http\Controllers\CoursePlanning\GroupCourseController;
+use App\Http\Controllers\Sis\TermController as SisTermController;
+use App\Http\Controllers\Sis\GroupController as SisGroupController;
+use App\Http\Controllers\Sis\GroupSectionController as SisGroupSectionController;
+use App\Http\Controllers\Sis\GroupCourseController as SisGroupCourseController;
+use App\Http\Controllers\Sis\GroupEmployeeController as SisGroupEmployeeController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\LeavePermissionController;
 use App\Http\Controllers\CoursePermissionController;
@@ -72,6 +77,7 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
 
     Route::get('lookup/department/{deptId?}', 'LookupController@departmentInfo');
 
+    // TODO: move callers to /api/sis/terms and retire this
     Route::get('terms', [TermController::class, 'index']);
     Route::get('terms/payrollDates', [TermController::class, 'payrollDates']);
 
@@ -112,6 +118,15 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
         Route::resource('/groups/{group}/enrollments', GroupEnrollmentController::class);
         Route::get('/groups/{group}/people', [GroupPersonController::class, 'index']);
         Route::get('/groups/{group}/leaves', [GroupLeaveController::class, 'index']);
+    });
+
+    // Read-only views of the SIS data cached in the sis_ tables.
+    Route::prefix('sis')->group(function () {
+        Route::get('/terms', [SisTermController::class, 'index']);
+        Route::get('/groups', [SisGroupController::class, 'index']);
+        Route::get('/groups/{group}/sections', [SisGroupSectionController::class, 'index']);
+        Route::get('/groups/{group}/courses', [SisGroupCourseController::class, 'index']);
+        Route::get('/groups/{group}/employees', [SisGroupEmployeeController::class, 'index']);
     });
 
     Route::post('groups/{group}/change-request', 'GroupController@requestChange');

@@ -137,7 +137,7 @@ export default {
     userListQuery: "loadUsersFromProps",
   },
   mounted() {
-    usePageTitle('Users');
+    usePageTitle("Users");
     this.loadUsersFromProps();
   },
   methods: {

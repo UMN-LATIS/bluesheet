@@ -1,0 +1,310 @@
+/**
+ * Options and counts include crosslist partners; filtering itself happens in
+ * scheduleFilters.
+ */
+
+import type { SisInstructor, SisSection } from "../types";
+import { TBA_PERSON } from "../types";
+import { daysMetLabel } from "./scheduleDays";
+
+export interface CourseOption {
+  /** The filter value: `section.courseCode`, e.g. "HIST-1082". */
+  value: string;
+  /** How the code prints: subject, space, catalog number, e.g. "HIST 1082". */
+  code: string;
+  title: string;
+  credits: number | null;
+  sectionCount: number;
+}
+
+export interface CourseLevel {
+  /** "1000-level", "2000-level", ... or "Other". */
+  label: string;
+  courses: CourseOption[];
+}
+
+export interface PersonOption {
+  /** The filter value: the emplid as a string, or TBA_PERSON. */
+  value: string;
+  /** Full name, e.g. "Ana García". "TBA" for the TBA row. */
+  name: string;
+  /**
+   * How the faculty list prints and orders a person: last name first, e.g.
+   * "García, Ana". The full name for anyone with no last name of their own,
+   * and "TBA" for the TBA row.
+   */
+  listName: string;
+  /** Both null on the TBA row, which stands for nobody in particular. */
+  emplid: number | null;
+  internetId: string | null;
+  sectionCount: number;
+}
+
+export interface SectionOption {
+  /** The filter value: `String(section.id)`. */
+  value: string;
+  /** e.g. "HIST 1082 · 001" */
+  label: string;
+  component: string;
+  /**
+   * The lead instructor's last name (role PI, else the first instructor), or
+   * null when there is none.
+   */
+  instructorLastName: string | null;
+  /** Which days it meets, as "MW" or "TTh"; "Async" when it meets on none. */
+  days: string;
+}
+
+export interface ComponentOption {
+  /** The filter value and the printed code, e.g. "LEC". */
+  value: string;
+  sectionCount: number;
+}
+
+export interface FilterOptions {
+  courseLevels: CourseLevel[];
+  /**
+   * Instructors holding role "PI" or "SI" on at
+   * least one section. TA rows are not listed.
+   */
+  faculty: PersonOption[];
+  /**
+   * Present when at least one section has
+   * no instructors; its count is how many.
+   */
+  tba: PersonOption | null;
+  sections: SectionOption[];
+  components: ComponentOption[];
+}
+
+interface CourseDraft {
+  option: CourseOption;
+  subject: string;
+  catalogNumber: string;
+}
+
+function courseLevelLabel(catalogNumber: string): string {
+  const firstChar = catalogNumber[0];
+  return firstChar !== undefined && /[0-9]/.test(firstChar)
+    ? `${firstChar}000-level`
+    : "Other";
+}
+
+function buildCourseLevels(sections: SisSection[]): CourseLevel[] {
+  const courses = new Map<string, CourseDraft>();
+
+  for (const section of sections) {
+    const existing = courses.get(section.courseCode);
+    if (existing) {
+      existing.option.sectionCount += 1;
+      continue;
+    }
+    courses.set(section.courseCode, {
+      option: {
+        value: section.courseCode,
+        code: `${section.subject} ${section.catalogNumber}`,
+        title: section.title,
+        credits: section.credits,
+        sectionCount: 1,
+      },
+      subject: section.subject,
+      catalogNumber: section.catalogNumber,
+    });
+  }
+
+  const draftsByLevel = new Map<string, CourseDraft[]>();
+  for (const draft of courses.values()) {
+    const label = courseLevelLabel(draft.catalogNumber);
+    const bucket = draftsByLevel.get(label);
+    if (bucket) {
+      bucket.push(draft);
+    } else {
+      draftsByLevel.set(label, [draft]);
+    }
+  }
+
+  return [...draftsByLevel.entries()]
+    .sort(([a], [b]) => {
+      if (a === "Other") return 1;
+      if (b === "Other") return -1;
+      return Number(a[0]) - Number(b[0]);
+    })
+    .map(([label, drafts]) => ({
+      label,
+      courses: [...drafts]
+        .sort((a, b) => {
+          const subjectCompare = a.subject.localeCompare(b.subject);
+          if (subjectCompare !== 0) return subjectCompare;
+          return a.catalogNumber.localeCompare(b.catalogNumber);
+        })
+        .map(({ option }) => option),
+    }));
+}
+
+function isFacultyRole(role: string): boolean {
+  return role === "PI" || role === "SI";
+}
+
+function facultyName(instructor: SisInstructor): string {
+  return (
+    instructor.name ??
+    instructor.lastName ??
+    instructor.internetId ??
+    String(instructor.emplid)
+  );
+}
+
+/**
+ * "García, Ana". The last name is taken off the end of the full name rather
+ * than guessed at from it, which is why the SIS sends it separately: nothing
+ * here can tell that "de la Cruz" is one surname and "Ana Maria" two given
+ * names.
+ */
+function lastNameFirst(fullName: string, lastName: string | null): string {
+  if (lastName === null || !fullName.endsWith(lastName)) return fullName;
+
+  const givenNames = fullName.slice(0, -lastName.length).trim();
+  return givenNames === "" ? lastName : `${lastName}, ${givenNames}`;
+}
+
+interface FacultyDraft {
+  option: PersonOption;
+  lastName: string | null;
+}
+
+function buildFaculty(sections: SisSection[]): {
+  faculty: PersonOption[];
+  tba: PersonOption | null;
+} {
+  const draftsByEmplid = new Map<
+    number,
+    {
+      name: string;
+      listName: string;
+      lastName: string | null;
+      internetId: string | null;
+      sectionIds: Set<number>;
+    }
+  >();
+  let tbaSectionCount = 0;
+
+  for (const section of sections) {
+    if (section.instructors.length === 0) {
+      tbaSectionCount += 1;
+    }
+
+    for (const instructor of section.instructors) {
+      if (!isFacultyRole(instructor.role)) continue;
+
+      let draft = draftsByEmplid.get(instructor.emplid);
+      if (!draft) {
+        const name = facultyName(instructor);
+        draft = {
+          name,
+          listName: lastNameFirst(name, instructor.lastName),
+          lastName: instructor.lastName,
+          internetId: instructor.internetId,
+          sectionIds: new Set(),
+        };
+        draftsByEmplid.set(instructor.emplid, draft);
+      }
+      draft.sectionIds.add(section.id);
+    }
+  }
+
+  const faculty: FacultyDraft[] = [...draftsByEmplid.entries()].map(
+    ([emplid, draft]) => ({
+      option: {
+        value: String(emplid),
+        name: draft.name,
+        listName: draft.listName,
+        emplid,
+        internetId: draft.internetId,
+        sectionCount: draft.sectionIds.size,
+      },
+      lastName: draft.lastName,
+    }),
+  );
+
+  faculty.sort((a, b) => {
+    if (a.lastName === null && b.lastName === null) {
+      return a.option.name.localeCompare(b.option.name);
+    }
+    if (a.lastName === null) return 1;
+    if (b.lastName === null) return -1;
+    const lastNameCompare = a.lastName.localeCompare(b.lastName);
+    if (lastNameCompare !== 0) return lastNameCompare;
+    return a.option.name.localeCompare(b.option.name);
+  });
+
+  const tba: PersonOption | null =
+    tbaSectionCount > 0
+      ? {
+          value: TBA_PERSON,
+          name: "TBA",
+          listName: "TBA",
+          emplid: null,
+          internetId: null,
+          sectionCount: tbaSectionCount,
+        }
+      : null;
+
+  return {
+    faculty: faculty.map(({ option }) => option),
+    tba,
+  };
+}
+
+function leadInstructorLastName(instructors: SisInstructor[]): string | null {
+  if (instructors.length === 0) return null;
+  const primaryInstructor = instructors.find(
+    (instructor) => instructor.role === "PI",
+  );
+  return (primaryInstructor ?? instructors[0]).lastName;
+}
+
+function buildSections(sections: SisSection[]): SectionOption[] {
+  return [...sections]
+    .sort((a, b) => {
+      const courseCodeCompare = a.courseCode.localeCompare(b.courseCode);
+      if (courseCodeCompare !== 0) return courseCodeCompare;
+      return a.section.localeCompare(b.section);
+    })
+    .map((section) => ({
+      value: String(section.id),
+      label: `${section.subject} ${section.catalogNumber} · ${section.section}`,
+      component: section.component,
+      instructorLastName: leadInstructorLastName(section.instructors),
+      days: daysMetLabel(section.meetings),
+    }));
+}
+
+function buildComponents(sections: SisSection[]): ComponentOption[] {
+  const sectionCountByComponent = new Map<string, number>();
+  for (const section of sections) {
+    sectionCountByComponent.set(
+      section.component,
+      (sectionCountByComponent.get(section.component) ?? 0) + 1,
+    );
+  }
+
+  return [...sectionCountByComponent.entries()]
+    .map(([value, sectionCount]) => ({ value, sectionCount }))
+    .sort((a, b) => {
+      if (a.sectionCount !== b.sectionCount)
+        return b.sectionCount - a.sectionCount;
+      return a.value.localeCompare(b.value);
+    });
+}
+
+export function buildFilterOptions(sections: SisSection[]): FilterOptions {
+  const { faculty, tba } = buildFaculty(sections);
+
+  return {
+    courseLevels: buildCourseLevels(sections),
+    faculty,
+    tba,
+    sections: buildSections(sections),
+    components: buildComponents(sections),
+  };
+}

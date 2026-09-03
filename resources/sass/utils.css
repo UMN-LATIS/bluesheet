@@ -6,3 +6,31 @@
   border-width: 1px;
   border-style: solid;
 }
+
+/**
+ * Keeps a scrollbar visible before scrolling (macOS hides overlay ones).
+ * A width on `::-webkit-scrollbar` turns it into a classic scrollbar. Do
+ * not add `scrollbar-color`: Chrome 121+ then ignores these rules.
+ * WebKit/Blink only; Firefox cannot opt out of overlay scrollbars.
+ * @see https://developer.chrome.com/docs/css-ui/scrollbar-styling
+ */
+.scrollbar-always-visible::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.scrollbar-always-visible::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-always-visible::-webkit-scrollbar-thumb {
+  background: var(--outline-variant);
+  background-clip: content-box;
+  border: 3px solid transparent;
+  border-radius: 9999px;
+}
+
+.scrollbar-always-visible:hover::-webkit-scrollbar-thumb {
+  background: var(--outline);
+  background-clip: content-box;
+}

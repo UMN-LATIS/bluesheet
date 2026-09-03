@@ -76,12 +76,23 @@
               <CheckIcon />
             </dd>
           </template>
-          <template v-if="canViewGroupLeaves && group.dept_id">
-            <dt>Reports</dt>
+          <template
+            v-if="(canViewGroupLeaves || canViewGroupCourses) && group.dept_id"
+          >
+            <dt>Planning</dt>
             <dd>
-              <router-link :to="`/course-planning/groups/${group.id}`">
-                Faculty Leaves Planning Report
-              </router-link>
+              <ul class="tw-list-none tw-pl-0 tw-m-0">
+                <li v-if="canViewGroupLeaves">
+                  <router-link :to="`/course-planning/groups/${group.id}`">
+                    Faculty Leaves Planning Report
+                  </router-link>
+                </li>
+                <li v-if="canViewGroupCourses">
+                  <router-link :to="`/term-planning/groups/${group.id}`">
+                    Term Planning
+                  </router-link>
+                </li>
+              </ul>
             </dd>
           </template>
           <template v-if="activeChildGroups.length || canCreateSubgroup">
@@ -192,21 +203,37 @@ const allRoles = ref<T.MemberRole[]>([]);
 const userStore = useUserStore();
 const permissionsStore = usePermissionsStore();
 const canViewGroupLeaves = ref(false);
+const canViewGroupCourses = ref(false);
 const canCreateSubgroup = ref(false);
 const isAddingSubgroup = ref(false);
 
 const requestAChange = ref(false);
 
+// This component is reused across groups rather than remounted, so nothing
+// resets itself. The permissions are cleared before the new group's are
+// fetched: held over, they would offer links the viewer is allowed to follow
+// only on the group that just left the screen.
 watch(
   () => props.group,
-  async () => {
-    canViewGroupLeaves.value = await permissionsStore.canViewAnyLeavesForGroup(
-      props.group.id,
-    );
+  async (group) => {
+    canViewGroupLeaves.value = false;
+    canViewGroupCourses.value = false;
+    canCreateSubgroup.value = false;
+    isAddingSubgroup.value = false;
+    requestAChange.value = false;
 
-    canCreateSubgroup.value = await permissionsStore.canCreateSubgroupForGroup(
-      props.group.id,
-    );
+    const [canViewLeaves, canViewCourses, canCreate] = await Promise.all([
+      permissionsStore.canViewAnyLeavesForGroup(group.id),
+      permissionsStore.canViewAnyCoursesForGroup(group.id),
+      permissionsStore.canCreateSubgroupForGroup(group.id),
+    ]);
+
+    // drop a response superseded by a newer group
+    if (group.id !== props.group.id) return;
+
+    canViewGroupLeaves.value = canViewLeaves;
+    canViewGroupCourses.value = canViewCourses;
+    canCreateSubgroup.value = canCreate;
   },
   { immediate: true },
 );
