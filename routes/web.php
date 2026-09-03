@@ -23,6 +23,7 @@ use App\Http\Controllers\Sis\GroupController as SisGroupController;
 use App\Http\Controllers\Sis\GroupSectionController as SisGroupSectionController;
 use App\Http\Controllers\Sis\GroupCourseController as SisGroupCourseController;
 use App\Http\Controllers\Sis\GroupEmployeeController as SisGroupEmployeeController;
+use App\Http\Controllers\TermPlanning\GroupCourseController as TermPlanningGroupCourseController;
 use App\Http\Controllers\TermPlanning\GroupSectionController as TermPlanningGroupSectionController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\LeavePermissionController;
@@ -123,6 +124,8 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
 
     // The plan a department is building for a term the SIS has not published.
     Route::prefix('term-planning')->group(function () {
+        Route::get('/groups/{group}/courses', [TermPlanningGroupCourseController::class, 'index']);
+        Route::post('/groups/{group}/courses', [TermPlanningGroupCourseController::class, 'store']);
         Route::get('/groups/{group}/sections', [TermPlanningGroupSectionController::class, 'index']);
         Route::post('/groups/{group}/sections', [TermPlanningGroupSectionController::class, 'store']);
         Route::put('/groups/{group}/sections/{section}', [TermPlanningGroupSectionController::class, 'update']);

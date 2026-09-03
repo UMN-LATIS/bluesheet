@@ -3,6 +3,8 @@
 use App\Console\Commands\ImportSisData;
 use App\Group;
 use App\LocalClassSection;
+use App\LocalCourse;
+use App\SisCourse;
 use App\SisClassSection;
 use App\SisEmployee;
 use App\User;
@@ -356,6 +358,23 @@ describe('DELETE /api/term-planning/groups/:groupId/sections/:id', function () {
         expect($res->status())->toBe(201);
     });
 
+    it('leaves the course in place when its last section goes', function () {
+        $course = LocalCourse::factory()->create([
+            'academic_org' => DEPT,
+            'subject' => 'ANTH',
+            'catalog_number' => '3999',
+        ]);
+        $section = plannedSection(['subject' => 'ANTH', 'catalog_number' => '3999']);
+
+        actingAs($this->admin);
+        deleteJson(sectionsUrl($this->group) . "/{$section->id}");
+
+        // a course named by hand is worth more than the section that prompted
+        // it: the next term still has to be able to pick it
+        expect($course->fresh())->not->toBeNull();
+        expect(getJson(coursesUrl($this->group))->json())->toHaveCount(1);
+    });
+
     it('refuses once the SIS has published the section\'s term', function () {
         $section = plannedSection(['term_code' => PUBLISHED_TERM]);
         publishTermInSis();
@@ -375,6 +394,117 @@ describe('DELETE /api/term-planning/groups/:groupId/sections/:id', function () {
 
         expect($res->status())->toBe(403);
         expect(LocalClassSection::count())->toBe(1);
+    });
+});
+
+function coursesUrl(Group $group): string {
+    return "/api/term-planning/groups/{$group->id}/courses";
+}
+
+describe('GET /api/term-planning/groups/:groupId/courses', function () {
+    it('lists the SIS catalogue and the courses a scheduler named, marked apart', function () {
+        SisCourse::factory()->create([
+            'academic_org' => DEPT,
+            'subject' => 'ANTH',
+            'catalog_number' => '1001',
+            'title' => 'Human Evolution',
+        ]);
+        LocalCourse::factory()->create([
+            'academic_org' => DEPT,
+            'subject' => 'ANTH',
+            'catalog_number' => '3999',
+            'title' => 'Field Methods',
+        ]);
+
+        actingAs($this->admin);
+        $res = getJson(coursesUrl($this->group));
+
+        expect($res->status())->toBe(200);
+        expect(collect($res->json())->pluck('source', 'courseCode')->all())->toBe([
+            'ANTH-1001' => 'sis',
+            'ANTH-3999' => 'local',
+        ]);
+    });
+
+    it('leaves out another department\'s courses', function () {
+        SisCourse::factory()->create(['academic_org' => DEPT, 'subject' => 'ANTH', 'catalog_number' => '1001']);
+        SisCourse::factory()->create(['academic_org' => 22222, 'subject' => 'HIST', 'catalog_number' => '1001']);
+        LocalCourse::factory()->create(['academic_org' => 22222, 'subject' => 'HIST', 'catalog_number' => '3999']);
+
+        actingAs($this->admin);
+        $res = getJson(coursesUrl($this->group));
+
+        expect(collect($res->json())->pluck('courseCode')->all())->toBe(['ANTH-1001']);
+    });
+
+    it('requires the user to have read privileges', function () {
+        actingAs($this->basicUser);
+
+        expect(getJson(coursesUrl($this->group))->status())->toBe(403);
+    });
+});
+
+describe('POST /api/term-planning/groups/:groupId/courses', function () {
+    $payload = [
+        'subject' => 'anth',
+        'catalogNumber' => '3999',
+        'title' => 'Field Methods',
+        'credits' => 4,
+    ];
+
+    it('names a course the SIS has never published', function () use ($payload) {
+        actingAs($this->admin);
+        $res = postJson(coursesUrl($this->group), $payload);
+
+        expect($res->status())->toBe(201);
+        expect($res->json())->toMatchArray([
+            'courseCode' => 'ANTH-3999',
+            'subject' => 'ANTH',
+            'title' => 'Field Methods',
+            'source' => 'local',
+            'lastOfferedTermId' => null,
+        ]);
+
+        $course = LocalCourse::sole();
+        expect($course->academic_org)->toBe(DEPT);
+        expect($course->created_by)->toBe($this->admin->id);
+    });
+
+    it('refuses a course the department already has locally', function () use ($payload) {
+        LocalCourse::factory()->create([
+            'academic_org' => DEPT,
+            'subject' => 'ANTH',
+            'catalog_number' => '3999',
+        ]);
+
+        actingAs($this->admin);
+        $res = postJson(coursesUrl($this->group), $payload);
+
+        expect($res->status())->toBe(422);
+        expect(LocalCourse::count())->toBe(1);
+    });
+
+    it('refuses a course the SIS already publishes', function () use ($payload) {
+        // a local row would never win the union, so it would vanish on save
+        SisCourse::factory()->create([
+            'academic_org' => DEPT,
+            'subject' => 'ANTH',
+            'catalog_number' => '3999',
+        ]);
+
+        actingAs($this->admin);
+        $res = postJson(coursesUrl($this->group), $payload);
+
+        expect($res->status())->toBe(422);
+        expect(LocalCourse::count())->toBe(0);
+    });
+
+    it('requires the user to have edit privileges', function () use ($payload) {
+        actingAs($this->basicUser);
+        $res = postJson(coursesUrl($this->group), $payload);
+
+        expect($res->status())->toBe(403);
+        expect(LocalCourse::count())->toBe(0);
     });
 });
 
