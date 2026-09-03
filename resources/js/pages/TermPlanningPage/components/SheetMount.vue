@@ -5,9 +5,9 @@
   in the slot and this decides only where it lands.
 -->
 <template>
-  <div v-if="isLarge" :class="[PANE_CLASS, 'tw-w-[404px] tw-flex-none']">
+  <Pane v-if="isLarge" class="tw-w-[404px] tw-flex-none">
     <slot />
-  </div>
+  </Pane>
 
   <div
     v-else-if="isSmall"
@@ -24,19 +24,16 @@
     </div>
   </div>
 
-  <div
+  <Pane
     v-else
-    :class="[
-      PANE_CLASS,
-      'tw-absolute tw-inset-y-0 tw-right-3 tw-z-50 tw-w-[380px] tw-shadow-[-18px_0_44px_rgba(38,38,38,0.16)]',
-    ]"
+    class="tw-absolute tw-inset-y-0 tw-right-3 tw-z-50 tw-w-[380px] tw-shadow-[-18px_0_44px_rgba(38,38,38,0.16)]"
   >
     <slot />
-  </div>
+  </Pane>
 </template>
 
 <script setup lang="ts">
-import { PANE_CLASS } from "../constants/pane";
+import Pane from "./Pane.vue";
 import { useScreenSize } from "../useScreenSize";
 
 const { isLarge, isSmall } = useScreenSize();

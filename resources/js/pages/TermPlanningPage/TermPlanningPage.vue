@@ -24,20 +24,18 @@
     <div
       class="tw-relative tw-flex tw-min-h-0 tw-flex-1 tw-gap-3 tw-px-3 tw-pb-3 roomy:tw-px-4 roomy:tw-pb-4"
     >
-      <div v-if="isLarge" :class="[PANE_CLASS, 'tw-w-[304px] tw-flex-none']">
+      <Pane v-if="isLarge" class="tw-w-[304px] tw-flex-none">
         <ScheduleSidebar
           :options="filterOptions"
           :schedule="schedule"
           :reachable="reachableValues"
         />
-      </div>
+      </Pane>
 
-      <section
+      <Pane
+        as="section"
         :aria-label="`${VIEW_LABELS[activeView]} schedule`"
-        :class="[
-          PANE_CLASS,
-          'tw-flex tw-min-h-0 tw-min-w-0 tw-flex-1 tw-flex-col',
-        ]"
+        class="tw-flex tw-min-h-0 tw-min-w-0 tw-flex-1 tw-flex-col"
       >
         <DayView
           v-if="activeView === 'day'"
@@ -61,11 +59,10 @@
             :unscheduled="placed.unscheduled"
             :selectedSectionId="selectedSection?.id ?? null"
           >
-            <template #block="{ meeting, width }">
+            <template #block="{ meeting }">
               <SectionBlock
                 v-if="sectionOf(meeting.id)"
                 :section="sectionOf(meeting.id)!"
-                :width="width"
                 :isEdited="schedule.hasEdits(sectionOf(meeting.id)!.id)"
                 :startMinute="meeting.startMinute"
                 :endMinute="meeting.endMinute"
@@ -91,7 +88,7 @@
             @showAsync="schedule.showAsyncDay"
           />
         </div>
-      </section>
+      </Pane>
 
       <SheetMount v-if="schedule.openHour || selectedSection">
         <HourSheet
@@ -125,15 +122,12 @@
           class="tw-absolute tw-inset-0 tw-z-40 tw-bg-black/20"
           @click="isFilterPanelOpen = false"
         />
-        <div
-          :class="[
+        <Pane
+          :class="
             isSmall
-              ? 'tw-fixed tw-inset-0 tw-z-50 tw-bg-surface-bright'
-              : [
-                  PANE_CLASS,
-                  'tw-absolute tw-inset-y-0 tw-left-3 tw-z-50 tw-w-[304px] tw-shadow-[18px_0_44px_rgba(38,38,38,0.16)]',
-                ],
-          ]"
+              ? 'tw-fixed tw-inset-0 tw-z-50 tw-rounded-none tw-border-0 tw-shadow-none'
+              : 'tw-absolute tw-inset-y-0 tw-left-3 tw-z-50 tw-w-[304px] tw-shadow-[18px_0_44px_rgba(38,38,38,0.16)]'
+          "
         >
           <ScheduleSidebar
             :options="filterOptions"
@@ -142,7 +136,7 @@
             isDismissible
             @close="isFilterPanelOpen = false"
           />
-        </div>
+        </Pane>
       </template>
     </div>
   </FullScreenLayout>
@@ -157,13 +151,13 @@ import CoverageHeatmap from "./components/CoverageHeatmap.vue";
 import DayView from "./components/DayView.vue";
 import HourSheet, { type HourEntry } from "./components/HourSheet.vue";
 import MeetingTimes from "./components/MeetingTimes.vue";
+import Pane from "./components/Pane.vue";
 import PlanningToolbar from "./components/PlanningToolbar.vue";
 import ScheduleGrid from "./components/ScheduleGrid.vue";
 import ScheduleSidebar from "./components/ScheduleSidebar.vue";
 import SectionBlock from "./components/SectionBlock.vue";
 import SectionSheet from "./components/SectionSheet.vue";
 import SheetMount from "./components/SheetMount.vue";
-import { PANE_CLASS } from "./constants/pane";
 import { bandsForDay } from "./helpers/dayBands";
 import { buildFilterOptions } from "./helpers/filterOptions";
 import {

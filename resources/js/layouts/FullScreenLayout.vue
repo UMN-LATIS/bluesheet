@@ -29,7 +29,7 @@
         </span>
       </router-link>
 
-      <span :class="DIVIDER_CLASS" />
+      <span class="tw-h-5 tw-w-px tw-flex-none tw-bg-outline-variant" />
 
       <!-- The page's own title and controls. Anything pushed right with
            `ml-auto` here lands just before the account links. -->
@@ -39,7 +39,9 @@
 
       <!-- Last to appear: on a narrow screen the page's own controls need
            the width more than a link to the docs does. -->
-      <span :class="[DIVIDER_CLASS, 'tw-hidden roomy:tw-block']" />
+      <span
+        class="tw-h-5 tw-w-px tw-flex-none tw-bg-outline-variant tw-hidden roomy:tw-block"
+      />
       <nav
         aria-label="Account"
         class="tw-hidden tw-flex-none tw-gap-4 tw-text-xs roomy:tw-flex"
@@ -48,11 +50,16 @@
           href="https://umn-latis.github.io/bluesheet/"
           target="_blank"
           rel="noopener"
-          :class="LINK_CLASS"
+          class="tw-text-on-surface-variant tw-no-underline hover:tw-text-on-surface hover:tw-underline"
         >
           Help
         </a>
-        <a href="/shibboleth-logout" :class="LINK_CLASS">Log out</a>
+        <a
+          href="/shibboleth-logout"
+          class="tw-text-on-surface-variant tw-no-underline hover:tw-text-on-surface hover:tw-underline"
+        >
+          Log out
+        </a>
       </nav>
     </header>
 
@@ -64,9 +71,4 @@
 
 <script setup lang="ts">
 import BlockM from "@/components/BlockM.vue";
-
-const DIVIDER_CLASS = "tw-h-5 tw-w-px tw-flex-none tw-bg-outline-variant";
-
-const LINK_CLASS =
-  "tw-text-on-surface-variant tw-no-underline hover:tw-text-on-surface hover:tw-underline";
 </script>

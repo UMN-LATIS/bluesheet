@@ -25,9 +25,9 @@
           ? 'tw-min-h-[52px] tw-min-w-0'
           : 'tw-min-w-24 tw-min-h-14',
         index === dayIndex ? 'tw-border-b-brand' : 'tw-border-b-transparent',
-        isAsyncDay(index) && 'tw-border-l tw-border-l-outline-variant',
+        isAsyncDay(index) &&
+          'async-tab tw-border-l tw-border-l-outline-variant',
       ]"
-      :style="isAsyncDay(index) ? { borderLeftStyle: 'dashed' } : undefined"
       @click="emit('select', index)"
     >
       <span
@@ -72,3 +72,11 @@ const countLabel = (index: number): string => {
     : `${count} ${count === 1 ? "class" : "classes"}`;
 };
 </script>
+
+<style scoped>
+/* Async is marked off from the weekdays by a dashed
+   edge, where the tab's other borders are solid. */
+.async-tab {
+  border-left-style: dashed;
+}
+</style>

@@ -5,30 +5,28 @@
   reading a closed term learns the sheet they will use on an open one. What
   would have written is gone rather than dimmed: no remove ×, no Add, and
   nothing blue, since blue is what says "you can act on this".
+
+  Nothing here takes a control, so the labels sit tighter against their values
+  than the same labels do on the form.
 -->
 <template>
   <div
     class="scrollbar-always-visible tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-gap-3 tw-overflow-y-auto tw-px-[18px] tw-pb-4 tw-pt-3.5"
   >
     <div>
-      <span :class="LABEL_CLASS">Section</span>
-      <span :class="VALUE_CLASS">{{ section.section }}</span>
+      <FieldLabel class="tw-mb-px">Section</FieldLabel>
+      <FactValue>{{ section.section }}</FactValue>
     </div>
 
     <div>
-      <span :class="LABEL_CLASS">Meets</span>
-      <p
-        v-if="section.meetings.length === 0"
-        class="tw-m-0 tw-text-[15px] tw-font-semibold"
-      >
-        No set time
-      </p>
+      <FieldLabel class="tw-mb-px">Meets</FieldLabel>
+      <FactValue v-if="section.meetings.length === 0">No set time</FactValue>
       <div
         v-for="(pattern, patternIndex) in section.meetings"
         :key="patternIndex"
         class="tw-flex tw-flex-wrap tw-items-baseline tw-gap-x-2.5 tw-gap-y-1"
       >
-        <span :class="VALUE_CLASS">{{ daysMetSpelled(pattern.days) }}</span>
+        <FactValue>{{ daysMetSpelled(pattern.days) }}</FactValue>
         <span class="tw-text-[15px]">{{ timeOf(pattern) }}</span>
         <span
           class="tw-text-[11.5px] tw-font-semibold tw-text-on-surface-variant"
@@ -38,10 +36,10 @@
       </div>
     </div>
 
-    <div class="tw-h-px tw-bg-surface-container" />
+    <FieldDivider />
 
     <div>
-      <span :class="LABEL_CLASS">Taught by</span>
+      <FieldLabel class="tw-mb-px">Taught by</FieldLabel>
       <div class="tw-flex tw-flex-col tw-gap-2">
         <PersonRecord
           v-for="instructor in instructorsOfRecord(section.instructors)"
@@ -58,21 +56,21 @@
       </div>
     </div>
 
-    <div class="tw-h-px tw-bg-surface-container" />
+    <FieldDivider />
 
     <div>
-      <span :class="LABEL_CLASS">Enrollment</span>
+      <FieldLabel class="tw-mb-px">Enrollment</FieldLabel>
       <div class="tw-flex tw-items-baseline tw-gap-2.5">
-        <span :class="VALUE_CLASS">
+        <FactValue>
           {{ section.enrollmentTotal }} / {{ section.enrollmentCap }}
-        </span>
+        </FactValue>
         <span class="tw-text-[13px] tw-text-on-surface-variant">
           enrolled of cap
         </span>
       </div>
     </div>
 
-    <div class="tw-h-px tw-bg-surface-container" />
+    <FieldDivider />
 
     <div class="tw-flex tw-flex-col tw-gap-1.5">
       <Disclosure
@@ -81,14 +79,18 @@
       >
         <div class="tw-flex tw-gap-5">
           <div class="tw-min-w-0 tw-flex-1">
-            <span :class="SUB_LABEL_CLASS">Component</span>
+            <FieldLabel variant="control" class="tw-mb-0.5">
+              Component
+            </FieldLabel>
             <span class="tw-text-[13.5px]">
               {{ section.component }} —
               {{ labelOfComponent(section.component) }}
             </span>
           </div>
           <div class="tw-min-w-0 tw-flex-1">
-            <span :class="SUB_LABEL_CLASS">Delivery</span>
+            <FieldLabel variant="control" class="tw-mb-0.5">
+              Delivery
+            </FieldLabel>
             <span class="tw-text-[13.5px]">
               {{ labelOfDelivery(section.delivery) }}
             </span>
@@ -96,7 +98,7 @@
         </div>
       </Disclosure>
 
-      <div class="tw-h-px tw-bg-surface-container" />
+      <FieldDivider />
 
       <Disclosure
         label="Cross-listings"
@@ -120,7 +122,7 @@
         </div>
       </Disclosure>
 
-      <div class="tw-h-px tw-bg-surface-container" />
+      <FieldDivider />
 
       <Disclosure
         label="Teaching assistants"
@@ -139,7 +141,7 @@
         </p>
       </Disclosure>
 
-      <div class="tw-h-px tw-bg-surface-container" />
+      <FieldDivider />
 
       <Disclosure label="Notes" :summary="notesSummary">
         <p
@@ -160,6 +162,9 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import Disclosure from "./Disclosure.vue";
+import FactValue from "./FactValue.vue";
+import FieldDivider from "./FieldDivider.vue";
+import FieldLabel from "./FieldLabel.vue";
 import PersonRecord from "./PersonRecord.vue";
 import { labelOfComponent } from "../constants/meetingTypeColors";
 import { labelOfDelivery } from "../constants/delivery";
@@ -173,14 +178,6 @@ import {
 import type { PlannedSection, SisSectionMeeting } from "../types";
 
 const props = defineProps<{ section: PlannedSection }>();
-
-const LABEL_CLASS =
-  "tw-m-0 tw-mb-px tw-block tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-surface-variant";
-
-const SUB_LABEL_CLASS =
-  "tw-mb-0.5 tw-block tw-text-[11px] tw-text-on-surface-variant";
-
-const VALUE_CLASS = "tw-text-[15px] tw-font-semibold";
 
 /** "9:45 – 11:00 AM": the half is written once, on the end that carries it. */
 const timeOf = (pattern: SisSectionMeeting) =>

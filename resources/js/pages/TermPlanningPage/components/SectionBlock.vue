@@ -6,10 +6,11 @@
       title="Edited here, not saved anywhere"
     />
     <div class="tw-truncate tw-font-semibold">{{ heading }}</div>
-    <div class="tw-truncate">{{ byline }}</div>
-    <div v-if="hasRoomForTimes" class="tw-truncate tw-opacity-50">
-      {{ timeRange }}
+    <div class="tw-truncate">
+      <span class="component-code">{{ section.component }} </span
+      >{{ instructorName }}
     </div>
+    <div class="time-range tw-truncate tw-opacity-50">{{ timeRange }}</div>
   </div>
 </template>
 
@@ -20,20 +21,11 @@ import type { SisSection } from "../types";
 
 const props = defineProps<{
   section: SisSection;
-  width: number;
   /** As drawn on the grid, which may differ from the section's saved times. */
   startMinute: number;
   endMinute: number;
   isEdited?: boolean;
 }>();
-
-/**
- * At or above this lane width there is room
- * for the meeting type beside the instructor.
- */
-const WIDE_LANE_WIDTH = 120;
-
-const isWide = computed(() => props.width >= WIDE_LANE_WIDTH);
 
 const heading = computed(
   () =>
@@ -46,21 +38,38 @@ const leadInstructor = computed(
     props.section.instructors[0],
 );
 
-const byline = computed(() => {
+const instructorName = computed(() => {
   const instructor = leadInstructor.value;
-  const name = instructor?.lastName ?? instructor?.name ?? "TBA";
-
-  return isWide.value ? `${props.section.component} ${name}` : name;
+  return instructor?.lastName ?? instructor?.name ?? "TBA";
 });
-
-/** Below this many minutes tall, the times are dropped. */
-const THREE_LINE_MINUTES = 50;
-
-const hasRoomForTimes = computed(
-  () => props.endMinute - props.startMinute >= THREE_LINE_MINUTES,
-);
 
 const timeRange = computed(() =>
   formatTimeRange(props.startMinute, props.endMinute),
 );
 </script>
+
+<style scoped>
+/*
+ * What the block has room to say, asked of the block rather than measured in
+ * script. Its content box runs 19px narrower and 10px shorter than the lane
+ * and the class's length in minutes; see MeetingBlock. So the meeting type
+ * joins the instructor at a 120px lane, and the times appear on a class of
+ * 50 minutes or more.
+ */
+.component-code,
+.time-range {
+  display: none;
+}
+
+@container meeting-block (min-width: 101px) {
+  .component-code {
+    display: inline;
+  }
+}
+
+@container meeting-block (min-height: 40px) {
+  .time-range {
+    display: block;
+  }
+}
+</style>

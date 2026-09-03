@@ -1,6 +1,6 @@
 <template>
   <div
-    class="tw-absolute tw-box-border tw-rounded-lg tw-border-0 tw-border-l-[3px] tw-border-solid tw-px-2 tw-py-[5px] tw-text-[11px] tw-leading-[1.3] tw-text-on-surface"
+    class="meeting-block tw-absolute tw-box-border tw-rounded-lg tw-border-0 tw-border-l-[3px] tw-border-solid tw-px-2 tw-py-[5px] tw-text-[11px] tw-leading-[1.3] tw-text-on-surface"
     :class="[appearance, { 'just-placed': isJustPlaced }]"
     :style="{
       top: topOf(startMinute),
@@ -98,6 +98,17 @@ const appearance = computed(() => {
 </script>
 
 <style scoped>
+/*
+ * The block is what its contents measure themselves against, so a short class
+ * can drop a line without anyone passing its size down in props. One minute
+ * is one pixel here, so a height query is a query on how long the class runs;
+ * what a query sees is the padded content box, 10px shorter and 19px narrower
+ * than the block. Children ask for it by name with `@container meeting-block`.
+ */
+.meeting-block {
+  container: meeting-block / size;
+}
+
 .just-placed {
   animation: just-placed 600ms ease-out;
 }

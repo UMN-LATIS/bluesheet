@@ -71,18 +71,18 @@
       class="scrollbar-always-visible tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-gap-5 tw-overflow-y-auto tw-p-[18px]"
     >
       <div>
-        <label :for="fieldId('section')" :class="LABEL_CLASS">Section</label>
+        <FieldLabel :for="fieldId('section')">Section</FieldLabel>
         <input
           :id="fieldId('section')"
           :value="draft.section"
           type="text"
-          :class="[INPUT_CLASS, 'tw-w-24']"
+          class="field-control tw-w-24"
           @input="edit({ section: valueOf($event) })"
         />
       </div>
 
       <div>
-        <span :class="LABEL_CLASS">Meets</span>
+        <FieldLabel>Meets</FieldLabel>
         <div class="tw-flex tw-flex-col tw-gap-4">
           <div
             v-for="(pattern, patternIndex) in patterns"
@@ -122,7 +122,7 @@
                   :value="pattern.startTime"
                   type="time"
                   :aria-label="`Start time ${patternIndex + 1}`"
-                  :class="INPUT_CLASS"
+                  class="field-control"
                   @input="
                     schedule.editMeetingTime(section.id, patternIndex, {
                       startTime: valueOf($event),
@@ -134,7 +134,7 @@
                   :value="pattern.endTime"
                   type="time"
                   :aria-label="`End time ${patternIndex + 1}`"
-                  :class="INPUT_CLASS"
+                  class="field-control"
                   @input="
                     schedule.editMeetingTime(section.id, patternIndex, {
                       endTime: valueOf($event),
@@ -165,38 +165,18 @@
         </div>
       </div>
 
-      <div class="tw-h-px tw-bg-surface-container" />
+      <FieldDivider />
 
       <div>
-        <span :class="LABEL_CLASS">Taught by</span>
+        <FieldLabel>Taught by</FieldLabel>
         <div class="tw-flex tw-flex-col tw-gap-2">
-          <div
+          <PersonField
             v-for="instructor in instructorsOnRecord"
             :key="instructor.emplid"
-            class="tw-flex tw-items-center tw-gap-2.5 tw-rounded-[10px] tw-border tw-border-solid tw-border-outline-variant tw-p-2 tw-pl-3"
-          >
-            <span
-              class="tw-flex tw-h-7 tw-w-7 tw-flex-none tw-items-center tw-justify-center tw-rounded-full tw-bg-surface-container tw-text-[10px] tw-font-bold tw-text-on-surface-variant"
-            >
-              {{ initialsOf(instructor) }}
-            </span>
-            <div class="tw-min-w-0 tw-flex-1">
-              <p class="tw-m-0 tw-truncate tw-text-[13.5px] tw-text-on-surface">
-                {{ instructor.name ?? "TBA" }}
-              </p>
-              <p class="tw-m-0 tw-text-[11px] tw-text-on-surface-variant">
-                Instructor of record
-              </p>
-            </div>
-            <button
-              type="button"
-              class="tw-flex tw-h-11 tw-w-11 tw-flex-none tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-text-on-surface-variant hover:tw-bg-surface-container hover:tw-text-on-surface"
-              :aria-label="`Remove ${instructor.name ?? 'instructor'}`"
-              @click="removeInstructor(instructor.emplid)"
-            >
-              ×
-            </button>
-          </div>
+            :instructor="instructor"
+            role="Instructor of record"
+            @remove="removeInstructor(instructor.emplid)"
+          />
           <p
             v-if="instructorsOnRecord.length === 0"
             class="tw-m-0 tw-text-[13px] tw-text-on-surface-variant"
@@ -227,19 +207,17 @@
         />
       </div>
 
-      <div class="tw-h-px tw-bg-surface-container" />
+      <FieldDivider />
 
       <div>
-        <label :for="fieldId('cap')" :class="LABEL_CLASS">
-          Enrollment cap
-        </label>
+        <FieldLabel :for="fieldId('cap')">Enrollment cap</FieldLabel>
         <div class="tw-flex tw-items-center tw-gap-3">
           <input
             :id="fieldId('cap')"
             :value="capText"
             type="number"
             min="0"
-            :class="[INPUT_CLASS, 'tw-w-24']"
+            class="field-control tw-w-24"
             @input="editCap(valueOf($event))"
           />
           <span class="tw-text-[13px] tw-text-on-surface-variant">
@@ -254,22 +232,19 @@
         </div>
       </div>
 
-      <div class="tw-h-px tw-bg-surface-container" />
+      <FieldDivider />
 
       <div class="tw-flex tw-flex-col tw-gap-3.5">
         <Disclosure label="Component & delivery" :summary="componentSummary">
           <div class="tw-flex tw-gap-3">
             <div class="tw-min-w-0 tw-flex-1">
-              <label
-                :for="fieldId('component')"
-                class="tw-mb-1.5 tw-block tw-text-[11px] tw-text-on-surface-variant"
-              >
+              <FieldLabel variant="control" :for="fieldId('component')">
                 Component
-              </label>
+              </FieldLabel>
               <select
                 :id="fieldId('component')"
                 :value="draft.component"
-                :class="[INPUT_CLASS, 'tw-w-full']"
+                class="field-control tw-w-full"
                 @change="edit({ component: valueOf($event) })"
               >
                 <option
@@ -282,16 +257,13 @@
               </select>
             </div>
             <div class="tw-min-w-0 tw-flex-1">
-              <label
-                :for="fieldId('delivery')"
-                class="tw-mb-1.5 tw-block tw-text-[11px] tw-text-on-surface-variant"
-              >
+              <FieldLabel variant="control" :for="fieldId('delivery')">
                 Delivery
-              </label>
+              </FieldLabel>
               <select
                 :id="fieldId('delivery')"
                 :value="draft.delivery"
-                :class="[INPUT_CLASS, 'tw-w-full']"
+                class="field-control tw-w-full"
                 @change="edit({ delivery: valueOf($event) as Delivery })"
               >
                 <option
@@ -306,7 +278,7 @@
           </div>
         </Disclosure>
 
-        <div class="tw-h-px tw-bg-surface-container" />
+        <FieldDivider />
 
         <Disclosure label="Cross-listings" :summary="crosslistSummary">
           <p
@@ -344,42 +316,20 @@
           </button>
         </Disclosure>
 
-        <div class="tw-h-px tw-bg-surface-container" />
+        <FieldDivider />
 
         <Disclosure
           label="Teaching assistants"
           :summary="String(assistants.length)"
         >
           <div class="tw-flex tw-flex-col tw-gap-2">
-            <div
+            <PersonField
               v-for="instructor in assistants"
               :key="instructor.emplid"
-              class="tw-flex tw-items-center tw-gap-2.5 tw-rounded-[10px] tw-border tw-border-solid tw-border-outline-variant tw-p-2 tw-pl-3"
-            >
-              <span
-                class="tw-flex tw-h-7 tw-w-7 tw-flex-none tw-items-center tw-justify-center tw-rounded-full tw-bg-surface-container tw-text-[10px] tw-font-bold tw-text-on-surface-variant"
-              >
-                {{ initialsOf(instructor) }}
-              </span>
-              <div class="tw-min-w-0 tw-flex-1">
-                <p
-                  class="tw-m-0 tw-truncate tw-text-[13.5px] tw-text-on-surface"
-                >
-                  {{ instructor.name ?? "TBA" }}
-                </p>
-                <p class="tw-m-0 tw-text-[11px] tw-text-on-surface-variant">
-                  {{ instructor.role }}
-                </p>
-              </div>
-              <button
-                type="button"
-                class="tw-flex tw-h-11 tw-w-11 tw-flex-none tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-text-on-surface-variant hover:tw-bg-surface-container hover:tw-text-on-surface"
-                :aria-label="`Remove ${instructor.name ?? 'instructor'}`"
-                @click="removeInstructor(instructor.emplid)"
-              >
-                ×
-              </button>
-            </div>
+              :instructor="instructor"
+              :role="instructor.role"
+              @remove="removeInstructor(instructor.emplid)"
+            />
           </div>
 
           <button
@@ -404,7 +354,7 @@
           />
         </Disclosure>
 
-        <div class="tw-h-px tw-bg-surface-container" />
+        <FieldDivider />
 
         <Disclosure label="Notes" :summary="notesSummary">
           <textarea
@@ -412,7 +362,7 @@
             :value="draft.notes"
             rows="3"
             placeholder="Internal to the department"
-            :class="[INPUT_CLASS, 'tw-w-full tw-py-2.5']"
+            class="field-control tw-w-full tw-py-2.5"
             @input="edit({ notes: valueOf($event) })"
           />
         </Disclosure>
@@ -546,6 +496,9 @@
 import { computed, ref } from "vue";
 import { onClickOutside } from "@vueuse/core";
 import Disclosure from "./Disclosure.vue";
+import FieldDivider from "./FieldDivider.vue";
+import FieldLabel from "./FieldLabel.vue";
+import PersonField from "./PersonField.vue";
 import SectionFacts from "./SectionFacts.vue";
 import SegmentedControl, { type SegmentedOption } from "./SegmentedControl.vue";
 import { ComboBox, type ComboBoxOptionType } from "@/components/ComboBox";
@@ -554,7 +507,6 @@ import { colorOfType, labelOfComponent } from "../constants/meetingTypeColors";
 import { DELIVERY_OPTIONS, labelOfDelivery } from "../constants/delivery";
 import {
   assistantsOf,
-  initialsOf,
   instructorsOfRecord,
   PRIMARY_ROLE,
   TA_ROLE,
@@ -587,12 +539,6 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{ close: []; back: [] }>();
-
-const LABEL_CLASS =
-  "tw-m-0 tw-mb-2 tw-block tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-surface-variant";
-
-const INPUT_CLASS =
-  "tw-min-h-11 tw-rounded-[10px] tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-px-3 tw-text-sm tw-text-on-surface focus:tw-border-primary focus:tw-outline-none";
 
 const COMPONENT_CODES = ["LEC", "DIS", "LAB", "FWK", "IND"];
 
@@ -785,3 +731,27 @@ function startCancelFromMenu() {
   isConfirmingCancel.value = true;
 }
 </script>
+
+<style scoped>
+/*
+ * Every control on the sheet — text, number, time, select, textarea — wears
+ * one border and one focus ring. Written here rather than repeated across
+ * five kinds of element, and only the box: width and padding stay on the
+ * element, where the field that needs a wider one can say so.
+ */
+.field-control {
+  min-height: 44px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 10px;
+  background-color: var(--surface-bright);
+  padding-inline: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--on-surface);
+}
+
+.field-control:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+</style>
