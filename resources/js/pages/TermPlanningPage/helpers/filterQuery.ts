@@ -1,11 +1,10 @@
 /** Filters as URL query: one key per facet, values comma-joined. */
 
-import type { LocationQuery, LocationQueryValue } from "vue-router";
-import { FILTER_FACETS, type ScheduleFilters } from "../types";
+import { FILTER_FACETS, type ScheduleFilters, type UrlQuery } from "../types";
 import { emptyFilters } from "../useScheduleEditor/update";
 
-export function encodeFilters(filters: ScheduleFilters): LocationQuery {
-  const query: LocationQuery = {};
+export function encodeFilters(filters: ScheduleFilters): UrlQuery {
+  const query: UrlQuery = {};
 
   for (const facet of FILTER_FACETS) {
     if (filters[facet].length > 0) {
@@ -16,26 +15,17 @@ export function encodeFilters(filters: ScheduleFilters): LocationQuery {
   return query;
 }
 
-export function decodeFilters(query: LocationQuery): ScheduleFilters {
+export function decodeFilters(query: UrlQuery): ScheduleFilters {
   const filters = emptyFilters();
 
   for (const facet of FILTER_FACETS) {
-    if (facet in query) {
-      filters[facet] = dedupe(valuesOf(query[facet]));
+    const raw = query[facet];
+    if (raw !== undefined) {
+      filters[facet] = dedupe(raw.split(",").filter((value) => value !== ""));
     }
   }
 
   return filters;
-}
-
-function valuesOf(
-  raw: LocationQueryValue | LocationQueryValue[] | undefined,
-): string[] {
-  const rawValues = Array.isArray(raw) ? raw : [raw];
-
-  return rawValues
-    .flatMap((value) => (value ?? "").split(","))
-    .filter((value) => value !== "");
 }
 
 function dedupe(values: string[]): string[] {

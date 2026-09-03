@@ -3,12 +3,29 @@
  * Gestures write only their draft until `released` commits.
  */
 
+import { isEqual } from "lodash-es";
+import { FILTER_FACETS } from "../types";
 import type {
   FilterFacet,
   ScheduleFilters,
   SisSectionMeeting,
   TimeRange,
+  UrlQuery,
 } from "../types";
+import { decodeFilters, encodeFilters } from "../helpers/filterQuery";
+import {
+  decodeSelection,
+  encodeSelection,
+  SELECTION_KEYS,
+} from "../helpers/selectionQuery";
+import {
+  decodeDayIndex,
+  decodeView,
+  DEFAULT_VIEW,
+  encodeDayIndex,
+  VIEW_KEYS,
+} from "../helpers/viewQuery";
+import { ASYNC_DAY_INDEX } from "../helpers/scheduleDays";
 import {
   clockFromMinutes,
   END_MINUTE,
@@ -52,7 +69,11 @@ export const emptyFilters = (): ScheduleFilters => ({
   component: [],
 });
 
-export const initialState = (): EditorState => ({
+/**
+ * `dayIndex` is a parameter because today is a clock read, which belongs in the
+ * shell: `useScheduleEditor` passes it in, and everything here stays pure.
+ */
+export const initialState = (dayIndex = 0): EditorState => ({
   placeholderMeetings: [],
   sectionEdits: {},
   drafts: {},
@@ -60,7 +81,20 @@ export const initialState = (): EditorState => ({
   lastPlacedId: null,
   selection: null,
   filters: emptyFilters(),
+  view: DEFAULT_VIEW,
+  dayIndex,
 });
+
+/**
+ * Every query key the editor owns. The page clears these before writing an
+ * effect's query over them, so a key the effect leaves out is cleared rather
+ * than left standing from whatever the URL said before.
+ */
+export const EDITOR_QUERY_KEYS = [
+  ...FILTER_FACETS,
+  ...SELECTION_KEYS,
+  ...VIEW_KEYS,
+];
 
 /**
  * What a read-only term still answers. Default-deny: anything not named here
@@ -81,7 +115,10 @@ const READING_EVENTS: EditorEvent["type"][] = [
   "filterValuesAdded",
   "filterValuesRemoved",
   "filtersCleared",
-  "filtersReplaced",
+  "viewSelected",
+  "daySelected",
+  "asyncDayShown",
+  "urlChanged",
 ];
 
 export function update(
@@ -96,21 +133,67 @@ export function update(
 
   const nextState = reduce(state, event, context, deps);
 
-  return { state: nextState, effects: effectsOf(event, nextState) };
+  return {
+    state: nextState,
+    effects: effectsOf(event, state, nextState, context),
+  };
 }
 
-// only user-made changes sync to the URL;
-// echoing `filtersReplaced` back would loop
-function effectsOf(event: EditorEvent, state: EditorState): Effect[] {
-  switch (event.type) {
-    case "filterValuesAdded":
-    case "filterValuesRemoved":
-    case "filtersCleared":
-      return [{ type: "syncFiltersToUrl", filters: state.filters }];
+/**
+ * The URL is rewritten whenever it would now say something different, and only
+ * then. That covers the whole loop guard between the page and the router:
+ * `urlChanged` is the one event that writes URL-backed state and the one that
+ * raises no effect, so a round trip always ends after a single pass, and a
+ * gesture that moves a block without changing what a link would name writes
+ * nothing at all.
+ */
+function effectsOf(
+  event: EditorEvent,
+  before: EditorState,
+  after: EditorState,
+  context: ScheduleContext,
+): Effect[] {
+  if (event.type === "urlChanged") return [];
 
-    default:
-      return [];
-  }
+  const query = urlQueryOf(after, context);
+
+  return isEqual(query, urlQueryOf(before, context))
+    ? []
+    : [{ type: "replaceUrlQuery", query }];
+}
+
+/**
+ * The whole of what a link to this page carries. Written in one piece rather
+ * than a key at a time, so no two writes can race and leave the day naming a
+ * tab the view is not on.
+ */
+function urlQueryOf(state: EditorState, context: ScheduleContext): UrlQuery {
+  return {
+    ...encodeFilters(state.filters),
+    ...encodeSelection(state.selection, context.meetings),
+    view: state.view,
+    // The day list shows one day at a time, so a link to it has to say which.
+    // No other view has a day to name.
+    ...(state.view === "day" ? { day: encodeDayIndex(state.dayIndex) } : {}),
+  };
+}
+
+/**
+ * Whether a selection read back out of the URL is the one already held. A
+ * selected grid block encodes as the section it belongs to, so the query the
+ * page just wrote for a block reads back as a plain section selection.
+ * Comparing the encodings rather than the selections is what keeps the block
+ * itself marked instead of every block its section has.
+ */
+function namesHeldSelection(
+  state: EditorState,
+  fromUrl: EditorState["selection"],
+  context: ScheduleContext,
+): boolean {
+  return isEqual(
+    encodeSelection(state.selection, context.meetings),
+    encodeSelection(fromUrl, context.meetings),
+  );
 }
 
 function reduce(
@@ -224,8 +307,31 @@ function reduce(
     case "filtersCleared":
       return { ...state, filters: emptyFilters() };
 
-    case "filtersReplaced":
-      return { ...state, filters: event.filters };
+    case "viewSelected":
+      return { ...state, view: event.view };
+
+    case "daySelected":
+      return { ...state, dayIndex: event.dayIndex };
+
+    case "asyncDayShown":
+      return { ...state, view: "day", dayIndex: ASYNC_DAY_INDEX };
+
+    case "urlChanged": {
+      const fromUrl = decodeSelection(event.query);
+
+      return {
+        ...state,
+        view: decodeView(event.query),
+        // A URL that names no day is not asking for a particular one, so the
+        // tab a scheduler last opened stays open under a view that has no day
+        // to name.
+        dayIndex: decodeDayIndex(event.query) ?? state.dayIndex,
+        filters: decodeFilters(event.query),
+        selection: namesHeldSelection(state, fromUrl, context)
+          ? state.selection
+          : fromUrl,
+      };
+    }
 
     case "sectionFieldEdited":
       return {

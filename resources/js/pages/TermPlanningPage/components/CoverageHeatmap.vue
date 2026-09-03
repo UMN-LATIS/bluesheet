@@ -182,16 +182,10 @@ const cellStyle = (count: number) => {
   };
 };
 
-// still marked while a section picked from this hour is open
+// `markedHour`, not the open hour: a cell stays marked while a section
+// picked out of it has the sheet.
 const isSelected = (dayIndex: number, startMinute: number) => {
-  const selection = props.schedule.selection;
-  const hour =
-    selection?.kind === "hour"
-      ? selection
-      : selection?.kind === "section"
-        ? selection.from
-        : undefined;
-
+  const hour = props.schedule.markedHour;
   return hour?.dayIndex === dayIndex && hour?.startMinute === startMinute;
 };
 

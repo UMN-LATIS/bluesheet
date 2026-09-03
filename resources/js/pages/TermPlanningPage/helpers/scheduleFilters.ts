@@ -11,10 +11,6 @@ import {
 /** Per facet, the values the sidebar still has reason to list. */
 export type ReachableFacetValues = Record<FilterFacet, Set<string>>;
 
-export function isFiltering(filters: ScheduleFilters): boolean {
-  return FILTER_FACETS.some((facet) => filters[facet].length > 0);
-}
-
 export function filterSections<T extends SisSection>(
   sections: T[],
   filters: ScheduleFilters,

@@ -1,7 +1,13 @@
 import type { Meeting, PlannedSection, SisSection, TimeRange } from "../types";
+import { FILTER_FACETS } from "../types";
 import { isEqual } from "lodash-es";
 import { type DayLayout, layOutDay } from "../helpers/dayLayout";
-import type { EditorState, Interaction, ScheduleContext } from "./types";
+import type {
+  EditorState,
+  HourSelection,
+  Interaction,
+  ScheduleContext,
+} from "./types";
 
 /** The SIS section with this browser's edits applied. */
 export function selectLocalSection(
@@ -46,6 +52,45 @@ export function selectIsDraftDirty(
 export const selectHasEdits = (sectionId: number, state: EditorState) =>
   state.sectionEdits[sectionId] !== undefined;
 
+/**
+ * How many values are checked across every facet, which is what the filter
+ * button's badge counts and what the sidebar calls a filter being "active".
+ */
+export const selectActiveFilterCount = (state: EditorState): number =>
+  FILTER_FACETS.reduce((sum, facet) => sum + state.filters[facet].length, 0);
+
+/*
+ * The four readings of `Selection` the canvases need. They live here rather
+ * than in each canvas so that a new variant of the union is a type error in
+ * one file instead of a silent miss in three components.
+ */
+
+/** The chip or card the day list marks, if a section is what is selected. */
+export const selectSelectedSectionId = (state: EditorState): number | null =>
+  state.selection?.kind === "section" ? state.selection.sectionId : null;
+
+/** The block the week grid marks, if a block is what is selected. */
+export const selectSelectedMeetingId = (state: EditorState): string | null =>
+  state.selection?.kind === "meeting" ? state.selection.meetingId : null;
+
+/** The hour whose own sheet is open, which is not the same as `markedHour`. */
+export const selectOpenHour = (state: EditorState): HourSelection | null =>
+  state.selection?.kind === "hour" ? state.selection : null;
+
+/** The hour list a selected section was picked from, for the sheet's back link. */
+export const selectHourReturnedTo = (
+  state: EditorState,
+): HourSelection | null =>
+  state.selection?.kind === "section" ? (state.selection.from ?? null) : null;
+
+/**
+ * The heatmap cell that reads as chosen: the hour whose sheet is open, or else
+ * the hour a section was picked from, so the cell a scheduler came through
+ * stays marked while that section's sheet stands in the hour sheet's place.
+ */
+export const selectMarkedHour = (state: EditorState): HourSelection | null =>
+  selectOpenHour(state) ?? selectHourReturnedTo(state);
+
 export function selectMeetings(
   context: ScheduleContext,
   state: EditorState,
@@ -87,9 +132,7 @@ function selectDayView(
   const { interaction } = state;
 
   const meetings = all.filter((meeting) => meeting.dayIndex === dayIndex);
-
-  const selectedMeetingId =
-    state.selection?.kind === "meeting" ? state.selection.meetingId : null;
+  const selectedMeetingId = selectSelectedMeetingId(state);
 
   return {
     layout: withLiveResize(layOutDay(meetings), interaction),

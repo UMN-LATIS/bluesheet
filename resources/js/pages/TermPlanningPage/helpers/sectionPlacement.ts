@@ -18,15 +18,12 @@ export interface PlacedSections {
   meetings: Meeting[];
   sectionsByMeetingId: Map<string, PlannedSection>;
   unscheduled: PlannedSection[];
-  /** Meetings on weekends or outside the grid's hours, which are not drawn. */
-  outsideGridCount: number;
 }
 
 export function placeSections(sections: PlannedSection[]): PlacedSections {
   const meetings: Meeting[] = [];
   const sectionsByMeetingId = new Map<string, PlannedSection>();
   const unscheduled: PlannedSection[] = [];
-  let outsideGridCount = 0;
   const ownerOfBlock = blockOwners(sections);
 
   for (const section of sections) {
@@ -45,11 +42,10 @@ export function placeSections(sections: PlannedSection[]): PlacedSections {
       const fitsHours = START_MINUTE <= startMinute && endMinute <= END_MINUTE;
 
       for (const day of pattern.days) {
+        // Weekends and hours outside the grid have no lane to sit in, so the
+        // meeting is left undrawn rather than clamped to a time it is not at.
         const dayIndex = GRID_DAYS.indexOf(day);
-        if (dayIndex === -1 || !fitsHours) {
-          outsideGridCount += 1;
-          continue;
-        }
+        if (dayIndex === -1 || !fitsHours) continue;
 
         const id = meetingIdOf(section.id, day, pattern.startTime);
 
@@ -69,7 +65,6 @@ export function placeSections(sections: PlannedSection[]): PlacedSections {
     meetings,
     sectionsByMeetingId,
     unscheduled,
-    outsideGridCount,
   };
 }
 

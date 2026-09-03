@@ -23,6 +23,17 @@ export const DAY_TAB_CODES: string[] = [...WEEKDAY_CODES, "async"];
 
 export const isAsyncDay = (dayIndex: number) => dayIndex === ASYNC_DAY_INDEX;
 
+/**
+ * Which tab a link naming no day opens on. `weekday` counts from Sunday, the
+ * way `Date` and dayjs do, while the grid counts from Monday; a weekend falls
+ * outside the grid altogether and opens the week's first day instead.
+ */
+export function dayIndexOfWeekday(weekday: number): number {
+  const dayIndex = weekday - 1;
+
+  return dayIndex >= 0 && dayIndex < WEEKDAY_NAMES.length ? dayIndex : 0;
+}
+
 /** "Mon, Wed": the days one meeting pattern is on, in week order. */
 export const daysMetSpelled = (days: SisDay[]): string =>
   WEEK_DAYS.filter((day) => days.includes(day))

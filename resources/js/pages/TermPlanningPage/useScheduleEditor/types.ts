@@ -8,12 +8,20 @@ import type {
   SisInstructor,
   SisSectionMeeting,
   TimeRange,
+  UrlQuery,
 } from "../types";
+import type { ScheduleView } from "../helpers/viewQuery";
 
 /**
  * Read by `update`, never written: the schedule as it stands, edits applied.
  */
 export interface ScheduleContext {
+  /**
+   * The blocks the week grid is drawing, so the filters have already been
+   * applied to them. `sections` has not been filtered, on purpose: a sheet
+   * stays open on a section the filters have since hidden, and its fields have
+   * to keep saving.
+   */
   meetings: Meeting[];
   sections: PlannedSection[];
   /**
@@ -107,6 +115,10 @@ export interface EditorState {
   selection: Selection | null;
   /** Applied by the page before placing, not here. */
   filters: ScheduleFilters;
+  /** Which canvas is showing. */
+  view: ScheduleView;
+  /** Which tab the day list is on: a weekday, or the Async day past them. */
+  dayIndex: number;
 }
 
 /** Past-tense facts from the UI; minutes arrive unsnapped. */
@@ -136,11 +148,17 @@ export type EditorEvent =
   | { type: "filterValuesAdded"; facet: FilterFacet; values: string[] }
   | { type: "filterValuesRemoved"; facet: FilterFacet; values: string[] }
   | { type: "filtersCleared" }
+  | { type: "viewSelected"; view: ScheduleView }
+  | { type: "daySelected"; dayIndex: number }
+  /** The heatmap's Async cell: one step to the day list, on the Async tab. */
+  | { type: "asyncDayShown" }
   /**
-   * The URL changed underneath the page:
-   * initial load, back button, pasted link.
+   * The URL changed underneath the page: initial load, back button, pasted
+   * link, or the page's own `replaceUrlQuery` arriving back. The only way any
+   * URL-backed state is written, and the only event that raises no effect,
+   * which is what stops the page and the router answering each other forever.
    */
-  | { type: "filtersReplaced"; filters: ScheduleFilters }
+  | { type: "urlChanged"; query: UrlQuery }
   | { type: "sectionFieldEdited"; sectionId: number; change: SectionEdit }
   /** A day pressed in the sheet. An index past the last pattern starts one. */
   | {
@@ -169,8 +187,12 @@ export type EditorEvent =
   | { type: "sectionCancelled"; sectionId: number }
   | { type: "sectionEditsReverted"; sectionId: number };
 
-/** Work for the page to do outside `update`, which never imports the router. */
-export type Effect = { type: "syncFiltersToUrl"; filters: ScheduleFilters };
+/**
+ * Work for the page to do outside `update`, which never imports the router.
+ * The query holds every key the editor owns, so the page clears that whole set
+ * before writing this over it; a key the editor left out is one to remove.
+ */
+export type Effect = { type: "replaceUrlQuery"; query: UrlQuery };
 
 export interface Next {
   state: EditorState;

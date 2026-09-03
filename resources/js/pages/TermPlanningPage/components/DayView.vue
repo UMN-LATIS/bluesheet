@@ -51,7 +51,7 @@
       <div v-if="isAsync" class="tw-p-3">
         <AsyncSectionChips
           :sections="unscheduled"
-          :selectedSectionId="selectedSectionId"
+          :selectedSectionId="schedule.selectedSectionId"
           :schedule="schedule"
         />
       </div>
@@ -153,37 +153,25 @@ const bands = computed(() =>
 
 const busiest = computed(() => busiestBand(bands.value));
 
-// Every section on view right now, deduplicated, so a section meeting
-// twice in one day is not counted twice in the pill below.
-const shownSections = computed<PlannedSection[]>(() => {
-  if (isAsync.value) return props.unscheduled;
+/**
+ * How many of the sections on view have nobody teaching them. Counted by
+ * section id, so a class meeting twice in one day is not counted twice.
+ */
+const unassignedCount = computed(() => {
+  const onView = isAsync.value
+    ? props.unscheduled
+    : bands.value.flatMap((band) => band.items.map(({ section }) => section));
 
-  const bySectionId = new Map<number, PlannedSection>();
-  for (const band of bands.value) {
-    for (const item of band.items)
-      bySectionId.set(item.section.id, item.section);
-  }
-  return [...bySectionId.values()];
+  return new Set(
+    onView
+      .filter(({ instructors }) => instructors.length === 0)
+      .map(({ id }) => id),
+  ).size;
 });
 
-const unassignedCount = computed(
-  () =>
-    shownSections.value.filter((section) => section.instructors.length === 0)
-      .length,
-);
-
-const selectedSectionId = computed<number | null>(() => {
-  const selection = props.schedule.selection;
-  return selection?.kind === "section" ? selection.sectionId : null;
-});
-
-const isItemSelected = (item: DayBandItem): boolean => {
-  const selection = props.schedule.selection;
-  if (!selection) return false;
-  if (selection.kind === "meeting")
-    return selection.meetingId === item.meetingId;
-  if (selection.kind === "section")
-    return selection.sectionId === item.section.id;
-  return false;
-};
+// A card stands for both: the block it draws and the section that block
+// belongs to, either of which the selection may name.
+const isItemSelected = (item: DayBandItem): boolean =>
+  props.schedule.selectedMeetingId === item.meetingId ||
+  props.schedule.selectedSectionId === item.section.id;
 </script>

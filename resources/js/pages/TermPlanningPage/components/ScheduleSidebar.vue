@@ -129,7 +129,7 @@
       <span
         class="tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-surface-variant"
       >
-        {{ listHeader.title }}
+        {{ FACET_LABELS[activeFacet].list }}
       </span>
       <button
         v-if="filters[activeFacet].length > 0"
@@ -343,86 +343,60 @@ const isInView = (facet: FilterFacet, value: string, text: string) => {
   return query === "" || text.toLowerCase().includes(query);
 };
 
-// Term totals: what the list header reports, and the second half of a tile's
-// count while a search narrows it.
-const courseCount = computed(() =>
-  props.options.courseLevels.reduce(
-    (sum, level) => sum + level.courses.length,
-    0,
-  ),
-);
-const facultyCount = computed(
-  () => props.options.faculty.length + (props.options.tba ? 1 : 0),
-);
-const sectionCount = computed(() => props.options.sections.length);
-const componentCount = computed(() => props.options.components.length);
+/**
+ * How a facet names itself in each of the two places it is named. Only the
+ * meeting types differ: the tile has room for one word, the heading over the
+ * open list has room to say which kind of type it means.
+ */
+const FACET_LABELS: Record<FilterFacet, { tile: string; list: string }> = {
+  course: { tile: "Courses", list: "Courses" },
+  person: { tile: "Faculty", list: "Faculty" },
+  section: { tile: "Sections", list: "Sections" },
+  component: { tile: "Types", list: "Meeting type" },
+};
 
 /**
  * `shown` is how many rows the list below holds, which the search and the
  * checked values of the *other* facets both narrow. `total` is what the term
- * holds.
- */
-const tileCounts = computed(() => [
-  {
-    facet: "course" as const,
-    label: "Courses",
-    shown: shownCourseCount.value,
-    total: courseCount.value,
-  },
-  {
-    facet: "person" as const,
-    label: "Faculty",
-    shown: people.value.length,
-    total: facultyCount.value,
-  },
-  {
-    facet: "section" as const,
-    label: "Sections",
-    shown: sections.value.length,
-    total: sectionCount.value,
-  },
-  {
-    facet: "component" as const,
-    label: "Types",
-    shown: components.value.length,
-    total: componentCount.value,
-  },
-]);
-
-/**
- * A facet with checked values counts those, so "4 / 137" reads the same as
- * the badge above it. Everywhere else the count is the length of the list
- * below, and matches `total` until something narrows it.
+ * holds. A facet with checked values shows that count in place of `shown`, so
+ * "4 / 137" reads the same as the badge above it.
  */
 const tiles = computed(() =>
-  tileCounts.value.map((tile) => ({
+  [
+    {
+      facet: "course" as const,
+      shown: courseLevels.value.reduce(
+        (sum, level) => sum + level.courses.length,
+        0,
+      ),
+      total: props.options.courseLevels.reduce(
+        (sum, level) => sum + level.courses.length,
+        0,
+      ),
+    },
+    {
+      facet: "person" as const,
+      shown: people.value.length,
+      total: props.options.faculty.length + (props.options.tba ? 1 : 0),
+    },
+    {
+      facet: "section" as const,
+      shown: sections.value.length,
+      total: props.options.sections.length,
+    },
+    {
+      facet: "component" as const,
+      shown: components.value.length,
+      total: props.options.components.length,
+    },
+  ].map((tile) => ({
     ...tile,
+    label: FACET_LABELS[tile.facet].tile,
     count:
       filters.value[tile.facet].length > 0
         ? filters.value[tile.facet].length
         : tile.shown,
   })),
-);
-
-const shownCourseCount = computed(() =>
-  courseLevels.value.reduce((sum, level) => sum + level.courses.length, 0),
-);
-
-const listHeader = computed(
-  () =>
-    ({
-      course: {
-        title: "Courses",
-      },
-      person: {
-        title: "Faculty",
-      },
-      section: {
-        title: "Sections",
-      },
-      // No count phrase: the type list is short enough to read at a glance.
-      component: { title: "Meeting type", countPhrase: "" },
-    })[activeFacet.value],
 );
 
 const courseLevels = computed(() =>
@@ -472,7 +446,6 @@ const components = computed(() =>
 
 const isListEmpty = computed(
   () =>
-    tileCounts.value.find((tile) => tile.facet === activeFacet.value)?.shown ===
-    0,
+    tiles.value.find((tile) => tile.facet === activeFacet.value)?.shown === 0,
 );
 </script>

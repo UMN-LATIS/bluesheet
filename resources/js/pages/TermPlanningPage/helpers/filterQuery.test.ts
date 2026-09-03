@@ -25,14 +25,11 @@ describe("decodeFilters", () => {
     expect(decodeFilters({})).toEqual(emptyFilters());
   });
 
-  it("decodes an array value and a comma string the same way", () => {
-    const fromArray = decodeFilters({ course: ["ANTH-1001", "HIST-1082"] });
-    const fromCommaString = decodeFilters({
-      course: "ANTH-1001,HIST-1082",
-    });
-
-    expect(fromArray).toEqual(fromCommaString);
-    expect(fromArray.course).toEqual(["ANTH-1001", "HIST-1082"]);
+  it("splits a comma-joined value back into its own facet", () => {
+    expect(decodeFilters({ course: "ANTH-1001,HIST-1082" }).course).toEqual([
+      "ANTH-1001",
+      "HIST-1082",
+    ]);
   });
 
   it("ignores keys that are not facets", () => {
@@ -42,10 +39,8 @@ describe("decodeFilters", () => {
     });
   });
 
-  it("drops empty strings and nulls", () => {
-    expect(
-      decodeFilters({ course: ["ANTH-1001", "", null, "HIST-1082"] }),
-    ).toEqual({
+  it("drops the empty stretches a stray comma leaves behind", () => {
+    expect(decodeFilters({ course: "ANTH-1001,,HIST-1082," })).toEqual({
       ...emptyFilters(),
       course: ["ANTH-1001", "HIST-1082"],
     });

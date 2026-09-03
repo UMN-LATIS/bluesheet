@@ -3,6 +3,7 @@ import { selectWeekView } from "./selectors";
 import type { Meeting } from "../types";
 import { selectLocalSection } from "./selectors";
 import { plannedSection } from "../helpers/plannedSection.fixture";
+import { initialState } from "./update";
 import type { EditorState, ScheduleContext } from "./types";
 
 const meetings: Meeting[] = [
@@ -32,15 +33,7 @@ const meetings: Meeting[] = [
 /** No sections: every test here is about blocks, not about what is in them. */
 const context: ScheduleContext = { meetings, sections: [], isReadOnly: false };
 
-const atRest: EditorState = {
-  placeholderMeetings: [],
-  sectionEdits: {},
-  drafts: {},
-  interaction: { status: "idle" },
-  lastPlacedId: null,
-  selection: null,
-  filters: { course: [], person: [], section: [], component: [] },
-};
+const atRest: EditorState = initialState();
 
 describe("selectWeekView while a meeting is carried", () => {
   const carrying: EditorState = {

@@ -3,13 +3,6 @@
     aria-label="Section details"
     class="tw-flex tw-h-full tw-w-full tw-flex-col tw-min-h-0 tw-bg-surface-bright tw-text-on-surface"
   >
-    <!-- Marks the sheet as a panel dragged up over a phone screen. -->
-    <div v-if="hasHandle" class="tw-flex-none tw-pt-2">
-      <div
-        class="tw-mx-auto tw-h-1 tw-w-10 tw-rounded-full tw-bg-outline-variant"
-      />
-    </div>
-
     <div
       class="tw-flex-none tw-border-0 tw-border-b tw-border-solid tw-border-surface-container tw-px-[18px] tw-pb-3 tw-pt-3.5"
       :class="{ 'tw-bg-brand/[0.06]': draft.isCancelled }"
@@ -584,8 +577,6 @@ const props = defineProps<{
   roster: SisEmployee[];
   /** Names the list this sheet was opened from, e.g. "Tue · 2 – 3p", if any. */
   returnTo?: string | null;
-  /** Draws the grab handle that marks a sheet pulled up over a small screen. */
-  hasHandle?: boolean;
   /** Names the term in the cancel prompt, e.g. "Fall 2026". */
   termName?: string;
   /**

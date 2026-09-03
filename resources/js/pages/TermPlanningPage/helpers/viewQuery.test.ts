@@ -9,12 +9,12 @@ import { ASYNC_DAY_INDEX } from "./scheduleDays";
 
 describe("decodeView", () => {
   it("reads a view the page has", () => {
-    expect(decodeView("heatmap")).toBe("heatmap");
+    expect(decodeView({ view: "heatmap" })).toBe("heatmap");
   });
 
   it("falls back to the default view for a missing or unknown one", () => {
-    expect(decodeView(undefined)).toBe(DEFAULT_VIEW);
-    expect(decodeView("gantt")).toBe(DEFAULT_VIEW);
+    expect(decodeView({})).toBe(DEFAULT_VIEW);
+    expect(decodeView({ view: "gantt" })).toBe(DEFAULT_VIEW);
   });
 
   it("opens on the week", () => {
@@ -25,7 +25,7 @@ describe("decodeView", () => {
 describe("encodeDayIndex", () => {
   it("round-trips every tab, Async included", () => {
     for (let dayIndex = 0; dayIndex <= ASYNC_DAY_INDEX; dayIndex++) {
-      expect(decodeDayIndex(encodeDayIndex(dayIndex))).toBe(dayIndex);
+      expect(decodeDayIndex({ day: encodeDayIndex(dayIndex) })).toBe(dayIndex);
     }
   });
 
@@ -37,12 +37,8 @@ describe("encodeDayIndex", () => {
 
 describe("decodeDayIndex", () => {
   it("is null where the URL names no day, so the caller's default stands", () => {
-    expect(decodeDayIndex(undefined)).toBeNull();
-    expect(decodeDayIndex("someday")).toBeNull();
-    expect(decodeDayIndex("2")).toBeNull();
-  });
-
-  it("takes the first of a repeated key", () => {
-    expect(decodeDayIndex(["wed", "fri"])).toBe(2);
+    expect(decodeDayIndex({})).toBeNull();
+    expect(decodeDayIndex({ day: "someday" })).toBeNull();
+    expect(decodeDayIndex({ day: "2" })).toBeNull();
   });
 });

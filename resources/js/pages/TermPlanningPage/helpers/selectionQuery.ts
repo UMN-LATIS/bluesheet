@@ -1,6 +1,6 @@
 /** What the page has open, as URL query: a section's sheet, an hour's list, or both. */
 
-import type { LocationQuery, LocationQueryValue } from "vue-router";
+import type { Meeting, UrlQuery } from "../types";
 import { WEEKDAY_CODES } from "./scheduleDays";
 import {
   clockFromMinutes,
@@ -19,14 +19,14 @@ export const SELECTION_KEYS = ["sectionId", "hour"];
 
 /**
  * What a link can name. A grid block is left out: it stands for the section it
- * belongs to, which is what the sheet shows and what `section` restores.
+ * belongs to, which is what the sheet shows and what `sectionId` restores.
  */
 export type SheetSelection = Exclude<Selection, { kind: "meeting" }>;
 
 export function encodeSelection(
   selection: Selection | null,
-  sectionIdOfMeeting: (meetingId: string) => number | null,
-): LocationQuery {
+  meetings: Meeting[],
+): UrlQuery {
   if (!selection) return {};
 
   switch (selection.kind) {
@@ -35,8 +35,10 @@ export function encodeSelection(
 
     case "meeting": {
       // A time drawn on empty space belongs to no section, so it names nothing.
-      const sectionId = sectionIdOfMeeting(selection.meetingId);
-      return sectionId === null ? {} : { sectionId: String(sectionId) };
+      const sectionId = meetings.find(
+        ({ id }) => id === selection.meetingId,
+      )?.sectionId;
+      return sectionId == null ? {} : { sectionId: String(sectionId) };
     }
 
     case "section":
@@ -48,9 +50,9 @@ export function encodeSelection(
   }
 }
 
-export function decodeSelection(query: LocationQuery): SheetSelection | null {
-  const hour = decodeHour(single(query.hour));
-  const sectionId = decodeSectionId(single(query.sectionId));
+export function decodeSelection(query: UrlQuery): SheetSelection | null {
+  const hour = decodeHour(query.hour);
+  const sectionId = decodeSectionId(query.sectionId);
 
   if (sectionId === null) return hour;
 
@@ -61,7 +63,7 @@ export function decodeSelection(query: LocationQuery): SheetSelection | null {
 const encodeHour = (hour: HourSelection) =>
   `${WEEKDAY_CODES[hour.dayIndex]}-${clockFromMinutes(hour.startMinute)}`;
 
-function decodeHour(raw: string | null): HourSelection | null {
+function decodeHour(raw: string | undefined): HourSelection | null {
   const [day, clock] = (raw ?? "").split("-");
   const dayIndex = WEEKDAY_CODES.findIndex((code) => code === day);
   if (dayIndex === -1 || !/^\d{1,2}:\d{2}$/.test(clock ?? "")) return null;
@@ -72,14 +74,9 @@ function decodeHour(raw: string | null): HourSelection | null {
   return isOnTheGrid ? { kind: "hour", dayIndex, startMinute } : null;
 }
 
-function decodeSectionId(raw: string | null): number | null {
+function decodeSectionId(raw: string | undefined): number | null {
   const sectionId = Number(raw);
-  return raw !== null && Number.isInteger(sectionId) && sectionId > 0
+  return raw !== undefined && Number.isInteger(sectionId) && sectionId > 0
     ? sectionId
     : null;
 }
-
-/** A key repeated in the query arrives as an array; the first one wins. */
-const single = (
-  raw: LocationQueryValue | LocationQueryValue[] | undefined,
-): string | null => (Array.isArray(raw) ? raw[0] : raw) ?? null;

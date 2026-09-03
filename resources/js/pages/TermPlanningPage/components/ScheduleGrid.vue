@@ -29,7 +29,7 @@
         @pointercancel="schedule.cancel()"
       >
         <DayColumn
-          v-for="(day, dayIndex) in DAY_NAMES"
+          v-for="(day, dayIndex) in WEEKDAY_NAMES"
           :key="day"
           :label="day"
           :dayIndex="dayIndex"
@@ -96,8 +96,6 @@ import { dayIndexAt } from "../helpers/dayLayout";
 import { COLUMN_HEIGHT, minuteAt } from "../helpers/timeScale";
 import { WEEKDAY_NAMES } from "../helpers/scheduleDays";
 
-const DAY_NAMES = WEEKDAY_NAMES;
-
 /**
  * Three chips to a row. A chip is a section code and a pair of initials, so
  * about 140px at its longest; three of those, two 6px gaps, 24px of padding
@@ -123,7 +121,7 @@ const props = defineProps<{
 const days = ref<HTMLElement | null>(null);
 const gutter = ref<HTMLElement | null>(null);
 const { width: gutterWidth } = useElementSize(gutter);
-const week = computed(() => props.schedule.weekView(DAY_NAMES.length));
+const week = computed(() => props.schedule.weekView(WEEKDAY_NAMES.length));
 
 function onPointerDown(event: PointerEvent) {
   if (event.button !== 0) return;

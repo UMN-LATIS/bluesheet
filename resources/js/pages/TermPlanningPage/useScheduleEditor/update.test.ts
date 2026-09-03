@@ -3,6 +3,7 @@ import { initialState, update } from "./update";
 import { placeSections } from "../helpers/sectionPlacement";
 import { plannedSection } from "../helpers/plannedSection.fixture";
 import type {
+  EditorDeps,
   EditorEvent,
   EditorState,
   ScheduleContext,
@@ -24,7 +25,7 @@ const contextOf = (
   isReadOnly: false,
 });
 
-const countingUuids = () => {
+const countingUuids = (): EditorDeps => {
   let count = 0;
   return { createUuid: () => `local-${++count}` };
 };
@@ -555,16 +556,18 @@ describe("filtering", () => {
     expect(state.filters).toEqual(initialState().filters);
   });
 
-  it("replacing sets the filters exactly as given", () => {
-    const filters = {
+  it("a URL naming courses sets those filters exactly", () => {
+    const state = after([
+      twoCourses,
+      { type: "urlChanged", query: { course: "ANTH-1001", section: "4821" } },
+    ]);
+
+    expect(state.filters).toEqual({
       course: ["ANTH-1001"],
       person: [],
       section: ["4821"],
       component: [],
-    };
-    const state = after([twoCourses, { type: "filtersReplaced", filters }]);
-
-    expect(state.filters).toEqual(filters);
+    });
   });
 
   it("leaves the selection and the schedule alone", () => {
@@ -580,42 +583,124 @@ describe("filtering", () => {
     expect(state.selection).toEqual({ kind: "meeting", meetingId: "local-1" });
     expect(state.placeholderMeetings).toEqual(selected.placeholderMeetings);
   });
+});
 
-  describe("effects", () => {
-    it("a change the user makes is synced to the URL", () => {
-      const step = update(
-        initialState(),
-        twoCourses,
-        emptyContext,
-        countingUuids(),
-      );
+describe("the URL", () => {
+  const step = (
+    event: EditorEvent,
+    state: EditorState = initialState(),
+    context: ScheduleContext = emptyContext,
+  ) => update(state, event, context, countingUuids());
 
-      expect(step.effects).toEqual([
-        { type: "syncFiltersToUrl", filters: step.state.filters },
-      ]);
+  const checkTwoCourses: EditorEvent = {
+    type: "filterValuesAdded",
+    facet: "course",
+    values: ["ANTH-1001", "HIST-1082"],
+  };
+
+  it("a change the user makes is written back in one piece", () => {
+    expect(step(checkTwoCourses).effects).toEqual([
+      {
+        type: "replaceUrlQuery",
+        query: { course: "ANTH-1001,HIST-1082", view: "week" },
+      },
+    ]);
+  });
+
+  it("a change that came from the URL is not echoed back", () => {
+    expect(
+      step({ type: "urlChanged", query: { course: "ANTH-1001" } }).effects,
+    ).toEqual([]);
+  });
+
+  it("a gesture that changes nothing a link names writes nothing", () => {
+    expect(
+      step({ type: "pressedEmptySpace", dayIndex: 0, minute: 600 }).effects,
+    ).toEqual([]);
+  });
+
+  it("the day is named only while the day list is the view", () => {
+    const onWednesday = after([
+      { type: "viewSelected", view: "day" },
+      { type: "daySelected", dayIndex: 2 },
+    ]);
+
+    expect(
+      step({ type: "viewSelected", view: "day" }, onWednesday).effects,
+    ).toEqual([]);
+    expect(
+      step({ type: "viewSelected", view: "heatmap" }, onWednesday).effects,
+    ).toEqual([{ type: "replaceUrlQuery", query: { view: "heatmap" } }]);
+  });
+
+  it("the Async cell moves the view and the day together", () => {
+    const next = step({ type: "asyncDayShown" });
+
+    expect(next.state.view).toBe("day");
+    expect(next.effects).toEqual([
+      { type: "replaceUrlQuery", query: { view: "day", day: "async" } },
+    ]);
+  });
+
+  it("a URL naming no day leaves the tab already open alone", () => {
+    const onThursday = after([{ type: "daySelected", dayIndex: 3 }]);
+    const state = step(
+      { type: "urlChanged", query: { view: "week" } },
+      onThursday,
+    ).state;
+
+    expect(state.dayIndex).toBe(3);
+  });
+
+  it("a selected block survives the query it wrote coming back", () => {
+    const context = contextOf(
+      plannedSection(1, [
+        { days: ["mon"], startTime: "09:00", endTime: "09:50" },
+      ]),
+    );
+    const selected = after(
+      [
+        { type: "pressedMeeting", meetingId: "s1:mon:0900", minute: 550 },
+        { type: "released" },
+      ],
+      initialState(),
+      context,
+    );
+
+    const returned = step(
+      { type: "urlChanged", query: { sectionId: "1", view: "week" } },
+      selected,
+      context,
+    );
+
+    expect(returned.state.selection).toEqual({
+      kind: "meeting",
+      meetingId: "s1:mon:0900",
     });
+  });
 
-    it("a change that came from the URL is not echoed back", () => {
-      const step = update(
-        initialState(),
-        { type: "filtersReplaced", filters: initialState().filters },
-        emptyContext,
-        countingUuids(),
-      );
+  it("a link naming another section opens that one instead", () => {
+    const context = contextOf(
+      plannedSection(1, [
+        { days: ["mon"], startTime: "09:00", endTime: "09:50" },
+      ]),
+    );
+    const selected = after(
+      [
+        { type: "pressedMeeting", meetingId: "s1:mon:0900", minute: 550 },
+        { type: "released" },
+      ],
+      initialState(),
+      context,
+    );
 
-      expect(step.effects).toEqual([]);
-    });
+    const returned = step(
+      { type: "urlChanged", query: { sectionId: "7" } },
+      selected,
+      context,
+    );
 
-    it("gestures have no effects", () => {
-      const step = update(
-        initialState(),
-        { type: "pressedEmptySpace", dayIndex: 0, minute: 600 },
-        emptyContext,
-        countingUuids(),
-      );
-
-      expect(step.effects).toEqual([]);
-    });
+    expect(returned.state.selection).toEqual({ kind: "section", sectionId: 7 });
   });
 });
 

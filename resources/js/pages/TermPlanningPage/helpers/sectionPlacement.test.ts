@@ -28,7 +28,6 @@ describe("placeSections", () => {
       },
     ]);
     expect(placed.sectionsByMeetingId.get("s1:mon:1010")?.id).toBe(1);
-    expect(placed.outsideGridCount).toBe(0);
   });
 
   it("a crosslisted class draws once, under its primary", () => {
@@ -94,10 +93,9 @@ describe("placeSections", () => {
 
     expect(placed.meetings).toEqual([]);
     expect(placed.unscheduled.map(({ id }) => id)).toEqual([1]);
-    expect(placed.outsideGridCount).toBe(0);
   });
 
-  it("weekend days are counted, not drawn", () => {
+  it("a weekend day is left undrawn, and the weekday beside it still draws", () => {
     const placed = placeSections([
       section(1, [
         { days: ["fri", "sat"], startTime: "09:00", endTime: "10:00" },
@@ -105,7 +103,6 @@ describe("placeSections", () => {
     ]);
 
     expect(placed.meetings.map(({ id }) => id)).toEqual(["s1:fri:0900"]);
-    expect(placed.outsideGridCount).toBe(1);
   });
 
   it("a block is named for where it sits, so a rewrite cannot rename its neighbors", () => {
@@ -127,12 +124,11 @@ describe("placeSections", () => {
     ]);
   });
 
-  it("meetings outside the grid's hours are counted, not drawn", () => {
+  it("a meeting past the grid's last hour is left undrawn", () => {
     const placed = placeSections([
       section(1, [{ days: ["mon"], startTime: "21:30", endTime: "22:30" }]),
     ]);
 
     expect(placed.meetings).toEqual([]);
-    expect(placed.outsideGridCount).toBe(1);
   });
 });

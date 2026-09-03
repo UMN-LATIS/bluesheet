@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  filterSections,
-  isFiltering,
-  reachableFacetValues,
-} from "./scheduleFilters";
+import { filterSections, reachableFacetValues } from "./scheduleFilters";
 import type { ScheduleFilters, SisInstructor, SisSection } from "../types";
 import { TBA_PERSON } from "../types";
 
@@ -46,18 +42,6 @@ const section = (id: number, extra: Partial<SisSection> = {}): SisSection => ({
   meetings: [],
   crosslist: null,
   ...extra,
-});
-
-describe("isFiltering", () => {
-  it("is false when every facet is empty", () => {
-    expect(isFiltering(emptyFilters())).toBe(false);
-  });
-
-  it("is true once any facet has a checked value", () => {
-    expect(isFiltering({ ...emptyFilters(), course: ["ANTH-1001"] })).toBe(
-      true,
-    );
-  });
 });
 
 describe("filterSections", () => {

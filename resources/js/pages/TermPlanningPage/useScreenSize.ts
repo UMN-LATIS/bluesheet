@@ -24,10 +24,11 @@ export function useScreenSize() {
 
   return {
     size,
-    /** Both panels sit in the layout as columns of their own. */
+    /**
+     * Both panels sit in the layout as columns of their own. Below this they
+     * are summoned instead: a panel covers what is behind it and closes again.
+     */
     isLarge,
     isSmall,
-    /** Below large, a panel covers what is behind it and closes again. */
-    arePanelsOverlaid: computed(() => !isLarge.value),
   };
 }
