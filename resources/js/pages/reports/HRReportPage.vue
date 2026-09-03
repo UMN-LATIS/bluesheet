@@ -57,7 +57,7 @@
           <td>{{ department.zdept_id }}</td>
           <td>
             <router-link :to="{ name: 'group', params: { groupId: department.group.id } }">{{ department.department
-              }}</router-link>
+            }}</router-link>
           </td>
           <td>
             <UserWithLink :memberList="department.hrConsultant"></UserWithLink>
@@ -159,7 +159,11 @@ export default {
       {
         roleId: 14, // payroll specialist
         groupType: null,
-      }
+      },
+      {
+        roleId: 99, // hr business partner
+        groupType: null,
+      },
     ];
 
     let fullList = [];
