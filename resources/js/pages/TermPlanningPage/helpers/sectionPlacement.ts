@@ -27,10 +27,12 @@ export function placeSections(sections: PlannedSection[]): PlacedSections {
   const sectionsByMeetingId = new Map<string, PlannedSection>();
   const unscheduled: PlannedSection[] = [];
   let outsideGridCount = 0;
+  const ownerOfBlock = blockOwners(sections);
 
   for (const section of sections) {
-    // a crosslisted class is drawn once, by its primary section
-    if (section.crosslist && !section.crosslist.isPrimary) continue;
+    // a crosslisted class is drawn once, by the partner that owns its block
+    const raw = section.crosslist?.raw;
+    if (raw !== undefined && ownerOfBlock.get(raw) !== section.id) continue;
 
     if (section.meetings.length === 0) {
       unscheduled.push(section);
@@ -70,3 +72,39 @@ export function placeSections(sections: PlannedSection[]): PlacedSections {
     outsideGridCount,
   };
 }
+
+interface BlockOwner {
+  id: number;
+  isPrimary: boolean;
+}
+
+/**
+ * Which section draws each cross-listed block, keyed by the listing it shares.
+ *
+ * The primary is elected across the whole listing, so it is usually a section
+ * in another department and absent from this payload. Deferring to it anyway
+ * would drop the listing from the page entirely, so the election is settled
+ * again here among the partners actually on hand.
+ */
+function blockOwners(sections: PlannedSection[]): Map<string, number> {
+  const owners = new Map<string, BlockOwner>();
+
+  for (const { id, crosslist } of sections) {
+    if (!crosslist) continue;
+
+    const candidate = { id, isPrimary: crosslist.isPrimary };
+    const held = owners.get(crosslist.raw);
+
+    if (!held || outranks(candidate, held)) {
+      owners.set(crosslist.raw, candidate);
+    }
+  }
+
+  return new Map([...owners].map(([raw, owner]) => [raw, owner.id]));
+}
+
+/** The elected primary wins; among equals the lowest id, so the pick is stable. */
+const outranks = (candidate: BlockOwner, held: BlockOwner): boolean =>
+  candidate.isPrimary === held.isPrimary
+    ? candidate.id < held.id
+    : candidate.isPrimary;

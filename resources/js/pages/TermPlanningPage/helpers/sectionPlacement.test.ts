@@ -57,6 +57,38 @@ describe("placeSections", () => {
     expect(placed.sectionsByMeetingId.get("s1:tue:1300")?.id).toBe(1);
   });
 
+  it("a crosslisted class still draws when its primary is another department's", () => {
+    const placed = placeSections([
+      section(2, [{ days: ["tue"], startTime: "13:00", endTime: "14:15" }], {
+        subject: "GWSS",
+        crosslist: {
+          raw: "ANTH 1001/GWSS 1001",
+          partners: [],
+          isPrimary: false,
+        },
+      }),
+    ]);
+
+    expect(placed.meetings.map(({ id }) => id)).toEqual(["s2:tue:1300"]);
+  });
+
+  it("with no primary present, the lowest-numbered partner draws the block", () => {
+    const shared: SisSectionMeeting[] = [
+      { days: ["tue"], startTime: "13:00", endTime: "14:15" },
+    ];
+    const crosslist = {
+      raw: "ANTH 1001/GWSS 1001/HIST 1001",
+      partners: [],
+      isPrimary: false,
+    };
+    const placed = placeSections([
+      section(5, shared, { subject: "GWSS", crosslist }),
+      section(3, shared, { subject: "HIST", crosslist }),
+    ]);
+
+    expect(placed.meetings.map(({ id }) => id)).toEqual(["s3:tue:1300"]);
+  });
+
   it("a section with no set time goes to the tray, not the grid", () => {
     const placed = placeSections([section(1, [])]);
 

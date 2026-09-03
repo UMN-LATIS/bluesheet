@@ -7,7 +7,7 @@ use App\Group;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Sis\SisCourseResource;
 use App\SisClassSection;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Collection;
 
 class GroupCourseController extends Controller {
     /**
@@ -21,26 +21,40 @@ class GroupCourseController extends Controller {
             return SisCourseResource::collection([]);
         }
 
-        $offerings = SisClassSection::query()
-            ->where('academic_org', (int) $group->sis_dept_id)
-            ->where('is_cancelled', false)
-            ->orderByDesc('term_code')
-            ->get(['subject', 'catalog_number', 'title', 'component', 'credits', 'term_code']);
-
-        return SisCourseResource::collection(self::latestOfferings($offerings));
-    }
-
-    /**
-     * @param Collection<SisClassSection> $offerings ordered most recent first
-     */
-    private static function latestOfferings(Collection $offerings): Collection {
-        return $offerings
-            ->unique(fn(SisClassSection $section) => $section->course_code . '-' . $section->component)
+        $courses = self::latestOfferings((int) $group->sis_dept_id)
             ->sortBy(fn(SisClassSection $section) => [
                 $section->subject,
                 $section->catalog_number,
                 $section->component,
             ])
             ->values();
+
+        return SisCourseResource::collection($courses);
+    }
+
+    /**
+     * The newest section of each course and component, one row apiece. Ranked
+     * in the database rather than deduplicated here, because a department's
+     * history runs to every section of every term and all but a handful of
+     * those rows would be read only to be discarded.
+     *
+     * @return Collection<int, SisClassSection>
+     */
+    private static function latestOfferings(int $academicOrg): Collection {
+        $ranked = SisClassSection::query()
+            ->where('academic_org', $academicOrg)
+            ->where('is_cancelled', false)
+            ->select('subject', 'catalog_number', 'title', 'component', 'credits', 'term_code')
+            // class_number only breaks ties, so that two sections of one course
+            // in the same term cannot each claim to be the newest.
+            ->selectRaw('ROW_NUMBER() OVER (
+                PARTITION BY subject, catalog_number, component
+                ORDER BY term_code DESC, class_number
+            ) AS offering_rank');
+
+        return SisClassSection::query()
+            ->fromSub($ranked, 'offerings')
+            ->where('offering_rank', 1)
+            ->get();
     }
 }

@@ -432,13 +432,21 @@ const termOptions = computed(() =>
   [...(termsQuery.data.value ?? [])].sort((a, b) => b.id - a.id),
 );
 
-// The filters ride along in the query, so a view narrowed to one person
-// stays narrowed when the term changes.
+/**
+ * The query keys that name a row rather than a value: the `section` facet and
+ * an open sheet's `sectionId` both hold section ids, and a section id belongs
+ * to one term. Carried into another term it matches nothing, which empties the
+ * schedule and, through `reachableFacetValues`, every other facet's list too.
+ */
+const TERM_BOUND_KEYS = ["section", "sectionId"];
+
+// The rest of the filters ride along in the query, so a view narrowed to one
+// person stays narrowed when the term changes.
 const goToTerm = (termCode: string) =>
   router.push({
     name: "termPlanning",
     params: { groupId: props.groupId, termCode },
-    query: route.query,
+    query: omit(route.query, TERM_BOUND_KEYS),
   });
 
 const groupQuery = useGroupQuery(groupId);
@@ -529,11 +537,6 @@ const reachableValues = computed(() =>
 );
 
 const placed = computed(() => placeSections(visibleSections.value));
-
-/** What the week view managed to draw, which is the rest of what is shown. */
-const scheduledCount = computed(
-  () => visibleSections.value.length - placed.value.unscheduled.length,
-);
 
 const sectionOf = (meetingId: string) =>
   placed.value.sectionsByMeetingId.get(meetingId);
