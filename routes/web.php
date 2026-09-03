@@ -23,6 +23,7 @@ use App\Http\Controllers\Sis\GroupController as SisGroupController;
 use App\Http\Controllers\Sis\GroupSectionController as SisGroupSectionController;
 use App\Http\Controllers\Sis\GroupCourseController as SisGroupCourseController;
 use App\Http\Controllers\Sis\GroupEmployeeController as SisGroupEmployeeController;
+use App\Http\Controllers\TermPlanning\GroupSectionController as TermPlanningGroupSectionController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\LeavePermissionController;
 use App\Http\Controllers\CoursePermissionController;
@@ -118,6 +119,14 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
         Route::resource('/groups/{group}/enrollments', GroupEnrollmentController::class);
         Route::get('/groups/{group}/people', [GroupPersonController::class, 'index']);
         Route::get('/groups/{group}/leaves', [GroupLeaveController::class, 'index']);
+    });
+
+    // The plan a department is building for a term the SIS has not published.
+    Route::prefix('term-planning')->group(function () {
+        Route::get('/groups/{group}/sections', [TermPlanningGroupSectionController::class, 'index']);
+        Route::post('/groups/{group}/sections', [TermPlanningGroupSectionController::class, 'store']);
+        Route::put('/groups/{group}/sections/{section}', [TermPlanningGroupSectionController::class, 'update']);
+        Route::delete('/groups/{group}/sections/{section}', [TermPlanningGroupSectionController::class, 'destroy']);
     });
 
     // Read-only views of the SIS data cached in the sis_ tables.
