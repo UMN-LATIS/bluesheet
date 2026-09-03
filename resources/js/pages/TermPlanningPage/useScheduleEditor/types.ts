@@ -185,7 +185,17 @@ export type EditorEvent =
    * dispatched, and undone only by reverting the section.
    */
   | { type: "sectionCancelled"; sectionId: number }
-  | { type: "sectionEditsReverted"; sectionId: number };
+  | { type: "sectionEditsReverted"; sectionId: number }
+  /**
+   * The server has these edits now, so the overlay holding them can go. The
+   * edits are named rather than assumed, because the scheduler may have typed
+   * again while the save was in flight, and that newer edit has to survive.
+   */
+  | {
+      type: "sectionEditsPersisted";
+      sectionId: number;
+      saved: SectionEdit;
+    };
 
 /**
  * Work for the page to do outside `update`, which never imports the router.

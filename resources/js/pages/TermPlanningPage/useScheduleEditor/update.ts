@@ -112,6 +112,9 @@ export const EDITOR_QUERY_KEYS = [
 const READING_EVENTS: EditorEvent["type"][] = [
   "pressedMeeting",
   "released",
+  // bookkeeping, not an edit: it only drops an overlay the server already
+  // holds, and a term that locked mid-save still has to be able to let go
+  "sectionEditsPersisted",
   "canceled",
   "deselected",
   "selectedSection",
@@ -421,6 +424,13 @@ function reduce(
         withoutDraft(state, event.sectionId),
         event.sectionId,
       );
+
+    case "sectionEditsPersisted":
+      // a newer edit made while the save was in flight is not the one that
+      // was saved, so it stays and will be saved in its turn
+      return isEqual(state.sectionEdits[event.sectionId], event.saved)
+        ? withoutEntry(state, event.sectionId)
+        : state;
 
     default:
       return assertNever(event);

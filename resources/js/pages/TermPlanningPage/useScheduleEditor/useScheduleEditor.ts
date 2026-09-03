@@ -91,6 +91,8 @@ export function useScheduleEditor(
     isDraftDirty: (section: SisSection) =>
       selectIsDraftDirty(section, state.value),
     hasEdits: (sectionId: number) => selectHasEdits(sectionId, state.value),
+    /** Edits this browser has made and the server has not been told about. */
+    pendingEdits: computed(() => state.value.sectionEdits),
     draftProblems: (section: SisSection) =>
       sectionProblems(selectDraftSection(section, state.value)),
 
@@ -169,5 +171,7 @@ export function useScheduleEditor(
       dispatch({ type: "sectionCancelled", sectionId }),
     revertSection: (sectionId: number) =>
       dispatch({ type: "sectionEditsReverted", sectionId }),
+    markEditsPersisted: (sectionId: number, saved: SectionEdit) =>
+      dispatch({ type: "sectionEditsPersisted", sectionId, saved }),
   });
 }

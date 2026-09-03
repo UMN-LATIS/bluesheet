@@ -1060,3 +1060,74 @@ describe("a read-only term", () => {
     expect(state.filters.component).toEqual(["LEC"]);
   });
 });
+
+describe("sectionEditsPersisted", () => {
+  const section = plannedSection(1, []);
+  const context = contextOf(section);
+
+  /** A sheet edit, saved, which is how an edit reaches the overlay. */
+  const editAndSave = (notes: string): EditorEvent[] => [
+    { type: "sectionFieldEdited", sectionId: 1, change: { notes } },
+    { type: "draftSaved", sectionId: 1 },
+  ];
+
+  it("drops the overlay once the server holds it", () => {
+    const edited = after(editAndSave("saved"), initialState(), context);
+    expect(edited.sectionEdits[1]).toEqual({ notes: "saved" });
+
+    const state = after(
+      [
+        {
+          type: "sectionEditsPersisted",
+          sectionId: 1,
+          saved: { notes: "saved" },
+        },
+      ],
+      edited,
+      context,
+    );
+
+    expect(state.sectionEdits[1]).toBeUndefined();
+  });
+
+  it("keeps an edit made while the save was in flight", () => {
+    // "one" was the version sent; "two" was saved before the reply came back
+    const edited = after(
+      [...editAndSave("one"), ...editAndSave("two")],
+      initialState(),
+      context,
+    );
+
+    const state = after(
+      [
+        {
+          type: "sectionEditsPersisted",
+          sectionId: 1,
+          saved: { notes: "one" },
+        },
+      ],
+      edited,
+      context,
+    );
+
+    expect(state.sectionEdits[1]).toEqual({ notes: "two" });
+  });
+
+  it("still lets go once the term has locked", () => {
+    const edited = after(editAndSave("saved"), initialState(), context);
+
+    const state = after(
+      [
+        {
+          type: "sectionEditsPersisted",
+          sectionId: 1,
+          saved: { notes: "saved" },
+        },
+      ],
+      edited,
+      { ...context, isReadOnly: true },
+    );
+
+    expect(state.sectionEdits[1]).toBeUndefined();
+  });
+});

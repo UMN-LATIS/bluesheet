@@ -169,6 +169,8 @@ import { placeSections } from "./helpers/sectionPlacement";
 import { formatTimeRange } from "./helpers/timeScale";
 import { flattenQuery } from "./helpers/urlQuery";
 import type { ScheduleView } from "./helpers/viewQuery";
+import { useTermPlanMutations } from "./queries/useTermPlanMutations";
+import { useTermPlanAutosave } from "./useTermPlanAutosave";
 import type { Meeting } from "./types";
 import { useScheduleEditor } from "./useScheduleEditor";
 import type { Effect } from "./useScheduleEditor/types";
@@ -208,8 +210,15 @@ watch(isLarge, (isDocked) => {
   if (isDocked) isFilterPanelOpen.value = false;
 });
 
-const { today, term, termOptions, isReadOnly, roster, sections } =
-  useTermSchedule(groupId, termCode);
+const {
+  today,
+  term,
+  activeTermCode,
+  termOptions,
+  isReadOnly,
+  roster,
+  sections,
+} = useTermSchedule(groupId, termCode);
 
 /** The week is the one view a phone cannot draw; the day list stands in. */
 const activeView = computed<ScheduleView>(() =>
@@ -287,6 +296,17 @@ const schedule = useScheduleEditor(
   })),
   runEffect,
 );
+
+const { saveSection } = useTermPlanMutations(groupId, activeTermCode);
+
+// Sections are read from `localSections`, not from the payload, so a section
+// saves with the edits the reader can see on it rather than without them.
+useTermPlanAutosave({
+  sections: localSections,
+  pendingEdits: computed(() => schedule.pendingEdits),
+  save: (section) => saveSection.mutateAsync(section),
+  onSaved: (sectionId, saved) => schedule.markEditsPersisted(sectionId, saved),
+});
 
 // The only way anything the URL carries is written: a pasted link on first
 // load, the back button, or `runEffect`'s own write arriving back. `update`
