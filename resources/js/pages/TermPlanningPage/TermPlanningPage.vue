@@ -137,37 +137,6 @@
           'tw-flex tw-min-h-0 tw-min-w-0 tw-flex-1 tw-flex-col',
         ]"
       >
-        <!--
-          The week is the only view that needs a line of its own to say how
-          much of the term it managed to draw. The day view says it in its
-          own summary strip, and the heatmap counts nothing.
-        -->
-        <div
-          v-if="activeView === 'week'"
-          class="tw-flex tw-h-[46px] tw-flex-none tw-items-center tw-gap-3 tw-border-0 tw-border-b tw-border-solid tw-border-surface-container tw-px-4 tw-text-[12.5px]"
-        >
-          <!-- How much of the term is placed is a measure of work left to
-               do, which a term nobody can edit is not asking for. -->
-          <span v-if="isReadOnly" class="tw-flex-none">
-            <span class="tw-font-semibold">{{ visibleSections.length }}</span>
-            {{ visibleSections.length === 1 ? "section" : "sections" }}
-          </span>
-          <span v-else class="tw-flex-none">
-            <span class="tw-font-semibold">{{ scheduledCount }}</span>
-            of {{ visibleSections.length }} sections scheduled
-          </span>
-          <span
-            v-if="placed.outsideGridCount > 0"
-            class="tw-truncate tw-text-xs tw-text-amber-700"
-          >
-            {{ placed.outsideGridCount }}
-            {{
-              placed.outsideGridCount === 1 ? "meeting falls" : "meetings fall"
-            }}
-            outside Mon–Fri, 8am–9pm
-          </span>
-        </div>
-
         <DayView
           v-if="activeView === 'day'"
           :dayIndex="currentDayIndex"

@@ -124,7 +124,7 @@
     </div>
 
     <div
-      class="tw-flex tw-flex-none tw-items-center tw-gap-2 tw-px-4 tw-pb-1.5 tw-pt-4"
+      class="tw-flex tw-justify-between tw-flex-none tw-items-center tw-gap-2 tw-px-4 tw-pb-1.5 tw-pt-4"
     >
       <span
         class="tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-surface-variant"
@@ -139,12 +139,6 @@
       >
         Clear
       </button>
-      <span
-        v-if="listHeader.countPhrase"
-        class="tw-ml-auto tw-text-[11px] tw-text-on-surface-variant"
-      >
-        {{ listHeader.countPhrase }}
-      </span>
     </div>
 
     <div
@@ -419,15 +413,12 @@ const listHeader = computed(
     ({
       course: {
         title: "Courses",
-        countPhrase: `${courseCount.value} in this term`,
       },
       person: {
         title: "Faculty",
-        countPhrase: `${facultyCount.value} on the roster`,
       },
       section: {
         title: "Sections",
-        countPhrase: `${sectionCount.value} in this term`,
       },
       // No count phrase: the type list is short enough to read at a glance.
       component: { title: "Meeting type", countPhrase: "" },
