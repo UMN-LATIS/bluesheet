@@ -52,8 +52,8 @@
         >
           {{ filters[tile.facet].length }}
         </span>
-        <!-- While searching, what the list will show out of what the term
-             holds: "5/57". No slash where the search matches everything. -->
+        <!-- What is checked here, or else what the list will show, out of
+             what the term holds: "5/57". No slash where nothing narrows it. -->
         <span
           class="tw-text-[21px] tw-font-semibold tw-leading-tight tw-tracking-tight tw-text-on-surface"
           >{{ tile.count }}&nbsp;<span
@@ -70,19 +70,29 @@
       </button>
     </div>
 
+    <!--
+      Always on screen, disabled while there is nothing to clear, so the way
+      out of a narrowed term is in the same place whether or not it is needed
+      yet. A button that appears only once a filter is on has to be found.
+    -->
     <div
-      v-if="activeFilterCount > 0"
       class="tw-flex tw-flex-none tw-items-center tw-gap-2 tw-px-3.5 tw-pt-3"
     >
       <span class="tw-text-[11.5px] tw-text-on-surface-variant">
-        {{ activeFilterCount }}
-        {{ activeFilterCount === 1 ? "filter" : "filters" }} active
+        {{ narrowingSummary }}
       </span>
       <button
         type="button"
-        class="tw-ml-auto tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[11.5px] tw-font-semibold tw-text-primary hover:tw-underline"
-        @click="schedule.clearFilters()"
+        class="tw-ml-auto tw-flex tw-min-h-8 tw-flex-none tw-items-center tw-gap-1 tw-rounded-full tw-border tw-border-solid tw-px-3 tw-text-[11.5px] tw-font-semibold"
+        :class="
+          isNarrowed
+            ? 'tw-cursor-pointer tw-border-primary tw-bg-primary-container tw-text-primary hover:tw-bg-primary hover:tw-text-on-primary'
+            : 'tw-cursor-default tw-border-outline-variant tw-bg-transparent tw-text-on-surface-variant tw-opacity-60'
+        "
+        :disabled="!isNarrowed"
+        @click="clearAll"
       >
+        <XIcon class="tw-h-3.5 tw-w-3.5" aria-hidden="true" />
         Clear all
       </button>
     </div>
@@ -236,6 +246,13 @@
           </li>
         </template>
       </ul>
+
+      <p
+        v-if="isListEmpty"
+        class="tw-m-0 tw-px-2 tw-py-6 tw-text-center tw-text-[11.5px] tw-text-on-surface-variant"
+      >
+        Nothing here matches the filters.
+      </p>
     </div>
   </aside>
 </template>
@@ -243,18 +260,22 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import FilterRow from "./FilterRow.vue";
+import { XIcon } from "@/icons";
 import { colorOfType, labelOfComponent } from "../constants/meetingTypeColors";
 import type {
   CourseOption,
   FilterOptions,
   PersonOption,
 } from "../helpers/filterOptions";
+import type { ReachableFacetValues } from "../helpers/scheduleFilters";
 import { type FilterFacet, TBA_PERSON } from "../types";
 import type { ScheduleEditor } from "../useScheduleEditor";
 
 const props = defineProps<{
   options: FilterOptions;
   schedule: ScheduleEditor;
+  /** Per facet, the values the other facets' checked values leave standing. */
+  reachable: ReachableFacetValues;
   /** Mounted as an overlay that can be closed, rather than docked. */
   isDismissible?: boolean;
 }>();
@@ -282,19 +303,50 @@ const activeFilterCount = computed(() =>
 const clearFacet = (facet: FilterFacet) =>
   props.schedule.removeFilterValues(facet, filters.value[facet]);
 
+const isSearching = computed(() => search.value.trim() !== "");
+
+/** Whether anything at all is holding sections back from the schedule. */
+const isNarrowed = computed(
+  () => activeFilterCount.value > 0 || isSearching.value,
+);
+
+/** The search narrows the lists as a checked value does, so it clears too. */
+const clearAll = () => {
+  search.value = "";
+  props.schedule.clearFilters();
+};
+
+const narrowingSummary = computed(() => {
+  const filterPhrase =
+    activeFilterCount.value === 1
+      ? "1 filter"
+      : `${activeFilterCount.value} filters`;
+
+  if (activeFilterCount.value > 0) {
+    return isSearching.value
+      ? `${filterPhrase} and a search active`
+      : `${filterPhrase} active`;
+  }
+  return isSearching.value ? "Search active" : "No filters active";
+});
+
 const showUnassigned = () => {
   activeFacet.value = "person";
   props.schedule.addFilterValues("person", [TBA_PERSON]);
 };
 
-// a checked row stays in view whatever the search says, so it can be unchecked
+/**
+ * A row is listed when the search matches it and the other facets leave it
+ * standing: check "LEC" and the course list keeps the courses that hold a
+ * lecture. A checked row is listed whatever either says, so it can always be
+ * unchecked.
+ */
 const isInView = (facet: FilterFacet, value: string, text: string) => {
+  if (isChecked(facet, value)) return true;
+  if (!props.reachable[facet].has(value)) return false;
+
   const query = search.value.trim().toLowerCase();
-  return (
-    query === "" ||
-    isChecked(facet, value) ||
-    text.toLowerCase().includes(query)
-  );
+  return query === "" || text.toLowerCase().includes(query);
 };
 
 // Term totals: what the list header reports, and the second half of a tile's
@@ -312,35 +364,51 @@ const sectionCount = computed(() => props.options.sections.length);
 const componentCount = computed(() => props.options.components.length);
 
 /**
- * `count` is what the list below would show, which the search narrows;
- * `total` is what the term holds. They are equal when nothing is searched.
+ * `shown` is how many rows the list below holds, which the search and the
+ * checked values of the *other* facets both narrow. `total` is what the term
+ * holds.
  */
-const tiles = computed(() => [
+const tileCounts = computed(() => [
   {
     facet: "course" as const,
     label: "Courses",
-    count: shownCourseCount.value,
+    shown: shownCourseCount.value,
     total: courseCount.value,
   },
   {
     facet: "person" as const,
     label: "Faculty",
-    count: people.value.length,
+    shown: people.value.length,
     total: facultyCount.value,
   },
   {
     facet: "section" as const,
     label: "Sections",
-    count: sections.value.length,
+    shown: sections.value.length,
     total: sectionCount.value,
   },
   {
     facet: "component" as const,
     label: "Types",
-    count: components.value.length,
+    shown: components.value.length,
     total: componentCount.value,
   },
 ]);
+
+/**
+ * A facet with checked values counts those, so "4 / 137" reads the same as
+ * the badge above it. Everywhere else the count is the length of the list
+ * below, and matches `total` until something narrows it.
+ */
+const tiles = computed(() =>
+  tileCounts.value.map((tile) => ({
+    ...tile,
+    count:
+      filters.value[tile.facet].length > 0
+        ? filters.value[tile.facet].length
+        : tile.shown,
+  })),
+);
 
 const shownCourseCount = computed(() =>
   courseLevels.value.reduce((sum, level) => sum + level.courses.length, 0),
@@ -409,5 +477,11 @@ const components = computed(() =>
   props.options.components.filter((component) =>
     isInView("component", component.value, component.value),
   ),
+);
+
+const isListEmpty = computed(
+  () =>
+    tileCounts.value.find((tile) => tile.facet === activeFacet.value)?.shown ===
+    0,
 );
 </script>

@@ -123,7 +123,11 @@
       class="tw-relative tw-flex tw-min-h-0 tw-flex-1 tw-gap-3 tw-px-3 tw-pb-3 roomy:tw-px-4 roomy:tw-pb-4"
     >
       <div v-if="isLarge" :class="[PANE_CLASS, 'tw-w-[304px] tw-flex-none']">
-        <ScheduleSidebar :options="filterOptions" :schedule="schedule" />
+        <ScheduleSidebar
+          :options="filterOptions"
+          :schedule="schedule"
+          :reachable="reachableValues"
+        />
       </div>
 
       <section
@@ -280,6 +284,7 @@
           <ScheduleSidebar
             :options="filterOptions"
             :schedule="schedule"
+            :reachable="reachableValues"
             isDismissible
             @close="isFilterPanelOpen = false"
           />
@@ -320,7 +325,10 @@ import {
   encodeDayIndex,
   type ScheduleView,
 } from "./helpers/viewQuery";
-import { filterSections } from "./helpers/scheduleFilters";
+import {
+  filterSections,
+  reachableFacetValues,
+} from "./helpers/scheduleFilters";
 import { ASYNC_DAY_INDEX, WEEKDAY_NAMES } from "./helpers/scheduleDays";
 import { placeSections } from "./helpers/sectionPlacement";
 import { isTermReadOnly } from "./helpers/termLock";
@@ -544,6 +552,11 @@ const filterOptions = computed(() => buildFilterOptions(localSections.value));
 // the sections are placed, so a hidden section simply leaves the schedule.
 const visibleSections = computed(() =>
   filterSections(localSections.value, schedule.filters),
+);
+
+/** What the filters panel still has reason to list; see `isInView` there. */
+const reachableValues = computed(() =>
+  reachableFacetValues(localSections.value, schedule.filters),
 );
 
 const placed = computed(() => placeSections(visibleSections.value));

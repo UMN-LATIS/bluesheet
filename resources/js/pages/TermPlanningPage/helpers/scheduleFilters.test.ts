@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { filterSections, isFiltering } from "./scheduleFilters";
+import {
+  filterSections,
+  isFiltering,
+  reachableFacetValues,
+} from "./scheduleFilters";
 import type { ScheduleFilters, SisInstructor, SisSection } from "../types";
 import { TBA_PERSON } from "../types";
 
@@ -164,5 +168,44 @@ describe("filterSections", () => {
     });
 
     expect(result).toEqual([]);
+  });
+});
+
+describe("reachableFacetValues", () => {
+  const sections = [
+    section(1, { courseCode: "HIST-1082", component: "LEC" }),
+    section(2, {
+      courseCode: "HIST-1082",
+      component: "DIS",
+      instructors: [instructor(111, "PI")],
+    }),
+    section(3, { courseCode: "ANTH-1001", component: "LEC" }),
+  ];
+
+  it("reaches every value when no facet is checked", () => {
+    const reachable = reachableFacetValues(sections, emptyFilters());
+
+    expect([...reachable.course]).toEqual(["HIST-1082", "ANTH-1001"]);
+    expect([...reachable.component]).toEqual(["LEC", "DIS"]);
+    expect([...reachable.person]).toEqual([TBA_PERSON, "111"]);
+  });
+
+  it("narrows the other facets to what a checked value leaves standing", () => {
+    const reachable = reachableFacetValues(sections, {
+      ...emptyFilters(),
+      component: ["DIS"],
+    });
+
+    expect([...reachable.course]).toEqual(["HIST-1082"]);
+    expect([...reachable.section]).toEqual(["2"]);
+  });
+
+  it("leaves a facet out of its own reckoning", () => {
+    const reachable = reachableFacetValues(sections, {
+      ...emptyFilters(),
+      component: ["DIS"],
+    });
+
+    expect([...reachable.component]).toEqual(["LEC", "DIS"]);
   });
 });
