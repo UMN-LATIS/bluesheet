@@ -24,10 +24,9 @@ export function useTermSchedule(
   /** The term the URL names, or failing that the one we are in today. */
   const term = computed(() => {
     const terms = termsQuery.data.value ?? [];
+    const namedTerm = terms.find(({ id }) => id === termCode.value);
 
-    return termCode.value === null
-      ? currentTerm(terms, today.value)
-      : (terms.find(({ id }) => id === termCode.value) ?? null);
+    return namedTerm ?? currentTerm(terms, today.value);
   });
 
   /** Newest first, since planning looks forward. */

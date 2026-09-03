@@ -80,18 +80,20 @@
             v-if="(canViewGroupLeaves || canViewGroupCourses) && group.dept_id"
           >
             <dt>Planning</dt>
-            <div>
-              <dd v-if="canViewGroupLeaves">
-                <router-link :to="`/course-planning/groups/${group.id}`">
-                  Faculty Leaves Planning Report
-                </router-link>
-              </dd>
-              <dd v-if="canViewGroupCourses">
-                <router-link :to="`/term-planning/groups/${group.id}`">
-                  Term Planning
-                </router-link>
-              </dd>
-            </div>
+            <dd>
+              <ul class="tw-list-none tw-pl-0 tw-m-0">
+                <li v-if="canViewGroupLeaves">
+                  <router-link :to="`/course-planning/groups/${group.id}`">
+                    Faculty Leaves Planning Report
+                  </router-link>
+                </li>
+                <li v-if="canViewGroupCourses">
+                  <router-link :to="`/term-planning/groups/${group.id}`">
+                    Term Planning
+                  </router-link>
+                </li>
+              </ul>
+            </dd>
           </template>
           <template v-if="activeChildGroups.length || canCreateSubgroup">
             <dt>Subgroups</dt>
