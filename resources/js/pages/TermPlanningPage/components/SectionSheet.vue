@@ -780,9 +780,7 @@ function rosterGroupedBy(roles: string[], taughtLabel: string) {
     })
     .map(({ person, row }) => ({
       ...optionFor(person),
-      annotation: row.isPlanned
-        ? `Planned ${nameOfTerm(row.lastTermId)}`
-        : `Last taught ${nameOfTerm(row.lastTermId)}`,
+      annotation: nameOfTerm(row.lastTermId),
       group: taughtLabel,
     }));
 
