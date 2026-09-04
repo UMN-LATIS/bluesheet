@@ -46,6 +46,11 @@
           {{ section.subject }} {{ section.catalogNumber }} ·
           {{ section.section }}
         </span>
+        <NoteIcon
+          v-if="section.notes.trim() !== ''"
+          class="tw-h-3 tw-w-3 tw-flex-none tw-text-on-surface-variant"
+          aria-label="Has a note"
+        />
         <span
           v-if="initialsOf(section)"
           class="tw-flex tw-h-[19px] tw-w-[19px] tw-flex-none tw-items-center tw-justify-center tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-text-[9px] tw-font-bold tw-text-on-surface-variant"
@@ -67,6 +72,7 @@
 
 <script setup lang="ts">
 import { colorOfType } from "../constants/meetingTypeColors";
+import { NoteIcon } from "@/icons";
 import { instructorsOfRecord } from "../helpers/sectionPeople";
 import type { PlannedSection, SisInstructor } from "../types";
 import type { ScheduleEditor } from "../useScheduleEditor";

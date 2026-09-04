@@ -7,4 +7,6 @@ export interface ComboBoxOptionType {
   secondaryLabel?: string;
   /** Heading this option sits under. Ungrouped options list with no heading. */
   group?: string;
+  /** A short fact set to the right of the option, opposite its label. */
+  annotation?: string;
 }

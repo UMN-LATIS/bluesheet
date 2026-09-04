@@ -6,6 +6,7 @@
 import type { SisInstructor, SisSection } from "../types";
 import { TBA_PERSON } from "../types";
 import { daysMetLabel } from "./scheduleDays";
+import { lastNameFirst } from "./sectionPeople";
 
 export interface CourseOption {
   /** The filter value: `section.courseCode`, e.g. "HIST-1082". */
@@ -152,19 +153,6 @@ function facultyName(instructor: SisInstructor): string {
     instructor.internetId ??
     String(instructor.emplid)
   );
-}
-
-/**
- * "García, Ana". The last name is taken off the end of the full name rather
- * than guessed at from it, which is why the SIS sends it separately: nothing
- * here can tell that "de la Cruz" is one surname and "Ana Maria" two given
- * names.
- */
-function lastNameFirst(fullName: string, lastName: string | null): string {
-  if (lastName === null || !fullName.endsWith(lastName)) return fullName;
-
-  const givenNames = fullName.slice(0, -lastName.length).trim();
-  return givenNames === "" ? lastName : `${lastName}, ${givenNames}`;
 }
 
 interface FacultyDraft {

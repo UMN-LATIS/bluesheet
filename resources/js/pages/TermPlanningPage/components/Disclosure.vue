@@ -14,6 +14,11 @@
       @click="isOpen = !isOpen"
     >
       {{ label }}
+      <NoteIcon
+        v-if="isMarked"
+        class="tw-h-3.5 tw-w-3.5 tw-flex-none tw-text-on-surface-variant"
+        aria-label="Has a note"
+      />
       <span
         class="tw-min-w-0 tw-text-[11px] tw-font-normal tw-normal-case tw-tracking-normal tw-text-on-surface-variant"
       >
@@ -34,9 +39,12 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
+import { NoteIcon } from "@/icons";
 
 defineProps<{
   label: string;
+  /** Draws the note mark beside the label. */
+  isMarked?: boolean;
   /** What the part holds, read without opening it: "DIS · On campus", "1". */
   summary: string;
 }>();

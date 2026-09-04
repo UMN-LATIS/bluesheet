@@ -365,19 +365,15 @@
               </span>
             </div>
           </div>
-          <button
-            type="button"
-            disabled
-            title="Cross-listings come from the SIS import and cannot be added here yet"
-            class="tw-mt-2 tw-cursor-default tw-border-none tw-bg-transparent tw-p-0 tw-text-[12.5px] tw-font-semibold tw-text-on-surface-variant"
-          >
-            Add cross-listing
-          </button>
+          <p class="tw-m-0 tw-mt-2 tw-text-[12.5px] tw-text-on-surface-variant">
+            Cross-listings come from the SIS. Use Notes to record one this
+            department is planning.
+          </p>
         </Disclosure>
 
         <FieldDivider />
 
-        <Disclosure label="Notes" :summary="notesSummary">
+        <Disclosure label="Notes" :summary="notesSummary" :isMarked="hasNote">
           <textarea
             :id="fieldId('notes')"
             :value="draft.notes"
@@ -550,6 +546,7 @@ import { DELIVERY_OPTIONS, labelOfDelivery } from "../constants/delivery";
 import {
   assistantsOf,
   instructorsOfRecord,
+  lastNameFirst,
   PRIMARY_ROLE,
   TA_ROLE,
 } from "../helpers/sectionPeople";
@@ -708,6 +705,13 @@ const nameOfTerm = (termId: number) =>
   termsQuery.data.value?.find(({ id }) => id === termId)?.name ??
   String(termId);
 
+/** "García, Ana", with their appointment under it; see `ComboBoxOptionType`. */
+const optionFor = (person: SisEmployee) => ({
+  id: person.emplid,
+  label: lastNameFirst(person.name ?? String(person.emplid), person.lastName),
+  secondaryLabel: person.positionTitle ?? undefined,
+});
+
 const TAUGHT_BEFORE = "Has taught this course";
 const ASSISTED_BEFORE = "Has assisted this course";
 const EVERYONE_ELSE = "Rest of the department";
@@ -741,12 +745,10 @@ function rosterGroupedBy(roles: string[], taughtLabel: string) {
       const row = history.get(person.emplid);
       return row ? [{ person, row }] : [];
     })
-    .sort((a, b) => b.row.lastTermId - a.row.lastTermId)
     .map(({ person, row }) => ({
-      id: person.emplid,
-      label: person.name ?? String(person.emplid),
-      secondaryLabel: row.isPlanned
-        ? `Planned for ${nameOfTerm(row.lastTermId)}`
+      ...optionFor(person),
+      annotation: row.isPlanned
+        ? `Planned ${nameOfTerm(row.lastTermId)}`
         : `Last taught ${nameOfTerm(row.lastTermId)}`,
       group: taughtLabel,
     }));
@@ -754,9 +756,7 @@ function rosterGroupedBy(roles: string[], taughtLabel: string) {
   const rest = available
     .filter((person) => !history.has(person.emplid))
     .map((person) => ({
-      id: person.emplid,
-      label: person.name ?? String(person.emplid),
-      secondaryLabel: person.positionTitle ?? undefined,
+      ...optionFor(person),
       // no heading above the only group there is
       group: held.length > 0 ? EVERYONE_ELSE : undefined,
     }));
@@ -802,6 +802,8 @@ const instructorsOnRecord = computed(() =>
 );
 
 const assistants = computed(() => assistantsOf(draft.value.instructors));
+
+const hasNote = computed(() => draft.value.notes.trim() !== "");
 
 const notesSummary = computed(() => {
   const firstLine = draft.value.notes.trim().split("\n")[0];
