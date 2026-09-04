@@ -66,7 +66,7 @@ const props = defineProps<{
 
 const appearance = computed(() => {
   if (props.isDraft) {
-    return "tw-border-dashed tw-border-brand tw-bg-brand/10 tw-text-brand";
+    return "tw-border-dashed tw-border-brand tw-bg-brand-container tw-text-brand";
   }
 
   const type = colorOfType(props.component);

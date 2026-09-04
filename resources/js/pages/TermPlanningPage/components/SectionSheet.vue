@@ -5,7 +5,7 @@
   >
     <div
       class="tw-flex-none tw-border-0 tw-border-b tw-border-solid tw-border-outline-variant tw-px-[18px] tw-pb-3 tw-pt-3.5"
-      :class="{ 'tw-bg-brand/[0.06]': draft.isCancelled }"
+      :class="{ 'tw-bg-brand-container': draft.isCancelled }"
     >
       <button
         v-if="returnTo"
@@ -384,7 +384,7 @@
     <div
       v-if="schedule.isDismissalPending"
       role="alertdialog"
-      class="tw-flex tw-flex-none tw-flex-col tw-gap-2 tw-border-0 tw-border-t tw-border-solid tw-border-outline-variant tw-bg-brand/[0.06] tw-px-[18px] tw-py-3.5"
+      class="tw-flex tw-flex-none tw-flex-col tw-gap-2 tw-border-0 tw-border-t tw-border-solid tw-border-outline-variant tw-bg-brand-container tw-px-[18px] tw-py-3.5"
     >
       <p class="tw-m-0 tw-text-[13.5px] tw-font-bold">
         Discard the changes to this section?
@@ -417,16 +417,17 @@
     <div
       v-if="isConfirmingDelete"
       role="alertdialog"
-      class="tw-flex tw-flex-none tw-flex-col tw-gap-2 tw-border-0 tw-border-t tw-border-solid tw-border-outline-variant tw-bg-brand/[0.06] tw-px-[18px] tw-py-3.5"
+      class="tw-flex tw-flex-none tw-flex-col tw-gap-2 tw-border-0 tw-border-t tw-border-solid tw-border-outline-variant tw-bg-brand-container tw-px-[18px] tw-py-3.5"
     >
       <p class="tw-m-0 tw-text-[13.5px] tw-font-bold">
-        Delete {{ draft.subject }} {{ draft.catalogNumber }} ·
+        Delete Section {{ draft.subject }} {{ draft.catalogNumber }} ·
         {{ draft.section }}?
       </p>
       <p class="tw-m-0 tw-text-[12.5px] tw-leading-normal">
-        It leaves {{ termName ?? "this term" }} for everyone.
-        {{ draft.title }} stays on the course list, so a later term can still
-        plan it.
+        Section
+        <b class="tw-font-mono tw-text-on-surface">{{ draft.section }}</b>
+        will be removed for {{ termName ?? "this term" }}. Other sections are
+        unaffected.
       </p>
 
       <!--
@@ -708,11 +709,9 @@ const metaLine = computed(() => {
 
   if (isNew.value) return `${credits} · not created yet`;
 
-  return [
-    credits,
-    `Class ${props.section.classNumber ?? "—"}`,
-    ...(isEdited.value ? [] : ["Matches SIS"]),
-  ].join(" · ");
+  const classNumber = props.section.classNumber;
+
+  return classNumber === null ? credits : `${credits} · Class ${classNumber}`;
 });
 
 const courseInstructorsQuery = useCourseInstructorsQuery(

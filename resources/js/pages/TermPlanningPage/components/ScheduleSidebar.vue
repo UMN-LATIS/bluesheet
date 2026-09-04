@@ -103,7 +103,7 @@
     -->
     <div
       v-if="options.tba && options.tba.sectionCount > 0 && !schedule.isReadOnly"
-      class="tw-mx-3.5 tw-mt-3 tw-flex tw-flex-none tw-items-center tw-gap-2 tw-rounded-[10px] tw-bg-brand/[0.06] tw-px-3 tw-py-2"
+      class="tw-mx-3.5 tw-mt-3 tw-flex tw-flex-none tw-items-center tw-gap-2 tw-rounded-[10px] tw-bg-brand-container tw-px-3 tw-py-2"
     >
       <span
         class="tw-h-[7px] tw-w-[7px] tw-flex-none tw-rounded-full tw-bg-brand"
