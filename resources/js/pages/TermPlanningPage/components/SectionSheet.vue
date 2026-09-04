@@ -4,7 +4,7 @@
     class="tw-flex tw-h-full tw-w-full tw-flex-col tw-min-h-0 tw-bg-surface-bright tw-text-on-surface"
   >
     <div
-      class="tw-flex-none tw-border-0 tw-border-b tw-border-solid tw-border-surface-container tw-px-[18px] tw-pb-3 tw-pt-3.5"
+      class="tw-flex-none tw-border-0 tw-border-b tw-border-solid tw-border-outline-variant tw-px-[18px] tw-pb-3 tw-pt-3.5"
       :class="{ 'tw-bg-brand/[0.06]': draft.isCancelled }"
     >
       <button
@@ -31,7 +31,13 @@
         >
           Cancelled
         </span>
-        <span class="tw-text-[11.5px] tw-text-on-surface-variant">
+        <span
+          v-if="isEdited"
+          class="tw-inline-flex tw-h-5 tw-items-center tw-rounded-full tw-bg-accent tw-px-2 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-accent"
+        >
+          Edited here
+        </span>
+        <span class="tw-text-[11px] tw-text-on-surface-variant">
           {{ labelOfDelivery(draft.delivery) }}
         </span>
         <button
@@ -45,25 +51,23 @@
         </button>
       </div>
 
-      <h2 class="tw-m-0 tw-mt-1 tw-text-[19px] tw-font-bold tw-tracking-tight">
+      <h2
+        class="tw-m-0 tw-mt-0.5 tw-text-[19px] tw-font-bold tw-tracking-tight"
+      >
         <template v-if="isNew && !draft.courseCode">New section</template>
         <template v-else>
           {{ draft.subject }} {{ draft.catalogNumber }} · {{ draft.section }}
         </template>
-        <!-- How many other numbers this same class is listed under. -->
-        <span v-if="partners.length > 0" class="tw-text-on-surface-variant">
-          [+{{ partners.length }}]
-        </span>
       </h2>
 
       <p
-        class="tw-m-0 tw-truncate tw-text-[12.5px] tw-text-on-surface-variant"
+        class="tw-m-0 tw-truncate tw-text-[13px] tw-text-on-surface-variant"
         :title="draft.title"
       >
         {{ draft.title || "Pick a course to name it" }}
       </p>
 
-      <p class="tw-m-0 tw-mt-2 tw-text-[11.5px] tw-text-on-surface-variant">
+      <p class="tw-m-0 tw-mt-1.5 tw-text-[11px] tw-text-on-surface-variant">
         {{ metaLine }}
       </p>
     </div>
@@ -72,7 +76,7 @@
 
     <div
       v-else
-      class="scrollbar-always-visible tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-gap-5 tw-overflow-y-auto tw-p-[18px]"
+      class="scrollbar-always-visible tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-gap-4 tw-overflow-y-auto tw-p-[18px]"
     >
       <CoursePicker
         v-if="isNew"
@@ -82,35 +86,66 @@
         @update:modelValue="chooseCourse"
       />
 
-      <div>
-        <FieldLabel :for="fieldId('section')">Section</FieldLabel>
-        <input
-          :id="fieldId('section')"
-          :value="draft.section"
-          type="text"
-          class="field-control tw-w-24"
-          @input="edit({ section: valueOf($event) })"
-        />
+      <div class="tw-flex tw-items-start tw-gap-4">
+        <div>
+          <FieldLabel :for="fieldId('section')" class="tw-mb-1.5">
+            Section
+          </FieldLabel>
+          <input
+            :id="fieldId('section')"
+            :value="draft.section"
+            type="text"
+            class="field-control tw-w-24"
+            @input="edit({ section: valueOf($event) })"
+          />
+        </div>
+
+        <div>
+          <FieldLabel :for="fieldId('cap')" class="tw-mb-1.5">
+            Enrollment cap
+          </FieldLabel>
+          <input
+            :id="fieldId('cap')"
+            :value="capText"
+            type="number"
+            min="0"
+            class="field-control tw-w-24"
+            @input="editCap(valueOf($event))"
+          />
+          <p class="tw-m-0 tw-mt-1.5 tw-text-xs tw-text-on-surface-variant">
+            <span class="tw-font-semibold tw-text-on-surface">
+              {{ section.enrollmentTotal }}
+            </span>
+            enrolled
+            <template v-if="combinedCap !== null">
+              · combined {{ combinedCap }}
+            </template>
+          </p>
+        </div>
       </div>
 
       <div>
-        <FieldLabel>Meets</FieldLabel>
-        <div class="tw-flex tw-flex-col tw-gap-4">
+        <FieldHeader
+          label="Meets"
+          :actionLabel="patterns.length > 0 ? 'Add meeting' : undefined"
+          @act="schedule.addMeetingPattern(section.id)"
+        />
+        <div class="tw-flex tw-flex-col tw-gap-2">
           <div
             v-for="(pattern, patternIndex) in patterns"
             :key="patternIndex"
-            class="tw-flex tw-flex-col tw-gap-2"
+            class="tw-flex tw-flex-col tw-gap-2 tw-rounded-[10px] tw-bg-surface tw-p-2.5 tw-pb-3"
           >
-            <div v-if="pattern" class="tw-flex tw-items-center tw-gap-2">
-              <span
-                v-if="patterns.length > 1"
-                class="tw-text-[11px] tw-font-semibold tw-text-on-surface-variant"
-              >
-                Meeting {{ patternIndex + 1 }}
-              </span>
+            <div class="tw-flex tw-items-center tw-gap-2">
+              <FieldLabel class="tw-mb-0">
+                {{
+                  pattern ? `Meeting ${patternIndex + 1}` : "No meeting time"
+                }}
+              </FieldLabel>
               <button
+                v-if="pattern"
                 type="button"
-                class="tw-ms-auto tw-flex tw-h-7 tw-cursor-pointer tw-items-center tw-gap-1 tw-rounded-full tw-border-none tw-bg-transparent tw-px-2 tw-text-[11px] tw-font-semibold tw-text-on-surface-variant hover:tw-bg-surface-container hover:tw-text-on-surface"
+                class="tw--my-2 tw--me-1.5 tw-ms-auto tw-flex tw-h-11 tw-w-11 tw-flex-none tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-text-on-surface-variant hover:tw-bg-surface-container-high hover:tw-text-on-surface"
                 :aria-label="
                   patterns.length > 1
                     ? `Remove meeting time ${patternIndex + 1}`
@@ -118,8 +153,7 @@
                 "
                 @click="schedule.removeMeetingPattern(section.id, patternIndex)"
               >
-                <span aria-hidden="true">×</span>
-                <span v-if="patterns.length === 1">Clear</span>
+                ×
               </button>
             </div>
 
@@ -144,7 +178,9 @@
                     })
                   "
                 />
-                <span class="tw-text-sm tw-text-on-surface-variant">to</span>
+                <span class="tw-text-[13px] tw-text-on-surface-variant"
+                  >to</span
+                >
                 <input
                   :value="pattern.endTime"
                   type="time"
@@ -156,34 +192,33 @@
                     })
                   "
                 />
+                <span
+                  v-if="!problemWith(patternIndex)"
+                  class="tw-ms-auto tw-text-[11px] tw-font-semibold tw-text-on-surface-variant"
+                >
+                  {{ durationOf(pattern) }} min
+                </span>
               </div>
               <p
                 v-if="problemWith(patternIndex)"
-                class="tw-m-0 tw-text-xs tw-text-red-700"
+                class="tw-m-0 tw-text-[11px] tw-font-semibold tw-text-red-700"
               >
                 {{ problemWith(patternIndex) }}
               </p>
-              <p v-else class="tw-m-0 tw-text-xs tw-text-on-surface-variant">
-                {{ durationOf(pattern) }} minutes
-              </p>
             </template>
+            <p v-else class="tw-m-0 tw-text-[11px] tw-text-on-surface-variant">
+              Press a day to give it an hour on the grid.
+            </p>
           </div>
-
-          <button
-            v-if="patterns.length > 0"
-            type="button"
-            class="tw-cursor-pointer tw-self-start tw-border-none tw-bg-transparent tw-p-0 tw-text-xs tw-font-semibold tw-text-primary hover:tw-underline"
-            @click="schedule.addMeetingPattern(section.id)"
-          >
-            Add meeting
-          </button>
         </div>
       </div>
 
-      <FieldDivider />
-
       <div>
-        <FieldLabel>Taught by</FieldLabel>
+        <FieldHeader
+          label="Taught by"
+          :actionLabel="isAddingInstructor ? undefined : 'Add instructor'"
+          @act="isAddingInstructor = true"
+        />
         <div class="tw-flex tw-flex-col tw-gap-2">
           <PersonField
             v-for="instructor in instructorsOnRecord"
@@ -198,31 +233,19 @@
           >
             TBA
           </p>
+          <ComboBox
+            v-if="isAddingInstructor"
+            label="Add instructor"
+            placeholder="Add instructor…"
+            :showLabel="false"
+            :options="instructorOptions"
+            :modelValue="null"
+            strategy="fixed"
+            teleportTo="body"
+            @update:modelValue="(option) => addPerson(option, PRIMARY_ROLE)"
+          />
         </div>
-
-        <button
-          v-if="!isAddingInstructor"
-          type="button"
-          class="tw-mt-2 tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[12.5px] tw-font-semibold tw-text-primary hover:tw-underline"
-          @click="isAddingInstructor = true"
-        >
-          Add instructor
-        </button>
-        <ComboBox
-          v-else
-          label="Add instructor"
-          placeholder="Add instructor…"
-          :showLabel="false"
-          :options="instructorOptions"
-          :modelValue="null"
-          strategy="fixed"
-          teleportTo="body"
-          class="tw-mt-2"
-          @update:modelValue="(option) => addPerson(option, PRIMARY_ROLE)"
-        />
       </div>
-
-      <FieldDivider />
 
       <!--
         Alongside the instructor of record rather than folded away below, since
@@ -230,8 +253,12 @@
         SIS names no instructor of record on it at all.
       -->
       <div>
-        <FieldLabel>Teaching assistants</FieldLabel>
-        <div v-if="assistants.length > 0" class="tw-flex tw-flex-col tw-gap-2">
+        <FieldHeader
+          label="Teaching assistants"
+          :actionLabel="isAddingAssistant ? undefined : 'Add assistant'"
+          @act="isAddingAssistant = true"
+        />
+        <div class="tw-flex tw-flex-col tw-gap-2">
           <PersonField
             v-for="instructor in assistants"
             :key="instructor.emplid"
@@ -239,61 +266,29 @@
             :role="instructor.role"
             @remove="removeInstructor(instructor.emplid)"
           />
-        </div>
-        <p v-else class="tw-m-0 tw-text-[13px] tw-text-on-surface-variant">
-          None
-        </p>
-
-        <button
-          v-if="!isAddingAssistant"
-          type="button"
-          class="tw-mt-2 tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[12.5px] tw-font-semibold tw-text-primary hover:tw-underline"
-          @click="isAddingAssistant = true"
-        >
-          Add assistant
-        </button>
-        <ComboBox
-          v-else
-          label="Add assistant"
-          placeholder="Add assistant…"
-          :showLabel="false"
-          :options="assistantOptions"
-          :modelValue="null"
-          strategy="fixed"
-          teleportTo="body"
-          class="tw-mt-2"
-          @update:modelValue="(option) => addPerson(option, TA_ROLE)"
-        />
-      </div>
-
-      <FieldDivider />
-
-      <div>
-        <FieldLabel :for="fieldId('cap')">Enrollment cap</FieldLabel>
-        <div class="tw-flex tw-items-center tw-gap-3">
-          <input
-            :id="fieldId('cap')"
-            :value="capText"
-            type="number"
-            min="0"
-            class="field-control tw-w-24"
-            @input="editCap(valueOf($event))"
+          <p
+            v-if="assistants.length === 0"
+            class="tw-m-0 tw-text-[13px] tw-text-on-surface-variant"
+          >
+            None
+          </p>
+          <ComboBox
+            v-if="isAddingAssistant"
+            label="Add assistant"
+            placeholder="Add assistant…"
+            :showLabel="false"
+            :options="assistantOptions"
+            :modelValue="null"
+            strategy="fixed"
+            teleportTo="body"
+            @update:modelValue="(option) => addPerson(option, TA_ROLE)"
           />
-          <span class="tw-text-[13px] tw-text-on-surface-variant">
-            <span class="tw-font-semibold tw-text-on-surface">
-              {{ section.enrollmentTotal }}
-            </span>
-            enrolled
-            <template v-if="combinedCap !== null">
-              · combined cap {{ combinedCap }}
-            </template>
-          </span>
         </div>
       </div>
 
       <FieldDivider />
 
-      <div class="tw-flex tw-flex-col tw-gap-3.5">
+      <div class="tw-overflow-hidden tw-rounded-[10px] tw-bg-surface">
         <Disclosure label="Component & delivery" :summary="componentSummary">
           <div class="tw-flex tw-gap-3">
             <div class="tw-min-w-0 tw-flex-1">
@@ -337,20 +332,20 @@
           </div>
         </Disclosure>
 
-        <FieldDivider />
+        <FieldDivider class="tw-mx-3" />
 
         <Disclosure label="Cross-listings" :summary="crosslistSummary">
           <p
             v-if="partners.length === 0"
-            class="tw-m-0 tw-text-[12.5px] tw-text-on-surface-variant"
+            class="tw-m-0 tw-text-[13px] tw-text-on-surface-variant"
           >
             This section is not listed under another number.
           </p>
-          <div v-else class="tw-flex tw-flex-col tw-gap-1.5">
+          <div v-else class="tw-flex tw-flex-col tw-gap-1">
             <div
               v-for="partner in partners"
               :key="`${partner.subject}${partner.catalogNumber}${partner.section}`"
-              class="tw-flex tw-items-baseline tw-justify-between tw-gap-2 tw-rounded-lg tw-bg-surface-container tw-px-3 tw-py-2 tw-text-[13px]"
+              class="tw-flex tw-items-baseline tw-gap-2 tw-text-[13px]"
             >
               <span>
                 {{ partner.subject }} {{ partner.catalogNumber }} ·
@@ -365,13 +360,13 @@
               </span>
             </div>
           </div>
-          <p class="tw-m-0 tw-mt-2 tw-text-[12.5px] tw-text-on-surface-variant">
+          <p class="tw-m-0 tw-mt-2 tw-text-[11px] tw-text-on-surface-variant">
             Cross-listings come from the SIS. Use Notes to record one this
             department is planning.
           </p>
         </Disclosure>
 
-        <FieldDivider />
+        <FieldDivider class="tw-mx-3" />
 
         <Disclosure label="Notes" :summary="notesSummary" :isMarked="hasNote">
           <textarea
@@ -442,11 +437,7 @@
         v-if="draft.meetings.length > 0"
         class="tw-flex tw-flex-col tw-gap-1.5"
       >
-        <p
-          class="tw-m-0 tw-text-[11px] tw-font-bold tw-uppercase tw-tracking-[0.06em] tw-text-on-surface-variant"
-        >
-          Meets
-        </p>
+        <FieldLabel class="tw-mb-0">Meets</FieldLabel>
         <div
           v-for="(pattern, patternIndex) in draft.meetings"
           :key="patternIndex"
@@ -484,7 +475,7 @@
     <p
       v-for="problem in generalProblems"
       :key="problem.message"
-      class="tw-m-0 tw-px-[18px] tw-pt-2 tw-text-xs tw-text-red-700"
+      class="tw-m-0 tw-flex-none tw-px-[18px] tw-pt-2 tw-text-[11px] tw-font-semibold tw-text-red-700"
     >
       {{ problem.message }}
     </p>
@@ -503,7 +494,7 @@
 
     <div
       v-else-if="isNew"
-      class="tw-flex tw-flex-none tw-items-center tw-gap-2.5 tw-border-0 tw-border-t tw-border-solid tw-border-surface-container tw-bg-surface-bright tw-px-[18px] tw-pb-3 tw-pt-2.5"
+      class="tw-flex tw-flex-none tw-items-center tw-gap-2.5 tw-border-0 tw-border-t tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-px-[18px] tw-py-3"
     >
       <button
         type="button"
@@ -531,7 +522,7 @@
 
     <div
       v-else
-      class="tw-flex tw-flex-none tw-items-center tw-gap-2.5 tw-border-0 tw-border-t tw-border-solid tw-border-surface-container tw-bg-surface-bright tw-px-[18px] tw-pb-3 tw-pt-2.5"
+      class="tw-flex tw-flex-none tw-items-center tw-gap-2.5 tw-border-0 tw-border-t tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-px-[18px] tw-py-3"
     >
       <button
         type="button"
@@ -568,6 +559,7 @@ import CoursePicker from "./CoursePicker.vue";
 import UnofficialTag from "./UnofficialTag.vue";
 import Disclosure from "./Disclosure.vue";
 import FieldDivider from "./FieldDivider.vue";
+import FieldHeader from "./FieldHeader.vue";
 import FieldLabel from "./FieldLabel.vue";
 import PersonField from "./PersonField.vue";
 import SectionFacts from "./SectionFacts.vue";
@@ -704,15 +696,12 @@ const capText = computed(() =>
   Number.isNaN(draft.value.enrollmentCap) ? "" : draft.value.enrollmentCap,
 );
 
-/** Falls back to the saved cap while the field is blank mid-edit. */
-const capForDisplay = computed(() =>
-  Number.isNaN(draft.value.enrollmentCap)
-    ? props.section.enrollmentCap
-    : draft.value.enrollmentCap,
-);
-
 const editCap = (raw: string) =>
   edit({ enrollmentCap: raw.trim() === "" ? NaN : Number(raw) });
+
+const isEdited = computed(
+  () => !isNew.value && props.schedule.hasEdits(props.section.id),
+);
 
 const metaLine = computed(() => {
   const credits = `${draft.value.credits ?? "—"} credits`;
@@ -721,9 +710,8 @@ const metaLine = computed(() => {
 
   return [
     credits,
-    `class ${props.section.classNumber ?? "—"}`,
-    `${props.section.enrollmentTotal} of ${capForDisplay.value} seats filled`,
-    props.schedule.hasEdits(props.section.id) ? "edited here" : "matches SIS",
+    `Class ${props.section.classNumber ?? "—"}`,
+    ...(isEdited.value ? [] : ["Matches SIS"]),
   ].join(" · ");
 });
 
@@ -844,7 +832,14 @@ const notesSummary = computed(() => {
 const partners = computed(() => props.section.crosslist?.partners ?? []);
 
 const crosslistSummary = computed(() =>
-  partners.value.length === 0 ? "None" : String(partners.value.length),
+  partners.value.length === 0
+    ? "None"
+    : partners.value
+        .map(
+          (partner) =>
+            `${partner.subject} ${partner.catalogNumber} · ${partner.section}`,
+        )
+        .join(", "),
 );
 
 /** Null unless every partner is in this term's payload. */

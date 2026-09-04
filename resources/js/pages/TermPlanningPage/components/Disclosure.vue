@@ -6,32 +6,32 @@
   one blue word in an otherwise inert panel.
 -->
 <template>
-  <div>
+  <div class="tw-px-3">
     <button
       type="button"
-      class="tw-flex tw-w-full tw-min-h-11 tw-cursor-pointer tw-items-center tw-gap-2 tw-border-none tw-bg-transparent tw-p-0 tw-text-left tw-text-[11.5px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-surface-variant"
+      class="tw-flex tw-w-full tw-min-h-11 tw-cursor-pointer tw-items-center tw-gap-2 tw-border-none tw-bg-transparent tw-p-0 tw-text-left"
       :aria-expanded="isOpen"
       @click="isOpen = !isOpen"
     >
-      {{ label }}
+      <FieldLabel class="tw-mb-0 tw-flex-none">{{ label }}</FieldLabel>
       <NoteIcon
         v-if="isMarked"
         class="tw-h-3.5 tw-w-3.5 tw-flex-none tw-text-on-surface-variant"
         aria-label="Has a note"
       />
       <span
-        class="tw-min-w-0 tw-text-[11px] tw-font-normal tw-normal-case tw-tracking-normal tw-text-on-surface-variant"
+        class="tw-min-w-0 tw-truncate tw-text-[11px] tw-text-on-surface-variant"
       >
         {{ summary }}
       </span>
       <span
-        class="tw-ml-auto tw-text-[11px] tw-font-semibold tw-normal-case tw-tracking-normal tw-text-primary"
+        class="tw-ms-auto tw-flex-none tw-text-xs tw-font-semibold tw-text-primary"
       >
         {{ isOpen ? "Hide" : "Show" }}
       </span>
     </button>
 
-    <div v-if="isOpen" class="tw-mt-2">
+    <div v-if="isOpen" class="tw-pb-3">
       <slot />
     </div>
   </div>
@@ -39,6 +39,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
+import FieldLabel from "./FieldLabel.vue";
 import { NoteIcon } from "@/icons";
 
 defineProps<{
