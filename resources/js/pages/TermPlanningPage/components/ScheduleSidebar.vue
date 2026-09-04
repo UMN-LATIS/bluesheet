@@ -103,7 +103,7 @@
     -->
     <div
       v-if="options.tba && options.tba.sectionCount > 0 && !schedule.isReadOnly"
-      class="tw-mx-3.5 tw-mt-3 tw-flex tw-flex-none tw-items-center tw-gap-2 tw-rounded-[10px] tw-bg-brand/[0.06] tw-px-3 tw-py-2"
+      class="tw-mx-3.5 tw-mt-3 tw-flex tw-flex-none tw-items-center tw-gap-2 tw-rounded-[10px] tw-bg-brand-container tw-px-3 tw-py-2"
     >
       <span
         class="tw-h-[7px] tw-w-[7px] tw-flex-none tw-rounded-full tw-bg-brand"
@@ -175,6 +175,10 @@
                 @toggle="toggle('course', [course.value], $event)"
               >
                 {{ course.code }}
+                <UnofficialTag
+                  v-if="unofficialCourseCodes.has(course.value)"
+                  class="tw-ms-1.5"
+                />
                 <template #secondary>{{ course.title }}</template>
                 <template #annotation>{{ course.sectionCount }} sec</template>
               </FilterRow>
@@ -256,6 +260,7 @@ import { computed, ref } from "vue";
 import FilterRow from "./FilterRow.vue";
 import { XIcon } from "@/icons";
 import { colorOfType, labelOfComponent } from "../constants/meetingTypeColors";
+import UnofficialTag from "./UnofficialTag.vue";
 import type {
   CourseOption,
   FilterOptions,
@@ -268,6 +273,7 @@ import type { ScheduleEditor } from "../useScheduleEditor";
 const props = defineProps<{
   options: FilterOptions;
   schedule: ScheduleEditor;
+  unofficialCourseCodes: Set<string>;
   /** Per facet, the values the other facets' checked values leave standing. */
   reachable: ReachableFacetValues;
   /** Mounted as an overlay that can be closed, rather than docked. */

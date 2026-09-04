@@ -38,7 +38,11 @@ export function layOutDay(meetings: Meeting[]): DayLayout {
     0,
   );
 
-  if (laneCount === 0) return { width: BASE_DAY_WIDTH, placed: [] };
+  // the gutter too, so a day does not resize under the pointer as its first
+  // section lands in it
+  if (laneCount === 0) {
+    return { width: BASE_DAY_WIDTH + CREATE_GUTTER, placed: [] };
+  }
 
   const laneWidth = Math.max(MIN_LANE_WIDTH, BASE_DAY_WIDTH / laneCount);
 

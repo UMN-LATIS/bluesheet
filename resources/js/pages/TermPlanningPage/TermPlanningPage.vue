@@ -29,6 +29,7 @@
           :options="filterOptions"
           :schedule="schedule"
           :reachable="reachableValues"
+          :unofficialCourseCodes="unofficialCourseCodes"
         />
       </Pane>
 
@@ -43,6 +44,7 @@
           :meetings="schedule.meetings"
           :sectionOf="sectionOf"
           :unscheduled="placed.unscheduled"
+          :unofficialCourseCodes="unofficialCourseCodes"
           :counts="dayCounts"
           :schedule="schedule"
           :size="size"
@@ -56,6 +58,8 @@
           <ScheduleGrid
             :schedule="schedule"
             :componentOf="componentOf"
+            :isUnofficial="isUnofficialBlock"
+            :unofficialCourseCodes="unofficialCourseCodes"
             :unscheduled="placed.unscheduled"
             :selectedSectionId="selectedSection?.id ?? null"
           >
@@ -64,6 +68,7 @@
                 v-if="sectionOf(meeting.id)"
                 :section="sectionOf(meeting.id)!"
                 :isEdited="schedule.hasEdits(sectionOf(meeting.id)!.id)"
+                :isUnofficial="isUnofficialBlock(meeting)"
                 :startMinute="meeting.startMinute"
                 :endMinute="meeting.endMinute"
               />
@@ -105,13 +110,18 @@
           v-else-if="selectedSection"
           :section="selectedSection"
           :schedule="schedule"
+          :groupId="groupId"
+          :isUnofficial="isUnofficialSection(selectedSection)"
           :sections="localSections"
           :roster="roster"
           :returnTo="returnTo"
           :termName="term?.name"
           :isReadOnly="isReadOnly"
           @back="goBackToHour"
-          @close="schedule.deselect"
+          @close="closeSheet"
+          @create="createDrawnSection"
+          @discard="schedule.discardNewSection"
+          @delete="deleteSelectedSection"
         />
       </SheetMount>
 
@@ -133,6 +143,7 @@
             :options="filterOptions"
             :schedule="schedule"
             :reachable="reachableValues"
+            :unofficialCourseCodes="unofficialCourseCodes"
             isDismissible
             @close="isFilterPanelOpen = false"
           />
@@ -144,7 +155,8 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
+import { useEventListener } from "@vueuse/core";
 import { omit } from "lodash-es";
 import FullScreenLayout from "@/layouts/FullScreenLayout.vue";
 import CoverageHeatmap from "./components/CoverageHeatmap.vue";
@@ -160,17 +172,18 @@ import SectionSheet from "./components/SectionSheet.vue";
 import SheetMount from "./components/SheetMount.vue";
 import { bandsForDay } from "./helpers/dayBands";
 import { buildFilterOptions } from "./helpers/filterOptions";
-import {
-  filterSections,
-  reachableFacetValues,
-} from "./helpers/scheduleFilters";
+import { reachableFacetValues } from "./helpers/scheduleFilters";
 import { ASYNC_DAY_INDEX, WEEKDAY_NAMES } from "./helpers/scheduleDays";
-import { placeSections } from "./helpers/sectionPlacement";
 import { formatTimeRange } from "./helpers/timeScale";
+import { toSectionPayload } from "./helpers/sectionPayload";
 import { flattenQuery } from "./helpers/urlQuery";
 import type { ScheduleView } from "./helpers/viewQuery";
-import type { Meeting } from "./types";
+import { useTermPlanCoursesQuery } from "./queries/useTermPlanCoursesQuery";
+import { useTermPlanMutations } from "./queries/useTermPlanMutations";
+import { useTermPlanAutosave } from "./useTermPlanAutosave";
+import type { Meeting, PlannedSection } from "./types";
 import { useScheduleEditor } from "./useScheduleEditor";
+import { NEW_SECTION_ID } from "./useScheduleEditor/types";
 import type { Effect } from "./useScheduleEditor/types";
 import { EDITOR_QUERY_KEYS } from "./useScheduleEditor/update";
 import { useScreenSize } from "./useScreenSize";
@@ -208,8 +221,15 @@ watch(isLarge, (isDocked) => {
   if (isDocked) isFilterPanelOpen.value = false;
 });
 
-const { today, term, termOptions, isReadOnly, roster, sections } =
-  useTermSchedule(groupId, termCode);
+const {
+  today,
+  term,
+  activeTermCode,
+  termOptions,
+  isReadOnly,
+  roster,
+  sections,
+} = useTermSchedule(groupId, termCode);
 
 /** The week is the one view a phone cannot draw; the day list stands in. */
 const activeView = computed<ScheduleView>(() =>
@@ -217,30 +237,20 @@ const activeView = computed<ScheduleView>(() =>
 );
 
 /**
- * Every section as the user sees it, this browser's unsaved edits included.
- * Everything below is built from these rather than from the payload, so an
- * edit reaches every view at once.
+ * Every section as the user sees it, this browser's unsaved edits included,
+ * and what the canvases draw once the filters have been applied. Both are
+ * derived inside the editor, so nothing the editor owns travels back to it.
  */
-const localSections = computed(() => schedule.localSections(sections.value));
+const localSections = computed(() => schedule.localSections);
+const placed = computed(() => schedule.placed);
 
 /** Lists and counts cover the whole term, whatever is checked. */
 const filterOptions = computed(() => buildFilterOptions(localSections.value));
-
-// `localSections` and the filters are read from `schedule`, declared below,
-// and `schedule` is built from `placed`. That is not a cycle: all of them are
-// computeds, nothing is read until the template renders, and by then they all
-// exist. The editor stores what is checked; the page applies it here, before
-// the sections are placed, so a hidden section simply leaves the schedule.
-const visibleSections = computed(() =>
-  filterSections(localSections.value, schedule.filters),
-);
 
 /** What the filters panel still has reason to list; see `isInView` there. */
 const reachableValues = computed(() =>
   reachableFacetValues(localSections.value, schedule.filters),
 );
-
-const placed = computed(() => placeSections(visibleSections.value));
 
 const sectionOf = (meetingId: string) =>
   placed.value.sectionsByMeetingId.get(meetingId);
@@ -280,13 +290,122 @@ const runEffect = (effect: Effect) => {
 // Held here rather than inside a view, so that the toolbar, the filters panel,
 // every view, and the detail sheet all read and change the same schedule.
 const schedule = useScheduleEditor(
-  computed(() => ({
-    meetings: placed.value.meetings,
-    sections: localSections.value,
-    isReadOnly: isReadOnly.value,
-  })),
+  computed(() => ({ sections: sections.value, isReadOnly: isReadOnly.value })),
   runEffect,
 );
+
+const { createSection, saveSection, deleteSection } = useTermPlanMutations(
+  groupId,
+  activeTermCode,
+);
+
+/**
+ * The section being created, in the shape every view already reads. It has no
+ * row on the server: its fields live in the editor's draft, which
+ * `draftSection` lays over this stand-in.
+ */
+const newSection = computed<PlannedSection | null>(() => {
+  if (!schedule.isCreatingSection || activeTermCode.value === null) return null;
+
+  return {
+    id: NEW_SECTION_ID,
+    classNumber: null,
+    termId: activeTermCode.value,
+    courseCode: "",
+    subject: "",
+    catalogNumber: "",
+    section: "001",
+    title: "",
+    component: "LEC",
+    credits: null,
+    enrollmentCap: 0,
+    enrollmentTotal: 0,
+    waitlistCap: 0,
+    waitlistTotal: 0,
+    instructors: [],
+    meetings: [],
+    crosslist: null,
+    delivery: "onCampus",
+    notes: "",
+    isCancelled: false,
+  };
+});
+
+async function createDrawnSection() {
+  const standIn = newSection.value;
+  if (!standIn) return;
+
+  const created = await createSection.mutateAsync(
+    toSectionPayload(schedule.draftSection(standIn)),
+  );
+
+  schedule.markSectionCreated(created.id);
+}
+
+async function deleteSelectedSection() {
+  const section = selectedSection.value;
+  if (!section) return;
+
+  await deleteSection.mutateAsync(section.id);
+  schedule.markSectionDeleted(section.id);
+}
+
+/** Closing the sheet on a section nobody created is discarding it. */
+const closeSheet = () =>
+  schedule.isNewSectionSelected
+    ? schedule.discardNewSection()
+    : schedule.deselect();
+
+const coursesQuery = useTermPlanCoursesQuery(groupId);
+
+/** Course codes a scheduler named, which the SIS has never published. */
+const unofficialCourseCodes = computed(
+  () =>
+    new Set(
+      (coursesQuery.data.value ?? [])
+        .filter(({ source }) => source === "local")
+        .map(({ courseCode }) => courseCode),
+    ),
+);
+
+const isUnofficialSection = (section: PlannedSection) =>
+  unofficialCourseCodes.value.has(section.courseCode);
+
+const isUnofficialBlock = (meeting: Meeting) => {
+  const section = sectionOf(meeting.id);
+  return section !== undefined && isUnofficialSection(section);
+};
+
+/**
+ * A section drawn but never created, or a sheet with typing behind its Save
+ * button. Grid drags are not here: they go straight to the autosave.
+ */
+const hasUnsavedWork = computed(
+  () =>
+    schedule.isCreatingSection ||
+    localSections.value.some((section) => schedule.isDraftDirty(section)),
+);
+
+const LEAVING_UNSAVED =
+  "This page has changes that have not been saved. Leave and lose them?";
+
+onBeforeRouteLeave(
+  () => !hasUnsavedWork.value || window.confirm(LEAVING_UNSAVED),
+);
+
+// the browser shows its own wording; preventDefault is what asks for the prompt
+useEventListener(window, "beforeunload", (event: BeforeUnloadEvent) => {
+  if (hasUnsavedWork.value) event.preventDefault();
+});
+
+// Sections are read from `localSections`, not from the payload, so a section
+// saves with the edits the reader can see on it rather than without them.
+useTermPlanAutosave({
+  sections: localSections,
+  pendingEdits: computed(() => schedule.pendingEdits),
+  save: (section) => saveSection.mutateAsync(section),
+  onSaved: (sectionId, saved) => schedule.markEditsPersisted(sectionId, saved),
+});
 
 // The only way anything the URL carries is written: a pasted link on first
 // load, the back button, or `runEffect`'s own write arriving back. `update`
@@ -335,6 +454,8 @@ const hourEntries = computed<HourEntry[]>(() => {
  * to no section, so selecting it stores an id but opens no sheet.
  */
 const selectedSection = computed(() => {
+  if (schedule.isNewSectionSelected) return newSection.value;
+
   if (schedule.selectedMeetingId) {
     return sectionOf(schedule.selectedMeetingId) ?? null;
   }

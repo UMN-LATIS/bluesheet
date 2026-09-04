@@ -1,6 +1,7 @@
 /** What the page has open, as URL query: a section's sheet, an hour's list, or both. */
 
-import type { Meeting, UrlQuery } from "../types";
+import type { UrlQuery } from "../types";
+import { sectionIdOfMeetingId } from "./sectionPlacement";
 import { WEEKDAY_CODES } from "./scheduleDays";
 import {
   clockFromMinutes,
@@ -23,10 +24,7 @@ export const SELECTION_KEYS = ["sectionId", "hour"];
  */
 export type SheetSelection = Exclude<Selection, { kind: "meeting" }>;
 
-export function encodeSelection(
-  selection: Selection | null,
-  meetings: Meeting[],
-): UrlQuery {
+export function encodeSelection(selection: Selection | null): UrlQuery {
   if (!selection) return {};
 
   switch (selection.kind) {
@@ -34,11 +32,12 @@ export function encodeSelection(
       return { hour: encodeHour(selection) };
 
     case "meeting": {
-      // A time drawn on empty space belongs to no section, so it names nothing.
-      const sectionId = meetings.find(
-        ({ id }) => id === selection.meetingId,
-      )?.sectionId;
-      return sectionId == null ? {} : { sectionId: String(sectionId) };
+      // A section being created has a negative id and no row to link to, so
+      // its block names nothing; see `decodeSectionId`.
+      const sectionId = sectionIdOfMeetingId(selection.meetingId);
+      return sectionId === null || sectionId < 1
+        ? {}
+        : { sectionId: String(sectionId) };
     }
 
     case "section":

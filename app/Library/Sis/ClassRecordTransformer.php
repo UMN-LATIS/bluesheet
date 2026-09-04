@@ -66,6 +66,7 @@ class ClassRecordTransformer {
             'institution' => $record['INSTITUTION'],
             'subject' => $record['SUBJECT'],
             'catalog_number' => $record['CATALOG_NUMBER'],
+            'course_code' => $record['SUBJECT'] . '-' . $record['CATALOG_NUMBER'],
             'class_section' => $record['CLASS_SECTION'],
             'component' => $record['COMPONENT_CLASS'],
             'academic_career' => $record['ACADEMIC_CAREER'],

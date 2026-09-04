@@ -61,15 +61,19 @@ const props = defineProps<{
   isReadOnly?: boolean;
   /** The SIS component code of the class on it; absent on a block with none. */
   component?: string;
+  isUnofficial?: boolean;
 }>();
 
 const appearance = computed(() => {
   if (props.isDraft) {
-    return "tw-border-dashed tw-border-brand tw-bg-brand/10 tw-text-brand";
+    return "tw-border-dashed tw-border-brand tw-bg-brand-container tw-text-brand";
   }
 
   const type = colorOfType(props.component);
-  const toned = `${type.tint} ${type.rail}`;
+  // A dashed edge rather than a color of its own: the block keeps saying what
+  // component it is, and the same dashes mark the Async column and the draft.
+  const edge = props.isUnofficial ? "tw-border-dashed" : "";
+  const toned = `${type.tint} ${type.rail} ${edge}`;
   // Blue rather than the block's own color: the ring means "the sheet is
   // open on this one", which is what blue means everywhere else in the app.
   // On a read-only term it falls back to ink, since nothing there can be

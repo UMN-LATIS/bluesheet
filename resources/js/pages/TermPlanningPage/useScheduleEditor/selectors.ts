@@ -2,6 +2,16 @@ import type { Meeting, PlannedSection, SisSection, TimeRange } from "../types";
 import { FILTER_FACETS } from "../types";
 import { isEqual } from "lodash-es";
 import { type DayLayout, layOutDay } from "../helpers/dayLayout";
+import { filterSections } from "../helpers/scheduleFilters";
+import {
+  GRID_DAYS,
+  meetingIdOf,
+  placeSections,
+  sectionIdOfMeetingId,
+  type PlacedSections,
+} from "../helpers/sectionPlacement";
+import { minutesFromClock } from "../helpers/timeScale";
+import { NEW_SECTION_ID } from "./types";
 import type {
   EditorState,
   HourSelection,
@@ -91,12 +101,109 @@ export const selectHourReturnedTo = (
 export const selectMarkedHour = (state: EditorState): HourSelection | null =>
   selectOpenHour(state) ?? selectHourReturnedTo(state);
 
+/** Every section as the reader sees it: the server's, this browser's edits on top. */
+export const selectLocalSections = (
+  context: ScheduleContext,
+  state: EditorState,
+): PlannedSection[] =>
+  context.sections.map((section) => selectLocalSection(section, state));
+
+/**
+ * The sections the canvases draw, laid out in lanes. The filters are applied
+ * here rather than by the page, so what the editor decides never has to travel
+ * back in as context.
+ */
+export const selectPlaced = (
+  context: ScheduleContext,
+  state: EditorState,
+): PlacedSections =>
+  placeSections(
+    filterSections(selectLocalSections(context, state), state.filters),
+  );
+
 export function selectMeetings(
   context: ScheduleContext,
   state: EditorState,
 ): Meeting[] {
-  return [...context.meetings, ...state.placeholderMeetings];
+  return [
+    ...selectPlaced(context, state).meetings,
+    ...selectNewSectionMeetings(state),
+  ];
 }
+
+/**
+ * The blocks for the section being created. It has no row on the server and
+ * no entry in `context.sections`, so its draft is the only place its times
+ * live and the grid reads them straight from here.
+ */
+export function selectNewSectionMeetings(state: EditorState): Meeting[] {
+  const patterns = state.drafts[NEW_SECTION_ID]?.meetings ?? [];
+
+  return patterns.flatMap((pattern) =>
+    pattern.days.flatMap((day) => {
+      const dayIndex = GRID_DAYS.indexOf(day);
+      if (dayIndex < 0) return [];
+
+      return [
+        {
+          id: meetingIdOf(NEW_SECTION_ID, day, pattern.startTime),
+          dayIndex,
+          sectionId: NEW_SECTION_ID,
+          startMinute: minutesFromClock(pattern.startTime),
+          endMinute: minutesFromClock(pattern.endTime),
+        },
+      ];
+    }),
+  );
+}
+
+/**
+ * The section the sheet is open on, whether it was reached by its own chip or
+ * by one of its blocks. A block's id is read rather than matched against the
+ * blocks on the grid: changing the day in the sheet renames them, and the
+ * sheet must not close when it does.
+ */
+export function selectOpenSectionId(state: EditorState): number | null {
+  const { selection } = state;
+
+  if (selection?.kind === "section") return selection.sectionId;
+  if (selection?.kind === "meeting") {
+    return sectionIdOfMeetingId(selection.meetingId);
+  }
+
+  return null;
+}
+
+export const selectIsNewSectionSelected = (state: EditorState): boolean =>
+  selectOpenSectionId(state) === NEW_SECTION_ID;
+
+/**
+ * Whether this change would drop sheet edits nobody has saved. The shell asks
+ * before letting it through, which is why this reports rather than acts.
+ *
+ * A section being created counts only once it has a course: before that it is
+ * a rectangle, and asking about it would make a stray click a question.
+ */
+export function selectAbandonsUnsavedWork(
+  before: EditorState,
+  after: EditorState,
+  context: ScheduleContext,
+): boolean {
+  const left = selectOpenSectionId(before);
+  if (left === null || selectOpenSectionId(after) === left) return false;
+
+  const draft = before.drafts[left];
+  if (!draft) return false;
+
+  if (left === NEW_SECTION_ID) return draft.courseCode !== undefined;
+
+  const section = context.sections.find(({ id }) => id === left);
+  return section !== undefined && selectIsDraftDirty(section, before);
+}
+
+/** Unsaved work the page warns about before it lets the reader leave. */
+export const selectIsCreatingSection = (state: EditorState): boolean =>
+  state.drafts[NEW_SECTION_ID] !== undefined;
 
 export interface DayView {
   layout: DayLayout;

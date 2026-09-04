@@ -1,11 +1,10 @@
 import type {
   Delivery,
   FilterFacet,
-  Meeting,
-  PlannedSection,
   ScheduleFilters,
   SisDay,
   SisInstructor,
+  SisSection,
   SisSectionMeeting,
   TimeRange,
   UrlQuery,
@@ -17,13 +16,11 @@ import type { ScheduleView } from "../helpers/viewQuery";
  */
 export interface ScheduleContext {
   /**
-   * The blocks the week grid is drawing, so the filters have already been
-   * applied to them. `sections` has not been filtered, on purpose: a sheet
-   * stays open on a section the filters have since hidden, and its fields have
-   * to keep saving.
+   * The term as the server sent it, before this browser's edits and before
+   * the filters. Everything else the editor reads is derived from it here, so
+   * nothing the editor owns travels back in as context.
    */
-  meetings: Meeting[];
-  sections: PlannedSection[];
+  sections: SisSection[];
   /**
    * A closed term, or one the save endpoints cannot reach yet. Hiding the
    * controls is not enforcement — keyboard, deep link, and stale tab all still
@@ -34,6 +31,16 @@ export interface ScheduleContext {
 
 /** Sparse: an absent field is unchanged. */
 export interface SectionEdit {
+  /**
+   * Which course the section is on. Only the section being created sets
+   * these: an existing section's course is half of the key the server
+   * enforces, so moving one to another course is a delete and a create.
+   */
+  courseCode?: string;
+  subject?: string;
+  catalogNumber?: string;
+  title?: string;
+  credits?: number | null;
   section?: string;
   component?: string;
   delivery?: Delivery;
@@ -99,16 +106,30 @@ export interface HourSelection {
   startMinute: number;
 }
 
+/**
+ * The id the section being created stands under while the sheet is open on
+ * it. Negative because section ids are auto-increment, so no saved section
+ * can ever collide with it.
+ */
+export const NEW_SECTION_ID = -1;
+
 /** Only this browser's edits; the server's sections stay in the query cache. */
 export interface EditorState {
-  /** Times drawn on empty space, belonging to no section. */
-  placeholderMeetings: Meeting[];
   sectionEdits: Record<number, SectionEdit>;
   /**
-   * The sheet's unsaved form per section;
-   * nothing here reaches the grid until Save.
+   * The sheet's unsaved form per section; nothing here reaches the grid until
+   * Save. The exception is `NEW_SECTION_ID`, whose draft is the whole of the
+   * section being created: it has no row on the server and no entry in
+   * `context.sections`, so the grid draws its blocks straight from here.
    */
   drafts: Record<number, SectionEdit>;
+  /**
+   * The event held back because applying it would drop sheet edits nobody has
+   * saved. The view asks about it, and the answer arrives as
+   * `dismissalConfirmed` or `dismissalCancelled`, which is what keeps the
+   * question out of `update` and out of a browser dialog.
+   */
+  pendingDismissal: EditorEvent | null;
   interaction: Interaction;
   /** Flashed by the grid; cleared by the next press. */
   lastPlacedId: string | null;
@@ -185,7 +206,33 @@ export type EditorEvent =
    * dispatched, and undone only by reverting the section.
    */
   | { type: "sectionCancelled"; sectionId: number }
-  | { type: "sectionEditsReverted"; sectionId: number };
+  | { type: "sectionEditsReverted"; sectionId: number }
+  /**
+   * Create was pressed and the server has the section now, so the draft that
+   * stood for it can go and the sheet can reopen on the real thing.
+   */
+  | { type: "sectionCreated"; sectionId: number }
+  /** The sheet closed on a section that was never created. */
+  | { type: "newSectionDiscarded" }
+  /**
+   * The server no longer has this section. Its overlay and its draft go with
+   * it; leaving either would save a section back into existence.
+   */
+  | { type: "sectionDeleted"; sectionId: number }
+  /** The reader let the held event through, losing the sheet's edits. */
+  | { type: "dismissalConfirmed" }
+  /** The reader kept the edits, so the held event never happened. */
+  | { type: "dismissalCancelled" }
+  /**
+   * The server has these edits now, so the overlay holding them can go. The
+   * edits are named rather than assumed, because the scheduler may have typed
+   * again while the save was in flight, and that newer edit has to survive.
+   */
+  | {
+      type: "sectionEditsPersisted";
+      sectionId: number;
+      saved: SectionEdit;
+    };
 
 /**
  * Work for the page to do outside `update`, which never imports the router.
@@ -197,9 +244,4 @@ export type Effect = { type: "replaceUrlQuery"; query: UrlQuery };
 export interface Next {
   state: EditorState;
   effects: Effect[];
-}
-
-/** Injected so `update` stays deterministic. */
-export interface EditorDeps {
-  createUuid: () => string;
 }

@@ -50,6 +50,7 @@
     >
       <div v-if="isAsync" class="tw-p-3">
         <AsyncSectionChips
+          :unofficialCourseCodes="unofficialCourseCodes"
           :sections="unscheduled"
           :selectedSectionId="schedule.selectedSectionId"
           :schedule="schedule"
@@ -130,6 +131,7 @@ const props = defineProps<{
   meetings: Meeting[];
   sectionOf: (meetingId: string) => PlannedSection | undefined;
   unscheduled: PlannedSection[];
+  unofficialCourseCodes: Set<string>;
   /** One count per tab: the five weekdays, then the unscheduled sections. */
   counts: number[];
   schedule: ScheduleEditor;

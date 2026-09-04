@@ -47,7 +47,10 @@ export default {
         },
         "on-primary": "var(--on-primary)",
         "on-primary-container": "var(--on-primary-container)",
-        brand: "var(--brand)",
+        brand: {
+          DEFAULT: "var(--brand)",
+          container: "var(--brand-container)",
+        },
         "on-brand": "var(--on-brand)",
         accent: "var(--accent)",
         "on-accent": "var(--on-accent)",

@@ -35,6 +35,7 @@
           :dayIndex="dayIndex"
           :view="week[dayIndex]"
           :componentOf="componentOf"
+          :isUnofficial="isUnofficial"
           :isReadOnly="schedule.isReadOnly"
         >
           <!--
@@ -71,6 +72,7 @@
             :style="{ height: COLUMN_HEIGHT }"
           >
             <AsyncSectionChips
+              :unofficialCourseCodes="unofficialCourseCodes"
               :sections="unscheduled"
               :selectedSectionId="selectedSectionId"
               :schedule="schedule"
@@ -112,6 +114,8 @@ const props = defineProps<{
    * meeting's class, which picks its color.
    */
   componentOf?: (meeting: Meeting) => string | undefined;
+  isUnofficial?: (meeting: Meeting) => boolean;
+  unofficialCourseCodes: Set<string>;
   /** The sections with no meeting time, drawn as the week's last column. */
   unscheduled: PlannedSection[];
   /** Which section the sheet is open on, so its chip can show it. */
@@ -135,11 +139,13 @@ function onPointerDown(event: PointerEvent) {
   const edge =
     target.closest<HTMLElement>("[data-resize-edge]")?.dataset.resizeEdge;
 
-  // TODO: drawing on empty space, once a section can be created for it
-  if (!meetingId) return;
-
   // capture, so the gesture keeps arriving after the pointer leaves the grid
   days.value?.setPointerCapture(event.pointerId);
+
+  if (!meetingId) {
+    props.schedule.pressEmptySpace(at.dayIndex, at.minute);
+    return;
+  }
 
   // A read-only week keeps its blocks and loses its handles: the press below
   // opens the sheet on release, and `update` refuses everything else.

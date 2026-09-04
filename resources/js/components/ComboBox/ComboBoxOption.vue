@@ -25,11 +25,20 @@
           >{{ option.secondaryLabel }}</span
         >
       </div>
-      <CircleCheckIcon
-        v-if="isSelected"
-        class="tw-h-5 tw-w-5 tw-text-blue-600 tw-mr-2"
-        aria-hidden="true"
-      />
+      <div
+        class="tw-flex tw-flex-none tw-items-center tw-gap-2 tw-pl-2 tw-pr-2"
+      >
+        <span
+          v-if="option.annotation"
+          class="tw-whitespace-nowrap tw-text-xs tw-text-neutral-500"
+          >{{ option.annotation }}</span
+        >
+        <CircleCheckIcon
+          v-if="isSelected"
+          class="tw-h-5 tw-w-5 tw-text-blue-600"
+          aria-hidden="true"
+        />
+      </div>
     </div>
   </li>
 </template>
