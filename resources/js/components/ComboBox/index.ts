@@ -5,4 +5,6 @@ export interface ComboBoxOptionType {
   id?: string | number; // new options might have an undefined id
   label: string;
   secondaryLabel?: string;
+  /** Heading this option sits under. Ungrouped options list with no heading. */
+  group?: string;
 }

@@ -69,17 +69,17 @@
           class="combobox__options tw-border tw-border-neutral-300 tw-py-3 tw-px-2 tw-max-h-60 tw-overflow-auto tw-bg-white tw-rounded-md tw-shadow-lg tw-ring-1 tw-ring-black tw-ring-opacity-5 focus:tw-outline-none tw-relative tw-z-[1000] tw-min-w-[20rem]"
           :style="floatingStyles"
         >
-        <div class="tw-flex tw-justify-end">
-          <button
-            type="button"
-            class="tw-p-1 tw-text-neutral-400 hover:tw-text-neutral-600 tw-bg-transparent tw-border-none tw-cursor-pointer tw-rounded"
-            aria-label="Close options dropdown"
-            title="Close options dropdown"
-            @click="closeComboBoxOptions"
-          >
-            <XIcon />
-          </button>
-        </div>
+          <div class="tw-flex tw-justify-end">
+            <button
+              type="button"
+              class="tw-p-1 tw-text-neutral-400 hover:tw-text-neutral-600 tw-bg-transparent tw-border-none tw-cursor-pointer tw-rounded"
+              aria-label="Close options dropdown"
+              title="Close options dropdown"
+              @click="closeComboBoxOptions"
+            >
+              <XIcon />
+            </button>
+          </div>
           <div v-if="!options.length">
             <p class="tw-text-sm tw-text-neutral-500 tw-text-center">
               No options.
@@ -91,32 +91,40 @@
             class="tw-pl-0 tw-flex tw-flex-col gap-2"
             role="listbox"
           >
-            <ComboBoxOption
+            <template
               v-for="option in filteredOptions"
               :key="option.id ?? option.label"
-              :option="option"
-              :isSelected="isSelected(option)"
-              :isHighlighted="isHighlighted(option)"
-              :data-highlighted-option="isHighlighted(option)"
-              @click="() => handleSelectOption(option)"
-            />
+            >
+              <li
+                v-if="isFirstOfGroup(option)"
+                role="presentation"
+                class="tw-px-2 tw-pt-2 tw-pb-1 tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-neutral-500"
+              >
+                {{ option.group }}
+              </li>
+              <ComboBoxOption
+                :option="option"
+                :isSelected="isSelected(option)"
+                :isHighlighted="isHighlighted(option)"
+                :data-highlighted-option="isHighlighted(option)"
+                @click="() => handleSelectOption(option)"
+              />
+            </template>
           </ul>
-          <div
-            v-else
-            class="tw-p-2 tw-text-neutral-500 tw-text-center"
-          >
+          <div v-else class="tw-p-2 tw-text-neutral-500 tw-text-center">
             <p class="tw-text-sm tw-mb-1">No matches found.</p>
             <p class="tw-text-sm">
               <Button
-              v-if="query"
-              variant="link"
-              type="button"
-              class="tw-inline-block"
-              @click="query = ''"
-            >
-              Clear
-            </Button>
-            to see all options.</p>
+                v-if="query"
+                variant="link"
+                type="button"
+                class="tw-inline-block"
+                @click="query = ''"
+              >
+                Clear
+              </Button>
+              to see all options.
+            </p>
           </div>
           <div
             v-if="canAddNewOptions"
@@ -216,6 +224,18 @@ const filteredOptions = computed(() => {
       option.secondaryLabel?.toLowerCase().includes(lcQuery),
   );
 });
+
+/**
+ * Whether a heading is drawn above this option. Read off the option before it
+ * rather than off the group itself, so the caller's order is the order shown
+ * and a group split by the search reads as two runs, not one.
+ */
+function isFirstOfGroup(option: ComboBoxOptionType): boolean {
+  if (!option.group) return false;
+
+  const index = filteredOptions.value.indexOf(option);
+  return filteredOptions.value[index - 1]?.group !== option.group;
+}
 
 const indexOfHighlightedOption = computed(() => {
   const index = filteredOptions.value.findIndex((option) =>
@@ -392,7 +412,7 @@ watch(query, () => {
 
   highlightedOption.value = isModelValueInFilteredOptions
     ? props.modelValue
-    : first(filteredOptions.value) ?? null;
+    : (first(filteredOptions.value) ?? null);
 });
 
 const { floatingStyles } = useFloating(

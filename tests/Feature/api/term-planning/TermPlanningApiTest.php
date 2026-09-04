@@ -536,3 +536,89 @@ describe('the local tables and the nightly rebuild', function () {
         }
     });
 });
+
+describe('GET /api/term-planning/groups/:groupId/course-instructors', function () {
+    /**
+     * Someone the SIS recorded on a section of `$courseCode` in `$termCode`.
+     * The employee comes first: sis_class_instructors.emplid is a foreign key
+     * into sis_employees, unlike its local_ counterpart.
+     */
+    function taught(int $emplid, string $role, string $courseCode, int $termCode): void {
+        SisEmployee::firstOrCreate(
+            ['emplid' => $emplid],
+            SisEmployee::factory()->make()->only(['first_name', 'last_name', 'internet_id']),
+        );
+
+        $section = SisClassSection::factory()->create([
+            'academic_org' => DEPT,
+            'term_code' => $termCode,
+            'course_code' => $courseCode,
+        ]);
+
+        $section->instructors()->create(['emplid' => $emplid, 'role' => $role]);
+    }
+
+    function historyUrl(Group $group, string $courseCode): string {
+        return "/api/term-planning/groups/{$group->id}/course-instructors?course={$courseCode}";
+    }
+
+    it('reports the most recent term a person taught the course', function () {
+        taught(101, 'PI', 'ANTH-1001', 1265);
+        taught(101, 'PI', 'ANTH-1001', PUBLISHED_TERM);
+        actingAs($this->admin);
+
+        $response = getJson(historyUrl($this->group, 'ANTH-1001'));
+
+        $response->assertOk()->assertJson([
+            ['emplid' => 101, 'role' => 'PI', 'lastTermId' => PUBLISHED_TERM, 'isPlanned' => false],
+        ]);
+    });
+
+    // the picker fills two fields, and the TAs on a large lecture would bury
+    // the instructors of record if the two shared one list
+    it('keeps a person once per role they held', function () {
+        taught(101, 'PI', 'ANTH-1001', 1265);
+        taught(101, 'TA', 'ANTH-1001', 1261);
+        actingAs($this->admin);
+
+        $response = getJson(historyUrl($this->group, 'ANTH-1001'));
+
+        expect($response->json())->toHaveCount(2);
+        expect(collect($response->json())->pluck('role')->sort()->values()->all())
+            ->toBe(['PI', 'TA']);
+    });
+
+    it('counts a term this department planned, marked as planned', function () {
+        $section = plannedSection(['course_code' => 'ANTH-1001']);
+        $section->instructors()->create(['emplid' => 202, 'role' => 'PI']);
+        actingAs($this->admin);
+
+        $response = getJson(historyUrl($this->group, 'ANTH-1001'));
+
+        $response->assertOk()->assertJson([
+            ['emplid' => 202, 'role' => 'PI', 'lastTermId' => PLANNABLE_TERM, 'isPlanned' => true],
+        ]);
+    });
+
+    it('leaves out a deleted planned section', function () {
+        $section = plannedSection(['course_code' => 'ANTH-1001']);
+        $section->instructors()->create(['emplid' => 202, 'role' => 'PI']);
+        $section->delete();
+        actingAs($this->admin);
+
+        getJson(historyUrl($this->group, 'ANTH-1001'))->assertOk()->assertJson([]);
+    });
+
+    it('leaves out another course', function () {
+        taught(101, 'PI', 'ANTH-3001', PUBLISHED_TERM);
+        actingAs($this->admin);
+
+        getJson(historyUrl($this->group, 'ANTH-1001'))->assertOk()->assertJson([]);
+    });
+
+    it('requires the user to have read privileges', function () {
+        actingAs($this->basicUser);
+
+        getJson(historyUrl($this->group, 'ANTH-1001'))->assertForbidden();
+    });
+});

@@ -101,22 +101,25 @@
             :key="patternIndex"
             class="tw-flex tw-flex-col tw-gap-2"
           >
-            <div
-              v-if="patterns.length > 1"
-              class="tw-flex tw-items-center tw-justify-between tw-gap-2"
-            >
+            <div v-if="pattern" class="tw-flex tw-items-center tw-gap-2">
               <span
+                v-if="patterns.length > 1"
                 class="tw-text-[11px] tw-font-semibold tw-text-on-surface-variant"
               >
                 Meeting {{ patternIndex + 1 }}
               </span>
               <button
                 type="button"
-                class="tw-flex tw-h-7 tw-w-7 tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-text-xs tw-text-on-surface-variant hover:tw-bg-surface-container hover:tw-text-on-surface"
-                :aria-label="`Remove meeting time ${patternIndex + 1}`"
+                class="tw-ms-auto tw-flex tw-h-7 tw-cursor-pointer tw-items-center tw-gap-1 tw-rounded-full tw-border-none tw-bg-transparent tw-px-2 tw-text-[11px] tw-font-semibold tw-text-on-surface-variant hover:tw-bg-surface-container hover:tw-text-on-surface"
+                :aria-label="
+                  patterns.length > 1
+                    ? `Remove meeting time ${patternIndex + 1}`
+                    : 'Remove meeting time, leaving the section asynchronous'
+                "
                 @click="schedule.removeMeetingPattern(section.id, patternIndex)"
               >
-                ×
+                <span aria-hidden="true">×</span>
+                <span v-if="patterns.length === 1">Clear</span>
               </button>
             </div>
 
@@ -210,7 +213,7 @@
           label="Add instructor"
           placeholder="Add instructor…"
           :showLabel="false"
-          :options="rosterOptions"
+          :options="instructorOptions"
           :modelValue="null"
           strategy="fixed"
           teleportTo="body"
@@ -254,7 +257,7 @@
           label="Add assistant"
           placeholder="Add assistant…"
           :showLabel="false"
-          :options="rosterOptions"
+          :options="assistantOptions"
           :modelValue="null"
           strategy="fixed"
           teleportTo="body"
@@ -384,38 +387,6 @@
             @input="edit({ notes: valueOf($event) })"
           />
         </Disclosure>
-      </div>
-    </div>
-
-    <div
-      v-if="isConfirmingCancel"
-      role="alertdialog"
-      class="tw-flex tw-flex-none tw-flex-col tw-gap-2 tw-border-0 tw-border-t tw-border-solid tw-border-outline-variant tw-bg-brand/[0.06] tw-px-[18px] tw-py-3.5"
-    >
-      <p class="tw-m-0 tw-text-[13.5px] tw-font-bold">
-        Cancel {{ draft.subject }} {{ draft.catalogNumber }} ·
-        {{ draft.section }}?
-      </p>
-      <p class="tw-m-0 tw-text-[12.5px] tw-leading-normal">
-        It stays in the SIS, marked cancelled for {{ termName ?? "this term" }}.
-        The registrar notifies the {{ section.enrollmentTotal }} enrolled
-        students.
-      </p>
-      <div class="tw-flex tw-items-center tw-gap-3">
-        <button
-          type="button"
-          class="tw-min-h-11 tw-cursor-pointer tw-rounded-full tw-border-none tw-bg-brand tw-px-5 tw-text-[13px] tw-font-bold tw-text-white"
-          @click="confirmCancelSection"
-        >
-          Cancel section
-        </button>
-        <button
-          type="button"
-          class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[13px] tw-font-semibold tw-text-on-surface-variant hover:tw-underline"
-          @click="isConfirmingCancel = false"
-        >
-          Keep it
-        </button>
       </div>
     </div>
 
@@ -551,66 +522,19 @@
         Discard
       </button>
 
-      <div
-        ref="menuContainerRef"
-        class="tw-relative tw-ml-auto"
-        @keydown.escape="isMenuOpen = false"
+      <button
+        type="button"
+        class="tw-ml-auto tw-min-h-11 tw-cursor-pointer tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-px-5 tw-text-[13px] tw-font-bold tw-text-brand hover:tw-border-brand"
+        @click="isConfirmingDelete = true"
       >
-        <button
-          type="button"
-          aria-label="More options"
-          aria-haspopup="menu"
-          :aria-expanded="isMenuOpen"
-          class="tw-flex tw-h-11 tw-w-11 tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-text-on-surface-variant hover:tw-border-outline hover:tw-text-on-surface"
-          @click="isMenuOpen = !isMenuOpen"
-        >
-          <VDotsIcon class="tw-h-4 tw-w-4" />
-        </button>
-        <div
-          v-if="isMenuOpen"
-          role="menu"
-          class="tw-absolute tw-bottom-[52px] tw-right-0 tw-z-[60] tw-w-[212px] tw-rounded-[10px] tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-p-1.5 tw-shadow-[0_10px_28px_rgba(38,38,38,0.18)]"
-        >
-          <button
-            type="button"
-            role="menuitem"
-            class="tw-block tw-w-full tw-min-h-11 tw-cursor-pointer tw-rounded-[7px] tw-border-none tw-bg-transparent tw-px-2.5 tw-text-left tw-text-[13px] tw-font-semibold tw-text-on-surface hover:tw-bg-surface disabled:tw-cursor-default disabled:tw-text-on-surface-variant disabled:hover:tw-bg-transparent"
-            :disabled="!schedule.hasEdits(section.id)"
-            @click="revertFromMenu"
-          >
-            Revert to SIS
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            class="tw-block tw-w-full tw-min-h-11 tw-cursor-pointer tw-rounded-[7px] tw-border-none tw-bg-transparent tw-px-2.5 tw-text-left tw-text-[13px] tw-font-semibold tw-text-brand hover:tw-bg-brand/[0.06] disabled:tw-cursor-default disabled:tw-text-on-surface-variant disabled:hover:tw-bg-transparent"
-            :disabled="draft.isCancelled"
-            :title="
-              draft.isCancelled
-                ? 'This section is already cancelled'
-                : undefined
-            "
-            @click="startCancelFromMenu"
-          >
-            Cancel section…
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            class="tw-block tw-w-full tw-min-h-11 tw-cursor-pointer tw-rounded-[7px] tw-border-none tw-bg-transparent tw-px-2.5 tw-text-left tw-text-[13px] tw-font-semibold tw-text-brand hover:tw-bg-brand/[0.06]"
-            @click="startDeleteFromMenu"
-          >
-            Delete section…
-          </button>
-        </div>
-      </div>
+        Delete…
+      </button>
     </div>
   </aside>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { onClickOutside } from "@vueuse/core";
 import CoursePicker from "./CoursePicker.vue";
 import UnofficialTag from "./UnofficialTag.vue";
 import Disclosure from "./Disclosure.vue";
@@ -620,7 +544,7 @@ import PersonField from "./PersonField.vue";
 import SectionFacts from "./SectionFacts.vue";
 import SegmentedControl, { type SegmentedOption } from "./SegmentedControl.vue";
 import { ComboBox, type ComboBoxOptionType } from "@/components/ComboBox";
-import { LockIcon, VDotsIcon } from "@/icons";
+import { LockIcon } from "@/icons";
 import { colorOfType, labelOfComponent } from "../constants/meetingTypeColors";
 import { DELIVERY_OPTIONS, labelOfDelivery } from "../constants/delivery";
 import {
@@ -630,6 +554,8 @@ import {
   TA_ROLE,
 } from "../helpers/sectionPeople";
 import { formatTimeRange, minutesFromClock } from "../helpers/timeScale";
+import { useCourseInstructorsQuery } from "../queries/useCourseInstructorsQuery";
+import { useSisTermsQuery } from "../queries/useSisTermsQuery";
 import { NEW_SECTION_ID } from "../useScheduleEditor/types";
 import type {
   Delivery,
@@ -687,14 +613,7 @@ const DAY_OPTIONS: SegmentedOption[] = [
 
 const isAddingInstructor = ref(false);
 const isAddingAssistant = ref(false);
-const isConfirmingCancel = ref(false);
 const isConfirmingDelete = ref(false);
-const isMenuOpen = ref(false);
-
-const menuContainerRef = ref<HTMLElement | null>(null);
-onClickOutside(menuContainerRef, () => {
-  isMenuOpen.value = false;
-});
 
 const fieldId = (field: string) => `section-${props.section.id}-${field}`;
 
@@ -778,19 +697,79 @@ const metaLine = computed(() => {
   ].join(" · ");
 });
 
-const rosterOptions = computed<ComboBoxOptionType[]>(() =>
-  props.roster
-    .filter(
-      (person) =>
-        !draft.value.instructors.some(
-          (instructor) => instructor.emplid === person.emplid,
-        ),
-    )
+const courseInstructorsQuery = useCourseInstructorsQuery(
+  computed(() => props.groupId),
+  computed(() => draft.value.courseCode),
+);
+
+const termsQuery = useSisTermsQuery();
+
+const nameOfTerm = (termId: number) =>
+  termsQuery.data.value?.find(({ id }) => id === termId)?.name ??
+  String(termId);
+
+const TAUGHT_BEFORE = "Has taught this course";
+const ASSISTED_BEFORE = "Has assisted this course";
+const EVERYONE_ELSE = "Rest of the department";
+
+/**
+ * The department, with whoever has had this course in the role being filled
+ * at the top and the term they last had it beside their name. Staffing starts
+ * from whoever taught it last, and a roster of seventy-four is too long to
+ * scan for them.
+ *
+ * The two fields ask different questions. ANTH 1001 has ten primary
+ * instructors and twenty-five assistants, so one shared "has taught" group
+ * would bury the instructors under the TAs.
+ */
+function rosterGroupedBy(roles: string[], taughtLabel: string) {
+  const history = new Map(
+    (courseInstructorsQuery.data.value ?? [])
+      .filter((row) => roles.includes(row.role))
+      .map((row) => [row.emplid, row]),
+  );
+
+  const available = props.roster.filter(
+    (person) =>
+      !draft.value.instructors.some(
+        (instructor) => instructor.emplid === person.emplid,
+      ),
+  );
+
+  const held = available
+    .flatMap((person) => {
+      const row = history.get(person.emplid);
+      return row ? [{ person, row }] : [];
+    })
+    .sort((a, b) => b.row.lastTermId - a.row.lastTermId)
+    .map(({ person, row }) => ({
+      id: person.emplid,
+      label: person.name ?? String(person.emplid),
+      secondaryLabel: row.isPlanned
+        ? `Planned for ${nameOfTerm(row.lastTermId)}`
+        : `Last taught ${nameOfTerm(row.lastTermId)}`,
+      group: taughtLabel,
+    }));
+
+  const rest = available
+    .filter((person) => !history.has(person.emplid))
     .map((person) => ({
       id: person.emplid,
       label: person.name ?? String(person.emplid),
       secondaryLabel: person.positionTitle ?? undefined,
-    })),
+      // no heading above the only group there is
+      group: held.length > 0 ? EVERYONE_ELSE : undefined,
+    }));
+
+  return [...held, ...rest];
+}
+
+const instructorOptions = computed<ComboBoxOptionType[]>(() =>
+  rosterGroupedBy([PRIMARY_ROLE, "SI"], TAUGHT_BEFORE),
+);
+
+const assistantOptions = computed<ComboBoxOptionType[]>(() =>
+  rosterGroupedBy([TA_ROLE], ASSISTED_BEFORE),
 );
 
 function addPerson(option: ComboBoxOptionType | null, role: string) {
@@ -900,26 +879,6 @@ function removeMeetingOnly(patternIndex: number) {
 function confirmDelete() {
   isConfirmingDelete.value = false;
   emit("delete");
-}
-
-function startDeleteFromMenu() {
-  isMenuOpen.value = false;
-  isConfirmingDelete.value = true;
-}
-
-function confirmCancelSection() {
-  props.schedule.cancelSection(props.section.id);
-  isConfirmingCancel.value = false;
-}
-
-function revertFromMenu() {
-  props.schedule.revertSection(props.section.id);
-  isMenuOpen.value = false;
-}
-
-function startCancelFromMenu() {
-  isMenuOpen.value = false;
-  isConfirmingCancel.value = true;
 }
 </script>
 
