@@ -37,6 +37,8 @@ import {
   START_MINUTE,
 } from "../helpers/timeScale";
 import { GRID_DAYS, meetingIdOf } from "../helpers/sectionPlacement";
+import { selectMeetings, selectNewSectionMeetings } from "./selectors";
+import { NEW_SECTION_ID } from "./types";
 import {
   DEFAULT_PATTERN,
   withDayToggled,
@@ -44,9 +46,8 @@ import {
   withPlacement,
   withTimes,
 } from "./meetingPatterns";
-import { selectMeetings } from "./selectors";
+
 import type {
-  EditorDeps,
   EditorEvent,
   EditorState,
   Effect,
@@ -78,7 +79,6 @@ export const emptyFilters = (): ScheduleFilters => ({
  * shell: `useScheduleEditor` passes it in, and everything here stays pure.
  */
 export const initialState = (dayIndex = 0): EditorState => ({
-  placeholderMeetings: [],
   sectionEdits: {},
   drafts: {},
   interaction: { status: "idle" },
@@ -119,6 +119,8 @@ const READING_EVENTS: EditorEvent["type"][] = [
   "deselected",
   "selectedSection",
   "selectedHour",
+  // nothing was ever written, so there is nothing a locked term protects
+  "newSectionDiscarded",
   "filterValuesAdded",
   "filterValuesRemoved",
   "filtersCleared",
@@ -132,13 +134,12 @@ export function update(
   state: EditorState,
   event: EditorEvent,
   context: ScheduleContext,
-  deps: EditorDeps,
 ): Next {
   if (context.isReadOnly && !READING_EVENTS.includes(event.type)) {
     return { state, effects: [] };
   }
 
-  const nextState = reduce(state, event, context, deps);
+  const nextState = reduce(state, event, context);
 
   return {
     state: nextState,
@@ -207,7 +208,6 @@ function reduce(
   state: EditorState,
   event: EditorEvent,
   context: ScheduleContext,
-  deps: EditorDeps,
 ): EditorState {
   switch (event.type) {
     case "pressedEmptySpace": {
@@ -270,7 +270,7 @@ function reduce(
       return pointerMoved(state, event.dayIndex, event.minute, context);
 
     case "released":
-      return commit(state, context, deps);
+      return commit(state, context);
 
     case "canceled":
       return state.interaction.status === "idle"
@@ -431,6 +431,21 @@ function reduce(
       return isEqual(state.sectionEdits[event.sectionId], event.saved)
         ? withoutEntry(state, event.sectionId)
         : state;
+
+    case "sectionCreated":
+      return {
+        ...withoutDraft(state, NEW_SECTION_ID),
+        selection: { kind: "section", sectionId: event.sectionId },
+      };
+
+    case "newSectionDiscarded":
+      return { ...withoutDraft(state, NEW_SECTION_ID), selection: null };
+
+    case "sectionDeleted":
+      return {
+        ...withoutEntry(withoutDraft(state, event.sectionId), event.sectionId),
+        selection: null,
+      };
 
     default:
       return assertNever(event);
@@ -596,11 +611,7 @@ function pointerMoved(
   }
 }
 
-function commit(
-  state: EditorState,
-  context: ScheduleContext,
-  deps: EditorDeps,
-): EditorState {
+function commit(state: EditorState, context: ScheduleContext): EditorState {
   const { interaction } = state;
 
   switch (interaction.status) {
@@ -608,7 +619,7 @@ function commit(
       return state;
 
     case "drawing":
-      return commitDrawing(state, interaction, deps);
+      return commitDrawing(state, interaction);
 
     case "pressed":
       return {
@@ -617,34 +628,17 @@ function commit(
       };
 
     case "moving":
-    case "resizing": {
-      const placement = {
-        dayIndex: interaction.dayIndex,
-        startMinute: interaction.startMinute,
-        endMinute: interaction.endMinute,
-      };
-
-      const isPlaceholder = state.placeholderMeetings.some(
-        ({ id }) => id === interaction.meetingId,
+    case "resizing":
+      return withSectionPlacement(
+        state,
+        interaction.meetingId,
+        {
+          dayIndex: interaction.dayIndex,
+          startMinute: interaction.startMinute,
+          endMinute: interaction.endMinute,
+        },
+        context,
       );
-
-      return isPlaceholder
-        ? {
-            ...toIdle(state),
-            lastPlacedId: interaction.meetingId,
-            placeholderMeetings: state.placeholderMeetings.map((meeting) =>
-              meeting.id === interaction.meetingId
-                ? { ...meeting, ...placement }
-                : meeting,
-            ),
-          }
-        : withSectionPlacement(
-            state,
-            interaction.meetingId,
-            placement,
-            context,
-          );
-    }
 
     default:
       return assertNever(interaction);
@@ -654,7 +648,6 @@ function commit(
 function commitDrawing(
   state: EditorState,
   drawing: Extract<Interaction, { status: "drawing" }>,
-  deps: EditorDeps,
 ): EditorState {
   // a drag shorter than MIN_DURATION is a click; this also keeps every meeting
   // at least MIN_DURATION
@@ -663,21 +656,44 @@ function commitDrawing(
     ? placeWithinDay(drawing.startMinute, CLICK_DURATION)
     : { startMinute: drawing.startMinute, endMinute: drawing.endMinute };
 
-  const id = deps.createUuid();
+  const startTime = clockFromMinutes(range.startMinute);
+  const meetings = [
+    {
+      days: [GRID_DAYS[drawing.dayIndex]],
+      startTime,
+      endTime: clockFromMinutes(range.endMinute),
+    },
+  ];
 
   return {
     ...state,
-    placeholderMeetings: [
-      ...state.placeholderMeetings,
-      { id, dayIndex: drawing.dayIndex, sectionId: null, ...range },
-    ],
+    // The whole of the section being created, drawn from here until Create
+    // gives it a row. Drawing again over an unfinished one replaces it: one
+    // section is being created at a time, and the sheet is open on it.
+    drafts: { ...state.drafts, [NEW_SECTION_ID]: { meetings } },
     interaction: { status: "idle" },
-    lastPlacedId: id,
+    lastPlacedId: meetingIdOf(
+      NEW_SECTION_ID,
+      GRID_DAYS[drawing.dayIndex],
+      startTime,
+    ),
+    selection: {
+      kind: "meeting",
+      meetingId: meetingIdOf(
+        NEW_SECTION_ID,
+        GRID_DAYS[drawing.dayIndex],
+        startTime,
+      ),
+    },
   };
 }
 
 /**
  * Moving a block renames it; selection and the drop flash follow the new id.
+ *
+ * The section being created is moved the same way, except that its times live
+ * in its draft rather than in an overlay on a server row, so that is where the
+ * new placement is written.
  */
 function withSectionPlacement(
   state: EditorState,
@@ -685,12 +701,21 @@ function withSectionPlacement(
   placement: Placement,
   context: ScheduleContext,
 ): EditorState {
-  const meeting = context.meetings.find(({ id }) => id === meetingId);
-  const section = context.sections.find(({ id }) => id === meeting?.sectionId);
-  if (!meeting || !section) return toIdle(state);
+  const beingCreated = selectNewSectionMeetings(state).find(
+    ({ id }) => id === meetingId,
+  );
 
+  const meeting =
+    beingCreated ?? context.meetings.find(({ id }) => id === meetingId);
+  const patterns = beingCreated
+    ? state.drafts[NEW_SECTION_ID]?.meetings
+    : context.sections.find(({ id }) => id === meeting?.sectionId)?.meetings;
+
+  if (!meeting || !patterns || meeting.sectionId === null) return toIdle(state);
+
+  const sectionId = meeting.sectionId;
   const meetings = withPlacement(
-    section.meetings,
+    patterns,
     {
       day: GRID_DAYS[meeting.dayIndex],
       startTime: clockFromMinutes(meeting.startMinute),
@@ -699,7 +724,7 @@ function withSectionPlacement(
   );
 
   const placedId = meetingIdOf(
-    section.id,
+    sectionId,
     GRID_DAYS[placement.dayIndex],
     clockFromMinutes(placement.startMinute),
   );
@@ -708,12 +733,24 @@ function withSectionPlacement(
     state.selection?.kind === "meeting" &&
     state.selection.meetingId === meetingId;
 
+  const moved = beingCreated
+    ? {
+        ...state,
+        drafts: {
+          ...state.drafts,
+          [NEW_SECTION_ID]: { ...state.drafts[NEW_SECTION_ID], meetings },
+        },
+      }
+    : {
+        ...state,
+        sectionEdits: {
+          ...state.sectionEdits,
+          [sectionId]: { ...state.sectionEdits[sectionId], meetings },
+        },
+      };
+
   return {
-    ...toIdle(state),
-    sectionEdits: {
-      ...state.sectionEdits,
-      [section.id]: { ...state.sectionEdits[section.id], meetings },
-    },
+    ...toIdle(moved),
     lastPlacedId: placedId,
     selection: wasSelected
       ? { kind: "meeting", meetingId: placedId }

@@ -21,7 +21,9 @@ import {
   selectDraftSection,
   selectHasEdits,
   selectHourReturnedTo,
+  selectIsCreatingSection,
   selectIsDraftDirty,
+  selectIsNewSectionSelected,
   selectLocalSection,
   selectMarkedHour,
   selectMeetings,
@@ -32,16 +34,12 @@ import {
 } from "./selectors";
 import { initialState, update } from "./update";
 import type {
-  EditorDeps,
   EditorEvent,
   Effect,
   HourSelection,
   MeetingEdge,
   ScheduleContext,
 } from "./types";
-
-/** Everything `update` refuses to reach for itself; see `EditorDeps`. */
-const deps: EditorDeps = { createUuid: () => crypto.randomUUID() };
 
 export type ScheduleEditor = ReturnType<typeof useScheduleEditor>;
 
@@ -54,7 +52,7 @@ export function useScheduleEditor(
   const state = shallowRef(initialState(dayIndexOfWeekday(dayjs().day())));
 
   const dispatch = (event: EditorEvent) => {
-    const next = update(state.value, event, context.value, deps);
+    const next = update(state.value, event, context.value);
     state.value = next.state;
     // In a microtask, not inline: an effect that writes the URL brings the
     // route watcher straight back with `urlChanged`, and running that inside
@@ -93,6 +91,11 @@ export function useScheduleEditor(
     hasEdits: (sectionId: number) => selectHasEdits(sectionId, state.value),
     /** Edits this browser has made and the server has not been told about. */
     pendingEdits: computed(() => state.value.sectionEdits),
+    /** A section drawn on the grid that Create has not been pressed on yet. */
+    isCreatingSection: computed(() => selectIsCreatingSection(state.value)),
+    isNewSectionSelected: computed(() =>
+      selectIsNewSectionSelected(state.value),
+    ),
     draftProblems: (section: SisSection) =>
       sectionProblems(selectDraftSection(section, state.value)),
 
@@ -173,5 +176,12 @@ export function useScheduleEditor(
       dispatch({ type: "sectionEditsReverted", sectionId }),
     markEditsPersisted: (sectionId: number, saved: SectionEdit) =>
       dispatch({ type: "sectionEditsPersisted", sectionId, saved }),
+
+    /* Creating and deleting, which the sheet drives. */
+    markSectionCreated: (sectionId: number) =>
+      dispatch({ type: "sectionCreated", sectionId }),
+    discardNewSection: () => dispatch({ type: "newSectionDiscarded" }),
+    markSectionDeleted: (sectionId: number) =>
+      dispatch({ type: "sectionDeleted", sectionId }),
   });
 }

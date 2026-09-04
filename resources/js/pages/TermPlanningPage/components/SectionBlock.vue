@@ -5,7 +5,12 @@
       class="tw-absolute tw-right-0 tw-top-0.5 tw-h-2 tw-w-2 tw-rounded-full tw-bg-accent tw-ring-1 tw-ring-inset tw-ring-black/20"
       title="Edited here, not saved anywhere"
     />
-    <div class="tw-truncate tw-font-semibold">{{ heading }}</div>
+    <div class="tw-truncate tw-font-semibold">
+      {{ heading }}
+      <span v-if="isUnofficial" title="Named here, not published by the SIS">
+        *
+      </span>
+    </div>
     <div class="tw-truncate">
       <span class="component-code tw-me-1">{{ section.component }}</span
       >{{ instructorName }}
@@ -29,6 +34,7 @@ const props = defineProps<{
   startMinute: number;
   endMinute: number;
   isEdited?: boolean;
+  isUnofficial?: boolean;
 }>();
 
 const instructorName = computed(() =>

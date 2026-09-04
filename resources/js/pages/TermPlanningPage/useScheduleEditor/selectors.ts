@@ -2,6 +2,9 @@ import type { Meeting, PlannedSection, SisSection, TimeRange } from "../types";
 import { FILTER_FACETS } from "../types";
 import { isEqual } from "lodash-es";
 import { type DayLayout, layOutDay } from "../helpers/dayLayout";
+import { GRID_DAYS, meetingIdOf } from "../helpers/sectionPlacement";
+import { minutesFromClock } from "../helpers/timeScale";
+import { NEW_SECTION_ID } from "./types";
 import type {
   EditorState,
   HourSelection,
@@ -95,8 +98,53 @@ export function selectMeetings(
   context: ScheduleContext,
   state: EditorState,
 ): Meeting[] {
-  return [...context.meetings, ...state.placeholderMeetings];
+  return [...context.meetings, ...selectNewSectionMeetings(state)];
 }
+
+/**
+ * The blocks for the section being created. It has no row on the server and
+ * no entry in `context.sections`, so its draft is the only place its times
+ * live and the grid reads them straight from here.
+ */
+export function selectNewSectionMeetings(state: EditorState): Meeting[] {
+  const patterns = state.drafts[NEW_SECTION_ID]?.meetings ?? [];
+
+  return patterns.flatMap((pattern) =>
+    pattern.days.flatMap((day) => {
+      const dayIndex = GRID_DAYS.indexOf(day);
+      if (dayIndex < 0) return [];
+
+      return [
+        {
+          id: meetingIdOf(NEW_SECTION_ID, day, pattern.startTime),
+          dayIndex,
+          sectionId: NEW_SECTION_ID,
+          startMinute: minutesFromClock(pattern.startTime),
+          endMinute: minutesFromClock(pattern.endTime),
+        },
+      ];
+    }),
+  );
+}
+
+/** Whether the sheet is open on the section being created. */
+export function selectIsNewSectionSelected(state: EditorState): boolean {
+  const { selection } = state;
+
+  if (selection?.kind === "section") {
+    return selection.sectionId === NEW_SECTION_ID;
+  }
+
+  if (selection?.kind !== "meeting") return false;
+
+  return selectNewSectionMeetings(state).some(
+    ({ id }) => id === selection.meetingId,
+  );
+}
+
+/** Unsaved work the page warns about before it lets the reader leave. */
+export const selectIsCreatingSection = (state: EditorState): boolean =>
+  state.drafts[NEW_SECTION_ID] !== undefined;
 
 export interface DayView {
   layout: DayLayout;

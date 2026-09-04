@@ -34,6 +34,16 @@ export interface ScheduleContext {
 
 /** Sparse: an absent field is unchanged. */
 export interface SectionEdit {
+  /**
+   * Which course the section is on. Only the section being created sets
+   * these: an existing section's course is half of the key the server
+   * enforces, so moving one to another course is a delete and a create.
+   */
+  courseCode?: string;
+  subject?: string;
+  catalogNumber?: string;
+  title?: string;
+  credits?: number | null;
   section?: string;
   component?: string;
   delivery?: Delivery;
@@ -99,14 +109,21 @@ export interface HourSelection {
   startMinute: number;
 }
 
+/**
+ * The id the section being created stands under while the sheet is open on
+ * it. Negative because section ids are auto-increment, so no saved section
+ * can ever collide with it.
+ */
+export const NEW_SECTION_ID = -1;
+
 /** Only this browser's edits; the server's sections stay in the query cache. */
 export interface EditorState {
-  /** Times drawn on empty space, belonging to no section. */
-  placeholderMeetings: Meeting[];
   sectionEdits: Record<number, SectionEdit>;
   /**
-   * The sheet's unsaved form per section;
-   * nothing here reaches the grid until Save.
+   * The sheet's unsaved form per section; nothing here reaches the grid until
+   * Save. The exception is `NEW_SECTION_ID`, whose draft is the whole of the
+   * section being created: it has no row on the server and no entry in
+   * `context.sections`, so the grid draws its blocks straight from here.
    */
   drafts: Record<number, SectionEdit>;
   interaction: Interaction;
@@ -187,6 +204,18 @@ export type EditorEvent =
   | { type: "sectionCancelled"; sectionId: number }
   | { type: "sectionEditsReverted"; sectionId: number }
   /**
+   * Create was pressed and the server has the section now, so the draft that
+   * stood for it can go and the sheet can reopen on the real thing.
+   */
+  | { type: "sectionCreated"; sectionId: number }
+  /** The sheet closed on a section that was never created. */
+  | { type: "newSectionDiscarded" }
+  /**
+   * The server no longer has this section. Its overlay and its draft go with
+   * it; leaving either would save a section back into existence.
+   */
+  | { type: "sectionDeleted"; sectionId: number }
+  /**
    * The server has these edits now, so the overlay holding them can go. The
    * edits are named rather than assumed, because the scheduler may have typed
    * again while the save was in flight, and that newer edit has to survive.
@@ -207,9 +236,4 @@ export type Effect = { type: "replaceUrlQuery"; query: UrlQuery };
 export interface Next {
   state: EditorState;
   effects: Effect[];
-}
-
-/** Injected so `update` stays deterministic. */
-export interface EditorDeps {
-  createUuid: () => string;
 }

@@ -118,7 +118,8 @@ export type PlannedSection = SisSection & {
 
 export interface SisSection {
   id: number;
-  classNumber: number;
+  /** Null on a planned section: the SIS assigns class numbers. */
+  classNumber: number | null;
   termId: number;
   courseCode: string;
   subject: string;
@@ -135,4 +136,21 @@ export interface SisSection {
   /** Empty when the section has no set meeting time. */
   meetings: SisSectionMeeting[];
   crosslist: SisCrosslist | null;
+}
+
+/**
+ * A course a department can plan against. `sis` courses come from the nightly
+ * mirror; `local` ones a scheduler named because the SIS has none, and those
+ * are the ones the page marks unofficial. See App\Library\TermPlan\CourseUnion.
+ */
+export interface PlannableCourse {
+  id: string;
+  courseCode: string;
+  subject: string;
+  catalogNumber: string;
+  title: string;
+  credits: number | null;
+  /** Null on a course nobody has offered, which is why it was named here. */
+  lastOfferedTermId: number | null;
+  source: "sis" | "local";
 }

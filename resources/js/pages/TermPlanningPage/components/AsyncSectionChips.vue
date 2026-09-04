@@ -36,6 +36,8 @@
               : 'tw-outline-primary',
           ],
           section.isCancelled && 'tw-opacity-60',
+          props.unofficialCourseCodes.has(section.courseCode) &&
+            'tw-border-dashed',
         ]"
         :aria-pressed="section.id === selectedSectionId"
         @click="schedule.selectSection(section.id)"
@@ -69,11 +71,12 @@ import { instructorsOfRecord } from "../helpers/sectionPeople";
 import type { PlannedSection, SisInstructor } from "../types";
 import type { ScheduleEditor } from "../useScheduleEditor";
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     sections: PlannedSection[];
     selectedSectionId: number | null;
     schedule: ScheduleEditor;
+    unofficialCourseCodes: Set<string>;
     /** "columns" fits three to a row, whatever the codes on them run to. */
     layout?: "wrap" | "columns";
   }>(),

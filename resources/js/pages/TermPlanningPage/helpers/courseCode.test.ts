@@ -1,0 +1,76 @@
+import { describe, expect, it } from "vitest";
+import { courseCodeOf, parseCourseCode, searchCourses } from "./courseCode";
+import type { PlannableCourse } from "../types";
+
+describe("parseCourseCode", () => {
+  it("reads a subject and a catalog number however they are separated", () => {
+    const expected = { subject: "PSY", catalogNumber: "5099" };
+
+    expect(parseCourseCode("psy 5099")).toEqual(expected);
+    expect(parseCourseCode("PSY-5099")).toEqual(expected);
+    expect(parseCourseCode(" PSY5099 ")).toEqual(expected);
+  });
+
+  it("keeps a catalog number's letter suffix", () => {
+    expect(parseCourseCode("anth 1001W")).toEqual({
+      subject: "ANTH",
+      catalogNumber: "1001W",
+    });
+  });
+
+  it("is null for anything that is not one course", () => {
+    expect(parseCourseCode("intro psych")).toBeNull();
+    expect(parseCourseCode("5099")).toBeNull();
+    expect(parseCourseCode("")).toBeNull();
+  });
+});
+
+describe("courseCodeOf", () => {
+  it("joins the two the way the server does", () => {
+    expect(courseCodeOf({ subject: "PSY", catalogNumber: "5099" })).toBe(
+      "PSY-5099",
+    );
+  });
+});
+
+describe("searchCourses", () => {
+  const course = (
+    courseCode: string,
+    title: string,
+    source: PlannableCourse["source"] = "sis",
+  ): PlannableCourse => {
+    const [subject, catalogNumber] = courseCode.split("-");
+    return {
+      id: courseCode,
+      courseCode,
+      subject,
+      catalogNumber,
+      title,
+      credits: 3,
+      lastOfferedTermId: null,
+      source,
+    };
+  };
+
+  const courses = [
+    course("PSY-1001", "Intro Psych"),
+    course("PSY-3001", "Brain Science"),
+    course("ANTH-1001", "Understanding Cultures"),
+  ];
+
+  it("matches a code and a title in one search", () => {
+    expect(searchCourses(courses, "psy intro").map(({ id }) => id)).toEqual([
+      "PSY-1001",
+    ]);
+  });
+
+  it("matches on the catalog number alone", () => {
+    expect(searchCourses(courses, "3001").map(({ id }) => id)).toEqual([
+      "PSY-3001",
+    ]);
+  });
+
+  it("returns everything when nothing has been typed", () => {
+    expect(searchCourses(courses, "  ")).toEqual(courses);
+  });
+});

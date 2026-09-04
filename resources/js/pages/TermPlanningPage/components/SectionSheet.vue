@@ -24,6 +24,7 @@
         >
           {{ draft.component }}
         </span>
+        <UnofficialTag v-if="isUnofficial" />
         <span
           v-if="draft.isCancelled"
           class="tw-inline-flex tw-h-5 tw-items-center tw-rounded-full tw-bg-brand tw-px-2 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-wide tw-text-white"
@@ -45,7 +46,10 @@
       </div>
 
       <h2 class="tw-m-0 tw-mt-1 tw-text-[19px] tw-font-bold tw-tracking-tight">
-        {{ draft.subject }} {{ draft.catalogNumber }} · {{ draft.section }}
+        <template v-if="isNew && !draft.courseCode">New section</template>
+        <template v-else>
+          {{ draft.subject }} {{ draft.catalogNumber }} · {{ draft.section }}
+        </template>
         <!-- How many other numbers this same class is listed under. -->
         <span v-if="partners.length > 0" class="tw-text-on-surface-variant">
           [+{{ partners.length }}]
@@ -54,9 +58,9 @@
 
       <p
         class="tw-m-0 tw-truncate tw-text-[12.5px] tw-text-on-surface-variant"
-        :title="section.title"
+        :title="draft.title"
       >
-        {{ section.title }}
+        {{ draft.title || "Pick a course to name it" }}
       </p>
 
       <p class="tw-m-0 tw-mt-2 tw-text-[11.5px] tw-text-on-surface-variant">
@@ -70,6 +74,14 @@
       v-else
       class="scrollbar-always-visible tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-gap-5 tw-overflow-y-auto tw-p-[18px]"
     >
+      <CoursePicker
+        v-if="isNew"
+        :groupId="groupId"
+        :termCode="section.termId"
+        :modelValue="draft.courseCode ?? null"
+        @update:modelValue="chooseCourse"
+      />
+
       <div>
         <FieldLabel :for="fieldId('section')">Section</FieldLabel>
         <input
@@ -407,6 +419,68 @@
       </div>
     </div>
 
+    <div
+      v-if="isConfirmingDelete"
+      role="alertdialog"
+      class="tw-flex tw-flex-none tw-flex-col tw-gap-2 tw-border-0 tw-border-t tw-border-solid tw-border-outline-variant tw-bg-brand/[0.06] tw-px-[18px] tw-py-3.5"
+    >
+      <p class="tw-m-0 tw-text-[13.5px] tw-font-bold">
+        Delete {{ draft.subject }} {{ draft.catalogNumber }} ·
+        {{ draft.section }}?
+      </p>
+      <p class="tw-m-0 tw-text-[12.5px] tw-leading-normal">
+        It leaves {{ termName ?? "this term" }} for everyone.
+        {{ draft.title }} stays on the course list, so a later term can still
+        plan it.
+      </p>
+
+      <!--
+        Reaching for Delete often means "not on Tuesdays" rather than "not at
+        all", so each meeting can go on its own from here.
+      -->
+      <div
+        v-if="draft.meetings.length > 0"
+        class="tw-flex tw-flex-col tw-gap-1.5"
+      >
+        <p
+          class="tw-m-0 tw-text-[11px] tw-font-bold tw-uppercase tw-tracking-[0.06em] tw-text-on-surface-variant"
+        >
+          Meets
+        </p>
+        <div
+          v-for="(pattern, patternIndex) in draft.meetings"
+          :key="patternIndex"
+          class="tw-flex tw-items-center tw-justify-between tw-gap-2 tw-rounded-lg tw-bg-surface-bright tw-px-3 tw-py-2 tw-text-[13px]"
+        >
+          <span>{{ describePattern(pattern) }}</span>
+          <button
+            type="button"
+            class="tw-flex-none tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[12.5px] tw-font-semibold tw-text-primary hover:tw-underline"
+            @click="removeMeetingOnly(patternIndex)"
+          >
+            Remove this meeting
+          </button>
+        </div>
+      </div>
+
+      <div class="tw-flex tw-items-center tw-gap-3">
+        <button
+          type="button"
+          class="tw-min-h-11 tw-cursor-pointer tw-rounded-full tw-border-none tw-bg-brand tw-px-5 tw-text-[13px] tw-font-bold tw-text-white"
+          @click="confirmDelete"
+        >
+          Delete section
+        </button>
+        <button
+          type="button"
+          class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[13px] tw-font-semibold tw-text-on-surface-variant hover:tw-underline"
+          @click="isConfirmingDelete = false"
+        >
+          Keep it
+        </button>
+      </div>
+    </div>
+
     <p
       v-for="problem in generalProblems"
       :key="problem.message"
@@ -425,6 +499,34 @@
     >
       <LockIcon class="tw-h-4 tw-w-4 tw-flex-none tw-text-on-surface-variant" />
       <span class="tw-text-xs tw-font-bold">Read only</span>
+    </div>
+
+    <div
+      v-else-if="isNew"
+      class="tw-flex tw-flex-none tw-items-center tw-gap-2.5 tw-border-0 tw-border-t tw-border-solid tw-border-surface-container tw-bg-surface-bright tw-px-[18px] tw-pb-3 tw-pt-2.5"
+    >
+      <button
+        type="button"
+        class="tw-min-h-11 tw-rounded-full tw-border-none tw-bg-primary tw-px-6 tw-text-[13px] tw-font-bold tw-text-on-primary disabled:tw-cursor-default disabled:tw-bg-surface-container-high disabled:tw-text-on-surface-variant"
+        :class="{ 'tw-cursor-pointer': canCreate }"
+        :disabled="!canCreate"
+        @click="emit('create')"
+      >
+        Create section
+      </button>
+      <button
+        type="button"
+        class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[13px] tw-font-semibold tw-text-on-surface-variant hover:tw-underline"
+        @click="emit('discard')"
+      >
+        Cancel
+      </button>
+      <p
+        v-if="!draft.courseCode"
+        class="tw-m-0 tw-ml-auto tw-text-[12px] tw-text-on-surface-variant"
+      >
+        Pick a course first
+      </p>
     </div>
 
     <div
@@ -492,6 +594,14 @@
           >
             Cancel section…
           </button>
+          <button
+            type="button"
+            role="menuitem"
+            class="tw-block tw-w-full tw-min-h-11 tw-cursor-pointer tw-rounded-[7px] tw-border-none tw-bg-transparent tw-px-2.5 tw-text-left tw-text-[13px] tw-font-semibold tw-text-brand hover:tw-bg-brand/[0.06]"
+            @click="startDeleteFromMenu"
+          >
+            Delete section…
+          </button>
         </div>
       </div>
     </div>
@@ -501,6 +611,8 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { onClickOutside } from "@vueuse/core";
+import CoursePicker from "./CoursePicker.vue";
+import UnofficialTag from "./UnofficialTag.vue";
 import Disclosure from "./Disclosure.vue";
 import FieldDivider from "./FieldDivider.vue";
 import FieldLabel from "./FieldLabel.vue";
@@ -517,9 +629,11 @@ import {
   PRIMARY_ROLE,
   TA_ROLE,
 } from "../helpers/sectionPeople";
-import { minutesFromClock } from "../helpers/timeScale";
+import { formatTimeRange, minutesFromClock } from "../helpers/timeScale";
+import { NEW_SECTION_ID } from "../useScheduleEditor/types";
 import type {
   Delivery,
+  PlannableCourse,
   PlannedSection,
   SisDay,
   SisEmployee,
@@ -530,6 +644,10 @@ import type { ScheduleEditor } from "../useScheduleEditor";
 const props = defineProps<{
   section: PlannedSection;
   schedule: ScheduleEditor;
+  /** Which department's catalogue the course picker offers. */
+  groupId: number;
+  /** On a course a scheduler named, which the SIS has never published. */
+  isUnofficial?: boolean;
   /** The term's sections, for reading a cross-list partner's cap. */
   sections: PlannedSection[];
   roster: SisEmployee[];
@@ -544,7 +662,15 @@ const props = defineProps<{
   isReadOnly?: boolean;
 }>();
 
-const emit = defineEmits<{ close: []; back: [] }>();
+const emit = defineEmits<{
+  close: [];
+  back: [];
+  /** Create was pressed; the page writes the draft to the server. */
+  create: [];
+  /** Cancel was pressed on a section that was never created. */
+  discard: [];
+  delete: [];
+}>();
 
 const COMPONENT_CODES = ["LEC", "DIS", "LAB", "FWK", "IND"];
 
@@ -562,6 +688,7 @@ const DAY_OPTIONS: SegmentedOption[] = [
 const isAddingInstructor = ref(false);
 const isAddingAssistant = ref(false);
 const isConfirmingCancel = ref(false);
+const isConfirmingDelete = ref(false);
 const isMenuOpen = ref(false);
 
 const menuContainerRef = ref<HTMLElement | null>(null);
@@ -572,6 +699,9 @@ onClickOutside(menuContainerRef, () => {
 const fieldId = (field: string) => `section-${props.section.id}-${field}`;
 
 const draft = computed(() => props.schedule.draftSection(props.section));
+
+/** No row exists for this one yet; see `NEW_SECTION_ID`. */
+const isNew = computed(() => props.section.id === NEW_SECTION_ID);
 
 const isDirty = computed(() => props.schedule.isDraftDirty(props.section));
 
@@ -635,14 +765,18 @@ const capForDisplay = computed(() =>
 const editCap = (raw: string) =>
   edit({ enrollmentCap: raw.trim() === "" ? NaN : Number(raw) });
 
-const metaLine = computed(() =>
-  [
-    `${props.section.credits ?? "—"} credits`,
-    `class ${props.section.classNumber}`,
+const metaLine = computed(() => {
+  const credits = `${draft.value.credits ?? "—"} credits`;
+
+  if (isNew.value) return `${credits} · not created yet`;
+
+  return [
+    credits,
+    `class ${props.section.classNumber ?? "—"}`,
     `${props.section.enrollmentTotal} of ${capForDisplay.value} seats filled`,
     props.schedule.hasEdits(props.section.id) ? "edited here" : "matches SIS",
-  ].join(" · "),
-);
+  ].join(" · ");
+});
 
 const rosterOptions = computed<ComboBoxOptionType[]>(() =>
   props.roster
@@ -721,6 +855,57 @@ const combinedCap = computed(() => {
     draft.value.enrollmentCap,
   );
 });
+
+const chooseCourse = (course: PlannableCourse) =>
+  edit({
+    courseCode: course.courseCode,
+    subject: course.subject,
+    catalogNumber: course.catalogNumber,
+    title: course.title,
+    credits: course.credits,
+  });
+
+const canCreate = computed(
+  () =>
+    Boolean(draft.value.courseCode) &&
+    draft.value.section.trim() !== "" &&
+    problems.value.length === 0,
+);
+
+const DAY_LABELS: Record<SisDay, string> = {
+  mon: "Mon",
+  tue: "Tue",
+  wed: "Wed",
+  thu: "Thu",
+  fri: "Fri",
+  sat: "Sat",
+  sun: "Sun",
+};
+
+/** "Mon, Wed · 10:10 – 11a", as the delete prompt lists a meeting. */
+const describePattern = (pattern: SisSectionMeeting) =>
+  `${pattern.days.map((day) => DAY_LABELS[day]).join(", ")} · ${formatTimeRange(
+    minutesFromClock(pattern.startTime),
+    minutesFromClock(pattern.endTime),
+  )}`;
+
+// straight through the draft to the saved edits: the prompt has already asked
+function removeMeetingOnly(patternIndex: number) {
+  props.schedule.removeMeetingPattern(props.section.id, patternIndex);
+  props.schedule.saveDraft(props.section.id);
+
+  if (draft.value.meetings.length === 0) isConfirmingDelete.value = false;
+}
+
+function confirmDelete() {
+  isConfirmingDelete.value = false;
+  emit("delete");
+}
+
+function startDeleteFromMenu() {
+  isMenuOpen.value = false;
+  isConfirmingDelete.value = true;
+}
 
 function confirmCancelSection() {
   props.schedule.cancelSection(props.section.id);
