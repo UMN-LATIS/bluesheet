@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { emptyFilters, initialState, update } from "./update";
+import { selectIsNewSectionSelected } from "./selectors";
 import { placeSections } from "../helpers/sectionPlacement";
 import { plannedSection } from "../helpers/plannedSection.fixture";
 import { NEW_SECTION_ID } from "./types";
@@ -1206,5 +1207,79 @@ describe("deleting a section", () => {
     const state = after([{ type: "sectionDeleted", sectionId: 1 }], both);
 
     expect(state.sectionEdits).toEqual({ 2: { notes: "keep" } });
+  });
+});
+
+describe("walking away from a section being created", () => {
+  const started = after(draw(0, 600, 675));
+
+  it("escape takes the drawn block with it", () => {
+    const state = after([{ type: "canceled" }], started);
+
+    expect(drawn(state)).toBeUndefined();
+    expect(state.selection).toBeNull();
+  });
+
+  it("so does closing the sheet", () => {
+    expect(drawn(after([{ type: "deselected" }], started))).toBeUndefined();
+  });
+
+  it("so does opening another section", () => {
+    const state = after([{ type: "selectedSection", sectionId: 7 }], started);
+
+    expect(drawn(state)).toBeUndefined();
+    expect(state.selection).toEqual({ kind: "section", sectionId: 7 });
+  });
+
+  it("so does opening an hour", () => {
+    const state = after(
+      [{ type: "selectedHour", dayIndex: 1, startMinute: 600 }],
+      started,
+    );
+
+    expect(drawn(state)).toBeUndefined();
+  });
+
+  // the sheet renames its blocks as it edits them, which must not read as
+  // walking away from the section they belong to
+  it("editing its own days keeps it", () => {
+    const state = after(
+      [
+        {
+          type: "meetingDayToggled",
+          sectionId: NEW_SECTION_ID,
+          patternIndex: 0,
+          day: "thu",
+        },
+      ],
+      started,
+    );
+
+    expect(drawn(state)?.[0].days).toContain("thu");
+    // and the sheet stays open on it, though its blocks now have other ids
+    expect(selectIsNewSectionSelected(state)).toBe(true);
+  });
+
+  it("moving its block on the grid keeps it", () => {
+    const state = after(
+      [
+        { type: "pressedMeeting", meetingId: "s-1:mon:1000", minute: 610 },
+        { type: "pointerMoved", dayIndex: 3, minute: 700 },
+        { type: "released" },
+      ],
+      started,
+    );
+
+    expect(drawn(state)).toEqual([
+      { days: ["thu"], startTime: "11:30", endTime: "12:45" },
+    ]);
+  });
+
+  it("drawing a second one replaces rather than discards", () => {
+    const state = after(draw(2, 540, 590), started);
+
+    expect(drawn(state)).toEqual([
+      { days: ["wed"], startTime: "09:00", endTime: "09:50" },
+    ]);
   });
 });

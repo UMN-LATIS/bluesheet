@@ -2,7 +2,11 @@ import type { Meeting, PlannedSection, SisSection, TimeRange } from "../types";
 import { FILTER_FACETS } from "../types";
 import { isEqual } from "lodash-es";
 import { type DayLayout, layOutDay } from "../helpers/dayLayout";
-import { GRID_DAYS, meetingIdOf } from "../helpers/sectionPlacement";
+import {
+  GRID_DAYS,
+  meetingIdOf,
+  sectionIdOfMeetingId,
+} from "../helpers/sectionPlacement";
 import { minutesFromClock } from "../helpers/timeScale";
 import { NEW_SECTION_ID } from "./types";
 import type {
@@ -137,9 +141,9 @@ export function selectIsNewSectionSelected(state: EditorState): boolean {
 
   if (selection?.kind !== "meeting") return false;
 
-  return selectNewSectionMeetings(state).some(
-    ({ id }) => id === selection.meetingId,
-  );
+  // read off the id rather than matched against the blocks: changing the day
+  // in the sheet renames them, and the sheet must not close when it does
+  return sectionIdOfMeetingId(selection.meetingId) === NEW_SECTION_ID;
 }
 
 /** Unsaved work the page warns about before it lets the reader leave. */

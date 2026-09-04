@@ -37,7 +37,11 @@ import {
   START_MINUTE,
 } from "../helpers/timeScale";
 import { GRID_DAYS, meetingIdOf } from "../helpers/sectionPlacement";
-import { selectMeetings, selectNewSectionMeetings } from "./selectors";
+import {
+  selectIsNewSectionSelected,
+  selectMeetings,
+  selectNewSectionMeetings,
+} from "./selectors";
 import { NEW_SECTION_ID } from "./types";
 import {
   DEFAULT_PATTERN,
@@ -139,12 +143,39 @@ export function update(
     return { state, effects: [] };
   }
 
-  const nextState = reduce(state, event, context);
+  const nextState = withoutAbandonedSection(
+    state,
+    reduce(state, event, context),
+  );
 
   return {
     state: nextState,
     effects: effectsOf(event, state, nextState, context),
   };
+}
+
+/**
+ * A section drawn but never created goes as soon as the selection leaves it:
+ * Escape, a click on another block, a chip, an hour. Nothing was written, so
+ * there is nothing to keep, and a block left on the grid with no sheet open on
+ * it can be neither finished nor removed.
+ *
+ * Keyed on the selection changing rather than on what the event was, so that
+ * editing the section's own days and times, which renames its blocks, does not
+ * read as walking away from it.
+ */
+function withoutAbandonedSection(
+  before: EditorState,
+  after: EditorState,
+): EditorState {
+  const wasCreating = before.drafts[NEW_SECTION_ID] !== undefined;
+  const movedOn = !isEqual(before.selection, after.selection);
+
+  if (!wasCreating || !movedOn || selectIsNewSectionSelected(after)) {
+    return after;
+  }
+
+  return { ...after, drafts: omitKey(after.drafts, NEW_SECTION_ID) };
 }
 
 /**

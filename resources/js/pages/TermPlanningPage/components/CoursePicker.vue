@@ -1,5 +1,5 @@
 <template>
-  <div ref="containerRef" class="tw-relative" @keydown.escape="close">
+  <div ref="containerRef" class="tw-relative" @keydown.escape="dismissList">
     <FieldLabel :for="inputId">Course</FieldLabel>
 
     <div
@@ -142,6 +142,18 @@ function open() {
 
 function close() {
   isOpen.value = false;
+}
+
+/**
+ * Escape closes the list, and stops there. A page listening for Escape on
+ * window would otherwise also act on it: in the section sheet that means
+ * discarding the section this picker is being used to name.
+ */
+function dismissList(event: KeyboardEvent) {
+  if (!isOpen.value) return;
+
+  event.stopPropagation();
+  close();
 }
 
 function choose(course: PlannableCourse) {
