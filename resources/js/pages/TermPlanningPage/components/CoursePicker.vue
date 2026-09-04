@@ -63,69 +63,29 @@
       </button>
 
       <p
-        v-if="matches.length === 0 && !nameable"
+        v-if="matches.length === 0"
         class="tw-m-0 tw-px-2.5 tw-py-3 tw-text-[12.5px] tw-text-on-surface-variant"
       >
-        No course matches. Type a subject and number to name a new one.
+        No course matches what you typed.
       </p>
 
-      <template v-if="nameable">
-        <FieldDivider v-if="matches.length > 0" />
-        <div
-          v-if="naming"
-          class="tw-flex tw-flex-col tw-gap-2 tw-px-2.5 tw-py-2"
-        >
-          <p class="tw-m-0 tw-text-[13px] tw-font-bold">
-            New course {{ naming.subject }} {{ naming.catalogNumber }}
-          </p>
-          <input
-            v-model="title"
-            type="text"
-            aria-label="Course title"
-            placeholder="Title"
-            class="field-control tw-w-full"
-          />
-          <input
-            v-model="credits"
-            type="number"
-            min="0"
-            aria-label="Credits"
-            placeholder="Credits"
-            class="field-control tw-w-24"
-          />
-          <p v-if="nameError" class="tw-m-0 tw-text-xs tw-text-red-700">
-            {{ nameError }}
-          </p>
-          <div class="tw-flex tw-items-center tw-gap-3">
-            <button
-              type="button"
-              class="tw-min-h-11 tw-rounded-full tw-border-none tw-bg-primary tw-px-5 tw-text-[13px] tw-font-bold tw-text-on-primary disabled:tw-cursor-default disabled:tw-bg-surface-container-high disabled:tw-text-on-surface-variant"
-              :class="{ 'tw-cursor-pointer': title.trim() !== '' }"
-              :disabled="title.trim() === '' || createCourse.isPending.value"
-              @click="addCourse"
-            >
-              Add course
-            </button>
-            <button
-              type="button"
-              class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[13px] tw-font-semibold tw-text-on-surface-variant hover:tw-underline"
-              @click="naming = null"
-            >
-              Back
-            </button>
-          </div>
-        </div>
-        <button
-          v-else
-          type="button"
-          class="tw-flex tw-w-full tw-min-h-11 tw-cursor-pointer tw-items-center tw-rounded-[7px] tw-border-none tw-bg-transparent tw-px-2.5 tw-text-left tw-text-[13px] tw-font-semibold tw-text-primary hover:tw-bg-surface"
-          @click="startNaming"
-        >
-          Name a new course: {{ nameable.subject }}
-          {{ nameable.catalogNumber }}
-        </button>
-      </template>
+      <FieldDivider v-if="matches.length > 0" />
+      <button
+        type="button"
+        class="tw-flex tw-min-h-11 tw-w-full tw-cursor-pointer tw-items-center tw-rounded-[7px] tw-border-none tw-bg-transparent tw-px-2.5 tw-text-left tw-text-[13px] tw-font-semibold tw-text-primary hover:tw-bg-surface"
+        @click="isNamingCourse = true"
+      >
+        Create new course…
+      </button>
     </div>
+
+    <NewCourseModal
+      :show="isNamingCourse"
+      :groupId="groupId"
+      :termCode="termCode"
+      @close="isNamingCourse = false"
+      @created="courseNamed"
+    />
   </div>
 </template>
 
@@ -134,14 +94,10 @@ import { computed, nextTick, ref, useId } from "vue";
 import { onClickOutside } from "@vueuse/core";
 import FieldDivider from "./FieldDivider.vue";
 import FieldLabel from "./FieldLabel.vue";
+import NewCourseModal from "./NewCourseModal.vue";
 import UnofficialTag from "./UnofficialTag.vue";
-import {
-  courseCodeOf,
-  parseCourseCode,
-  searchCourses,
-} from "../helpers/courseCode";
+import { searchCourses } from "../helpers/courseSearch";
 import { useTermPlanCoursesQuery } from "../queries/useTermPlanCoursesQuery";
-import { useTermPlanMutations } from "../queries/useTermPlanMutations";
 import type { PlannableCourse } from "../types";
 
 const props = defineProps<{
@@ -159,14 +115,10 @@ const groupId = computed(() => props.groupId);
 const termCode = computed(() => props.termCode);
 
 const coursesQuery = useTermPlanCoursesQuery(groupId);
-const { createCourse } = useTermPlanMutations(groupId, termCode);
 
 const search = ref("");
 const isOpen = ref(false);
-const naming = ref<ReturnType<typeof parseCourseCode>>(null);
-const title = ref("");
-const credits = ref("");
-const nameError = ref("");
+const isNamingCourse = ref(false);
 
 const containerRef = ref<HTMLElement | null>(null);
 const inputRef = ref<HTMLInputElement | null>(null);
@@ -182,23 +134,6 @@ const chosen = computed(
 
 const matches = computed(() => searchCourses(courses.value, search.value));
 
-/**
- * The course the typed text names, or null when the department already has
- * that code. Narrow this to `local_courses` alone and a code the SIS carries
- * becomes nameable, at which point `CourseUnion` hides the saved row behind
- * the SIS one and nobody sees it again.
- */
-const nameable = computed(() => {
-  const parts = parseCourseCode(search.value);
-  if (!parts) return null;
-
-  const code = courseCodeOf(parts);
-
-  return courses.value.some((course) => course.courseCode === code)
-    ? null
-    : parts;
-});
-
 function open() {
   isOpen.value = true;
   search.value = "";
@@ -207,8 +142,6 @@ function open() {
 
 function close() {
   isOpen.value = false;
-  naming.value = null;
-  nameError.value = "";
 }
 
 function choose(course: PlannableCourse) {
@@ -216,30 +149,9 @@ function choose(course: PlannableCourse) {
   close();
 }
 
-function startNaming() {
-  naming.value = nameable.value;
-  title.value = "";
-  credits.value = "";
-  nameError.value = "";
-}
-
-async function addCourse() {
-  if (!naming.value) return;
-
-  nameError.value = "";
-
-  try {
-    const course = await createCourse.mutateAsync({
-      subject: naming.value.subject,
-      catalogNumber: naming.value.catalogNumber,
-      title: title.value.trim(),
-      credits: credits.value.trim() === "" ? null : Number(credits.value),
-    });
-
-    choose(course);
-  } catch {
-    nameError.value = "That course could not be added. It may already exist.";
-  }
+function courseNamed(course: PlannableCourse) {
+  isNamingCourse.value = false;
+  choose(course);
 }
 </script>
 

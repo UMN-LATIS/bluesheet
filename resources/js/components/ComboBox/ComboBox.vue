@@ -95,10 +95,15 @@
               v-for="option in filteredOptions"
               :key="option.id ?? option.label"
             >
+              <!--
+                -top-3 against the list's own py-3: pinned there the heading
+                covers that padding band, so options scroll under it rather
+                than through a gap above it.
+              -->
               <li
                 v-if="isFirstOfGroup(option)"
                 role="presentation"
-                class="tw-px-2 tw-pt-2 tw-pb-1 tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-neutral-500"
+                class="tw-sticky -tw-top-3 tw-z-10 -tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-border-neutral-300 tw-bg-neutral-100 tw-px-4 tw-pb-1 tw-pt-3 tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-neutral-600"
               >
                 {{ option.group }}
               </li>

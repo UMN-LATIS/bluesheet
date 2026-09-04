@@ -1,37 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { courseCodeOf, parseCourseCode, searchCourses } from "./courseCode";
+import { searchCourses } from "./courseSearch";
 import type { PlannableCourse } from "../types";
-
-describe("parseCourseCode", () => {
-  it("reads a subject and a catalog number however they are separated", () => {
-    const expected = { subject: "PSY", catalogNumber: "5099" };
-
-    expect(parseCourseCode("psy 5099")).toEqual(expected);
-    expect(parseCourseCode("PSY-5099")).toEqual(expected);
-    expect(parseCourseCode(" PSY5099 ")).toEqual(expected);
-  });
-
-  it("keeps a catalog number's letter suffix", () => {
-    expect(parseCourseCode("anth 1001W")).toEqual({
-      subject: "ANTH",
-      catalogNumber: "1001W",
-    });
-  });
-
-  it("is null for anything that is not one course", () => {
-    expect(parseCourseCode("intro psych")).toBeNull();
-    expect(parseCourseCode("5099")).toBeNull();
-    expect(parseCourseCode("")).toBeNull();
-  });
-});
-
-describe("courseCodeOf", () => {
-  it("joins the two the way the server does", () => {
-    expect(courseCodeOf({ subject: "PSY", catalogNumber: "5099" })).toBe(
-      "PSY-5099",
-    );
-  });
-});
 
 describe("searchCourses", () => {
   const course = (
