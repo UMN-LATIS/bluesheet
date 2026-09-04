@@ -2,6 +2,8 @@
 
 use App\Console\Commands\ImportSisData;
 use App\Group;
+use App\LocalClassInstructor;
+use App\LocalClassMeeting;
 use App\LocalClassSection;
 use App\LocalCourse;
 use App\SisCourse;
@@ -10,6 +12,7 @@ use App\SisEmployee;
 use App\User;
 use Database\Seeders\TestDatabaseSeeder;
 use Illuminate\Support\Facades\Schema;
+use OwenIt\Auditing\Models\Audit;
 
 use function Pest\Laravel\{actingAs, deleteJson, getJson, postJson, putJson};
 
@@ -337,15 +340,36 @@ describe('PUT /api/term-planning/groups/:groupId/sections/:id', function () {
 });
 
 describe('DELETE /api/term-planning/groups/:groupId/sections/:id', function () {
-    it('removes the section from the plan but keeps the row', function () {
+    it('removes the section and its meetings and instructors', function () {
         $section = plannedSection();
+        $section->meetings()->create(['starts_at' => '10:00', 'ends_at' => '10:50', 'mon' => true]);
+        $section->instructors()->create(['emplid' => 900000001, 'role' => 'PI']);
 
         actingAs($this->admin);
         $res = deleteJson(sectionsUrl($this->group) . "/{$section->id}");
 
         expect($res->status())->toBe(204);
         expect(LocalClassSection::count())->toBe(0);
-        expect(LocalClassSection::withTrashed()->count())->toBe(1);
+        expect(LocalClassMeeting::where('local_class_section_id', $section->id)->count())->toBe(0);
+        expect(LocalClassInstructor::where('local_class_section_id', $section->id)->count())->toBe(0);
+    });
+
+    // the row is gone, so this is the only record of what was there
+    it('records the deletion in the audit trail', function () {
+        config(['audit.console' => true]);
+        $section = plannedSection(['class_section' => '004', 'title' => 'Human Evolution']);
+
+        actingAs($this->admin);
+        deleteJson(sectionsUrl($this->group) . "/{$section->id}");
+
+        $audit = Audit::where('auditable_type', LocalClassSection::class)
+            ->where('auditable_id', $section->id)
+            ->where('event', 'deleted')
+            ->sole();
+
+        expect($audit->old_values['class_section'])->toBe('004');
+        expect($audit->old_values['title'])->toBe('Human Evolution');
+        expect($audit->user_id)->toBe($this->admin->id);
     });
 
     it('frees the section number for reuse', function () {

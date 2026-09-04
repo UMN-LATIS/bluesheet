@@ -4,7 +4,6 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use OwenIt\Auditing\Auditable as AuditableTrait;
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
@@ -16,7 +15,6 @@ use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 class LocalCourse extends Model implements AuditableContract {
     use AuditableTrait;
     use HasFactory;
-    use SoftDeletes;
 
     protected $fillable = [
         'course_code',

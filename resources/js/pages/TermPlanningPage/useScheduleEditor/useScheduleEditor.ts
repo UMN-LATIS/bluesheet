@@ -27,6 +27,7 @@ import {
   selectLocalSections,
   selectMarkedHour,
   selectMeetings,
+  selectNewSectionHasCourse,
   selectOpenHour,
   selectPlaced,
   selectSelectedMeetingId,
@@ -98,6 +99,8 @@ export function useScheduleEditor(
     pendingEdits: computed(() => state.value.sectionEdits),
     /** A section drawn on the grid that Create has not been pressed on yet. */
     isCreatingSection: computed(() => selectIsCreatingSection(state.value)),
+    /** The same section, once a course has been picked for it. */
+    newSectionHasCourse: computed(() => selectNewSectionHasCourse(state.value)),
     isNewSectionSelected: computed(() =>
       selectIsNewSectionSelected(state.value),
     ),

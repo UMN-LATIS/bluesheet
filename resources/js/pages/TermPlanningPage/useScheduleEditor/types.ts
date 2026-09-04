@@ -128,8 +128,13 @@ export interface EditorState {
    * saved. The view asks about it, and the answer arrives as
    * `dismissalConfirmed` or `dismissalCancelled`, which is what keeps the
    * question out of `update` and out of a browser dialog.
+   *
+   * `interaction` is the gesture the event ended, parked here so that
+   * `interaction` above can go idle while the question stands. Drop it and a
+   * press whose release is held keeps `isGestureInFlight` true, so a phantom
+   * block follows the pointer across the grid.
    */
-  pendingDismissal: EditorEvent | null;
+  pendingDismissal: { event: EditorEvent; interaction: Interaction } | null;
   interaction: Interaction;
   /** Flashed by the grid; cleared by the next press. */
   lastPlacedId: string | null;

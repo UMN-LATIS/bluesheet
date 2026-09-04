@@ -130,10 +130,17 @@ const week = computed(() => props.schedule.weekView(WEEKDAY_NAMES.length));
 function onPointerDown(event: PointerEvent) {
   if (event.button !== 0) return;
 
+  const target = event.target as HTMLElement;
+
+  // The day headers and the Async column are inside this element too, and a
+  // press on either has no place on the clock. Without this, `dayIndexAt`
+  // answers for them anyway by clamping, and pressing a chip draws a Friday
+  // section behind it. The capture below would also swallow the chip's click.
+  if (!target.closest("[data-day-index]")) return;
+
   const at = positionOf(event);
   if (!at) return;
 
-  const target = event.target as HTMLElement;
   const meetingId =
     target.closest<HTMLElement>("[data-meeting-id]")?.dataset.meetingId;
   const edge =

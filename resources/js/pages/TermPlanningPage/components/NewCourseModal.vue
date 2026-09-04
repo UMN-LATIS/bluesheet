@@ -93,6 +93,7 @@
 import { computed, ref, useId, watch } from "vue";
 import Modal from "@/components/Modal.vue";
 import FieldLabel from "./FieldLabel.vue";
+import { refusalMessage } from "../helpers/refusalMessage";
 import { useTermPlanMutations } from "../queries/useTermPlanMutations";
 import type { PlannableCourse } from "../types";
 
@@ -146,18 +147,9 @@ async function submit() {
     emit("created", course);
   } catch (refusal) {
     error.value =
-      messageOf(refusal) ??
+      refusalMessage(refusal) ??
       "That course could not be added. Check the subject and catalog number.";
   }
-}
-
-/** Laravel sends a 422's per-field messages under `errors`. */
-function messageOf(refusal: unknown): string | undefined {
-  const errors = (
-    refusal as { response?: { data?: { errors?: Record<string, string[]> } } }
-  ).response?.data?.errors;
-
-  return errors && Object.values(errors)[0]?.[0];
 }
 </script>
 

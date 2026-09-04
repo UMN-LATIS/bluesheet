@@ -38,6 +38,17 @@
         :aria-label="`${VIEW_LABELS[activeView]} schedule`"
         class="tw-flex tw-min-h-0 tw-min-w-0 tw-flex-1 tw-flex-col"
       >
+        <Notification
+          v-if="writeError"
+          type="danger"
+          title="Not saved"
+          isDismissable
+          class="tw-mt-3 tw-flex-none"
+          @dismiss="writeError = null"
+        >
+          {{ writeError }}
+        </Notification>
+
         <DayView
           v-if="activeView === 'day'"
           :dayIndex="schedule.dayIndex"
@@ -159,6 +170,7 @@ import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import { useEventListener } from "@vueuse/core";
 import { omit } from "lodash-es";
 import FullScreenLayout from "@/layouts/FullScreenLayout.vue";
+import Notification from "@/components/Notification.vue";
 import CoverageHeatmap from "./components/CoverageHeatmap.vue";
 import DayView from "./components/DayView.vue";
 import HourSheet, { type HourEntry } from "./components/HourSheet.vue";
@@ -174,6 +186,7 @@ import { bandsForDay } from "./helpers/dayBands";
 import { buildFilterOptions } from "./helpers/filterOptions";
 import { reachableFacetValues } from "./helpers/scheduleFilters";
 import { ASYNC_DAY_INDEX, WEEKDAY_NAMES } from "./helpers/scheduleDays";
+import { refusalMessage } from "./helpers/refusalMessage";
 import { formatTimeRange } from "./helpers/timeScale";
 import { toSectionPayload } from "./helpers/sectionPayload";
 import { flattenQuery } from "./helpers/urlQuery";
@@ -331,23 +344,49 @@ const newSection = computed<PlannedSection | null>(() => {
   };
 });
 
+/**
+ * The last write the server refused. Every write clears it first, so the
+ * banner names what just happened rather than something already recovered
+ * from, and the reader can dismiss what is left.
+ */
+const writeError = ref<string | null>(null);
+
+const REFUSED =
+  "That change could not be saved. Check your connection and try again.";
+
+const showRefusal = (refusal: unknown) => {
+  writeError.value = refusalMessage(refusal) ?? REFUSED;
+};
+
 async function createDrawnSection() {
   const standIn = newSection.value;
   if (!standIn) return;
 
-  const created = await createSection.mutateAsync(
-    toSectionPayload(schedule.draftSection(standIn)),
-  );
+  writeError.value = null;
 
-  schedule.markSectionCreated(created.id);
+  try {
+    const created = await createSection.mutateAsync(
+      toSectionPayload(schedule.draftSection(standIn)),
+    );
+
+    schedule.markSectionCreated(created.id);
+  } catch (refusal) {
+    showRefusal(refusal);
+  }
 }
 
 async function deleteSelectedSection() {
   const section = selectedSection.value;
   if (!section) return;
 
-  await deleteSection.mutateAsync(section.id);
-  schedule.markSectionDeleted(section.id);
+  writeError.value = null;
+
+  try {
+    await deleteSection.mutateAsync(section.id);
+    schedule.markSectionDeleted(section.id);
+  } catch (refusal) {
+    showRefusal(refusal);
+  }
 }
 
 /** Closing the sheet on a section nobody created is discarding it. */
@@ -377,12 +416,14 @@ const isUnofficialBlock = (meeting: Meeting) => {
 };
 
 /**
- * A section drawn but never created, or a sheet with typing behind its Save
- * button. Grid drags are not here: they go straight to the autosave.
+ * A section drawn and given a course but never created, or a sheet with
+ * typing behind its Save button. Grid drags are not here: they go straight to
+ * the autosave. The same test the sheet asks by, so one click on the grid and
+ * then Back is not a question; see `selectAbandonsUnsavedWork`.
  */
 const hasUnsavedWork = computed(
   () =>
-    schedule.isCreatingSection ||
+    schedule.newSectionHasCourse ||
     localSections.value.some((section) => schedule.isDraftDirty(section)),
 );
 
@@ -405,6 +446,7 @@ useTermPlanAutosave({
   pendingEdits: computed(() => schedule.pendingEdits),
   save: (section) => saveSection.mutateAsync(section),
   onSaved: (sectionId, saved) => schedule.markEditsPersisted(sectionId, saved),
+  onRefused: showRefusal,
 });
 
 // The only way anything the URL carries is written: a pasted link on first

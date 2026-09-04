@@ -47,7 +47,6 @@ class CourseTeachingHistory {
     private static function plannedTerms(int $academicOrg, string $courseCode): Collection {
         return LocalClassInstructor::query()
             ->join('local_class_sections', 'local_class_sections.id', '=', 'local_class_instructors.local_class_section_id')
-            ->whereNull('local_class_sections.deleted_at')
             ->where('local_class_sections.academic_org', $academicOrg)
             ->where('local_class_sections.course_code', $courseCode)
             ->groupBy('local_class_instructors.emplid', 'local_class_instructors.role')

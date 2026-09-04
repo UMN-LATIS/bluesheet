@@ -17,16 +17,18 @@ const QUIET_PERIOD_MS = 800;
  * The editor holds each change as a sparse overlay on the section it belongs
  * to. This watches those overlays, and when they settle sends the whole
  * section for each one and tells the editor which edits it can let go of. An
- * overlay stays put until its own save lands, so a failed save leaves the
- * change on screen rather than losing it silently.
+ * overlay stays put until its own save is back from the server, so a refused
+ * save leaves the change on screen and the next edit sends it again.
  */
 export function useTermPlanAutosave(options: {
   sections: Readonly<Ref<PlannedSection[]>>;
   pendingEdits: Readonly<Ref<Record<number, SectionEdit>>>;
   save: (section: PlannedSection) => Promise<unknown>;
   onSaved: (sectionId: number, saved: SectionEdit) => void;
+  /** Nothing here retries, so this is the reader's only sign of a refusal. */
+  onRefused: (refusal: unknown) => void;
 }) {
-  const { sections, pendingEdits, save, onSaved } = options;
+  const { sections, pendingEdits, save, onSaved, onRefused } = options;
 
   const saveEdited = async () => {
     // read once: an edit made during a save must not be marked as saved
@@ -38,8 +40,13 @@ export function useTermPlanAutosave(options: {
         const section = sections.value.find(({ id }) => id === sectionId);
         if (!section) return;
 
-        await save(section);
-        onSaved(sectionId, edit);
+        // one section per catch, so a refusal on one still saves the rest
+        try {
+          await save(section);
+          onSaved(sectionId, edit);
+        } catch (refusal) {
+          onRefused(refusal);
+        }
       }),
     );
   };

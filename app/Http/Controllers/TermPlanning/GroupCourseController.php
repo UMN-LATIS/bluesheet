@@ -78,8 +78,7 @@ class GroupCourseController extends Controller {
             'courseCode' => [
                 Rule::unique('sis_courses', 'course_code')->where('academic_org', $academicOrg),
                 Rule::unique('local_courses', 'course_code')
-                    ->where('academic_org', $academicOrg)
-                    ->whereNull('deleted_at'),
+                    ->where('academic_org', $academicOrg),
             ],
         ], [
             'courseCode.unique' => 'This department already has a course with that subject and catalog number.',

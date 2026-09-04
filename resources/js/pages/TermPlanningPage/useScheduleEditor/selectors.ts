@@ -195,15 +195,24 @@ export function selectAbandonsUnsavedWork(
   const draft = before.drafts[left];
   if (!draft) return false;
 
-  if (left === NEW_SECTION_ID) return draft.courseCode !== undefined;
+  if (left === NEW_SECTION_ID) return selectNewSectionHasCourse(before);
 
   const section = context.sections.find(({ id }) => id === left);
   return section !== undefined && selectIsDraftDirty(section, before);
 }
 
-/** Unsaved work the page warns about before it lets the reader leave. */
+/** A rectangle drawn on the grid that Create has not been pressed on yet. */
 export const selectIsCreatingSection = (state: EditorState): boolean =>
   state.drafts[NEW_SECTION_ID] !== undefined;
+
+/**
+ * Whether the section being created is worth keeping: a rectangle with a
+ * course picked for it. Read this rather than `selectIsCreatingSection`
+ * wherever the reader is asked about losing work, or a stray click on the
+ * grid becomes a question on the way out of the page.
+ */
+export const selectNewSectionHasCourse = (state: EditorState): boolean =>
+  state.drafts[NEW_SECTION_ID]?.courseCode !== undefined;
 
 export interface DayView {
   layout: DayLayout;

@@ -177,15 +177,11 @@ class GroupSectionController extends Controller {
      * One section number per course per term, which is the key the local table
      * enforces. Checking it here turns a duplicate into a message the form can
      * show instead of a constraint violation.
-     *
-     * A deleted section does not hold its number, matching the unique key,
-     * which counts deleted_at so a number can be used again.
      */
     private function sectionNumberIsFree(Request $request, ?LocalClassSection $existing): Unique {
         $rule = Rule::unique('local_class_sections', 'class_section')
             ->where('term_code', $request->input('termId'))
-            ->where('course_code', $request->input('courseCode'))
-            ->whereNull('deleted_at');
+            ->where('course_code', $request->input('courseCode'));
 
         return $existing === null ? $rule : $rule->ignore($existing);
     }

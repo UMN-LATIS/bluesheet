@@ -1338,7 +1338,7 @@ describe("asking before unsaved sheet edits are dropped", () => {
   it("holds the event once a section being created names a course", () => {
     const state = after([escape], named);
 
-    expect(state.pendingDismissal).toEqual(escape);
+    expect(state.pendingDismissal?.event).toEqual(escape);
     expect(drawn(state)?.length).toBe(1);
     expect(state.selection).toEqual(named.selection);
   });
@@ -1346,7 +1346,7 @@ describe("asking before unsaved sheet edits are dropped", () => {
   it("holds it for a typed-in sheet on a section that already exists", () => {
     const state = after([escape], typed, context);
 
-    expect(state.pendingDismissal).toEqual(escape);
+    expect(state.pendingDismissal?.event).toEqual(escape);
     expect(state.drafts[1]).toEqual({ notes: "hi" });
   });
 
@@ -1419,7 +1419,55 @@ describe("asking before unsaved sheet edits are dropped", () => {
       context,
     );
 
-    expect(state.pendingDismissal).toEqual(escape);
+    expect(state.pendingDismissal?.event).toEqual(escape);
     expect(state.selection).toEqual(typed.selection);
+  });
+
+  // a held release used to leave the editor drawing, so a phantom block
+  // followed the pointer across the grid until the next press
+  it("goes idle while it asks, and draws again once the answer is yes", () => {
+    const held = after(
+      [
+        { type: "pressedEmptySpace", dayIndex: 0, minute: 600 },
+        { type: "pointerMoved", dayIndex: 0, minute: 675 },
+        { type: "released" },
+      ],
+      typed,
+      context,
+    );
+
+    expect(held.interaction).toEqual({ status: "idle" });
+
+    const kept = after([{ type: "dismissalCancelled" }], held, context);
+    expect(kept.interaction).toEqual({ status: "idle" });
+    expect(drawn(kept)).toBeUndefined();
+
+    const discarded = after([{ type: "dismissalConfirmed" }], held, context);
+    expect(drawn(discarded)).toEqual([
+      { days: ["mon"], startTime: "10:00", endTime: "11:15" },
+    ]);
+  });
+
+  // the back button had already rewritten it before the question went up
+  it("puts the address bar back when a held urlChanged is refused", () => {
+    const wentBack = after([{ type: "urlChanged", query: {} }], typed, context);
+    expect(wentBack.pendingDismissal?.event).toEqual({
+      type: "urlChanged",
+      query: {},
+    });
+
+    const { state, effects } = update(
+      wentBack,
+      { type: "dismissalCancelled" },
+      context,
+    );
+
+    expect(state.selection).toEqual(typed.selection);
+    expect(effects).toEqual([
+      {
+        type: "replaceUrlQuery",
+        query: expect.objectContaining({ sectionId: "1" }),
+      },
+    ]);
   });
 });

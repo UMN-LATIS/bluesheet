@@ -112,15 +112,6 @@ export const EDITOR_QUERY_KEYS = [
 ];
 
 /**
- * What a read-only term still answers. Default-deny: anything not named here
- * is a write, whatever route it arrives by.
- *
- * `pressedMeeting` and `released` are on the list because together they are
- * how the week grid selects a block. A press alone changes no data, and with
- * `pointerMoved` refused it can never become a drag, so the release that
- * follows can only ever select.
- */
-/**
  * Events that drop a draft because that is what the reader asked for. The
  * shell does not ask again before letting one of these through.
  */
@@ -134,6 +125,15 @@ export const DISCARDS_ON_PURPOSE: EditorEvent["type"][] = [
   "sectionCancelled",
 ];
 
+/**
+ * What a read-only term still answers. Default-deny: anything not named here
+ * is a write, whatever route it arrives by.
+ *
+ * `pressedMeeting` and `released` are on the list because together they are
+ * how the week grid selects a block. A press alone changes no data, and with
+ * `pointerMoved` refused it can never become a drag, so the release that
+ * follows can only ever select.
+ */
 const READING_EVENTS: EditorEvent["type"][] = [
   "pressedMeeting",
   "released",
@@ -180,7 +180,14 @@ export function update(
     !DISCARDS_ON_PURPOSE.includes(event.type) &&
     selectAbandonsUnsavedWork(state, nextState, context)
   ) {
-    return { state: { ...state, pendingDismissal: event }, effects: [] };
+    return {
+      state: {
+        ...state,
+        interaction: { status: "idle" },
+        pendingDismissal: { event, interaction: state.interaction },
+      },
+      effects: [],
+    };
   }
 
   return {
@@ -208,9 +215,10 @@ function answeringDismissal(
       {
         ...state,
         pendingDismissal: null,
+        interaction: held.interaction,
         drafts: open === null ? state.drafts : omitKey(state.drafts, open),
       },
-      held,
+      held.event,
       context,
     );
   }
@@ -218,10 +226,19 @@ function answeringDismissal(
   // Escape answers it too, and answers it the safe way
   const isAnswer =
     event.type === "dismissalCancelled" || event.type === "canceled";
+  if (!isAnswer) return { state, effects: [] };
 
-  return isAnswer
-    ? { state: { ...state, pendingDismissal: null }, effects: [] }
-    : { state, effects: [] };
+  const kept = { ...state, pendingDismissal: null };
+
+  // Drop this and "Keep editing" after a back button leaves the address bar
+  // naming the section the reader was heading for, not the one still open.
+  return {
+    state: kept,
+    effects:
+      held?.event.type === "urlChanged"
+        ? [{ type: "replaceUrlQuery", query: urlQueryOf(kept) }]
+        : [],
+  };
 }
 
 /**
