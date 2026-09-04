@@ -1,11 +1,10 @@
 import type {
   Delivery,
   FilterFacet,
-  Meeting,
-  PlannedSection,
   ScheduleFilters,
   SisDay,
   SisInstructor,
+  SisSection,
   SisSectionMeeting,
   TimeRange,
   UrlQuery,
@@ -17,13 +16,11 @@ import type { ScheduleView } from "../helpers/viewQuery";
  */
 export interface ScheduleContext {
   /**
-   * The blocks the week grid is drawing, so the filters have already been
-   * applied to them. `sections` has not been filtered, on purpose: a sheet
-   * stays open on a section the filters have since hidden, and its fields have
-   * to keep saving.
+   * The term as the server sent it, before this browser's edits and before
+   * the filters. Everything else the editor reads is derived from it here, so
+   * nothing the editor owns travels back in as context.
    */
-  meetings: Meeting[];
-  sections: PlannedSection[];
+  sections: SisSection[];
   /**
    * A closed term, or one the save endpoints cannot reach yet. Hiding the
    * controls is not enforcement — keyboard, deep link, and stale tab all still
@@ -126,6 +123,13 @@ export interface EditorState {
    * `context.sections`, so the grid draws its blocks straight from here.
    */
   drafts: Record<number, SectionEdit>;
+  /**
+   * The event held back because applying it would drop sheet edits nobody has
+   * saved. The view asks about it, and the answer arrives as
+   * `dismissalConfirmed` or `dismissalCancelled`, which is what keeps the
+   * question out of `update` and out of a browser dialog.
+   */
+  pendingDismissal: EditorEvent | null;
   interaction: Interaction;
   /** Flashed by the grid; cleared by the next press. */
   lastPlacedId: string | null;
@@ -215,6 +219,10 @@ export type EditorEvent =
    * it; leaving either would save a section back into existence.
    */
   | { type: "sectionDeleted"; sectionId: number }
+  /** The reader let the held event through, losing the sheet's edits. */
+  | { type: "dismissalConfirmed" }
+  /** The reader kept the edits, so the held event never happened. */
+  | { type: "dismissalCancelled" }
   /**
    * The server has these edits now, so the overlay holding them can go. The
    * edits are named rather than assumed, because the scheduler may have typed

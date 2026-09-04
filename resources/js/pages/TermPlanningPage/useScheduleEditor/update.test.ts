@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { emptyFilters, initialState, update } from "./update";
 import { selectIsNewSectionSelected } from "./selectors";
-import { placeSections } from "../helpers/sectionPlacement";
 import { plannedSection } from "../helpers/plannedSection.fixture";
 import { NEW_SECTION_ID } from "./types";
 import type {
@@ -11,20 +10,12 @@ import type {
   SectionEdit,
 } from "./types";
 
-const emptyContext: ScheduleContext = {
-  meetings: [],
-  sections: [],
-  isReadOnly: false,
-};
+const emptyContext: ScheduleContext = { sections: [], isReadOnly: false };
 
-/** Built through `placeSections`, so block ids match the grid's. */
+/** The term as the server sent it; the editor places the blocks itself. */
 const contextOf = (
   ...sections: ReturnType<typeof plannedSection>[]
-): ScheduleContext => ({
-  meetings: placeSections(sections).meetings,
-  sections,
-  isReadOnly: false,
-});
+): ScheduleContext => ({ sections, isReadOnly: false });
 
 const after = (
   events: EditorEvent[],
@@ -1281,5 +1272,154 @@ describe("walking away from a section being created", () => {
     expect(drawn(state)).toEqual([
       { days: ["wed"], startTime: "09:00", endTime: "09:50" },
     ]);
+  });
+});
+
+describe("redrawing the times of a section being created", () => {
+  const named: EditorEvent = {
+    type: "sectionFieldEdited",
+    sectionId: NEW_SECTION_ID,
+    change: { courseCode: "ANTH-1001", section: "003", component: "LAB" },
+  };
+
+  const inProgress = after([named], after(draw(0, 600, 675)));
+
+  it("moves the times", () => {
+    const state = after(draw(3, 540, 590), inProgress);
+
+    expect(drawn(state)).toEqual([
+      { days: ["thu"], startTime: "09:00", endTime: "09:50" },
+    ]);
+  });
+
+  // redrawing used to replace the draft outright, losing the course
+  it("keeps the course and everything else typed into the sheet", () => {
+    const state = after(draw(3, 540, 590), inProgress);
+
+    expect(state.drafts[NEW_SECTION_ID]).toMatchObject({
+      courseCode: "ANTH-1001",
+      section: "003",
+      component: "LAB",
+    });
+  });
+});
+
+describe("asking before unsaved sheet edits are dropped", () => {
+  const escape: EditorEvent = { type: "canceled" };
+
+  const named = after(
+    [
+      {
+        type: "sectionFieldEdited",
+        sectionId: NEW_SECTION_ID,
+        change: { courseCode: "ANTH-1001" },
+      },
+    ],
+    after(draw(0, 600, 675)),
+  );
+
+  const context = contextOf(plannedSection(1, []));
+  const typed = after(
+    [
+      { type: "selectedSection", sectionId: 1 },
+      { type: "sectionFieldEdited", sectionId: 1, change: { notes: "hi" } },
+    ],
+    initialState(),
+    context,
+  );
+
+  it("lets a rectangle with no course on it go without asking", () => {
+    const state = after([escape], after(draw(0, 600, 675)));
+
+    expect(state.pendingDismissal).toBeNull();
+    expect(drawn(state)).toBeUndefined();
+  });
+
+  it("holds the event once a section being created names a course", () => {
+    const state = after([escape], named);
+
+    expect(state.pendingDismissal).toEqual(escape);
+    expect(drawn(state)?.length).toBe(1);
+    expect(state.selection).toEqual(named.selection);
+  });
+
+  it("holds it for a typed-in sheet on a section that already exists", () => {
+    const state = after([escape], typed, context);
+
+    expect(state.pendingDismissal).toEqual(escape);
+    expect(state.drafts[1]).toEqual({ notes: "hi" });
+  });
+
+  // retyping the value that was already there leaves nothing to discard
+  it("does not ask when the form matches the section", () => {
+    const section = plannedSection(1, []);
+    const sameContext = contextOf(section);
+    const same = after(
+      [
+        { type: "selectedSection", sectionId: 1 },
+        {
+          type: "sectionFieldEdited",
+          sectionId: 1,
+          change: { section: section.section },
+        },
+      ],
+      initialState(),
+      sameContext,
+    );
+
+    expect(after([escape], same, sameContext).pendingDismissal).toBeNull();
+  });
+
+  it("does not ask while the sheet stays on the same section", () => {
+    const state = after(
+      [{ type: "sectionFieldEdited", sectionId: 1, change: { notes: "ho" } }],
+      typed,
+      context,
+    );
+
+    expect(state.pendingDismissal).toBeNull();
+  });
+
+  it("confirming drops the edits and lets the held event through", () => {
+    const state = after(
+      [escape, { type: "dismissalConfirmed" }],
+      typed,
+      context,
+    );
+
+    expect(state.pendingDismissal).toBeNull();
+    expect(state.drafts[1]).toBeUndefined();
+    expect(state.selection).toBeNull();
+  });
+
+  it("cancelling keeps the edits and the held event never happened", () => {
+    const state = after(
+      [escape, { type: "dismissalCancelled" }],
+      typed,
+      context,
+    );
+
+    expect(state.pendingDismissal).toBeNull();
+    expect(state.drafts[1]).toEqual({ notes: "hi" });
+    expect(state.selection).toEqual(typed.selection);
+  });
+
+  it("a second escape answers it the safe way", () => {
+    const state = after([escape, escape], typed, context);
+
+    expect(state.pendingDismissal).toBeNull();
+    expect(state.drafts[1]).toEqual({ notes: "hi" });
+  });
+
+  // the question owns the screen until it is answered
+  it("ignores everything else while it is asking", () => {
+    const state = after(
+      [escape, { type: "selectedHour", dayIndex: 1, startMinute: 600 }],
+      typed,
+      context,
+    );
+
+    expect(state.pendingDismissal).toEqual(escape);
+    expect(state.selection).toEqual(typed.selection);
   });
 });

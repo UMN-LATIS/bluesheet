@@ -36,11 +36,17 @@ import {
   snapToGrid,
   START_MINUTE,
 } from "../helpers/timeScale";
-import { GRID_DAYS, meetingIdOf } from "../helpers/sectionPlacement";
 import {
-  selectIsNewSectionSelected,
+  GRID_DAYS,
+  meetingIdOf,
+  sectionIdOfMeetingId,
+} from "../helpers/sectionPlacement";
+import {
+  selectAbandonsUnsavedWork,
+  selectLocalSections,
   selectMeetings,
   selectNewSectionMeetings,
+  selectOpenSectionId,
 } from "./selectors";
 import { NEW_SECTION_ID } from "./types";
 import {
@@ -85,6 +91,7 @@ export const emptyFilters = (): ScheduleFilters => ({
 export const initialState = (dayIndex = 0): EditorState => ({
   sectionEdits: {},
   drafts: {},
+  pendingDismissal: null,
   interaction: { status: "idle" },
   lastPlacedId: null,
   selection: null,
@@ -113,6 +120,20 @@ export const EDITOR_QUERY_KEYS = [
  * `pointerMoved` refused it can never become a drag, so the release that
  * follows can only ever select.
  */
+/**
+ * Events that drop a draft because that is what the reader asked for. The
+ * shell does not ask again before letting one of these through.
+ */
+export const DISCARDS_ON_PURPOSE: EditorEvent["type"][] = [
+  "newSectionDiscarded",
+  "sectionCreated",
+  "sectionDeleted",
+  "draftCancelled",
+  "draftSaved",
+  "sectionEditsReverted",
+  "sectionCancelled",
+];
+
 const READING_EVENTS: EditorEvent["type"][] = [
   "pressedMeeting",
   "released",
@@ -132,6 +153,7 @@ const READING_EVENTS: EditorEvent["type"][] = [
   "daySelected",
   "asyncDayShown",
   "urlChanged",
+  "dismissalCancelled",
 ];
 
 export function update(
@@ -143,39 +165,84 @@ export function update(
     return { state, effects: [] };
   }
 
+  if (event.type === "dismissalCancelled" || state.pendingDismissal !== null) {
+    return answeringDismissal(state, event, context);
+  }
+
   const nextState = withoutAbandonedSection(
     state,
     reduce(state, event, context),
   );
 
+  // Held rather than applied: the view asks, and the answer comes back as its
+  // own event. Nothing impure happens here, and nothing is lost meanwhile.
+  if (
+    !DISCARDS_ON_PURPOSE.includes(event.type) &&
+    selectAbandonsUnsavedWork(state, nextState, context)
+  ) {
+    return { state: { ...state, pendingDismissal: event }, effects: [] };
+  }
+
   return {
     state: nextState,
-    effects: effectsOf(event, state, nextState, context),
+    effects: effectsOf(event, state, nextState),
   };
 }
 
 /**
- * A section drawn but never created goes as soon as the selection leaves it:
- * Escape, a click on another block, a chip, an hour. Nothing was written, so
- * there is nothing to keep, and a block left on the grid with no sheet open on
- * it can be neither finished nor removed.
+ * While a question is on screen the only events that mean anything are its
+ * answers. Confirming drops the edits before replaying the held event, so the
+ * replay cannot ask the same question again.
+ */
+function answeringDismissal(
+  state: EditorState,
+  event: EditorEvent,
+  context: ScheduleContext,
+): Next {
+  const held = state.pendingDismissal;
+
+  if (event.type === "dismissalConfirmed" && held) {
+    const open = selectOpenSectionId(state);
+
+    return update(
+      {
+        ...state,
+        pendingDismissal: null,
+        drafts: open === null ? state.drafts : omitKey(state.drafts, open),
+      },
+      held,
+      context,
+    );
+  }
+
+  // Escape answers it too, and answers it the safe way
+  const isAnswer =
+    event.type === "dismissalCancelled" || event.type === "canceled";
+
+  return isAnswer
+    ? { state: { ...state, pendingDismissal: null }, effects: [] }
+    : { state, effects: [] };
+}
+
+/**
+ * The sheet's unsaved form goes when the selection leaves the section it
+ * belongs to: Escape, a click on another block, a chip, an hour. A section
+ * drawn but never created goes with it, since its draft is the whole of it.
  *
- * Keyed on the selection changing rather than on what the event was, so that
- * editing the section's own days and times, which renames its blocks, does not
- * read as walking away from it.
+ * Keyed on which section is open rather than on what the event was, so that
+ * editing a section's own days and times, which renames its blocks, does not
+ * read as walking away from it. The shell asks first where the edits are worth
+ * keeping; see `selectAbandonsUnsavedWork`.
  */
 function withoutAbandonedSection(
   before: EditorState,
   after: EditorState,
 ): EditorState {
-  const wasCreating = before.drafts[NEW_SECTION_ID] !== undefined;
-  const movedOn = !isEqual(before.selection, after.selection);
+  const left = selectOpenSectionId(before);
+  if (left === null || selectOpenSectionId(after) === left) return after;
+  if (after.drafts[left] === undefined) return after;
 
-  if (!wasCreating || !movedOn || selectIsNewSectionSelected(after)) {
-    return after;
-  }
-
-  return { ...after, drafts: omitKey(after.drafts, NEW_SECTION_ID) };
+  return { ...after, drafts: omitKey(after.drafts, left) };
 }
 
 /**
@@ -190,13 +257,12 @@ function effectsOf(
   event: EditorEvent,
   before: EditorState,
   after: EditorState,
-  context: ScheduleContext,
 ): Effect[] {
   if (event.type === "urlChanged") return [];
 
-  const query = urlQueryOf(after, context);
+  const query = urlQueryOf(after);
 
-  return isEqual(query, urlQueryOf(before, context))
+  return isEqual(query, urlQueryOf(before))
     ? []
     : [{ type: "replaceUrlQuery", query }];
 }
@@ -206,10 +272,10 @@ function effectsOf(
  * than a key at a time, so no two writes can race and leave the day naming a
  * tab the view is not on.
  */
-function urlQueryOf(state: EditorState, context: ScheduleContext): UrlQuery {
+function urlQueryOf(state: EditorState): UrlQuery {
   return {
     ...encodeFilters(state.filters),
-    ...encodeSelection(state.selection, context.meetings),
+    ...encodeSelection(state.selection),
     view: state.view,
     // The day list shows one day at a time, so a link to it has to say which.
     // No other view has a day to name.
@@ -227,12 +293,8 @@ function urlQueryOf(state: EditorState, context: ScheduleContext): UrlQuery {
 function namesHeldSelection(
   state: EditorState,
   fromUrl: EditorState["selection"],
-  context: ScheduleContext,
 ): boolean {
-  return isEqual(
-    encodeSelection(state.selection, context.meetings),
-    encodeSelection(fromUrl, context.meetings),
-  );
+  return isEqual(encodeSelection(state.selection), encodeSelection(fromUrl));
 }
 
 function reduce(
@@ -365,7 +427,7 @@ function reduce(
         // to name.
         dayIndex: decodeDayIndex(event.query) ?? state.dayIndex,
         filters: decodeFilters(event.query),
-        selection: namesHeldSelection(state, fromUrl, context)
+        selection: namesHeldSelection(state, fromUrl)
           ? state.selection
           : fromUrl,
       };
@@ -472,6 +534,11 @@ function reduce(
     case "newSectionDiscarded":
       return { ...withoutDraft(state, NEW_SECTION_ID), selection: null };
 
+    // answered in `update`, which never lets them reach here
+    case "dismissalConfirmed":
+    case "dismissalCancelled":
+      return state;
+
     case "sectionDeleted":
       return {
         ...withoutEntry(withoutDraft(state, event.sectionId), event.sectionId),
@@ -497,8 +564,7 @@ function keepingSelection(
   if (!meetings || selection?.kind !== "meeting") return state;
 
   const wasThisSection =
-    context.meetings.find(({ id }) => id === selection.meetingId)?.sectionId ===
-    sectionId;
+    sectionIdOfMeetingId(selection.meetingId) === sectionId;
   if (!wasThisSection) return state;
 
   const ids = meetings.flatMap((pattern) =>
@@ -521,7 +587,9 @@ function withDraftPatterns(
   sectionId: number,
   change: (patterns: SisSectionMeeting[]) => SisSectionMeeting[],
 ): EditorState {
-  const section = context.sections.find(({ id }) => id === sectionId);
+  const section = selectLocalSections(context, state).find(
+    ({ id }) => id === sectionId,
+  );
   const draft = state.drafts[sectionId];
   const patterns = draft?.meetings ?? section?.meetings;
   if (!patterns) return state;
@@ -698,10 +766,13 @@ function commitDrawing(
 
   return {
     ...state,
-    // The whole of the section being created, drawn from here until Create
-    // gives it a row. Drawing again over an unfinished one replaces it: one
-    // section is being created at a time, and the sheet is open on it.
-    drafts: { ...state.drafts, [NEW_SECTION_ID]: { meetings } },
+    // Only the times: drawing again while the sheet is open on an uncreated
+    // section is how its times get changed, so the course, the number, and
+    // whoever is teaching it all stay put.
+    drafts: {
+      ...state.drafts,
+      [NEW_SECTION_ID]: { ...state.drafts[NEW_SECTION_ID], meetings },
+    },
     interaction: { status: "idle" },
     lastPlacedId: meetingIdOf(
       NEW_SECTION_ID,
@@ -737,10 +808,13 @@ function withSectionPlacement(
   );
 
   const meeting =
-    beingCreated ?? context.meetings.find(({ id }) => id === meetingId);
+    beingCreated ??
+    selectMeetings(context, state).find(({ id }) => id === meetingId);
   const patterns = beingCreated
     ? state.drafts[NEW_SECTION_ID]?.meetings
-    : context.sections.find(({ id }) => id === meeting?.sectionId)?.meetings;
+    : selectLocalSections(context, state).find(
+        ({ id }) => id === meeting?.sectionId,
+      )?.meetings;
 
   if (!meeting || !patterns || meeting.sectionId === null) return toIdle(state);
 

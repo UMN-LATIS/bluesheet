@@ -387,6 +387,39 @@
     </div>
 
     <div
+      v-if="schedule.isDismissalPending"
+      role="alertdialog"
+      class="tw-flex tw-flex-none tw-flex-col tw-gap-2 tw-border-0 tw-border-t tw-border-solid tw-border-outline-variant tw-bg-brand/[0.06] tw-px-[18px] tw-py-3.5"
+    >
+      <p class="tw-m-0 tw-text-[13.5px] tw-font-bold">
+        Discard the changes to this section?
+      </p>
+      <p class="tw-m-0 tw-text-[12.5px] tw-leading-normal">
+        {{
+          isNew
+            ? "It has not been created, so nothing has been saved."
+            : "Its saved values stay as they are."
+        }}
+      </p>
+      <div class="tw-flex tw-items-center tw-gap-3">
+        <button
+          type="button"
+          class="tw-min-h-11 tw-cursor-pointer tw-rounded-full tw-border-none tw-bg-brand tw-px-5 tw-text-[13px] tw-font-bold tw-text-white"
+          @click="schedule.confirmDismissal"
+        >
+          Discard changes
+        </button>
+        <button
+          type="button"
+          class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[13px] tw-font-semibold tw-text-on-surface-variant hover:tw-underline"
+          @click="schedule.cancelDismissal"
+        >
+          Keep editing
+        </button>
+      </div>
+    </div>
+
+    <div
       v-if="isConfirmingDelete"
       role="alertdialog"
       class="tw-flex tw-flex-none tw-flex-col tw-gap-2 tw-border-0 tw-border-t tw-border-solid tw-border-outline-variant tw-bg-brand/[0.06] tw-px-[18px] tw-py-3.5"

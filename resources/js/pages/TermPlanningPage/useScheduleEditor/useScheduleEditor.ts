@@ -24,10 +24,11 @@ import {
   selectIsCreatingSection,
   selectIsDraftDirty,
   selectIsNewSectionSelected,
-  selectLocalSection,
+  selectLocalSections,
   selectMarkedHour,
   selectMeetings,
   selectOpenHour,
+  selectPlaced,
   selectSelectedMeetingId,
   selectSelectedSectionId,
   selectWeekView,
@@ -63,8 +64,12 @@ export function useScheduleEditor(
   return reactive({
     /* Reads: what the schedule is, and what the page has open. */
     meetings: computed(() => selectMeetings(context.value, state.value)),
-    localSections: (sections: SisSection[]) =>
-      sections.map((section) => selectLocalSection(section, state.value)),
+    /** The term with this browser's edits on it, before the filters. */
+    localSections: computed(() =>
+      selectLocalSections(context.value, state.value),
+    ),
+    /** What the canvases draw: filtered, then laid out in lanes. */
+    placed: computed(() => selectPlaced(context.value, state.value)),
     filters: computed(() => state.value.filters),
     view: computed(() => state.value.view),
     dayIndex: computed(() => state.value.dayIndex),
@@ -96,6 +101,8 @@ export function useScheduleEditor(
     isNewSectionSelected: computed(() =>
       selectIsNewSectionSelected(state.value),
     ),
+    /** The sheet is asking whether its unsaved edits can go. */
+    isDismissalPending: computed(() => state.value.pendingDismissal !== null),
     draftProblems: (section: SisSection) =>
       sectionProblems(selectDraftSection(section, state.value)),
 
@@ -181,6 +188,8 @@ export function useScheduleEditor(
     markSectionCreated: (sectionId: number) =>
       dispatch({ type: "sectionCreated", sectionId }),
     discardNewSection: () => dispatch({ type: "newSectionDiscarded" }),
+    confirmDismissal: () => dispatch({ type: "dismissalConfirmed" }),
+    cancelDismissal: () => dispatch({ type: "dismissalCancelled" }),
     markSectionDeleted: (sectionId: number) =>
       dispatch({ type: "sectionDeleted", sectionId }),
   });

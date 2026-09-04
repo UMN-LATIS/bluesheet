@@ -172,12 +172,8 @@ import SectionSheet from "./components/SectionSheet.vue";
 import SheetMount from "./components/SheetMount.vue";
 import { bandsForDay } from "./helpers/dayBands";
 import { buildFilterOptions } from "./helpers/filterOptions";
-import {
-  filterSections,
-  reachableFacetValues,
-} from "./helpers/scheduleFilters";
+import { reachableFacetValues } from "./helpers/scheduleFilters";
 import { ASYNC_DAY_INDEX, WEEKDAY_NAMES } from "./helpers/scheduleDays";
-import { placeSections } from "./helpers/sectionPlacement";
 import { formatTimeRange } from "./helpers/timeScale";
 import { toSectionPayload } from "./helpers/sectionPayload";
 import { flattenQuery } from "./helpers/urlQuery";
@@ -241,30 +237,20 @@ const activeView = computed<ScheduleView>(() =>
 );
 
 /**
- * Every section as the user sees it, this browser's unsaved edits included.
- * Everything below is built from these rather than from the payload, so an
- * edit reaches every view at once.
+ * Every section as the user sees it, this browser's unsaved edits included,
+ * and what the canvases draw once the filters have been applied. Both are
+ * derived inside the editor, so nothing the editor owns travels back to it.
  */
-const localSections = computed(() => schedule.localSections(sections.value));
+const localSections = computed(() => schedule.localSections);
+const placed = computed(() => schedule.placed);
 
 /** Lists and counts cover the whole term, whatever is checked. */
 const filterOptions = computed(() => buildFilterOptions(localSections.value));
-
-// `localSections` and the filters are read from `schedule`, declared below,
-// and `schedule` is built from `placed`. That is not a cycle: all of them are
-// computeds, nothing is read until the template renders, and by then they all
-// exist. The editor stores what is checked; the page applies it here, before
-// the sections are placed, so a hidden section simply leaves the schedule.
-const visibleSections = computed(() =>
-  filterSections(localSections.value, schedule.filters),
-);
 
 /** What the filters panel still has reason to list; see `isInView` there. */
 const reachableValues = computed(() =>
   reachableFacetValues(localSections.value, schedule.filters),
 );
-
-const placed = computed(() => placeSections(visibleSections.value));
 
 const sectionOf = (meetingId: string) =>
   placed.value.sectionsByMeetingId.get(meetingId);
@@ -304,11 +290,7 @@ const runEffect = (effect: Effect) => {
 // Held here rather than inside a view, so that the toolbar, the filters panel,
 // every view, and the detail sheet all read and change the same schedule.
 const schedule = useScheduleEditor(
-  computed(() => ({
-    meetings: placed.value.meetings,
-    sections: localSections.value,
-    isReadOnly: isReadOnly.value,
-  })),
+  computed(() => ({ sections: sections.value, isReadOnly: isReadOnly.value })),
   runEffect,
 );
 
