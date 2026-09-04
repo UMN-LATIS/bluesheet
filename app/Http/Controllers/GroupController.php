@@ -425,7 +425,14 @@ class GroupController extends Controller
         else {
             $adminEmails = $admins->pluck('user.email')->unique()->toArray();
             // Send email notifications to admins
-            Mail::to($adminEmails)->send(new \App\Mail\GroupChangeRequest($group, $validated['description'], $request->user()));
+            try {
+                Mail::to($adminEmails)->send(new \App\Mail\GroupChangeRequest($group, $validated['description'], $request->user()));
+            }
+            catch (\Throwable $e) {
+                \Log::error("Failed to send group change request to admins: " . $e->getMessage());
+                return response()->json(['success' => false, 'message' => 'Failed to send group change request. Please try again later.'], 500);
+            }
+            
         }
         
         return response()->json(['success' => true, 'message' => 'Change request submitted successfully.']);

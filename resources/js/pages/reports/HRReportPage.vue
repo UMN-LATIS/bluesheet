@@ -5,107 +5,72 @@
     </p>
     <ul>
       <li>
-        <router-link :to="{ name: 'role', params: { roleId: 12 } }"
-          >HR Consultant</router-link
-        >
+        <router-link :to="{ name: 'role', params: { roleId: 12 } }">Senior HR Consultant</router-link>
       </li>
       <li>
-        <router-link :to="{ name: 'role', params: { roleId: 13 } }"
-          >HR Generalist</router-link
-        >
+        <router-link :to="{ name: 'role', params: { roleId: 13 } }">HR Generalist</router-link>
       </li>
       <li>
-        <router-link :to="{ name: 'role', params: { roleId: 14 } }"
-          >Payroll Specialist</router-link
-        >
-        </li>
+        <router-link :to="{ name: 'role', params: { roleId: 14 } }">Payroll Analyst</router-link>
+      </li>
+      <li>
+        <router-link :to="{ name: 'role', params: { roleId: 99 } }">HR Business Partner</router-link>
+      </li>
 
     </ul>
     <table class="table">
       <thead>
         <tr>
           <th>
-            <SortableLink
-              sortLabel="DeptId"
-              sortElement="dept_id"
-              :currentSort="currentSort"
-              :currentSortDir="currentSortDir"
-              @sort="sort"
-            />
+            <SortableLink sortLabel="DeptId" sortElement="dept_id" :currentSort="currentSort"
+              :currentSortDir="currentSortDir" @sort="sort" />
           </th>
           <th>
-            <SortableLink
-              sortLabel="ZDeptId"
-              sortElement="zdept_id"
-              :currentSort="currentSort"
-              :currentSortDir="currentSortDir"
-              @sort="sort"
-            />
+            <SortableLink sortLabel="ZDeptId" sortElement="zdept_id" :currentSort="currentSort"
+              :currentSortDir="currentSortDir" @sort="sort" />
           </th>
           <th>
-            <SortableLink
-              sortLabel="Department"
-              sortElement="department"
-              :currentSort="currentSort"
-              :currentSortDir="currentSortDir"
-              @sort="sort"
-            />
+            <SortableLink sortLabel="Department" sortElement="department" :currentSort="currentSort"
+              :currentSortDir="currentSortDir" @sort="sort" />
           </th>
           <th>
-            <SortableLink
-              sortLabel="HR Consultant"
-              sortElement="hrconsultant.0.user.displayName"
-              :currentSort="currentSort"
-              :currentSortDir="currentSortDir"
-              @sort="sort"
-            />
+            <SortableLink sortLabel="HR Consultant" sortElement="hrconsultant.0.user.displayName"
+              :currentSort="currentSort" :currentSortDir="currentSortDir" @sort="sort" />
           </th>
           <th>
-            <SortableLink
-              sortLabel="HR Generalist"
-              sortElement="hrgeneralist.0.user.displayName"
-              :currentSort="currentSort"
-              :currentSortDir="currentSortDir"
-              @sort="sort"
-            />
+            <SortableLink sortLabel="HR Generalist" sortElement="hrgeneralist.0.user.displayName"
+              :currentSort="currentSort" :currentSortDir="currentSortDir" @sort="sort" />
           </th>
           <th>
-            <SortableLink
-              sortLabel="Payroll Specialist"
-              sortElement="payrollspecialist.0.user.displayName"
-              :currentSort="currentSort"
-              :currentSortDir="currentSortDir"
-              @sort="sort"
-            />
+            <SortableLink sortLabel="Payroll Specialist" sortElement="payrollspecialist.0.user.displayName"
+              :currentSort="currentSort" :currentSortDir="currentSortDir" @sort="sort" />
+          </th>
+          <th>
+            <SortableLink sortLabel="HR Business Partner" sortElement="hrbusinesspartner.0.user.displayName"
+              :currentSort="currentSort" :currentSortDir="currentSortDir" @sort="sort" />
           </th>
         </tr>
       </thead>
       <tbody>
-        <tr
-          v-for="department in sortedListByDepartment"
-          :key="department.dept_id"
-        >
+        <tr v-for="department in sortedListByDepartment" :key="department.dept_id">
           <td>{{ department.dept_id }}</td>
           <td>{{ department.zdept_id }}</td>
           <td>
-            <router-link
-              :to="{ name: 'group', params: { groupId: department.group.id } }"
-              >{{ department.department }}</router-link
-            >
+            <router-link :to="{ name: 'group', params: { groupId: department.group.id } }">{{ department.department
+            }}</router-link>
           </td>
           <td>
             <UserWithLink :memberList="department.hrConsultant"></UserWithLink>
           </td>
           <td>
-            <UserWithLink
-              :memberList="department.hrGeneralist"
-            ></UserWithLink>
+            <UserWithLink :memberList="department.hrGeneralist"></UserWithLink>
           </td>
           <td>
-            <UserWithLink
-              :memberList="department.payrollSpecialist"
-            ></UserWithLink>
-            </td>
+            <UserWithLink :memberList="department.payrollSpecialist"></UserWithLink>
+          </td>
+          <td>
+            <UserWithLink :memberList="department.hrBusinessPartner"></UserWithLink>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -155,6 +120,7 @@ export default {
         outputObject.hrConsultant = members.filter((m) => m.role.id == 12);
         outputObject.hrGeneralist = members.filter((m) => m.role.id == 13);
         outputObject.payrollSpecialist = members.filter((m) => m.role.id == 14);
+        outputObject.hrBusinessPartner = members.filter((m) => m.role.id == 99);
         listByDepartment.push(outputObject);
       }
 
@@ -193,7 +159,11 @@ export default {
       {
         roleId: 14, // payroll specialist
         groupType: null,
-      }
+      },
+      {
+        roleId: 99, // hr business partner
+        groupType: null,
+      },
     ];
 
     let fullList = [];
