@@ -1,61 +1,44 @@
 import { describe, expect, it } from "vitest";
 import { decodeSelection, encodeSelection } from "./selectionQuery";
 import type { HourSelection } from "../useScheduleEditor/types";
-import type { Meeting } from "../types";
 
 /** No block belongs to a section, so a block selection names nothing. */
-const noMeetings: Meeting[] = [];
-
-const meetingOf412: Meeting[] = [
-  {
-    id: "412-mon-10:10",
-    dayIndex: 0,
-    sectionId: 412,
-    startMinute: 610,
-    endMinute: 660,
-  },
-];
-
 const hour: HourSelection = { kind: "hour", dayIndex: 1, startMinute: 840 };
 
 describe("encodeSelection", () => {
   it("writes nothing when nothing is selected", () => {
-    expect(encodeSelection(null, noMeetings)).toEqual({});
+    expect(encodeSelection(null)).toEqual({});
   });
 
   it("round-trips a section", () => {
     const selection = { kind: "section", sectionId: 412 } as const;
 
-    expect(decodeSelection(encodeSelection(selection, noMeetings))).toEqual(
-      selection,
-    );
+    expect(decodeSelection(encodeSelection(selection))).toEqual(selection);
   });
 
   it("round-trips an hour", () => {
-    expect(encodeSelection(hour, noMeetings)).toEqual({ hour: "tue-14:00" });
+    expect(encodeSelection(hour)).toEqual({ hour: "tue-14:00" });
     expect(decodeSelection({ hour: "tue-14:00" })).toEqual(hour);
   });
 
   it("round-trips the hour a section was opened from", () => {
     const selection = { kind: "section", sectionId: 412, from: hour } as const;
 
-    expect(decodeSelection(encodeSelection(selection, noMeetings))).toEqual(
-      selection,
-    );
+    expect(decodeSelection(encodeSelection(selection))).toEqual(selection);
   });
 
   it("names the section a selected grid block belongs to", () => {
-    const selection = { kind: "meeting", meetingId: "412-mon-10:10" } as const;
+    const selection = { kind: "meeting", meetingId: "s412:mon:1010" } as const;
 
-    expect(encodeSelection(selection, meetingOf412)).toEqual({
+    expect(encodeSelection(selection)).toEqual({
       sectionId: "412",
     });
   });
 
-  it("writes nothing for a block belonging to no section", () => {
-    const selection = { kind: "meeting", meetingId: "local-1" } as const;
+  it("writes nothing for a block of a section being created", () => {
+    const selection = { kind: "meeting", meetingId: "s-1:mon:1010" } as const;
 
-    expect(encodeSelection(selection, noMeetings)).toEqual({});
+    expect(encodeSelection(selection)).toEqual({});
   });
 });
 

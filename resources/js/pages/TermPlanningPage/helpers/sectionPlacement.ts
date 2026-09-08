@@ -14,6 +14,16 @@ export const meetingIdOf = (
   startTime: string,
 ) => `s${sectionId}:${day}:${startTime.replace(":", "")}`;
 
+/**
+ * The section a block id names, or null if it names none. Reads back what
+ * `meetingIdOf` wrote, so a block still belongs to its section after the sheet
+ * has moved it to another day.
+ */
+export function sectionIdOfMeetingId(meetingId: string): number | null {
+  const match = /^s(-?\d+):/.exec(meetingId);
+  return match ? Number(match[1]) : null;
+}
+
 export interface PlacedSections {
   meetings: Meeting[];
   sectionsByMeetingId: Map<string, PlannedSection>;

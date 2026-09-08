@@ -1,14 +1,14 @@
 <!--
   One person on a section, with a way to take them off it. The editable twin
-  of PersonRecord: a bordered card on the sheet's own surface, which is how
-  this sheet draws anything that can be changed.
+  of PersonRecord: a tinted row, which is how this sheet draws a group of
+  things hung on the section. A border is left to mean a control you type in.
 -->
 <template>
   <div
-    class="tw-flex tw-items-center tw-gap-2.5 tw-rounded-[10px] tw-border tw-border-solid tw-border-outline-variant tw-p-2 tw-pl-3"
+    class="tw-flex tw-items-center tw-gap-2.5 tw-rounded-[10px] tw-bg-surface tw-p-2 tw-ps-3"
   >
     <span
-      class="tw-flex tw-h-7 tw-w-7 tw-flex-none tw-items-center tw-justify-center tw-rounded-full tw-bg-surface-container tw-text-[10px] tw-font-bold tw-text-on-surface-variant"
+      class="tw-flex tw-h-7 tw-w-7 tw-flex-none tw-items-center tw-justify-center tw-rounded-full tw-bg-surface-container-high tw-text-[10px] tw-font-bold tw-text-on-surface-variant"
     >
       {{ initialsOf(instructor) }}
     </span>
@@ -20,7 +20,7 @@
     </div>
     <button
       type="button"
-      class="tw-flex tw-h-11 tw-w-11 tw-flex-none tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-text-on-surface-variant hover:tw-bg-surface-container hover:tw-text-on-surface"
+      class="tw--me-1.5 tw-flex tw-h-11 tw-w-11 tw-flex-none tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-text-on-surface-variant hover:tw-bg-surface-container-high hover:tw-text-on-surface"
       :aria-label="`Remove ${instructor.name ?? 'instructor'}`"
       @click="emit('remove')"
     >

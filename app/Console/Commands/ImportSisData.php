@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Group;
 use App\Library\Bandaid;
 use App\Library\Sis\ClassRecordTransformer;
+use App\Library\Sis\CourseRecordDeriver;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -39,6 +40,7 @@ class ImportSisData extends Command {
         'sis_departments',
         'sis_appointments',
         'sis_employees',
+        'sis_courses',
         'sis_class_sections',
         'sis_class_instructors',
         'sis_class_meetings',
@@ -46,10 +48,12 @@ class ImportSisData extends Command {
 
     private Bandaid $bandaid;
     private ClassRecordTransformer $transformer;
+    private CourseRecordDeriver $courseDeriver;
 
     public function handle(): int {
         $this->bandaid = new Bandaid();
         $this->transformer = new ClassRecordTransformer();
+        $this->courseDeriver = new CourseRecordDeriver();
 
         $departments = $this->deptIdsToImport();
 
@@ -212,6 +216,8 @@ class ImportSisData extends Command {
             $sections = $this->transformer->transform($classRecords);
             $this->importSections((string) $deptId, $sections);
 
+            $courses = $this->importCourses($classRecords);
+
             $appointments = $this->toAppointmentRows((string) $deptId, $jobs);
             $this->insertInChunks('sis_appointments_tmp', $appointments);
 
@@ -221,7 +227,7 @@ class ImportSisData extends Command {
             $emplids = $emplids->concat($rosterEmplids)->concat($appointments->pluck('emplid'));
 
             $meetings = $sections->sum(fn(array $s) => count($s['meetings']));
-            $this->line("  {$deptId} ({$groupNames}): {$sections->count()} sections, {$meetings} meetings, {$appointments->count()} appointments");
+            $this->line("  {$deptId} ({$groupNames}): {$courses} courses, {$sections->count()} sections, {$meetings} meetings, {$appointments->count()} appointments");
         }
 
         return $emplids->unique()->values();
@@ -264,6 +270,36 @@ class ImportSisData extends Command {
 
     private function sectionKey(int|string $termCode, int|string $classNumber): string {
         return "{$termCode}-{$classNumber}";
+    }
+
+    /**
+     * Bandaid has no course endpoint, so courses are derived from the class
+     * list this department has already fetched. Course facts drift across
+     * terms, mostly retitling: the most recent offering wins and every value
+     * it displaced is printed, because a rename nobody noticed is how a
+     * department loses track of its own catalogue.
+     *
+     * @param Collection<int, object> $classRecords one department's, from Bandaid
+     * @return int courses written
+     */
+    private function importCourses(Collection $classRecords): int {
+        ['courses' => $courses, 'conflicts' => $conflicts] = $this->courseDeriver->derive($classRecords);
+
+        $now = now();
+        $this->insertInChunks(
+            'sis_courses_tmp',
+            $courses->map(fn(array $course) => [...$course, 'created_at' => $now, 'updated_at' => $now])
+        );
+
+        foreach ($conflicts as $conflict) {
+            $this->warn(
+                "    {$conflict['course_code']} {$conflict['field']}: kept \"{$conflict['kept']}\" " .
+                    "from {$conflict['kept_term_code']}, overrode \"{$conflict['overridden']}\" " .
+                    "from {$conflict['overridden_term_code']}"
+            );
+        }
+
+        return $courses->count();
     }
 
     private function toAppointmentRows(string $deptId, array $jobs): Collection {

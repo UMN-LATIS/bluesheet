@@ -13,6 +13,7 @@ export { default as FilterIcon } from "./FilterIcon.vue";
 export { default as InfoIcon } from "./InfoIcon.vue";
 export { default as LockIcon } from "./LockIcon.vue";
 export { default as NoIcon } from "./NoIcon.vue";
+export { default as NoteIcon } from "./NoteIcon.vue";
 export { default as PencilIcon } from "./PencilIcon.vue";
 export { default as QuestionIcon } from "./QuestionIcon.vue";
 export { default as SparklesIcon } from "./SparklesIcon.vue";

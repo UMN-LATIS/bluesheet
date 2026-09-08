@@ -6,6 +6,7 @@
     :aria-labelledby="title ? titleId : undefined"
     @cancel.prevent="handleCancel"
     @close="handleNativeClose"
+    @keydown.escape.stop
     @mousedown.self="$emit('close')"
   >
     <!-- `v-if` keeps closed modals cheap: some callers render many Modal
@@ -71,7 +72,10 @@ function syncDialogToShowProp() {
   }
 }
 
-// The `cancel` event is Escape. We always prevent the browser's own close
+// The `cancel` event is Escape. The keydown behind it is stopped in the
+// template: `cancel` is what closes the dialog, and a page listening for
+// Escape on window would otherwise act on the same press.
+// We always prevent the browser's own close
 // so that the dialog's open state stays owned by the `show` prop, then ask
 // the parent to close by flipping that prop.
 function handleCancel() {

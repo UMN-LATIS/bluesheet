@@ -5,7 +5,12 @@
       class="tw-absolute tw-right-0 tw-top-0.5 tw-h-2 tw-w-2 tw-rounded-full tw-bg-accent tw-ring-1 tw-ring-inset tw-ring-black/20"
       title="Edited here, not saved anywhere"
     />
-    <div class="tw-truncate tw-font-semibold">{{ heading }}</div>
+    <div class="tw-truncate tw-font-semibold">
+      {{ heading }}
+      <span v-if="isUnofficial" title="Named here, not published by the SIS">
+        *
+      </span>
+    </div>
     <div class="tw-truncate">
       <span class="component-code tw-me-1">{{ section.component }}</span
       >{{ instructorName }}
@@ -14,22 +19,31 @@
       TA {{ assistants }}
     </div>
     <div class="time-range tw-truncate tw-opacity-50">{{ timeRange }}</div>
+    <NoteIcon
+      v-if="hasNote"
+      class="tw-absolute tw-bottom-0 tw-right-0 tw-h-3 tw-w-3 tw-opacity-60"
+      aria-label="Has a note"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
+import { NoteIcon } from "@/icons";
 import { assistantNames, leadInstructorName } from "../helpers/sectionPeople";
 import { formatTimeRange } from "../helpers/timeScale";
-import type { SisSection } from "../types";
+import type { PlannedSection } from "../types";
 
 const props = defineProps<{
-  section: SisSection;
+  section: PlannedSection;
   /** As drawn on the grid, which may differ from the section's saved times. */
   startMinute: number;
   endMinute: number;
   isEdited?: boolean;
+  isUnofficial?: boolean;
 }>();
+
+const hasNote = computed(() => props.section.notes.trim() !== "");
 
 const instructorName = computed(() =>
   leadInstructorName(props.section.instructors),

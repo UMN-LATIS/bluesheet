@@ -5,6 +5,7 @@ use App\SisAppointment;
 use App\SisClassInstructor;
 use App\SisClassMeeting;
 use App\SisClassSection;
+use App\SisCourse;
 use App\SisDepartment;
 use App\SisEmployee;
 use App\SisTerm;
@@ -31,6 +32,14 @@ function sectionInGroupDept(array $attributes = []): SisClassSection {
     return SisClassSection::factory()->create([
         'academic_org' => 11111,
         'term_code' => TERM,
+        ...$attributes,
+    ]);
+}
+
+/** A course in this test group's department, with the given overrides. */
+function courseInGroupDept(array $attributes = []): SisCourse {
+    return SisCourse::factory()->create([
+        'academic_org' => 11111,
         ...$attributes,
     ]);
 }
@@ -249,21 +258,13 @@ describe('GET /api/sis/groups/:groupId/sections', function () {
 });
 
 describe('GET /api/sis/groups/:groupId/courses', function () {
-    it('lists each course once, described by its most recent offering', function () {
-        sectionInGroupDept([
+    it('describes a course by the offering the import chose for it', function () {
+        courseInGroupDept([
             'subject' => 'AFRO',
             'catalog_number' => '4406',
-            'term_code' => OTHER_TERM,
-            'title' => 'African Cinema',
-            'credits' => 3,
-        ]);
-        sectionInGroupDept([
-            'subject' => 'AFRO',
-            'catalog_number' => '4406',
-            'class_section' => '002',
-            'term_code' => TERM,
             'title' => 'African Cinema and Media',
             'credits' => 4,
+            'last_offered_term_code' => TERM,
         ]);
 
         actingAs($this->admin);
@@ -271,36 +272,35 @@ describe('GET /api/sis/groups/:groupId/courses', function () {
 
         expect($res->status())->toBe(200);
         expect($res->json())->toEqual([[
-            'id' => 'AFRO-4406-LEC',
+            'id' => 'AFRO-4406',
             'courseCode' => 'AFRO-4406',
             'subject' => 'AFRO',
             'catalogNumber' => '4406',
             'title' => 'African Cinema and Media',
-            'component' => 'LEC',
             'credits' => 4,
             'lastOfferedTermId' => TERM,
         ]]);
     });
 
-    it('treats a lecture and a discussion of one course as separate entries', function () {
-        sectionInGroupDept(['subject' => 'AFRO', 'catalog_number' => '4406', 'component' => 'LEC']);
-        sectionInGroupDept(['subject' => 'AFRO', 'catalog_number' => '4406', 'component' => 'DIS']);
-
-        actingAs($this->admin);
-        $res = getJson("/api/sis/groups/{$this->group->id}/courses");
-
-        expect(collect($res->json())->pluck('component')->all())->toEqual(['DIS', 'LEC']);
-    });
-
-    it('spans every term, not just the current one', function () {
-        sectionInGroupDept(['subject' => 'AFRO', 'catalog_number' => '1021', 'term_code' => OTHER_TERM]);
-        sectionInGroupDept(['subject' => 'AFRO', 'catalog_number' => '4406', 'term_code' => TERM]);
+    it('orders by subject and catalog number', function () {
+        courseInGroupDept(['subject' => 'AFRO', 'catalog_number' => '4406']);
+        courseInGroupDept(['subject' => 'AFRO', 'catalog_number' => '1021']);
 
         actingAs($this->admin);
         $res = getJson("/api/sis/groups/{$this->group->id}/courses");
 
         expect(collect($res->json())->pluck('courseCode')->all())
             ->toEqual(['AFRO-1021', 'AFRO-4406']);
+    });
+
+    it('leaves out courses belonging to another department', function () {
+        courseInGroupDept(['subject' => 'AFRO', 'catalog_number' => '4406']);
+        SisCourse::factory()->create(['academic_org' => 22222, 'subject' => 'HIST']);
+
+        actingAs($this->admin);
+        $res = getJson("/api/sis/groups/{$this->group->id}/courses");
+
+        expect(collect($res->json())->pluck('courseCode')->all())->toEqual(['AFRO-4406']);
     });
 
     it('requires the user to have read privileges', function () {

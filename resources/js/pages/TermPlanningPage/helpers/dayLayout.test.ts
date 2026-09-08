@@ -66,3 +66,30 @@ describe("dayIndexAt", () => {
     expect(dayIndexAt(9000, widths)).toBe(2);
   });
 });
+
+describe("day width", () => {
+  const widthOf = (...meetings: Meeting[]) => layOutDay(meetings).width;
+
+  const at = (startMinute: number, endMinute: number): Meeting => ({
+    id: `m-${startMinute}`,
+    dayIndex: 0,
+    sectionId: 1,
+    startMinute,
+    endMinute,
+  });
+
+  // a column that resized as its first section landed made the grid jump
+  // under the pointer mid-gesture
+  it("holds still from empty up to two lanes", () => {
+    const empty = widthOf();
+
+    expect(widthOf(at(600, 650))).toBe(empty);
+    expect(widthOf(at(600, 650), at(610, 660))).toBe(empty);
+  });
+
+  it("widens once lanes would be too narrow to read", () => {
+    expect(widthOf(at(600, 650), at(610, 660), at(620, 670))).toBeGreaterThan(
+      widthOf(),
+    );
+  });
+});

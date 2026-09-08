@@ -1,37 +1,33 @@
 import { describe, expect, it } from "vitest";
 import { selectWeekView } from "./selectors";
-import type { Meeting } from "../types";
+import { NEW_SECTION_ID } from "./types";
 import { selectLocalSection } from "./selectors";
 import { plannedSection } from "../helpers/plannedSection.fixture";
 import { initialState } from "./update";
 import type { EditorState, ScheduleContext } from "./types";
 
-const meetings: Meeting[] = [
-  {
-    id: "mon-9",
-    dayIndex: 0,
-    sectionId: null,
-    startMinute: 540,
-    endMinute: 590,
-  },
-  {
-    id: "mon-9b",
-    dayIndex: 0,
-    sectionId: null,
-    startMinute: 570,
-    endMinute: 620,
-  },
-  {
-    id: "tue-9",
-    dayIndex: 1,
-    sectionId: null,
-    startMinute: 540,
-    endMinute: 590,
-  },
-];
+/**
+ * Two sections overlapping on Monday and one on Tuesday. Blocks are derived
+ * from these rather than written by hand, so their ids are the ones the grid
+ * uses; see `meetingIdOf`.
+ */
+const context: ScheduleContext = {
+  sections: [
+    plannedSection(1, [
+      { days: ["mon"], startTime: "09:00", endTime: "09:50" },
+    ]),
+    plannedSection(2, [
+      { days: ["mon"], startTime: "09:30", endTime: "10:20" },
+    ]),
+    plannedSection(3, [
+      { days: ["tue"], startTime: "09:00", endTime: "09:50" },
+    ]),
+  ],
+  isReadOnly: false,
+};
 
-/** No sections: every test here is about blocks, not about what is in them. */
-const context: ScheduleContext = { meetings, sections: [], isReadOnly: false };
+const MON_9 = "s1:mon:0900";
+const TUE_9 = "s3:tue:0900";
 
 const atRest: EditorState = initialState();
 
@@ -40,7 +36,7 @@ describe("selectWeekView while a meeting is carried", () => {
     ...atRest,
     interaction: {
       status: "moving",
-      meetingId: "mon-9",
+      meetingId: MON_9,
       grabbedAfterStart: 10,
       dayIndex: 1,
       startMinute: 700,
@@ -58,15 +54,15 @@ describe("selectWeekView while a meeting is carried", () => {
   it("the origin block ghosts and the overlay draws in the target day", () => {
     const [monday, tuesday] = selectWeekView(context, carrying, 5);
 
-    expect(monday.ghostMeetingId).toBe("mon-9");
+    expect(monday.ghostMeetingId).toBe(MON_9);
     expect(monday.overlay).toBeNull();
     // The overlay names its meeting so the block can be labeled like the
     // one the pointer picked up.
     expect(tuesday.overlay).toEqual({
       startMinute: 700,
       endMinute: 750,
-      meetingId: "mon-9",
-      sectionId: null,
+      meetingId: MON_9,
+      sectionId: 1,
     });
   });
 });
@@ -77,7 +73,7 @@ describe("selectWeekView while a meeting is pressed", () => {
       ...atRest,
       interaction: {
         status: "pressed",
-        meetingId: "mon-9",
+        meetingId: MON_9,
         grabbedAfterStart: 10,
         dayIndex: 0,
         minute: 550,
@@ -125,7 +121,7 @@ describe("selectWeekView while a meeting is resized", () => {
         ...atRest,
         interaction: {
           status: "resizing",
-          meetingId: "mon-9",
+          meetingId: MON_9,
           edge: "end",
           dayIndex: 0,
           startMinute: 540,
@@ -136,17 +132,17 @@ describe("selectWeekView while a meeting is resized", () => {
     );
 
     const resized = monday.layout.placed.find(
-      ({ meeting }) => meeting.id === "mon-9",
+      ({ meeting }) => meeting.id === MON_9,
     );
     const atRestPlacement = selectWeekView(
       context,
       atRest,
       5,
-    )[0].layout.placed.find(({ meeting }) => meeting.id === "mon-9");
+    )[0].layout.placed.find(({ meeting }) => meeting.id === MON_9);
 
     expect(resized?.meeting.endMinute).toBe(650);
     expect(resized?.lane).toBe(atRestPlacement?.lane);
-    expect(monday.activeMeetingId).toBe("mon-9");
+    expect(monday.activeMeetingId).toBe(MON_9);
     expect(monday.overlay).toBeNull();
   });
 });
@@ -188,25 +184,21 @@ describe("selectLocalSection", () => {
 });
 
 describe("selectWeekView over local edits", () => {
-  it("placeholder times pack alongside the placed sections", () => {
+  it("the section being created packs alongside the placed sections", () => {
     const drawn: EditorState = {
       ...atRest,
-      placeholderMeetings: [
-        {
-          id: "local-1",
-          dayIndex: 1,
-          sectionId: null,
-          startMinute: 560,
-          endMinute: 610,
+      drafts: {
+        [NEW_SECTION_ID]: {
+          meetings: [{ days: ["tue"], startTime: "09:20", endTime: "10:10" }],
         },
-      ],
+      },
     };
 
     const tuesday = selectWeekView(context, drawn, 5)[1];
 
     expect(tuesday.layout.placed.map(({ meeting }) => meeting.id)).toEqual([
-      "tue-9",
-      "local-1",
+      TUE_9,
+      "s-1:tue:0920",
     ]);
   });
 });
@@ -215,12 +207,12 @@ describe("selectWeekView with a meeting selected", () => {
   it("names the selected meeting only in the day that holds it", () => {
     const selected: EditorState = {
       ...atRest,
-      selection: { kind: "meeting", meetingId: "tue-9" },
+      selection: { kind: "meeting", meetingId: TUE_9 },
     };
 
     const [monday, tuesday] = selectWeekView(context, selected, 5);
 
     expect(monday.selectedMeetingId).toBeNull();
-    expect(tuesday.selectedMeetingId).toBe("tue-9");
+    expect(tuesday.selectedMeetingId).toBe(TUE_9);
   });
 });

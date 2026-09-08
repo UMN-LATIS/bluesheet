@@ -35,6 +35,7 @@
           :dayIndex="dayIndex"
           :view="week[dayIndex]"
           :componentOf="componentOf"
+          :isUnofficial="isUnofficial"
           :isReadOnly="schedule.isReadOnly"
         >
           <!--
@@ -71,6 +72,7 @@
             :style="{ height: COLUMN_HEIGHT }"
           >
             <AsyncSectionChips
+              :unofficialCourseCodes="unofficialCourseCodes"
               :sections="unscheduled"
               :selectedSectionId="selectedSectionId"
               :schedule="schedule"
@@ -112,6 +114,8 @@ const props = defineProps<{
    * meeting's class, which picks its color.
    */
   componentOf?: (meeting: Meeting) => string | undefined;
+  isUnofficial?: (meeting: Meeting) => boolean;
+  unofficialCourseCodes: Set<string>;
   /** The sections with no meeting time, drawn as the week's last column. */
   unscheduled: PlannedSection[];
   /** Which section the sheet is open on, so its chip can show it. */
@@ -126,20 +130,29 @@ const week = computed(() => props.schedule.weekView(WEEKDAY_NAMES.length));
 function onPointerDown(event: PointerEvent) {
   if (event.button !== 0) return;
 
+  const target = event.target as HTMLElement;
+
+  // The day headers and the Async column are inside this element too, and a
+  // press on either has no place on the clock. Without this, `dayIndexAt`
+  // answers for them anyway by clamping, and pressing a chip draws a Friday
+  // section behind it. The capture below would also swallow the chip's click.
+  if (!target.closest("[data-day-index]")) return;
+
   const at = positionOf(event);
   if (!at) return;
 
-  const target = event.target as HTMLElement;
   const meetingId =
     target.closest<HTMLElement>("[data-meeting-id]")?.dataset.meetingId;
   const edge =
     target.closest<HTMLElement>("[data-resize-edge]")?.dataset.resizeEdge;
 
-  // TODO: drawing on empty space, once a section can be created for it
-  if (!meetingId) return;
-
   // capture, so the gesture keeps arriving after the pointer leaves the grid
   days.value?.setPointerCapture(event.pointerId);
+
+  if (!meetingId) {
+    props.schedule.pressEmptySpace(at.dayIndex, at.minute);
+    return;
+  }
 
   // A read-only week keeps its blocks and loses its handles: the press below
   // opens the sheet on release, and `update` refuses everything else.

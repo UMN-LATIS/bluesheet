@@ -31,6 +31,10 @@
    * the header, and the one accent that marks a change as yours. */
   --brand: #7a0019;
   --on-brand: #ffffff;
+  /* Do not swap for `bg-brand/[0.06]`. Tailwind drops an
+   * opacity modifier on a color held in a var, so that
+   * class emits no rule at all and nothing is painted. */
+  --brand-container: #f7f0f1;
   --accent: #ffcc33;
   --on-accent: #3d2f00;
 }

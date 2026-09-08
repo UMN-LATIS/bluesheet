@@ -24,6 +24,7 @@ class SisClassSection extends Model {
         'institution',
         'subject',
         'catalog_number',
+        'course_code',
         'class_section',
         'component',
         'academic_career',
@@ -51,10 +52,6 @@ class SisClassSection extends Model {
 
     public function meetings(): HasMany {
         return $this->hasMany(SisClassMeeting::class);
-    }
-
-    public function getCourseCodeAttribute(): string {
-        return $this->subject . '-' . $this->catalog_number;
     }
 
     public function scopeForDepartmentTerm($query, int $academicOrg, int $termCode) {

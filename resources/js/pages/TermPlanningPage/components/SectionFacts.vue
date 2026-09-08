@@ -11,11 +11,25 @@
 -->
 <template>
   <div
-    class="scrollbar-always-visible tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-gap-3 tw-overflow-y-auto tw-px-[18px] tw-pb-4 tw-pt-3.5"
+    class="scrollbar-always-visible tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-gap-4 tw-overflow-y-auto tw-p-[18px]"
   >
-    <div>
-      <FieldLabel class="tw-mb-px">Section</FieldLabel>
-      <FactValue>{{ section.section }}</FactValue>
+    <div class="tw-flex tw-items-start tw-gap-8">
+      <div>
+        <FieldLabel class="tw-mb-px">Section</FieldLabel>
+        <FactValue>{{ section.section }}</FactValue>
+      </div>
+
+      <div>
+        <FieldLabel class="tw-mb-px">Enrollment</FieldLabel>
+        <div class="tw-flex tw-items-baseline tw-gap-2">
+          <FactValue>
+            {{ section.enrollmentTotal }} / {{ section.enrollmentCap }}
+          </FactValue>
+          <span class="tw-text-xs tw-text-on-surface-variant">
+            enrolled of cap
+          </span>
+        </div>
+      </div>
     </div>
 
     <div>
@@ -29,14 +43,12 @@
         <FactValue>{{ daysMetSpelled(pattern.days) }}</FactValue>
         <span class="tw-text-[15px]">{{ timeOf(pattern) }}</span>
         <span
-          class="tw-text-[11.5px] tw-font-semibold tw-text-on-surface-variant"
+          class="tw-text-[11px] tw-font-semibold tw-text-on-surface-variant"
         >
           {{ durationOf(pattern) }} min
         </span>
       </div>
     </div>
-
-    <FieldDivider />
 
     <div>
       <FieldLabel class="tw-mb-px">Taught by</FieldLabel>
@@ -55,8 +67,6 @@
         </p>
       </div>
     </div>
-
-    <FieldDivider />
 
     <!--
       Alongside the instructor of record rather than folded away below, since
@@ -80,21 +90,7 @@
 
     <FieldDivider />
 
-    <div>
-      <FieldLabel class="tw-mb-px">Enrollment</FieldLabel>
-      <div class="tw-flex tw-items-baseline tw-gap-2.5">
-        <FactValue>
-          {{ section.enrollmentTotal }} / {{ section.enrollmentCap }}
-        </FactValue>
-        <span class="tw-text-[13px] tw-text-on-surface-variant">
-          enrolled of cap
-        </span>
-      </div>
-    </div>
-
-    <FieldDivider />
-
-    <div class="tw-flex tw-flex-col tw-gap-1.5">
+    <div class="tw-overflow-hidden tw-rounded-[10px] tw-bg-surface">
       <Disclosure
         label="Component & delivery"
         :summary="`${section.component} · ${labelOfDelivery(section.delivery)}`"
@@ -120,23 +116,20 @@
         </div>
       </Disclosure>
 
-      <FieldDivider />
+      <FieldDivider class="tw-mx-3" />
 
-      <Disclosure
-        label="Cross-listings"
-        :summary="partners.length === 0 ? 'None' : String(partners.length)"
-      >
+      <Disclosure label="Cross-listings" :summary="crosslistSummary">
         <p
           v-if="partners.length === 0"
-          class="tw-m-0 tw-text-[12.5px] tw-text-on-surface-variant"
+          class="tw-m-0 tw-text-[13px] tw-text-on-surface-variant"
         >
           This section is not listed under another number.
         </p>
-        <div v-else class="tw-flex tw-flex-col tw-gap-1.5">
+        <div v-else class="tw-flex tw-flex-col tw-gap-1">
           <div
             v-for="partner in partners"
             :key="`${partner.subject}${partner.catalogNumber}${partner.section}`"
-            class="tw-rounded-lg tw-bg-surface tw-px-3 tw-py-2 tw-text-[13px]"
+            class="tw-text-[13px]"
           >
             {{ partner.subject }} {{ partner.catalogNumber }} ·
             {{ partner.section }}
@@ -144,11 +137,11 @@
         </div>
       </Disclosure>
 
-      <FieldDivider />
+      <FieldDivider class="tw-mx-3" />
 
       <Disclosure label="Notes" :summary="notesSummary">
         <p
-          class="tw-m-0 tw-whitespace-pre-line tw-text-[12.5px]"
+          class="tw-m-0 tw-whitespace-pre-line tw-text-[13px]"
           :class="{ 'tw-text-on-surface-variant': section.notes.trim() === '' }"
         >
           {{
@@ -196,6 +189,17 @@ const instructorsOnRecord = computed(() =>
 const assistants = computed(() => assistantsOf(props.section.instructors));
 
 const partners = computed(() => props.section.crosslist?.partners ?? []);
+
+const crosslistSummary = computed(() =>
+  partners.value.length === 0
+    ? "None"
+    : partners.value
+        .map(
+          (partner) =>
+            `${partner.subject} ${partner.catalogNumber} · ${partner.section}`,
+        )
+        .join(", "),
+);
 
 const notesSummary = computed(
   () => props.section.notes.trim().split("\n")[0] || "Empty",

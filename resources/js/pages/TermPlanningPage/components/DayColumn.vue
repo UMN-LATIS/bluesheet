@@ -66,6 +66,7 @@
         :isSelected="placed.meeting.id === view.selectedMeetingId"
         :isReadOnly="isReadOnly"
         :component="componentOf?.(placed.meeting)"
+        :isUnofficial="isUnofficial?.(placed.meeting)"
       >
         <template v-if="$slots.block" #default>
           <slot
@@ -87,6 +88,7 @@
         :isDraft="!carriedMeeting"
         :isCarried="Boolean(carriedMeeting)"
         :component="carriedMeeting ? componentOf?.(carriedMeeting) : undefined"
+        :isUnofficial="carriedMeeting ? isUnofficial?.(carriedMeeting) : false"
       >
         <template v-if="$slots.block && carriedMeeting" #default>
           <slot
@@ -123,6 +125,7 @@ const props = defineProps<{
    * meeting's class, which picks the block color.
    */
   componentOf?: (meeting: Meeting) => string | undefined;
+  isUnofficial?: (meeting: Meeting) => boolean;
   /** Draws the blocks without their handles; see `MeetingBlock`. */
   isReadOnly?: boolean;
 }>();

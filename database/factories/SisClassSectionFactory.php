@@ -19,6 +19,9 @@ class SisClassSectionFactory extends Factory {
             'institution' => 'UMNTC',
             'subject' => strtoupper($this->faker->lexify('????')),
             'catalog_number' => (string) $this->faker->numberBetween(1000, 5999),
+            // a closure so a test overriding either part still gets a
+            // matching course code
+            'course_code' => fn(array $attributes) => $attributes['subject'] . '-' . $attributes['catalog_number'],
             'class_section' => '001',
             'component' => 'LEC',
             'academic_career' => 'UGRD',
