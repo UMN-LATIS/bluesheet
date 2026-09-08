@@ -1304,6 +1304,80 @@ describe("redrawing the times of a section being created", () => {
   });
 });
 
+describe("moving to another department or term", () => {
+  const context = contextOf(plannedSection(1, []));
+
+  it("drops the overlays and drafts the old term left behind", () => {
+    const held = after(
+      [
+        { type: "selectedSection", sectionId: 1 },
+        { type: "sectionFieldEdited", sectionId: 1, change: { notes: "hi" } },
+        { type: "draftSaved", sectionId: 1 },
+        { type: "sectionFieldEdited", sectionId: 1, change: { notes: "ho" } },
+      ],
+      initialState(),
+      context,
+    );
+
+    expect(held.sectionEdits[1]).toBeDefined();
+    expect(held.drafts[1]).toBeDefined();
+
+    const moved = after([{ type: "contextChanged" }], held, context);
+
+    expect(moved.sectionEdits).toEqual({});
+    expect(moved.drafts).toEqual({});
+    expect(moved.selection).toBeNull();
+  });
+
+  // the rectangle belongs to neither department, and Create would have posted
+  // it to whichever one the page landed on
+  it("drops a section drawn but never created", () => {
+    const named = after(
+      [
+        {
+          type: "sectionFieldEdited",
+          sectionId: NEW_SECTION_ID,
+          change: { courseCode: "ANTH-1001" },
+        },
+      ],
+      after(draw(0, 600, 675)),
+    );
+
+    const moved = after([{ type: "contextChanged" }], named);
+
+    expect(drawn(moved)).toBeUndefined();
+    expect(selectIsNewSectionSelected(moved)).toBe(false);
+  });
+
+  it("asks nothing on the way out, because the page already did", () => {
+    const typed = after(
+      [
+        { type: "selectedSection", sectionId: 1 },
+        { type: "sectionFieldEdited", sectionId: 1, change: { notes: "hi" } },
+      ],
+      initialState(),
+      context,
+    );
+
+    const moved = after([{ type: "contextChanged" }], typed, context);
+
+    expect(moved.pendingDismissal).toBeNull();
+    expect(moved.drafts).toEqual({});
+  });
+
+  it("still clears when the term it is leaving is read-only", () => {
+    const locked = { ...context, isReadOnly: true };
+    const held = {
+      ...initialState(),
+      sectionEdits: { 1: { notes: "hi" } },
+    };
+
+    expect(
+      after([{ type: "contextChanged" }], held, locked).sectionEdits,
+    ).toEqual({});
+  });
+});
+
 describe("asking before unsaved sheet edits are dropped", () => {
   const escape: EditorEvent = { type: "canceled" };
 

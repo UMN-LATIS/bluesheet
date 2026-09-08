@@ -116,6 +116,7 @@ export const EDITOR_QUERY_KEYS = [
  * shell does not ask again before letting one of these through.
  */
 export const DISCARDS_ON_PURPOSE: EditorEvent["type"][] = [
+  "contextChanged",
   "newSectionDiscarded",
   "sectionCreated",
   "sectionDeleted",
@@ -154,6 +155,8 @@ const READING_EVENTS: EditorEvent["type"][] = [
   "asyncDayShown",
   "urlChanged",
   "dismissalCancelled",
+  // leaving a locked term still has to drop what was held for it
+  "contextChanged",
 ];
 
 export function update(
@@ -449,6 +452,20 @@ function reduce(
           : fromUrl,
       };
     }
+
+    // Everything keyed by a section id, and the drawn section with it. The
+    // view, the day and the filters are in the URL, which the toolbar rewrites
+    // for the department it is moving to.
+    case "contextChanged":
+      return {
+        ...state,
+        sectionEdits: {},
+        drafts: {},
+        selection: null,
+        lastPlacedId: null,
+        interaction: { status: "idle" },
+        pendingDismissal: null,
+      };
 
     case "sectionFieldEdited":
       return {

@@ -167,7 +167,12 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
+import {
+  onBeforeRouteLeave,
+  onBeforeRouteUpdate,
+  useRoute,
+  useRouter,
+} from "vue-router";
 import { useEventListener } from "@vueuse/core";
 import { omit } from "lodash-es";
 import FullScreenLayout from "@/layouts/FullScreenLayout.vue";
@@ -450,6 +455,24 @@ const LEAVING_UNSAVED =
 onBeforeRouteLeave(
   () => !hasUnsavedWork.value || window.confirm(LEAVING_UNSAVED),
 );
+
+/**
+ * Switching department or term keeps this component, so `onBeforeRouteLeave`
+ * never runs and the editor would carry the old department's overlays and its
+ * drawn section into the new one. A query-only change is the page writing its
+ * own filters back, which nothing here should interrupt.
+ */
+onBeforeRouteUpdate((to, from) => {
+  const isSameTermPlan =
+    to.params.groupId === from.params.groupId &&
+    to.params.termCode === from.params.termCode;
+
+  if (isSameTermPlan) return true;
+  if (hasUnsavedWork.value && !window.confirm(LEAVING_UNSAVED)) return false;
+
+  schedule.contextChanged();
+  return true;
+});
 
 // the browser shows its own wording; preventDefault is what asks for the prompt
 useEventListener(window, "beforeunload", (event: BeforeUnloadEvent) => {

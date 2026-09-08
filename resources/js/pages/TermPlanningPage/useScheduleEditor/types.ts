@@ -185,6 +185,11 @@ export type EditorEvent =
    * which is what stops the page and the router answering each other forever.
    */
   | { type: "urlChanged"; query: UrlQuery }
+  /**
+   * The page is now on another department or term. Overlays and drafts name
+   * rows the new one does not have, and the drawn section belongs to neither.
+   */
+  | { type: "contextChanged" }
   | { type: "sectionFieldEdited"; sectionId: number; change: SectionEdit }
   /** A day pressed in the sheet. An index past the last pattern starts one. */
   | {

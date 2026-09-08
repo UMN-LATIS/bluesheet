@@ -45,6 +45,7 @@ return new class extends Migration {
                 ['academic_org', 'term_code', 'course_code', 'class_section'],
                 'local_class_sections_unique'
             );
+            $table->dropIndex(['academic_org', 'term_code']);
         });
 
         Schema::table('local_courses', function (Blueprint $table) {
@@ -62,6 +63,7 @@ return new class extends Migration {
                 ['term_code', 'course_code', 'class_section', 'deleted_at'],
                 'local_class_sections_unique'
             );
+            $table->index(['academic_org', 'term_code']);
         });
 
         Schema::table('local_courses', function (Blueprint $table) {

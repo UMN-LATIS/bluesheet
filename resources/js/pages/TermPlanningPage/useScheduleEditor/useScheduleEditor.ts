@@ -153,6 +153,8 @@ export function useScheduleEditor(
     showAsyncDay: () => dispatch({ type: "asyncDayShown" }),
     /** The URL changed: first load, the back button, or our own effect. */
     urlChanged: (query: UrlQuery) => dispatch({ type: "urlChanged", query }),
+    /** Another department or term is showing, so nothing held is about it. */
+    contextChanged: () => dispatch({ type: "contextChanged" }),
 
     /* Editing a section through the sheet: draft, then save. */
     editSection: (sectionId: number, change: SectionEdit) =>
