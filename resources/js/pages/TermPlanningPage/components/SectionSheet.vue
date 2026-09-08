@@ -288,7 +288,7 @@
 
       <FieldDivider />
 
-      <div class="tw-overflow-hidden tw-rounded-[10px] tw-bg-surface">
+      <div class="tw-rounded-[10px] tw-bg-surface">
         <Disclosure label="Component & delivery" :summary="componentSummary">
           <div class="tw-flex tw-gap-3">
             <div class="tw-min-w-0 tw-flex-1">
