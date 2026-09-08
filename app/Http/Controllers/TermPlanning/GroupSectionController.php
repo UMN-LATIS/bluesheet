@@ -44,7 +44,7 @@ class GroupSectionController extends Controller {
                 ->get();
 
         return [
-            // the client mirrors this in termLock.ts rather than deciding for itself
+            // useTermSchedule.ts reads this rather than deciding for itself
             'isEditable' => TermLock::isEditable($academicOrg, $termCode),
             'sections' => LocalSectionResource::collection($sections),
         ];
@@ -52,7 +52,7 @@ class GroupSectionController extends Controller {
 
     public function store(Request $request, Group $group) {
         $academicOrg = $this->authorizeWrite($request, $group);
-        $validated = $request->validate($this->rules($request));
+        $validated = $request->validate($this->rules($request, $academicOrg));
 
         $section = DB::transaction(function () use ($validated, $academicOrg) {
             $section = LocalClassSection::create([
@@ -86,7 +86,7 @@ class GroupSectionController extends Controller {
             'A section cannot be moved to another term.'
         );
 
-        $validated = $request->validate($this->rules($request, $section));
+        $validated = $request->validate($this->rules($request, $academicOrg, $section));
 
         DB::transaction(function () use ($section, $validated) {
             $section->update([
@@ -143,7 +143,7 @@ class GroupSectionController extends Controller {
     }
 
     /** @return array<string, mixed> */
-    private function rules(Request $request, ?LocalClassSection $existing = null): array {
+    private function rules(Request $request, int $academicOrg, ?LocalClassSection $existing = null): array {
         return [
             'termId' => 'required|integer',
             'courseCode' => 'required|string|max:255',
@@ -151,7 +151,7 @@ class GroupSectionController extends Controller {
             'catalogNumber' => 'required|string|max:255',
             'section' => [
                 'required', 'string', 'max:255',
-                $this->sectionNumberIsFree($request, $existing),
+                $this->sectionNumberIsFree($request, $academicOrg, $existing),
             ],
             'component' => 'required|string|max:255',
             'title' => 'required|string|max:255',
@@ -174,12 +174,16 @@ class GroupSectionController extends Controller {
     }
 
     /**
-     * One section number per course per term, which is the key the local table
-     * enforces. Checking it here turns a duplicate into a message the form can
-     * show instead of a constraint violation.
+     * One section number per course per term per department, which is the key
+     * the local table enforces. Checking it here turns a duplicate into a
+     * message the form can show instead of a constraint violation.
+     *
+     * Every column of that key is named. Leave academic_org out and a section
+     * another department already planned refuses this one.
      */
-    private function sectionNumberIsFree(Request $request, ?LocalClassSection $existing): Unique {
+    private function sectionNumberIsFree(Request $request, int $academicOrg, ?LocalClassSection $existing): Unique {
         $rule = Rule::unique('local_class_sections', 'class_section')
+            ->where('academic_org', $academicOrg)
             ->where('term_code', $request->input('termId'))
             ->where('course_code', $request->input('courseCode'));
 

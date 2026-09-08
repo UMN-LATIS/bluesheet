@@ -501,7 +501,7 @@
         type="button"
         class="tw-min-h-11 tw-rounded-full tw-border-none tw-bg-primary tw-px-6 tw-text-[13px] tw-font-bold tw-text-on-primary disabled:tw-cursor-default disabled:tw-bg-surface-container-high disabled:tw-text-on-surface-variant"
         :class="{ 'tw-cursor-pointer': canCreate }"
-        :disabled="!canCreate"
+        :disabled="!canCreate || isCreating"
         @click="emit('create')"
       >
         Create section
@@ -597,6 +597,8 @@ const props = defineProps<{
   groupId: number;
   /** On a course a scheduler named, which the SIS has never published. */
   isUnofficial?: boolean;
+  /** The create is with the server, so Create must not fire again. */
+  isCreating?: boolean;
   /** The term's sections, for reading a cross-list partner's cap. */
   sections: PlannedSection[];
   roster: SisEmployee[];

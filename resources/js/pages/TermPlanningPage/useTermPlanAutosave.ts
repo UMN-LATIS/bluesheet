@@ -30,15 +30,22 @@ export function useTermPlanAutosave(options: {
 }) {
   const { sections, pendingEdits, save, onSaved, onRefused } = options;
 
-  const saveEdited = async () => {
-    // read once: an edit made during a save must not be marked as saved
-    const edits = { ...pendingEdits.value };
+  /**
+   * The save each section is waiting behind. One section's saves run in a
+   * line, so a slow first request cannot land after a later one and put the
+   * older values back.
+   */
+  const saving = new Map<number, Promise<void>>();
 
-    await Promise.all(
-      Object.entries(edits).map(async ([id, edit]) => {
-        const sectionId = Number(id);
+  const saveSection = (sectionId: number): Promise<void> => {
+    const queued = (saving.get(sectionId) ?? Promise.resolve()).then(
+      async () => {
+        // Read when this link runs rather than when it was queued: what goes
+        // to the server is the section as it stands now, and an edit the
+        // save ahead already covered is gone from the overlay by here.
+        const edit = pendingEdits.value[sectionId];
         const section = sections.value.find(({ id }) => id === sectionId);
-        if (!section) return;
+        if (!edit || !section) return;
 
         // one section per catch, so a refusal on one still saves the rest
         try {
@@ -47,9 +54,19 @@ export function useTermPlanAutosave(options: {
         } catch (refusal) {
           onRefused(refusal);
         }
-      }),
+      },
     );
+
+    saving.set(sectionId, queued);
+    queued.finally(() => {
+      if (saving.get(sectionId) === queued) saving.delete(sectionId);
+    });
+
+    return queued;
   };
+
+  const saveEdited = () =>
+    Promise.all(Object.keys(pendingEdits.value).map(Number).map(saveSection));
 
   const flushSoon = debounce(saveEdited, QUIET_PERIOD_MS);
 

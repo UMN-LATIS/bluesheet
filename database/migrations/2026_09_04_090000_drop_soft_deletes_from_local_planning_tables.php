@@ -36,8 +36,13 @@ return new class extends Migration {
         Schema::table('local_class_sections', function (Blueprint $table) {
             $table->dropUnique('local_class_sections_unique');
             $table->dropSoftDeletes();
+            // academic_org leads: course codes are department-scoped, as
+            // local_courses_unique says, so without it one department's
+            // section number would block every other department's. It also
+            // makes local_class_sections_academic_org_term_code_index a
+            // redundant prefix of this key.
             $table->unique(
-                ['term_code', 'course_code', 'class_section'],
+                ['academic_org', 'term_code', 'course_code', 'class_section'],
                 'local_class_sections_unique'
             );
         });
@@ -78,7 +83,7 @@ return new class extends Migration {
      */
     private function assertLiveRowsAreUnique(): void {
         $duplicates = collect([
-            'local_class_sections' => ['term_code', 'course_code', 'class_section'],
+            'local_class_sections' => ['academic_org', 'term_code', 'course_code', 'class_section'],
             'local_courses' => ['academic_org', 'course_code'],
         ])->flatMap(fn(array $key, string $table) => DB::table($table)
             ->whereNull('deleted_at')

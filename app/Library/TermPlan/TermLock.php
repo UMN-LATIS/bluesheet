@@ -14,8 +14,8 @@ use App\SisClassSection;
  * term the SIS has published, and two rules that can disagree are worse than
  * one that cannot.
  *
- * The front end's termLock.ts is the same rule, applied to the flag this one
- * produces. This is the enforcement; that is the courtesy.
+ * The front end reads the flag this one produces in useTermSchedule.ts.
+ * This is the enforcement, that is the courtesy.
  */
 class TermLock {
     public static function isReadOnly(?int $academicOrg, int $termCode): bool {

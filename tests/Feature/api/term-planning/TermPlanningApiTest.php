@@ -213,6 +213,33 @@ describe('POST /api/term-planning/groups/:groupId/sections', function () {
         expect(LocalClassSection::count())->toBe(0);
     });
 
+    it('refuses a section number this department already used', function () {
+        plannedSection(['course_code' => 'ANTH-1001', 'class_section' => '001']);
+
+        actingAs($this->admin);
+        $res = postJson(sectionsUrl($this->group), sectionPayload(['section' => '001']));
+
+        expect($res->status())->toBe(422);
+        expect(LocalClassSection::count())->toBe(1);
+    });
+
+    // course codes are department-scoped, so one department's numbering must
+    // not reach into another's
+    it('allows a section number another department already used', function () {
+        LocalClassSection::factory()->create([
+            'academic_org' => 22222,
+            'term_code' => PLANNABLE_TERM,
+            'course_code' => 'ANTH-1001',
+            'class_section' => '001',
+        ]);
+
+        actingAs($this->admin);
+        $res = postJson(sectionsUrl($this->group), sectionPayload(['section' => '001']));
+
+        expect($res->status())->toBe(201);
+        expect(LocalClassSection::where('academic_org', DEPT)->count())->toBe(1);
+    });
+
     it('refuses a delivery the front end has no name for', function () {
         actingAs($this->admin);
         $res = postJson(sectionsUrl($this->group), sectionPayload(['delivery' => 'telepathy']));

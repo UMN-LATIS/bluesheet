@@ -123,6 +123,7 @@
           :schedule="schedule"
           :groupId="groupId"
           :isUnofficial="isUnofficialSection(selectedSection)"
+          :isCreating="isSavingNewSection"
           :sections="localSections"
           :roster="roster"
           :returnTo="returnTo"
@@ -358,10 +359,18 @@ const showRefusal = (refusal: unknown) => {
   writeError.value = refusalMessage(refusal) ?? REFUSED;
 };
 
+/**
+ * Read synchronously by `createDrawnSection` rather than watched, because two
+ * clicks land before Vue has re-rendered the button as disabled, and the
+ * second would POST the same section again.
+ */
+const isSavingNewSection = ref(false);
+
 async function createDrawnSection() {
   const standIn = newSection.value;
-  if (!standIn) return;
+  if (!standIn || isSavingNewSection.value) return;
 
+  isSavingNewSection.value = true;
   writeError.value = null;
 
   try {
@@ -372,6 +381,8 @@ async function createDrawnSection() {
     schedule.markSectionCreated(created.id);
   } catch (refusal) {
     showRefusal(refusal);
+  } finally {
+    isSavingNewSection.value = false;
   }
 }
 
@@ -416,14 +427,20 @@ const isUnofficialBlock = (meeting: Meeting) => {
 };
 
 /**
- * A section drawn and given a course but never created, or a sheet with
- * typing behind its Save button. Grid drags are not here: they go straight to
- * the autosave. The same test the sheet asks by, so one click on the grid and
- * then Back is not a question; see `selectAbandonsUnsavedWork`.
+ * A section drawn and given a course but never created, a sheet with typing
+ * behind its Save button, or an edit the autosave has not had an answer for.
+ *
+ * `pendingEdits` covers the 800ms pause plus the request: a grid drag is
+ * saved without asking, but for that window it is only on screen. It empties
+ * as each save is acknowledged.
+ *
+ * The drawn section is tested the way the sheet tests it, so one click on the
+ * grid and then Back is not a question; see `selectAbandonsUnsavedWork`.
  */
 const hasUnsavedWork = computed(
   () =>
     schedule.newSectionHasCourse ||
+    Object.keys(schedule.pendingEdits).length > 0 ||
     localSections.value.some((section) => schedule.isDraftDirty(section)),
 );
 
