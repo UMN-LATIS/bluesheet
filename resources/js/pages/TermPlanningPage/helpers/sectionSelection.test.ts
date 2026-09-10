@@ -16,12 +16,16 @@ const SECTIONS = [
   section(1, {
     courseCode: "ANTH-1001",
     component: "LEC",
-    instructors: [{ emplid: 10, role: "PI", name: "A", lastName: "A", internetId: null }],
+    instructors: [
+      { emplid: 10, role: "PI", name: "A", lastName: "A", internetId: null },
+    ],
   }),
   section(2, {
     courseCode: "ANTH-1001",
     component: "LEC",
-    instructors: [{ emplid: 10, role: "PI", name: "A", lastName: "A", internetId: null }],
+    instructors: [
+      { emplid: 10, role: "PI", name: "A", lastName: "A", internetId: null },
+    ],
   }),
   section(3, { courseCode: "ANTH-3001", component: "LAB", instructors: [] }),
 ];
@@ -42,7 +46,9 @@ describe("sectionsByFacetValue", () => {
   });
 
   it("counts a section once when two values name it", () => {
-    expect(sectionIdsUnder(byValue, "course", ["ANTH-1001", "ANTH-1001"])).toEqual([1, 2]);
+    expect(
+      sectionIdsUnder(byValue, "course", ["ANTH-1001", "ANTH-1001"]),
+    ).toEqual([1, 2]);
   });
 
   it("gives nothing for a value no section carries", () => {
@@ -52,42 +58,52 @@ describe("sectionsByFacetValue", () => {
 
 describe("selectionStateOf", () => {
   it("is all when every section under the value is chosen", () => {
-    expect(selectionStateOf(byValue, new Set([1, 2]), "course", ["ANTH-1001"]))
-      .toBe("all");
+    expect(
+      selectionStateOf(byValue, new Set([1, 2]), "course", ["ANTH-1001"]),
+    ).toBe("all");
   });
 
   it("is some when only part of the value is chosen", () => {
-    expect(selectionStateOf(byValue, new Set([1]), "course", ["ANTH-1001"]))
-      .toBe("some");
+    expect(
+      selectionStateOf(byValue, new Set([1]), "course", ["ANTH-1001"]),
+    ).toBe("some");
   });
 
   it("is none when nothing under the value is chosen", () => {
-    expect(selectionStateOf(byValue, new Set([3]), "course", ["ANTH-1001"]))
-      .toBe("none");
+    expect(
+      selectionStateOf(byValue, new Set([3]), "course", ["ANTH-1001"]),
+    ).toBe("none");
   });
 
   it("is none for a value standing for no sections", () => {
-    expect(selectionStateOf(byValue, new Set([1, 2, 3]), "course", ["HIST-1000"]))
-      .toBe("none");
+    expect(
+      selectionStateOf(byValue, new Set([1, 2, 3]), "course", ["HIST-1000"]),
+    ).toBe("none");
   });
 
   it("reads a group of values as one, which is how a level row behaves", () => {
     const everything = ["ANTH-1001", "ANTH-3001"];
 
-    expect(selectionStateOf(byValue, new Set([1, 2]), "course", everything))
-      .toBe("some");
-    expect(selectionStateOf(byValue, new Set([1, 2, 3]), "course", everything))
-      .toBe("all");
+    expect(
+      selectionStateOf(byValue, new Set([1, 2]), "course", everything),
+    ).toBe("some");
+    expect(
+      selectionStateOf(byValue, new Set([1, 2, 3]), "course", everything),
+    ).toBe("all");
   });
 });
 
 describe("withSectionsSelected", () => {
   it("adds without disturbing what was already chosen", () => {
-    expect([...withSectionsSelected(new Set([1]), [2, 3], true)]).toEqual([1, 2, 3]);
+    expect([...withSectionsSelected(new Set([1]), [2, 3], true)]).toEqual([
+      1, 2, 3,
+    ]);
   });
 
   it("removes only the ids named", () => {
-    expect([...withSectionsSelected(new Set([1, 2, 3]), [2], false)]).toEqual([1, 3]);
+    expect([...withSectionsSelected(new Set([1, 2, 3]), [2], false)]).toEqual([
+      1, 3,
+    ]);
   });
 
   it("leaves the set it was given alone", () => {
@@ -100,17 +116,22 @@ describe("withSectionsSelected", () => {
 
 describe("valuesWithAnySelection", () => {
   it("counts a course as chosen once any of its sections is", () => {
-    expect(valuesWithAnySelection(byValue, new Set([1]), "course"))
-      .toEqual({ count: 1, total: 2 });
+    expect(valuesWithAnySelection(byValue, new Set([1]), "course")).toEqual({
+      count: 1,
+      total: 2,
+    });
   });
 
   it("counts every value when everything is chosen", () => {
-    expect(valuesWithAnySelection(byValue, new Set([1, 2, 3]), "component"))
-      .toEqual({ count: 2, total: 2 });
+    expect(
+      valuesWithAnySelection(byValue, new Set([1, 2, 3]), "component"),
+    ).toEqual({ count: 2, total: 2 });
   });
 
   it("counts none when nothing is chosen", () => {
-    expect(valuesWithAnySelection(byValue, new Set(), "section"))
-      .toEqual({ count: 0, total: 3 });
+    expect(valuesWithAnySelection(byValue, new Set(), "section")).toEqual({
+      count: 0,
+      total: 3,
+    });
   });
 });

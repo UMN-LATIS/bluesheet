@@ -27,7 +27,9 @@ export function sectionIdsUnder(
   values: string[],
 ): number[] {
   return [
-    ...new Set(values.flatMap((value) => byValue.get(`${facet}:${value}`) ?? [])),
+    ...new Set(
+      values.flatMap((value) => byValue.get(`${facet}:${value}`) ?? []),
+    ),
   ];
 }
 
@@ -75,8 +77,7 @@ export function valuesWithAnySelection(
 
   return {
     count: values.filter(
-      (value) =>
-        selectionStateOf(byValue, selected, facet, [value]) !== "none",
+      (value) => selectionStateOf(byValue, selected, facet, [value]) !== "none",
     ).length,
     total: values.length,
   };
