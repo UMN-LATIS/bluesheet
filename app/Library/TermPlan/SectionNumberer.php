@@ -28,6 +28,30 @@ class SectionNumberer {
         return array_values($assigned);
     }
 
+    /**
+     * `TBA1`, `TBA2`, ... for sections arriving without numbers, counting on
+     * from any the course already holds.
+     *
+     * @param string[] $taken numbers the course already holds in the destination term
+     * @return string[] one placeholder per section, in the order asked for
+     */
+    public static function placeholdersWithinCourse(array $taken, int $count): array {
+        $highest = 0;
+
+        foreach ($taken as $number) {
+            if (preg_match('/^TBA(\d+)$/', $number, $found)) {
+                $highest = max($highest, (int) $found[1]);
+            }
+        }
+
+        return $count === 0
+            ? []
+            : array_map(
+                fn(int $offset) => 'TBA' . ($highest + $offset),
+                range(1, $count),
+            );
+    }
+
     private static function afterHighest(array $claimed): string {
         $highest = max(array_map('intval', $claimed));
 

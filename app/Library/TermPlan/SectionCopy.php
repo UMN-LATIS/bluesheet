@@ -8,7 +8,11 @@ use Illuminate\Support\Collection;
 
 class SectionCopy {
     /** @return array<string, mixed> */
-    public static function toColumns(SisClassSection $source, string $classSection): array {
+    public static function toColumns(
+        SisClassSection $source,
+        string $classSection,
+        ImportOptions $options,
+    ): array {
         return [
             'course_code' => $source->course_code,
             'subject' => $source->subject,
@@ -18,7 +22,7 @@ class SectionCopy {
             'title' => $source->title,
             'credits' => $source->credits,
             'enrollment_cap' => $source->enrollment_cap,
-            'delivery' => self::deliveryFromSchedule($source),
+            'delivery' => self::deliveryFromSchedule($source, $options),
             'notes' => null,
             'is_cancelled' => false,
         ];
@@ -31,7 +35,13 @@ class SectionCopy {
             ->values();
     }
 
-    private static function deliveryFromSchedule(SisClassSection $source): string {
-        return self::timedMeetings($source)->isEmpty() ? 'online' : 'onCampus';
+    private static function deliveryFromSchedule(
+        SisClassSection $source,
+        ImportOptions $options,
+    ): string {
+        $meetsSomewhere = $options->meetingTimes
+            && self::timedMeetings($source)->isNotEmpty();
+
+        return $meetsSomewhere ? 'onCampus' : 'online';
     }
 }

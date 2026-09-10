@@ -33,6 +33,25 @@ describe('SectionNumberer', function () {
         expect(assignNumbers(['001', '002', '005'], ['002']))->toBe(['006']);
     });
 
+    it('numbers placeholders from one when the course has none', function () {
+        expect(SectionNumberer::placeholdersWithinCourse(['001', '002'], 3))
+            ->toBe(['TBA1', 'TBA2', 'TBA3']);
+    });
+
+    it('counts placeholders on from the highest the course already holds', function () {
+        expect(SectionNumberer::placeholdersWithinCourse(['001', 'TBA1', 'TBA2'], 2))
+            ->toBe(['TBA3', 'TBA4']);
+    });
+
+    it('ignores a placeholder with no number on the end', function () {
+        expect(SectionNumberer::placeholdersWithinCourse(['TBA', 'TBAx'], 1))
+            ->toBe(['TBA1']);
+    });
+
+    it('asks for none and gets none', function () {
+        expect(SectionNumberer::placeholdersWithinCourse(['TBA1'], 0))->toBe([]);
+    });
+
     it('pads to three digits and grows past them', function () {
         expect(assignNumbers(['009'], ['009']))->toBe(['010']);
         expect(assignNumbers(['099'], ['099']))->toBe(['100']);

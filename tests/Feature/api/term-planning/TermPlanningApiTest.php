@@ -727,17 +727,6 @@ describe('POST /api/term-planning/groups/:groupId/sections/batch', function () {
         expect($meeting->meets_tuesday)->toBeFalse();
     });
 
-    it('brings no instructors over, so every section arrives unassigned', function () {
-        $source = publishedSection();
-        SisEmployee::factory()->create(['emplid' => 101]);
-        $source->instructors()->create(['emplid' => 101, 'role' => 'PI']);
-        actingAs($this->admin);
-
-        postJson(batchUrl($this->group), importBody([$source]))->assertOk();
-
-        expect(LocalClassInstructor::count())->toBe(0);
-    });
-
     it('renumbers a section whose number the term already holds', function () {
         plannedSection(['course_code' => 'ANTH-1001', 'class_section' => '009']);
         $source = publishedSection(['class_section' => '009']);
@@ -800,6 +789,80 @@ describe('POST /api/term-planning/groups/:groupId/sections/batch', function () {
         ])->assertStatus(422);
 
         expect(LocalClassSection::count())->toBe(0);
+    });
+});
+
+describe('POST .../sections/batch, choosing what comes over', function () {
+    beforeEach(function () {
+        $this->source = publishedSection(['class_section' => '009']);
+        $this->source->meetings()->create(
+            SisClassMeeting::factory()->raw(['sis_class_section_id' => $this->source->id])
+        );
+        SisEmployee::factory()->create(['emplid' => 101]);
+        SisEmployee::factory()->create(['emplid' => 202]);
+        $this->source->instructors()->create(['emplid' => 101, 'role' => 'PI']);
+        $this->source->instructors()->create(['emplid' => 202, 'role' => 'TA']);
+        actingAs($this->admin);
+    });
+
+    function importWith(Group $group, array $include): array {
+        $body = [
+            'termId' => PLANNABLE_TERM,
+            'sourceTermId' => PUBLISHED_TERM,
+            'sectionIds' => [test()->source->id],
+            'include' => $include,
+        ];
+
+        postJson(batchUrl($group), $body)->assertOk();
+
+        return LocalClassInstructor::all()->map->only(['emplid', 'role'])->all();
+    }
+
+    it('brings the instructor of record but not the TA by default', function () {
+        expect(importWith($this->group, []))->toBe([['emplid' => 101, 'role' => 'PI']]);
+    });
+
+    it('brings the TA when asked', function () {
+        expect(importWith($this->group, ['tas' => true]))->toHaveCount(2);
+    });
+
+    it('brings nobody when both are declined', function () {
+        expect(importWith($this->group, ['instructors' => false, 'tas' => false]))
+            ->toBe([]);
+    });
+
+    it('brings the TA alone when the instructor is declined', function () {
+        expect(importWith($this->group, ['instructors' => false, 'tas' => true]))
+            ->toBe([['emplid' => 202, 'role' => 'TA']]);
+    });
+
+    it('leaves the section async when meeting times are declined', function () {
+        importWith($this->group, ['meetingTimes' => false]);
+
+        expect(LocalClassMeeting::count())->toBe(0);
+        expect(LocalClassSection::sole()->delivery)->toBe('online');
+    });
+
+    it('keeps the schedule by default', function () {
+        importWith($this->group, []);
+
+        expect(LocalClassMeeting::count())->toBe(1);
+        expect(LocalClassSection::sole()->delivery)->toBe('onCampus');
+    });
+
+    it('numbers TBA1 when section numbers are declined', function () {
+        importWith($this->group, ['sectionNumbers' => false]);
+
+        expect(LocalClassSection::sole()->class_section)->toBe('TBA1');
+    });
+
+    it('counts placeholders on from one the term already holds', function () {
+        plannedSection(['course_code' => 'ANTH-1001', 'class_section' => 'TBA1']);
+
+        importWith($this->group, ['sectionNumbers' => false]);
+
+        expect(LocalClassSection::pluck('class_section')->sort()->values()->all())
+            ->toBe(['TBA1', 'TBA2']);
     });
 });
 

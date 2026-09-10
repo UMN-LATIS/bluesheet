@@ -6,9 +6,11 @@ use App\Course;
 use App\Group;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TermPlanning\LocalSectionResource;
+use App\Library\TermPlan\ImportOptions;
 use App\Library\TermPlan\SectionCopy;
 use App\Library\TermPlan\SectionNumberer;
 use App\Library\TermPlan\TermLock;
+use App\LocalClassInstructor;
 use App\LocalClassMeeting;
 use App\LocalClassSection;
 use App\SisClassMeeting;
@@ -24,6 +26,11 @@ class SectionBatchController extends Controller {
             'sourceTermId' => 'required|integer',
             'sectionIds' => 'required|array|min:1',
             'sectionIds.*' => 'required|integer',
+            'include' => 'sometimes|array',
+            'include.instructors' => 'sometimes|boolean',
+            'include.tas' => 'sometimes|boolean',
+            'include.meetingTimes' => 'sometimes|boolean',
+            'include.sectionNumbers' => 'sometimes|boolean',
         ]);
 
         $this->authorize('editAnyCoursesForGroup', [Course::class, $group]);
@@ -36,18 +43,20 @@ class SectionBatchController extends Controller {
             'The SIS has published this term, so it can no longer be planned here.'
         );
 
+        $options = ImportOptions::from($validated['include'] ?? []);
+
         $sources = SisClassSection::query()
             ->forDepartmentTerm($academicOrg, $validated['sourceTermId'])
             ->whereIn('id', $validated['sectionIds'])
             ->where('is_cancelled', false)
             ->where('component', '!=', 'IND')
-            ->with('meetings')
+            ->with(['meetings', 'instructors'])
             ->get();
 
         abort_if($sources->isEmpty(), 422, 'None of those sections are in that term.');
 
         $created = DB::transaction(
-            fn() => $this->copyInto($sources, $academicOrg, $validated['termId'])
+            fn() => $this->copyInto($sources, $academicOrg, $validated['termId'], $options)
         );
 
         return LocalSectionResource::collection($this->reload($created));
@@ -79,32 +88,56 @@ class SectionBatchController extends Controller {
         return response()->noContent();
     }
 
-    private function copyInto(Collection $sources, int $academicOrg, int $termCode): Collection {
-        $numbers = $this->numbersBySourceId($sources, $academicOrg, $termCode);
+    private function copyInto(
+        Collection $sources,
+        int $academicOrg,
+        int $termCode,
+        ImportOptions $options,
+    ): Collection {
+        $numbers = $this->numbersBySourceId($sources, $academicOrg, $termCode, $options);
         $meetingRows = [];
+        $instructorRows = [];
         $now = now();
 
         $sections = $sources->map(function (SisClassSection $source) use (
             $numbers,
             $academicOrg,
             $termCode,
+            $options,
             $now,
-            &$meetingRows
+            &$meetingRows,
+            &$instructorRows
         ) {
             $section = LocalClassSection::create([
-                ...SectionCopy::toColumns($source, $numbers[$source->id]),
+                ...SectionCopy::toColumns($source, $numbers[$source->id], $options),
                 'term_code' => $termCode,
                 'academic_org' => $academicOrg,
                 'created_by' => auth()->id(),
                 'updated_by' => auth()->id(),
             ]);
 
-            foreach (SectionCopy::timedMeetings($source) as $meeting) {
-                $meetingRows[] = [
+            if ($options->meetingTimes) {
+                foreach (SectionCopy::timedMeetings($source) as $meeting) {
+                    $meetingRows[] = [
+                        'local_class_section_id' => $section->id,
+                        'starts_at' => $meeting->starts_at,
+                        'ends_at' => $meeting->ends_at,
+                        ...self::daysOf($meeting),
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                }
+            }
+
+            foreach ($source->instructors as $instructor) {
+                if (!$options->includesRole($instructor->role)) {
+                    continue;
+                }
+
+                $instructorRows[] = [
                     'local_class_section_id' => $section->id,
-                    'starts_at' => $meeting->starts_at,
-                    'ends_at' => $meeting->ends_at,
-                    ...self::daysOf($meeting),
+                    'emplid' => $instructor->emplid,
+                    'role' => $instructor->role,
                     'created_at' => $now,
                     'updated_at' => $now,
                 ];
@@ -114,11 +147,17 @@ class SectionBatchController extends Controller {
         });
 
         LocalClassMeeting::insert($meetingRows);
+        LocalClassInstructor::insert($instructorRows);
 
         return $sections;
     }
 
-    private function numbersBySourceId(Collection $sources, int $academicOrg, int $termCode): array {
+    private function numbersBySourceId(
+        Collection $sources,
+        int $academicOrg,
+        int $termCode,
+        ImportOptions $options,
+    ): array {
         $taken = LocalClassSection::query()
             ->forDepartmentTerm($academicOrg, $termCode)
             ->get(['course_code', 'class_section'])
@@ -127,10 +166,15 @@ class SectionBatchController extends Controller {
 
         $numbers = [];
         foreach ($sources->groupBy('course_code') as $courseCode => $course) {
-            $assigned = SectionNumberer::assignWithinCourse(
-                $taken[$courseCode] ?? [],
-                $course->pluck('class_section')->all(),
-            );
+            $assigned = $options->sectionNumbers
+                ? SectionNumberer::assignWithinCourse(
+                    $taken[$courseCode] ?? [],
+                    $course->pluck('class_section')->all(),
+                )
+                : SectionNumberer::placeholdersWithinCourse(
+                    $taken[$courseCode] ?? [],
+                    $course->count(),
+                );
 
             foreach ($course->values() as $position => $source) {
                 $numbers[$source->id] = $assigned[$position];
