@@ -4,10 +4,10 @@
     owns the whole viewport and lays itself out inside `main`, which never
     scrolls as a whole.
 
-    The bar carries the University's mark and the two account links, and gives
-    the middle of its width to the page. Folding the page's own title and
-    controls into this one row rather than stacking a second row under it is
-    what leaves a full-height canvas below on a laptop screen.
+    The bar carries the University's mark and gives the rest of its width to
+    the page. Folding the page's own title and controls into this one row
+    rather than stacking a second row under it is what leaves a full-height
+    canvas below on a laptop screen.
   -->
   <div
     class="tw-flex tw-h-screen tw-flex-col tw-bg-surface-container tw-text-on-surface"
@@ -31,36 +31,10 @@
 
       <span class="tw-h-5 tw-w-px tw-flex-none tw-bg-outline-variant" />
 
-      <!-- The page's own title and controls. Anything pushed right with
-           `ml-auto` here lands just before the account links. -->
+      <!-- The page's own title and controls. -->
       <div class="tw-flex tw-min-w-0 tw-flex-1 tw-items-center tw-gap-3">
         <slot name="bar" />
       </div>
-
-      <!-- Last to appear: on a narrow screen the page's own controls need
-           the width more than a link to the docs does. -->
-      <span
-        class="tw-h-5 tw-w-px tw-flex-none tw-bg-outline-variant tw-hidden roomy:tw-block"
-      />
-      <nav
-        aria-label="Account"
-        class="tw-hidden tw-flex-none tw-gap-4 tw-text-xs roomy:tw-flex"
-      >
-        <a
-          href="https://umn-latis.github.io/bluesheet/"
-          target="_blank"
-          rel="noopener"
-          class="tw-text-on-surface-variant tw-no-underline hover:tw-text-on-surface hover:tw-underline"
-        >
-          Help
-        </a>
-        <a
-          href="/shibboleth-logout"
-          class="tw-text-on-surface-variant tw-no-underline hover:tw-text-on-surface hover:tw-underline"
-        >
-          Log out
-        </a>
-      </nav>
     </header>
 
     <main class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col">
