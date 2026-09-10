@@ -13,8 +13,19 @@
         :isFilterPanelOpen="isFilterPanelOpen"
         @selectView="schedule.selectView"
         @openFilters="isFilterPanelOpen = true"
+        @openImport="openImport"
       />
     </template>
+
+    <ImportBanner
+      v-if="lastImport"
+      :sectionIds="lastImport.sectionIds"
+      :sourceTermName="lastImport.sourceTermName"
+      :isUndoing="undoImport.isPending.value"
+      @show="showImported"
+      @undo="undoLastImport"
+      @dismiss="lastImport = null"
+    />
 
     <!--
       The panes float as cards on the recessed page. `relative` is what the
@@ -106,6 +117,25 @@
         </div>
       </Pane>
 
+      <EmptyTermCard
+        v-if="isTermEmpty"
+        :termName="term?.name ?? ''"
+        :suggestedTermName="suggestedSourceTerm?.name ?? null"
+        @importFromSuggested="openImport"
+        @chooseTerm="openImport"
+      />
+
+      <ImportModal
+        :show="isImportOpen"
+        :groupId="groupId"
+        :termCode="activeTermCode"
+        :termName="term?.name ?? ''"
+        :isTermEmpty="isTermEmpty"
+        :suggestedSourceTermId="suggestedSourceTerm?.id ?? null"
+        @close="isImportOpen = false"
+        @imported="onImported"
+      />
+
       <SheetMount v-if="schedule.openHour || selectedSection">
         <HourSheet
           v-if="schedule.openHour"
@@ -179,6 +209,9 @@ import FullScreenLayout from "@/layouts/FullScreenLayout.vue";
 import Notification from "@/components/Notification.vue";
 import CoverageHeatmap from "./components/CoverageHeatmap.vue";
 import DayView from "./components/DayView.vue";
+import EmptyTermCard from "./components/EmptyTermCard.vue";
+import ImportBanner from "./components/ImportBanner.vue";
+import ImportModal from "./components/ImportModal.vue";
 import HourSheet, { type HourEntry } from "./components/HourSheet.vue";
 import MeetingTimes from "./components/MeetingTimes.vue";
 import Pane from "./components/Pane.vue";
@@ -198,9 +231,10 @@ import { toSectionPayload } from "./helpers/sectionPayload";
 import { flattenQuery } from "./helpers/urlQuery";
 import type { ScheduleView } from "./helpers/viewQuery";
 import { useTermPlanCoursesQuery } from "./queries/useTermPlanCoursesQuery";
+import { useSectionImport } from "./queries/useSectionImport";
 import { useTermPlanMutations } from "./queries/useTermPlanMutations";
 import { useTermPlanAutosave } from "./useTermPlanAutosave";
-import type { Meeting, PlannedSection } from "./types";
+import type { Meeting, PlannedSection, SisSection } from "./types";
 import { useScheduleEditor } from "./useScheduleEditor";
 import { NEW_SECTION_ID } from "./useScheduleEditor/types";
 import type { Effect } from "./useScheduleEditor/types";
@@ -249,6 +283,60 @@ const {
   roster,
   sections,
 } = useTermSchedule(groupId, termCode);
+
+const isImportOpen = ref(false);
+
+const lastImport = ref<{
+  sectionIds: number[];
+  sourceTermName: string;
+} | null>(null);
+
+const { undoImport } = useSectionImport(groupId, activeTermCode);
+
+/**
+ * The same term a year back, which is the source nearly every time. Null when
+ * the SIS never published it, and then the empty card offers only the picker.
+ */
+const suggestedSourceTerm = computed(
+  () =>
+    termOptions.value.find(
+      (option) => option.id === (activeTermCode.value ?? 0) - 10,
+    ) ?? null,
+);
+
+const isTermEmpty = computed(
+  () => !isReadOnly.value && sections.value.length === 0,
+);
+
+function openImport() {
+  isImportOpen.value = true;
+}
+
+function onImported(created: SisSection[]) {
+  isImportOpen.value = false;
+  schedule.noteSectionsImported();
+
+  lastImport.value = {
+    sectionIds: created.map((section) => section.id),
+    sourceTermName: term.value?.name ?? "",
+  };
+}
+
+const showImported = () =>
+  lastImport.value &&
+  schedule.showImportedSections(lastImport.value.sectionIds);
+
+async function undoLastImport() {
+  const undoing = lastImport.value;
+  if (!undoing) return;
+
+  try {
+    await undoImport.mutateAsync(undoing.sectionIds);
+    lastImport.value = null;
+  } catch (refusal) {
+    showRefusal(refusal);
+  }
+}
 
 /** The week is the one view a phone cannot draw; the day list stands in. */
 const activeView = computed<ScheduleView>(() =>
@@ -316,6 +404,9 @@ const schedule = useScheduleEditor(
 const { createSection, saveSection, deleteSection } = useTermPlanMutations(
   groupId,
   activeTermCode,
+  // Undo deletes the sections the import made. Leave the banner up once the
+  // scheduler has edited them and it can throw that work away too.
+  () => (lastImport.value = null),
 );
 
 /**

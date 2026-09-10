@@ -103,6 +103,15 @@
       </select>
     </label>
 
+    <button
+      v-if="!isReadOnly"
+      type="button"
+      class="tw-flex tw-min-h-11 tw-flex-none tw-cursor-pointer tw-items-center tw-gap-1.5 tw-rounded-full tw-border tw-border-solid tw-border-primary tw-bg-primary tw-px-4 tw-text-xs tw-font-bold tw-text-on-primary hover:tw-bg-primary/90 roomy:tw-min-h-0 roomy:tw-py-1.5"
+      @click="emit('openImport')"
+    >
+      Import
+    </button>
+
     <!--
       Read-only is a property of the term, so it is named on the control
       that picks one. Below `cramped` the bar has no width to spare, and
@@ -147,6 +156,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   selectView: [view: ScheduleView];
   openFilters: [];
+  openImport: [];
 }>();
 
 const route = useRoute();

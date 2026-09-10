@@ -21,18 +21,24 @@ export interface NewCourse {
  * Writes to a term plan. Each one invalidates the term's sections, so the
  * server's answer replaces whatever the page was showing rather than the two
  * being reconciled by hand.
+ *
+ * `onWrite` runs after any of them succeeds.
  */
 export function useTermPlanMutations(
   groupId: Readonly<Ref<number>>,
   termCode: Readonly<Ref<number | null>>,
+  onWrite: () => void = () => {},
 ) {
   const queryClient = useQueryClient();
   const url = () => `/api/term-planning/groups/${groupId.value}/sections`;
 
-  const refetchTermPlan = () =>
-    queryClient.invalidateQueries({
+  const refetchTermPlan = () => {
+    onWrite();
+
+    return queryClient.invalidateQueries({
       queryKey: termPlanQueryKey(groupId, termCode),
     });
+  };
 
   const createSection = useMutation({
     mutationFn: async (payload: SectionPayload) => {
