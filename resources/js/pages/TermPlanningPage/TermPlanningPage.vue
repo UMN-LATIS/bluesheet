@@ -9,11 +9,13 @@
         :today="today"
         :view="activeView"
         :isReadOnly="isReadOnly"
+        :plannedSectionCount="sections.length"
         :activeFilterCount="schedule.activeFilterCount"
         :isFilterPanelOpen="isFilterPanelOpen"
         @selectView="schedule.selectView"
         @openFilters="isFilterPanelOpen = true"
         @openImport="openImport"
+        @deleteAll="isDeleteAllOpen = true"
       />
     </template>
 
@@ -136,6 +138,16 @@
         @imported="onImported"
       />
 
+      <DeleteAllModal
+        :show="isDeleteAllOpen"
+        :groupId="groupId"
+        :termCode="activeTermCode"
+        :termName="term?.name ?? ''"
+        :everySectionId="plannedSectionIds"
+        @close="isDeleteAllOpen = false"
+        @deleted="onDeletedAll"
+      />
+
       <SheetMount v-if="schedule.openHour || selectedSection">
         <HourSheet
           v-if="schedule.openHour"
@@ -209,6 +221,7 @@ import FullScreenLayout from "@/layouts/FullScreenLayout.vue";
 import Notification from "@/components/Notification.vue";
 import CoverageHeatmap from "./components/CoverageHeatmap.vue";
 import DayView from "./components/DayView.vue";
+import DeleteAllModal from "./components/DeleteAllModal.vue";
 import EmptyTermCard from "./components/EmptyTermCard.vue";
 import ImportBanner from "./components/ImportBanner.vue";
 import ImportModal from "./components/ImportModal.vue";
@@ -231,7 +244,7 @@ import { toSectionPayload } from "./helpers/sectionPayload";
 import { flattenQuery } from "./helpers/urlQuery";
 import type { ScheduleView } from "./helpers/viewQuery";
 import { useTermPlanCoursesQuery } from "./queries/useTermPlanCoursesQuery";
-import { useSectionImport } from "./queries/useSectionImport";
+import { useSectionBatch } from "./queries/useSectionBatch";
 import { useTermPlanMutations } from "./queries/useTermPlanMutations";
 import { useTermPlanAutosave } from "./useTermPlanAutosave";
 import type { Meeting, PlannedSection, SisSection } from "./types";
@@ -285,13 +298,14 @@ const {
 } = useTermSchedule(groupId, termCode);
 
 const isImportOpen = ref(false);
+const isDeleteAllOpen = ref(false);
 
 const lastImport = ref<{
   sectionIds: number[];
   sourceTermName: string;
 } | null>(null);
 
-const { undoImport } = useSectionImport(groupId, activeTermCode);
+const { deleteSections: undoImport } = useSectionBatch(groupId, activeTermCode);
 
 /**
  * The same term a year back, which is the source nearly every time. Null when
@@ -320,6 +334,16 @@ function onImported(created: SisSection[]) {
     sectionIds: created.map((section) => section.id),
     sourceTermName: term.value?.name ?? "",
   };
+}
+
+const plannedSectionIds = computed(() =>
+  sections.value.map((section) => section.id),
+);
+
+function onDeletedAll() {
+  isDeleteAllOpen.value = false;
+  schedule.markAllSectionsDeleted();
+  lastImport.value = null;
 }
 
 const showImported = () =>

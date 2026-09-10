@@ -25,7 +25,7 @@ export interface ImportRequest {
   include: ImportOptions;
 }
 
-export function useSectionImport(
+export function useSectionBatch(
   groupId: Readonly<Ref<number>>,
   termCode: Readonly<Ref<number | null>>,
 ) {
@@ -54,7 +54,7 @@ export function useSectionImport(
     onSuccess: refetchTermPlan,
   });
 
-  const undoImport = useMutation({
+  const deleteSections = useMutation({
     mutationFn: (sectionIds: number[]) =>
       // axios.delete's 2nd argument is config, not a body. Drop
       // the `data:` wrapper and the request carries nothing, and
@@ -63,5 +63,5 @@ export function useSectionImport(
     onSuccess: refetchTermPlan,
   });
 
-  return { importSections, undoImport };
+  return { importSections, deleteSections };
 }

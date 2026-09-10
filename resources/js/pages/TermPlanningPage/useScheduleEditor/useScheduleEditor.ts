@@ -202,5 +202,6 @@ export function useScheduleEditor(
     cancelDismissal: () => dispatch({ type: "dismissalCancelled" }),
     markSectionDeleted: (sectionId: number) =>
       dispatch({ type: "sectionDeleted", sectionId }),
+    markAllSectionsDeleted: () => dispatch({ type: "allSectionsDeleted" }),
   });
 }

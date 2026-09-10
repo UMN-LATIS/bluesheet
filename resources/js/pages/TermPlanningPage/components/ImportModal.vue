@@ -223,9 +223,9 @@ import {
 import { refusalMessage } from "../helpers/refusalMessage";
 import {
   defaultImportOptions,
-  useSectionImport,
+  useSectionBatch,
   type ImportOptions,
-} from "../queries/useSectionImport";
+} from "../queries/useSectionBatch";
 import { useSisSectionsQuery } from "../queries/useSisSectionsQuery";
 import { useSisGroupTermsQuery } from "../queries/useSisGroupTermsQuery";
 import { FILTER_FACETS } from "../types";
@@ -375,7 +375,7 @@ const tiles = computed(() =>
   })),
 );
 
-const { importSections } = useSectionImport(
+const { importSections } = useSectionBatch(
   computed(() => props.groupId),
   computed(() => props.termCode),
 );

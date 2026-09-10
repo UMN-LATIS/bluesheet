@@ -120,6 +120,7 @@ export const DISCARDS_ON_PURPOSE: EditorEvent["type"][] = [
   "newSectionDiscarded",
   "sectionCreated",
   "sectionDeleted",
+  "allSectionsDeleted",
   "draftCancelled",
   "draftSaved",
   "sectionEditsReverted",
@@ -588,6 +589,17 @@ function reduce(
       return {
         ...withoutEntry(withoutDraft(state, event.sectionId), event.sectionId),
         selection: null,
+      };
+
+    // Filters go too. A `section` filter names ids the term no longer has, so
+    // the canvas would stay empty through the next import as well.
+    case "allSectionsDeleted":
+      return {
+        ...state,
+        sectionEdits: {},
+        drafts: {},
+        selection: null,
+        filters: emptyFilters(),
       };
 
     default:

@@ -231,6 +231,8 @@ export type EditorEvent =
    * it; leaving either would save a section back into existence.
    */
   | { type: "sectionDeleted"; sectionId: number }
+  /** The term was emptied: the server holds no section this editor knew. */
+  | { type: "allSectionsDeleted" }
   /** The reader let the held event through, losing the sheet's edits. */
   | { type: "dismissalConfirmed" }
   /** The reader kept the edits, so the held event never happened. */

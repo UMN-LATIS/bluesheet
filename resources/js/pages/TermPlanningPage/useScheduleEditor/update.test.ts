@@ -1201,6 +1201,31 @@ describe("deleting a section", () => {
   });
 });
 
+describe("deleting every section", () => {
+  const workedOn = after([
+    { type: "sectionFieldEdited", sectionId: 1, change: { notes: "hi" } },
+    { type: "draftSaved", sectionId: 1 },
+    { type: "sectionFieldEdited", sectionId: 2, change: { notes: "also" } },
+    { type: "draftSaved", sectionId: 2 },
+    { type: "selectedSection", sectionId: 2 },
+    { type: "filterValuesAdded", facet: "section", values: ["1"] },
+  ]);
+
+  it("leaves no overlay, draft or selection behind", () => {
+    const state = after([{ type: "allSectionsDeleted" }], workedOn);
+
+    expect(state.sectionEdits).toEqual({});
+    expect(state.drafts).toEqual({});
+    expect(state.selection).toBeNull();
+  });
+
+  it("clears the filters, which now name sections the term does not have", () => {
+    const state = after([{ type: "allSectionsDeleted" }], workedOn);
+
+    expect(state.filters).toEqual(emptyFilters());
+  });
+});
+
 describe("walking away from a section being created", () => {
   const started = after(draw(0, 600, 675));
 

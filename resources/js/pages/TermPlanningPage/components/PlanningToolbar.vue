@@ -112,6 +112,15 @@
       Import
     </button>
 
+    <MoreMenu v-if="!isReadOnly && plannedSectionCount > 0">
+      <MoreMenuItem
+        class="tw-whitespace-nowrap tw-text-red-600"
+        @click="emit('deleteAll')"
+      >
+        Delete All&hellip;
+      </MoreMenuItem>
+    </MoreMenu>
+
     <!--
       Read-only is a property of the term, so it is named on the control
       that picks one. Below `cramped` the bar has no width to spare, and
@@ -132,6 +141,7 @@ import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { omit, pick } from "lodash-es";
 import { FilterIcon, LockIcon } from "@/icons";
+import { MoreMenu, MoreMenuItem } from "@/components/MoreMenu";
 import { useGroupQuery } from "../queries/useGroupQuery";
 import { useSisGroupsQuery } from "../queries/useSisGroupsQuery";
 import type { ScheduleView } from "../helpers/viewQuery";
@@ -146,6 +156,7 @@ const props = defineProps<{
   termOptions: SisTerm[];
   view: ScheduleView;
   isReadOnly: boolean;
+  plannedSectionCount: number;
   /** Across every facet, which is what the filter button's badge shows. */
   activeFilterCount: number;
   isFilterPanelOpen: boolean;
@@ -157,6 +168,7 @@ const emit = defineEmits<{
   selectView: [view: ScheduleView];
   openFilters: [];
   openImport: [];
+  deleteAll: [];
 }>();
 
 const route = useRoute();

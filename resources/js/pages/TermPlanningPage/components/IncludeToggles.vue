@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ImportOptions } from "../queries/useSectionImport";
+import type { ImportOptions } from "../queries/useSectionBatch";
 
 defineProps<{ modelValue: ImportOptions }>();
 
