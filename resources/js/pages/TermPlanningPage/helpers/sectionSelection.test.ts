@@ -3,7 +3,7 @@ import {
   sectionIdsUnder,
   sectionsByFacetValue,
   selectionStateOf,
-  valuesWithAnySelection,
+  countValuesWithAnySelection,
   withSectionsSelected,
 } from "./sectionSelection";
 import { plannedSection } from "./plannedSection.fixture";
@@ -114,9 +114,11 @@ describe("withSectionsSelected", () => {
   });
 });
 
-describe("valuesWithAnySelection", () => {
+describe("countValuesWithAnySelection", () => {
   it("counts a course as chosen once any of its sections is", () => {
-    expect(valuesWithAnySelection(byValue, new Set([1]), "course")).toEqual({
+    expect(
+      countValuesWithAnySelection(byValue, new Set([1]), "course"),
+    ).toEqual({
       count: 1,
       total: 2,
     });
@@ -124,12 +126,12 @@ describe("valuesWithAnySelection", () => {
 
   it("counts every value when everything is chosen", () => {
     expect(
-      valuesWithAnySelection(byValue, new Set([1, 2, 3]), "component"),
+      countValuesWithAnySelection(byValue, new Set([1, 2, 3]), "component"),
     ).toEqual({ count: 2, total: 2 });
   });
 
   it("counts none when nothing is chosen", () => {
-    expect(valuesWithAnySelection(byValue, new Set(), "section")).toEqual({
+    expect(countValuesWithAnySelection(byValue, new Set(), "section")).toEqual({
       count: 0,
       total: 3,
     });

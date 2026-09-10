@@ -74,9 +74,8 @@
         >
           <template v-if="activeFacet === 'course'">
             <li v-for="level in courseLevels" :key="level.label">
-              <!-- Sticky inside its own `li`, so a level holds the top of
-                   the list only while its own courses are in view and the
-                   next level pushes it out instead of stacking over it. -->
+              <!-- Sticky inside its own li. As a direct child of the ul,
+                   every level heading would pin at once and stack. -->
               <div
                 class="tw-sticky tw-top-0 tw-z-10 tw-bg-surface-bright tw-pt-1"
               >
@@ -86,7 +85,9 @@
                   :isIndeterminate="
                     isValuePartlySelected('course', levelValues(level))
                   "
-                  @toggle="select('course', levelValues(level), $event)"
+                  @toggle="
+                    setFacetValuesSelected('course', levelValues(level), $event)
+                  "
                 >
                   {{ level.label }}
                   <template #annotation>{{ level.courses.length }}</template>
@@ -99,7 +100,9 @@
                 :isIndeterminate="
                   isValuePartlySelected('course', [course.value])
                 "
-                @toggle="select('course', [course.value], $event)"
+                @toggle="
+                  setFacetValuesSelected('course', [course.value], $event)
+                "
               >
                 {{ course.code }}
                 <template #secondary>{{ course.title }}</template>
@@ -108,54 +111,60 @@
             </li>
           </template>
 
-          <li
-            v-for="person in people"
-            v-else-if="activeFacet === 'person'"
-            :key="person.value"
-          >
-            <FilterRow
-              :isChecked="isValueSelected('person', [person.value])"
-              :isIndeterminate="isValuePartlySelected('person', [person.value])"
-              @toggle="select('person', [person.value], $event)"
-            >
-              {{ person.listName }}
-              <template #annotation>{{ person.sectionCount }}</template>
-            </FilterRow>
-          </li>
+          <template v-else-if="activeFacet === 'person'">
+            <li v-for="person in personOptions" :key="person.value">
+              <FilterRow
+                :isChecked="isValueSelected('person', [person.value])"
+                :isIndeterminate="
+                  isValuePartlySelected('person', [person.value])
+                "
+                @toggle="
+                  setFacetValuesSelected('person', [person.value], $event)
+                "
+              >
+                {{ person.listName }}
+                <template #annotation>{{ person.sectionCount }}</template>
+              </FilterRow>
+            </li>
+          </template>
 
-          <li
-            v-for="option in sections"
-            v-else-if="activeFacet === 'section'"
-            :key="option.value"
-          >
-            <FilterRow
-              :isChecked="isValueSelected('section', [option.value])"
-              :swatch="colorOfType(option.component).dot"
-              @toggle="select('section', [option.value], $event)"
-            >
-              {{ option.label }}
-              <template #secondary>
-                {{ option.days
-                }}<template v-if="option.instructorLastName">
-                  · {{ option.instructorLastName }}</template
-                >
-              </template>
-            </FilterRow>
-          </li>
+          <template v-else-if="activeFacet === 'section'">
+            <li v-for="option in sectionOptions" :key="option.value">
+              <FilterRow
+                :isChecked="isValueSelected('section', [option.value])"
+                :swatch="colorOfType(option.component).dot"
+                @toggle="
+                  setFacetValuesSelected('section', [option.value], $event)
+                "
+              >
+                {{ option.label }}
+                <template #secondary>
+                  {{ option.days
+                  }}<template v-if="option.instructorLastName">
+                    · {{ option.instructorLastName }}</template
+                  >
+                </template>
+              </FilterRow>
+            </li>
+          </template>
 
-          <li v-for="option in components" v-else :key="option.value">
-            <FilterRow
-              :isChecked="isValueSelected('component', [option.value])"
-              :isIndeterminate="
-                isValuePartlySelected('component', [option.value])
-              "
-              :swatch="colorOfType(option.value).dot"
-              @toggle="select('component', [option.value], $event)"
-            >
-              {{ labelOfComponent(option.value) }}
-              <template #annotation>{{ option.sectionCount }}</template>
-            </FilterRow>
-          </li>
+          <template v-else>
+            <li v-for="option in componentOptions" :key="option.value">
+              <FilterRow
+                :isChecked="isValueSelected('component', [option.value])"
+                :isIndeterminate="
+                  isValuePartlySelected('component', [option.value])
+                "
+                :swatch="colorOfType(option.value).dot"
+                @toggle="
+                  setFacetValuesSelected('component', [option.value], $event)
+                "
+              >
+                {{ labelOfComponent(option.value) }}
+                <template #annotation>{{ option.sectionCount }}</template>
+              </FilterRow>
+            </li>
+          </template>
 
           <li
             v-if="isListEmpty"
@@ -217,7 +226,7 @@ import {
   sectionIdsUnder,
   sectionsByFacetValue,
   selectionStateOf,
-  valuesWithAnySelection,
+  countValuesWithAnySelection,
   withSectionsSelected,
 } from "../helpers/sectionSelection";
 import { refusalMessage } from "../helpers/refusalMessage";
@@ -284,7 +293,11 @@ const isValueSelected = (facet: FilterFacet, values: string[]) =>
 const isValuePartlySelected = (facet: FilterFacet, values: string[]) =>
   stateOf(facet, values) === "some";
 
-function select(facet: FilterFacet, values: string[], isNowSelected: boolean) {
+function setFacetValuesSelected(
+  facet: FilterFacet,
+  values: string[],
+  isNowSelected: boolean,
+) {
   selectedIds.value = withSectionsSelected(
     selectedIds.value,
     sectionIdsUnder(byFacetValue.value, facet, values),
@@ -331,34 +344,37 @@ const courseLevels = computed(() =>
 const levelValues = (level: CourseLevel) =>
   level.courses.map((course) => course.value);
 
-const people = computed(() =>
+const personOptions = computed(() =>
   [
     ...options.value.faculty,
     ...(options.value.tba ? [options.value.tba] : []),
   ].filter((person) => matchesEveryWord(person.listName)),
 );
 
-const sections = computed(() =>
+const sectionOptions = computed(() =>
   options.value.sections.filter((option) =>
     matchesEveryWord(option.label, option.instructorLastName ?? ""),
   ),
 );
 
-const components = computed(() =>
+const componentOptions = computed(() =>
   options.value.components.filter((option) =>
     matchesEveryWord(option.value, labelOfComponent(option.value)),
   ),
 );
 
-const isListEmpty = computed(
-  () =>
-    ({
-      course: courseLevels.value.length,
-      person: people.value.length,
-      section: sections.value.length,
-      component: components.value.length,
-    })[activeFacet.value] === 0,
-);
+const shownListLength = computed(() => {
+  const lengths: Record<FilterFacet, number> = {
+    course: courseLevels.value.length,
+    person: personOptions.value.length,
+    section: sectionOptions.value.length,
+    component: componentOptions.value.length,
+  };
+
+  return lengths[activeFacet.value];
+});
+
+const isListEmpty = computed(() => shownListLength.value === 0);
 
 const FACET_LABELS: Record<FilterFacet, string> = {
   course: "Courses",
@@ -371,7 +387,11 @@ const tiles = computed(() =>
   FILTER_FACETS.map((facet) => ({
     facet,
     label: FACET_LABELS[facet],
-    ...valuesWithAnySelection(byFacetValue.value, selectedIds.value, facet),
+    ...countValuesWithAnySelection(
+      byFacetValue.value,
+      selectedIds.value,
+      facet,
+    ),
   })),
 );
 
@@ -396,11 +416,11 @@ const canImport = computed(
   () => selectedIds.value.size > 0 && !importSections.isPending.value,
 );
 
-const everySourceSection = () =>
+const everySourceSectionId = () =>
   new Set(sourceSections.value.map((section) => section.id));
 
 function seedSelection() {
-  selectedIds.value = props.isTermEmpty ? everySourceSection() : new Set();
+  selectedIds.value = props.isTermEmpty ? everySourceSectionId() : new Set();
 }
 
 watch(sourceSections, seedSelection);

@@ -11,7 +11,6 @@ export interface ImportOptions {
   sectionNumbers: boolean;
 }
 
-/** TAs off, matching the SIS habit of reassigning them each year. */
 export const defaultImportOptions = (): ImportOptions => ({
   instructors: true,
   tas: false,

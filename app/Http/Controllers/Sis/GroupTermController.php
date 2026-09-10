@@ -17,7 +17,7 @@ class GroupTermController extends Controller {
             return SisTermResource::collection([]);
         }
 
-        $offered = SisClassSection::query()
+        $offeredTermCodes = SisClassSection::query()
             ->where('academic_org', (int) $group->sis_dept_id)
             ->where('is_cancelled', false)
             ->where('component', '!=', 'IND')
@@ -25,7 +25,7 @@ class GroupTermController extends Controller {
             ->pluck('term_code');
 
         $terms = SisTerm::undergrad()
-            ->whereIn('term_code', $offered)
+            ->whereIn('term_code', $offeredTermCodes)
             ->orderByDesc('term_code')
             ->get();
 

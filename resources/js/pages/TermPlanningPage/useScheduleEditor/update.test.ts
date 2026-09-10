@@ -1402,9 +1402,6 @@ describe("moving to another department or term", () => {
     ).toEqual({});
   });
 
-  // The page raises this from a route guard, so a `replaceUrlQuery` from here
-  // reaches the router before the new term's navigation commits, resolves
-  // against the term being left, and cancels the move to the new one.
   it("writes no URL, though clearing the selection changes what one would say", () => {
     const selected = after(
       [{ type: "selectedSection", sectionId: 1 }],

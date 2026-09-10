@@ -174,7 +174,6 @@ export type EditorEvent =
   | { type: "filterValuesAdded"; facet: FilterFacet; values: string[] }
   | { type: "filterValuesRemoved"; facet: FilterFacet; values: string[] }
   | { type: "filtersCleared" }
-  | { type: "sectionsImported" }
   | { type: "importedSectionsShown"; sectionIds: number[] }
   | { type: "viewSelected"; view: ScheduleView }
   | { type: "daySelected"; dayIndex: number }
@@ -231,7 +230,6 @@ export type EditorEvent =
    * it; leaving either would save a section back into existence.
    */
   | { type: "sectionDeleted"; sectionId: number }
-  /** The term was emptied: the server holds no section this editor knew. */
   | { type: "allSectionsDeleted" }
   /** The reader let the held event through, losing the sheet's edits. */
   | { type: "dismissalConfirmed" }

@@ -307,16 +307,16 @@ const lastImport = ref<{
 
 const { deleteSections: undoImport } = useSectionBatch(groupId, activeTermCode);
 
-/**
- * The same term a year back, which is the source nearly every time. Null when
- * the SIS never published it, and then the empty card offers only the picker.
- */
-const suggestedSourceTerm = computed(
-  () =>
-    termOptions.value.find(
-      (option) => option.id === (activeTermCode.value ?? 0) - 10,
-    ) ?? null,
-);
+const TERM_CODE_YEAR_STEP = 10;
+
+/** The same term a year back. Null when the SIS never published it. */
+const suggestedSourceTerm = computed(() => {
+  if (activeTermCode.value === null) return null;
+
+  const aYearBack = activeTermCode.value - TERM_CODE_YEAR_STEP;
+
+  return termOptions.value.find((option) => option.id === aYearBack) ?? null;
+});
 
 const isTermEmpty = computed(
   () => !isReadOnly.value && sections.value.length === 0,
@@ -328,7 +328,7 @@ function openImport() {
 
 function onImported(created: SisSection[]) {
   isImportOpen.value = false;
-  schedule.noteSectionsImported();
+  schedule.clearFilters();
 
   lastImport.value = {
     sectionIds: created.map((section) => section.id),
@@ -346,16 +346,18 @@ function onDeletedAll() {
   lastImport.value = null;
 }
 
-const showImported = () =>
-  lastImport.value &&
+function showImported(): void {
+  if (!lastImport.value) return;
+
   schedule.showImportedSections(lastImport.value.sectionIds);
+}
 
 async function undoLastImport() {
-  const undoing = lastImport.value;
-  if (!undoing) return;
+  const importToUndo = lastImport.value;
+  if (!importToUndo) return;
 
   try {
-    await undoImport.mutateAsync(undoing.sectionIds);
+    await undoImport.mutateAsync(importToUndo.sectionIds);
     lastImport.value = null;
   } catch (refusal) {
     showRefusal(refusal);
@@ -428,8 +430,8 @@ const schedule = useScheduleEditor(
 const { createSection, saveSection, deleteSection } = useTermPlanMutations(
   groupId,
   activeTermCode,
-  // Undo deletes the sections the import made. Leave the banner up once the
-  // scheduler has edited them and it can throw that work away too.
+  // Undo deletes the sections the import made, so drop the banner
+  // once the scheduler edits one: undo would delete those edits too.
   () => (lastImport.value = null),
 );
 

@@ -16,8 +16,6 @@
     >
       {{ checkedCount }}
     </span>
-    <!-- What is checked here, or else what the list will show, out of
-         what the term holds: "5/57". No slash where nothing narrows it. -->
     <span
       class="tw-text-[21px] tw-font-semibold tw-leading-tight tw-tracking-tight tw-text-on-surface"
       >{{ count }}&nbsp;<span
@@ -41,7 +39,6 @@ withDefaults(
     count: number;
     total: number;
     isActive: boolean;
-    /** Shown as a badge when a facet holds checked values of its own. */
     checkedCount?: number;
   }>(),
   { checkedCount: 0 },

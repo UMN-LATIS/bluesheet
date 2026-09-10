@@ -31,7 +31,6 @@
 
       <span class="tw-h-5 tw-w-px tw-flex-none tw-bg-outline-variant" />
 
-      <!-- The page's own title and controls. -->
       <div class="tw-flex tw-min-w-0 tw-flex-1 tw-items-center tw-gap-3">
         <slot name="bar" />
       </div>

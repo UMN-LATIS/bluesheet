@@ -151,7 +151,6 @@ const READING_EVENTS: EditorEvent["type"][] = [
   "filterValuesAdded",
   "filterValuesRemoved",
   "filtersCleared",
-  "sectionsImported",
   "importedSectionsShown",
   "viewSelected",
   "daySelected",
@@ -272,9 +271,7 @@ function withoutAbandonedSection(
  * The URL is rewritten whenever it would now say something different, and only
  * then. That covers the whole loop guard between the page and the router:
  * `urlChanged` is the one event that writes URL-backed state, and it raises no
- * effect of its own, so a round trip always ends after a single pass, and a
- * gesture that moves a block without changing what a link would name writes
- * nothing at all.
+ * effect of its own, so a round trip always ends after a single pass.
  */
 function effectsOf(
   event: EditorEvent,
@@ -435,9 +432,6 @@ function reduce(
       );
 
     case "filtersCleared":
-      return { ...state, filters: emptyFilters() };
-
-    case "sectionsImported":
       return { ...state, filters: emptyFilters() };
 
     case "importedSectionsShown":

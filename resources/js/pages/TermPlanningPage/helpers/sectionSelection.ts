@@ -66,7 +66,7 @@ export function withSectionsSelected(
   return next;
 }
 
-export function valuesWithAnySelection(
+export function countValuesWithAnySelection(
   byValue: SectionsByFacetValue,
   selected: ReadonlySet<number>,
   facet: FilterFacet,

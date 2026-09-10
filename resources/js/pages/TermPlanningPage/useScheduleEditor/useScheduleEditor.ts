@@ -145,8 +145,6 @@ export function useScheduleEditor(
       dispatch({ type: "filterValuesRemoved", facet, values }),
     clearFilters: () => dispatch({ type: "filtersCleared" }),
 
-    noteSectionsImported: () => dispatch({ type: "sectionsImported" }),
-
     showImportedSections: (sectionIds: number[]) =>
       dispatch({ type: "importedSectionsShown", sectionIds }),
 

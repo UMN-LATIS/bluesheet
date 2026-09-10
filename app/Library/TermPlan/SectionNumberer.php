@@ -9,23 +9,26 @@ class SectionNumberer {
      * @return string[] one number per incoming section, in that same order
      */
     public static function assignWithinCourse(array $taken, array $incoming): array {
-        $keeping = array_filter(
+        // Keep the keys. `array_values` here breaks the
+        // SectionNumbererTest "free number stays free" case:
+        // `$assignedNumbers[$position]` maps by them.
+        $keptNumbers = array_filter(
             $incoming,
             fn(string $number) => !in_array($number, $taken, true),
         );
 
-        $claimed = [...array_values($taken), ...array_values($keeping)];
-        $assigned = $keeping;
+        $claimedNumbers = [...array_values($taken), ...array_values($keptNumbers)];
+        $assignedNumbers = $keptNumbers;
 
-        foreach (array_diff_key($incoming, $keeping) as $position => $number) {
-            $next = self::afterHighest($claimed);
-            $claimed[] = $next;
-            $assigned[$position] = $next;
+        foreach (array_diff_key($incoming, $keptNumbers) as $position => $number) {
+            $next = self::nextNumberAfterHighest($claimedNumbers);
+            $claimedNumbers[] = $next;
+            $assignedNumbers[$position] = $next;
         }
 
-        ksort($assigned);
+        ksort($assignedNumbers);
 
-        return array_values($assigned);
+        return array_values($assignedNumbers);
     }
 
     /**
@@ -36,6 +39,10 @@ class SectionNumberer {
      * @return string[] one placeholder per section, in the order asked for
      */
     public static function placeholdersWithinCourse(array $taken, int $count): array {
+        if ($count === 0) {
+            return [];
+        }
+
         $highest = 0;
 
         foreach ($taken as $number) {
@@ -44,16 +51,14 @@ class SectionNumberer {
             }
         }
 
-        return $count === 0
-            ? []
-            : array_map(
-                fn(int $offset) => 'TBA' . ($highest + $offset),
-                range(1, $count),
-            );
+        return array_map(
+            fn(int $offset) => 'TBA' . ($highest + $offset),
+            range(1, $count),
+        );
     }
 
-    private static function afterHighest(array $claimed): string {
-        $highest = max(array_map('intval', $claimed));
+    private static function nextNumberAfterHighest(array $claimedNumbers): string {
+        $highest = max(array_map('intval', $claimedNumbers));
 
         return str_pad((string) ($highest + 1), 3, '0', STR_PAD_LEFT);
     }

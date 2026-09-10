@@ -13,7 +13,7 @@ final class ImportOptions {
     ) {
     }
 
-    public static function from(array $include): self {
+    public static function fromRequestInclude(array $include): self {
         return new self(
             instructors: (bool) ($include['instructors'] ?? true),
             tas: (bool) ($include['tas'] ?? false),

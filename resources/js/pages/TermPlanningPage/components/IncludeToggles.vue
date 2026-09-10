@@ -27,8 +27,8 @@
         />
         <span class="tw-min-w-0 tw-flex-1">
           <span class="tw-block tw-leading-tight">{{ toggle.label }}</span>
-          <!-- Held open whether or not it has words in it, so ticking a box
-               cannot shift the three boxes beside it. -->
+          <!-- The min-height keeps this line's space when the text is
+               empty, so ticking a box cannot shift the toggles beside it. -->
           <span
             class="tw-block tw-min-h-[15px] tw-text-[11px] tw-leading-tight tw-text-on-surface-variant"
           >
