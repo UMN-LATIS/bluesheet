@@ -271,8 +271,8 @@ function withoutAbandonedSection(
 /**
  * The URL is rewritten whenever it would now say something different, and only
  * then. That covers the whole loop guard between the page and the router:
- * `urlChanged` is the one event that writes URL-backed state and the one that
- * raises no effect, so a round trip always ends after a single pass, and a
+ * `urlChanged` is the one event that writes URL-backed state, and it raises no
+ * effect of its own, so a round trip always ends after a single pass, and a
  * gesture that moves a block without changing what a link would name writes
  * nothing at all.
  */
@@ -282,6 +282,13 @@ function effectsOf(
   after: EditorState,
 ): Effect[] {
   if (event.type === "urlChanged") return [];
+
+  // `contextChanged` is raised from a route guard, so the navigation carrying
+  // the new term has not committed yet. Let it through and `router.replace`
+  // runs against the term being left, which cancels the move: the reader picks
+  // a new term and stays on the old one's sections. The navigation is writing
+  // the query itself, so there is nothing here to write.
+  if (event.type === "contextChanged") return [];
 
   const query = urlQueryOf(after);
 
