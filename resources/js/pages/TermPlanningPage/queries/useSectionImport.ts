@@ -4,9 +4,25 @@ import { axios } from "@/utils";
 import type { PlannedSection } from "../types";
 import { termPlanQueryKey } from "./useTermPlanQuery";
 
+export interface ImportOptions {
+  instructors: boolean;
+  tas: boolean;
+  meetingTimes: boolean;
+  sectionNumbers: boolean;
+}
+
+/** TAs off, matching the SIS habit of reassigning them each year. */
+export const defaultImportOptions = (): ImportOptions => ({
+  instructors: true,
+  tas: false,
+  meetingTimes: true,
+  sectionNumbers: true,
+});
+
 export interface ImportRequest {
   sourceTermId: number;
   sectionIds: number[];
+  include: ImportOptions;
 }
 
 export function useSectionImport(
@@ -14,8 +30,7 @@ export function useSectionImport(
   termCode: Readonly<Ref<number | null>>,
 ) {
   const queryClient = useQueryClient();
-  const url = () =>
-    `/api/term-planning/groups/${groupId.value}/sections/batch`;
+  const url = () => `/api/term-planning/groups/${groupId.value}/sections/batch`;
 
   const refetchTermPlan = () =>
     queryClient.invalidateQueries({
@@ -23,11 +38,16 @@ export function useSectionImport(
     });
 
   const importSections = useMutation({
-    mutationFn: async ({ sourceTermId, sectionIds }: ImportRequest) => {
+    mutationFn: async ({
+      sourceTermId,
+      sectionIds,
+      include,
+    }: ImportRequest) => {
       const res = await axios.post<PlannedSection[]>(url(), {
         termId: termCode.value,
         sourceTermId,
         sectionIds,
+        include,
       });
       return res.data;
     },

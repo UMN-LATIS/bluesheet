@@ -1,33 +1,44 @@
 <template>
-  <Modal :title="`Import into ${termName}`" :show="show" @close="close">
-    <div class="tw-flex tw-flex-col tw-gap-3">
-      <div class="tw-flex tw-items-center tw-gap-2.5">
-        <label
-          class="tw-m-0 tw-flex-none tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-surface-variant"
-          :for="fieldId('from')"
-        >
-          From
-        </label>
-        <select
-          :id="fieldId('from')"
-          v-model.number="sourceTermId"
-          class="tw-min-h-11 tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-py-1.5 tw-pl-3.5 tw-pr-8 tw-text-[13px] tw-font-semibold tw-text-on-surface"
-        >
-          <option v-for="term in sourceTerms" :key="term.id" :value="term.id">
-            {{ term.name }}
-          </option>
-        </select>
+  <Modal
+    class="import-modal"
+    :title="`Import into ${termName}`"
+    :show="show"
+    @close="close"
+  >
+    <div class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-gap-3">
+      <div
+        class="tw-flex tw-flex-none tw-flex-col tw-gap-3 cramped:tw-flex-row cramped:tw-items-center"
+      >
+        <div class="tw-flex tw-flex-none tw-items-center tw-gap-2.5">
+          <label
+            class="tw-m-0 tw-flex-none tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-surface-variant"
+            :for="fieldId('from')"
+          >
+            From
+          </label>
+          <select
+            :id="fieldId('from')"
+            v-model.number="sourceTermId"
+            class="tw-min-h-11 tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-py-1.5 tw-pl-3.5 tw-pr-8 tw-text-[13px] tw-font-semibold tw-text-on-surface"
+          >
+            <option v-for="term in sourceTerms" :key="term.id" :value="term.id">
+              {{ term.name }}
+            </option>
+          </select>
+        </div>
+
+        <input
+          v-model="search"
+          type="search"
+          placeholder="Search courses, people, sections"
+          aria-label="Search courses, people, sections"
+          class="tw-min-h-11 tw-w-full tw-min-w-0 tw-flex-1 tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-bg-surface tw-px-4 tw-text-[13px] tw-text-on-surface placeholder:tw-text-on-surface-variant focus:tw-border-primary focus:tw-bg-surface-bright focus:tw-outline-none"
+        />
       </div>
 
-      <input
-        v-model="search"
-        type="search"
-        placeholder="Search courses, people, sections"
-        aria-label="Search courses, people, sections"
-        class="tw-w-full tw-min-h-11 tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-bg-surface tw-px-4 tw-text-[13px] tw-text-on-surface placeholder:tw-text-on-surface-variant focus:tw-border-primary focus:tw-bg-surface-bright focus:tw-outline-none"
-      />
-
-      <div class="tw-grid tw-grid-cols-4 tw-gap-2">
+      <div
+        class="tw-grid tw-flex-none tw-grid-cols-2 tw-gap-2 cramped:tw-grid-cols-4"
+      >
         <FacetTile
           v-for="tile in tiles"
           :key="tile.facet"
@@ -40,9 +51,11 @@
       </div>
 
       <div
-        class="tw-rounded-[10px] tw-border tw-border-solid tw-border-surface-container"
+        class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-overflow-hidden tw-rounded-[10px] tw-border tw-border-solid tw-border-surface-container"
       >
-        <div class="tw-border-0 tw-border-b tw-border-solid tw-border-surface-container tw-p-1">
+        <div
+          class="tw-flex-none tw-border-0 tw-border-b tw-border-solid tw-border-surface-container tw-p-1"
+        >
           <FilterRow
             isGroupHeading
             :isChecked="isEverythingSelected"
@@ -57,24 +70,35 @@
         </div>
 
         <ul
-          class="tw-m-0 tw-max-h-[42vh] tw-min-h-[42vh] tw-list-none tw-overflow-y-auto tw-p-1"
+          class="tw-m-0 tw-min-h-0 tw-flex-1 tw-list-none tw-overflow-y-auto tw-px-1 tw-pb-1"
         >
           <template v-if="activeFacet === 'course'">
             <li v-for="level in courseLevels" :key="level.label">
-              <FilterRow
-                isGroupHeading
-                :isChecked="isValueSelected('course', levelValues(level))"
-                :isIndeterminate="isValuePartlySelected('course', levelValues(level))"
-                @toggle="select('course', levelValues(level), $event)"
+              <!-- Sticky inside its own `li`, so a level holds the top of
+                   the list only while its own courses are in view and the
+                   next level pushes it out instead of stacking over it. -->
+              <div
+                class="tw-sticky tw-top-0 tw-z-10 tw-bg-surface-bright tw-pt-1"
               >
-                {{ level.label }}
-                <template #annotation>{{ level.courses.length }}</template>
-              </FilterRow>
+                <FilterRow
+                  isGroupHeading
+                  :isChecked="isValueSelected('course', levelValues(level))"
+                  :isIndeterminate="
+                    isValuePartlySelected('course', levelValues(level))
+                  "
+                  @toggle="select('course', levelValues(level), $event)"
+                >
+                  {{ level.label }}
+                  <template #annotation>{{ level.courses.length }}</template>
+                </FilterRow>
+              </div>
               <FilterRow
                 v-for="course in level.courses"
                 :key="course.value"
                 :isChecked="isValueSelected('course', [course.value])"
-                :isIndeterminate="isValuePartlySelected('course', [course.value])"
+                :isIndeterminate="
+                  isValuePartlySelected('course', [course.value])
+                "
                 @toggle="select('course', [course.value], $event)"
               >
                 {{ course.code }}
@@ -122,7 +146,9 @@
           <li v-for="option in components" v-else :key="option.value">
             <FilterRow
               :isChecked="isValueSelected('component', [option.value])"
-              :isIndeterminate="isValuePartlySelected('component', [option.value])"
+              :isIndeterminate="
+                isValuePartlySelected('component', [option.value])
+              "
               :swatch="colorOfType(option.value).dot"
               @toggle="select('component', [option.value], $event)"
             >
@@ -144,7 +170,12 @@
         </ul>
       </div>
 
-      <p v-if="error" class="tw-m-0 tw-text-[12.5px] tw-text-red-700">
+      <IncludeToggles v-model="include" class="tw-flex-none" />
+
+      <p
+        v-if="error"
+        class="tw-m-0 tw-flex-none tw-text-[12.5px] tw-text-red-700"
+      >
         {{ error }}
       </p>
     </div>
@@ -179,6 +210,7 @@ import { computed, ref, useId, watch } from "vue";
 import Modal from "@/components/Modal.vue";
 import FacetTile from "./FacetTile.vue";
 import FilterRow from "./FilterRow.vue";
+import IncludeToggles from "./IncludeToggles.vue";
 import { colorOfType, labelOfComponent } from "../constants/meetingTypeColors";
 import { buildFilterOptions, type CourseLevel } from "../helpers/filterOptions";
 import {
@@ -189,7 +221,11 @@ import {
   withSectionsSelected,
 } from "../helpers/sectionSelection";
 import { refusalMessage } from "../helpers/refusalMessage";
-import { useSectionImport } from "../queries/useSectionImport";
+import {
+  defaultImportOptions,
+  useSectionImport,
+  type ImportOptions,
+} from "../queries/useSectionImport";
 import { useSisSectionsQuery } from "../queries/useSisSectionsQuery";
 import { useSisGroupTermsQuery } from "../queries/useSisGroupTermsQuery";
 import { FILTER_FACETS } from "../types";
@@ -213,6 +249,7 @@ const sourceTermId = ref<number | null>(null);
 const selectedIds = ref(new Set<number>());
 const search = ref("");
 const activeFacet = ref<FilterFacet>("course");
+const include = ref<ImportOptions>(defaultImportOptions());
 const error = ref("");
 
 const termsQuery = useSisGroupTermsQuery(computed(() => props.groupId));
@@ -223,7 +260,8 @@ const sourceTerms = computed(() =>
 
 const sourceTermName = computed(
   () =>
-    sourceTerms.value.find((term) => term.id === sourceTermId.value)?.name ?? "",
+    sourceTerms.value.find((term) => term.id === sourceTermId.value)?.name ??
+    "",
 );
 
 const sourceQuery = useSisSectionsQuery(
@@ -294,8 +332,10 @@ const levelValues = (level: CourseLevel) =>
   level.courses.map((course) => course.value);
 
 const people = computed(() =>
-  [...options.value.faculty, ...(options.value.tba ? [options.value.tba] : [])]
-    .filter((person) => matchesEveryWord(person.listName)),
+  [
+    ...options.value.faculty,
+    ...(options.value.tba ? [options.value.tba] : []),
+  ].filter((person) => matchesEveryWord(person.listName)),
 );
 
 const sections = computed(() =>
@@ -379,6 +419,7 @@ watch(
     seedSelection();
     search.value = "";
     activeFacet.value = "course";
+    include.value = defaultImportOptions();
     error.value = "";
   },
   { immediate: true },
@@ -395,6 +436,7 @@ async function submit() {
     const created = await importSections.mutateAsync({
       sourceTermId: sourceTermId.value!,
       sectionIds: [...selectedIds.value],
+      include: include.value,
     });
 
     emit("imported", created);
@@ -404,3 +446,30 @@ async function submit() {
   }
 }
 </script>
+
+<style>
+/* Keep both classes on this one. Drop `.modal-container` and Modal.vue's
+   own max-width of 600px can win instead: the two rules have equal
+   specificity and no guaranteed order in the stylesheet. */
+.modal-container.import-modal {
+  max-width: 56rem;
+}
+
+.import-modal .modal-content {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 80px);
+  min-height: 0;
+}
+
+.import-modal .modal-body {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.import-modal .modal-footer {
+  flex: none;
+}
+</style>
