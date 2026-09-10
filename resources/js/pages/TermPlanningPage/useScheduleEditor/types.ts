@@ -174,6 +174,8 @@ export type EditorEvent =
   | { type: "filterValuesAdded"; facet: FilterFacet; values: string[] }
   | { type: "filterValuesRemoved"; facet: FilterFacet; values: string[] }
   | { type: "filtersCleared" }
+  | { type: "sectionsImported" }
+  | { type: "importedSectionsShown"; sectionIds: number[] }
   | { type: "viewSelected"; view: ScheduleView }
   | { type: "daySelected"; dayIndex: number }
   /** The heatmap's Async cell: one step to the day list, on the Async tab. */

@@ -150,6 +150,8 @@ const READING_EVENTS: EditorEvent["type"][] = [
   "filterValuesAdded",
   "filterValuesRemoved",
   "filtersCleared",
+  "sectionsImported",
+  "importedSectionsShown",
   "viewSelected",
   "daySelected",
   "asyncDayShown",
@@ -426,6 +428,15 @@ function reduce(
 
     case "filtersCleared":
       return { ...state, filters: emptyFilters() };
+
+    case "sectionsImported":
+      return { ...state, filters: emptyFilters() };
+
+    case "importedSectionsShown":
+      return {
+        ...state,
+        filters: { ...emptyFilters(), section: event.sectionIds.map(String) },
+      };
 
     case "viewSelected":
       return { ...state, view: event.view };

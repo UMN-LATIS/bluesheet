@@ -145,6 +145,11 @@ export function useScheduleEditor(
       dispatch({ type: "filterValuesRemoved", facet, values }),
     clearFilters: () => dispatch({ type: "filtersCleared" }),
 
+    noteSectionsImported: () => dispatch({ type: "sectionsImported" }),
+
+    showImportedSections: (sectionIds: number[]) =>
+      dispatch({ type: "importedSectionsShown", sectionIds }),
+
     /* Which canvas, which day, and the URL that names them. */
     selectView: (view: ScheduleView) =>
       dispatch({ type: "viewSelected", view }),
