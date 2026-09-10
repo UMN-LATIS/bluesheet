@@ -23,6 +23,7 @@ use App\Http\Controllers\Sis\GroupController as SisGroupController;
 use App\Http\Controllers\Sis\GroupSectionController as SisGroupSectionController;
 use App\Http\Controllers\Sis\GroupCourseController as SisGroupCourseController;
 use App\Http\Controllers\Sis\GroupEmployeeController as SisGroupEmployeeController;
+use App\Http\Controllers\Sis\GroupTermController as SisGroupTermController;
 use App\Http\Controllers\TermPlanning\CourseInstructorController as TermPlanningCourseInstructorController;
 use App\Http\Controllers\TermPlanning\GroupCourseController as TermPlanningGroupCourseController;
 use App\Http\Controllers\TermPlanning\GroupSectionController as TermPlanningGroupSectionController;
@@ -147,6 +148,7 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
         Route::get('/groups/{group}/sections', [SisGroupSectionController::class, 'index']);
         Route::get('/groups/{group}/courses', [SisGroupCourseController::class, 'index']);
         Route::get('/groups/{group}/employees', [SisGroupEmployeeController::class, 'index']);
+        Route::get('/groups/{group}/terms', [SisGroupTermController::class, 'index']);
     });
 
     Route::post('groups/{group}/change-request', 'GroupController@requestChange');

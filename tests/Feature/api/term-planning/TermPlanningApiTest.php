@@ -10,6 +10,7 @@ use App\SisCourse;
 use App\SisClassMeeting;
 use App\SisClassSection;
 use App\SisEmployee;
+use App\SisTerm;
 use App\User;
 use Database\Seeders\TestDatabaseSeeder;
 use Illuminate\Support\Facades\Schema;
@@ -844,5 +845,50 @@ describe('DELETE /api/term-planning/groups/:groupId/sections/batch', function ()
         ])->assertNoContent();
 
         expect(LocalClassSection::find($theirs->id))->not->toBeNull();
+    });
+});
+
+describe('GET /api/sis/groups/:groupId/terms', function () {
+    beforeEach(function () {
+        SisTerm::factory()->create([
+            'term_code' => PUBLISHED_TERM,
+            'description' => 'Spring 2027',
+        ]);
+        SisTerm::factory()->create(['term_code' => 1269, 'description' => 'Fall 2026']);
+    });
+
+    it('lists only terms the department has sections in', function () {
+        publishedSection(['term_code' => PUBLISHED_TERM]);
+        actingAs($this->admin);
+
+        $res = getJson("/api/sis/groups/{$this->group->id}/terms");
+
+        expect(collect($res->json())->pluck('id')->all())->toBe([PUBLISHED_TERM]);
+    });
+
+    it('leaves out a term only another department has sections in', function () {
+        SisClassSection::factory()->create([
+            'academic_org' => 99999,
+            'term_code' => 1269,
+        ]);
+        publishedSection(['term_code' => PUBLISHED_TERM]);
+        actingAs($this->admin);
+
+        $res = getJson("/api/sis/groups/{$this->group->id}/terms");
+
+        expect(collect($res->json())->pluck('id')->all())->not->toContain(1269);
+    });
+
+    it('leaves out independent study, which the picker never offers', function () {
+        publishedSection(['term_code' => PUBLISHED_TERM, 'component' => 'IND']);
+        actingAs($this->admin);
+
+        expect(getJson("/api/sis/groups/{$this->group->id}/terms")->json())->toBe([]);
+    });
+
+    it('requires read privileges', function () {
+        actingAs($this->basicUser);
+
+        getJson("/api/sis/groups/{$this->group->id}/terms")->assertForbidden();
     });
 });
