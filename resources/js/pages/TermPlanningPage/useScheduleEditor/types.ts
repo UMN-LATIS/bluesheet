@@ -113,6 +113,17 @@ export interface HourSelection {
  */
 export const NEW_SECTION_ID = -1;
 
+/**
+ * An import the server has taken, which the banner offers to show or to undo.
+ * Undo deletes exactly these sections, so the ids are held rather than
+ * re-derived from what the term holds now.
+ */
+export interface LastImport {
+  sectionIds: number[];
+  /** The term the sections were copied from, which the banner names. */
+  sourceTermName: string;
+}
+
 /** Only this browser's edits; the server's sections stay in the query cache. */
 export interface EditorState {
   sectionEdits: Record<number, SectionEdit>;
@@ -145,6 +156,8 @@ export interface EditorState {
   view: ScheduleView;
   /** Which tab the day list is on: a weekday, or the Async day past them. */
   dayIndex: number;
+  /** The import the banner stands for, or null when no banner is showing. */
+  lastImport: LastImport | null;
 }
 
 /** Past-tense facts from the UI; minutes arrive unsnapped. */
@@ -175,6 +188,16 @@ export type EditorEvent =
   | { type: "filterValuesRemoved"; facet: FilterFacet; values: string[] }
   | { type: "filtersCleared" }
   | { type: "importedSectionsShown"; sectionIds: number[] }
+  /** The server has copied these sections in from `sourceTermName`. */
+  | { type: "sectionsImported"; sectionIds: number[]; sourceTermName: string }
+  /**
+   * The server has deleted the imported sections again. The `section` filter
+   * and the open sheet may both still name them, and a filter naming ids the
+   * term no longer has holds the canvas empty behind a badge.
+   */
+  | { type: "importUndone" }
+  /** The reader closed the banner, so the offer to undo goes with it. */
+  | { type: "importDismissed" }
   | { type: "viewSelected"; view: ScheduleView }
   | { type: "daySelected"; dayIndex: number }
   /** The heatmap's Async cell: one step to the day list, on the Async tab. */

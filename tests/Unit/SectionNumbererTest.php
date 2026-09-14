@@ -25,6 +25,12 @@ describe('SectionNumberer', function () {
         expect(assignNumbers(['001', '002'], ['001', '002']))->toBe(['003', '004']);
     });
 
+    // the SIS is unique on (term_code, class_number), not on the section number
+    it('separates two arrivals that share a number', function () {
+        expect(assignNumbers([], ['001', '001']))->toBe(['001', '002']);
+        expect(assignNumbers(['001'], ['002', '002']))->toBe(['002', '003']);
+    });
+
     it('lets a free number stay free when a sibling is renumbered', function () {
         expect(assignNumbers(['009'], ['009', '010']))->toBe(['011', '010']);
     });

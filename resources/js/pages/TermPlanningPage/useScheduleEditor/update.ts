@@ -98,6 +98,7 @@ export const initialState = (dayIndex = 0): EditorState => ({
   filters: defaultFilters(),
   view: DEFAULT_VIEW,
   dayIndex,
+  lastImport: null,
 });
 
 /**
@@ -121,6 +122,8 @@ export const DISCARDS_ON_PURPOSE: EditorEvent["type"][] = [
   "sectionCreated",
   "sectionDeleted",
   "allSectionsDeleted",
+  // the server has already deleted the sections, so there is nothing left to ask
+  "importUndone",
   "draftCancelled",
   "draftSaved",
   "sectionEditsReverted",
@@ -152,6 +155,9 @@ const READING_EVENTS: EditorEvent["type"][] = [
   "filterValuesRemoved",
   "filtersCleared",
   "importedSectionsShown",
+  // both only drop what the banner held, which a locked term still has to do
+  "importDismissed",
+  "importUndone",
   "viewSelected",
   "daySelected",
   "asyncDayShown",
@@ -174,9 +180,9 @@ export function update(
     return answeringDismissal(state, event, context);
   }
 
-  const nextState = withoutAbandonedSection(
-    state,
-    reduce(state, event, context),
+  const nextState = withoutSupersededImport(
+    event,
+    withoutAbandonedSection(state, reduce(state, event, context)),
   );
 
   // Held rather than applied: the view asks, and the answer comes back as its
@@ -244,6 +250,26 @@ function answeringDismissal(
         ? [{ type: "replaceUrlQuery", query: urlQueryOf(kept) }]
         : [],
   };
+}
+
+/**
+ * Writes that leave the banner's Undo unsafe to press. Undo deletes the
+ * sections the import made, so once the server holds an edit to one of them,
+ * pressing it would delete that edit too.
+ */
+const SUPERSEDES_IMPORT: EditorEvent["type"][] = [
+  "sectionCreated",
+  "sectionDeleted",
+  "sectionEditsPersisted",
+];
+
+function withoutSupersededImport(
+  event: EditorEvent,
+  state: EditorState,
+): EditorState {
+  return state.lastImport !== null && SUPERSEDES_IMPORT.includes(event.type)
+    ? { ...state, lastImport: null }
+    : state;
 }
 
 /**
@@ -440,6 +466,39 @@ function reduce(
         filters: { ...emptyFilters(), section: event.sectionIds.map(String) },
       };
 
+    // The filters go so that the sections that just arrived are all on screen;
+    // a course checked before the import would hide most of them.
+    case "sectionsImported":
+      return {
+        ...state,
+        filters: emptyFilters(),
+        lastImport: {
+          sectionIds: event.sectionIds,
+          sourceTermName: event.sourceTermName,
+        },
+      };
+
+    // Everything still naming those sections goes with them: the `section`
+    // filter "Show these" wrote, which would otherwise hold the canvas empty
+    // behind a badge, and a sheet open on one of them.
+    case "importUndone": {
+      const undoneIds = state.lastImport?.sectionIds ?? [];
+      const undoneValues = undoneIds.map(String);
+      const open = selectOpenSectionId(state);
+
+      return {
+        ...withFacet(state, "section", (checked) =>
+          checked.filter((value) => !undoneValues.includes(value)),
+        ),
+        lastImport: null,
+        selection:
+          open !== null && undoneIds.includes(open) ? null : state.selection,
+      };
+    }
+
+    case "importDismissed":
+      return { ...state, lastImport: null };
+
     case "viewSelected":
       return { ...state, view: event.view };
 
@@ -478,6 +537,9 @@ function reduce(
         lastPlacedId: null,
         interaction: { status: "idle" },
         pendingDismissal: null,
+        // Undo would send this term's ids to the term now on screen, where
+        // they match nothing: a 204 and a banner that clears as if it worked.
+        lastImport: null,
       };
 
     case "sectionFieldEdited":
@@ -601,6 +663,7 @@ function reduce(
         drafts: {},
         selection: null,
         filters: emptyFilters(),
+        lastImport: null,
       };
 
     default:

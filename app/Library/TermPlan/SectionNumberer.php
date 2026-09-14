@@ -9,15 +9,25 @@ class SectionNumberer {
      * @return string[] one number per incoming section, in that same order
      */
     public static function assignWithinCourse(array $taken, array $incoming): array {
-        // Keep the keys. `array_values` here breaks the
-        // SectionNumbererTest "free number stays free" case:
-        // `$assignedNumbers[$position]` maps by them.
-        $keptNumbers = array_filter(
-            $incoming,
-            fn(string $number) => !in_array($number, $taken, true),
-        );
+        $claimedNumbers = array_values($taken);
 
-        $claimedNumbers = [...array_values($taken), ...array_values($keptNumbers)];
+        // Keyed by position. Drop the keys and the
+        // SectionNumbererTest "free number stays free" case breaks:
+        // `$assignedNumbers[$position]` maps by them.
+        $keptNumbers = [];
+
+        // One at a time, against what earlier sections have claimed as well as
+        // what the course already holds: two incoming sections sharing a number
+        // would otherwise both keep it and break `local_class_sections_unique`.
+        foreach ($incoming as $position => $number) {
+            if (in_array($number, $claimedNumbers, true)) {
+                continue;
+            }
+
+            $keptNumbers[$position] = $number;
+            $claimedNumbers[] = $number;
+        }
+
         $assignedNumbers = $keptNumbers;
 
         foreach (array_diff_key($incoming, $keptNumbers) as $position => $number) {

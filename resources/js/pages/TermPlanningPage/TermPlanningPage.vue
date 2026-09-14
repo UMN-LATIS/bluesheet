@@ -20,13 +20,13 @@
     </template>
 
     <ImportBanner
-      v-if="lastImport"
-      :sectionIds="lastImport.sectionIds"
-      :sourceTermName="lastImport.sourceTermName"
+      v-if="schedule.lastImport"
+      :sectionIds="schedule.lastImport.sectionIds"
+      :sourceTermName="schedule.lastImport.sourceTermName"
       :isUndoing="undoImport.isPending.value"
       @show="showImported"
       @undo="undoLastImport"
-      @dismiss="lastImport = null"
+      @dismiss="schedule.dismissImport"
     />
 
     <!--
@@ -224,7 +224,7 @@ import DayView from "./components/DayView.vue";
 import DeleteAllModal from "./components/DeleteAllModal.vue";
 import EmptyTermCard from "./components/EmptyTermCard.vue";
 import ImportBanner from "./components/ImportBanner.vue";
-import ImportModal from "./components/ImportModal.vue";
+import ImportModal, { type ImportResult } from "./components/ImportModal.vue";
 import HourSheet, { type HourEntry } from "./components/HourSheet.vue";
 import MeetingTimes from "./components/MeetingTimes.vue";
 import Pane from "./components/Pane.vue";
@@ -243,11 +243,12 @@ import { formatTimeRange } from "./helpers/timeScale";
 import { toSectionPayload } from "./helpers/sectionPayload";
 import { flattenQuery } from "./helpers/urlQuery";
 import type { ScheduleView } from "./helpers/viewQuery";
+import { useSisGroupTermsQuery } from "./queries/useSisGroupTermsQuery";
 import { useTermPlanCoursesQuery } from "./queries/useTermPlanCoursesQuery";
 import { useSectionBatch } from "./queries/useSectionBatch";
 import { useTermPlanMutations } from "./queries/useTermPlanMutations";
 import { useTermPlanAutosave } from "./useTermPlanAutosave";
-import type { Meeting, PlannedSection, SisSection } from "./types";
+import type { Meeting, PlannedSection } from "./types";
 import { useScheduleEditor } from "./useScheduleEditor";
 import { NEW_SECTION_ID } from "./useScheduleEditor/types";
 import type { Effect } from "./useScheduleEditor/types";
@@ -300,22 +301,27 @@ const {
 const isImportOpen = ref(false);
 const isDeleteAllOpen = ref(false);
 
-const lastImport = ref<{
-  sectionIds: number[];
-  sourceTermName: string;
-} | null>(null);
-
 const { deleteSections: undoImport } = useSectionBatch(groupId, activeTermCode);
 
 const TERM_CODE_YEAR_STEP = 10;
 
-/** The same term a year back. Null when the SIS never published it. */
+const groupTermsQuery = useSisGroupTermsQuery(groupId);
+
+/**
+ * The same term a year back, which the empty-term card offers. Read from the
+ * department's own terms rather than the University's, because those are the
+ * ones the import modal lists: a term from anywhere else would leave its
+ * dropdown blank and its list saying there is nothing to import.
+ */
 const suggestedSourceTerm = computed(() => {
   if (activeTermCode.value === null) return null;
 
   const aYearBack = activeTermCode.value - TERM_CODE_YEAR_STEP;
 
-  return termOptions.value.find((option) => option.id === aYearBack) ?? null;
+  return (
+    (groupTermsQuery.data.value ?? []).find((term) => term.id === aYearBack) ??
+    null
+  );
 });
 
 const isTermEmpty = computed(
@@ -326,14 +332,13 @@ function openImport() {
   isImportOpen.value = true;
 }
 
-function onImported(created: SisSection[]) {
+function onImported({ sections, sourceTermName }: ImportResult) {
   isImportOpen.value = false;
-  schedule.clearFilters();
 
-  lastImport.value = {
-    sectionIds: created.map((section) => section.id),
-    sourceTermName: term.value?.name ?? "",
-  };
+  schedule.markSectionsImported(
+    sections.map((section) => section.id),
+    sourceTermName,
+  );
 }
 
 const plannedSectionIds = computed(() =>
@@ -343,22 +348,21 @@ const plannedSectionIds = computed(() =>
 function onDeletedAll() {
   isDeleteAllOpen.value = false;
   schedule.markAllSectionsDeleted();
-  lastImport.value = null;
 }
 
 function showImported(): void {
-  if (!lastImport.value) return;
+  if (!schedule.lastImport) return;
 
-  schedule.showImportedSections(lastImport.value.sectionIds);
+  schedule.showImportedSections(schedule.lastImport.sectionIds);
 }
 
 async function undoLastImport() {
-  const importToUndo = lastImport.value;
+  const importToUndo = schedule.lastImport;
   if (!importToUndo) return;
 
   try {
     await undoImport.mutateAsync(importToUndo.sectionIds);
-    lastImport.value = null;
+    schedule.markImportUndone();
   } catch (refusal) {
     showRefusal(refusal);
   }
@@ -430,9 +434,6 @@ const schedule = useScheduleEditor(
 const { createSection, saveSection, deleteSection } = useTermPlanMutations(
   groupId,
   activeTermCode,
-  // Undo deletes the sections the import made, so drop the banner
-  // once the scheduler edits one: undo would delete those edits too.
-  () => (lastImport.value = null),
 );
 
 /**

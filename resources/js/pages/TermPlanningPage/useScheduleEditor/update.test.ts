@@ -1226,6 +1226,113 @@ describe("deleting every section", () => {
   });
 });
 
+describe("the import banner", () => {
+  const imported: EditorEvent = {
+    type: "sectionsImported",
+    sectionIds: [7, 8],
+    sourceTermName: "Fall 2027",
+  };
+
+  const banner = after([imported]);
+
+  it("names the term the sections came from, not the one they landed in", () => {
+    expect(banner.lastImport).toEqual({
+      sectionIds: [7, 8],
+      sourceTermName: "Fall 2027",
+    });
+  });
+
+  // a course checked beforehand would hide most of what just arrived
+  it("clears the filters so the arrivals are all on screen", () => {
+    const narrowed = after(
+      [{ type: "filterValuesAdded", facet: "course", values: ["ANTH-1001"] }],
+      banner,
+    );
+
+    expect(after([imported], narrowed).filters).toEqual(emptyFilters());
+  });
+
+  it("dismissing takes the banner and nothing else", () => {
+    const shown = after(
+      [{ type: "importedSectionsShown", sectionIds: [7, 8] }],
+      banner,
+    );
+    const state = after([{ type: "importDismissed" }], shown);
+
+    expect(state.lastImport).toBeNull();
+    expect(state.filters.section).toEqual(["7", "8"]);
+  });
+
+  describe("undoing", () => {
+    const shown = after(
+      [
+        { type: "importedSectionsShown", sectionIds: [7, 8] },
+        { type: "selectedSection", sectionId: 7 },
+      ],
+      banner,
+    );
+
+    // the filter would otherwise hold the canvas empty behind a badge
+    it("stops the section filter naming the sections it deleted", () => {
+      const state = after([{ type: "importUndone" }], shown);
+
+      expect(state.lastImport).toBeNull();
+      expect(state.filters.section).toEqual([]);
+      expect(state.selection).toBeNull();
+    });
+
+    it("leaves a filter value the import never put there", () => {
+      const alsoFiltered = after(
+        [{ type: "filterValuesAdded", facet: "section", values: ["3"] }],
+        shown,
+      );
+
+      expect(
+        after([{ type: "importUndone" }], alsoFiltered).filters.section,
+      ).toEqual(["3"]);
+    });
+
+    // the delete has already happened, so there is nothing left to ask about
+    it("does not stop to ask about the open sheet's edits", () => {
+      const context = contextOf(plannedSection(7, []));
+      const typed = after(
+        [
+          { type: "selectedSection", sectionId: 7 },
+          { type: "sectionFieldEdited", sectionId: 7, change: { notes: "hi" } },
+        ],
+        banner,
+        context,
+      );
+
+      const state = after([{ type: "importUndone" }], typed, context);
+
+      expect(state.pendingDismissal).toBeNull();
+      expect(state.lastImport).toBeNull();
+    });
+  });
+
+  // undo deletes the sections the import made, and would take the edit with them
+  it.each<EditorEvent>([
+    { type: "sectionCreated", sectionId: 9 },
+    { type: "sectionDeleted", sectionId: 7 },
+    { type: "sectionEditsPersisted", sectionId: 7, saved: { notes: "hi" } },
+  ])("goes once the server holds a write of its own: $type", (event) => {
+    expect(after([event], banner).lastImport).toBeNull();
+  });
+
+  // the ids belong to the term that was left; undo would send them to the new
+  // one, match nothing, and clear the banner as if it had worked
+  it("goes when the page moves to another department or term", () => {
+    expect(after([{ type: "contextChanged" }], banner).lastImport).toBeNull();
+  });
+
+  it("goes when every section is deleted", () => {
+    expect(
+      after([{ type: "allSectionsDeleted" }], banner).lastImport,
+    ).toBeNull();
+  });
+});
+
 describe("walking away from a section being created", () => {
   const started = after(draw(0, 600, 675));
 

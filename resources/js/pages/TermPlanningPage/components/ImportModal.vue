@@ -62,9 +62,9 @@
             :isIndeterminate="isSomethingSelected && !isEverythingSelected"
             @toggle="selectEverything"
           >
-            Select all
+            {{ search.trim() ? "Select all shown" : "Select all" }}
             <template #annotation>
-              {{ selectedIds.size }} of {{ sourceSections.length }}
+              {{ selectedShownCount }} of {{ shownSectionIds.length }}
             </template>
           </FilterRow>
         </div>
@@ -240,6 +240,12 @@ import { useSisGroupTermsQuery } from "../queries/useSisGroupTermsQuery";
 import { FILTER_FACETS } from "../types";
 import type { FilterFacet, SisSection } from "../types";
 
+/** What was imported, and the term it came from, which the banner names. */
+export interface ImportResult {
+  sections: SisSection[];
+  sourceTermName: string;
+}
+
 const props = defineProps<{
   show: boolean;
   groupId: number;
@@ -249,7 +255,7 @@ const props = defineProps<{
   suggestedSourceTermId: number | null;
 }>();
 
-const emit = defineEmits<{ close: []; imported: [SisSection[]] }>();
+const emit = defineEmits<{ close: []; imported: [ImportResult] }>();
 
 const modalId = useId();
 const fieldId = (field: string) => `${modalId}-${field}`;
@@ -305,20 +311,6 @@ function setFacetValuesSelected(
   );
 }
 
-const selectEverything = (isNowSelected: boolean) => {
-  selectedIds.value = isNowSelected
-    ? new Set(sourceSections.value.map((section) => section.id))
-    : new Set();
-};
-
-const isEverythingSelected = computed(
-  () =>
-    sourceSections.value.length > 0 &&
-    selectedIds.value.size === sourceSections.value.length,
-);
-
-const isSomethingSelected = computed(() => selectedIds.value.size > 0);
-
 const matchesEveryWord = (...fields: string[]) => {
   const haystack = fields.join(" ").toLowerCase();
 
@@ -363,18 +355,48 @@ const componentOptions = computed(() =>
   ),
 );
 
-const shownListLength = computed(() => {
-  const lengths: Record<FilterFacet, number> = {
-    course: courseLevels.value.length,
-    person: personOptions.value.length,
-    section: sectionOptions.value.length,
-    component: componentOptions.value.length,
+/** The options the list is drawing, which the search has already narrowed. */
+const shownValues = computed<string[]>(() => {
+  const values: Record<FilterFacet, string[]> = {
+    course: courseLevels.value.flatMap(levelValues),
+    person: personOptions.value.map((person) => person.value),
+    section: sectionOptions.value.map((option) => option.value),
+    component: componentOptions.value.map((option) => option.value),
   };
 
-  return lengths[activeFacet.value];
+  return values[activeFacet.value];
 });
 
-const isListEmpty = computed(() => shownListLength.value === 0);
+/**
+ * The sections behind those options, which is what "Select all" ticks. Every
+ * section answers to a value in every facet, so with the search empty this is
+ * the whole term.
+ */
+const shownSectionIds = computed(() =>
+  sectionIdsUnder(byFacetValue.value, activeFacet.value, shownValues.value),
+);
+
+const isListEmpty = computed(() => shownValues.value.length === 0);
+
+const selectEverything = (isNowSelected: boolean) => {
+  selectedIds.value = withSectionsSelected(
+    selectedIds.value,
+    shownSectionIds.value,
+    isNowSelected,
+  );
+};
+
+const selectedShownCount = computed(
+  () => shownSectionIds.value.filter((id) => selectedIds.value.has(id)).length,
+);
+
+const isEverythingSelected = computed(
+  () =>
+    shownSectionIds.value.length > 0 &&
+    selectedShownCount.value === shownSectionIds.value.length,
+);
+
+const isSomethingSelected = computed(() => selectedShownCount.value > 0);
 
 const FACET_LABELS: Record<FilterFacet, string> = {
   course: "Courses",
@@ -459,7 +481,10 @@ async function submit() {
       include: include.value,
     });
 
-    emit("imported", created);
+    emit("imported", {
+      sections: created,
+      sourceTermName: sourceTermName.value,
+    });
   } catch (refusal) {
     error.value =
       refusalMessage(refusal) ?? "Those sections could not be imported.";
