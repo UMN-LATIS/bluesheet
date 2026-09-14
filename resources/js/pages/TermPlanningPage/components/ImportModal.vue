@@ -445,7 +445,17 @@ function seedSelection() {
   selectedIds.value = props.isTermEmpty ? everySourceSectionId() : new Set();
 }
 
+const defaultSourceTermId = () =>
+  props.suggestedSourceTermId ?? sourceTerms.value[0]?.id ?? null;
+
 watch(sourceSections, seedSelection);
+
+// Terms can arrive after the modal opens. Without this,
+// sourceTermId stays null and Import stays disabled.
+watch(sourceTerms, () => {
+  if (!props.show || sourceTermId.value !== null) return;
+  sourceTermId.value = defaultSourceTermId();
+});
 
 watch(sourceTermId, () => {
   search.value = "";
@@ -456,8 +466,7 @@ watch(
   (isOpen) => {
     if (!isOpen) return;
 
-    sourceTermId.value =
-      props.suggestedSourceTermId ?? sourceTerms.value[0]?.id ?? null;
+    sourceTermId.value = defaultSourceTermId();
     seedSelection();
     search.value = "";
     activeFacet.value = "course";

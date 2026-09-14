@@ -486,8 +486,14 @@ function reduce(
       const undoneValues = undoneIds.map(String);
       const open = selectOpenSectionId(state);
 
+      const cleared = undoneIds.reduce(
+        (next, sectionId) =>
+          withoutEntry(withoutDraft(next, sectionId), sectionId),
+        state,
+      );
+
       return {
-        ...withFacet(state, "section", (checked) =>
+        ...withFacet(cleared, "section", (checked) =>
           checked.filter((value) => !undoneValues.includes(value)),
         ),
         lastImport: null,

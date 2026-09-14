@@ -1309,6 +1309,30 @@ describe("the import banner", () => {
       expect(state.pendingDismissal).toBeNull();
       expect(state.lastImport).toBeNull();
     });
+
+    // autosave cannot clear an overlay for a section that
+    // is gone, so the page keeps warning of unsaved work
+    it("takes the saved edits and drafts of those sections", () => {
+      const context = contextOf(plannedSection(7, []));
+      const edited = after(
+        [
+          { type: "selectedSection", sectionId: 7 },
+          { type: "sectionFieldEdited", sectionId: 7, change: { notes: "hi" } },
+          { type: "draftSaved", sectionId: 7 },
+          { type: "sectionFieldEdited", sectionId: 7, change: { notes: "ho" } },
+        ],
+        banner,
+        context,
+      );
+
+      expect(edited.sectionEdits[7]).toBeDefined();
+      expect(edited.drafts[7]).toBeDefined();
+
+      const state = after([{ type: "importUndone" }], edited, context);
+
+      expect(state.sectionEdits).toEqual({});
+      expect(state.drafts).toEqual({});
+    });
   });
 
   // undo deletes the sections the import made, and would take the edit with them

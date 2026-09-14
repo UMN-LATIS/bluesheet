@@ -80,11 +80,15 @@ class SectionBatchController extends Controller {
             'The SIS has published this term, so it can no longer be planned here.'
         );
 
-        LocalClassSection::query()
-            ->forDepartmentTerm($academicOrg, $validated['termId'])
-            ->whereIn('id', $validated['sectionIds'])
-            ->get()
-            ->each->delete();
+        // Keep the per-model loop: a mass delete skips
+        // the `deleted` event and Auditable logs nothing.
+        DB::transaction(
+            fn() => LocalClassSection::query()
+                ->forDepartmentTerm($academicOrg, $validated['termId'])
+                ->whereIn('id', $validated['sectionIds'])
+                ->get()
+                ->each->delete()
+        );
 
         return response()->noContent();
     }
