@@ -32,42 +32,16 @@
     </div>
 
     <div class="tw-flex-none tw-grid tw-grid-cols-2 tw-gap-2 tw-p-3.5 tw-pb-0">
-      <button
+      <FacetTile
         v-for="tile in tiles"
         :key="tile.facet"
-        type="button"
-        class="tw-relative tw-flex tw-min-h-14 tw-cursor-pointer tw-flex-col tw-items-start tw-gap-px tw-rounded-[10px] tw-border tw-border-solid tw-p-2 tw-px-3 tw-text-left"
-        :class="
-          activeFacet === tile.facet
-            ? 'tw-border-primary tw-bg-primary-container'
-            : 'tw-border-surface-container tw-bg-surface'
-        "
-        :aria-pressed="activeFacet === tile.facet"
+        :label="tile.label"
+        :count="tile.count"
+        :total="tile.total"
+        :checkedCount="filters[tile.facet].length"
+        :isActive="activeFacet === tile.facet"
         @click="activeFacet = tile.facet"
-      >
-        <span
-          v-if="filters[tile.facet].length > 0"
-          class="tw-absolute tw-right-1.5 tw-top-1.5 tw-rounded-full tw-bg-brand tw-px-1.5 tw-text-[10px] tw-font-semibold tw-leading-4 tw-text-white"
-          :title="`${filters[tile.facet].length} filters active`"
-        >
-          {{ filters[tile.facet].length }}
-        </span>
-        <!-- What is checked here, or else what the list will show, out of
-             what the term holds: "5/57". No slash where nothing narrows it. -->
-        <span
-          class="tw-text-[21px] tw-font-semibold tw-leading-tight tw-tracking-tight tw-text-on-surface"
-          >{{ tile.count }}&nbsp;<span
-            v-if="tile.count !== tile.total"
-            class="tw-text-[13px] tw-font-normal tw-text-on-surface-variant"
-            >/&nbsp;{{ tile.total }}</span
-          ></span
-        >
-        <span
-          class="tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-surface-variant"
-        >
-          {{ tile.label }}
-        </span>
-      </button>
+      />
     </div>
 
     <!--
@@ -257,6 +231,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import FacetTile from "./FacetTile.vue";
 import FilterRow from "./FilterRow.vue";
 import { XIcon } from "@/icons";
 import { colorOfType, labelOfComponent } from "../constants/meetingTypeColors";

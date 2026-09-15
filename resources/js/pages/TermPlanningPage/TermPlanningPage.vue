@@ -9,12 +9,25 @@
         :today="today"
         :view="activeView"
         :isReadOnly="isReadOnly"
+        :plannedSectionCount="sections.length"
         :activeFilterCount="schedule.activeFilterCount"
         :isFilterPanelOpen="isFilterPanelOpen"
         @selectView="schedule.selectView"
         @openFilters="isFilterPanelOpen = true"
+        @openImport="openImport"
+        @deleteAll="isDeleteAllOpen = true"
       />
     </template>
+
+    <ImportBanner
+      v-if="schedule.lastImport"
+      :sectionIds="schedule.lastImport.sectionIds"
+      :sourceTermName="schedule.lastImport.sourceTermName"
+      :isUndoing="undoImport.isPending.value"
+      @show="showImported"
+      @undo="undoLastImport"
+      @dismiss="schedule.dismissImport"
+    />
 
     <!--
       The panes float as cards on the recessed page. `relative` is what the
@@ -106,6 +119,35 @@
         </div>
       </Pane>
 
+      <EmptyTermCard
+        v-if="isTermEmpty"
+        :termName="term?.name ?? ''"
+        :suggestedTermName="suggestedSourceTerm?.name ?? null"
+        @importFromSuggested="openImport"
+        @chooseTerm="openImport"
+      />
+
+      <ImportModal
+        :show="isImportOpen"
+        :groupId="groupId"
+        :termCode="activeTermCode"
+        :termName="term?.name ?? ''"
+        :isTermEmpty="isTermEmpty"
+        :suggestedSourceTermId="suggestedSourceTerm?.id ?? null"
+        @close="isImportOpen = false"
+        @imported="onImported"
+      />
+
+      <DeleteAllModal
+        :show="isDeleteAllOpen"
+        :groupId="groupId"
+        :termCode="activeTermCode"
+        :termName="term?.name ?? ''"
+        :everySectionId="plannedSectionIds"
+        @close="isDeleteAllOpen = false"
+        @deleted="onDeletedAll"
+      />
+
       <SheetMount v-if="schedule.openHour || selectedSection">
         <HourSheet
           v-if="schedule.openHour"
@@ -179,6 +221,10 @@ import FullScreenLayout from "@/layouts/FullScreenLayout.vue";
 import Notification from "@/components/Notification.vue";
 import CoverageHeatmap from "./components/CoverageHeatmap.vue";
 import DayView from "./components/DayView.vue";
+import DeleteAllModal from "./components/DeleteAllModal.vue";
+import EmptyTermCard from "./components/EmptyTermCard.vue";
+import ImportBanner from "./components/ImportBanner.vue";
+import ImportModal, { type ImportResult } from "./components/ImportModal.vue";
 import HourSheet, { type HourEntry } from "./components/HourSheet.vue";
 import MeetingTimes from "./components/MeetingTimes.vue";
 import Pane from "./components/Pane.vue";
@@ -197,7 +243,9 @@ import { formatTimeRange } from "./helpers/timeScale";
 import { toSectionPayload } from "./helpers/sectionPayload";
 import { flattenQuery } from "./helpers/urlQuery";
 import type { ScheduleView } from "./helpers/viewQuery";
+import { useSisGroupTermsQuery } from "./queries/useSisGroupTermsQuery";
 import { useTermPlanCoursesQuery } from "./queries/useTermPlanCoursesQuery";
+import { useSectionBatch } from "./queries/useSectionBatch";
 import { useTermPlanMutations } from "./queries/useTermPlanMutations";
 import { useTermPlanAutosave } from "./useTermPlanAutosave";
 import type { Meeting, PlannedSection } from "./types";
@@ -249,6 +297,76 @@ const {
   roster,
   sections,
 } = useTermSchedule(groupId, termCode);
+
+const isImportOpen = ref(false);
+const isDeleteAllOpen = ref(false);
+
+const { deleteSections: undoImport } = useSectionBatch(groupId, activeTermCode);
+
+const TERM_CODE_YEAR_STEP = 10;
+
+const groupTermsQuery = useSisGroupTermsQuery(groupId);
+
+/**
+ * The same term a year back, which the empty-term card offers. Read from the
+ * department's own terms rather than the University's, because those are the
+ * ones the import modal lists: a term from anywhere else would leave its
+ * dropdown blank and its list saying there is nothing to import.
+ */
+const suggestedSourceTerm = computed(() => {
+  if (activeTermCode.value === null) return null;
+
+  const aYearBack = activeTermCode.value - TERM_CODE_YEAR_STEP;
+
+  return (
+    (groupTermsQuery.data.value ?? []).find((term) => term.id === aYearBack) ??
+    null
+  );
+});
+
+const isTermEmpty = computed(
+  () => !isReadOnly.value && sections.value.length === 0,
+);
+
+function openImport() {
+  isImportOpen.value = true;
+}
+
+function onImported({ sections, sourceTermName }: ImportResult) {
+  isImportOpen.value = false;
+
+  schedule.markSectionsImported(
+    sections.map((section) => section.id),
+    sourceTermName,
+  );
+}
+
+const plannedSectionIds = computed(() =>
+  sections.value.map((section) => section.id),
+);
+
+function onDeletedAll() {
+  isDeleteAllOpen.value = false;
+  schedule.markAllSectionsDeleted();
+}
+
+function showImported(): void {
+  if (!schedule.lastImport) return;
+
+  schedule.showImportedSections(schedule.lastImport.sectionIds);
+}
+
+async function undoLastImport() {
+  const importToUndo = schedule.lastImport;
+  if (!importToUndo) return;
+
+  try {
+    await undoImport.mutateAsync(importToUndo.sectionIds);
+    schedule.markImportUndone();
+  } catch (refusal) {
+    showRefusal(refusal);
+  }
+}
 
 /** The week is the one view a phone cannot draw; the day list stands in. */
 const activeView = computed<ScheduleView>(() =>

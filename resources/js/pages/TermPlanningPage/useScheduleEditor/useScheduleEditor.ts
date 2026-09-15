@@ -145,6 +145,16 @@ export function useScheduleEditor(
       dispatch({ type: "filterValuesRemoved", facet, values }),
     clearFilters: () => dispatch({ type: "filtersCleared" }),
 
+    /* The import banner: what it stands for, and its three buttons. */
+    /** The import the banner is about, or null when no banner is showing. */
+    lastImport: computed(() => state.value.lastImport),
+    markSectionsImported: (sectionIds: number[], sourceTermName: string) =>
+      dispatch({ type: "sectionsImported", sectionIds, sourceTermName }),
+    showImportedSections: (sectionIds: number[]) =>
+      dispatch({ type: "importedSectionsShown", sectionIds }),
+    markImportUndone: () => dispatch({ type: "importUndone" }),
+    dismissImport: () => dispatch({ type: "importDismissed" }),
+
     /* Which canvas, which day, and the URL that names them. */
     selectView: (view: ScheduleView) =>
       dispatch({ type: "viewSelected", view }),
@@ -197,5 +207,6 @@ export function useScheduleEditor(
     cancelDismissal: () => dispatch({ type: "dismissalCancelled" }),
     markSectionDeleted: (sectionId: number) =>
       dispatch({ type: "sectionDeleted", sectionId }),
+    markAllSectionsDeleted: () => dispatch({ type: "allSectionsDeleted" }),
   });
 }

@@ -7,8 +7,10 @@ use App\LocalClassMeeting;
 use App\LocalClassSection;
 use App\LocalCourse;
 use App\SisCourse;
+use App\SisClassMeeting;
 use App\SisClassSection;
 use App\SisEmployee;
+use App\SisTerm;
 use App\User;
 use Database\Seeders\TestDatabaseSeeder;
 use Illuminate\Support\Facades\Schema;
@@ -671,5 +673,285 @@ describe('GET /api/term-planning/groups/:groupId/course-instructors', function (
         actingAs($this->basicUser);
 
         getJson(historyUrl($this->group, 'ANTH-1001'))->assertForbidden();
+    });
+});
+
+function batchUrl(Group $group): string {
+    return "/api/term-planning/groups/{$group->id}/sections/batch";
+}
+
+function publishedSection(array $attributes = []): SisClassSection {
+    return SisClassSection::factory()->create([
+        'academic_org' => DEPT,
+        'term_code' => PUBLISHED_TERM,
+        'course_code' => 'ANTH-1001',
+        'subject' => 'ANTH',
+        'catalog_number' => '1001',
+        ...$attributes,
+    ]);
+}
+
+function importBody(array $sections, array $overrides = []): array {
+    return [
+        'termId' => PLANNABLE_TERM,
+        'sourceTermId' => PUBLISHED_TERM,
+        'sectionIds' => collect($sections)->pluck('id')->all(),
+        ...$overrides,
+    ];
+}
+
+describe('POST /api/term-planning/groups/:groupId/sections/batch', function () {
+    it('copies a published section into the term being planned', function () {
+        $source = publishedSection(['class_section' => '009', 'title' => 'Human Evolution']);
+        actingAs($this->admin);
+
+        postJson(batchUrl($this->group), importBody([$source]))->assertOk();
+
+        expect(LocalClassSection::where('term_code', PLANNABLE_TERM)->first())
+            ->course_code->toBe('ANTH-1001')
+            ->class_section->toBe('009')
+            ->title->toBe('Human Evolution')
+            ->academic_org->toBe(DEPT);
+    });
+
+    it('copies the meeting days and times', function () {
+        $source = publishedSection();
+        $source->meetings()->create(SisClassMeeting::factory()->raw(['sis_class_section_id' => $source->id]));
+        actingAs($this->admin);
+
+        postJson(batchUrl($this->group), importBody([$source]))->assertOk();
+
+        $meeting = LocalClassMeeting::first();
+        expect($meeting->starts_at)->toBe('10:10:00');
+        expect($meeting->meets_monday)->toBeTrue();
+        expect($meeting->meets_tuesday)->toBeFalse();
+    });
+
+    it('renumbers a section whose number the term already holds', function () {
+        plannedSection(['course_code' => 'ANTH-1001', 'class_section' => '009']);
+        $source = publishedSection(['class_section' => '009']);
+        actingAs($this->admin);
+
+        postJson(batchUrl($this->group), importBody([$source]))->assertOk();
+
+        expect(LocalClassSection::pluck('class_section')->sort()->values()->all())
+            ->toBe(['009', '010']);
+    });
+
+    it('is online when the section has no meeting time, on campus when it has one', function () {
+        $async = publishedSection(['class_section' => '001']);
+        $timed = publishedSection(['class_section' => '002']);
+        $timed->meetings()->create(SisClassMeeting::factory()->raw(['sis_class_section_id' => $timed->id]));
+        actingAs($this->admin);
+
+        postJson(batchUrl($this->group), importBody([$async, $timed]))->assertOk();
+
+        expect(LocalClassSection::where('class_section', '001')->first()->delivery)->toBe('online');
+        expect(LocalClassSection::where('class_section', '002')->first()->delivery)->toBe('onCampus');
+    });
+
+    it('refuses a term the SIS has published', function () {
+        $source = publishedSection();
+        actingAs($this->admin);
+
+        postJson(batchUrl($this->group), importBody([$source], ['termId' => PUBLISHED_TERM]))
+            ->assertForbidden();
+
+        expect(LocalClassSection::count())->toBe(0);
+    });
+
+    it('requires edit privileges', function () {
+        $source = publishedSection();
+        actingAs($this->basicUser);
+
+        postJson(batchUrl($this->group), importBody([$source]))->assertForbidden();
+    });
+
+    it('ignores a section id from another department', function () {
+        $other = SisClassSection::factory()->create([
+            'academic_org' => 99999,
+            'term_code' => PUBLISHED_TERM,
+        ]);
+        actingAs($this->admin);
+
+        postJson(batchUrl($this->group), importBody([$other]))->assertStatus(422);
+
+        expect(LocalClassSection::count())->toBe(0);
+    });
+
+    it('leaves the term untouched when nothing resolves', function () {
+        actingAs($this->admin);
+
+        postJson(batchUrl($this->group), [
+            'termId' => PLANNABLE_TERM,
+            'sourceTermId' => PUBLISHED_TERM,
+            'sectionIds' => [123456],
+        ])->assertStatus(422);
+
+        expect(LocalClassSection::count())->toBe(0);
+    });
+});
+
+describe('POST .../sections/batch, choosing what comes over', function () {
+    beforeEach(function () {
+        $this->source = publishedSection(['class_section' => '009']);
+        $this->source->meetings()->create(
+            SisClassMeeting::factory()->raw(['sis_class_section_id' => $this->source->id])
+        );
+        SisEmployee::factory()->create(['emplid' => 101]);
+        SisEmployee::factory()->create(['emplid' => 202]);
+        $this->source->instructors()->create(['emplid' => 101, 'role' => 'PI']);
+        $this->source->instructors()->create(['emplid' => 202, 'role' => 'TA']);
+        actingAs($this->admin);
+    });
+
+    function importWith(Group $group, array $include): array {
+        $body = [
+            'termId' => PLANNABLE_TERM,
+            'sourceTermId' => PUBLISHED_TERM,
+            'sectionIds' => [test()->source->id],
+            'include' => $include,
+        ];
+
+        postJson(batchUrl($group), $body)->assertOk();
+
+        return LocalClassInstructor::all()->map->only(['emplid', 'role'])->all();
+    }
+
+    it('brings the instructor of record but not the TA by default', function () {
+        expect(importWith($this->group, []))->toBe([['emplid' => 101, 'role' => 'PI']]);
+    });
+
+    it('brings the TA when asked', function () {
+        expect(importWith($this->group, ['tas' => true]))->toHaveCount(2);
+    });
+
+    it('brings nobody when both are declined', function () {
+        expect(importWith($this->group, ['instructors' => false, 'tas' => false]))
+            ->toBe([]);
+    });
+
+    it('brings the TA alone when the instructor is declined', function () {
+        expect(importWith($this->group, ['instructors' => false, 'tas' => true]))
+            ->toBe([['emplid' => 202, 'role' => 'TA']]);
+    });
+
+    it('leaves the section async when meeting times are declined', function () {
+        importWith($this->group, ['meetingTimes' => false]);
+
+        expect(LocalClassMeeting::count())->toBe(0);
+        expect(LocalClassSection::sole()->delivery)->toBe('online');
+    });
+
+    it('keeps the schedule by default', function () {
+        importWith($this->group, []);
+
+        expect(LocalClassMeeting::count())->toBe(1);
+        expect(LocalClassSection::sole()->delivery)->toBe('onCampus');
+    });
+
+    it('numbers TBA1 when section numbers are declined', function () {
+        importWith($this->group, ['sectionNumbers' => false]);
+
+        expect(LocalClassSection::sole()->class_section)->toBe('TBA1');
+    });
+
+    it('counts placeholders on from one the term already holds', function () {
+        plannedSection(['course_code' => 'ANTH-1001', 'class_section' => 'TBA1']);
+
+        importWith($this->group, ['sectionNumbers' => false]);
+
+        expect(LocalClassSection::pluck('class_section')->sort()->values()->all())
+            ->toBe(['TBA1', 'TBA2']);
+    });
+});
+
+describe('DELETE /api/term-planning/groups/:groupId/sections/batch', function () {
+    it('undoes an import, taking the meetings with it', function () {
+        $source = publishedSection();
+        $source->meetings()->create(SisClassMeeting::factory()->raw(['sis_class_section_id' => $source->id]));
+        actingAs($this->admin);
+        $created = postJson(batchUrl($this->group), importBody([$source]))->json();
+
+        deleteJson(batchUrl($this->group), [
+            'termId' => PLANNABLE_TERM,
+            'sectionIds' => collect($created)->pluck('id')->all(),
+        ])->assertNoContent();
+
+        expect(LocalClassSection::count())->toBe(0);
+        expect(LocalClassMeeting::count())->toBe(0);
+    });
+
+    it('skips an id that is already gone', function () {
+        $kept = plannedSection(['class_section' => '001']);
+        actingAs($this->admin);
+
+        deleteJson(batchUrl($this->group), [
+            'termId' => PLANNABLE_TERM,
+            'sectionIds' => [$kept->id, 999999],
+        ])->assertNoContent();
+
+        expect(LocalClassSection::count())->toBe(0);
+    });
+
+    it('will not delete a section in another department', function () {
+        $mine = plannedSection(['class_section' => '001']);
+        $theirs = LocalClassSection::factory()->create([
+            'academic_org' => 99999,
+            'term_code' => PLANNABLE_TERM,
+        ]);
+        actingAs($this->admin);
+
+        deleteJson(batchUrl($this->group), [
+            'termId' => PLANNABLE_TERM,
+            'sectionIds' => [$mine->id, $theirs->id],
+        ])->assertNoContent();
+
+        expect(LocalClassSection::find($theirs->id))->not->toBeNull();
+    });
+});
+
+describe('GET /api/sis/groups/:groupId/terms', function () {
+    beforeEach(function () {
+        SisTerm::factory()->create([
+            'term_code' => PUBLISHED_TERM,
+            'description' => 'Spring 2027',
+        ]);
+        SisTerm::factory()->create(['term_code' => 1269, 'description' => 'Fall 2026']);
+    });
+
+    it('lists only terms the department has sections in', function () {
+        publishedSection(['term_code' => PUBLISHED_TERM]);
+        actingAs($this->admin);
+
+        $res = getJson("/api/sis/groups/{$this->group->id}/terms");
+
+        expect(collect($res->json())->pluck('id')->all())->toBe([PUBLISHED_TERM]);
+    });
+
+    it('leaves out a term only another department has sections in', function () {
+        SisClassSection::factory()->create([
+            'academic_org' => 99999,
+            'term_code' => 1269,
+        ]);
+        publishedSection(['term_code' => PUBLISHED_TERM]);
+        actingAs($this->admin);
+
+        $res = getJson("/api/sis/groups/{$this->group->id}/terms");
+
+        expect(collect($res->json())->pluck('id')->all())->not->toContain(1269);
+    });
+
+    it('leaves out independent study, which the picker never offers', function () {
+        publishedSection(['term_code' => PUBLISHED_TERM, 'component' => 'IND']);
+        actingAs($this->admin);
+
+        expect(getJson("/api/sis/groups/{$this->group->id}/terms")->json())->toBe([]);
+    });
+
+    it('requires read privileges', function () {
+        actingAs($this->basicUser);
+
+        getJson("/api/sis/groups/{$this->group->id}/terms")->assertForbidden();
     });
 });

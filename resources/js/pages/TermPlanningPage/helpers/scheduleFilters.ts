@@ -62,7 +62,7 @@ function matchesFacet(checked: string[], sectionValues: string[]): boolean {
 }
 
 /** What a section answers to in one facet: usually one value, people aside. */
-function facetValues(section: SisSection, facet: FilterFacet): string[] {
+export function facetValues(section: SisSection, facet: FilterFacet): string[] {
   switch (facet) {
     case "course":
       return [section.courseCode];

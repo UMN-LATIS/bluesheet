@@ -98,6 +98,7 @@ export const initialState = (dayIndex = 0): EditorState => ({
   filters: defaultFilters(),
   view: DEFAULT_VIEW,
   dayIndex,
+  lastImport: null,
 });
 
 /**
@@ -120,6 +121,9 @@ export const DISCARDS_ON_PURPOSE: EditorEvent["type"][] = [
   "newSectionDiscarded",
   "sectionCreated",
   "sectionDeleted",
+  "allSectionsDeleted",
+  // the server has already deleted the sections, so there is nothing left to ask
+  "importUndone",
   "draftCancelled",
   "draftSaved",
   "sectionEditsReverted",
@@ -150,6 +154,10 @@ const READING_EVENTS: EditorEvent["type"][] = [
   "filterValuesAdded",
   "filterValuesRemoved",
   "filtersCleared",
+  "importedSectionsShown",
+  // both only drop what the banner held, which a locked term still has to do
+  "importDismissed",
+  "importUndone",
   "viewSelected",
   "daySelected",
   "asyncDayShown",
@@ -172,9 +180,9 @@ export function update(
     return answeringDismissal(state, event, context);
   }
 
-  const nextState = withoutAbandonedSection(
-    state,
-    reduce(state, event, context),
+  const nextState = withoutSupersededImport(
+    event,
+    withoutAbandonedSection(state, reduce(state, event, context)),
   );
 
   // Held rather than applied: the view asks, and the answer comes back as its
@@ -245,6 +253,26 @@ function answeringDismissal(
 }
 
 /**
+ * Writes that leave the banner's Undo unsafe to press. Undo deletes the
+ * sections the import made, so once the server holds an edit to one of them,
+ * pressing it would delete that edit too.
+ */
+const SUPERSEDES_IMPORT: EditorEvent["type"][] = [
+  "sectionCreated",
+  "sectionDeleted",
+  "sectionEditsPersisted",
+];
+
+function withoutSupersededImport(
+  event: EditorEvent,
+  state: EditorState,
+): EditorState {
+  return state.lastImport !== null && SUPERSEDES_IMPORT.includes(event.type)
+    ? { ...state, lastImport: null }
+    : state;
+}
+
+/**
  * The sheet's unsaved form goes when the selection leaves the section it
  * belongs to: Escape, a click on another block, a chip, an hour. A section
  * drawn but never created goes with it, since its draft is the whole of it.
@@ -268,10 +296,8 @@ function withoutAbandonedSection(
 /**
  * The URL is rewritten whenever it would now say something different, and only
  * then. That covers the whole loop guard between the page and the router:
- * `urlChanged` is the one event that writes URL-backed state and the one that
- * raises no effect, so a round trip always ends after a single pass, and a
- * gesture that moves a block without changing what a link would name writes
- * nothing at all.
+ * `urlChanged` is the one event that writes URL-backed state, and it raises no
+ * effect of its own, so a round trip always ends after a single pass.
  */
 function effectsOf(
   event: EditorEvent,
@@ -279,6 +305,13 @@ function effectsOf(
   after: EditorState,
 ): Effect[] {
   if (event.type === "urlChanged") return [];
+
+  // `contextChanged` is raised from a route guard, so the navigation carrying
+  // the new term has not committed yet. Let it through and `router.replace`
+  // runs against the term being left, which cancels the move: the reader picks
+  // a new term and stays on the old one's sections. The navigation is writing
+  // the query itself, so there is nothing here to write.
+  if (event.type === "contextChanged") return [];
 
   const query = urlQueryOf(after);
 
@@ -427,6 +460,51 @@ function reduce(
     case "filtersCleared":
       return { ...state, filters: emptyFilters() };
 
+    case "importedSectionsShown":
+      return {
+        ...state,
+        filters: { ...emptyFilters(), section: event.sectionIds.map(String) },
+      };
+
+    // The filters go so that the sections that just arrived are all on screen;
+    // a course checked before the import would hide most of them.
+    case "sectionsImported":
+      return {
+        ...state,
+        filters: emptyFilters(),
+        lastImport: {
+          sectionIds: event.sectionIds,
+          sourceTermName: event.sourceTermName,
+        },
+      };
+
+    // Everything still naming those sections goes with them: the `section`
+    // filter "Show these" wrote, which would otherwise hold the canvas empty
+    // behind a badge, and a sheet open on one of them.
+    case "importUndone": {
+      const undoneIds = state.lastImport?.sectionIds ?? [];
+      const undoneValues = undoneIds.map(String);
+      const open = selectOpenSectionId(state);
+
+      const cleared = undoneIds.reduce(
+        (next, sectionId) =>
+          withoutEntry(withoutDraft(next, sectionId), sectionId),
+        state,
+      );
+
+      return {
+        ...withFacet(cleared, "section", (checked) =>
+          checked.filter((value) => !undoneValues.includes(value)),
+        ),
+        lastImport: null,
+        selection:
+          open !== null && undoneIds.includes(open) ? null : state.selection,
+      };
+    }
+
+    case "importDismissed":
+      return { ...state, lastImport: null };
+
     case "viewSelected":
       return { ...state, view: event.view };
 
@@ -465,6 +543,9 @@ function reduce(
         lastPlacedId: null,
         interaction: { status: "idle" },
         pendingDismissal: null,
+        // Undo would send this term's ids to the term now on screen, where
+        // they match nothing: a 204 and a banner that clears as if it worked.
+        lastImport: null,
       };
 
     case "sectionFieldEdited":
@@ -577,6 +658,18 @@ function reduce(
       return {
         ...withoutEntry(withoutDraft(state, event.sectionId), event.sectionId),
         selection: null,
+      };
+
+    // Filters go too. A `section` filter names ids the term no longer has, so
+    // the canvas would stay empty through the next import as well.
+    case "allSectionsDeleted":
+      return {
+        ...state,
+        sectionEdits: {},
+        drafts: {},
+        selection: null,
+        filters: emptyFilters(),
+        lastImport: null,
       };
 
     default:

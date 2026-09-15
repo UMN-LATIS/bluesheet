@@ -17,8 +17,12 @@
       leaveFromClass="tw-transform tw-opacity-100 tw-scale-100"
       leaveToClass="tw-transform tw-opacity-0 tw-scale-95"
     >
+      <!-- Above every panel this can open over: the schedule's day headers
+           (z-30) and time axis (z-40), the section sheet (z-50) and the
+           course picker inside it (z-[60]). At z-10 the day header's own
+           background painted over the open menu's text. -->
       <MenuItems
-        class="tw-absolute tw-right-0 tw-z-10 tw-mt-2 tw-max-w-56 tw-origin-top-right tw-rounded-md tw-bg-white tw-shadow-lg tw-ring-1 tw-ring-black tw-ring-opacity-5 focus:tw-outline-none tw-cursor-pointer"
+        class="tw-absolute tw-right-0 tw-z-[70] tw-mt-2 tw-max-w-56 tw-origin-top-right tw-rounded-md tw-bg-white tw-shadow-lg tw-ring-1 tw-ring-black tw-ring-opacity-5 focus:tw-outline-none tw-cursor-pointer"
       >
         <div class="tw-py-1">
           <slot />

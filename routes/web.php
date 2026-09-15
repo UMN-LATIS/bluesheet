@@ -23,9 +23,11 @@ use App\Http\Controllers\Sis\GroupController as SisGroupController;
 use App\Http\Controllers\Sis\GroupSectionController as SisGroupSectionController;
 use App\Http\Controllers\Sis\GroupCourseController as SisGroupCourseController;
 use App\Http\Controllers\Sis\GroupEmployeeController as SisGroupEmployeeController;
+use App\Http\Controllers\Sis\GroupTermController as SisGroupTermController;
 use App\Http\Controllers\TermPlanning\CourseInstructorController as TermPlanningCourseInstructorController;
 use App\Http\Controllers\TermPlanning\GroupCourseController as TermPlanningGroupCourseController;
 use App\Http\Controllers\TermPlanning\GroupSectionController as TermPlanningGroupSectionController;
+use App\Http\Controllers\TermPlanning\SectionBatchController as TermPlanningSectionBatchController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\LeavePermissionController;
 use App\Http\Controllers\CoursePermissionController;
@@ -130,6 +132,11 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
         Route::get('/groups/{group}/course-instructors', [TermPlanningCourseInstructorController::class, 'index']);
         Route::get('/groups/{group}/sections', [TermPlanningGroupSectionController::class, 'index']);
         Route::post('/groups/{group}/sections', [TermPlanningGroupSectionController::class, 'store']);
+        // Keep both batch routes above `sections/{section}`. Below it, the
+        // delete matches that route instead and 404s looking for a section
+        // whose id is "batch".
+        Route::post('/groups/{group}/sections/batch', [TermPlanningSectionBatchController::class, 'store']);
+        Route::delete('/groups/{group}/sections/batch', [TermPlanningSectionBatchController::class, 'destroy']);
         Route::put('/groups/{group}/sections/{section}', [TermPlanningGroupSectionController::class, 'update']);
         Route::delete('/groups/{group}/sections/{section}', [TermPlanningGroupSectionController::class, 'destroy']);
     });
@@ -141,6 +148,7 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
         Route::get('/groups/{group}/sections', [SisGroupSectionController::class, 'index']);
         Route::get('/groups/{group}/courses', [SisGroupCourseController::class, 'index']);
         Route::get('/groups/{group}/employees', [SisGroupEmployeeController::class, 'index']);
+        Route::get('/groups/{group}/terms', [SisGroupTermController::class, 'index']);
     });
 
     Route::post('groups/{group}/change-request', 'GroupController@requestChange');
