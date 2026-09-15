@@ -8,6 +8,7 @@ use Illuminate\Support\Collection;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class Bandaid {
     private $baseUri;
@@ -229,6 +230,8 @@ class Bandaid {
     /**
      * Get academic terms which coincide with the given date range
      *
+     * Returns no terms when $endDate falls before $startDate.
+     *
      * @param Carbon|string $startDate
      * @param Carbon|string $endDate
      * @return \Illuminate\Support\Collection<array{
@@ -242,13 +245,24 @@ class Bandaid {
      * }>
      */
     public function getTermsOverlappingDates($startDate, $endDate) {
-        $terms = $this->getCLATerms();
+        $rangeStart = Carbon::parse($startDate);
+        $rangeEnd = Carbon::parse($endDate);
 
-        return $terms->filter(function ($term) use ($startDate, $endDate) {
+        if ($rangeEnd->lessThan($rangeStart)) {
+            Log::warning('Date range ends before it begins. Returning no terms.', [
+                'start_date' => $rangeStart->toDateString(),
+                'end_date' => $rangeEnd->toDateString(),
+            ]);
+
+            return collect();
+        }
+
+        return $this->getCLATerms()->filter(function ($term) use ($rangeStart, $rangeEnd) {
             $termStartDate = new Carbon($term->TERM_BEGIN_DT);
             $termEndDate = new Carbon($term->TERM_END_DT);
-            return $termStartDate->between($startDate, $endDate)
-                || $termEndDate->between($startDate, $endDate);
+
+            return $termStartDate->lessThanOrEqualTo($rangeEnd)
+                && $termEndDate->greaterThanOrEqualTo($rangeStart);
         });
     }
 
