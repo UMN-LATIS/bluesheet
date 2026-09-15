@@ -204,6 +204,12 @@
         </Pane>
       </template>
     </div>
+
+    <TermLeaveStrip
+      v-if="termLeaves.length > 0"
+      :leaves="termLeaves"
+      class="tw-flex-none tw-border-0 tw-border-t tw-border-solid tw-border-outline-variant"
+    />
   </FullScreenLayout>
 </template>
 
@@ -234,6 +240,7 @@ import ScheduleSidebar from "./components/ScheduleSidebar.vue";
 import SectionBlock from "./components/SectionBlock.vue";
 import SectionSheet from "./components/SectionSheet.vue";
 import SheetMount from "./components/SheetMount.vue";
+import TermLeaveStrip from "./components/TermLeaveStrip.vue";
 import { bandsForDay } from "./helpers/dayBands";
 import { buildFilterOptions } from "./helpers/filterOptions";
 import { reachableFacetValues } from "./helpers/scheduleFilters";
@@ -244,6 +251,7 @@ import { toSectionPayload } from "./helpers/sectionPayload";
 import { flattenQuery } from "./helpers/urlQuery";
 import type { ScheduleView } from "./helpers/viewQuery";
 import { useSisGroupTermsQuery } from "./queries/useSisGroupTermsQuery";
+import { useSisGroupLeavesQuery } from "./queries/useSisGroupLeavesQuery";
 import { useTermPlanCoursesQuery } from "./queries/useTermPlanCoursesQuery";
 import { useSectionBatch } from "./queries/useSectionBatch";
 import { useTermPlanMutations } from "./queries/useTermPlanMutations";
@@ -297,6 +305,10 @@ const {
   roster,
   sections,
 } = useTermSchedule(groupId, termCode);
+
+const leavesQuery = useSisGroupLeavesQuery(groupId, activeTermCode);
+
+const termLeaves = computed(() => leavesQuery.data.value ?? []);
 
 const isImportOpen = ref(false);
 const isDeleteAllOpen = ref(false);

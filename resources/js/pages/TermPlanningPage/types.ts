@@ -1,3 +1,5 @@
+import type { LeaveStatus, LeaveType } from "@/types";
+
 export interface TimeRange {
   startMinute: number;
   endMinute: number;
@@ -153,4 +155,23 @@ export interface PlannableCourse {
   /** Null on a course nobody has offered, which is why it was named here. */
   lastOfferedTermId: number | null;
   source: "sis" | "local";
+}
+
+/**
+ * One leave overlapping the term on screen, for someone appointed to the
+ * department. See App\Http\Controllers\Sis\GroupLeaveController.
+ */
+export interface TermLeave {
+  id: number;
+  /** BlueSheet user id, which /user/:userId takes. */
+  userId: number;
+  /** SIS emplid, which the roster and a section's instructors key on. */
+  emplid: number | null;
+  name: string | null;
+  lastName: string | null;
+  type: LeaveType;
+  status: LeaveStatus;
+  startDate: string;
+  endDate: string;
+  description: string;
 }
