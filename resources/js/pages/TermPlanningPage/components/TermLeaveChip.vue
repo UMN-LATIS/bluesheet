@@ -9,7 +9,10 @@
       class="tw-h-4 tw-w-4 tw-flex-none"
       aria-hidden="true"
     />
-    <span :class="{ 'tw-line-through': leave.status === DEFERRED }">
+    <span
+      class="group-hover:tw-underline"
+      :class="{ 'tw-line-through': leave.status === DEFERRED }"
+    >
       {{ personName }} &middot; {{ typeLabel }}
     </span>
   </Chip>

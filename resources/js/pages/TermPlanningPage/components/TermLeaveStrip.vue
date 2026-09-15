@@ -14,7 +14,12 @@
       class="tw-m-0 tw-flex tw-flex-wrap tw-items-center tw-gap-x-2.5 tw-gap-y-1.5 tw-p-0"
     >
       <li v-for="leave in leaves" :key="leave.id" class="tw-list-none">
-        <TermLeaveChip :leave="leave" />
+        <router-link
+          :to="{ name: 'user', params: { userId: leave.userId } }"
+          class="group tw-inline-flex tw-no-underline hover:tw-no-underline"
+        >
+          <TermLeaveChip :leave="leave" />
+        </router-link>
       </li>
     </ul>
   </section>

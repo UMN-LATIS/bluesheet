@@ -243,7 +243,15 @@
             strategy="fixed"
             teleportTo="body"
             @update:modelValue="(option) => addPerson(option, PRIMARY_ROLE)"
-          />
+          >
+            <template #optionDecoration="{ option }">
+              <TermLeaveChip
+                v-for="leave in leavesOf(option)"
+                :key="leave.id"
+                :leave="leave"
+              />
+            </template>
+          </ComboBox>
         </div>
       </div>
 
@@ -282,7 +290,15 @@
             strategy="fixed"
             teleportTo="body"
             @update:modelValue="(option) => addPerson(option, TA_ROLE)"
-          />
+          >
+            <template #optionDecoration="{ option }">
+              <TermLeaveChip
+                v-for="leave in leavesOf(option)"
+                :key="leave.id"
+                :leave="leave"
+              />
+            </template>
+          </ComboBox>
         </div>
       </div>
 
@@ -564,6 +580,7 @@ import FieldHeader from "./FieldHeader.vue";
 import FieldLabel from "./FieldLabel.vue";
 import PersonField from "./PersonField.vue";
 import SectionFacts from "./SectionFacts.vue";
+import TermLeaveChip from "./TermLeaveChip.vue";
 import SegmentedControl, { type SegmentedOption } from "./SegmentedControl.vue";
 import { ComboBox, type ComboBoxOptionType } from "@/components/ComboBox";
 import { LockIcon } from "@/icons";
@@ -588,6 +605,7 @@ import type {
   SisEmployee,
   SisSectionMeeting,
 } from "../types";
+import type { TermLeave } from "@/types";
 import type { ScheduleEditor } from "../useScheduleEditor";
 
 const props = defineProps<{
@@ -602,6 +620,8 @@ const props = defineProps<{
   /** The term's sections, for reading a cross-list partner's cap. */
   sections: PlannedSection[];
   roster: SisEmployee[];
+  /** Leaves in this term, by emplid, so an option can be marked. */
+  leavesByEmplid: Map<number, TermLeave[]>;
   /** Names the list this sheet was opened from, e.g. "Tue · 2 – 3p", if any. */
   returnTo?: string | null;
   /** Names the term in the cancel prompt, e.g. "Fall 2026". */
@@ -728,6 +748,12 @@ const nameOfTerm = (termId: number) =>
   String(termId);
 
 /** "García, Ana", with their appointment under it; see `ComboBoxOptionType`. */
+/** A chip each, for anyone this term's leaves name. */
+const leavesOf = (option: ComboBoxOptionType): TermLeave[] =>
+  typeof option.id === "number"
+    ? (props.leavesByEmplid.get(option.id) ?? [])
+    : [];
+
 const optionFor = (person: SisEmployee) => ({
   id: person.emplid,
   label: lastNameFirst(person.name ?? String(person.emplid), person.lastName),

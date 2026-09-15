@@ -18,7 +18,10 @@
       <div
         class="tw-flex tw-items-start tw-p-2 tw-cursor-pointer tw-flex-col tw-justify-center"
       >
-        <span class="tw-mr-2 tw-text-sm">{{ option.label }}</span>
+        <div class="tw-flex tw-items-center tw-gap-1.5">
+          <span class="tw-mr-2 tw-text-sm">{{ option.label }}</span>
+          <slot name="decoration" />
+        </div>
         <span
           v-if="option.secondaryLabel"
           class="tw-text-neutral-500 tw-text-xs"
