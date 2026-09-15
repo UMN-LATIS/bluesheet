@@ -1,18 +1,16 @@
 <template>
   <Chip
     :color="statusColor"
-    :class="`tw-bg-${statusColor}/5 tw-border-${statusColor}/40`"
+    :class="`tw-inline-flex tw-items-center tw-gap-1 tw-bg-${statusColor}/5 tw-border-${statusColor}/40`"
     :title="summary"
   >
-    <span class="tw-flex tw-items-center tw-gap-1">
-      <component
-        :is="statusIcon"
-        class="tw-h-4 tw-w-4 tw-flex-none"
-        aria-hidden="true"
-      />
-      <span :class="{ 'tw-line-through': leave.status === DEFERRED }">
-        {{ personName }} &middot; {{ typeLabel }}
-      </span>
+    <component
+      :is="statusIcon"
+      class="tw-h-4 tw-w-4 tw-flex-none"
+      aria-hidden="true"
+    />
+    <span :class="{ 'tw-line-through': leave.status === DEFERRED }">
+      {{ personName }} &middot; {{ typeLabel }}
     </span>
   </Chip>
 </template>
