@@ -1,17 +1,23 @@
 <template>
-  <div
-    role="status"
-    aria-label="Faculty on leave this term"
+  <section
+    aria-labelledby="term-leave-strip-heading"
     class="tw-flex tw-max-h-36 tw-flex-wrap tw-items-center tw-gap-x-2.5 tw-gap-y-1.5 tw-overflow-y-auto tw-px-3.5 tw-py-2"
   >
-    <span
-      class="tw-flex-none tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-surface-variant"
+    <h2
+      id="term-leave-strip-heading"
+      class="tw-m-0 tw-flex-none tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-surface-variant"
     >
       On leave
-    </span>
+    </h2>
 
-    <TermLeaveChip v-for="leave in leaves" :key="leave.id" :leave="leave" />
-  </div>
+    <ul
+      class="tw-m-0 tw-flex tw-flex-wrap tw-items-center tw-gap-x-2.5 tw-gap-y-1.5 tw-p-0"
+    >
+      <li v-for="leave in leaves" :key="leave.id" class="tw-list-none">
+        <TermLeaveChip :leave="leave" />
+      </li>
+    </ul>
+  </section>
 </template>
 
 <script setup lang="ts">

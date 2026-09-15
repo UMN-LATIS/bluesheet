@@ -70,7 +70,10 @@ import dayjs from "dayjs";
 import Chip from "@/components/Chip.vue";
 import { CircleCheckIcon, QuestionIcon, NoIcon, SparklesIcon } from "@/icons";
 import { useCoursePlanningStore } from "../stores/useCoursePlanningStore";
-import { getLeaveStatusLabel } from "@/utils/leaveStatusHelpers";
+import {
+  getLeaveStatusColor,
+  getLeaveStatusLabel,
+} from "@/utils/leaveStatusHelpers";
 
 const props = withDefaults(
   defineProps<{
@@ -106,18 +109,5 @@ const isOnlyPartiallyEligible = computed(() => {
   );
 });
 
-const statusColor = computed(() => {
-  switch (props.leave.status) {
-    case ELIGIBLE:
-      return "blue-600";
-    case PENDING:
-      return "orange-600";
-    case CONFIRMED:
-      return "green-600";
-    case DEFERRED:
-      return "neutral-400";
-    default:
-      return "neutral-400";
-  }
-});
+const statusColor = computed(() => getLeaveStatusColor(props.leave.status));
 </script>

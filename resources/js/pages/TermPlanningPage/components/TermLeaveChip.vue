@@ -1,46 +1,42 @@
 <template>
-  <span
-    class="tw-inline-flex tw-h-6 tw-max-w-full tw-flex-none tw-items-center tw-gap-1.5 tw-rounded-full tw-border tw-px-2.5 tw-text-[11.5px]"
-    :class="
-      isIntended
-        ? 'tw-border-solid tw-border-outline tw-bg-surface tw-text-on-surface'
-        : 'tw-border-dashed tw-border-outline-variant tw-text-on-surface-variant'
-    "
+  <Chip
+    :color="statusColor"
+    :class="`tw-bg-${statusColor}/5 tw-border-${statusColor}/40`"
     :title="summary"
   >
-    <component
-      :is="statusIcon"
-      class="tw-h-3.5 tw-w-3.5 tw-flex-none"
-      aria-hidden="true"
-    />
-    <span class="tw-truncate tw-font-semibold">{{ personName }}</span>
-    <span class="tw-truncate tw-text-on-surface-variant">{{ typeLabel }}</span>
-  </span>
+    <span class="tw-flex tw-items-center tw-gap-1">
+      <component
+        :is="statusIcon"
+        class="tw-h-4 tw-w-4 tw-flex-none"
+        aria-hidden="true"
+      />
+      <span :class="{ 'tw-line-through': leave.status === DEFERRED }">
+        {{ personName }} &middot; {{ typeLabel }}
+      </span>
+    </span>
+  </Chip>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
 import dayjs from "dayjs";
-import { CircleCheckIcon, QuestionIcon, SparklesIcon } from "@/icons";
-import { leaveStatuses } from "@/types";
-import { getLeaveStatusLabel } from "@/utils/leaveStatusHelpers";
+import Chip from "@/components/Chip.vue";
+import { leaveStatuses, type TermLeave } from "@/types";
+import {
+  getLeaveStatusColor,
+  getLeaveStatusIcon,
+  getLeaveStatusLabel,
+} from "@/utils/leaveStatusHelpers";
 import { getLeaveTypeLabel } from "@/utils/leaveTypeHelpers";
 import { lastNameFirst } from "../helpers/sectionPeople";
-import type { TermLeave } from "@/types";
 
 const props = defineProps<{ leave: TermLeave }>();
 
-const { CONFIRMED, PENDING } = leaveStatuses;
+const { DEFERRED } = leaveStatuses;
 
-const isIntended = computed(
-  () => props.leave.status === CONFIRMED || props.leave.status === PENDING,
-);
-
-const statusIcon = computed(() => {
-  if (props.leave.status === CONFIRMED) return CircleCheckIcon;
-  if (props.leave.status === PENDING) return QuestionIcon;
-  return SparklesIcon;
-});
+const statusColor = computed(() => getLeaveStatusColor(props.leave.status));
+const statusIcon = computed(() => getLeaveStatusIcon(props.leave.status));
+const typeLabel = computed(() => getLeaveTypeLabel(props.leave.type));
 
 const personName = computed(() => {
   const name = props.leave.name;
@@ -49,15 +45,14 @@ const personName = computed(() => {
   return lastNameFirst(name, props.leave.lastName);
 });
 
-const typeLabel = computed(() => getLeaveTypeLabel(props.leave.type));
-
 const asDate = (date: string) => dayjs(date).format("MMM D, YYYY");
 
 const summary = computed(() => {
   const status = getLeaveStatusLabel(props.leave.status);
   const dates = `${asDate(props.leave.startDate)} to ${asDate(props.leave.endDate)}`;
-  const parts = [typeLabel.value, status, dates, props.leave.description];
 
-  return parts.filter(Boolean).join(" · ");
+  return [typeLabel.value, status, dates, props.leave.description]
+    .filter(Boolean)
+    .join(" · ");
 });
 </script>
