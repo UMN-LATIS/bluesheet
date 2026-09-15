@@ -16,7 +16,7 @@
 
 <script setup lang="ts">
 import TermLeaveChip from "./TermLeaveChip.vue";
-import type { TermLeave } from "../types";
+import type { TermLeave } from "@/types";
 
 defineProps<{ leaves: TermLeave[] }>();
 </script>

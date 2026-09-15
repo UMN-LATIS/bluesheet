@@ -26,7 +26,7 @@ import { leaveStatuses } from "@/types";
 import { getLeaveStatusLabel } from "@/utils/leaveStatusHelpers";
 import { getLeaveTypeLabel } from "@/utils/leaveTypeHelpers";
 import { lastNameFirst } from "../helpers/sectionPeople";
-import type { TermLeave } from "../types";
+import type { TermLeave } from "@/types";
 
 const props = defineProps<{ leave: TermLeave }>();
 
