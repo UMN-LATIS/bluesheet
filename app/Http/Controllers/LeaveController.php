@@ -39,7 +39,7 @@ class LeaveController extends Controller {
         $employees = $this->bandaid->getEmployees($emplids->toArray());
         $employeeLookup = collect($employees)->keyBy("EMPLID");
 
-        $leaves
+        $leaves = $leaves
             ->each(function ($leave) use ($employeeLookup) {
 
                 // append terms
@@ -58,7 +58,8 @@ class LeaveController extends Controller {
                 // if terms are empty then the leave
                 // can be ignored
                 return $leave['terms']->isNotEmpty();
-            });
+            })
+            ->values();
 
         return LeaveResource::collection($leaves);
     }
