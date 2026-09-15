@@ -1,6 +1,7 @@
 <?php
 
 use App\Group;
+use App\Leave;
 use App\SisAppointment;
 use App\SisClassInstructor;
 use App\SisClassMeeting;
@@ -371,5 +372,196 @@ describe('GET /api/sis/groups/:groupId/employees', function () {
         $res = getJson("/api/sis/groups/{$this->group->id}/employees");
 
         expect($res->status())->toBe(403);
+    });
+});
+
+/**
+ * A BlueSheet user with the SIS employee and appointment rows behind them.
+ * Appointed to this test group's department unless another is named.
+ */
+function appointedUser(array $attributes = [], string $deptId = '11111'): User {
+    $employee = SisEmployee::factory()->create();
+    SisAppointment::factory()->create([
+        'emplid' => $employee->emplid,
+        'dept_id' => $deptId,
+    ]);
+
+    return User::factory()->create([
+        'emplid' => $employee->emplid,
+        ...$attributes,
+    ]);
+}
+
+/**
+ * A sabbatical for this person. Status is confirmed rather than the
+ * factory's random pick, which can be cancelled and so filtered out.
+ */
+function leaveFor(User $user, string $startDate, string $endDate, array $attributes = []): Leave {
+    return Leave::factory()->create([
+        'user_id' => $user->id,
+        'status' => Leave::STATUS_CONFIRMED,
+        'type' => Leave::TYPE_SABBATICAL,
+        'start_date' => $startDate,
+        'end_date' => $endDate,
+        ...$attributes,
+    ]);
+}
+
+function sectionTaughtBy(User $instructor): void {
+    SisClassInstructor::factory()->create([
+        'sis_class_section_id' => sectionInGroupDept()->id,
+        'emplid' => $instructor->emplid,
+    ]);
+}
+
+describe('GET /api/sis/groups/:groupId/leaves', function () {
+    beforeEach(function () {
+        SisTerm::factory()->create([
+            'term_code' => TERM,
+            'begins_on' => '2026-09-08',
+            'ends_on' => '2026-12-23',
+        ]);
+
+        $this->url = "/api/sis/groups/{$this->group->id}/leaves?term=" . TERM;
+    });
+
+    it('describes a leave overlapping the term', function () {
+        $user = appointedUser([
+            'givenname' => 'Ana',
+            'surname' => 'García',
+            'displayname' => 'Ana García',
+        ]);
+        $leave = leaveFor($user, '2026-09-01', '2026-12-31', [
+            'description' => 'Book project',
+        ]);
+
+        actingAs($this->admin);
+        $res = getJson($this->url);
+
+        expect($res->status())->toBe(200);
+        expect($res->json())->toEqual([[
+            'id' => $leave->id,
+            'userId' => $user->id,
+            'emplid' => $user->emplid,
+            'name' => 'Ana García',
+            'lastName' => 'García',
+            'type' => 'sabbatical',
+            'status' => 'confirmed',
+            'startDate' => '2026-09-01',
+            'endDate' => '2026-12-31',
+            'description' => 'Book project',
+        ]]);
+    });
+
+    it('finds a leave that begins and ends inside the term', function () {
+        leaveFor(appointedUser(), '2026-10-01', '2026-11-01');
+
+        actingAs($this->admin);
+
+        expect(getJson($this->url)->json())->toHaveCount(1);
+    });
+
+    it('leaves out a leave that ends before the term begins', function () {
+        leaveFor(appointedUser(), '2026-05-01', '2026-08-31');
+
+        actingAs($this->admin);
+
+        expect(getJson($this->url)->json())->toBe([]);
+    });
+
+    it('finds a leave for someone teaching nothing that term', function () {
+        $onLeave = appointedUser();
+        leaveFor($onLeave, '2026-09-01', '2026-12-31');
+
+        sectionTaughtBy(appointedUser());
+
+        actingAs($this->admin);
+        $res = getJson($this->url);
+
+        expect($res->json())->toHaveCount(1);
+        expect($res->json()[0]['userId'])->toBe($onLeave->id);
+    });
+
+    it('leaves out a cancelled leave', function () {
+        leaveFor(appointedUser(), '2026-09-01', '2026-12-31', [
+            'status' => Leave::STATUS_CANCELLED,
+        ]);
+
+        actingAs($this->admin);
+
+        expect(getJson($this->url)->json())->toBe([]);
+    });
+
+    it('leaves out a deleted leave', function () {
+        leaveFor(appointedUser(), '2026-09-01', '2026-12-31')->delete();
+
+        actingAs($this->admin);
+
+        expect(getJson($this->url)->json())->toBe([]);
+    });
+
+    it('leaves out a leave belonging to another department', function () {
+        $otherDepartment = SisDepartment::factory()->create();
+        $otherDeptUser = appointedUser([], $otherDepartment->dept_id);
+        leaveFor($otherDeptUser, '2026-09-01', '2026-12-31');
+
+        actingAs($this->admin);
+
+        expect(getJson($this->url)->json())->toBe([]);
+    });
+
+    it('leaves out a leave whose owner holds no appointment', function () {
+        leaveFor(User::factory()->create(), '2026-09-01', '2026-12-31');
+
+        actingAs($this->admin);
+
+        expect(getJson($this->url)->json())->toBe([]);
+    });
+
+    it('gives a person with two leaves in the term a row each', function () {
+        $user = appointedUser();
+        leaveFor($user, '2026-09-01', '2026-12-31', ['type' => Leave::TYPE_SABBATICAL]);
+        leaveFor($user, '2026-10-01', '2026-10-31', ['type' => Leave::TYPE_COURSE_RELEASE]);
+
+        actingAs($this->admin);
+        $res = getJson($this->url);
+
+        expect($res->json())->toHaveCount(2);
+        expect(collect($res->json())->pluck('type')->all())
+            ->toEqualCanonicalizing(['sabbatical', 'course_release']);
+    });
+
+    it('requires a term', function () {
+        actingAs($this->admin);
+        $res = getJson("/api/sis/groups/{$this->group->id}/leaves");
+
+        expect($res->status())->toBe(422);
+    });
+
+    it('requires the user to have leave read privileges', function () {
+        actingAs($this->basicUser);
+
+        expect(getJson($this->url)->status())->toBe(403);
+    });
+
+    it('returns nothing for a group with no SIS department', function () {
+        $group = Group::factory()->create(['dept_id' => 'not a department']);
+        leaveFor(appointedUser(), '2026-09-01', '2026-12-31');
+
+        actingAs($this->admin);
+        $res = getJson("/api/sis/groups/{$group->id}/leaves?term=" . TERM);
+
+        expect($res->status())->toBe(200);
+        expect($res->json())->toBe([]);
+    });
+
+    it('returns nothing for a term the SIS has no dates for', function () {
+        leaveFor(appointedUser(), '2026-09-01', '2026-12-31');
+
+        actingAs($this->admin);
+        $res = getJson("/api/sis/groups/{$this->group->id}/leaves?term=" . OTHER_TERM);
+
+        expect($res->status())->toBe(200);
+        expect($res->json())->toBe([]);
     });
 });
