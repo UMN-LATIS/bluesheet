@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\TermPlanning;
 
-use App\Course;
 use App\Group;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TermPlanning\LocalSectionResource;
@@ -13,6 +12,7 @@ use App\Library\TermPlan\TermLock;
 use App\LocalClassInstructor;
 use App\LocalClassMeeting;
 use App\LocalClassSection;
+use App\LocalCourse;
 use App\SisClassMeeting;
 use App\SisClassSection;
 use Illuminate\Http\Request;
@@ -34,7 +34,7 @@ class SectionBatchController extends Controller {
             'include.sectionNumbers' => 'sometimes|boolean',
         ]);
 
-        $this->authorize('editAnyCoursesForGroup', [Course::class, $group]);
+        $this->authorize('editAnyCoursesForGroup', [LocalCourse::class, $group]);
         abort_if($group->sis_dept_id === null, 403, 'This group has no department to plan for.');
 
         $academicOrg = (int) $group->sis_dept_id;
@@ -70,7 +70,7 @@ class SectionBatchController extends Controller {
             'sectionIds.*' => 'required|integer',
         ]);
 
-        $this->authorize('editAnyCoursesForGroup', [Course::class, $group]);
+        $this->authorize('editAnyCoursesForGroup', [LocalCourse::class, $group]);
         abort_if($group->sis_dept_id === null, 403, 'This group has no department to plan for.');
 
         $academicOrg = (int) $group->sis_dept_id;

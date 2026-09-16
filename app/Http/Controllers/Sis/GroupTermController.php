@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers\Sis;
 
-use App\Course;
 use App\Group;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Sis\SisTermResource;
+use App\LocalCourse;
 use App\SisClassSection;
 use App\SisTerm;
 
 class GroupTermController extends Controller {
     public function index(Group $group) {
-        $this->authorize('viewAnyCoursesForGroup', [Course::class, $group]);
+        $this->authorize('viewAnyCoursesForGroup', [LocalCourse::class, $group]);
 
         if ($group->sis_dept_id === null) {
             return SisTermResource::collection([]);

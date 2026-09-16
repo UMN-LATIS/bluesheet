@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers\LeavePlanning;
 
-use App\Course;
 use App\Group;
 use App\Http\Controllers\Controller;
 use App\Library\LeavePlanning\PlanningPeople;
 use App\Library\LeavePlanning\TeachingHistory;
 use App\Library\TermPlan\TermLock;
+use App\LocalCourse;
 use App\SisAppointment;
 use Illuminate\Http\Request;
 
 class GroupTeachingHistoryController extends Controller {
     public function index(Request $request, Group $group) {
-        $this->authorize('viewAnyCoursesForGroup', [Course::class, $group]);
+        $this->authorize('viewAnyCoursesForGroup', [LocalCourse::class, $group]);
 
         $validated = $request->validate([
             'start' => 'required|integer',

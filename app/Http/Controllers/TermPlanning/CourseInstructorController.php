@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\TermPlanning;
 
-use App\Course;
 use App\Group;
 use App\Http\Controllers\Controller;
 use App\Library\TermPlan\CourseTeachingHistory;
+use App\LocalCourse;
 use Illuminate\Http\Request;
 
 /**
@@ -15,7 +15,7 @@ use Illuminate\Http\Request;
  */
 class CourseInstructorController extends Controller {
     public function index(Request $request, Group $group) {
-        $this->authorize('viewAnyCoursesForGroup', [Course::class, $group]);
+        $this->authorize('viewAnyCoursesForGroup', [LocalCourse::class, $group]);
 
         $courseCode = $request->validate([
             'course' => 'required|string|max:255',

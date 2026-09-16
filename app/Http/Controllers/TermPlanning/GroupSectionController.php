@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\TermPlanning;
 
-use App\Course;
 use App\Group;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TermPlanning\LocalSectionResource;
 use App\Library\TermPlan\MeetingShape;
 use App\Library\TermPlan\TermLock;
 use App\LocalClassSection;
+use App\LocalCourse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -28,7 +28,7 @@ class GroupSectionController extends Controller {
     private const DAY_NAMES = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
     public function index(Request $request, Group $group) {
-        $this->authorize('viewAnyCoursesForGroup', [Course::class, $group]);
+        $this->authorize('viewAnyCoursesForGroup', [LocalCourse::class, $group]);
 
         $termCode = (int) $request->validate(['term' => 'required|integer'])['term'];
         $academicOrg = $group->sis_dept_id === null ? null : (int) $group->sis_dept_id;
@@ -117,7 +117,7 @@ class GroupSectionController extends Controller {
      * on a delete, because a delete carries no body.
      */
     private function authorizeWrite(Request $request, Group $group, ?int $termCode = null): int {
-        $this->authorize('editAnyCoursesForGroup', [Course::class, $group]);
+        $this->authorize('editAnyCoursesForGroup', [LocalCourse::class, $group]);
 
         if ($group->sis_dept_id === null) {
             abort(403, 'This group has no department to plan for.');
