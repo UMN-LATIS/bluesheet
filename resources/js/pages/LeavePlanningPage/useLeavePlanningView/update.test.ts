@@ -116,6 +116,17 @@ describe("turning history off", () => {
     expect(withoutHistory.filters.status).toEqual(["pending"]);
   });
 
+  it("returns types to lectures only", () => {
+    const withEveryType = after(
+      [{ type: "filterValuesRemoved", facet: "component", values: ["LEC"] }],
+      withHistory,
+    );
+
+    const state = after([{ type: "historyToggled" }], withEveryType);
+
+    expect(state.filters.component).toEqual(["LEC"]);
+  });
+
   it("closes an open section", () => {
     expect(withoutHistory.selection).toBeNull();
   });
@@ -144,8 +155,15 @@ describe("filters", () => {
     expect(state.filters.person).toEqual(["1", "2"]);
   });
 
-  it("clears every facet at once", () => {
+  it("opens history on lectures only", () => {
+    const state = after([{ type: "historyToggled" }]);
+
+    expect(state.filters.component).toEqual(["LEC"]);
+  });
+
+  it("clears every facet at once, types included", () => {
     const state = after([
+      { type: "historyToggled" },
       { type: "filterValuesAdded", facet: "person", values: ["1"] },
       { type: "filterValuesAdded", facet: "status", values: ["pending"] },
       { type: "filtersCleared" },

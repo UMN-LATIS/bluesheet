@@ -22,6 +22,17 @@ describe("the view query", () => {
 
   it("writes nothing for the defaults", () => {
     expect(encodeViewQuery(decodeViewQuery({}))).toEqual({});
+    expect(encodeViewQuery(decodeViewQuery({ history: "1" }))).toEqual({
+      history: "1",
+    });
+  });
+
+  it("reads a missing type list as lectures and an empty one as every type", () => {
+    expect(decodeViewQuery({}).filters.component).toEqual(["LEC"]);
+
+    const query = { history: "1", component: "" };
+    expect(decodeViewQuery(query).filters.component).toEqual([]);
+    expect(encodeViewQuery(decodeViewQuery(query))).toEqual(query);
   });
 
   it("ignores a term, view, or leave it cannot read", () => {

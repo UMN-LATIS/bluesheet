@@ -10,6 +10,7 @@ import {
 import {
   DEFAULT_VIEW,
   decodeViewQuery,
+  defaultFilters,
   emptyFilters,
   encodeViewQuery,
 } from "./viewQuery";
@@ -18,7 +19,7 @@ export const initialState = (): ViewState => ({
   range: { startTermId: null, endTermId: null },
   isHistoryShown: false,
   view: DEFAULT_VIEW,
-  filters: emptyFilters(),
+  filters: defaultFilters(),
   activeFacet: "person",
   selection: null,
 });
@@ -97,8 +98,10 @@ function reduce(state: ViewState, event: ViewEvent): ViewState {
         ),
       );
 
-    case "filtersCleared":
-      return { ...state, filters: emptyFilters() };
+    case "filtersCleared": {
+      const filters = state.isHistoryShown ? emptyFilters() : defaultFilters();
+      return { ...state, filters };
+    }
 
     case "leaveSelected":
       return { ...state, selection: { kind: "leave", leaveId: event.leaveId } };
@@ -125,7 +128,7 @@ function withFacet(
 
 function withoutHistory(state: ViewState): ViewState {
   const filters = { ...state.filters };
-  for (const facet of HISTORY_FACETS) filters[facet] = [];
+  for (const facet of HISTORY_FACETS) filters[facet] = defaultFilters()[facet];
 
   const isSectionSelected = state.selection?.kind === "section";
   const isSectionFacetOpen = HISTORY_FACETS.includes(state.activeFacet);

@@ -1,3 +1,4 @@
+import { isEqual } from "lodash-es";
 import type { UrlQuery } from "@/utils/urlQuery";
 import {
   FILTER_FACETS,
@@ -29,6 +30,13 @@ export const emptyFilters = (): PlanningFilters => ({
   status: [],
 });
 
+export const DEFAULT_COMPONENTS = ["LEC"];
+
+export const defaultFilters = (): PlanningFilters => ({
+  ...emptyFilters(),
+  component: [...DEFAULT_COMPONENTS],
+});
+
 const positiveIntegerOf = (value: string | undefined): number | null => {
   if (value === undefined || !/^\d+$/.test(value)) return null;
   const parsed = Number(value);
@@ -54,8 +62,10 @@ const selectionOf = (query: UrlQuery): Selection | null => {
 type UrlBackedState = Omit<ViewState, "activeFacet">;
 
 export function decodeViewQuery(query: UrlQuery): UrlBackedState {
-  const filters = emptyFilters();
-  for (const facet of FILTER_FACETS) filters[facet] = listOf(query[facet]);
+  const filters = defaultFilters();
+  for (const facet of FILTER_FACETS) {
+    if (query[facet] !== undefined) filters[facet] = listOf(query[facet]);
+  }
 
   return {
     range: {
@@ -82,9 +92,16 @@ export function encodeViewQuery(state: UrlBackedState): UrlQuery {
   if (state.view !== DEFAULT_VIEW) query.view = state.view;
 
   for (const facet of FILTER_FACETS) {
+    if (facet === "component") continue;
     if (state.filters[facet].length > 0) {
       query[facet] = state.filters[facet].join(",");
     }
+  }
+
+  const { component } = state.filters;
+  const isDefaultComponents = isEqual(component, DEFAULT_COMPONENTS);
+  if (state.isHistoryShown && !isDefaultComponents) {
+    query.component = component.join(",");
   }
 
   if (state.selection?.kind === "leave") {
