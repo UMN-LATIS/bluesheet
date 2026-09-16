@@ -68,3 +68,53 @@ describe('Bandaid Service Mocks', function () {
         ]);
     });
 });
+
+/**
+ * Fall 2019 in tests/Fixtures/Bandaid/mockGetTerms.json,
+ * which runs 2019-09-03 to 2019-12-19.
+ */
+const FALL_2019 = 1199;
+
+describe('getTermsOverlappingDates()', function () {
+    it('finds a term the range contains', function () {
+        $terms = (new Bandaid())->getTermsOverlappingDates('2019-08-20', '2020-01-01');
+
+        expect($terms->pluck('TERM')->all())->toBe([FALL_2019]);
+    });
+
+    it('finds a term the range overlaps at its beginning', function () {
+        $terms = (new Bandaid())->getTermsOverlappingDates('2019-08-20', '2019-10-01');
+
+        expect($terms->pluck('TERM')->all())->toBe([FALL_2019]);
+    });
+
+    it('finds a term the range overlaps at its end', function () {
+        $terms = (new Bandaid())->getTermsOverlappingDates('2019-12-01', '2020-01-01');
+
+        expect($terms->pluck('TERM')->all())->toBe([FALL_2019]);
+    });
+
+    it('finds a term that contains the whole range', function () {
+        $terms = (new Bandaid())->getTermsOverlappingDates('2019-10-01', '2019-11-01');
+
+        expect($terms->pluck('TERM')->all())->toBe([FALL_2019]);
+    });
+
+    it('finds no term for a range that ends before any term begins', function () {
+        $terms = (new Bandaid())->getTermsOverlappingDates('2019-01-01', '2019-01-31');
+
+        expect($terms)->toBeEmpty();
+    });
+
+    it('finds no term for a range that begins after every term ends', function () {
+        $terms = (new Bandaid())->getTermsOverlappingDates('2021-01-01', '2021-01-31');
+
+        expect($terms)->toBeEmpty();
+    });
+
+    it('finds no term for a range that ends before it begins', function () {
+        $terms = (new Bandaid())->getTermsOverlappingDates('2019-11-01', '2019-10-01');
+
+        expect($terms)->toBeEmpty();
+    });
+});
