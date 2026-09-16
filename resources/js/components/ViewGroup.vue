@@ -83,13 +83,8 @@
             <dd>
               <ul class="tw-list-none tw-pl-0 tw-m-0">
                 <li v-if="canViewGroupLeaves">
-                  <router-link :to="`/course-planning/groups/${group.id}`">
-                    Faculty Leaves Planning Report
-                  </router-link>
-                </li>
-                <li v-if="canViewGroupLeaves">
                   <router-link :to="`/leave-planning/groups/${group.id}`">
-                    Leave Planning (preview)
+                    Leave Planning
                   </router-link>
                 </li>
                 <li v-if="canViewGroupCourses">
