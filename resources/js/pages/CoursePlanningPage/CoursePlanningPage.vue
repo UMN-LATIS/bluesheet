@@ -18,13 +18,6 @@
               Settings
             </h2>
             <CheckboxGroup
-              v-if="canViewPlannedCourses"
-              id="toggle-planning-mode"
-              v-model="coursePlanningStore.filters.inPlanningMode"
-              label="Planning Mode"
-              description="Add/remove tentative courses."
-            />
-            <CheckboxGroup
               id="toggle-filters"
               :modelValue="isShowingFilters"
               label="Filter Results"
@@ -117,7 +110,6 @@ import { computed, ref, watch, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { PersonTable } from "./components/PersonTable";
 import { useCoursePlanningStore } from "./stores/useCoursePlanningStore";
-import { usePermissionsStore } from "@/stores/usePermissionsStore";
 import CoursePlanningFilters from "./components/CoursePlanningFilters.vue";
 import Spinner from "@/components/Spinner.vue";
 import Tabs, { type Tab } from "@/components/Tabs.vue";
@@ -135,7 +127,6 @@ const props = defineProps<{
 }>();
 
 const coursePlanningStore = useCoursePlanningStore();
-const permissionsStore = usePermissionsStore();
 const route = useRoute();
 const router = useRouter();
 const isLoadingComplete = ref(false);
@@ -167,16 +158,6 @@ async function initPage(groupId: number) {
 }
 
 watch(() => props.groupId, initPage, { immediate: true });
-
-const canViewPlannedCourses = ref(false);
-watch(
-  () => props.groupId,
-  async () => {
-    canViewPlannedCourses.value =
-      await permissionsStore.canViewAnyCoursesForGroup(props.groupId);
-  },
-  { immediate: true },
-);
 
 function updateQueryParams(queryObject: Record<string, unknown>) {
   const stringifiedQuery = qs.stringify(queryObject, {
