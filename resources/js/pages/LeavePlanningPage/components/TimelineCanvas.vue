@@ -124,6 +124,12 @@
           }"
         />
         <div
+          v-for="{ term, left, width } in axis.terms"
+          :key="term.id"
+          class="tw-absolute tw-inset-y-0 tw-border-0 tw-border-x tw-border-solid tw-border-outline-variant"
+          :style="{ left: `${left * 100}%`, width: `${width * 100}%` }"
+        />
+        <div
           v-for="gap in axis.gaps"
           :key="gap.left"
           class="tw-absolute tw-inset-y-0 tw-bg-striped"
