@@ -30,10 +30,14 @@
         class="tw-relative tw-flex-none"
         :style="{ width: 'var(--lp-track)', height: 'var(--lp-header)' }"
       >
-        <div
+        <TermPlanningLink
           v-for="termLabel in termLabels"
           :key="termLabel.term.id"
-          class="tw-absolute tw-top-2 tw-flex tw-h-6 tw-items-center tw-gap-1.5 tw-overflow-hidden tw-whitespace-nowrap tw-rounded-md tw-bg-surface-container tw-px-2"
+          :groupId="groupId"
+          :termId="termLabel.term.id"
+          :canViewTermPlanning="canViewTermPlanning"
+          class="tw-absolute tw-top-2 tw-flex tw-h-6 tw-items-center tw-gap-1.5 tw-overflow-hidden tw-whitespace-nowrap tw-rounded-md tw-bg-surface-container tw-px-2 tw-text-on-surface tw-no-underline hover:tw-no-underline"
+          :class="{ 'hover:tw-bg-surface-container-high': canViewTermPlanning }"
           :style="{
             left: `${termLabel.left * 100}%`,
             width: `${termLabel.width * 100}%`,
@@ -44,7 +48,14 @@
             {{ termLabel.term.name }}
           </span>
           <span
-            v-if="termLabel.isPlanned"
+            v-if="termLabel.isPlannable"
+            class="tw-inline-flex tw-h-4 tw-items-center tw-gap-1 tw-rounded-full tw-border tw-border-solid tw-border-primary tw-px-1.5 tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-[0.06em] tw-text-primary"
+          >
+            <PencilIcon class="tw-h-2.5 tw-w-2.5" aria-hidden="true" />
+            Plan term
+          </span>
+          <span
+            v-else-if="termLabel.isPlanned"
             class="tw-inline-flex tw-h-4 tw-items-center tw-rounded-full tw-border tw-border-dashed tw-border-outline tw-px-1.5 tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-[0.06em] tw-text-on-surface-variant"
           >
             Planned
@@ -55,7 +66,7 @@
           >
             {{ termLabel.dateRangeLabel }}
           </span>
-        </div>
+        </TermPlanningLink>
 
         <span
           v-for="month in monthTicks"
@@ -113,6 +124,8 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from "vue";
 import { useElementSize } from "@vueuse/core";
+import { PencilIcon } from "@/icons";
+import TermPlanningLink from "./TermPlanningLink.vue";
 import {
   fractionOf,
   isWithinAxis,
@@ -130,7 +143,10 @@ const props = defineProps<{
   axis: TimelineAxis;
   nameHeading: string;
   isHistoryShown: boolean;
+  groupId: number;
+  canViewTermPlanning: boolean;
   plannedTermIds: Set<number>;
+  plannableTermIds: Set<number>;
   trailingScrollRoomPx: number;
   /** "YYYY-MM-DD" */
   today: string;
@@ -167,6 +183,7 @@ const termLabels = computed(() =>
     return {
       ...axisTerm,
       isPlanned: props.isHistoryShown && props.plannedTermIds.has(term.id),
+      isPlannable: props.plannableTermIds.has(term.id),
       hasRoomForDates: axisTerm.width * trackWidth.value >= DATES_MIN_BAND_PX,
       dateRangeLabel: `${startLabel} – ${endLabel}`,
     };

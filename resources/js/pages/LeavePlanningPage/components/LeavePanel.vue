@@ -6,7 +6,6 @@
     <PanelHeader
       :title="person?.name || 'Unknown person'"
       :subtitle="subtitle"
-      :metaLine="termNames.join(', ')"
       @close="emit('close')"
     >
       <template #tags>
@@ -14,6 +13,21 @@
         <span class="tw-text-[11px] tw-text-on-surface-variant">
           {{ getLeaveTypeLabel(leave.type) }}
         </span>
+      </template>
+      <template v-if="terms.length > 0" #meta>
+        <template v-for="(term, index) in terms" :key="term.id">
+          <template v-if="index > 0">, </template>
+          <TermPlanningLink
+            :groupId="groupId"
+            :termId="term.id"
+            :canViewTermPlanning="canViewTermPlanning"
+            :class="{
+              'tw-text-primary hover:tw-underline': canViewTermPlanning,
+            }"
+          >
+            {{ term.name }}
+          </TermPlanningLink>
+        </template>
       </template>
     </PanelHeader>
 
@@ -27,8 +41,8 @@
             {{ formatDateRange(leave.startDate, leave.endDate) }}
           </FactValue>
           <span class="tw-text-xs tw-text-on-surface-variant">
-            {{ termNames.length }}
-            {{ termNames.length === 1 ? "term" : "terms" }}
+            {{ terms.length }}
+            {{ terms.length === 1 ? "term" : "terms" }}
           </span>
         </div>
       </div>
@@ -108,6 +122,7 @@ import {
   leaveStatuses,
   type PlanningLeave,
   type PlanningPerson,
+  type PlanningTerm,
 } from "@/types";
 import { getLeaveTypeLabel } from "@/utils/leaveTypeHelpers";
 import FactValue from "@/components/planning/FactValue.vue";
@@ -115,6 +130,7 @@ import FieldDivider from "@/components/planning/FieldDivider.vue";
 import FieldLabel from "@/components/planning/FieldLabel.vue";
 import LeaveStatusChip from "./LeaveStatusChip.vue";
 import PanelHeader from "./PanelHeader.vue";
+import TermPlanningLink from "./TermPlanningLink.vue";
 import { formatDateRange } from "../helpers/dateLabels";
 import { isEligibleWhenTenured } from "../helpers/leaveLabels";
 
@@ -122,7 +138,9 @@ const props = defineProps<{
   leave: PlanningLeave;
   person: PlanningPerson | undefined;
   otherLeaves: PlanningLeave[];
-  termNames: string[];
+  terms: PlanningTerm[];
+  groupId: number;
+  canViewTermPlanning: boolean;
 }>();
 
 const emit = defineEmits<{

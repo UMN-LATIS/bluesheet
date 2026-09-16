@@ -25,10 +25,10 @@
       {{ subtitle }}
     </p>
     <p
-      v-if="metaLine"
+      v-if="$slots.meta"
       class="tw-m-0 tw-mt-1.5 tw-text-[11px] tw-text-on-surface-variant"
     >
-      {{ metaLine }}
+      <slot name="meta" />
     </p>
   </div>
 </template>
@@ -37,7 +37,6 @@
 defineProps<{
   title: string;
   subtitle: string;
-  metaLine: string;
 }>();
 
 const emit = defineEmits<{ close: [] }>();

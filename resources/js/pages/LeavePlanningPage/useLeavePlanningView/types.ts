@@ -46,6 +46,7 @@ export interface ViewContext {
   teachingHistory: TeachingHistory | null;
   terms: PlanningTerm[];
   canShowHistory: boolean;
+  canPlanTerms: boolean;
 }
 
 export type ViewEvent =

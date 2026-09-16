@@ -418,6 +418,17 @@ describe('GET /api/leave-planning/groups/:groupId/teaching-history', function ()
         actingAs($this->admin);
 
         expect(getJson("{$this->url}?start=1275&end=1275")->json('sections'))->toBe([]);
+        expect(getJson("{$this->url}?start=1275&end=1275")->json('readOnlyTermIds'))->toBe([1275]);
+    });
+
+    it('lists the terms the SIS has published as read-only', function () {
+        $member = departmentMember();
+        taughtSection($member->emplid, ['term_code' => 1269, 'class_section' => '001']);
+        plannedSectionFor($member->emplid, ['term_code' => 1275, 'class_section' => '001']);
+
+        actingAs($this->admin);
+
+        expect(getJson("{$this->url}?start=1263&end=1275")->json('readOnlyTermIds'))->toBe([1269]);
     });
 
     it('leaves out a planned section in a term the SIS does not know', function () {

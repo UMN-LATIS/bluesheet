@@ -6,7 +6,6 @@
     <PanelHeader
       :title="`${section.subject} ${section.catalogNumber} · ${section.section}`"
       :subtitle="section.title"
-      :metaLine="metaLine"
       @close="emit('close')"
     >
       <template #tags>
@@ -22,6 +21,15 @@
         >
           Planned
         </span>
+      </template>
+      <template #meta>
+        <router-link
+          :to="termPlanningPage"
+          class="tw-text-primary hover:tw-underline"
+        >
+          {{ termName }}
+        </router-link>
+        <span v-if="section.isPlanned">· Planned in Term Planning</span>
       </template>
     </PanelHeader>
 
@@ -59,10 +67,7 @@
       <FieldDivider />
 
       <router-link
-        :to="{
-          name: 'termPlanning',
-          params: { groupId, termCode: section.termId },
-        }"
+        :to="termPlanningPage"
         class="tw-flex tw-min-h-11 tw-items-center tw-gap-1.5 tw-text-xs tw-font-semibold tw-text-primary"
       >
         Open in Term Planning
@@ -98,10 +103,10 @@ const ROLE_LABELS: Record<string, string> = {
   TA: "Teaching assistant",
 };
 
-const metaLine = computed(() => {
-  if (!props.section.isPlanned) return props.termName;
-  return `${props.termName} · Planned in Term Planning`;
-});
+const termPlanningPage = computed(() => ({
+  name: "termPlanning",
+  params: { groupId: props.groupId, termCode: props.section.termId },
+}));
 
 const listedPeopleWithRoles = (roles: string[]): ListedPerson[] =>
   props.section.instructors

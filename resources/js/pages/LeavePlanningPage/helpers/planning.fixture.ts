@@ -110,4 +110,4 @@ export const timelineOf = (
 export const historyOf = (
   people: PlanningPerson[],
   sections: TeachingSection[],
-): TeachingHistory => ({ people, sections });
+): TeachingHistory => ({ people, sections, readOnlyTermIds: [] });

@@ -137,6 +137,19 @@ export const selectPlannedTermIds = (context: ViewContext): Set<number> => {
   return new Set(plannedSections.map(({ termId }) => termId));
 };
 
+export const selectPlannableTermIds = (
+  context: ViewContext,
+  state: ViewState,
+): Set<number> => {
+  const { teachingHistory, canPlanTerms } = context;
+  const isHistoryShown = selectIsHistoryShown(context, state);
+  if (!isHistoryShown || !canPlanTerms || !teachingHistory) return new Set();
+
+  const readOnlyTermIds = new Set(teachingHistory.readOnlyTermIds);
+  const termIds = (selectAxis(context)?.terms ?? []).map(({ term }) => term.id);
+  return new Set(termIds.filter((termId) => !readOnlyTermIds.has(termId)));
+};
+
 export const selectPeopleByEmplid = (
   context: ViewContext,
 ): Map<number, PlanningPerson> => {

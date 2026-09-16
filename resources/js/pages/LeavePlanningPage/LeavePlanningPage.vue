@@ -42,7 +42,10 @@
           :axis="planning.axis"
           :nameHeading="nameHeading"
           :isHistoryShown="planning.isHistoryShown"
+          :groupId="groupId"
+          :canViewTermPlanning="canShowHistory"
           :plannedTermIds="planning.plannedTermIds"
+          :plannableTermIds="planning.plannableTermIds"
           :trailingScrollRoomPx="trailingScrollRoomPx"
           :today="today"
           :selectionKey="selectionKey"
@@ -85,7 +88,9 @@
           :leave="planning.selectedLeave"
           :person="planning.peopleByEmplid.get(planning.selectedLeave.emplid)"
           :otherLeaves="otherLeavesOfSelected"
-          :termNames="termNamesOf(planning.selectedLeave)"
+          :terms="termsOverlapping(planning.selectedLeave)"
+          :groupId="groupId"
+          :canViewTermPlanning="canShowHistory"
           @close="planning.deselect"
           @selectLeave="planning.selectLeave"
         />
@@ -178,6 +183,9 @@ const coursePermissionsQuery = useCoursePermissionsQuery(groupId);
 const canShowHistory = computed(
   () => coursePermissionsQuery.data.value?.viewAny ?? false,
 );
+const canPlanTerms = computed(
+  () => coursePermissionsQuery.data.value?.create ?? false,
+);
 
 // Every read below that sits in a query key must stay off
 // `context`: useQuery reads its key during setup, before the
@@ -188,6 +196,7 @@ const planning = useLeavePlanningView(
     teachingHistory: teachingHistoryQuery.data.value ?? null,
     terms: terms.value,
     canShowHistory: canShowHistory.value,
+    canPlanTerms: canPlanTerms.value,
   })),
   runEffect,
 );
@@ -298,15 +307,12 @@ const otherLeavesOfSelected = computed(() => {
 const termNameOf = (termId: number) =>
   terms.value.find(({ id }) => id === termId)?.name ?? String(termId);
 
-function termNamesOf(leave: PlanningLeave): string[] {
+function termsOverlapping(leave: PlanningLeave): PlanningTerm[] {
   const overlapsLeave = (term: PlanningTerm) =>
     isDated(term) &&
     term.startDate <= leave.endDate &&
     term.endDate >= leave.startDate;
 
-  return terms.value
-    .filter(overlapsLeave)
-    .sort((a, b) => a.id - b.id)
-    .map(({ name }) => name);
+  return terms.value.filter(overlapsLeave).sort((a, b) => a.id - b.id);
 }
 </script>

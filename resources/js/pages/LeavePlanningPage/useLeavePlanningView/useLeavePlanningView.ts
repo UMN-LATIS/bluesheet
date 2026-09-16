@@ -11,6 +11,7 @@ import {
   selectLeaveRows,
   selectPeopleByEmplid,
   selectPersonHistoryRows,
+  selectPlannableTermIds,
   selectPlannedTermIds,
   selectRowCounts,
   selectSelectedLeave,
@@ -70,6 +71,9 @@ export function useLeavePlanningView(
     ),
     rowCounts: computed(() => selectRowCounts(context.value, state.value)),
     plannedTermIds: computed(() => selectPlannedTermIds(context.value)),
+    plannableTermIds: computed(() =>
+      selectPlannableTermIds(context.value, state.value),
+    ),
     peopleByEmplid: computed(() => selectPeopleByEmplid(context.value)),
     selection: computed(() => state.value.selection),
     selectedLeave: computed(() =>

@@ -3,6 +3,7 @@
     v-for="row in laidOutRows"
     :key="row.person.emplid"
     :name="lastFirstNameOf(row.person)"
+    :nameLink="userPageOf(row.person)"
     :detail="row.person.title"
     :height="row.height"
   >
@@ -38,7 +39,8 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import type { TeachingSection } from "@/types";
+import type { RouteLocationRaw } from "vue-router";
+import type { PlanningPerson, TeachingSection } from "@/types";
 import TimelineRow from "./TimelineRow.vue";
 import LeaveBar from "./LeaveBar.vue";
 import TermChipColumns from "./TermChipColumns.vue";
@@ -68,6 +70,11 @@ const LEAVE_LANE_HEIGHT = 24;
 const LEAVES_GAP = 4;
 const CHIP_HEIGHT = 26;
 const MIN_ROW_HEIGHT = 52;
+
+const userPageOf = ({
+  userId,
+}: PlanningPerson): RouteLocationRaw | undefined =>
+  userId === null ? undefined : { name: "user", params: { userId } };
 
 const courseLabelOf = (section: TeachingSection) =>
   `${section.subject} ${section.catalogNumber}`;

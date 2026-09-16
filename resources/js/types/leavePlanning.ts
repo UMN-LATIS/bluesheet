@@ -74,6 +74,8 @@ export interface TeachingSection {
 export interface TeachingHistory {
   people: PlanningPerson[];
   sections: TeachingSection[];
+  /** Terms in the range the SIS has published. */
+  readOnlyTermIds: number[];
 }
 
 export interface PlanningGroup {
