@@ -88,7 +88,7 @@
           :leave="planning.selectedLeave"
           :person="planning.peopleByEmplid.get(planning.selectedLeave.emplid)"
           :otherLeaves="otherLeavesOfSelected"
-          :terms="termsOverlapping(planning.selectedLeave)"
+          :terms="termsOverlapping(terms, planning.selectedLeave)"
           :groupId="groupId"
           :canViewTermPlanning="canShowHistory"
           @close="planning.deselect"
@@ -133,10 +133,11 @@ import { onKeyStroke } from "@vueuse/core";
 import { useRoute, useRouter } from "vue-router";
 import { omit } from "lodash-es";
 import dayjs from "dayjs";
-import type { PlanningLeave, PlanningTerm } from "@/types";
+import type { PlanningLeave } from "@/types";
 import FullScreenLayout from "@/layouts/FullScreenLayout.vue";
 import Pane from "@/components/planning/Pane.vue";
 import { flattenQuery } from "@/utils/urlQuery";
+import { termsOverlapping } from "@/utils/termsOverlapping";
 import { useScreenSize } from "@/utils/useScreenSize";
 import LeavePlanningToolbar from "./components/LeavePlanningToolbar.vue";
 import PlanningSidebar from "./components/PlanningSidebar.vue";
@@ -145,7 +146,7 @@ import LeaveRows from "./components/LeaveRows.vue";
 import PersonHistoryRows from "./components/PersonHistoryRows.vue";
 import CourseHistoryRows from "./components/CourseHistoryRows.vue";
 import PanelMount from "./components/PanelMount.vue";
-import LeavePanel from "./components/LeavePanel.vue";
+import LeavePanel from "@/components/planning/LeavePanel.vue";
 import SectionPanel from "./components/SectionPanel.vue";
 import { useLeaveTimelineQuery } from "./queries/useLeaveTimelineQuery";
 import { useTeachingHistoryQuery } from "./queries/useTeachingHistoryQuery";
@@ -154,7 +155,6 @@ import { useCoursePermissionsQuery } from "./queries/useCoursePermissionsQuery";
 import { useLeavePlanningView } from "./useLeavePlanningView/useLeavePlanningView";
 import { OWNED_QUERY_KEYS } from "./useLeavePlanningView/viewQuery";
 import type { Effect, TeachingView } from "./useLeavePlanningView/types";
-import { isDated } from "./helpers/timelineAxis";
 import { PANEL_CLEARANCE, PANEL_WIDTH } from "./layout";
 
 const props = defineProps<{ groupId: number }>();
@@ -306,13 +306,4 @@ const otherLeavesOfSelected = computed(() => {
 
 const termNameOf = (termId: number) =>
   terms.value.find(({ id }) => id === termId)?.name ?? String(termId);
-
-function termsOverlapping(leave: PlanningLeave): PlanningTerm[] {
-  const overlapsLeave = (term: PlanningTerm) =>
-    isDated(term) &&
-    term.startDate <= leave.endDate &&
-    term.endDate >= leave.startDate;
-
-  return terms.value.filter(overlapsLeave).sort((a, b) => a.id - b.id);
-}
 </script>

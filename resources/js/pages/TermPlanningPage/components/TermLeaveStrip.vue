@@ -14,17 +14,16 @@
       class="tw-m-0 tw-flex tw-flex-wrap tw-items-center tw-gap-x-2.5 tw-gap-y-1.5 tw-p-0"
     >
       <li v-for="leave in leaves" :key="leave.id" class="tw-list-none">
-        <!--
-          Dropping "group" loses the hover underline: the chip is an
-          inline-flex box, so it never inherits this link's own
-          text-decoration, and reaches for group-hover instead.
-        -->
-        <router-link
-          :to="{ name: 'user', params: { userId: leave.userId } }"
-          class="group tw-inline-flex tw-no-underline hover:tw-no-underline"
+        <!-- Dropping "group" loses the chip's hover
+             underline, which TermLeaveChip draws with group-hover. -->
+        <button
+          type="button"
+          class="group tw-inline-flex tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0"
+          :aria-pressed="leave.id === selectedLeaveId"
+          @click="emit('select', leave.id)"
         >
           <TermLeaveChip :leave="leave" />
-        </router-link>
+        </button>
       </li>
     </ul>
     <router-link
@@ -51,5 +50,8 @@ defineProps<{
   leaves: TermLeave[];
   groupId: number;
   termCode: number | null;
+  selectedLeaveId: number | null;
 }>();
+
+const emit = defineEmits<{ select: [leaveId: number] }>();
 </script>

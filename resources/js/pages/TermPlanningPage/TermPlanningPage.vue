@@ -149,7 +149,7 @@
         @deleted="onDeletedAll"
       />
 
-      <SheetMount v-if="schedule.openHour || selectedSection">
+      <SheetMount v-if="schedule.openHour || selectedSection || selectedLeave">
         <HourSheet
           v-if="schedule.openHour"
           :dayIndex="schedule.openHour.dayIndex"
@@ -178,6 +178,17 @@
           @create="createDrawnSection"
           @discard="schedule.discardNewSection"
           @delete="deleteSelectedSection"
+        />
+        <LeavePanel
+          v-else-if="selectedLeave"
+          :leave="selectedLeave"
+          :person="selectedLeavePerson"
+          :otherLeaves="otherLeavesOfSelectedLeave"
+          :terms="termsOverlappingSelectedLeave"
+          :groupId="groupId"
+          canViewTermPlanning
+          @close="schedule.deselect"
+          @selectLeave="schedule.selectLeave"
         />
       </SheetMount>
 
@@ -213,7 +224,9 @@
       :leaves="termLeaves"
       :groupId="groupId"
       :termCode="activeTermCode"
+      :selectedLeaveId="schedule.selectedLeaveId"
       class="tw-flex-none tw-border-0 tw-border-t tw-border-solid tw-border-outline-variant"
+      @select="schedule.selectLeave"
     />
   </FullScreenLayout>
 </template>
@@ -230,6 +243,7 @@ import { useEventListener } from "@vueuse/core";
 import { omit } from "lodash-es";
 import FullScreenLayout from "@/layouts/FullScreenLayout.vue";
 import Notification from "@/components/Notification.vue";
+import LeavePanel from "@/components/planning/LeavePanel.vue";
 import CoverageHeatmap from "./components/CoverageHeatmap.vue";
 import DayView from "./components/DayView.vue";
 import DeleteAllModal from "./components/DeleteAllModal.vue";
@@ -255,9 +269,11 @@ import { refusalMessage } from "./helpers/refusalMessage";
 import { formatTimeRange } from "./helpers/timeScale";
 import { toSectionPayload } from "./helpers/sectionPayload";
 import { flattenQuery } from "@/utils/urlQuery";
+import { termsOverlapping } from "@/utils/termsOverlapping";
 import type { ScheduleView } from "./helpers/viewQuery";
 import { useSisGroupTermsQuery } from "./queries/useSisGroupTermsQuery";
 import { useSisGroupLeavesQuery } from "./queries/useSisGroupLeavesQuery";
+import { useTermLeaveTimelineQuery } from "./queries/useTermLeaveTimelineQuery";
 import { useTermPlanCoursesQuery } from "./queries/useTermPlanCoursesQuery";
 import { useSectionBatch } from "./queries/useSectionBatch";
 import { useTermPlanMutations } from "./queries/useTermPlanMutations";
@@ -317,6 +333,8 @@ const leavesQuery = useSisGroupLeavesQuery(groupId, activeTermCode);
 const termLeaves = computed(() => leavesQuery.data.value ?? []);
 
 const termLeavesByEmplid = computed(() => leavesByEmplid(termLeaves.value));
+
+const leaveTimelineQuery = useTermLeaveTimelineQuery(groupId, activeTermCode);
 
 const isImportOpen = ref(false);
 const isDeleteAllOpen = ref(false);
@@ -684,5 +702,32 @@ const selectedSection = computed(() => {
     localSections.value.find(({ id }) => id === schedule.selectedSectionId) ??
     null
   );
+});
+
+const selectedLeave = computed(
+  () =>
+    leaveTimelineQuery.data.value?.leaves.find(
+      ({ id }) => id === schedule.selectedLeaveId,
+    ) ?? null,
+);
+
+const selectedLeavePerson = computed(() =>
+  leaveTimelineQuery.data.value?.people.find(
+    ({ emplid }) => emplid === selectedLeave.value?.emplid,
+  ),
+);
+
+const otherLeavesOfSelectedLeave = computed(() => {
+  const leave = selectedLeave.value;
+  if (!leave) return [];
+
+  return (leaveTimelineQuery.data.value?.leaves ?? []).filter(
+    (other) => other.emplid === leave.emplid && other.id !== leave.id,
+  );
+});
+
+const termsOverlappingSelectedLeave = computed(() => {
+  const leave = selectedLeave.value;
+  return leave ? termsOverlapping(termOptions.value, leave) : [];
 });
 </script>

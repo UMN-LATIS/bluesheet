@@ -68,8 +68,8 @@ import {
 import {
   isEligibleWhenTenured as isEligibleWhenTenuredFor,
   leaveBarLabelOf,
-} from "../helpers/leaveLabels";
-import { formatDateRange } from "../helpers/dateLabels";
+} from "@/utils/leaveLabels";
+import { formatDateRange } from "@/utils/dateLabels";
 import type { AxisSpan } from "../helpers/timelineAxis";
 
 const props = defineProps<{

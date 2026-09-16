@@ -31,6 +31,7 @@ import {
   selectNewSectionHasCourse,
   selectOpenHour,
   selectPlaced,
+  selectSelectedLeaveId,
   selectSelectedMeetingId,
   selectSelectedSectionId,
   selectWeekView,
@@ -82,6 +83,7 @@ export function useScheduleEditor(
 
     /* The readings of `selection` each canvas marks itself by. */
     selectedSectionId: computed(() => selectSelectedSectionId(state.value)),
+    selectedLeaveId: computed(() => selectSelectedLeaveId(state.value)),
     selectedMeetingId: computed(() => selectSelectedMeetingId(state.value)),
     openHour: computed(() => selectOpenHour(state.value)),
     hourReturnedTo: computed(() => selectHourReturnedTo(state.value)),
@@ -139,6 +141,8 @@ export function useScheduleEditor(
       }),
     selectHour: (dayIndex: number, startMinute: number) =>
       dispatch({ type: "selectedHour", dayIndex, startMinute }),
+    selectLeave: (leaveId: number) =>
+      dispatch({ type: "selectedLeave", leaveId }),
     /* Narrowing the term. */
     addFilterValues: (facet: FilterFacet, values: string[]) =>
       dispatch({ type: "filterValuesAdded", facet, values }),

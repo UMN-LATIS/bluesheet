@@ -10,7 +10,6 @@ export interface Meeting extends TimeRange {
   sectionId: number | null;
 }
 
-
 export type FilterFacet = "course" | "person" | "section" | "component";
 
 /** Every facet, in the order the sidebar lists them and the chips read. */

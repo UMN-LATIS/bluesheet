@@ -85,7 +85,7 @@ import { colorOfType } from "@/utils/meetingTypeColors";
 import FactValue from "@/components/planning/FactValue.vue";
 import FieldDivider from "@/components/planning/FieldDivider.vue";
 import FieldLabel from "@/components/planning/FieldLabel.vue";
-import PanelHeader from "./PanelHeader.vue";
+import PanelHeader from "@/components/planning/PanelHeader.vue";
 import PeopleList, { type ListedPerson } from "./PeopleList.vue";
 
 const props = defineProps<{

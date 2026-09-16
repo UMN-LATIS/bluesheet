@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { isEligibleWhenTenured, leaveBarLabelOf } from "./leaveLabels";
-import { leave, person } from "./planning.fixture";
+import {
+  leave,
+  person,
+} from "@/pages/LeavePlanningPage/helpers/planning.fixture";
 
 describe("isEligibleWhenTenured", () => {
   const eligibleSabbatical = leave(1, "2027-01-19", "2027-05-12", {

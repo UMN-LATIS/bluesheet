@@ -699,6 +699,21 @@ describe("the URL", () => {
 
     expect(returned.state.selection).toEqual({ kind: "section", sectionId: 7 });
   });
+
+  it("selecting a leave writes its id to the URL", () => {
+    expect(step({ type: "selectedLeave", leaveId: 42 }).effects).toEqual([
+      {
+        type: "replaceUrlQuery",
+        query: { component: "LEC", view: "week", leaveId: "42" },
+      },
+    ]);
+  });
+
+  it("a link naming a leave restores that selection", () => {
+    const returned = step({ type: "urlChanged", query: { leaveId: "42" } });
+
+    expect(returned.state.selection).toEqual({ kind: "leave", leaveId: 42 });
+  });
 });
 
 describe("the sheet's draft", () => {
@@ -1591,6 +1606,15 @@ describe("asking before unsaved sheet edits are dropped", () => {
 
     expect(state.pendingDismissal?.event).toEqual(escape);
     expect(state.drafts[1]).toEqual({ notes: "hi" });
+  });
+
+  it("holds a leave selected while a section's sheet has unsaved edits", () => {
+    const selectLeave: EditorEvent = { type: "selectedLeave", leaveId: 99 };
+    const state = after([selectLeave], typed, context);
+
+    expect(state.pendingDismissal?.event).toEqual(selectLeave);
+    expect(state.drafts[1]).toEqual({ notes: "hi" });
+    expect(state.selection).toEqual(typed.selection);
   });
 
   // retyping the value that was already there leaves nothing to discard

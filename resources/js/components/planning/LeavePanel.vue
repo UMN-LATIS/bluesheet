@@ -128,11 +128,11 @@ import { getLeaveTypeLabel } from "@/utils/leaveTypeHelpers";
 import FactValue from "@/components/planning/FactValue.vue";
 import FieldDivider from "@/components/planning/FieldDivider.vue";
 import FieldLabel from "@/components/planning/FieldLabel.vue";
-import LeaveStatusChip from "./LeaveStatusChip.vue";
-import PanelHeader from "./PanelHeader.vue";
-import TermPlanningLink from "./TermPlanningLink.vue";
-import { formatDateRange } from "../helpers/dateLabels";
-import { isEligibleWhenTenured } from "../helpers/leaveLabels";
+import LeaveStatusChip from "@/components/planning/LeaveStatusChip.vue";
+import PanelHeader from "@/components/planning/PanelHeader.vue";
+import TermPlanningLink from "@/components/planning/TermPlanningLink.vue";
+import { formatDateRange } from "@/utils/dateLabels";
+import { isEligibleWhenTenured } from "@/utils/leaveLabels";
 
 const props = defineProps<{
   leave: PlanningLeave;

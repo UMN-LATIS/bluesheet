@@ -125,13 +125,13 @@
 import { computed, nextTick, ref, watch } from "vue";
 import { useElementSize } from "@vueuse/core";
 import { PencilIcon } from "@/icons";
-import TermPlanningLink from "./TermPlanningLink.vue";
+import TermPlanningLink from "@/components/planning/TermPlanningLink.vue";
 import {
   fractionOf,
   isWithinAxis,
   type TimelineAxis,
 } from "../helpers/timelineAxis";
-import { formatMonthDay } from "../helpers/dateLabels";
+import { formatMonthDay } from "@/utils/dateLabels";
 import {
   AXIS_HEADER_HEIGHT,
   HISTORY_PX_PER_DAY,

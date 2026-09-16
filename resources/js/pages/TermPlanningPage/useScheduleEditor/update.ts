@@ -149,6 +149,7 @@ const READING_EVENTS: EditorEvent["type"][] = [
   "deselected",
   "selectedSection",
   "selectedHour",
+  "selectedLeave",
   // nothing was ever written, so there is nothing a locked term protects
   "newSectionDiscarded",
   "filterValuesAdded",
@@ -444,6 +445,12 @@ function reduce(
           dayIndex: event.dayIndex,
           startMinute: event.startMinute,
         },
+      };
+
+    case "selectedLeave":
+      return {
+        ...state,
+        selection: { kind: "leave", leaveId: event.leaveId },
       };
 
     case "filterValuesAdded":
