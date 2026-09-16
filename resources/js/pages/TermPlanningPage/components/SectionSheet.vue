@@ -245,13 +245,9 @@
             @update:modelValue="(option) => addPerson(option, PRIMARY_ROLE)"
           >
             <template #afterOptionLabel="{ option }">
-              <TermLeaveChip
-                v-for="leave in leavesToMark(option)"
-                :key="leave.id"
-                :leave="leave"
-              >
+              <Chip v-if="hasTermLeave(option)" color="neutral-600">
                 On leave
-              </TermLeaveChip>
+              </Chip>
             </template>
           </ComboBox>
         </div>
@@ -294,13 +290,9 @@
             @update:modelValue="(option) => addPerson(option, TA_ROLE)"
           >
             <template #afterOptionLabel="{ option }">
-              <TermLeaveChip
-                v-for="leave in leavesToMark(option)"
-                :key="leave.id"
-                :leave="leave"
-              >
+              <Chip v-if="hasTermLeave(option)" color="neutral-600">
                 On leave
-              </TermLeaveChip>
+              </Chip>
             </template>
           </ComboBox>
         </div>
@@ -584,8 +576,8 @@ import FieldHeader from "./FieldHeader.vue";
 import FieldLabel from "./FieldLabel.vue";
 import PersonField from "./PersonField.vue";
 import SectionFacts from "./SectionFacts.vue";
-import TermLeaveChip from "./TermLeaveChip.vue";
 import SegmentedControl, { type SegmentedOption } from "./SegmentedControl.vue";
+import Chip from "@/components/Chip.vue";
 import { ComboBox, type ComboBoxOptionType } from "@/components/ComboBox";
 import { LockIcon } from "@/icons";
 import { colorOfType, labelOfComponent } from "../constants/meetingTypeColors";
@@ -609,7 +601,6 @@ import type {
   SisEmployee,
   SisSectionMeeting,
 } from "../types";
-import type { TermLeave } from "@/types";
 import type { ScheduleEditor } from "../useScheduleEditor";
 
 const props = defineProps<{
@@ -625,7 +616,7 @@ const props = defineProps<{
   sections: PlannedSection[];
   roster: SisEmployee[];
   /** Leaves in this term, keyed by emplid. */
-  leavesByEmplid: Map<number, TermLeave[]>;
+  emplidsOnLeave: Set<number>;
   /** Names the list this sheet was opened from, e.g. "Tue · 2 – 3p", if any. */
   returnTo?: string | null;
   /** Names the term in the cancel prompt, e.g. "Fall 2026". */
@@ -751,11 +742,8 @@ const nameOfTerm = (termId: number) =>
   termsQuery.data.value?.find(({ id }) => id === termId)?.name ??
   String(termId);
 
-const leavesToMark = (option: ComboBoxOptionType): TermLeave[] => {
-  if (typeof option.id !== "number") return [];
-
-  return (props.leavesByEmplid.get(option.id) ?? []).slice(0, 1);
-};
+const hasTermLeave = (option: ComboBoxOptionType): boolean =>
+  typeof option.id === "number" && props.emplidsOnLeave.has(option.id);
 
 /** "García, Ana", with their appointment under it; see `ComboBoxOptionType`. */
 const optionFor = (person: SisEmployee) => ({

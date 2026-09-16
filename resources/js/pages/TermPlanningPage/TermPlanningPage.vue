@@ -168,7 +168,7 @@
           :isCreating="isSavingNewSection"
           :sections="localSections"
           :roster="roster"
-          :leavesByEmplid="termLeavesByEmplid"
+          :emplidsOnLeave="termEmplidsOnLeave"
           :returnTo="returnTo"
           :termName="term?.name"
           :isReadOnly="isReadOnly"
@@ -244,7 +244,7 @@ import SheetMount from "./components/SheetMount.vue";
 import TermLeaveStrip from "./components/TermLeaveStrip.vue";
 import { bandsForDay } from "./helpers/dayBands";
 import { buildFilterOptions } from "./helpers/filterOptions";
-import { leavesByEmplid } from "./helpers/leavesByEmplid";
+import { emplidsOnLeave } from "./helpers/emplidsOnLeave";
 import { reachableFacetValues } from "./helpers/scheduleFilters";
 import { ASYNC_DAY_INDEX, WEEKDAY_NAMES } from "./helpers/scheduleDays";
 import { refusalMessage } from "./helpers/refusalMessage";
@@ -312,7 +312,7 @@ const leavesQuery = useSisGroupLeavesQuery(groupId, activeTermCode);
 
 const termLeaves = computed(() => leavesQuery.data.value ?? []);
 
-const termLeavesByEmplid = computed(() => leavesByEmplid(termLeaves.value));
+const termEmplidsOnLeave = computed(() => emplidsOnLeave(termLeaves.value));
 
 const isImportOpen = ref(false);
 const isDeleteAllOpen = ref(false);

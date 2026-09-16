@@ -37,6 +37,9 @@ class GroupLeaveController extends Controller {
             ->sortBy(fn(Leave $leave) => [
                 $leave->user?->surname,
                 $leave->user?->givenname,
+                $leave->start_date,
+                $leave->end_date,
+                $leave->id,
             ])
             ->values();
 
