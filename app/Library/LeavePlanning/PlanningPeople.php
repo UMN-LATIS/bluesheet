@@ -11,10 +11,15 @@ class PlanningPeople {
     private const UNSPECIFIED_CATEGORY = 'Unspecified';
 
     /**
-     * @param Collection<int, int> $emplids duplicates allowed
-     * @return Collection<int, array> by last name, then first
+     * One row per distinct emplid, including people with no
+     * appointment in the department.
+     *
+     * @param Collection<int, int> $emplids
+     *   duplicates allowed
+     * @return Collection<int, array>
+     *   sorted by last name, then first
      */
-    public static function inDepartment(string $deptId, Collection $emplids): Collection {
+    public static function forEmplids(string $deptId, Collection $emplids): Collection {
         $emplids = $emplids->map(fn($emplid) => (int) $emplid)->unique()->values();
 
         $employees = SisEmployee::whereIn('emplid', $emplids)->get()->keyBy('emplid');
@@ -55,7 +60,7 @@ class PlanningPeople {
             'lastName' => $employee?->last_name ?? $user?->surname ?? '',
             'title' => self::titleOf($appointments),
             'categories' => $appointments
-                ->map(fn(SisAppointment $appointment) => trim((string) $appointment->category) ?: self::UNSPECIFIED_CATEGORY)
+                ->map(fn(SisAppointment $appointment) => self::categoryOf($appointment))
                 ->unique()
                 ->sort()
                 ->values(),
@@ -66,18 +71,28 @@ class PlanningPeople {
                 ->sort()
                 ->values(),
             'hasAppointment' => $appointments->isNotEmpty(),
-            'eligibility' => [
-                'ssl' => (bool) $user?->ssl_eligible,
-                'sslApply' => (bool) $user?->ssl_apply_eligible,
-                'midcareer' => (bool) $user?->midcareer_eligible,
-            ],
+            'sslEligible' => (bool) $user?->ssl_eligible,
+            'sslApplyEligible' => (bool) $user?->ssl_apply_eligible,
+            'midcareerEligible' => (bool) $user?->midcareer_eligible,
         ];
     }
 
     private static function titleOf(Collection $appointments): ?string {
+        $isPrimary = fn(SisAppointment $appointment) => $appointment->job_indicator === 'P';
+
         return $appointments
-            ->sortBy(fn(SisAppointment $appointment) => $appointment->job_indicator === 'P' ? 0 : 1)
+            ->sortByDesc($isPrimary)
             ->map(fn(SisAppointment $appointment) => trim((string) $appointment->position_desc))
             ->first(fn(string $title) => $title !== '');
+    }
+
+    private static function categoryOf(SisAppointment $appointment): string {
+        $category = trim((string) $appointment->category);
+
+        if ($category === '') {
+            return self::UNSPECIFIED_CATEGORY;
+        }
+
+        return $category;
     }
 }

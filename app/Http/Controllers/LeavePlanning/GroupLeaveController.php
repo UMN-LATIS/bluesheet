@@ -5,8 +5,8 @@ namespace App\Http\Controllers\LeavePlanning;
 use App\Group;
 use App\Http\Controllers\Controller;
 use App\Leave;
-use App\Library\LeavePlanning\DefaultTermRange;
 use App\Library\LeavePlanning\PlanningPeople;
+use App\Library\LeavePlanning\TimelineTermRange;
 use App\SisAppointment;
 use App\SisTerm;
 use Carbon\Carbon;
@@ -16,6 +16,8 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class GroupLeaveController extends Controller {
+    private const DEPARTMENT_TIMEZONE = 'America/Chicago';
+
     public function index(Request $request, Group $group) {
         $this->authorize('viewAnyLeavesForGroup', [Leave::class, $group]);
 
@@ -42,18 +44,14 @@ class GroupLeaveController extends Controller {
             return ['range' => null, 'people' => [], 'leaves' => []];
         }
 
-        $today = Carbon::today()->toDateString();
+        $today = Carbon::today(self::DEPARTMENT_TIMEZONE)->toDateString();
 
-        $range = DefaultTermRange::resolve(
-            $terms,
-            self::leavesInDepartment($deptId)
-                ->where('status', '!=', Leave::STATUS_CANCELLED)
-                ->where('end_date', '>=', $today)
-                ->get(),
-            $today,
-            $requestedStart,
-            $requestedEnd,
-        );
+        $currentAndUpcomingLeaves = self::leavesInDepartment($deptId)
+            ->where('status', '!=', Leave::STATUS_CANCELLED)
+            ->where('end_date', '>=', $today)
+            ->get();
+
+        $range = TimelineTermRange::of($terms, $currentAndUpcomingLeaves, $today, $requestedStart, $requestedEnd);
 
         $startTerm = $terms->firstWhere('term_code', $range['startTermId']);
         $endTerm = $terms->firstWhere('term_code', $range['endTermId']);
@@ -66,9 +64,11 @@ class GroupLeaveController extends Controller {
             ->orderBy('id')
             ->get();
 
+        $leaveEmplids = $leaves->map(fn(Leave $leave) => $leave->user->emplid);
+
         return [
             'range' => $range,
-            'people' => PlanningPeople::inDepartment($deptId, $leaves->map(fn(Leave $leave) => $leave->user->emplid)),
+            'people' => PlanningPeople::forEmplids($deptId, $leaveEmplids),
             'leaves' => $leaves->map(fn(Leave $leave) => [
                 'id' => $leave->id,
                 'emplid' => $leave->user->emplid,
@@ -83,9 +83,11 @@ class GroupLeaveController extends Controller {
     }
 
     private static function leavesInDepartment(string $deptId): Builder {
-        return Leave::query()->whereHas('user', fn(Builder $query) => $query->whereIn(
-            'emplid',
-            SisAppointment::where('dept_id', $deptId)->select('emplid')
-        ));
+        $appointedEmplids = SisAppointment::where('dept_id', $deptId)->select('emplid');
+
+        return Leave::query()->whereHas(
+            'user',
+            fn(Builder $query) => $query->whereIn('emplid', $appointedEmplids),
+        );
     }
 }

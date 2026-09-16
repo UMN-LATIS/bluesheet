@@ -1,5 +1,6 @@
 <?php
 
+use App\Constants\Permissions;
 use App\Group;
 use App\Leave;
 use App\LocalClassInstructor;
@@ -132,6 +133,14 @@ describe('GET /api/leave-planning/groups', function () {
         expect($ids)->not->toContain($otherGroup->id);
     });
 
+    it('leaves out a group the user can only view courses for', function () {
+        $user = User::factory()->create()->givePermissionTo(Permissions::VIEW_PLANNED_COURSES);
+
+        actingAs($user);
+
+        expect(getJson('/api/leave-planning/groups')->json())->toBe([]);
+    });
+
     it('leaves out a group that names no SIS department', function () {
         $group = Group::factory()->create(['dept_id' => 'not a department']);
 
@@ -171,7 +180,9 @@ describe('GET /api/leave-planning/groups/:groupId/leaves', function () {
                 'categories' => ['Faculty'],
                 'jobCodes' => ['9401'],
                 'hasAppointment' => true,
-                'eligibility' => ['ssl' => true, 'sslApply' => false, 'midcareer' => false],
+                'sslEligible' => true,
+                'sslApplyEligible' => false,
+                'midcareerEligible' => false,
             ]],
             'leaves' => [[
                 'id' => $leave->id,
@@ -197,6 +208,22 @@ describe('GET /api/leave-planning/groups/:groupId/leaves', function () {
 
     it('does not widen the default range for a cancelled leave', function () {
         leaveTaken(departmentMember(), '2026-02-01', '2027-05-12', ['status' => Leave::STATUS_CANCELLED]);
+
+        actingAs($this->admin);
+
+        expect(getJson($this->url)->json('range'))->toBe(['startTermId' => 1269, 'endTermId' => 1269]);
+    });
+
+    it('moves the default start back to a requested end', function () {
+        actingAs($this->admin);
+
+        expect(getJson("{$this->url}?end=1265")->json('range'))
+            ->toBe(['startTermId' => 1265, 'endTermId' => 1265]);
+    });
+
+    it('takes today as the date in Minnesota, not in UTC', function () {
+        Carbon::setTestNow(Carbon::parse('2026-12-23 20:00', 'America/Chicago'));
+        leaveTaken(departmentMember(), '2026-09-08', '2026-12-23');
 
         actingAs($this->admin);
 
@@ -391,6 +418,26 @@ describe('GET /api/leave-planning/groups/:groupId/teaching-history', function ()
         actingAs($this->admin);
 
         expect(getJson("{$this->url}?start=1275&end=1275")->json('sections'))->toBe([]);
+    });
+
+    it('leaves out a planned section in a term the SIS does not know', function () {
+        plannedSectionFor(departmentMember()->emplid, ['term_code' => 1267]);
+
+        actingAs($this->admin);
+
+        expect(getJson("{$this->url}?start=1263&end=1273")->status())->toBe(200);
+        expect(getJson("{$this->url}?start=1263&end=1273")->json('sections'))->toBe([]);
+    });
+
+    it('reports eligibility flags for each person', function () {
+        departmentMember(['midcareer_eligible' => true, 'ssl_apply_eligible' => true]);
+
+        actingAs($this->admin);
+        $person = getJson("{$this->url}?start=1269&end=1269")->json('people.0');
+
+        expect($person['midcareerEligible'])->toBeTrue();
+        expect($person['sslApplyEligible'])->toBeTrue();
+        expect($person['sslEligible'])->toBeFalse();
     });
 
     it('keeps each role an instructor holds', function () {

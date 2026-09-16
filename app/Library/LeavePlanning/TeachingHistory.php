@@ -8,17 +8,21 @@ use App\LocalClassInstructor;
 use App\LocalClassSection;
 use App\SisClassInstructor;
 use App\SisClassSection;
+use App\SisTerm;
 use Illuminate\Support\Collection;
 
 class TeachingHistory {
     private const INDEPENDENT_STUDY = 'IND';
 
-    /** @return Collection<int, array> by term, course, then section */
+    /**
+     * @return Collection<int, array>
+     *   sorted by term, course, then section
+     */
     public static function sectionsBetween(int $academicOrg, int $startTermCode, int $endTermCode): Collection {
-        $readOnlyTerms = TermLock::readOnlyTermsBetween($academicOrg, $startTermCode, $endTermCode);
+        $readOnlyTermCodes = TermLock::readOnlyTermCodesBetween($academicOrg, $startTermCode, $endTermCode);
 
-        return self::publishedSections($academicOrg, $readOnlyTerms)
-            ->concat(self::plannedSections($academicOrg, $startTermCode, $endTermCode, $readOnlyTerms))
+        return self::publishedSections($academicOrg, $readOnlyTermCodes)
+            ->concat(self::plannedSections($academicOrg, $startTermCode, $endTermCode, $readOnlyTermCodes))
             ->sortBy(fn(array $section) => [
                 $section['termId'],
                 $section['subject'],
@@ -28,10 +32,10 @@ class TeachingHistory {
             ->values();
     }
 
-    private static function publishedSections(int $academicOrg, Collection $termCodes): Collection {
+    private static function publishedSections(int $academicOrg, Collection $readOnlyTermCodes): Collection {
         return SisClassSection::query()
             ->where('academic_org', $academicOrg)
-            ->whereIn('term_code', $termCodes)
+            ->whereIn('term_code', $readOnlyTermCodes)
             ->where('is_cancelled', false)
             ->where('component', '!=', self::INDEPENDENT_STUDY)
             ->with('instructors')
@@ -49,12 +53,15 @@ class TeachingHistory {
         int $academicOrg,
         int $startTermCode,
         int $endTermCode,
-        Collection $readOnlyTerms,
+        Collection $readOnlyTermCodes,
     ): Collection {
+        $undergradTermCodes = SisTerm::undergrad()->select('term_code');
+
         return LocalClassSection::query()
             ->where('academic_org', $academicOrg)
             ->whereBetween('term_code', [$startTermCode, $endTermCode])
-            ->whereNotIn('term_code', $readOnlyTerms)
+            ->whereIn('term_code', $undergradTermCodes)
+            ->whereNotIn('term_code', $readOnlyTermCodes)
             ->where('is_cancelled', false)
             ->where('component', '!=', self::INDEPENDENT_STUDY)
             ->with('instructors')
@@ -89,8 +96,13 @@ class TeachingHistory {
         ];
     }
 
-    /** e.g. "ANTH-1001-003-FA26" */
+    /**
+     * e.g. "ANTH-1001-003-FA26". A row id in the key would
+     * change it when the SIS publishes a planned section.
+     */
     private static function keyOf(SisClassSection|LocalClassSection $section): string {
-        return "{$section->course_code}-{$section->class_section}-" . TermCodeLabel::of($section->term_code);
+        $termLabel = TermCodeLabel::of($section->term_code);
+
+        return "{$section->course_code}-{$section->class_section}-{$termLabel}";
     }
 }

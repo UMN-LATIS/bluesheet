@@ -35,7 +35,7 @@ class TermLock {
     }
 
     /** @return Collection<int, int> term codes */
-    public static function readOnlyTermsBetween(int $academicOrg, int $startTermCode, int $endTermCode): Collection {
+    public static function readOnlyTermCodesBetween(int $academicOrg, int $startTermCode, int $endTermCode): Collection {
         return SisClassSection::query()
             ->where('academic_org', $academicOrg)
             ->whereBetween('term_code', [$startTermCode, $endTermCode])

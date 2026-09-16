@@ -31,7 +31,7 @@ class GroupTeachingHistoryController extends Controller {
         $instructorEmplids = $sections->pluck('instructors')->flatten(1)->pluck('emplid');
 
         return [
-            'people' => PlanningPeople::inDepartment($deptId, $appointedEmplids->concat($instructorEmplids)),
+            'people' => PlanningPeople::forEmplids($deptId, $appointedEmplids->concat($instructorEmplids)),
             'sections' => $sections,
         ];
     }

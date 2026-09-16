@@ -1,7 +1,7 @@
 <?php
 
 use App\Leave;
-use App\Library\LeavePlanning\DefaultTermRange;
+use App\Library\LeavePlanning\TimelineTermRange;
 use App\SisTerm;
 use Tests\TestCase;
 
@@ -27,7 +27,7 @@ function leaveBetween(string $startDate, string $endDate): Leave {
 }
 
 function rangeOn(string $today, array $leaves = [], ?int $start = null, ?int $end = null): array {
-    return DefaultTermRange::resolve(undergradTermsSpring2026ThroughFall2027(), collect($leaves), $today, $start, $end);
+    return TimelineTermRange::of(undergradTermsSpring2026ThroughFall2027(), collect($leaves), $today, $start, $end);
 }
 
 it('opens on the current term alone when no leave is in progress or to come', function () {
@@ -50,7 +50,7 @@ it('starts at the next term when an in-progress leave began between terms', func
     expect(rangeOn('2026-10-01', [$leave]))->toBe(['startTermId' => 1269, 'endTermId' => 1273]);
 });
 
-it('ignores a leave that has already ended when choosing the start', function () {
+it('ignores a leave that has already ended', function () {
     $finished = leaveBetween('2026-01-20', '2026-05-13');
 
     expect(rangeOn('2026-10-01', [$finished]))->toBe(['startTermId' => 1269, 'endTermId' => 1269]);
@@ -86,6 +86,8 @@ it('treats the last term as current once every term has ended', function () {
     expect(rangeOn('2028-03-01'))->toBe(['startTermId' => 1279, 'endTermId' => 1279]);
 });
 
-it('answers with no range when there are no terms', function () {
-    expect(DefaultTermRange::resolve(collect(), collect(), '2026-10-01'))->toBeNull();
+it('falls back to the current term when an in-progress leave began after every term', function () {
+    $leave = leaveBetween('2028-01-10', '2028-06-01');
+
+    expect(rangeOn('2028-03-01', [$leave]))->toBe(['startTermId' => 1279, 'endTermId' => 1279]);
 });
