@@ -36,12 +36,17 @@
           :groupId="groupId"
           :termId="termLabel.term.id"
           :canViewTermPlanning="canViewTermPlanning"
-          class="group tw-absolute tw-top-2 tw-flex tw-h-6 tw-items-center tw-gap-1.5 tw-overflow-hidden tw-whitespace-nowrap tw-rounded-md tw-px-2 tw-text-on-surface tw-no-underline hover:tw-no-underline"
-          :class="
-            canViewTermPlanning
-              ? 'tw-bg-primary-container hover:tw-shadow-[inset_0_0_0_1px_var(--primary)]'
-              : 'tw-bg-surface-container'
-          "
+          class="group tw-absolute tw-top-2 tw-flex tw-h-6 tw-items-center tw-gap-1.5 tw-overflow-hidden tw-whitespace-nowrap tw-rounded-md tw-px-2 tw-no-underline hover:tw-no-underline"
+          :class="{
+            'tw-bg-surface-container tw-text-on-surface':
+              termLabel.tone === 'plain',
+            'tw-bg-primary-container tw-text-primary':
+              termLabel.tone === 'link',
+            'tw-bg-accent-container tw-text-on-accent':
+              termLabel.tone === 'current',
+            'hover:tw-shadow-[inset_0_0_0_1px_currentColor]':
+              canViewTermPlanning,
+          }"
           :style="{
             left: `${termLabel.left * 100}%`,
             width: `${termLabel.width * 100}%`,
@@ -50,9 +55,7 @@
         >
           <span
             class="tw-text-[11.5px] tw-font-semibold"
-            :class="{
-              'tw-text-primary group-hover:tw-underline': canViewTermPlanning,
-            }"
+            :class="{ 'group-hover:tw-underline': canViewTermPlanning }"
           >
             {{ termLabel.term.name }}
           </span>
@@ -77,7 +80,7 @@
           </span>
           <ArrowRightIcon
             v-if="canViewTermPlanning"
-            class="tw-ms-auto !tw-h-3.5 !tw-w-3.5 tw-flex-none tw-text-primary"
+            class="tw-ms-auto !tw-h-3.5 !tw-w-3.5 tw-flex-none"
             aria-hidden="true"
           />
         </TermPlanningLink>
@@ -112,6 +115,14 @@
         class="tw-pointer-events-none tw-absolute tw-inset-y-0"
         :style="{ left: 'var(--lp-name)', width: 'var(--lp-track)' }"
       >
+        <div
+          v-if="currentTermColumn"
+          class="tw-absolute tw-inset-y-0 tw-bg-accent-container-low"
+          :style="{
+            left: `${currentTermColumn.left * 100}%`,
+            width: `${currentTermColumn.width * 100}%`,
+          }"
+        />
         <div
           v-for="gap in axis.gaps"
           :key="gap.left"
@@ -189,6 +200,22 @@ const todayLeft = computed(() =>
     : null,
 );
 
+const currentTermColumn = computed(
+  () =>
+    props.axis.terms.find(
+      ({ term }) =>
+        term.startDate <= props.today && props.today <= term.endDate,
+    ) ?? null,
+);
+
+type TermBandTone = "plain" | "link" | "current";
+
+const toneOf = (termId: number): TermBandTone => {
+  if (termId === currentTermColumn.value?.term.id) return "current";
+  if (props.canViewTermPlanning) return "link";
+  return "plain";
+};
+
 const termLabels = computed(() =>
   props.axis.terms.map((axisTerm) => {
     const { term } = axisTerm;
@@ -196,6 +223,7 @@ const termLabels = computed(() =>
     const endLabel = formatMonthDay(term.endDate);
     return {
       ...axisTerm,
+      tone: toneOf(term.id),
       isPlanned: props.isHistoryShown && props.plannedTermIds.has(term.id),
       isPlannable: props.plannableTermIds.has(term.id),
       hasRoomForDates: axisTerm.width * trackWidth.value >= DATES_MIN_BAND_PX,

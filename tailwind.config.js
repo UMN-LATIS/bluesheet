@@ -52,7 +52,11 @@ export default {
           container: "var(--brand-container)",
         },
         "on-brand": "var(--on-brand)",
-        accent: "var(--accent)",
+        accent: {
+          DEFAULT: "var(--accent)",
+          container: "var(--accent-container)",
+          "container-low": "var(--accent-container-low)",
+        },
         "on-accent": "var(--on-accent)",
       },
       backgroundImage: {
