@@ -61,7 +61,7 @@
         :disabled="!isNarrowed"
         @click="planning.clearFilters"
       >
-        <XIcon class="tw-h-3.5 tw-w-3.5" aria-hidden="true" />
+        <XIcon class="!tw-h-3.5 !tw-w-3.5" aria-hidden="true" />
         Clear all
       </button>
     </div>

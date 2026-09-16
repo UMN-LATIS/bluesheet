@@ -5,7 +5,7 @@
   >
     <component
       :is="getLeaveStatusIcon(status)"
-      class="tw-h-3 tw-w-3 tw-flex-none"
+      class="!tw-h-3 !tw-w-3 tw-flex-none"
       aria-hidden="true"
     />
     {{ getLeaveStatusLabel(status) }}

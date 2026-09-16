@@ -109,7 +109,7 @@
         class="tw-mt-auto tw-flex tw-min-h-11 tw-items-center tw-gap-1.5 tw-text-xs tw-font-semibold tw-text-primary"
       >
         Open {{ person?.name || "this person" }}’s leaves
-        <ArrowRightIcon class="tw-h-3.5 tw-w-3.5" aria-hidden="true" />
+        <ArrowRightIcon class="!tw-h-3.5 !tw-w-3.5" aria-hidden="true" />
       </router-link>
     </div>
   </aside>

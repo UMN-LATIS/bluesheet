@@ -36,7 +36,7 @@
       class="tw-ml-auto tw-flex tw-min-h-8 tw-flex-none tw-items-center tw-gap-1.5 tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-px-3 tw-text-xs tw-font-semibold tw-text-primary tw-no-underline hover:tw-bg-surface hover:tw-no-underline"
     >
       View Leaves
-      <ArrowRightIcon class="tw-h-3.5 tw-w-3.5" aria-hidden="true" />
+      <ArrowRightIcon class="!tw-h-3.5 !tw-w-3.5" aria-hidden="true" />
     </router-link>
   </section>
 </template>

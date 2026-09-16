@@ -31,13 +31,13 @@
   >
     <ChevronRightIcon
       v-if="span.isClippedAtStart"
-      class="leave-bar-chevron tw-h-2.5 tw-w-2.5 tw-flex-none tw-rotate-180"
+      class="leave-bar-chevron !tw-h-2.5 !tw-w-2.5 tw-flex-none tw-rotate-180"
       aria-hidden="true"
     />
     <span class="leave-bar-summary tw-flex tw-min-w-0 tw-items-center tw-gap-1">
       <component
         :is="getLeaveStatusIcon(leave.status)"
-        class="tw-h-3 tw-w-3 tw-flex-none"
+        class="!tw-h-3 !tw-w-3 tw-flex-none"
         aria-hidden="true"
       />
       <span class="tw-truncate" :class="{ 'tw-line-through': isCancelled }">
@@ -46,7 +46,7 @@
     </span>
     <ChevronRightIcon
       v-if="span.isClippedAtEnd"
-      class="leave-bar-chevron tw-ms-auto tw-h-2.5 tw-w-2.5 tw-flex-none"
+      class="leave-bar-chevron tw-ms-auto !tw-h-2.5 !tw-w-2.5 tw-flex-none"
       aria-hidden="true"
     />
   </button>

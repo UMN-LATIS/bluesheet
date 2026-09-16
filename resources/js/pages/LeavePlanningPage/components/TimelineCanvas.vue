@@ -36,22 +36,31 @@
           :groupId="groupId"
           :termId="termLabel.term.id"
           :canViewTermPlanning="canViewTermPlanning"
-          class="tw-absolute tw-top-2 tw-flex tw-h-6 tw-items-center tw-gap-1.5 tw-overflow-hidden tw-whitespace-nowrap tw-rounded-md tw-bg-surface-container tw-px-2 tw-text-on-surface tw-no-underline hover:tw-no-underline"
-          :class="{ 'hover:tw-bg-surface-container-high': canViewTermPlanning }"
+          class="group tw-absolute tw-top-2 tw-flex tw-h-6 tw-items-center tw-gap-1.5 tw-overflow-hidden tw-whitespace-nowrap tw-rounded-md tw-px-2 tw-text-on-surface tw-no-underline hover:tw-no-underline"
+          :class="
+            canViewTermPlanning
+              ? 'tw-bg-primary-container hover:tw-shadow-[inset_0_0_0_1px_var(--primary)]'
+              : 'tw-bg-surface-container'
+          "
           :style="{
             left: `${termLabel.left * 100}%`,
             width: `${termLabel.width * 100}%`,
           }"
           :title="termLabel.term.name"
         >
-          <span class="tw-text-[11.5px] tw-font-semibold">
+          <span
+            class="tw-text-[11.5px] tw-font-semibold"
+            :class="{
+              'tw-text-primary group-hover:tw-underline': canViewTermPlanning,
+            }"
+          >
             {{ termLabel.term.name }}
           </span>
           <span
             v-if="termLabel.isPlannable"
             class="tw-inline-flex tw-h-4 tw-items-center tw-gap-1 tw-rounded-full tw-border tw-border-solid tw-border-primary tw-px-1.5 tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-[0.06em] tw-text-primary"
           >
-            <PencilIcon class="tw-h-2.5 tw-w-2.5" aria-hidden="true" />
+            <PencilIcon class="!tw-h-2.5 !tw-w-2.5" aria-hidden="true" />
             Plan term
           </span>
           <span
@@ -66,6 +75,11 @@
           >
             {{ termLabel.dateRangeLabel }}
           </span>
+          <ArrowRightIcon
+            v-if="canViewTermPlanning"
+            class="tw-ms-auto !tw-h-3.5 !tw-w-3.5 tw-flex-none tw-text-primary"
+            aria-hidden="true"
+          />
         </TermPlanningLink>
 
         <span
@@ -124,7 +138,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from "vue";
 import { useElementSize } from "@vueuse/core";
-import { PencilIcon } from "@/icons";
+import { ArrowRightIcon, PencilIcon } from "@/icons";
 import TermPlanningLink from "@/components/planning/TermPlanningLink.vue";
 import {
   fractionOf,
