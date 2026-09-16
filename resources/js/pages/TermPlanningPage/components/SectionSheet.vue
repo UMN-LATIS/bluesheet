@@ -244,12 +244,14 @@
             teleportTo="body"
             @update:modelValue="(option) => addPerson(option, PRIMARY_ROLE)"
           >
-            <template #optionDecoration="{ option }">
+            <template #afterOptionLabel="{ option }">
               <TermLeaveChip
-                v-for="leave in leavesOf(option)"
+                v-for="leave in leavesToMark(option)"
                 :key="leave.id"
                 :leave="leave"
-              />
+              >
+                On leave
+              </TermLeaveChip>
             </template>
           </ComboBox>
         </div>
@@ -291,12 +293,14 @@
             teleportTo="body"
             @update:modelValue="(option) => addPerson(option, TA_ROLE)"
           >
-            <template #optionDecoration="{ option }">
+            <template #afterOptionLabel="{ option }">
               <TermLeaveChip
-                v-for="leave in leavesOf(option)"
+                v-for="leave in leavesToMark(option)"
                 :key="leave.id"
                 :leave="leave"
-              />
+              >
+                On leave
+              </TermLeaveChip>
             </template>
           </ComboBox>
         </div>
@@ -620,7 +624,7 @@ const props = defineProps<{
   /** The term's sections, for reading a cross-list partner's cap. */
   sections: PlannedSection[];
   roster: SisEmployee[];
-  /** Leaves in this term, by emplid, so an option can be marked. */
+  /** Leaves in this term, keyed by emplid. */
   leavesByEmplid: Map<number, TermLeave[]>;
   /** Names the list this sheet was opened from, e.g. "Tue · 2 – 3p", if any. */
   returnTo?: string | null;
@@ -747,13 +751,13 @@ const nameOfTerm = (termId: number) =>
   termsQuery.data.value?.find(({ id }) => id === termId)?.name ??
   String(termId);
 
-/** "García, Ana", with their appointment under it; see `ComboBoxOptionType`. */
-/** A chip each, for anyone this term's leaves name. */
-const leavesOf = (option: ComboBoxOptionType): TermLeave[] =>
-  typeof option.id === "number"
-    ? (props.leavesByEmplid.get(option.id) ?? [])
-    : [];
+const leavesToMark = (option: ComboBoxOptionType): TermLeave[] => {
+  if (typeof option.id !== "number") return [];
 
+  return (props.leavesByEmplid.get(option.id) ?? []).slice(0, 1);
+};
+
+/** "García, Ana", with their appointment under it; see `ComboBoxOptionType`. */
 const optionFor = (person: SisEmployee) => ({
   id: person.emplid,
   label: lastNameFirst(person.name ?? String(person.emplid), person.lastName),

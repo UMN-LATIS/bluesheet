@@ -5,13 +5,14 @@ import type { TermLeave } from "@/types";
  * roster entry or to a section's instructors.
  */
 export function leavesByEmplid(leaves: TermLeave[]): Map<number, TermLeave[]> {
-  const byEmplid = new Map<number, TermLeave[]>();
+  const leavesForEmplid = new Map<number, TermLeave[]>();
 
   for (const leave of leaves) {
     if (leave.emplid === null) continue;
 
-    byEmplid.set(leave.emplid, [...(byEmplid.get(leave.emplid) ?? []), leave]);
+    const found = leavesForEmplid.get(leave.emplid) ?? [];
+    leavesForEmplid.set(leave.emplid, [...found, leave]);
   }
 
-  return byEmplid;
+  return leavesForEmplid;
 }

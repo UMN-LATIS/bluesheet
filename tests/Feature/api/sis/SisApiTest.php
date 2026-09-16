@@ -376,7 +376,7 @@ describe('GET /api/sis/groups/:groupId/employees', function () {
 });
 
 /**
- * A BlueSheet user with the SIS employee and appointment rows behind them.
+ * A BlueSheet user with a SIS employee and appointment row.
  * Appointed to this test group's department unless another is named.
  */
 function appointedUser(array $attributes = [], string $deptId = '11111'): User {
@@ -407,13 +407,6 @@ function leaveFor(User $user, string $startDate, string $endDate, array $attribu
     ]);
 }
 
-function sectionTaughtBy(User $instructor): void {
-    SisClassInstructor::factory()->create([
-        'sis_class_section_id' => sectionInGroupDept()->id,
-        'emplid' => $instructor->emplid,
-    ]);
-}
-
 describe('GET /api/sis/groups/:groupId/leaves', function () {
     beforeEach(function () {
         SisTerm::factory()->create([
@@ -431,9 +424,7 @@ describe('GET /api/sis/groups/:groupId/leaves', function () {
             'surname' => 'García',
             'displayname' => 'Ana García',
         ]);
-        $leave = leaveFor($user, '2026-09-01', '2026-12-31', [
-            'description' => 'Book project',
-        ]);
+        $leave = leaveFor($user, '2026-09-01', '2026-12-31');
 
         actingAs($this->admin);
         $res = getJson($this->url);
@@ -449,7 +440,6 @@ describe('GET /api/sis/groups/:groupId/leaves', function () {
             'status' => 'confirmed',
             'startDate' => '2026-09-01',
             'endDate' => '2026-12-31',
-            'description' => 'Book project',
         ]]);
     });
 
@@ -469,11 +459,38 @@ describe('GET /api/sis/groups/:groupId/leaves', function () {
         expect(getJson($this->url)->json())->toBe([]);
     });
 
+    it('leaves out a leave that begins after the term ends', function () {
+        leaveFor(appointedUser(), '2027-01-15', '2027-05-15');
+
+        actingAs($this->admin);
+
+        expect(getJson($this->url)->json())->toBe([]);
+    });
+
+    it('finds a leave ending on the term\'s first day', function () {
+        leaveFor(appointedUser(), '2026-05-01', '2026-09-08');
+
+        actingAs($this->admin);
+
+        expect(getJson($this->url)->json())->toHaveCount(1);
+    });
+
+    it('finds a leave beginning on the term\'s last day', function () {
+        leaveFor(appointedUser(), '2026-12-23', '2027-05-15');
+
+        actingAs($this->admin);
+
+        expect(getJson($this->url)->json())->toHaveCount(1);
+    });
+
     it('finds a leave for someone teaching nothing that term', function () {
         $onLeave = appointedUser();
         leaveFor($onLeave, '2026-09-01', '2026-12-31');
 
-        sectionTaughtBy(appointedUser());
+        SisClassInstructor::factory()->create([
+            'sis_class_section_id' => sectionInGroupDept()->id,
+            'emplid' => appointedUser()->emplid,
+        ]);
 
         actingAs($this->admin);
         $res = getJson($this->url);
@@ -501,7 +518,7 @@ describe('GET /api/sis/groups/:groupId/leaves', function () {
     });
 
     it('leaves out a leave belonging to another department', function () {
-        $otherDepartment = SisDepartment::factory()->create();
+        $otherDepartment = SisDepartment::factory()->create(['dept_id' => '22222']);
         $otherDeptUser = appointedUser([], $otherDepartment->dept_id);
         leaveFor($otherDeptUser, '2026-09-01', '2026-12-31');
 

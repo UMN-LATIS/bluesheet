@@ -16,7 +16,6 @@ class SisLeaveResource extends JsonResource {
             'status' => $this->status,
             'startDate' => $this->start_date,
             'endDate' => $this->end_date,
-            'description' => $this->description,
         ];
     }
 }

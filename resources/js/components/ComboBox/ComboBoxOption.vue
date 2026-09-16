@@ -20,7 +20,7 @@
       >
         <div class="tw-flex tw-items-center tw-gap-1.5">
           <span class="tw-mr-2 tw-text-sm">{{ option.label }}</span>
-          <slot name="decoration" />
+          <slot name="afterOptionLabel" />
         </div>
         <span
           v-if="option.secondaryLabel"

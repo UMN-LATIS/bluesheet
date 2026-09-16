@@ -236,10 +236,9 @@ export interface TermLeave {
   name: string | null;
   lastName: string | null;
   type: LeaveType;
-  status: LeaveStatus;
+  status: Exclude<LeaveStatus, typeof leaveStatuses.DEFERRED>;
   startDate: string;
   endDate: string;
-  description: string;
 }
 export interface NewLeave {
   id?: string | number;

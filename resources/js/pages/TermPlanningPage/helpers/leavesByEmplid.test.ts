@@ -12,7 +12,6 @@ const leave = (overrides: Partial<TermLeave>): TermLeave => ({
   status: "confirmed",
   startDate: "2026-09-01",
   endDate: "2026-12-31",
-  description: "",
   ...overrides,
 });
 

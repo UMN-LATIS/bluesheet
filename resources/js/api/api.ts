@@ -199,9 +199,6 @@ export async function getTermPayrollDates() {
   return res.data;
 }
 
-const OK = 200;
-const FORBIDDEN = 403;
-
 /**
  * Leaves overlapping one term, for people appointed to the group's
  * department. Empty for a user who may not read the group's leaves.
@@ -216,9 +213,9 @@ export async function fetchTermLeavesForGroup(
       params: { term: termCode },
       // Counting 403 as an answer keeps it out of the error
       // interceptor, which would raise the global error modal.
-      validateStatus: (status) => status === OK || status === FORBIDDEN,
+      validateStatus: (status) => status === 200 || status === 403,
     },
   );
 
-  return res.status === FORBIDDEN ? [] : res.data;
+  return res.status === 403 ? [] : res.data;
 }

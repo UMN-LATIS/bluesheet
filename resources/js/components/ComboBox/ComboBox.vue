@@ -114,8 +114,8 @@
                 :data-highlighted-option="isHighlighted(option)"
                 @click="() => handleSelectOption(option)"
               >
-                <template #decoration>
-                  <slot name="optionDecoration" :option="option" />
+                <template #afterOptionLabel>
+                  <slot name="afterOptionLabel" :option="option" />
                 </template>
               </ComboBoxOption>
             </template>
