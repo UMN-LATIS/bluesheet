@@ -1,5 +1,8 @@
 <template>
-  <FullScreenLayout>
+  <FullScreenLayout
+    :backTo="{ name: 'group', params: { groupId } }"
+    backLabel="Back to group"
+  >
     <template #bar>
       <LeavePlanningToolbar
         :groupId="groupId"

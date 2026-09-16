@@ -1,3 +1,4 @@
+export { default as ArrowLeftIcon } from "./ArrowLeftIcon.vue";
 export { default as ArrowRightIcon } from "./ArrowRightIcon.vue";
 export { default as CalendarIcon } from "./CalendarIcon.vue";
 export { default as CheckIcon } from "./CheckIcon.vue";

@@ -16,6 +16,16 @@
       class="tw-flex tw-h-12 tw-flex-none tw-items-center tw-gap-3 tw-px-3 roomy:tw-h-[52px] roomy:tw-gap-4 roomy:tw-px-4"
     >
       <router-link
+        v-if="backTo"
+        :to="backTo"
+        :aria-label="backLabel"
+        :title="backLabel"
+        class="-tw-mr-1 tw-flex tw-h-9 tw-w-9 tw-flex-none tw-items-center tw-justify-center tw-rounded-full tw-text-on-surface-variant tw-no-underline hover:tw-bg-surface-container-high hover:tw-text-on-surface hover:tw-no-underline"
+      >
+        <ArrowLeftIcon class="!tw-h-[18px] !tw-w-[18px]" aria-hidden="true" />
+      </router-link>
+
+      <router-link
         :to="{ name: 'home' }"
         class="tw-flex tw-flex-none tw-items-center tw-gap-2 tw-text-brand tw-no-underline hover:tw-text-brand hover:tw-no-underline"
       >
@@ -43,5 +53,12 @@
 </template>
 
 <script setup lang="ts">
+import type { RouteLocationRaw } from "vue-router";
 import BlockM from "@/components/BlockM.vue";
+import { ArrowLeftIcon } from "@/icons";
+
+defineProps<{
+  backTo?: RouteLocationRaw;
+  backLabel?: string;
+}>();
 </script>
