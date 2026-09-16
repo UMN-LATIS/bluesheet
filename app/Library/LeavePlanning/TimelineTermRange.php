@@ -7,6 +7,8 @@ use App\SisTerm;
 use Illuminate\Support\Collection;
 
 class TimelineTermRange {
+    private const TERM_CODES_PER_YEAR = 10;
+
     /**
      * A requested side is kept as given, and an unrequested
      * side moves to meet it. When both are requested, the
@@ -28,13 +30,9 @@ class TimelineTermRange {
         $terms = $terms->sortBy('term_code')->values();
         $currentTerm = self::termOnOrAfter($terms, $today) ?? $terms->last()->term_code;
 
-        $earliestInProgressStart = $leaves
-            ->filter(fn(Leave $leave) => $leave->start_date <= $today && $leave->end_date >= $today)
-            ->min('start_date');
-
-        $inProgressLeaveStartTerm = $earliestInProgressStart === null
-            ? $currentTerm
-            : self::termOnOrAfter($terms, $earliestInProgressStart) ?? $currentTerm;
+        $yearBeforeCurrentTerm = $terms
+            ->first(fn(SisTerm $term) => $term->term_code >= $currentTerm - self::TERM_CODES_PER_YEAR)
+            ->term_code;
 
         $latestLeaveEnd = $leaves->max('end_date');
 
@@ -42,7 +40,7 @@ class TimelineTermRange {
             ? $currentTerm
             : self::termOnOrBefore($terms, $latestLeaveEnd) ?? $currentTerm;
 
-        $start = $requestedStart ?? min($currentTerm, $inProgressLeaveStartTerm);
+        $start = $requestedStart ?? $yearBeforeCurrentTerm;
         $end = $requestedEnd ?? max($currentTerm, $latestLeaveEndTerm);
 
         if ($requestedStart === null) {

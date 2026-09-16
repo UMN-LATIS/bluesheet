@@ -7,8 +7,10 @@ use Tests\TestCase;
 
 uses(TestCase::class);
 
-function undergradTermsSpring2026ThroughFall2027() {
+function undergradTermsSummer2025ThroughFall2027() {
     return collect([
+        [1255, '2025-05-19', '2025-08-15'],
+        [1259, '2025-09-02', '2025-12-22'],
         [1263, '2026-01-20', '2026-05-13'],
         [1265, '2026-05-18', '2026-08-14'],
         [1269, '2026-09-08', '2026-12-23'],
@@ -27,45 +29,37 @@ function leaveBetween(string $startDate, string $endDate): Leave {
 }
 
 function rangeOn(string $today, array $leaves = [], ?int $start = null, ?int $end = null): array {
-    return TimelineTermRange::of(undergradTermsSpring2026ThroughFall2027(), collect($leaves), $today, $start, $end);
+    return TimelineTermRange::of(undergradTermsSummer2025ThroughFall2027(), collect($leaves), $today, $start, $end);
 }
 
-it('opens on the current term alone when no leave is in progress or to come', function () {
-    expect(rangeOn('2026-10-01'))->toBe(['startTermId' => 1269, 'endTermId' => 1269]);
+it('opens from the same term a year earlier to the current term when no leave is to come', function () {
+    expect(rangeOn('2026-10-01'))->toBe(['startTermId' => 1259, 'endTermId' => 1269]);
 });
 
 it('uses the next term as current between terms', function () {
-    expect(rangeOn('2026-08-25'))->toBe(['startTermId' => 1269, 'endTermId' => 1269]);
+    expect(rangeOn('2026-08-25'))->toBe(['startTermId' => 1259, 'endTermId' => 1269]);
 });
 
-it('starts at the term an in-progress leave began in', function () {
-    $sabbatical = leaveBetween('2026-02-01', '2026-12-31');
-
-    expect(rangeOn('2026-10-01', [$sabbatical]))->toBe(['startTermId' => 1263, 'endTermId' => 1269]);
+it('starts at the earliest term when the terms do not reach back a year', function () {
+    expect(rangeOn('2026-03-01'))->toBe(['startTermId' => 1255, 'endTermId' => 1263]);
 });
 
-it('starts at the next term when an in-progress leave began between terms', function () {
-    $leave = leaveBetween('2026-08-20', '2027-05-01');
+it('does not move the start back for a leave in progress', function () {
+    $sabbatical = leaveBetween('2025-01-01', '2026-12-31');
 
-    expect(rangeOn('2026-10-01', [$leave]))->toBe(['startTermId' => 1269, 'endTermId' => 1273]);
-});
-
-it('ignores a leave that has already ended', function () {
-    $finished = leaveBetween('2026-01-20', '2026-05-13');
-
-    expect(rangeOn('2026-10-01', [$finished]))->toBe(['startTermId' => 1269, 'endTermId' => 1269]);
+    expect(rangeOn('2026-10-01', [$sabbatical]))->toBe(['startTermId' => 1259, 'endTermId' => 1269]);
 });
 
 it('ends at the term the latest upcoming leave ends in', function () {
     $upcoming = leaveBetween('2027-09-07', '2027-12-23');
 
-    expect(rangeOn('2026-10-01', [$upcoming]))->toBe(['startTermId' => 1269, 'endTermId' => 1279]);
+    expect(rangeOn('2026-10-01', [$upcoming]))->toBe(['startTermId' => 1259, 'endTermId' => 1279]);
 });
 
 it('ends at the previous term when the latest leave ends between terms', function () {
     $upcoming = leaveBetween('2027-01-19', '2027-08-30');
 
-    expect(rangeOn('2026-10-01', [$upcoming]))->toBe(['startTermId' => 1269, 'endTermId' => 1275]);
+    expect(rangeOn('2026-10-01', [$upcoming]))->toBe(['startTermId' => 1259, 'endTermId' => 1275]);
 });
 
 it('keeps a requested start and moves the default end up to meet it', function () {
@@ -73,7 +67,7 @@ it('keeps a requested start and moves the default end up to meet it', function (
 });
 
 it('keeps a requested end and moves the default start back to meet it', function () {
-    expect(rangeOn('2026-10-01', [], end: 1263))->toBe(['startTermId' => 1263, 'endTermId' => 1263]);
+    expect(rangeOn('2026-10-01', [], end: 1255))->toBe(['startTermId' => 1255, 'endTermId' => 1255]);
 });
 
 it('keeps both requested sides as given', function () {
@@ -83,11 +77,5 @@ it('keeps both requested sides as given', function () {
 });
 
 it('treats the last term as current once every term has ended', function () {
-    expect(rangeOn('2028-03-01'))->toBe(['startTermId' => 1279, 'endTermId' => 1279]);
-});
-
-it('falls back to the current term when an in-progress leave began after every term', function () {
-    $leave = leaveBetween('2028-01-10', '2028-06-01');
-
-    expect(rangeOn('2028-03-01', [$leave]))->toBe(['startTermId' => 1279, 'endTermId' => 1279]);
+    expect(rangeOn('2028-03-01'))->toBe(['startTermId' => 1269, 'endTermId' => 1279]);
 });

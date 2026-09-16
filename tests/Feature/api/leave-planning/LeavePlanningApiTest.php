@@ -30,6 +30,7 @@ beforeEach(function () {
     Carbon::setTestNow('2026-10-01');
 
     foreach ([
+        [1259, 'Fall 2025', '2025-09-02', '2025-12-22'],
         [1263, 'Spring 2026', '2026-01-20', '2026-05-13'],
         [1265, 'Summer 2026', '2026-05-18', '2026-08-14'],
         [1269, 'Fall 2026', '2026-09-08', '2026-12-23'],
@@ -197,13 +198,13 @@ describe('GET /api/leave-planning/groups/:groupId/leaves', function () {
         ]);
     });
 
-    it('opens on the terms from an in-progress leave to the latest upcoming one', function () {
+    it('opens on the terms from a year before the current one to the latest upcoming leave', function () {
         leaveTaken(departmentMember(), '2026-02-01', '2026-12-31');
         leaveTaken(departmentMember(), '2027-01-19', '2027-05-12');
 
         actingAs($this->admin);
 
-        expect(getJson($this->url)->json('range'))->toBe(['startTermId' => 1263, 'endTermId' => 1273]);
+        expect(getJson($this->url)->json('range'))->toBe(['startTermId' => 1259, 'endTermId' => 1273]);
     });
 
     it('does not widen the default range for a cancelled leave', function () {
@@ -211,14 +212,14 @@ describe('GET /api/leave-planning/groups/:groupId/leaves', function () {
 
         actingAs($this->admin);
 
-        expect(getJson($this->url)->json('range'))->toBe(['startTermId' => 1269, 'endTermId' => 1269]);
+        expect(getJson($this->url)->json('range'))->toBe(['startTermId' => 1259, 'endTermId' => 1269]);
     });
 
     it('moves the default start back to a requested end', function () {
         actingAs($this->admin);
 
-        expect(getJson("{$this->url}?end=1265")->json('range'))
-            ->toBe(['startTermId' => 1265, 'endTermId' => 1265]);
+        expect(getJson("{$this->url}?end=1259")->json('range'))
+            ->toBe(['startTermId' => 1259, 'endTermId' => 1259]);
     });
 
     it('takes today as the date in Minnesota, not in UTC', function () {
@@ -227,7 +228,7 @@ describe('GET /api/leave-planning/groups/:groupId/leaves', function () {
 
         actingAs($this->admin);
 
-        expect(getJson($this->url)->json('range'))->toBe(['startTermId' => 1269, 'endTermId' => 1269]);
+        expect(getJson($this->url)->json('range'))->toBe(['startTermId' => 1259, 'endTermId' => 1269]);
     });
 
     it('moves the default end up to a requested start', function () {
