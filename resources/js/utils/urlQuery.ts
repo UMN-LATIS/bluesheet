@@ -5,7 +5,14 @@
  */
 
 import type { LocationQuery } from "vue-router";
-import type { UrlQuery } from "../types";
+
+/**
+ * A URL query as this page reads and writes it, flattened: one value to a key,
+ * and a key carrying no value is simply absent. The router's own query type
+ * allows an array of values per key and a null among them, so the page
+ * flattens on the way in and hands back this shape on the way out.
+ */
+export type UrlQuery = Record<string, string | undefined>;
 
 /**
  * The router's query as one value to a key. A repeated key keeps its first

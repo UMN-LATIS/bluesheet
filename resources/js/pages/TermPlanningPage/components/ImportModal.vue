@@ -217,10 +217,10 @@
 <script setup lang="ts">
 import { computed, ref, useId, watch } from "vue";
 import Modal from "@/components/Modal.vue";
-import FacetTile from "./FacetTile.vue";
-import FilterRow from "./FilterRow.vue";
+import FacetTile from "@/components/planning/FacetTile.vue";
+import FilterRow from "@/components/planning/FilterRow.vue";
 import IncludeToggles from "./IncludeToggles.vue";
-import { colorOfType, labelOfComponent } from "../constants/meetingTypeColors";
+import { colorOfType, labelOfComponent } from "@/utils/meetingTypeColors";
 import { buildFilterOptions, type CourseLevel } from "../helpers/filterOptions";
 import {
   sectionIdsUnder,

@@ -92,8 +92,8 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, useId } from "vue";
 import { onClickOutside } from "@vueuse/core";
-import FieldDivider from "./FieldDivider.vue";
-import FieldLabel from "./FieldLabel.vue";
+import FieldDivider from "@/components/planning/FieldDivider.vue";
+import FieldLabel from "@/components/planning/FieldLabel.vue";
 import NewCourseModal from "./NewCourseModal.vue";
 import UnofficialTag from "./UnofficialTag.vue";
 import { searchCourses } from "../helpers/courseSearch";

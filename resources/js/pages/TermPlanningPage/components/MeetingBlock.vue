@@ -40,7 +40,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import MeetingTimes from "./MeetingTimes.vue";
-import { colorOfType } from "../constants/meetingTypeColors";
+import { colorOfType } from "@/utils/meetingTypeColors";
 import { heightOf, topOf } from "../helpers/timeScale";
 
 const props = defineProps<{

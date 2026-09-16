@@ -77,11 +77,11 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { colorOfType } from "../constants/meetingTypeColors";
+import { colorOfType } from "@/utils/meetingTypeColors";
 import type { DayBandItem } from "../helpers/dayBands";
 import { assistantNames, leadInstructorName } from "../helpers/sectionPeople";
 import { formatTimeRange } from "../helpers/timeScale";
-import type { ScreenSize } from "../useScreenSize";
+import type { ScreenSize } from "@/utils/useScreenSize";
 
 const props = defineProps<{
   item: DayBandItem;

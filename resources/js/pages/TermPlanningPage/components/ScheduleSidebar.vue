@@ -237,11 +237,11 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import FacetTile from "./FacetTile.vue";
-import FilterRow from "./FilterRow.vue";
+import FacetTile from "@/components/planning/FacetTile.vue";
+import FilterRow from "@/components/planning/FilterRow.vue";
 import PersonLeaveChip from "./PersonLeaveChip.vue";
 import { XIcon } from "@/icons";
-import { colorOfType, labelOfComponent } from "../constants/meetingTypeColors";
+import { colorOfType, labelOfComponent } from "@/utils/meetingTypeColors";
 import UnofficialTag from "./UnofficialTag.vue";
 import type {
   CourseOption,

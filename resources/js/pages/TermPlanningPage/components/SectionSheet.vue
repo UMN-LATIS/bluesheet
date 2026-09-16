@@ -567,16 +567,16 @@ import { computed, ref } from "vue";
 import CoursePicker from "./CoursePicker.vue";
 import UnofficialTag from "./UnofficialTag.vue";
 import Disclosure from "./Disclosure.vue";
-import FieldDivider from "./FieldDivider.vue";
+import FieldDivider from "@/components/planning/FieldDivider.vue";
 import FieldHeader from "./FieldHeader.vue";
-import FieldLabel from "./FieldLabel.vue";
+import FieldLabel from "@/components/planning/FieldLabel.vue";
 import PersonField from "./PersonField.vue";
 import PersonLeaveChip from "./PersonLeaveChip.vue";
 import SectionFacts from "./SectionFacts.vue";
 import SegmentedControl, { type SegmentedOption } from "./SegmentedControl.vue";
 import { ComboBox, type ComboBoxOptionType } from "@/components/ComboBox";
 import { LockIcon } from "@/icons";
-import { colorOfType, labelOfComponent } from "../constants/meetingTypeColors";
+import { colorOfType, labelOfComponent } from "@/utils/meetingTypeColors";
 import { DELIVERY_OPTIONS, labelOfDelivery } from "../constants/delivery";
 import {
   assistantsOf,

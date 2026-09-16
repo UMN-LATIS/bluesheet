@@ -109,7 +109,7 @@
 
 <script setup lang="ts">
 import { ArrowRightIcon } from "@/icons";
-import { colorOfType } from "../constants/meetingTypeColors";
+import { colorOfType } from "@/utils/meetingTypeColors";
 import { leadInstructorName } from "../helpers/sectionPeople";
 import { formatTimeRange } from "../helpers/timeScale";
 import type { SisSection, TimeRange } from "../types";

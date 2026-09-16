@@ -236,7 +236,7 @@ import ImportBanner from "./components/ImportBanner.vue";
 import ImportModal, { type ImportResult } from "./components/ImportModal.vue";
 import HourSheet, { type HourEntry } from "./components/HourSheet.vue";
 import MeetingTimes from "./components/MeetingTimes.vue";
-import Pane from "./components/Pane.vue";
+import Pane from "@/components/planning/Pane.vue";
 import PlanningToolbar from "./components/PlanningToolbar.vue";
 import ScheduleGrid from "./components/ScheduleGrid.vue";
 import ScheduleSidebar from "./components/ScheduleSidebar.vue";
@@ -252,7 +252,7 @@ import { ASYNC_DAY_INDEX, WEEKDAY_NAMES } from "./helpers/scheduleDays";
 import { refusalMessage } from "./helpers/refusalMessage";
 import { formatTimeRange } from "./helpers/timeScale";
 import { toSectionPayload } from "./helpers/sectionPayload";
-import { flattenQuery } from "./helpers/urlQuery";
+import { flattenQuery } from "@/utils/urlQuery";
 import type { ScheduleView } from "./helpers/viewQuery";
 import { useSisGroupTermsQuery } from "./queries/useSisGroupTermsQuery";
 import { useSisGroupLeavesQuery } from "./queries/useSisGroupLeavesQuery";
@@ -265,7 +265,7 @@ import { useScheduleEditor } from "./useScheduleEditor";
 import { NEW_SECTION_ID } from "./useScheduleEditor/types";
 import type { Effect } from "./useScheduleEditor/types";
 import { EDITOR_QUERY_KEYS } from "./useScheduleEditor/update";
-import { useScreenSize } from "./useScreenSize";
+import { useScreenSize } from "@/utils/useScreenSize";
 import { useTermSchedule } from "./useTermSchedule";
 
 const props = defineProps<{

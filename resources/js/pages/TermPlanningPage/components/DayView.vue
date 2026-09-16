@@ -124,7 +124,7 @@ import {
 import { isAsyncDay } from "../helpers/scheduleDays";
 import type { Meeting, PlannedSection } from "../types";
 import type { ScheduleEditor } from "../useScheduleEditor";
-import type { ScreenSize } from "../useScreenSize";
+import type { ScreenSize } from "@/utils/useScreenSize";
 
 const props = defineProps<{
   dayIndex: number;

@@ -146,7 +146,7 @@ import { useGroupQuery } from "../queries/useGroupQuery";
 import { useSisGroupsQuery } from "../queries/useSisGroupsQuery";
 import type { ScheduleView } from "../helpers/viewQuery";
 import type { SisGroup, SisTerm } from "../types";
-import { useScreenSize } from "../useScreenSize";
+import { useScreenSize } from "@/utils/useScreenSize";
 
 const props = defineProps<{
   groupId: number;

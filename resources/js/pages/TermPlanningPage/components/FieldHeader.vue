@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-import FieldLabel from "./FieldLabel.vue";
+import FieldLabel from "@/components/planning/FieldLabel.vue";
 
 defineProps<{
   label: string;

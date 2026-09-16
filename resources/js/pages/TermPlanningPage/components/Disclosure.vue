@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import FieldLabel from "./FieldLabel.vue";
+import FieldLabel from "@/components/planning/FieldLabel.vue";
 import { NoteIcon } from "@/icons";
 
 defineProps<{
