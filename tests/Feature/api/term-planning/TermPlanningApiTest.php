@@ -1,11 +1,13 @@
 <?php
 
 use App\Console\Commands\ImportSisData;
+use App\Constants\Permissions;
 use App\Group;
 use App\LocalClassInstructor;
 use App\LocalClassMeeting;
 use App\LocalClassSection;
 use App\LocalCourse;
+use App\Membership;
 use App\SisCourse;
 use App\SisClassMeeting;
 use App\SisClassSection;
@@ -32,6 +34,15 @@ beforeEach(function () {
     $this->group = Group::factory()->create(['dept_id' => (string) DEPT]);
     $this->admin = User::where('umndid', 'admin')->first();
     $this->basicUser = User::where('umndid', 'basic_user')->first();
+
+    $this->groupManager = User::factory()->create();
+    Membership::factory()->create([
+        'user_id' => $this->groupManager->id,
+        'group_id' => $this->group->id,
+        'admin' => true,
+    ]);
+    $this->coursesViewer = User::factory()->create()->givePermissionTo(Permissions::VIEW_PLANNED_COURSES);
+    $this->coursesEditor = User::factory()->create()->givePermissionTo(Permissions::EDIT_PLANNED_COURSES);
 });
 
 /** A planned section in this group's department, with the given overrides. */
@@ -172,6 +183,16 @@ describe('GET /api/term-planning/groups/:groupId/sections', function () {
 
         expect($res->status())->toBe(403);
     });
+
+    it('admits a group manager and a view-permission user', function (User $user) {
+        actingAs($user);
+        $res = getJson(sectionsUrl($this->group) . '?term=' . PLANNABLE_TERM);
+
+        expect($res->status())->toBe(200);
+    })->with([
+        'group manager' => fn () => $this->groupManager,
+        'view-permission user' => fn () => $this->coursesViewer,
+    ]);
 });
 
 describe('POST /api/term-planning/groups/:groupId/sections', function () {
@@ -209,6 +230,24 @@ describe('POST /api/term-planning/groups/:groupId/sections', function () {
 
     it('requires the user to have edit privileges', function () {
         actingAs($this->basicUser);
+        $res = postJson(sectionsUrl($this->group), sectionPayload());
+
+        expect($res->status())->toBe(403);
+        expect(LocalClassSection::count())->toBe(0);
+    });
+
+    it('lets a group manager and an edit-permission user create a section', function (User $user) {
+        actingAs($user);
+        $res = postJson(sectionsUrl($this->group), sectionPayload());
+
+        expect($res->status())->toBe(201);
+    })->with([
+        'group manager' => fn () => $this->groupManager,
+        'edit-permission user' => fn () => $this->coursesEditor,
+    ]);
+
+    it('refuses a view-permission-only user', function () {
+        actingAs($this->coursesViewer);
         $res = postJson(sectionsUrl($this->group), sectionPayload());
 
         expect($res->status())->toBe(403);

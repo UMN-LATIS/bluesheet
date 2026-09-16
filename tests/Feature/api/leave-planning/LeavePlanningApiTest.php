@@ -479,4 +479,17 @@ describe('GET /api/leave-planning/groups/:groupId/teaching-history', function ()
 
         expect(getJson("{$this->url}?start=1269&end=1269")->status())->toBe(403);
     });
+
+    it('admits a group manager and a view-permission user', function (User $user) {
+        actingAs($user);
+
+        expect(getJson("{$this->url}?start=1269&end=1269")->status())->toBe(200);
+    })->with([
+        'group manager' => fn () => tap(User::factory()->create(), fn (User $user) => Membership::factory()->create([
+            'user_id' => $user->id,
+            'group_id' => $this->group->id,
+            'admin' => true,
+        ])),
+        'view-permission user' => fn () => User::factory()->create()->givePermissionTo(Permissions::VIEW_PLANNED_COURSES),
+    ]);
 });

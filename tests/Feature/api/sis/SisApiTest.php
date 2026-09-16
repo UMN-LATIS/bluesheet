@@ -1,7 +1,9 @@
 <?php
 
+use App\Constants\Permissions;
 use App\Group;
 use App\Leave;
+use App\Membership;
 use App\SisAppointment;
 use App\SisClassInstructor;
 use App\SisClassMeeting;
@@ -26,6 +28,14 @@ beforeEach(function () {
 
     $this->admin = User::where('umndid', 'admin')->first();
     $this->basicUser = User::where('umndid', 'basic_user')->first();
+
+    $this->groupManager = User::factory()->create();
+    Membership::factory()->create([
+        'user_id' => $this->groupManager->id,
+        'group_id' => $this->group->id,
+        'admin' => true,
+    ]);
+    $this->coursesViewer = User::factory()->create()->givePermissionTo(Permissions::VIEW_PLANNED_COURSES);
 });
 
 /** A section in this test group's department, with the given overrides. */
@@ -310,6 +320,15 @@ describe('GET /api/sis/groups/:groupId/courses', function () {
 
         expect($res->status())->toBe(403);
     });
+
+    it('admits a group manager and a view-permission user', function (User $user) {
+        actingAs($user);
+
+        expect(getJson("/api/sis/groups/{$this->group->id}/courses")->status())->toBe(200);
+    })->with([
+        'group manager' => fn () => $this->groupManager,
+        'view-permission user' => fn () => $this->coursesViewer,
+    ]);
 });
 
 describe('GET /api/sis/groups/:groupId/employees', function () {
