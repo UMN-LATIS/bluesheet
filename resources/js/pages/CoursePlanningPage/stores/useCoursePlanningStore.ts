@@ -425,10 +425,6 @@ export const useCoursePlanningStore = defineStore("coursePlanning", () => {
     setFiltersFromQueryString(parsedQuery: ReturnType<typeof qs.parse>) {
       const updatedFilters: T.CoursePlanningFilters = { ...state.filters };
 
-      if (parsedQuery.inPlanningMode) {
-        updatedFilters.inPlanningMode = parsedQuery.inPlanningMode === "true";
-      }
-
       if (parsedQuery.startTermId) {
         updatedFilters.startTermId = Number.parseInt(
           parsedQuery.startTermId as string,

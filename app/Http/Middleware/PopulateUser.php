@@ -6,7 +6,7 @@ use Closure;
 use Auth;
 use App\Library\LDAP as LDAP;
 
-class populateUser
+class PopulateUser
 {
     /**
      * Handle an incoming request.
