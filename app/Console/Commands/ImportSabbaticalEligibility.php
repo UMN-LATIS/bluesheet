@@ -6,7 +6,7 @@ use App\Library\UserService;
 use Illuminate\Console\Command;
 use App\TermPayrollDate;
 
-class ImportSabbaticalEligibilty extends Command
+class ImportSabbaticalEligibility extends Command
 {
     /**
      * The name and signature of the console command.
