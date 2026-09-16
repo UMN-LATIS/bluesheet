@@ -4,9 +4,7 @@
     <select
       class="tw-min-h-11 tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-py-1.5 tw-pl-3.5 tw-pr-8 tw-text-[13px] tw-font-semibold tw-text-on-surface roomy:tw-min-h-0"
       :value="termId ?? ''"
-      @change="
-        emit('choose', Number(($event.target as HTMLSelectElement).value))
-      "
+      @change="chooseTerm"
     >
       <option v-if="termId === null" value="" disabled>Term</option>
       <option v-for="term in terms" :key="term.id" :value="term.id">
@@ -26,4 +24,9 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{ choose: [termId: number] }>();
+
+const chooseTerm = (event: Event) => {
+  const select = event.target as HTMLSelectElement;
+  emit("choose", Number(select.value));
+};
 </script>

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { courseViewOf, leaveRowsOf, personHistoryRowsOf } from "./planningRows";
+import {
+  courseHistoryOf,
+  leaveRowsOf,
+  personHistoryRowsOf,
+} from "./planningRows";
 import { emptyFilters } from "../useLeavePlanningView/viewQuery";
 import type { PlanningFilters } from "../useLeavePlanningView/types";
 import {
@@ -112,7 +116,7 @@ describe("personHistoryRowsOf", () => {
   });
 });
 
-describe("courseViewOf", () => {
+describe("courseHistoryOf", () => {
   const lucia = person(1, { categories: ["Faculty"] });
   const nina = person(2, { categories: ["Students - Instruction"] });
   const history = historyOf(
@@ -128,7 +132,7 @@ describe("courseViewOf", () => {
   );
 
   it("groups sections by course, in course order, by term", () => {
-    const { courses } = courseViewOf(history, null, emptyFilters());
+    const { courses } = courseHistoryOf(history, null, emptyFilters());
 
     expect(courses.map(({ courseCode }) => courseCode)).toEqual([
       "ANTH-1001",
@@ -138,7 +142,7 @@ describe("courseViewOf", () => {
   });
 
   it("keeps only courses someone chosen teaches", () => {
-    const { courses } = courseViewOf(
+    const { courses } = courseHistoryOf(
       history,
       null,
       filtersWith({ person: ["2"] }),
@@ -153,8 +157,12 @@ describe("courseViewOf", () => {
       [leave(1, "2027-01-19", "2027-05-12")],
     );
 
-    const { onLeave } = courseViewOf(history, timeline, emptyFilters());
+    const { peopleOnLeave } = courseHistoryOf(
+      history,
+      timeline,
+      emptyFilters(),
+    );
 
-    expect(onLeave.map(({ person }) => person.emplid)).toEqual([1]);
+    expect(peopleOnLeave.map(({ person }) => person.emplid)).toEqual([1]);
   });
 });

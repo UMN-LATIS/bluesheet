@@ -15,7 +15,8 @@
 
   <Pane
     v-else
-    class="tw-absolute tw-inset-y-0 tw-right-3 tw-z-40 tw-w-[380px] tw-shadow-[-18px_0_44px_rgba(38,38,38,0.16)] roomy:tw-right-4 roomy:tw-w-[404px]"
+    class="tw-absolute tw-inset-y-0 tw-right-3 tw-z-40 tw-shadow-[-18px_0_44px_rgba(38,38,38,0.16)] roomy:tw-right-4"
+    :style="{ width: `${panelWidthPx}px` }"
   >
     <slot />
   </Pane>
@@ -24,6 +25,8 @@
 <script setup lang="ts">
 import Pane from "@/components/planning/Pane.vue";
 import { useScreenSize } from "@/utils/useScreenSize";
+
+defineProps<{ panelWidthPx: number }>();
 
 const { isSmall } = useScreenSize();
 </script>

@@ -6,7 +6,7 @@
       '--lp-name': `${NAME_COLUMN_WIDTH}px`,
       '--lp-header': `${AXIS_HEADER_HEIGHT}px`,
       '--lp-track': `${trackWidth}px`,
-      '--lp-trailing': `${reservedRight}px`,
+      '--lp-trailing': `${trailingScrollRoomPx}px`,
     }"
   >
     <div
@@ -31,29 +31,29 @@
         :style="{ width: 'var(--lp-track)', height: 'var(--lp-header)' }"
       >
         <div
-          v-for="band in termBands"
-          :key="band.term.id"
+          v-for="termLabel in termLabels"
+          :key="termLabel.term.id"
           class="tw-absolute tw-top-2 tw-flex tw-h-6 tw-items-center tw-gap-1.5 tw-overflow-hidden tw-whitespace-nowrap tw-rounded-md tw-bg-surface-container tw-px-2"
           :style="{
-            left: `${band.left * 100}%`,
-            width: `${band.width * 100}%`,
+            left: `${termLabel.left * 100}%`,
+            width: `${termLabel.width * 100}%`,
           }"
-          :title="band.term.name"
+          :title="termLabel.term.name"
         >
           <span class="tw-text-[11.5px] tw-font-semibold">
-            {{ band.term.name }}
+            {{ termLabel.term.name }}
           </span>
           <span
-            v-if="band.isPlanned"
+            v-if="termLabel.isPlanned"
             class="tw-inline-flex tw-h-4 tw-items-center tw-rounded-full tw-border tw-border-dashed tw-border-outline tw-px-1.5 tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-[0.06em] tw-text-on-surface-variant"
           >
             Planned
           </span>
           <span
-            v-else-if="band.hasRoomForDates"
+            v-else-if="termLabel.hasRoomForDates"
             class="tw-text-[10px] tw-text-on-surface-variant"
           >
-            {{ band.dates }}
+            {{ termLabel.dateRangeLabel }}
           </span>
         </div>
 
@@ -131,8 +131,7 @@ const props = defineProps<{
   nameHeading: string;
   isHistoryShown: boolean;
   plannedTermIds: Set<number>;
-  /** px of scroll room past the track */
-  reservedRight: number;
+  trailingScrollRoomPx: number;
   /** "YYYY-MM-DD" */
   today: string;
   /** Matches a `data-selection-key` inside the rows. */
@@ -160,18 +159,25 @@ const todayLeft = computed(() =>
     : null,
 );
 
-const termBands = computed(() =>
-  props.axis.terms.map((band) => ({
-    ...band,
-    isPlanned: props.isHistoryShown && props.plannedTermIds.has(band.term.id),
-    hasRoomForDates: band.width * trackWidth.value >= DATES_MIN_BAND_PX,
-    dates: `${formatMonthDay(band.term.startDate!)} – ${formatMonthDay(band.term.endDate!)}`,
-  })),
+const termLabels = computed(() =>
+  props.axis.terms.map((axisTerm) => {
+    const { term } = axisTerm;
+    const startLabel = formatMonthDay(term.startDate);
+    const endLabel = formatMonthDay(term.endDate);
+    return {
+      ...axisTerm,
+      isPlanned: props.isHistoryShown && props.plannedTermIds.has(term.id),
+      hasRoomForDates: axisTerm.width * trackWidth.value >= DATES_MIN_BAND_PX,
+      dateRangeLabel: `${startLabel} – ${endLabel}`,
+    };
+  }),
 );
 
 const monthTicks = computed(() => {
   const months = props.axis.months;
-  const averageSpacing = trackWidth.value / Math.max(months.length, 1) || 0;
+  if (months.length === 0) return [];
+
+  const averageSpacing = trackWidth.value / months.length;
   const step = averageSpacing < MIN_TICK_SPACING_PX ? 2 : 1;
 
   return months.filter((month, index) => {

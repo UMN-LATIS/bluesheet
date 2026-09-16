@@ -7,8 +7,7 @@
     }"
   >
     <div
-      class="tw-sticky tw-left-0 tw-z-10 tw-flex tw-flex-none tw-flex-col tw-justify-center tw-gap-px tw-border-0 tw-border-r tw-border-solid tw-border-surface-container tw-px-3.5 tw-py-2"
-      :class="isMuted ? 'tw-bg-surface' : 'tw-bg-surface-bright'"
+      class="tw-sticky tw-left-0 tw-z-10 tw-flex tw-flex-none tw-flex-col tw-justify-center tw-gap-px tw-border-0 tw-border-r tw-border-solid tw-border-surface-container tw-bg-surface-bright tw-px-3.5 tw-py-2"
       :style="{ width: 'var(--lp-name)' }"
     >
       <span class="tw-truncate tw-text-[13px] tw-font-semibold">{{
@@ -31,8 +30,7 @@
 <script setup lang="ts">
 defineProps<{
   name: string;
-  detail?: string | null;
+  detail: string | null;
   height: number;
-  isMuted?: boolean;
 }>();
 </script>

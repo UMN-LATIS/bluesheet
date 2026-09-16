@@ -93,7 +93,6 @@ export function section(
     section: sectionNumber,
     title: `Title of ${courseCode}`,
     component: "LEC",
-    career: "UGRD",
     enrollmentTotal: 20,
     enrollmentCap: 30,
     isPlanned: false,

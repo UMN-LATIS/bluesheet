@@ -1,6 +1,6 @@
 /** What the page has open, as URL query: a section's sheet, an hour's list, or both. */
 
-import type { UrlQuery } from "../types";
+import type { UrlQuery } from "@/utils/urlQuery";
 import { sectionIdOfMeetingId } from "./sectionPlacement";
 import { WEEKDAY_CODES } from "./scheduleDays";
 import {

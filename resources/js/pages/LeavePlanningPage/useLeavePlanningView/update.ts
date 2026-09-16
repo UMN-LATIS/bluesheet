@@ -26,8 +26,6 @@ export const initialState = (): ViewState => ({
 export function update(state: ViewState, event: ViewEvent): Next {
   const nextState = reduce(state, event);
 
-  // An effect here writes the URL, and the route watcher
-  // answers with urlChanged again, forever.
   if (event.type === "urlChanged") return { state: nextState, effects: [] };
 
   const query = encodeViewQuery(nextState);
@@ -42,9 +40,10 @@ export function update(state: ViewState, event: ViewEvent): Next {
 function reduce(state: ViewState, event: ViewEvent): ViewState {
   switch (event.type) {
     case "urlChanged": {
-      const fromUrl = decodeViewQuery(event.query);
-      const withUrl = { ...state, ...fromUrl };
-      return fromUrl.isHistoryShown ? withUrl : withoutHistory(withUrl);
+      const urlState = decodeViewQuery(event.query);
+      const stateWithUrl = { ...state, ...urlState };
+      if (urlState.isHistoryShown) return stateWithUrl;
+      return withoutHistory(stateWithUrl);
     }
 
     case "rangeStartSelected": {
@@ -83,10 +82,11 @@ function reduce(state: ViewState, event: ViewEvent): ViewState {
     case "facetOpened":
       return { ...state, activeFacet: event.facet };
 
-    case "filterValuesAdded":
-      return withFacet(state, event.facet, [
-        ...new Set([...state.filters[event.facet], ...event.values]),
-      ]);
+    case "filterValuesAdded": {
+      const current = state.filters[event.facet];
+      const values = [...new Set([...current, ...event.values])];
+      return withFacet(state, event.facet, values);
+    }
 
     case "filterValuesRemoved":
       return withFacet(
@@ -127,13 +127,14 @@ function withoutHistory(state: ViewState): ViewState {
   const filters = { ...state.filters };
   for (const facet of HISTORY_FACETS) filters[facet] = [];
 
+  const isSectionSelected = state.selection?.kind === "section";
+  const isSectionFacetOpen = HISTORY_FACETS.includes(state.activeFacet);
+
   return {
     ...state,
     isHistoryShown: false,
     filters,
-    selection: state.selection?.kind === "section" ? null : state.selection,
-    activeFacet: HISTORY_FACETS.includes(state.activeFacet)
-      ? "person"
-      : state.activeFacet,
+    selection: isSectionSelected ? null : state.selection,
+    activeFacet: isSectionFacetOpen ? "person" : state.activeFacet,
   };
 }

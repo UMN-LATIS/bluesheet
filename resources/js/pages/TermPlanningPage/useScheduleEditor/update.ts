@@ -10,8 +10,8 @@ import type {
   ScheduleFilters,
   SisSectionMeeting,
   TimeRange,
-  UrlQuery,
 } from "../types";
+import type { UrlQuery } from "@/utils/urlQuery";
 import {
   decodeFilters,
   defaultFilters,

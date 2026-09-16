@@ -10,7 +10,8 @@
 
 import { computed, reactive, type Ref, shallowRef } from "vue";
 import dayjs from "dayjs";
-import type { FilterFacet, SisSection, UrlQuery } from "../types";
+import type { FilterFacet, SisSection } from "../types";
+import type { UrlQuery } from "@/utils/urlQuery";
 import type { ScheduleView } from "../helpers/viewQuery";
 import { dayIndexOfWeekday } from "../helpers/scheduleDays";
 import { sectionProblems } from "./validation";

@@ -12,8 +12,9 @@ export async function fetchLeavePlanningGroups(): Promise<T.PlanningGroup[]> {
 }
 
 /**
- * A side left null is chosen by the server from the department's leaves.
- * Null when the user may not read the group's leaves.
+ * `startTermId` or `endTermId` left null is chosen by the
+ * server from the department's leaves. Null when the user
+ * may not read the group's leaves.
  */
 export async function fetchLeaveTimeline(
   groupId: T.Group["id"],
@@ -23,9 +24,10 @@ export async function fetchLeaveTimeline(
   const res = await axios.get<T.LeaveTimeline>(
     `/api/leave-planning/groups/${groupId}/leaves`,
     {
-      params: { start: startTermId ?? undefined, end: endTermId ?? undefined },
-      // Counting 403 as an answer keeps it out of the error
-      // interceptor, which would raise the global error modal.
+      params: { start: startTermId, end: endTermId },
+      // Counting 403 as an answer keeps it out of the
+      // error interceptor, which raises the global error
+      // modal.
       validateStatus: (status) => status === 200 || status === 403,
     },
   );

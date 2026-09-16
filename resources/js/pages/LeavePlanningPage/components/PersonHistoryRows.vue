@@ -2,12 +2,12 @@
   <TimelineRow
     v-for="row in laidOutRows"
     :key="row.person.emplid"
-    :name="nameOf(row.person)"
+    :name="lastFirstNameOf(row.person)"
     :detail="row.person.title"
     :height="row.height"
   >
     <LeaveBar
-      v-for="{ item, lane } in row.laned"
+      v-for="{ item, lane } in row.itemsWithLane"
       :key="item.id"
       :leave="item"
       :person="row.person"
@@ -42,10 +42,13 @@ import type { TeachingSection } from "@/types";
 import TimelineRow from "./TimelineRow.vue";
 import LeaveBar from "./LeaveBar.vue";
 import TermChipColumns from "./TermChipColumns.vue";
-import { laneByDate } from "../helpers/leaveLanes";
+import { stackIntoLanes } from "../helpers/leaveLanes";
 import { spanOf, type TimelineAxis } from "../helpers/timelineAxis";
-import { nameOf } from "../helpers/filterOptions";
-import type { PersonHistoryRow } from "../helpers/planningRows";
+import { lastFirstNameOf } from "../helpers/filterOptions";
+import {
+  mostSectionsInOneTerm,
+  type PersonHistoryRow,
+} from "../helpers/planningRows";
 
 const props = defineProps<{
   rows: PersonHistoryRow[];
@@ -62,6 +65,7 @@ const emit = defineEmits<{
 
 const ROW_PADDING = 8;
 const LEAVE_LANE_HEIGHT = 24;
+const LEAVES_GAP = 4;
 const CHIP_HEIGHT = 26;
 const MIN_ROW_HEIGHT = 52;
 
@@ -70,19 +74,17 @@ const courseLabelOf = (section: TeachingSection) =>
 
 const laidOutRows = computed(() =>
   props.rows.map((row) => {
-    const { laned, laneCount } = laneByDate(row.leaves);
-    const leavesHeight = laneCount > 0 ? laneCount * LEAVE_LANE_HEIGHT + 4 : 0;
-    const tallestTerm = Math.max(
-      0,
-      ...[...row.sectionsByTerm.values()].map((sections) => sections.length),
-    );
+    const { itemsWithLane, laneCount } = stackIntoLanes(row.leaves);
+    const leavesHeight =
+      laneCount > 0 ? laneCount * LEAVE_LANE_HEIGHT + LEAVES_GAP : 0;
+    const chipsHeight = mostSectionsInOneTerm(row.sectionsByTerm) * CHIP_HEIGHT;
     return {
       ...row,
-      laned,
+      itemsWithLane,
       leavesHeight,
       height: Math.max(
         MIN_ROW_HEIGHT,
-        ROW_PADDING * 2 + leavesHeight + tallestTerm * CHIP_HEIGHT,
+        ROW_PADDING * 2 + leavesHeight + chipsHeight,
       ),
     };
   }),

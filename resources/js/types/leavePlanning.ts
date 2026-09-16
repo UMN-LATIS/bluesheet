@@ -10,7 +10,7 @@ export interface PlanningPerson {
   title: string | null;
   /**
    * This department's appointments only. A blank
-   * category reads "Unspecified".
+   * category arrives as "Unspecified".
    */
   categories: string[];
   jobCodes: string[];
@@ -47,7 +47,7 @@ export interface LeaveTimeline {
 
 export interface TeachingInstructor {
   emplid: number;
-  /** "PI", "SI", or "TA" */
+  /** The SIS instructor role, e.g. "PI" */
   role: string;
 }
 
@@ -61,9 +61,10 @@ export interface TeachingSection {
   section: string;
   title: string;
   component: string;
-  /** Null for a planned section. */
-  career: string | null;
-  /** Null for a planned section, which nobody can enroll in yet. */
+  /**
+   * Null for a planned section, which nobody can enroll in
+   * yet.
+   */
   enrollmentTotal: number | null;
   enrollmentCap: number;
   isPlanned: boolean;

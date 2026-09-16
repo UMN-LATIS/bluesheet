@@ -23,7 +23,10 @@ export type Selection =
   | { kind: "leave"; leaveId: number }
   | { kind: "section"; sectionKey: string };
 
-/** A side left null is the server's to choose. */
+/**
+ * `startTermId` or `endTermId` left null is chosen by the
+ * server from the department's leaves.
+ */
 export interface RequestedRange {
   startTermId: number | null;
   endTermId: number | null;

@@ -1,16 +1,16 @@
 <template>
   <div
-    v-for="band in bands"
-    :key="band.term.id"
+    v-for="termColumn in termColumns"
+    :key="termColumn.term.id"
     class="tw-absolute tw-flex tw-flex-col tw-items-start tw-gap-1 tw-px-1.5"
     :style="{
       top: `${top}px`,
-      left: `${band.left * 100}%`,
-      width: `${band.width * 100}%`,
+      left: `${termColumn.left * 100}%`,
+      width: `${termColumn.width * 100}%`,
     }"
   >
     <SectionChip
-      v-for="section in band.sections"
+      v-for="section in termColumn.sections"
       :key="section.key"
       :section="section"
       :label="labelOf(section)"
@@ -36,16 +36,16 @@ const props = defineProps<{
 
 const emit = defineEmits<{ selectSection: [sectionKey: string] }>();
 
-const bands = computed(() =>
+const byCourseThenSection = (a: TeachingSection, b: TeachingSection) =>
+  a.courseCode.localeCompare(b.courseCode) ||
+  a.section.localeCompare(b.section);
+
+const termColumns = computed(() =>
   props.axis.terms
-    .map((band) => ({
-      ...band,
-      sections: [...(props.sectionsByTerm.get(band.term.id) ?? [])].sort(
-        (a, b) =>
-          a.courseCode.localeCompare(b.courseCode) ||
-          a.section.localeCompare(b.section),
-      ),
-    }))
+    .map((axisTerm) => {
+      const sections = props.sectionsByTerm.get(axisTerm.term.id) ?? [];
+      return { ...axisTerm, sections: [...sections].sort(byCourseThenSection) };
+    })
     .filter(({ sections }) => sections.length > 0),
 );
 </script>

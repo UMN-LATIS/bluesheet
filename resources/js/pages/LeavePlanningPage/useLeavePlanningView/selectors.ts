@@ -6,10 +6,11 @@ import type {
 } from "@/types";
 import { axisFor, type TimelineAxis } from "../helpers/timelineAxis";
 import {
-  courseViewOf,
+  courseHistoryOf,
   leaveRowsOf,
   personHistoryRowsOf,
-  type CourseView,
+  sectionsOf,
+  type CourseHistory,
   type LeaveRow,
   type PersonHistoryRow,
 } from "../helpers/planningRows";
@@ -30,10 +31,15 @@ import { emptyFilters } from "./viewQuery";
 
 export interface FacetTileSummary {
   facet: FilterFacet;
-  /** Options left once every other facet has narrowed the page. */
-  count: number;
-  total: number;
+  reachableCount: number;
+  totalCount: number;
   checkedCount: number;
+}
+
+interface RowCounts {
+  shown: number;
+  total: number;
+  noun: "person" | "course";
 }
 
 export const selectIsHistoryShown = (context: ViewContext, state: ViewState) =>
@@ -42,61 +48,61 @@ export const selectIsHistoryShown = (context: ViewContext, state: ViewState) =>
 export const selectVisibleFacets = (
   context: ViewContext,
   state: ViewState,
-): FilterFacet[] =>
-  selectIsHistoryShown(context, state)
-    ? [...FILTER_FACETS]
-    : FILTER_FACETS.filter((facet) => !HISTORY_FACETS.includes(facet));
+): FilterFacet[] => {
+  if (selectIsHistoryShown(context, state)) return [...FILTER_FACETS];
+  return FILTER_FACETS.filter((facet) => !HISTORY_FACETS.includes(facet));
+};
 
 export const selectActiveFacet = (
   context: ViewContext,
   state: ViewState,
-): FilterFacet =>
-  selectVisibleFacets(context, state).includes(state.activeFacet)
-    ? state.activeFacet
-    : "person";
+): FilterFacet => {
+  const isVisible = selectVisibleFacets(context, state).includes(
+    state.activeFacet,
+  );
+  return isVisible ? state.activeFacet : "person";
+};
 
-export const selectResolvedRange = (
+export const selectTimelineRange = (
   context: ViewContext,
 ): PlanningTermRange | null => context.timeline?.range ?? null;
 
 export const selectAxis = (context: ViewContext): TimelineAxis | null => {
-  const range = selectResolvedRange(context);
-  return range ? axisFor(context.terms, range) : null;
+  const range = selectTimelineRange(context);
+  if (!range) return null;
+  return axisFor(context.terms, range);
 };
 
 export const selectLeaveRows = (
   context: ViewContext,
   filters: PlanningFilters,
-): LeaveRow[] =>
-  context.timeline ? leaveRowsOf(context.timeline, filters) : [];
+): LeaveRow[] => {
+  if (!context.timeline) return [];
+  return leaveRowsOf(context.timeline, filters);
+};
 
 export const selectPersonHistoryRows = (
   context: ViewContext,
   state: ViewState,
   filters: PlanningFilters,
-): PersonHistoryRow[] =>
-  context.teachingHistory && state.view !== "courses"
-    ? personHistoryRowsOf(
-        context.teachingHistory,
-        context.timeline?.leaves ?? [],
-        state.view,
-        filters,
-      )
-    : [];
+): PersonHistoryRow[] => {
+  if (!context.teachingHistory || state.view === "courses") return [];
+  const leaves = context.timeline?.leaves ?? [];
+  return personHistoryRowsOf(
+    context.teachingHistory,
+    leaves,
+    state.view,
+    filters,
+  );
+};
 
-export const selectCourseView = (
+export const selectCourseHistory = (
   context: ViewContext,
   filters: PlanningFilters,
-): CourseView =>
-  context.teachingHistory
-    ? courseViewOf(context.teachingHistory, context.timeline, filters)
-    : { onLeave: [], courses: [] };
-
-export interface RowCounts {
-  shown: number;
-  total: number;
-  noun: "person" | "course";
-}
+): CourseHistory => {
+  if (!context.teachingHistory) return { peopleOnLeave: [], courses: [] };
+  return courseHistoryOf(context.teachingHistory, context.timeline, filters);
+};
 
 export function selectRowCounts(
   context: ViewContext,
@@ -112,8 +118,8 @@ export function selectRowCounts(
 
   if (state.view === "courses") {
     return {
-      shown: selectCourseView(context, state.filters).courses.length,
-      total: selectCourseView(context, emptyFilters()).courses.length,
+      shown: selectCourseHistory(context, state.filters).courses.length,
+      total: selectCourseHistory(context, emptyFilters()).courses.length,
       noun: "course",
     };
   }
@@ -125,27 +131,27 @@ export function selectRowCounts(
   };
 }
 
-export const selectPlannedTermIds = (context: ViewContext): Set<number> =>
-  new Set(
-    (context.teachingHistory?.sections ?? [])
-      .filter(({ isPlanned }) => isPlanned)
-      .map(({ termId }) => termId),
-  );
+export const selectPlannedTermIds = (context: ViewContext): Set<number> => {
+  const sections = context.teachingHistory?.sections ?? [];
+  const plannedSections = sections.filter(({ isPlanned }) => isPlanned);
+  return new Set(plannedSections.map(({ termId }) => termId));
+};
 
 export const selectPeopleByEmplid = (
   context: ViewContext,
-): Map<number, PlanningPerson> =>
-  new Map(
-    [
-      ...(context.timeline?.people ?? []),
-      ...(context.teachingHistory?.people ?? []),
-    ].map((person) => [person.emplid, person]),
-  );
+): Map<number, PlanningPerson> => {
+  const people = [
+    ...(context.timeline?.people ?? []),
+    ...(context.teachingHistory?.people ?? []),
+  ];
+  return new Map(people.map((person) => [person.emplid, person]));
+};
 
 function uniqueSections(sections: TeachingSection[]): TeachingSection[] {
-  return [
-    ...new Map(sections.map((section) => [section.key, section])).values(),
-  ];
+  const sectionsByKey = new Map(
+    sections.map((section) => [section.key, section]),
+  );
+  return [...sectionsByKey.values()];
 }
 
 function visibleRecordsOf(
@@ -164,9 +170,9 @@ function visibleRecordsOf(
   }
 
   if (state.view === "courses") {
-    const { onLeave, courses } = selectCourseView(context, filters);
+    const { peopleOnLeave, courses } = selectCourseHistory(context, filters);
     const sections = courses.flatMap(({ sectionsByTerm }) =>
-      [...sectionsByTerm.values()].flat(),
+      sectionsOf(sectionsByTerm),
     );
     const peopleByEmplid = selectPeopleByEmplid(context);
     const instructors = sections
@@ -175,20 +181,21 @@ function visibleRecordsOf(
       .filter((person): person is PlanningPerson => person !== undefined);
 
     return {
-      people: [...instructors, ...onLeave.map(({ person }) => person)],
-      leaves: onLeave.flatMap(({ leaves }) => leaves),
+      people: [...instructors, ...peopleOnLeave.map(({ person }) => person)],
+      leaves: peopleOnLeave.flatMap(({ leaves }) => leaves),
       sections,
       isHistoryShown: true,
     };
   }
 
   const rows = selectPersonHistoryRows(context, state, filters);
+  const sections = rows.flatMap(({ sectionsByTerm }) =>
+    sectionsOf(sectionsByTerm),
+  );
   return {
     people: rows.map(({ person }) => person),
     leaves: rows.flatMap(({ leaves }) => leaves),
-    sections: uniqueSections(
-      rows.flatMap(({ sectionsByTerm }) => [...sectionsByTerm.values()].flat()),
-    ),
+    sections: uniqueSections(sections),
     isHistoryShown: true,
   };
 }
@@ -201,29 +208,33 @@ const withoutFacet = (
 export const selectFacetTiles = (
   context: ViewContext,
   state: ViewState,
-): FacetTileSummary[] =>
-  selectVisibleFacets(context, state).map((facet) => ({
-    facet,
-    count: filterOptionsFor(
+): FacetTileSummary[] => {
+  const allRecords = visibleRecordsOf(context, state, emptyFilters());
+
+  return selectVisibleFacets(context, state).map((facet) => {
+    const filtersExceptFacet = withoutFacet(state.filters, facet);
+    const reachableRecords = visibleRecordsOf(
+      context,
+      state,
+      filtersExceptFacet,
+    );
+    return {
       facet,
-      visibleRecordsOf(context, state, withoutFacet(state.filters, facet)),
-    ).length,
-    total: filterOptionsFor(
-      facet,
-      visibleRecordsOf(context, state, emptyFilters()),
-    ).length,
-    checkedCount: state.filters[facet].length,
-  }));
+      reachableCount: filterOptionsFor(facet, reachableRecords).length,
+      totalCount: filterOptionsFor(facet, allRecords).length,
+      checkedCount: state.filters[facet].length,
+    };
+  });
+};
 
 export const selectActiveFacetOptions = (
   context: ViewContext,
   state: ViewState,
 ): FilterOption[] => {
   const facet = selectActiveFacet(context, state);
-  return filterOptionsFor(
-    facet,
-    visibleRecordsOf(context, state, withoutFacet(state.filters, facet)),
-  );
+  const filtersExceptFacet = withoutFacet(state.filters, facet);
+  const records = visibleRecordsOf(context, state, filtersExceptFacet);
+  return filterOptionsFor(facet, records);
 };
 
 export const selectActiveFilterCount = (
@@ -241,9 +252,8 @@ export const selectSelectedLeave = (
 ): PlanningLeave | null => {
   const { selection } = state;
   if (selection?.kind !== "leave") return null;
-  return (
-    context.timeline?.leaves.find(({ id }) => id === selection.leaveId) ?? null
-  );
+  const leaves = context.timeline?.leaves ?? [];
+  return leaves.find(({ id }) => id === selection.leaveId) ?? null;
 };
 
 export const selectSelectedSection = (
@@ -251,12 +261,8 @@ export const selectSelectedSection = (
   state: ViewState,
 ): TeachingSection | null => {
   const { selection } = state;
-  if (selection?.kind !== "section" || !selectIsHistoryShown(context, state)) {
-    return null;
-  }
-  return (
-    context.teachingHistory?.sections.find(
-      ({ key }) => key === selection.sectionKey,
-    ) ?? null
-  );
+  if (selection?.kind !== "section") return null;
+  if (!selectIsHistoryShown(context, state)) return null;
+  const sections = context.teachingHistory?.sections ?? [];
+  return sections.find(({ key }) => key === selection.sectionKey) ?? null;
 };

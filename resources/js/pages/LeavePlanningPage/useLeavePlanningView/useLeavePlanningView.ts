@@ -1,9 +1,3 @@
-/**
- * The reads come back as an unwrapped `reactive`.
- * Destructuring one takes a copy and stops tracking, so
- * read through the object at the point of use.
- */
-
 import { computed, reactive, shallowRef, type Ref } from "vue";
 import type { UrlQuery } from "@/utils/urlQuery";
 import {
@@ -11,18 +5,17 @@ import {
   selectActiveFacetOptions,
   selectActiveFilterCount,
   selectAxis,
-  selectCourseView,
+  selectCourseHistory,
   selectFacetTiles,
   selectIsHistoryShown,
   selectLeaveRows,
   selectPeopleByEmplid,
   selectPersonHistoryRows,
   selectPlannedTermIds,
-  selectResolvedRange,
   selectRowCounts,
   selectSelectedLeave,
   selectSelectedSection,
-  selectVisibleFacets,
+  selectTimelineRange,
 } from "./selectors";
 import { initialState, update } from "./update";
 import type {
@@ -35,6 +28,7 @@ import type {
 
 export type LeavePlanningView = ReturnType<typeof useLeavePlanningView>;
 
+/** Returns a `reactive`, so destructuring the result stops tracking. */
 export function useLeavePlanningView(
   context: Readonly<Ref<ViewContext>>,
   runEffect: (effect: Effect) => void,
@@ -44,25 +38,19 @@ export function useLeavePlanningView(
   const dispatch = (event: ViewEvent) => {
     const next = update(state.value, event);
     state.value = next.state;
-    // Not inline: writing the URL brings the route
-    // watcher straight back with `urlChanged`, which
-    // must not be reduced inside this dispatch.
     next.effects.forEach((effect) => queueMicrotask(() => runEffect(effect)));
   };
 
   return reactive({
     requestedRange: computed(() => state.value.range),
-    resolvedRange: computed(() => selectResolvedRange(context.value)),
+    timelineRange: computed(() => selectTimelineRange(context.value)),
     axis: computed(() => selectAxis(context.value)),
+    isHistoryRequested: computed(() => state.value.isHistoryShown),
     isHistoryShown: computed(() =>
       selectIsHistoryShown(context.value, state.value),
     ),
-    isHistoryRequested: computed(() => state.value.isHistoryShown),
     view: computed(() => state.value.view),
     filters: computed(() => state.value.filters),
-    visibleFacets: computed(() =>
-      selectVisibleFacets(context.value, state.value),
-    ),
     activeFacet: computed(() => selectActiveFacet(context.value, state.value)),
     facetTiles: computed(() => selectFacetTiles(context.value, state.value)),
     activeFacetOptions: computed(() =>
@@ -77,8 +65,8 @@ export function useLeavePlanningView(
     personHistoryRows: computed(() =>
       selectPersonHistoryRows(context.value, state.value, state.value.filters),
     ),
-    courseView: computed(() =>
-      selectCourseView(context.value, state.value.filters),
+    courseHistory: computed(() =>
+      selectCourseHistory(context.value, state.value.filters),
     ),
     rowCounts: computed(() => selectRowCounts(context.value, state.value)),
     plannedTermIds: computed(() => selectPlannedTermIds(context.value)),

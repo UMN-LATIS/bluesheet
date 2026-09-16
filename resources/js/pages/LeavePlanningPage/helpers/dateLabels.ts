@@ -15,14 +15,16 @@ export function formatMonthDay(isoDate: string): string {
   return `${monthNameOf(month)} ${day}`;
 }
 
-/** "Jan 19 – May 12, 2027", or both years when they differ. */
+/**
+ * "Jan 19 – May 12, 2027", or both years when they
+ * differ.
+ */
 export function formatDateRange(startDate: string, endDate: string): string {
   const start = partsOf(startDate);
   const end = partsOf(endDate);
-  const startLabel = `${monthNameOf(start.month)} ${start.day}`;
-  const endLabel = `${monthNameOf(end.month)} ${end.day}, ${end.year}`;
+  const startLabel = formatMonthDay(startDate);
+  const endLabel = `${formatMonthDay(endDate)}, ${end.year}`;
 
-  return start.year === end.year
-    ? `${startLabel} – ${endLabel}`
-    : `${startLabel}, ${start.year} – ${endLabel}`;
+  if (start.year === end.year) return `${startLabel} – ${endLabel}`;
+  return `${startLabel}, ${start.year} – ${endLabel}`;
 }

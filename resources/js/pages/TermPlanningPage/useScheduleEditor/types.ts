@@ -7,8 +7,8 @@ import type {
   SisSection,
   SisSectionMeeting,
   TimeRange,
-  UrlQuery,
 } from "../types";
+import type { UrlQuery } from "@/utils/urlQuery";
 import type { ScheduleView } from "../helpers/viewQuery";
 
 /**

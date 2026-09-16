@@ -25,10 +25,10 @@
       {{ subtitle }}
     </p>
     <p
-      v-if="meta"
+      v-if="metaLine"
       class="tw-m-0 tw-mt-1.5 tw-text-[11px] tw-text-on-surface-variant"
     >
-      {{ meta }}
+      {{ metaLine }}
     </p>
   </div>
 </template>
@@ -36,8 +36,8 @@
 <script setup lang="ts">
 defineProps<{
   title: string;
-  subtitle?: string | null;
-  meta?: string | null;
+  subtitle: string;
+  metaLine: string;
 }>();
 
 const emit = defineEmits<{ close: [] }>();

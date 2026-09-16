@@ -36,13 +36,13 @@ const STATUS_ORDER: LeaveStatus[] = [
   leaveStatuses.DEFERRED,
 ];
 
-const plural = (count: number, noun: string) =>
-  `${count} ${count === 1 ? noun : `${noun}s`}`;
+const countWithNoun = (count: number, noun: string) =>
+  count === 1 ? `1 ${noun}` : `${count} ${noun}s`;
 
-function countBy<T>(items: T[], keyOf: (item: T) => string[]) {
+function countBy<T>(items: T[], keysOf: (item: T) => string[]) {
   const counts = new Map<string, number>();
   for (const item of items) {
-    for (const key of new Set(keyOf(item))) {
+    for (const key of new Set(keysOf(item))) {
       counts.set(key, (counts.get(key) ?? 0) + 1);
     }
   }
@@ -62,34 +62,57 @@ const option = (
   swatchClass: extra.swatchClass ?? null,
 });
 
+export function lastFirstNameOf(person: PlanningPerson): string {
+  const lastFirst = [person.lastName, person.firstName]
+    .filter(Boolean)
+    .join(", ");
+  return lastFirst || person.name || String(person.emplid);
+}
+
+const byLastThenFirstName = (a: PlanningPerson, b: PlanningPerson) =>
+  a.lastName.localeCompare(b.lastName) ||
+  a.firstName.localeCompare(b.firstName);
+
+function uniqueBy<T>(items: T[], keyOf: (item: T) => string): T[] {
+  const itemsByKey = new Map<string, T>();
+  for (const item of items) {
+    const key = keyOf(item);
+    if (itemsByKey.has(key)) continue;
+    itemsByKey.set(key, item);
+  }
+  return [...itemsByKey.values()];
+}
+
+function personOptions(records: VisibleRecords): FilterOption[] {
+  const leaveCounts = countBy(records.leaves, (leave) => [
+    String(leave.emplid),
+  ]);
+  const sectionCounts = countBy(records.sections, (section) =>
+    section.instructors.map(({ emplid }) => String(emplid)),
+  );
+
+  return uniqueBy(records.people, (person) => String(person.emplid))
+    .sort(byLastThenFirstName)
+    .map((person) => {
+      const value = String(person.emplid);
+      const sectionCount = sectionCounts.get(value) ?? 0;
+      const leaveCount = leaveCounts.get(value) ?? 0;
+      const annotation = records.isHistoryShown
+        ? `${sectionCount} sec`
+        : countWithNoun(leaveCount, "leave");
+      return option(value, lastFirstNameOf(person), annotation, {
+        secondary: person.title,
+      });
+    });
+}
+
 export function filterOptionsFor(
   facet: FilterFacet,
   records: VisibleRecords,
 ): FilterOption[] {
   switch (facet) {
-    case "person": {
-      const leaveCounts = countBy(records.leaves, (leave) => [
-        String(leave.emplid),
-      ]);
-      const sectionCounts = countBy(records.sections, (section) =>
-        section.instructors.map(({ emplid }) => String(emplid)),
-      );
-      return uniqueBy(records.people, (person) => String(person.emplid))
-        .sort(
-          (a, b) =>
-            a.lastName.localeCompare(b.lastName) ||
-            a.firstName.localeCompare(b.firstName),
-        )
-        .map((person) => {
-          const value = String(person.emplid);
-          const annotation = records.isHistoryShown
-            ? `${sectionCounts.get(value) ?? 0} sec`
-            : plural(leaveCounts.get(value) ?? 0, "leave");
-          return option(value, nameOf(person), annotation, {
-            secondary: person.title,
-          });
-        });
-    }
+    case "person":
+      return personOptions(records);
 
     case "category": {
       const counts = countBy(records.people, (person) => person.categories);
@@ -101,13 +124,10 @@ export function filterOptionsFor(
     case "leaveType": {
       const counts = countBy(records.leaves, (leave) => [leave.type]);
       return [...counts.entries()]
-        .map(([type, count]) =>
-          option(
-            type,
-            getLeaveTypeLabel(type as PlanningLeave["type"]),
-            String(count),
-          ),
-        )
+        .map(([type, count]) => {
+          const label = getLeaveTypeLabel(type as PlanningLeave["type"]);
+          return option(type, label, String(count));
+        })
         .sort((a, b) => a.label.localeCompare(b.label));
     }
 
@@ -118,9 +138,7 @@ export function filterOptionsFor(
           status,
           getLeaveStatusLabel(status),
           String(counts.get(status)),
-          {
-            swatchClass: `tw-bg-${getLeaveStatusColor(status)}`,
-          },
+          { swatchClass: `tw-bg-${getLeaveStatusColor(status)}` },
         ),
       );
     }
@@ -155,17 +173,4 @@ export function filterOptionsFor(
         );
     }
   }
-}
-
-export const nameOf = (person: PlanningPerson): string =>
-  [person.lastName, person.firstName].filter(Boolean).join(", ") ||
-  person.name ||
-  String(person.emplid);
-
-function uniqueBy<T>(items: T[], keyOf: (item: T) => string): T[] {
-  const seen = new Map<string, T>();
-  for (const item of items) {
-    if (!seen.has(keyOf(item))) seen.set(keyOf(item), item);
-  }
-  return [...seen.values()];
 }

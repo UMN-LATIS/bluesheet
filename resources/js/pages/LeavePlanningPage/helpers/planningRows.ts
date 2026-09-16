@@ -10,12 +10,12 @@ import type {
   TeachingView,
 } from "../useLeavePlanningView/types";
 
+type PersonView = Exclude<TeachingView, "courses">;
+
 const ROLES_BY_VIEW: Record<PersonView, string[]> = {
   instructors: ["PI", "SI"],
   tas: ["TA"],
 };
-
-export type PersonView = Exclude<TeachingView, "courses">;
 
 export interface LeaveRow {
   person: PlanningPerson;
@@ -27,7 +27,7 @@ export interface PersonHistoryRow extends LeaveRow {
   sectionCount: number;
 }
 
-export interface CourseRow {
+interface CourseRow {
   courseCode: string;
   subject: string;
   catalogNumber: string;
@@ -36,32 +36,25 @@ export interface CourseRow {
   sectionCount: number;
 }
 
-export interface CourseView {
-  onLeave: LeaveRow[];
+export interface CourseHistory {
+  peopleOnLeave: LeaveRow[];
   courses: CourseRow[];
 }
 
 const allows = (chosen: string[], value: string) =>
   chosen.length === 0 || chosen.includes(value);
 
-export const matchesPerson = (
-  person: PlanningPerson,
-  filters: PlanningFilters,
-): boolean =>
-  allows(filters.person, String(person.emplid)) &&
-  (filters.category.length === 0 ||
-    person.categories.some((category) => filters.category.includes(category)));
+const allowsAny = (chosen: string[], values: string[]) =>
+  chosen.length === 0 || values.some((value) => chosen.includes(value));
 
-export const matchesLeave = (
-  leave: PlanningLeave,
-  filters: PlanningFilters,
-): boolean =>
+const matchesPerson = (person: PlanningPerson, filters: PlanningFilters) =>
+  allows(filters.person, String(person.emplid)) &&
+  allowsAny(filters.category, person.categories);
+
+const matchesLeave = (leave: PlanningLeave, filters: PlanningFilters) =>
   allows(filters.leaveType, leave.type) && allows(filters.status, leave.status);
 
-export const matchesSection = (
-  section: TeachingSection,
-  filters: PlanningFilters,
-): boolean =>
+const matchesSection = (section: TeachingSection, filters: PlanningFilters) =>
   allows(filters.course, section.courseCode) &&
   allows(filters.component, section.component);
 
@@ -74,23 +67,34 @@ const isNarrowingLeaves = (filters: PlanningFilters) =>
 const isNarrowingPeople = (filters: PlanningFilters) =>
   filters.person.length > 0 || filters.category.length > 0;
 
+export const sectionsOf = (
+  sectionsByTerm: Map<number, TeachingSection[]>,
+): TeachingSection[] => [...sectionsByTerm.values()].flat();
+
+export const mostSectionsInOneTerm = (
+  sectionsByTerm: Map<number, TeachingSection[]>,
+): number =>
+  [...sectionsByTerm.values()].reduce(
+    (most, sections) => Math.max(most, sections.length),
+    0,
+  );
+
 function groupByTerm(sections: TeachingSection[]) {
-  const byTerm = new Map<number, TeachingSection[]>();
+  const sectionsByTerm = new Map<number, TeachingSection[]>();
   for (const section of sections) {
-    byTerm.set(section.termId, [
-      ...(byTerm.get(section.termId) ?? []),
-      section,
-    ]);
+    const termSections = sectionsByTerm.get(section.termId) ?? [];
+    sectionsByTerm.set(section.termId, [...termSections, section]);
   }
-  return byTerm;
+  return sectionsByTerm;
 }
 
 function leavesByEmplidOf(leaves: PlanningLeave[], filters: PlanningFilters) {
-  const byEmplid = new Map<number, PlanningLeave[]>();
+  const leavesByEmplid = new Map<number, PlanningLeave[]>();
   for (const leave of leaves.filter((each) => matchesLeave(each, filters))) {
-    byEmplid.set(leave.emplid, [...(byEmplid.get(leave.emplid) ?? []), leave]);
+    const personLeaves = leavesByEmplid.get(leave.emplid) ?? [];
+    leavesByEmplid.set(leave.emplid, [...personLeaves, leave]);
   }
-  return byEmplid;
+  return leavesByEmplid;
 }
 
 export function leaveRowsOf(
@@ -123,10 +127,8 @@ export function personHistoryRowsOf(
         .map((instructor): number => instructor.emplid),
     );
     for (const emplid of emplids) {
-      sectionsByEmplid.set(emplid, [
-        ...(sectionsByEmplid.get(emplid) ?? []),
-        section,
-      ]);
+      const personSections = sectionsByEmplid.get(emplid) ?? [];
+      sectionsByEmplid.set(emplid, [...personSections, section]);
     }
   }
 
@@ -136,12 +138,19 @@ export function personHistoryRowsOf(
     sectionsByEmplid.has(person.emplid) ||
     (view === "instructors" && person.hasAppointment);
 
+  const survivesNarrowing = (row: PersonHistoryRow) => {
+    if (isNarrowingSections(filters) && row.sectionCount === 0) return false;
+    if (isNarrowingLeaves(filters) && row.leaves.length === 0) return false;
+    return true;
+  };
+
   return history.people
     .filter(isOnRoster)
     .filter((person) => matchesPerson(person, filters))
     .map((person) => {
-      const sections = (sectionsByEmplid.get(person.emplid) ?? []).filter(
-        (section) => matchesSection(section, filters),
+      const allSections = sectionsByEmplid.get(person.emplid) ?? [];
+      const sections = allSections.filter((section) =>
+        matchesSection(section, filters),
       );
       return {
         person,
@@ -150,18 +159,14 @@ export function personHistoryRowsOf(
         sectionCount: sections.length,
       };
     })
-    .filter(
-      (row) =>
-        (!isNarrowingSections(filters) || row.sectionCount > 0) &&
-        (!isNarrowingLeaves(filters) || row.leaves.length > 0),
-    );
+    .filter(survivesNarrowing);
 }
 
-export function courseViewOf(
+export function courseHistoryOf(
   history: TeachingHistory,
   timeline: LeaveTimeline | null,
   filters: PlanningFilters,
-): CourseView {
+): CourseHistory {
   const peopleByEmplid = new Map(
     history.people.map((person) => [person.emplid, person]),
   );
@@ -180,30 +185,28 @@ export function courseViewOf(
 
   const sectionsByCourse = new Map<string, TeachingSection[]>();
   for (const section of sections) {
-    sectionsByCourse.set(section.courseCode, [
-      ...(sectionsByCourse.get(section.courseCode) ?? []),
-      section,
-    ]);
+    const courseSections = sectionsByCourse.get(section.courseCode) ?? [];
+    sectionsByCourse.set(section.courseCode, [...courseSections, section]);
   }
 
   const courses = [...sectionsByCourse.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([courseCode, courseSections]) => {
-      const latest = courseSections.reduce((newest, section) =>
-        section.termId > newest.termId ? section : newest,
+      const latestSection = courseSections.reduce((latest, section) =>
+        section.termId > latest.termId ? section : latest,
       );
       return {
         courseCode,
-        subject: latest.subject,
-        catalogNumber: latest.catalogNumber,
-        title: latest.title,
+        subject: latestSection.subject,
+        catalogNumber: latestSection.catalogNumber,
+        title: latestSection.title,
         sectionsByTerm: groupByTerm(courseSections),
         sectionCount: courseSections.length,
       };
     });
 
   return {
-    onLeave: timeline ? leaveRowsOf(timeline, filters) : [],
+    peopleOnLeave: timeline ? leaveRowsOf(timeline, filters) : [],
     courses,
   };
 }

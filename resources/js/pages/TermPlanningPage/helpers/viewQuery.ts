@@ -1,6 +1,6 @@
 /** Which view the page is showing, and which day it is on, as URL query. */
 
-import type { UrlQuery } from "../types";
+import type { UrlQuery } from "@/utils/urlQuery";
 import { DAY_TAB_CODES } from "./scheduleDays";
 
 export const SCHEDULE_VIEWS = ["day", "week", "heatmap"] as const;

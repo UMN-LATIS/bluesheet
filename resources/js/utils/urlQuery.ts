@@ -1,17 +1,6 @@
-/**
- * The one place the router's own query shape is dealt with. Everything below
- * the page reads and writes `UrlQuery`, so no decoder has to think about a key
- * arriving twice or arriving valueless.
- */
-
 import type { LocationQuery } from "vue-router";
 
-/**
- * A URL query as this page reads and writes it, flattened: one value to a key,
- * and a key carrying no value is simply absent. The router's own query type
- * allows an array of values per key and a null among them, so the page
- * flattens on the way in and hands back this shape on the way out.
- */
+/** One value per key. A key with no value is absent. */
 export type UrlQuery = Record<string, string | undefined>;
 
 /**

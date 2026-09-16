@@ -24,7 +24,7 @@
       </label>
       <input
         id="leave-planning-filter-search"
-        v-model="search"
+        v-model="searchInput"
         type="search"
         :placeholder="searchPlaceholder"
         class="tw-min-h-11 tw-w-full tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-bg-surface tw-px-4 tw-text-[13px] tw-text-on-surface placeholder:tw-text-on-surface-variant focus:tw-border-primary focus:tw-bg-surface-bright focus:tw-outline-none"
@@ -36,8 +36,8 @@
         v-for="tile in planning.facetTiles"
         :key="tile.facet"
         :label="FACET_LABELS[tile.facet]"
-        :count="tile.count"
-        :total="tile.total"
+        :count="tile.reachableCount"
+        :total="tile.totalCount"
         :checkedCount="tile.checkedCount"
         :isActive="planning.activeFacet === tile.facet"
         @click="planning.openFacet(tile.facet)"
@@ -121,6 +121,7 @@ import FacetTile from "@/components/planning/FacetTile.vue";
 import FilterRow from "@/components/planning/FilterRow.vue";
 import type { LeavePlanningView } from "../useLeavePlanningView/useLeavePlanningView";
 import type { FilterFacet } from "../useLeavePlanningView/types";
+import type { FilterOption } from "../helpers/filterOptions";
 
 const props = defineProps<{
   planning: LeavePlanningView;
@@ -138,7 +139,7 @@ const FACET_LABELS: Record<FilterFacet, string> = {
   status: "Status",
 };
 
-const search = ref("");
+const searchInput = ref("");
 
 const searchPlaceholder = computed(() =>
   props.planning.isHistoryShown ? "Search people, courses" : "Search people",
@@ -149,14 +150,14 @@ const checkedValues = computed(
 );
 
 const shownOptions = computed(() => {
-  const needle = search.value.trim().toLowerCase();
-  if (needle === "") return props.planning.activeFacetOptions;
+  const searchText = searchInput.value.trim().toLowerCase();
+  if (searchText === "") return props.planning.activeFacetOptions;
 
-  return props.planning.activeFacetOptions.filter((option) =>
+  const matchesSearch = (option: FilterOption) =>
     [option.label, option.secondary ?? ""].some((text) =>
-      text.toLowerCase().includes(needle),
-    ),
-  );
+      text.toLowerCase().includes(searchText),
+    );
+  return props.planning.activeFacetOptions.filter(matchesSearch);
 });
 
 const isNarrowed = computed(() => props.planning.activeFilterCount > 0);
@@ -164,13 +165,16 @@ const isNarrowed = computed(() => props.planning.activeFilterCount > 0);
 const narrowingSummary = computed(() => {
   const { shown, total, noun } = props.planning.rowCounts;
   const nouns = noun === "person" ? "people" : "courses";
-  return shown === total
-    ? `Showing all ${total} ${nouns}`
-    : `Showing ${shown} of ${total} ${nouns}`;
+  if (shown === total) return `Showing all ${total} ${nouns}`;
+  return `Showing ${shown} of ${total} ${nouns}`;
 });
 
-const toggle = (value: string, isChecked: boolean) =>
-  isChecked
-    ? props.planning.addFilterValues(props.planning.activeFacet, [value])
-    : props.planning.removeFilterValues(props.planning.activeFacet, [value]);
+function toggle(value: string, isChecked: boolean) {
+  const facet = props.planning.activeFacet;
+  if (isChecked) {
+    props.planning.addFilterValues(facet, [value]);
+    return;
+  }
+  props.planning.removeFilterValues(facet, [value]);
+}
 </script>

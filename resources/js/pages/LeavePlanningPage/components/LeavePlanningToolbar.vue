@@ -10,7 +10,7 @@
       <select
         class="tw-max-w-[15rem] tw-cursor-pointer tw-truncate tw-border-none tw-bg-transparent tw-p-0 tw-text-[13px] tw-text-on-surface-variant hover:tw-text-on-surface"
         :value="groupId"
-        @change="goToGroup(($event.target as HTMLSelectElement).value)"
+        @change="chooseGroup"
       >
         <option
           v-for="option in departmentOptions"
@@ -121,6 +121,7 @@ import { FilterIcon } from "@/icons";
 import type { PlanningGroup, PlanningTerm, PlanningTermRange } from "@/types";
 import { useScreenSize } from "@/utils/useScreenSize";
 import TermSelect from "./TermSelect.vue";
+import { isDated } from "../helpers/timelineAxis";
 import { useGroupQuery } from "../queries/useGroupQuery";
 import { useLeavePlanningGroupsQuery } from "../queries/useLeavePlanningGroupsQuery";
 import type { TeachingView } from "../useLeavePlanningView/types";
@@ -155,20 +156,19 @@ const router = useRouter();
 const { isLarge, isSmall } = useScreenSize();
 
 const termOptions = computed(() =>
-  props.terms
-    .filter(({ startDate, endDate }) => startDate !== null && endDate !== null)
-    .sort((a, b) => a.id - b.id),
+  props.terms.filter(isDated).sort((a, b) => a.id - b.id),
 );
 
-// Filters and a selection name this department's people and
-// courses. Carried to another department they match nothing
-// there, and the timeline goes blank.
-const goToGroup = (nextGroupId: string) =>
+function chooseGroup(event: Event) {
+  const select = event.target as HTMLSelectElement;
   router.push({
     name: "leavePlanning",
-    params: { groupId: nextGroupId },
+    params: { groupId: select.value },
+    // Keep only these keys: filters and a selection name this
+    // department's people, and match nothing in another one.
     query: pick(route.query, ["start", "end", "history", "view"]),
   });
+}
 
 const groupId = computed(() => props.groupId);
 const groupsQuery = useLeavePlanningGroupsQuery();
@@ -183,17 +183,15 @@ const departmentOptions = computed<PlanningGroup[]>(() => {
   const departments = groupsQuery.data.value ?? [];
   if (departments.some(({ id }) => id === props.groupId)) return departments;
 
-  const current = groupQuery.data.value;
-  return current
-    ? [
-        {
-          id: props.groupId,
-          name: current.group_title,
-          abbreviation: current.abbreviation,
-        },
-        ...departments,
-      ]
-    : departments;
+  const currentGroup = groupQuery.data.value;
+  if (!currentGroup) return departments;
+
+  const currentDepartment = {
+    id: props.groupId,
+    name: currentGroup.group_title,
+    abbreviation: currentGroup.abbreviation,
+  };
+  return [currentDepartment, ...departments];
 });
 
 const labelOfDepartment = ({ name, abbreviation }: PlanningGroup) => {

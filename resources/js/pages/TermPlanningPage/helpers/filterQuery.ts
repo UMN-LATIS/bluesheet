@@ -1,6 +1,7 @@
 /** Filters as URL query: one key per facet, values comma-joined. */
 
-import { FILTER_FACETS, type ScheduleFilters, type UrlQuery } from "../types";
+import { FILTER_FACETS, type ScheduleFilters } from "../types";
+import type { UrlQuery } from "@/utils/urlQuery";
 import { emptyFilters } from "../useScheduleEditor/update";
 
 /**

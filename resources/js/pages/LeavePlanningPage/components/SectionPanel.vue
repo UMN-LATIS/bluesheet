@@ -6,7 +6,7 @@
     <PanelHeader
       :title="`${section.subject} ${section.catalogNumber} · ${section.section}`"
       :subtitle="section.title"
-      :meta="meta"
+      :metaLine="metaLine"
       @close="emit('close')"
     >
       <template #tags>
@@ -98,13 +98,12 @@ const ROLE_LABELS: Record<string, string> = {
   TA: "Teaching assistant",
 };
 
-const meta = computed(() =>
-  props.section.isPlanned
-    ? `${props.termName} · Planned in Term Planning`
-    : props.termName,
-);
+const metaLine = computed(() => {
+  if (!props.section.isPlanned) return props.termName;
+  return `${props.termName} · Planned in Term Planning`;
+});
 
-const listedWith = (roles: string[]): ListedPerson[] =>
+const listedPeopleWithRoles = (roles: string[]): ListedPerson[] =>
   props.section.instructors
     .filter(({ role }) => roles.includes(role))
     .map(({ emplid, role }) => ({
@@ -113,6 +112,6 @@ const listedWith = (roles: string[]): ListedPerson[] =>
       role: ROLE_LABELS[role] ?? role,
     }));
 
-const instructors = computed(() => listedWith(["PI", "SI"]));
-const teachingAssistants = computed(() => listedWith(["TA"]));
+const instructors = computed(() => listedPeopleWithRoles(["PI", "SI"]));
+const teachingAssistants = computed(() => listedPeopleWithRoles(["TA"]));
 </script>

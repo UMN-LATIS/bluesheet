@@ -6,7 +6,7 @@
     <PanelHeader
       :title="person?.name || 'Unknown person'"
       :subtitle="subtitle"
-      :meta="termNames.join(', ')"
+      :metaLine="termNames.join(', ')"
       @close="emit('close')"
     >
       <template #tags>
@@ -136,11 +136,20 @@ const subtitle = computed(() =>
     .join(" · "),
 );
 
-const eligibilityTags = computed(() =>
-  [
-    props.person?.sslEligible && "SSL",
-    props.person?.sslApplyEligible && "SSL apply",
-    props.person?.midcareerEligible && "Midcareer",
-  ].filter((tag): tag is string => typeof tag === "string"),
-);
+const ELIGIBILITY_TAGS: {
+  label: string;
+  isEligible: (person: PlanningPerson) => boolean;
+}[] = [
+  { label: "SSL", isEligible: (person) => person.sslEligible },
+  { label: "SSL apply", isEligible: (person) => person.sslApplyEligible },
+  { label: "Midcareer", isEligible: (person) => person.midcareerEligible },
+];
+
+const eligibilityTags = computed(() => {
+  const { person } = props;
+  if (!person) return [];
+  return ELIGIBILITY_TAGS.filter(({ isEligible }) => isEligible(person)).map(
+    ({ label }) => label,
+  );
+});
 </script>

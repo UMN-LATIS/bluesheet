@@ -8,11 +8,22 @@ export const dayNumberOf = (isoDate: string): number => {
   return Date.UTC(year, month - 1, day) / MS_PER_DAY;
 };
 
-export interface AxisTerm {
-  term: PlanningTerm;
+type DatedTerm = PlanningTerm & { startDate: string; endDate: string };
+
+export const isDated = (term: PlanningTerm): term is DatedTerm =>
+  term.startDate !== null && term.endDate !== null;
+
+interface AxisTerm {
+  term: DatedTerm;
   /** 0–1 across the axis */
   left: number;
   width: number;
+}
+
+interface AxisMonth {
+  isoDate: string;
+  left: number;
+  label: string;
 }
 
 export interface AxisSpan {
@@ -23,12 +34,6 @@ export interface AxisSpan {
   isClippedAtEnd: boolean;
 }
 
-export interface AxisMonth {
-  isoDate: string;
-  left: number;
-  label: string;
-}
-
 export interface TimelineAxis {
   startDate: string;
   endDate: string;
@@ -37,11 +42,6 @@ export interface TimelineAxis {
   gaps: { left: number; width: number }[];
   months: AxisMonth[];
 }
-
-type DatedTerm = PlanningTerm & { startDate: string; endDate: string };
-
-const isDated = (term: PlanningTerm): term is DatedTerm =>
-  term.startDate !== null && term.endDate !== null;
 
 const MONTH_NAMES = [
   "Jan",
@@ -59,8 +59,8 @@ const MONTH_NAMES = [
 ];
 
 /**
- * Null when either end of the range names a term with no
- * dates.
+ * Null when either end of the range is missing from `terms`
+ * or has no dates.
  */
 export function axisFor(
   terms: PlanningTerm[],
@@ -73,9 +73,8 @@ export function axisFor(
 
   const firstTerm = termsInRange.at(0);
   const lastTerm = termsInRange.at(-1);
-  const hasBothEnds =
-    firstTerm?.id === range.startTermId && lastTerm?.id === range.endTermId;
-  if (!firstTerm || !lastTerm || !hasBothEnds) return null;
+  if (firstTerm?.id !== range.startTermId) return null;
+  if (!lastTerm || lastTerm.id !== range.endTermId) return null;
 
   const startDay = dayNumberOf(firstTerm.startDate);
   const dayCount = dayNumberOf(lastTerm.endDate) + 1 - startDay;
@@ -90,11 +89,19 @@ export function axisFor(
     width: rightOf(term.endDate) - leftOf(term.startDate),
   }));
 
-  const gaps = axisTerms.slice(1).map((following, index) => {
-    const previous = axisTerms[index];
-    const left = previous.left + previous.width;
-    return { left, width: following.left - left };
+  const gaps = axisTerms.slice(1).map((followingTerm, index) => {
+    const previousTerm = axisTerms[index];
+    const left = previousTerm.left + previousTerm.width;
+    return { left, width: followingTerm.left - left };
   });
+
+  const months = monthStartsBetween(firstTerm.startDate, lastTerm.endDate).map(
+    (isoDate) => ({
+      isoDate,
+      left: leftOf(isoDate),
+      label: monthLabelOf(isoDate),
+    }),
+  );
 
   return {
     startDate: firstTerm.startDate,
@@ -102,13 +109,7 @@ export function axisFor(
     dayCount,
     terms: axisTerms,
     gaps: gaps.filter(({ width }) => width > 0),
-    months: monthsBetween(firstTerm.startDate, lastTerm.endDate).map(
-      (isoDate) => ({
-        isoDate,
-        left: leftOf(isoDate),
-        label: monthLabelOf(isoDate),
-      }),
-    ),
+    months,
   };
 }
 
@@ -139,24 +140,28 @@ export const fractionOf = (axis: TimelineAxis, isoDate: string): number =>
 export const isWithinAxis = (axis: TimelineAxis, isoDate: string): boolean =>
   isoDate >= axis.startDate && isoDate <= axis.endDate;
 
-function monthsBetween(startDate: string, endDate: string): string[] {
-  const months: string[] = [];
-  let [year, month] = startDate.split("-").map(Number);
+function nextMonthStartOf(isoDate: string): string {
+  const [year, month] = isoDate.split("-").map(Number);
+  const nextYear = month === 12 ? year + 1 : year;
+  const nextMonth = month === 12 ? 1 : month + 1;
+  return `${nextYear}-${String(nextMonth).padStart(2, "0")}-01`;
+}
 
-  for (;;) {
-    month += 1;
-    if (month === 13) {
-      year += 1;
-      month = 1;
-    }
-    const isoDate = `${year}-${String(month).padStart(2, "0")}-01`;
-    if (isoDate > endDate) return months;
-    months.push(isoDate);
+function monthStartsBetween(startDate: string, endDate: string): string[] {
+  const monthStarts: string[] = [];
+  for (
+    let monthStart = nextMonthStartOf(startDate);
+    monthStart <= endDate;
+    monthStart = nextMonthStartOf(monthStart)
+  ) {
+    monthStarts.push(monthStart);
   }
+  return monthStarts;
 }
 
 function monthLabelOf(isoDate: string): string {
   const [year, month] = isoDate.split("-").map(Number);
   const name = MONTH_NAMES[month - 1];
-  return month === 1 ? `${name} ${year}` : name;
+  if (month === 1) return `${name} ${year}`;
+  return name;
 }

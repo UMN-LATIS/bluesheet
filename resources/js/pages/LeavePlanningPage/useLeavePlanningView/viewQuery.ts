@@ -35,9 +35,11 @@ const positiveIntegerOf = (value: string | undefined): number | null => {
   return parsed > 0 ? parsed : null;
 };
 
-const listOf = (value: string | undefined): string[] => [
-  ...new Set((value ?? "").split(",").filter((item) => item !== "")),
-];
+const listOf = (value: string | undefined): string[] => {
+  if (value === undefined) return [];
+  const items = value.split(",").filter((item) => item !== "");
+  return [...new Set(items)];
+};
 
 const viewOf = (value: string | undefined): TeachingView =>
   TEACHING_VIEWS.find((view) => view === value) ?? DEFAULT_VIEW;
@@ -49,7 +51,7 @@ const selectionOf = (query: UrlQuery): Selection | null => {
   return null;
 };
 
-export type UrlBackedState = Omit<ViewState, "activeFacet">;
+type UrlBackedState = Omit<ViewState, "activeFacet">;
 
 export function decodeViewQuery(query: UrlQuery): UrlBackedState {
   const filters = emptyFilters();

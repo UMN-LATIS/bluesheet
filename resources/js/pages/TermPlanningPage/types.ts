@@ -10,7 +10,6 @@ export interface Meeting extends TimeRange {
   sectionId: number | null;
 }
 
-export type { UrlQuery } from "@/utils/urlQuery";
 
 export type FilterFacet = "course" | "person" | "section" | "component";
 

@@ -4,7 +4,7 @@
       <LeavePlanningToolbar
         :groupId="groupId"
         :terms="terms"
-        :range="planning.resolvedRange"
+        :range="planning.timelineRange"
         :canShowHistory="canShowHistory"
         :isHistoryShown="planning.isHistoryShown"
         :view="planning.view"
@@ -43,7 +43,7 @@
           :nameHeading="nameHeading"
           :isHistoryShown="planning.isHistoryShown"
           :plannedTermIds="planning.plannedTermIds"
-          :reservedRight="reservedRight"
+          :trailingScrollRoomPx="trailingScrollRoomPx"
           :today="today"
           :selectionKey="selectionKey"
         >
@@ -57,7 +57,7 @@
           />
           <CourseHistoryRows
             v-else-if="planning.view === 'courses'"
-            :courseView="planning.courseView"
+            :courseHistory="planning.courseHistory"
             :axis="planning.axis"
             :peopleByEmplid="planning.peopleByEmplid"
             :selectedLeaveId="selectedLeaveId"
@@ -79,7 +79,7 @@
         </TimelineCanvas>
       </Pane>
 
-      <PanelMount v-if="planning.selectedLeave || planning.selectedSection">
+      <PanelMount v-if="isPanelOpen" :panelWidthPx="panelWidthPx">
         <LeavePanel
           v-if="planning.selectedLeave"
           :leave="planning.selectedLeave"
@@ -128,7 +128,7 @@ import { onKeyStroke } from "@vueuse/core";
 import { useRoute, useRouter } from "vue-router";
 import { omit } from "lodash-es";
 import dayjs from "dayjs";
-import type { PlanningLeave } from "@/types";
+import type { PlanningLeave, PlanningTerm } from "@/types";
 import FullScreenLayout from "@/layouts/FullScreenLayout.vue";
 import Pane from "@/components/planning/Pane.vue";
 import { flattenQuery } from "@/utils/urlQuery";
@@ -148,7 +148,8 @@ import { useSisTermsQuery } from "./queries/useSisTermsQuery";
 import { useCoursePermissionsQuery } from "./queries/useCoursePermissionsQuery";
 import { useLeavePlanningView } from "./useLeavePlanningView/useLeavePlanningView";
 import { OWNED_QUERY_KEYS } from "./useLeavePlanningView/viewQuery";
-import type { Effect } from "./useLeavePlanningView/types";
+import type { Effect, TeachingView } from "./useLeavePlanningView/types";
+import { isDated } from "./helpers/timelineAxis";
 import { PANEL_CLEARANCE, PANEL_WIDTH } from "./layout";
 
 const props = defineProps<{ groupId: number }>();
@@ -223,7 +224,7 @@ const unavailableMessage = computed(() => {
   if (timelineQuery.data.value === null) {
     return "You don’t have permission to view leaves for this department.";
   }
-  if (planning.resolvedRange === null) {
+  if (planning.timelineRange === null) {
     return "This group isn’t linked to a department in the SIS.";
   }
   if (termsQuery.isPending.value) return "Loading terms…";
@@ -238,24 +239,24 @@ const unavailableMessage = computed(() => {
   return null;
 });
 
+const VIEW_HEADINGS: Record<TeachingView, string> = {
+  instructors: "Instructors",
+  tas: "Teaching assistants",
+  courses: "Courses",
+};
+
 const nameHeading = computed(() => {
   const { shown } = planning.rowCounts;
   if (!planning.isHistoryShown) return `On leave · ${shown}`;
-  const heading = {
-    instructors: "Instructors",
-    tas: "Teaching assistants",
-    courses: "Courses",
-  }[planning.view];
-  return `${heading} · ${shown}`;
+  return `${VIEW_HEADINGS[planning.view]} · ${shown}`;
 });
 
-const emptyMessage = computed(() =>
-  planning.activeFilterCount > 0
-    ? "Nothing here matches the filters."
-    : planning.isHistoryShown
-      ? "No teaching in this range."
-      : "No leaves in this range.",
-);
+const emptyMessage = computed(() => {
+  if (planning.activeFilterCount > 0)
+    return "Nothing here matches the filters.";
+  if (planning.isHistoryShown) return "No teaching in this range.";
+  return "No leaves in this range.";
+});
 
 const selectedLeaveId = computed(() =>
   planning.selection?.kind === "leave" ? planning.selection.leaveId : null,
@@ -275,32 +276,37 @@ const isPanelOpen = computed(
   () => planning.selectedLeave !== null || planning.selectedSection !== null,
 );
 
-const reservedRight = computed(() => {
+const panelWidthPx = computed(() =>
+  isLarge.value ? PANEL_WIDTH.large : PANEL_WIDTH.medium,
+);
+
+const trailingScrollRoomPx = computed(() => {
   if (!isPanelOpen.value || isSmall.value) return 0;
-  const panelWidth = isLarge.value ? PANEL_WIDTH.large : PANEL_WIDTH.medium;
-  return panelWidth + PANEL_CLEARANCE;
+  return panelWidthPx.value + PANEL_CLEARANCE;
 });
 
 const otherLeavesOfSelected = computed(() => {
-  const selected = planning.selectedLeave;
-  if (!selected) return [];
+  const selectedLeave = planning.selectedLeave;
+  if (!selectedLeave) return [];
+  const isOtherLeaveOfSamePerson = (leave: PlanningLeave) =>
+    leave.emplid === selectedLeave.emplid && leave.id !== selectedLeave.id;
   return (timelineQuery.data.value?.leaves ?? []).filter(
-    (leave) => leave.emplid === selected.emplid && leave.id !== selected.id,
+    isOtherLeaveOfSamePerson,
   );
 });
 
 const termNameOf = (termId: number) =>
   terms.value.find(({ id }) => id === termId)?.name ?? String(termId);
 
-const termNamesOf = (leave: PlanningLeave) =>
-  [...terms.value]
-    .filter(
-      ({ startDate, endDate }) =>
-        startDate !== null &&
-        endDate !== null &&
-        startDate <= leave.endDate &&
-        endDate >= leave.startDate,
-    )
+function termNamesOf(leave: PlanningLeave): string[] {
+  const overlapsLeave = (term: PlanningTerm) =>
+    isDated(term) &&
+    term.startDate <= leave.endDate &&
+    term.endDate >= leave.startDate;
+
+  return terms.value
+    .filter(overlapsLeave)
     .sort((a, b) => a.id - b.id)
     .map(({ name }) => name);
+}
 </script>

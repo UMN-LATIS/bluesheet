@@ -72,7 +72,7 @@ import type { AxisSpan } from "../helpers/timelineAxis";
 
 const props = defineProps<{
   leave: PlanningLeave;
-  person: PlanningPerson | undefined;
+  person: PlanningPerson;
   span: AxisSpan;
   top: number;
   isSelected: boolean;
