@@ -47,6 +47,7 @@
         :userId="user.id"
         :isShowingPastLeaves="isShowingPastLeaves"
         class="tw-mt-12"
+        @update:isShowingPastLeaves="setIsShowingPastLeaves"
       />
     </template>
   </DefaultLayout>
@@ -54,6 +55,8 @@
 
 <script lang="ts" setup>
 import { ref, computed, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { omit } from "lodash-es";
 import ViewUser from "@/components/ViewUser.vue";
 import Roles from "@/components/Roles.vue";
 import LeavesTable from "@/components/LeavesTable";
@@ -71,6 +74,15 @@ const props = defineProps<{
 
 const userStore = useUserStore();
 const permissionsStore = usePermissionsStore();
+const route = useRoute();
+const router = useRouter();
+
+const setIsShowingPastLeaves = (isShowing: boolean) =>
+  router.replace({
+    query: isShowing
+      ? { ...route.query, showPastLeaves: "true" }
+      : omit(route.query, "showPastLeaves"),
+  });
 
 const user = computed(() => {
   return props.userId

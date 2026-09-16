@@ -9,8 +9,9 @@
       <div class="tw-flex tw-items-center tw-gap-4">
         <CheckboxGroup
           id="show-past-leaves-checkbox"
-          v-model="showPastLeaves"
+          :modelValue="isShowingPastLeaves"
           label="Show Past Leaves"
+          @update:modelValue="emit('update:isShowingPastLeaves', $event)"
         />
         <template v-if="canCreateLeaves">
           <Button
@@ -71,20 +72,18 @@ const props = defineProps<{
   isShowingPastLeaves: boolean;
 }>();
 
+const emit = defineEmits<{
+  "update:isShowingPastLeaves": [isShowingPastLeaves: boolean];
+}>();
+
 const userStore = useUserStore();
 const permissionsStore = usePermissionsStore();
-const showPastLeaves = ref(props.isShowingPastLeaves);
 const canCreateLeaves = ref(false);
 const canUpdateLeaves = computed(() =>
   props.leaves.some((leave) => leave.canCurrentUser?.update),
 );
 const canDeleteLeaves = computed(() =>
   props.leaves.some((leave) => leave.canCurrentUser?.delete),
-);
-
-watch(
-  () => props.isShowingPastLeaves,
-  (isShowingPastLeaves) => (showPastLeaves.value = isShowingPastLeaves),
 );
 
 watch(
@@ -112,7 +111,7 @@ const sortNewLeavesFirst = (a, b) => {
 const sortedAndFilteredLeaves = computed(() => {
   return [...props.leaves]
     .filter((leave) => {
-      if (showPastLeaves.value) return true;
+      if (props.isShowingPastLeaves) return true;
       return !dayjs(leave.end_date).isBefore(dayjs());
     })
     .sort(sortByStartDateDescending)
