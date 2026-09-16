@@ -1,3 +1,5 @@
+import type { Component } from "vue";
+import { CircleCheckIcon, NoIcon, QuestionIcon, SparklesIcon } from "@/icons";
 import { type LeaveStatus, leaveStatuses } from "@/types";
 
 const leaveStatusToLabelMap: Record<LeaveStatus, string> = {
@@ -38,4 +40,15 @@ const leaveStatusToColorMap: Record<LeaveStatus, string> = {
  */
 export function getLeaveStatusColor(status: LeaveStatus): string {
   return leaveStatusToColorMap[status] ?? "neutral-400";
+}
+
+const leaveStatusToIconMap: Record<LeaveStatus, Component> = {
+  [leaveStatuses.ELIGIBLE]: SparklesIcon,
+  [leaveStatuses.PENDING]: QuestionIcon,
+  [leaveStatuses.CONFIRMED]: CircleCheckIcon,
+  [leaveStatuses.DEFERRED]: NoIcon,
+};
+
+export function getLeaveStatusIcon(status: LeaveStatus): Component {
+  return leaveStatusToIconMap[status] ?? QuestionIcon;
 }

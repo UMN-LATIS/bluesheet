@@ -245,9 +245,7 @@
             @update:modelValue="(option) => addPerson(option, PRIMARY_ROLE)"
           >
             <template #afterOptionLabel="{ option }">
-              <Chip v-if="hasTermLeave(option)" color="neutral-600">
-                On leave
-              </Chip>
+              <PersonLeaveChip :leaves="leavesFor(option)" />
             </template>
           </ComboBox>
         </div>
@@ -290,9 +288,7 @@
             @update:modelValue="(option) => addPerson(option, TA_ROLE)"
           >
             <template #afterOptionLabel="{ option }">
-              <Chip v-if="hasTermLeave(option)" color="neutral-600">
-                On leave
-              </Chip>
+              <PersonLeaveChip :leaves="leavesFor(option)" />
             </template>
           </ComboBox>
         </div>
@@ -575,9 +571,9 @@ import FieldDivider from "./FieldDivider.vue";
 import FieldHeader from "./FieldHeader.vue";
 import FieldLabel from "./FieldLabel.vue";
 import PersonField from "./PersonField.vue";
+import PersonLeaveChip from "./PersonLeaveChip.vue";
 import SectionFacts from "./SectionFacts.vue";
 import SegmentedControl, { type SegmentedOption } from "./SegmentedControl.vue";
-import Chip from "@/components/Chip.vue";
 import { ComboBox, type ComboBoxOptionType } from "@/components/ComboBox";
 import { LockIcon } from "@/icons";
 import { colorOfType, labelOfComponent } from "../constants/meetingTypeColors";
@@ -601,6 +597,7 @@ import type {
   SisEmployee,
   SisSectionMeeting,
 } from "../types";
+import type { TermLeave } from "@/types";
 import type { ScheduleEditor } from "../useScheduleEditor";
 
 const props = defineProps<{
@@ -616,7 +613,7 @@ const props = defineProps<{
   sections: PlannedSection[];
   roster: SisEmployee[];
   /** Leaves in this term, keyed by emplid. */
-  emplidsOnLeave: Set<number>;
+  leavesByEmplid: Map<number, TermLeave[]>;
   /** Names the list this sheet was opened from, e.g. "Tue · 2 – 3p", if any. */
   returnTo?: string | null;
   /** Names the term in the cancel prompt, e.g. "Fall 2026". */
@@ -742,8 +739,10 @@ const nameOfTerm = (termId: number) =>
   termsQuery.data.value?.find(({ id }) => id === termId)?.name ??
   String(termId);
 
-const hasTermLeave = (option: ComboBoxOptionType): boolean =>
-  typeof option.id === "number" && props.emplidsOnLeave.has(option.id);
+const leavesFor = (option: ComboBoxOptionType): TermLeave[] =>
+  typeof option.id === "number"
+    ? (props.leavesByEmplid.get(option.id) ?? [])
+    : [];
 
 /** "García, Ana", with their appointment under it; see `ComboBoxOptionType`. */
 const optionFor = (person: SisEmployee) => ({
