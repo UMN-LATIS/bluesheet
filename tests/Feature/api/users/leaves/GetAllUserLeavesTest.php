@@ -146,6 +146,7 @@ it('does not let BlueSheet Managers view leaves of instructors outside their gro
         // mock the getEmployeesForDept response, needed for checking
         // whether the instructor has an active status
         "{$BANDAID_API}/department/*/employees" => mockResponse("Bandaid/mockGetEmployeesForDept.json"),
+        "{$BANDAID_API}/employment/employees" => mockResponse("Bandaid/mockGetEmployeesForDept.json"),
 
         // Now, put the $instructor1 in the mock
         // reponse for getEmployeesForDept($deptId)
