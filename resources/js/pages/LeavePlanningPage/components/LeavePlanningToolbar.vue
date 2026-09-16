@@ -171,8 +171,13 @@ const goToGroup = (nextGroupId: string) =>
   });
 
 const groupId = computed(() => props.groupId);
-const groupQuery = useGroupQuery(groupId);
 const groupsQuery = useLeavePlanningGroupsQuery();
+const isGroupMissingFromList = computed(
+  () =>
+    groupsQuery.isSuccess.value &&
+    !(groupsQuery.data.value ?? []).some(({ id }) => id === props.groupId),
+);
+const groupQuery = useGroupQuery(groupId, isGroupMissingFromList);
 
 const departmentOptions = computed<PlanningGroup[]>(() => {
   const departments = groupsQuery.data.value ?? [];

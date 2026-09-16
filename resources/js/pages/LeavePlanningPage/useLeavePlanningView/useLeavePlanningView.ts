@@ -57,6 +57,7 @@ export function useLeavePlanningView(
     isHistoryShown: computed(() =>
       selectIsHistoryShown(context.value, state.value),
     ),
+    isHistoryRequested: computed(() => state.value.isHistoryShown),
     view: computed(() => state.value.view),
     filters: computed(() => state.value.filters),
     visibleFacets: computed(() =>

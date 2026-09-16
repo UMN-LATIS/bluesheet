@@ -4,6 +4,7 @@
     class="scrollbar-always-visible tw-relative tw-min-h-0 tw-flex-1 tw-overflow-auto"
     :style="{
       '--lp-name': `${NAME_COLUMN_WIDTH}px`,
+      '--lp-header': `${AXIS_HEADER_HEIGHT}px`,
       '--lp-track': `${trackWidth}px`,
       '--lp-trailing': `${reservedRight}px`,
     }"
@@ -26,8 +27,8 @@
       </div>
 
       <div
-        class="tw-relative tw-h-[58px] tw-flex-none"
-        :style="{ width: 'var(--lp-track)' }"
+        class="tw-relative tw-flex-none"
+        :style="{ width: 'var(--lp-track)', height: 'var(--lp-header)' }"
       >
         <div
           v-for="band in termBands"
@@ -119,6 +120,7 @@ import {
 } from "../helpers/timelineAxis";
 import { formatMonthDay } from "../helpers/dateLabels";
 import {
+  AXIS_HEADER_HEIGHT,
   HISTORY_PX_PER_DAY,
   LEAVE_TRACK_MIN_WIDTH,
   NAME_COLUMN_WIDTH,
@@ -194,5 +196,6 @@ watch(
         behavior: "smooth",
       });
   },
+  { immediate: true, flush: "post" },
 );
 </script>

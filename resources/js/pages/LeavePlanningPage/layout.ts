@@ -1,5 +1,7 @@
 export const NAME_COLUMN_WIDTH = 220;
 
+export const AXIS_HEADER_HEIGHT = 58;
+
 export const HISTORY_PX_PER_DAY = 2.2;
 
 export const LEAVE_TRACK_MIN_WIDTH = 480;

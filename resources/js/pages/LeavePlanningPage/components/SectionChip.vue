@@ -16,6 +16,7 @@
       borderWidth: '1px',
       borderLeftWidth: '3px',
       borderLeftStyle: 'solid',
+      scrollMarginTop: 'calc(var(--lp-header) + 8px)',
       scrollMarginLeft: 'calc(var(--lp-name) + 12px)',
       scrollMarginRight: 'calc(var(--lp-trailing) + 12px)',
     }"

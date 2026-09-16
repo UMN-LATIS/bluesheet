@@ -124,6 +124,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
+import { onKeyStroke } from "@vueuse/core";
 import { useRoute, useRouter } from "vue-router";
 import { omit } from "lodash-es";
 import dayjs from "dayjs";
@@ -169,22 +170,31 @@ const runEffect = (effect: Effect) => {
   }
 };
 
-const planning = useLeavePlanningView(
-  computed(() => ({
-    timeline: timelineQuery.data.value ?? null,
-    teachingHistory: teachingHistoryQuery.data.value ?? null,
-    terms: termsQuery.data.value ?? [],
-    canShowHistory: canShowHistory.value,
-  })),
-  runEffect,
-);
-
 const termsQuery = useSisTermsQuery();
 const terms = computed(() => termsQuery.data.value ?? []);
 
 const coursePermissionsQuery = useCoursePermissionsQuery(groupId);
 const canShowHistory = computed(
   () => coursePermissionsQuery.data.value?.viewAny ?? false,
+);
+
+// Every read below that sits in a query key must stay off
+// `context`: useQuery reads its key during setup, before the
+// queries that `context` reads have been declared.
+const planning = useLeavePlanningView(
+  computed(() => ({
+    timeline: timelineQuery.data.value ?? null,
+    teachingHistory: teachingHistoryQuery.data.value ?? null,
+    terms: terms.value,
+    canShowHistory: canShowHistory.value,
+  })),
+  runEffect,
+);
+
+watch(
+  () => route.query,
+  (query) => planning.urlChanged(flattenQuery(query)),
+  { immediate: true },
 );
 
 const timelineQuery = useLeaveTimelineQuery(
@@ -195,15 +205,17 @@ const timelineQuery = useLeaveTimelineQuery(
 
 const teachingHistoryQuery = useTeachingHistoryQuery(
   groupId,
-  computed(() => planning.resolvedRange),
-  computed(() => planning.isHistoryShown),
+  computed(() => timelineQuery.data.value?.range ?? null),
+  computed(() => planning.isHistoryRequested && canShowHistory.value),
 );
 
-watch(
-  () => route.query,
-  (query) => planning.urlChanged(flattenQuery(query)),
-  { immediate: true },
-);
+onKeyStroke("Escape", () => {
+  if (isFilterPanelOpen.value) {
+    isFilterPanelOpen.value = false;
+    return;
+  }
+  planning.deselect();
+});
 
 const unavailableMessage = computed(() => {
   if (timelineQuery.isPending.value) return "Loading leaves…";
@@ -214,9 +226,14 @@ const unavailableMessage = computed(() => {
   if (planning.resolvedRange === null) {
     return "This group isn’t linked to a department in the SIS.";
   }
-  if (!planning.axis) return "Loading terms…";
+  if (termsQuery.isPending.value) return "Loading terms…";
+  if (termsQuery.isError.value) return "Terms could not be loaded.";
+  if (!planning.axis) return "This range names a term with no dates.";
   if (planning.isHistoryShown && teachingHistoryQuery.isPending.value) {
     return "Loading teaching history…";
+  }
+  if (planning.isHistoryShown && teachingHistoryQuery.isError.value) {
+    return "Teaching history could not be loaded.";
   }
   return null;
 });

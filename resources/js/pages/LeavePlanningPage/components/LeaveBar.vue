@@ -23,6 +23,7 @@
       height: `${isCompact ? 20 : 24}px`,
       left: `${span.left * 100}%`,
       width: `max(${span.width * 100}%, 12px)`,
+      scrollMarginTop: 'calc(var(--lp-header) + 8px)',
       scrollMarginLeft: 'calc(var(--lp-name) + 12px)',
       scrollMarginRight: 'calc(var(--lp-trailing) + 12px)',
     }"
