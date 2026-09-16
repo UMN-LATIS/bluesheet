@@ -68,17 +68,23 @@ import { usePermissionsStore } from "@/stores/usePermissionsStore";
 const props = defineProps<{
   userId: number;
   leaves: Leave[];
+  isShowingPastLeaves: boolean;
 }>();
 
 const userStore = useUserStore();
 const permissionsStore = usePermissionsStore();
-const showPastLeaves = ref(false);
+const showPastLeaves = ref(props.isShowingPastLeaves);
 const canCreateLeaves = ref(false);
 const canUpdateLeaves = computed(() =>
   props.leaves.some((leave) => leave.canCurrentUser?.update),
 );
 const canDeleteLeaves = computed(() =>
   props.leaves.some((leave) => leave.canCurrentUser?.delete),
+);
+
+watch(
+  () => props.isShowingPastLeaves,
+  (isShowingPastLeaves) => (showPastLeaves.value = isShowingPastLeaves),
 );
 
 watch(

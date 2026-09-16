@@ -74,7 +74,9 @@ const MIN_ROW_HEIGHT = 52;
 const userPageOf = ({
   userId,
 }: PlanningPerson): RouteLocationRaw | undefined =>
-  userId === null ? undefined : { name: "user", params: { userId } };
+  userId === null
+    ? undefined
+    : { name: "user", params: { userId }, query: { showPastLeaves: "true" } };
 
 const courseLabelOf = (section: TeachingSection) =>
   `${section.subject} ${section.catalogNumber}`;

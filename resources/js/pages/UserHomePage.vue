@@ -45,6 +45,7 @@
         v-if="canViewLeaves"
         :leaves="user.leaves"
         :userId="user.id"
+        :isShowingPastLeaves="isShowingPastLeaves"
         class="tw-mt-12"
       />
     </template>
@@ -65,6 +66,7 @@ import { usePermissionsStore } from "@/stores/usePermissionsStore";
 
 const props = defineProps<{
   userId: number | null;
+  isShowingPastLeaves: boolean;
 }>();
 
 const userStore = useUserStore();

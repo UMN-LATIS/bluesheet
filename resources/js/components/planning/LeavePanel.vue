@@ -105,7 +105,11 @@
       </template>
 
       <router-link
-        :to="{ name: 'user', params: { userId: leave.userId } }"
+        :to="{
+          name: 'user',
+          params: { userId: leave.userId },
+          query: { showPastLeaves: 'true' },
+        }"
         class="tw-mt-auto tw-flex tw-min-h-11 tw-items-center tw-gap-1.5 tw-text-xs tw-font-semibold tw-text-primary"
       >
         Open {{ person?.name || "this person" }}’s leaves

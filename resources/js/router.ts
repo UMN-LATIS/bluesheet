@@ -58,6 +58,7 @@ export const router = createRouter({
       component: UserHomePage,
       props: (route) => ({
         userId: parseIntFromParam(route.params.userId),
+        isShowingPastLeaves: route.query.showPastLeaves === "true",
       }),
     },
     {
