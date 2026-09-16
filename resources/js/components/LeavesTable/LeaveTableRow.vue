@@ -158,7 +158,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, reactive } from "vue";
 import { dayjs, isTempId } from "@/utils";
-import { Leave, leaveStatuses } from "@/types";
+import { Leave } from "@/types";
 import InputGroup from "@/components/InputGroup.vue";
 import SelectGroup from "@/components/SelectGroup.vue";
 import { Td } from "@/components/Table";
@@ -170,10 +170,14 @@ import SmallButton from "./SmallButton.vue";
 import { useUserStore } from "@/stores/useUserStore";
 import SelectLeaveDate from "./SelectLeaveDate.vue";
 import {
+  getLeaveStatusColor,
   getLeaveStatusLabel,
   getLeaveStatusOptions,
 } from "@/utils/leaveStatusHelpers";
-import { getLeaveTypeLabel, getLeaveTypeOptions } from "@/utils/leaveTypeHelpers";
+import {
+  getLeaveTypeLabel,
+  getLeaveTypeOptions,
+} from "@/utils/leaveTypeHelpers";
 
 const props = defineProps<{
   leave: Leave;
@@ -258,19 +262,6 @@ const isCurrentOrFutureLeave = computed(() =>
   dayjs(props.leave.end_date).isAfter(dayjs()),
 );
 
-const statusColor = computed(() => {
-  switch (props.leave.status) {
-    case leaveStatuses.ELIGIBLE:
-      return "blue-600";
-    case leaveStatuses.PENDING:
-      return "orange-600";
-    case leaveStatuses.CONFIRMED:
-      return "green-600";
-    case leaveStatuses.DEFERRED:
-      return "neutral-400";
-    default:
-      return "neutral-400";
-  }
-});
+const statusColor = computed(() => getLeaveStatusColor(props.leave.status));
 </script>
 <style></style>

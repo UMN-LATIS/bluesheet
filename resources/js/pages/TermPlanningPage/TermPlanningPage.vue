@@ -42,6 +42,7 @@
           :options="filterOptions"
           :schedule="schedule"
           :reachable="reachableValues"
+          :leavesByEmplid="termLeavesByEmplid"
           :unofficialCourseCodes="unofficialCourseCodes"
         />
       </Pane>
@@ -168,6 +169,7 @@
           :isCreating="isSavingNewSection"
           :sections="localSections"
           :roster="roster"
+          :leavesByEmplid="termLeavesByEmplid"
           :returnTo="returnTo"
           :termName="term?.name"
           :isReadOnly="isReadOnly"
@@ -197,6 +199,7 @@
             :options="filterOptions"
             :schedule="schedule"
             :reachable="reachableValues"
+            :leavesByEmplid="termLeavesByEmplid"
             :unofficialCourseCodes="unofficialCourseCodes"
             isDismissible
             @close="isFilterPanelOpen = false"
@@ -204,6 +207,12 @@
         </Pane>
       </template>
     </div>
+
+    <TermLeaveStrip
+      v-if="termLeaves.length > 0"
+      :leaves="termLeaves"
+      class="tw-flex-none tw-border-0 tw-border-t tw-border-solid tw-border-outline-variant"
+    />
   </FullScreenLayout>
 </template>
 
@@ -234,8 +243,10 @@ import ScheduleSidebar from "./components/ScheduleSidebar.vue";
 import SectionBlock from "./components/SectionBlock.vue";
 import SectionSheet from "./components/SectionSheet.vue";
 import SheetMount from "./components/SheetMount.vue";
+import TermLeaveStrip from "./components/TermLeaveStrip.vue";
 import { bandsForDay } from "./helpers/dayBands";
 import { buildFilterOptions } from "./helpers/filterOptions";
+import { leavesByEmplid } from "./helpers/leavesByEmplid";
 import { reachableFacetValues } from "./helpers/scheduleFilters";
 import { ASYNC_DAY_INDEX, WEEKDAY_NAMES } from "./helpers/scheduleDays";
 import { refusalMessage } from "./helpers/refusalMessage";
@@ -244,6 +255,7 @@ import { toSectionPayload } from "./helpers/sectionPayload";
 import { flattenQuery } from "./helpers/urlQuery";
 import type { ScheduleView } from "./helpers/viewQuery";
 import { useSisGroupTermsQuery } from "./queries/useSisGroupTermsQuery";
+import { useSisGroupLeavesQuery } from "./queries/useSisGroupLeavesQuery";
 import { useTermPlanCoursesQuery } from "./queries/useTermPlanCoursesQuery";
 import { useSectionBatch } from "./queries/useSectionBatch";
 import { useTermPlanMutations } from "./queries/useTermPlanMutations";
@@ -297,6 +309,12 @@ const {
   roster,
   sections,
 } = useTermSchedule(groupId, termCode);
+
+const leavesQuery = useSisGroupLeavesQuery(groupId, activeTermCode);
+
+const termLeaves = computed(() => leavesQuery.data.value ?? []);
+
+const termLeavesByEmplid = computed(() => leavesByEmplid(termLeaves.value));
 
 const isImportOpen = ref(false);
 const isDeleteAllOpen = ref(false);

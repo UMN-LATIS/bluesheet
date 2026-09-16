@@ -198,3 +198,24 @@ export async function getTermPayrollDates() {
   const res = await axios.get<T.TermPayrollDate[]>(`/api/terms/payrollDates`);
   return res.data;
 }
+
+/**
+ * Leaves overlapping one term, for people appointed to the group's
+ * department. Empty for a user who may not read the group's leaves.
+ */
+export async function fetchTermLeavesForGroup(
+  groupId: T.Group["id"],
+  termCode: number,
+): Promise<T.TermLeave[]> {
+  const res = await axios.get<T.TermLeave[]>(
+    `/api/sis/groups/${groupId}/leaves`,
+    {
+      params: { term: termCode },
+      // Counting 403 as an answer keeps it out of the error
+      // interceptor, which would raise the global error modal.
+      validateStatus: (status) => status === 200 || status === 403,
+    },
+  );
+
+  return res.status === 403 ? [] : res.data;
+}

@@ -113,7 +113,11 @@
                 :isHighlighted="isHighlighted(option)"
                 :data-highlighted-option="isHighlighted(option)"
                 @click="() => handleSelectOption(option)"
-              />
+              >
+                <template #afterOptionLabel>
+                  <slot name="afterOptionLabel" :option="option" />
+                </template>
+              </ComboBoxOption>
             </template>
           </ul>
           <div v-else class="tw-p-2 tw-text-neutral-500 tw-text-center">

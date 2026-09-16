@@ -179,7 +179,13 @@
               <template v-else-if="person.value === TBA_PERSON" #secondary>
                 No instructor assigned
               </template>
-              <template #annotation>{{ person.sectionCount }} sec</template>
+              <template #annotation>
+                <PersonLeaveChip
+                  :leaves="leavesFor(person)"
+                  class="tw-me-1.5 tw-align-middle"
+                />
+                {{ person.sectionCount }} sec
+              </template>
             </FilterRow>
           </li>
         </template>
@@ -233,6 +239,7 @@
 import { computed, ref } from "vue";
 import FacetTile from "./FacetTile.vue";
 import FilterRow from "./FilterRow.vue";
+import PersonLeaveChip from "./PersonLeaveChip.vue";
 import { XIcon } from "@/icons";
 import { colorOfType, labelOfComponent } from "../constants/meetingTypeColors";
 import UnofficialTag from "./UnofficialTag.vue";
@@ -242,6 +249,7 @@ import type {
   PersonOption,
 } from "../helpers/filterOptions";
 import type { ReachableFacetValues } from "../helpers/scheduleFilters";
+import type { TermLeave } from "@/types";
 import { type FilterFacet, TBA_PERSON } from "../types";
 import type { ScheduleEditor } from "../useScheduleEditor";
 
@@ -249,6 +257,8 @@ const props = defineProps<{
   options: FilterOptions;
   schedule: ScheduleEditor;
   unofficialCourseCodes: Set<string>;
+  /** Every leave overlapping the term, so the faculty list can mark who has one. */
+  leavesByEmplid: Map<number, TermLeave[]>;
   /** Per facet, the values the other facets' checked values leave standing. */
   reachable: ReachableFacetValues;
   /** Mounted as an overlay that can be closed, rather than docked. */
@@ -264,6 +274,9 @@ const filters = computed(() => props.schedule.filters);
 
 const isChecked = (facet: FilterFacet, value: string) =>
   filters.value[facet].includes(value);
+
+const leavesFor = (person: PersonOption): TermLeave[] =>
+  person.emplid === null ? [] : (props.leavesByEmplid.get(person.emplid) ?? []);
 
 const toggle = (facet: FilterFacet, values: string[], isNowChecked: boolean) =>
   isNowChecked
