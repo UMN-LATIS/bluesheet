@@ -26,6 +26,7 @@ import DeptLeavesReportPage from "./pages/reports/DeptLeavesReportPage.vue";
 import UnitReportPage from "./pages/reports/UnitReport.vue";
 import CoursePlanningPage from "@/pages/CoursePlanningPage/CoursePlanningPage.vue";
 import TermPlanningPage from "@/pages/TermPlanningPage/TermPlanningPage.vue";
+import LeavePlanningPage from "@/pages/LeavePlanningPage/LeavePlanningPage.vue";
 import { parseIntFromRouteParam as parseIntFromParam } from "@/utils";
 
 // test routes
@@ -179,6 +180,14 @@ export const router = createRouter({
       props: (route) => ({
         groupId: parseIntFromParam(route.params.groupId),
         termCode: parseIntFromParam(route.params.termCode),
+      }),
+    },
+    {
+      name: "leavePlanning",
+      path: "/leave-planning/groups/:groupId",
+      component: LeavePlanningPage,
+      props: (route) => ({
+        groupId: parseIntFromParam(route.params.groupId),
       }),
     },
     {

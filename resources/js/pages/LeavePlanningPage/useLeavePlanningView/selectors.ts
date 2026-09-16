@@ -92,6 +92,46 @@ export const selectCourseView = (
     ? courseViewOf(context.teachingHistory, context.timeline, filters)
     : { onLeave: [], courses: [] };
 
+export interface RowCounts {
+  shown: number;
+  total: number;
+  noun: "person" | "course";
+}
+
+export function selectRowCounts(
+  context: ViewContext,
+  state: ViewState,
+): RowCounts {
+  if (!selectIsHistoryShown(context, state)) {
+    return {
+      shown: selectLeaveRows(context, state.filters).length,
+      total: selectLeaveRows(context, emptyFilters()).length,
+      noun: "person",
+    };
+  }
+
+  if (state.view === "courses") {
+    return {
+      shown: selectCourseView(context, state.filters).courses.length,
+      total: selectCourseView(context, emptyFilters()).courses.length,
+      noun: "course",
+    };
+  }
+
+  return {
+    shown: selectPersonHistoryRows(context, state, state.filters).length,
+    total: selectPersonHistoryRows(context, state, emptyFilters()).length,
+    noun: "person",
+  };
+}
+
+export const selectPlannedTermIds = (context: ViewContext): Set<number> =>
+  new Set(
+    (context.teachingHistory?.sections ?? [])
+      .filter(({ isPlanned }) => isPlanned)
+      .map(({ termId }) => termId),
+  );
+
 export const selectPeopleByEmplid = (
   context: ViewContext,
 ): Map<number, PlanningPerson> =>
@@ -103,7 +143,9 @@ export const selectPeopleByEmplid = (
   );
 
 function uniqueSections(sections: TeachingSection[]): TeachingSection[] {
-  return [...new Map(sections.map((section) => [section.key, section])).values()];
+  return [
+    ...new Map(sections.map((section) => [section.key, section])).values(),
+  ];
 }
 
 function visibleRecordsOf(

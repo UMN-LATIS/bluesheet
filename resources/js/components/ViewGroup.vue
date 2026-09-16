@@ -87,6 +87,11 @@
                     Faculty Leaves Planning Report
                   </router-link>
                 </li>
+                <li v-if="canViewGroupLeaves">
+                  <router-link :to="`/leave-planning/groups/${group.id}`">
+                    Leave Planning (preview)
+                  </router-link>
+                </li>
                 <li v-if="canViewGroupCourses">
                   <router-link :to="`/term-planning/groups/${group.id}`">
                     Term Planning

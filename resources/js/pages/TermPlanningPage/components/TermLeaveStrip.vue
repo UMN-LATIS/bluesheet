@@ -27,12 +27,29 @@
         </router-link>
       </li>
     </ul>
+    <router-link
+      v-if="termCode !== null"
+      :to="{
+        name: 'leavePlanning',
+        params: { groupId },
+        query: { start: termCode },
+      }"
+      class="tw-ml-auto tw-flex tw-min-h-8 tw-flex-none tw-items-center tw-gap-1.5 tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-px-3 tw-text-xs tw-font-semibold tw-text-primary tw-no-underline hover:tw-bg-surface hover:tw-no-underline"
+    >
+      View Leaves
+      <ArrowRightIcon class="tw-h-3.5 tw-w-3.5" aria-hidden="true" />
+    </router-link>
   </section>
 </template>
 
 <script setup lang="ts">
+import { ArrowRightIcon } from "@/icons";
 import TermLeaveChip from "./TermLeaveChip.vue";
 import type { TermLeave } from "@/types";
 
-defineProps<{ leaves: TermLeave[] }>();
+defineProps<{
+  leaves: TermLeave[];
+  groupId: number;
+  termCode: number | null;
+}>();
 </script>

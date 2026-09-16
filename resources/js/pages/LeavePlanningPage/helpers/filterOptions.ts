@@ -95,27 +95,33 @@ export function filterOptionsFor(
       const counts = countBy(records.people, (person) => person.categories);
       return [...counts.entries()]
         .sort(([a], [b]) => a.localeCompare(b))
-        .map(([category, count]) =>
-          option(category, category, String(count)),
-        );
+        .map(([category, count]) => option(category, category, String(count)));
     }
 
     case "leaveType": {
       const counts = countBy(records.leaves, (leave) => [leave.type]);
       return [...counts.entries()]
         .map(([type, count]) =>
-          option(type, getLeaveTypeLabel(type as PlanningLeave["type"]), String(count)),
+          option(
+            type,
+            getLeaveTypeLabel(type as PlanningLeave["type"]),
+            String(count),
+          ),
         )
         .sort((a, b) => a.label.localeCompare(b.label));
     }
 
     case "status": {
       const counts = countBy(records.leaves, (leave) => [leave.status]);
-      return STATUS_ORDER.filter((status) => counts.has(status)).map(
-        (status) =>
-          option(status, getLeaveStatusLabel(status), String(counts.get(status)), {
+      return STATUS_ORDER.filter((status) => counts.has(status)).map((status) =>
+        option(
+          status,
+          getLeaveStatusLabel(status),
+          String(counts.get(status)),
+          {
             swatchClass: `tw-bg-${getLeaveStatusColor(status)}`,
-          }),
+          },
+        ),
       );
     }
 

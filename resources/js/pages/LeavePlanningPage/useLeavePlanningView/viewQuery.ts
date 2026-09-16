@@ -35,8 +35,9 @@ const positiveIntegerOf = (value: string | undefined): number | null => {
   return parsed > 0 ? parsed : null;
 };
 
-const listOf = (value: string | undefined): string[] =>
-  [...new Set((value ?? "").split(",").filter((item) => item !== ""))];
+const listOf = (value: string | undefined): string[] => [
+  ...new Set((value ?? "").split(",").filter((item) => item !== "")),
+];
 
 const viewOf = (value: string | undefined): TeachingView =>
   TEACHING_VIEWS.find((view) => view === value) ?? DEFAULT_VIEW;

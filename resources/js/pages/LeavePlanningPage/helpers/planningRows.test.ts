@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  courseViewOf,
-  leaveRowsOf,
-  personHistoryRowsOf,
-} from "./planningRows";
+import { courseViewOf, leaveRowsOf, personHistoryRowsOf } from "./planningRows";
 import { emptyFilters } from "../useLeavePlanningView/viewQuery";
 import type { PlanningFilters } from "../useLeavePlanningView/types";
 import {
@@ -46,7 +42,10 @@ describe("leaveRowsOf", () => {
   });
 
   it("narrows people by appointment category", () => {
-    const rows = leaveRowsOf(timeline, filtersWith({ category: ["Direct Research"] }));
+    const rows = leaveRowsOf(
+      timeline,
+      filtersWith({ category: ["Direct Research"] }),
+    );
 
     expect(rows.map(({ person }) => person.emplid)).toEqual([2]);
   });
@@ -55,7 +54,10 @@ describe("leaveRowsOf", () => {
 describe("personHistoryRowsOf", () => {
   const appointedNonTeacher = person(1);
   const pastInstructor = person(2, { hasAppointment: false, categories: [] });
-  const teachingAssistant = person(3, { hasAppointment: false, categories: [] });
+  const teachingAssistant = person(3, {
+    hasAppointment: false,
+    categories: [],
+  });
   const history = historyOf(
     [appointedNonTeacher, pastInstructor, teachingAssistant],
     [
@@ -68,7 +70,12 @@ describe("personHistoryRowsOf", () => {
   );
 
   it("lists instructors as everyone appointed plus everyone who taught", () => {
-    const rows = personHistoryRowsOf(history, [], "instructors", emptyFilters());
+    const rows = personHistoryRowsOf(
+      history,
+      [],
+      "instructors",
+      emptyFilters(),
+    );
 
     expect(rows.map(({ person }) => person.emplid)).toEqual([1, 2]);
     expect(rows[1].sectionCount).toBe(2);
@@ -113,7 +120,10 @@ describe("courseViewOf", () => {
     [
       section("ANTH-1003", 1269, [[1, "PI"]]),
       section("ANTH-1003", 1273, [[1, "PI"]], { isPlanned: true }),
-      section("ANTH-1001", 1269, [[2, "TA"]], { component: "LAB", section: "011" }),
+      section("ANTH-1001", 1269, [[2, "TA"]], {
+        component: "LAB",
+        section: "011",
+      }),
     ],
   );
 
@@ -128,13 +138,20 @@ describe("courseViewOf", () => {
   });
 
   it("keeps only courses someone chosen teaches", () => {
-    const { courses } = courseViewOf(history, null, filtersWith({ person: ["2"] }));
+    const { courses } = courseViewOf(
+      history,
+      null,
+      filtersWith({ person: ["2"] }),
+    );
 
     expect(courses.map(({ courseCode }) => courseCode)).toEqual(["ANTH-1001"]);
   });
 
   it("pins the people on leave above the courses", () => {
-    const timeline = timelineOf([lucia], [leave(1, "2027-01-19", "2027-05-12")]);
+    const timeline = timelineOf(
+      [lucia],
+      [leave(1, "2027-01-19", "2027-05-12")],
+    );
 
     const { onLeave } = courseViewOf(history, timeline, emptyFilters());
 

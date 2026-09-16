@@ -17,7 +17,9 @@ import {
   selectLeaveRows,
   selectPeopleByEmplid,
   selectPersonHistoryRows,
+  selectPlannedTermIds,
   selectResolvedRange,
+  selectRowCounts,
   selectSelectedLeave,
   selectSelectedSection,
   selectVisibleFacets,
@@ -77,6 +79,8 @@ export function useLeavePlanningView(
     courseView: computed(() =>
       selectCourseView(context.value, state.value.filters),
     ),
+    rowCounts: computed(() => selectRowCounts(context.value, state.value)),
+    plannedTermIds: computed(() => selectPlannedTermIds(context.value)),
     peopleByEmplid: computed(() => selectPeopleByEmplid(context.value)),
     selection: computed(() => state.value.selection),
     selectedLeave: computed(() =>
@@ -92,7 +96,8 @@ export function useLeavePlanningView(
     selectRangeEnd: (termId: number) =>
       dispatch({ type: "rangeEndSelected", termId }),
     toggleHistory: () => dispatch({ type: "historyToggled" }),
-    selectView: (view: TeachingView) => dispatch({ type: "viewSelected", view }),
+    selectView: (view: TeachingView) =>
+      dispatch({ type: "viewSelected", view }),
     openFacet: (facet: FilterFacet) => dispatch({ type: "facetOpened", facet }),
     addFilterValues: (facet: FilterFacet, values: string[]) =>
       dispatch({ type: "filterValuesAdded", facet, values }),

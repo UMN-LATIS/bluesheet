@@ -103,7 +103,11 @@ export function axisFor(
     terms: axisTerms,
     gaps: gaps.filter(({ width }) => width > 0),
     months: monthsBetween(firstTerm.startDate, lastTerm.endDate).map(
-      (isoDate) => ({ isoDate, left: leftOf(isoDate), label: monthLabelOf(isoDate) }),
+      (isoDate) => ({
+        isoDate,
+        left: leftOf(isoDate),
+        label: monthLabelOf(isoDate),
+      }),
     ),
   };
 }

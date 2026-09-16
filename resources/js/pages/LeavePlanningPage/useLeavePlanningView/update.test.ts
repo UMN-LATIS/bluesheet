@@ -28,7 +28,10 @@ describe("the URL", () => {
   });
 
   it("an event that leaves the query as it was writes nothing", () => {
-    const { effects } = update(initialState(), { type: "facetOpened", facet: "status" });
+    const { effects } = update(initialState(), {
+      type: "facetOpened",
+      facet: "status",
+    });
 
     expect(effects).toEqual([]);
   });

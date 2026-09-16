@@ -1,8 +1,4 @@
-import type {
-  LeaveTimeline,
-  PlanningTerm,
-  TeachingHistory,
-} from "@/types";
+import type { LeaveTimeline, PlanningTerm, TeachingHistory } from "@/types";
 import type { UrlQuery } from "@/utils/urlQuery";
 
 export const TEACHING_VIEWS = ["instructors", "tas", "courses"] as const;

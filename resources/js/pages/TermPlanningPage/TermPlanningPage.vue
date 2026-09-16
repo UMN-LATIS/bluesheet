@@ -211,6 +211,8 @@
     <TermLeaveStrip
       v-if="termLeaves.length > 0"
       :leaves="termLeaves"
+      :groupId="groupId"
+      :termCode="activeTermCode"
       class="tw-flex-none tw-border-0 tw-border-t tw-border-solid tw-border-outline-variant"
     />
   </FullScreenLayout>

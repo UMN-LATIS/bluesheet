@@ -24,9 +24,9 @@ describe("axisFor", () => {
     expect(spring.left + spring.width).toBeCloseTo(1);
     expect(fallThroughSpring.gaps).toHaveLength(1);
     expect(fallThroughSpring.gaps[0].left).toBeCloseTo(fall.left + fall.width);
-    expect(fallThroughSpring.gaps[0].left + fallThroughSpring.gaps[0].width).toBeCloseTo(
-      spring.left,
-    );
+    expect(
+      fallThroughSpring.gaps[0].left + fallThroughSpring.gaps[0].width,
+    ).toBeCloseTo(spring.left);
   });
 
   it("labels months, naming the year in January", () => {

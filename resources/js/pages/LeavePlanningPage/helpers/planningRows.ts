@@ -77,7 +77,10 @@ const isNarrowingPeople = (filters: PlanningFilters) =>
 function groupByTerm(sections: TeachingSection[]) {
   const byTerm = new Map<number, TeachingSection[]>();
   for (const section of sections) {
-    byTerm.set(section.termId, [...(byTerm.get(section.termId) ?? []), section]);
+    byTerm.set(section.termId, [
+      ...(byTerm.get(section.termId) ?? []),
+      section,
+    ]);
   }
   return byTerm;
 }
