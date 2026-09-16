@@ -1,6 +1,5 @@
 <?php
 
-use App\CourseSection;
 use App\Group;
 use App\Leave;
 use Database\Seeders\TestDatabaseSeeder;

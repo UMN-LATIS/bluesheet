@@ -13,11 +13,6 @@ use Illuminate\Support\Collection;
  * Where both hold the same course code the SIS row wins, because the registrar
  * publishing a course is what makes the locally named one redundant. Each row
  * says which side it came from, so the picker can mark the unofficial ones.
- *
- * Note this is the opposite of the old course planner, whose
- * CoursePlanning\GroupCourseController concatenates local first and so lets
- * local win. That was the right call when local rows were the only plan there
- * was; here the SIS is the record as soon as it has one.
  */
 class CourseUnion {
     /**

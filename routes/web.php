@@ -13,11 +13,6 @@
 
 use App\Http\Controllers\LeaveArtifactController;
 use App\Http\Controllers\TermController;
-use App\Http\Controllers\CoursePlanning\GroupSectionController;
-use App\Http\Controllers\CoursePlanning\GroupEnrollmentController;
-use App\Http\Controllers\CoursePlanning\GroupPersonController;
-use App\Http\Controllers\CoursePlanning\GroupLeaveController;
-use App\Http\Controllers\CoursePlanning\GroupCourseController;
 use App\Http\Controllers\Sis\TermController as SisTermController;
 use App\Http\Controllers\Sis\GroupController as SisGroupController;
 use App\Http\Controllers\Sis\GroupSectionController as SisGroupSectionController;
@@ -86,8 +81,6 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
 
     Route::get('lookup/department/{deptId?}', 'LookupController@departmentInfo');
 
-    // TODO: move callers to /api/sis/terms and retire this
-    Route::get('terms', [TermController::class, 'index']);
     Route::get('terms/payrollDates', [TermController::class, 'payrollDates']);
 
     Route::get('eligibility/{type}', 'UserController@eligibility');
@@ -119,14 +112,6 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
             'groups/{group}/subgroups',
             [GroupPermissionController::class, 'subgroups']
         );
-    });
-
-    Route::prefix('course-planning')->group(function () {
-        Route::resource('/groups/{group}/courses', GroupCourseController::class);
-        Route::resource('/groups/{group}/sections', GroupSectionController::class);
-        Route::resource('/groups/{group}/enrollments', GroupEnrollmentController::class);
-        Route::get('/groups/{group}/people', [GroupPersonController::class, 'index']);
-        Route::get('/groups/{group}/leaves', [GroupLeaveController::class, 'index']);
     });
 
     // The plan a department is building for a term the SIS has not published.
