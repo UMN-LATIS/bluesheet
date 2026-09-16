@@ -46,12 +46,7 @@ class GroupLeaveController extends Controller {
 
         $today = Carbon::today(self::DEPARTMENT_TIMEZONE)->toDateString();
 
-        $currentAndUpcomingLeaves = self::leavesInDepartment($deptId)
-            ->where('status', '!=', Leave::STATUS_CANCELLED)
-            ->where('end_date', '>=', $today)
-            ->get();
-
-        $range = TimelineTermRange::of($terms, $currentAndUpcomingLeaves, $today, $requestedStart, $requestedEnd);
+        $range = TimelineTermRange::of($terms, $today, $requestedStart, $requestedEnd);
 
         $startTerm = $terms->firstWhere('term_code', $range['startTermId']);
         $endTerm = $terms->firstWhere('term_code', $range['endTermId']);

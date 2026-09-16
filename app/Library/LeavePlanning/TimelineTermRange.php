@@ -2,7 +2,6 @@
 
 namespace App\Library\LeavePlanning;
 
-use App\Leave;
 use App\SisTerm;
 use Illuminate\Support\Collection;
 
@@ -15,14 +14,11 @@ class TimelineTermRange {
      * caller must reject a start after the end.
      *
      * @param Collection<int, SisTerm> $terms must not be empty
-     * @param Collection<int, Leave> $leaves
-     *   must exclude cancelled leaves
      * @param string $today as `Y-m-d`
      * @return array{startTermId: int, endTermId: int}
      */
     public static function of(
         Collection $terms,
-        Collection $leaves,
         string $today,
         ?int $requestedStart,
         ?int $requestedEnd,
@@ -34,14 +30,12 @@ class TimelineTermRange {
             ->first(fn(SisTerm $term) => $term->term_code >= $currentTerm - self::TERM_CODES_PER_YEAR)
             ->term_code;
 
-        $latestLeaveEnd = $leaves->max('end_date');
-
-        $latestLeaveEndTerm = $latestLeaveEnd === null
-            ? $currentTerm
-            : self::termOnOrBefore($terms, $latestLeaveEnd) ?? $currentTerm;
+        $yearAfterCurrentTerm = $terms
+            ->last(fn(SisTerm $term) => $term->term_code <= $currentTerm + self::TERM_CODES_PER_YEAR)
+            ->term_code;
 
         $start = $requestedStart ?? $yearBeforeCurrentTerm;
-        $end = $requestedEnd ?? max($currentTerm, $latestLeaveEndTerm);
+        $end = $requestedEnd ?? $yearAfterCurrentTerm;
 
         if ($requestedStart === null) {
             $start = min($start, $end);
@@ -56,9 +50,5 @@ class TimelineTermRange {
 
     private static function termOnOrAfter(Collection $terms, string $date): ?int {
         return $terms->first(fn(SisTerm $term) => $term->ends_on->toDateString() >= $date)?->term_code;
-    }
-
-    private static function termOnOrBefore(Collection $terms, string $date): ?int {
-        return $terms->last(fn(SisTerm $term) => $term->begins_on->toDateString() <= $date)?->term_code;
     }
 }

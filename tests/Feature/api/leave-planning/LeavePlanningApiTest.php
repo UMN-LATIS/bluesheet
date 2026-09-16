@@ -36,6 +36,7 @@ beforeEach(function () {
         [1269, 'Fall 2026', '2026-09-08', '2026-12-23'],
         [1273, 'Spring 2027', '2027-01-19', '2027-05-12'],
         [1275, 'Summer 2027', '2027-05-17', '2027-08-13'],
+        [1279, 'Fall 2027', '2027-09-07', '2027-12-23'],
     ] as [$termCode, $description, $beginsOn, $endsOn]) {
         SisTerm::factory()->create([
             'term_code' => $termCode,
@@ -198,44 +199,27 @@ describe('GET /api/leave-planning/groups/:groupId/leaves', function () {
         ]);
     });
 
-    it('opens on the terms from a year before the current one to the latest upcoming leave', function () {
-        leaveTaken(departmentMember(), '2026-02-01', '2026-12-31');
-        leaveTaken(departmentMember(), '2027-01-19', '2027-05-12');
-
+    it('opens on the terms from a year before the current one to a year after it', function () {
         actingAs($this->admin);
 
-        expect(getJson($this->url)->json('range'))->toBe(['startTermId' => 1259, 'endTermId' => 1273]);
+        expect(getJson($this->url)->json('range'))->toBe(['startTermId' => 1259, 'endTermId' => 1279]);
     });
 
-    it('does not widen the default range for a cancelled leave', function () {
-        leaveTaken(departmentMember(), '2026-02-01', '2027-05-12', ['status' => Leave::STATUS_CANCELLED]);
-
+    it('fills in the side of the range that was not requested', function () {
         actingAs($this->admin);
 
-        expect(getJson($this->url)->json('range'))->toBe(['startTermId' => 1259, 'endTermId' => 1269]);
-    });
-
-    it('moves the default start back to a requested end', function () {
-        actingAs($this->admin);
-
-        expect(getJson("{$this->url}?end=1259")->json('range'))
-            ->toBe(['startTermId' => 1259, 'endTermId' => 1259]);
+        expect(getJson("{$this->url}?end=1265")->json('range'))
+            ->toBe(['startTermId' => 1259, 'endTermId' => 1265]);
+        expect(getJson("{$this->url}?start=1265")->json('range'))
+            ->toBe(['startTermId' => 1265, 'endTermId' => 1279]);
     });
 
     it('takes today as the date in Minnesota, not in UTC', function () {
         Carbon::setTestNow(Carbon::parse('2026-12-23 20:00', 'America/Chicago'));
-        leaveTaken(departmentMember(), '2026-09-08', '2026-12-23');
 
         actingAs($this->admin);
 
-        expect(getJson($this->url)->json('range'))->toBe(['startTermId' => 1259, 'endTermId' => 1269]);
-    });
-
-    it('moves the default end up to a requested start', function () {
-        actingAs($this->admin);
-
-        expect(getJson("{$this->url}?start=1275")->json('range'))
-            ->toBe(['startTermId' => 1275, 'endTermId' => 1275]);
+        expect(getJson($this->url)->json('range'))->toBe(['startTermId' => 1259, 'endTermId' => 1279]);
     });
 
     it('includes cancelled leaves in range', function () {
