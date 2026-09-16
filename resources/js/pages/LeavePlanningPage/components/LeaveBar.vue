@@ -4,7 +4,7 @@
     :data-selection-key="`leave-${leave.id}`"
     :title="summary"
     :aria-pressed="isSelected"
-    class="tw-absolute tw-flex tw-cursor-pointer tw-items-center tw-gap-1 tw-overflow-hidden tw-whitespace-nowrap tw-rounded-full tw-border tw-px-2 tw-leading-none"
+    class="leave-bar tw-absolute tw-flex tw-cursor-pointer tw-items-center tw-gap-1 tw-overflow-hidden tw-whitespace-nowrap tw-rounded-full tw-border tw-px-2 tw-leading-none"
     :class="[
       `tw-text-${color}`,
       `tw-border-${color}/40`,
@@ -31,20 +31,22 @@
   >
     <ChevronRightIcon
       v-if="span.isClippedAtStart"
-      class="tw-h-2.5 tw-w-2.5 tw-flex-none tw-rotate-180"
+      class="leave-bar-chevron tw-h-2.5 tw-w-2.5 tw-flex-none tw-rotate-180"
       aria-hidden="true"
     />
-    <component
-      :is="getLeaveStatusIcon(leave.status)"
-      class="tw-h-3 tw-w-3 tw-flex-none"
-      aria-hidden="true"
-    />
-    <span class="tw-truncate" :class="{ 'tw-line-through': isCancelled }">
-      {{ label }}
+    <span class="leave-bar-summary tw-flex tw-min-w-0 tw-items-center tw-gap-1">
+      <component
+        :is="getLeaveStatusIcon(leave.status)"
+        class="tw-h-3 tw-w-3 tw-flex-none"
+        aria-hidden="true"
+      />
+      <span class="tw-truncate" :class="{ 'tw-line-through': isCancelled }">
+        {{ label }}
+      </span>
     </span>
     <ChevronRightIcon
       v-if="span.isClippedAtEnd"
-      class="tw-ms-auto tw-h-2.5 tw-w-2.5 tw-flex-none"
+      class="leave-bar-chevron tw-ms-auto tw-h-2.5 tw-w-2.5 tw-flex-none"
       aria-hidden="true"
     />
   </button>
@@ -97,3 +99,21 @@ const summary = computed(
     `${label.value} · ${getLeaveStatusLabel(props.leave.status)} · ${formatDateRange(props.leave.startDate, props.leave.endDate)}`,
 );
 </script>
+
+<style scoped>
+.leave-bar {
+  container: leave-bar / inline-size;
+}
+
+@container leave-bar (width < 60px) {
+  .leave-bar-chevron {
+    display: none;
+  }
+}
+
+@container leave-bar (width < 32px) {
+  .leave-bar-summary {
+    display: none;
+  }
+}
+</style>
