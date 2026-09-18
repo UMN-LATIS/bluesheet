@@ -49,7 +49,7 @@ function countBy<T>(items: T[], keysOf: (item: T) => string[]) {
   return counts;
 }
 
-const option = (
+const filterOptionOf = (
   value: string,
   label: string,
   annotation: string,
@@ -100,7 +100,7 @@ function personOptions(records: VisibleRecords): FilterOption[] {
       const annotation = records.isHistoryShown
         ? `${sectionCount} sec`
         : countWithNoun(leaveCount, "leave");
-      return option(value, lastFirstNameOf(person), annotation, {
+      return filterOptionOf(value, lastFirstNameOf(person), annotation, {
         secondary: person.title,
       });
     });
@@ -118,7 +118,9 @@ export function filterOptionsFor(
       const counts = countBy(records.people, (person) => person.categories);
       return [...counts.entries()]
         .sort(([a], [b]) => a.localeCompare(b))
-        .map(([category, count]) => option(category, category, String(count)));
+        .map(([category, count]) =>
+          filterOptionOf(category, category, String(count)),
+        );
     }
 
     case "leaveType": {
@@ -126,7 +128,7 @@ export function filterOptionsFor(
       return [...counts.entries()]
         .map(([type, count]) => {
           const label = getLeaveTypeLabel(type as PlanningLeave["type"]);
-          return option(type, label, String(count));
+          return filterOptionOf(type, label, String(count));
         })
         .sort((a, b) => a.label.localeCompare(b.label));
     }
@@ -134,7 +136,7 @@ export function filterOptionsFor(
     case "status": {
       const counts = countBy(records.leaves, (leave) => [leave.status]);
       return STATUS_ORDER.filter((status) => counts.has(status)).map((status) =>
-        option(
+        filterOptionOf(
           status,
           getLeaveStatusLabel(status),
           String(counts.get(status)),
@@ -150,7 +152,7 @@ export function filterOptionsFor(
       return uniqueBy(records.sections, (section) => section.courseCode)
         .sort((a, b) => a.courseCode.localeCompare(b.courseCode))
         .map((section) =>
-          option(
+          filterOptionOf(
             section.courseCode,
             `${section.subject} ${section.catalogNumber}`,
             `${counts.get(section.courseCode)} sec`,
@@ -166,7 +168,7 @@ export function filterOptionsFor(
       return [...counts.entries()]
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([component, count]) =>
-          option(component, component, String(count), {
+          filterOptionOf(component, component, String(count), {
             secondary: labelOfComponent(component),
             swatchClass: colorOfType(component).dot,
           }),

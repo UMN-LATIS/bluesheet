@@ -94,7 +94,7 @@
           <FilterRow
             :isChecked="checkedValues.includes(option.value)"
             :swatch="option.swatchClass ?? undefined"
-            @toggle="toggle(option.value, $event)"
+            @toggle="setFilterValueChecked(option.value, $event)"
           >
             {{ option.label }}
             <template v-if="option.secondary" #secondary>
@@ -169,7 +169,7 @@ const narrowingSummary = computed(() => {
   return `Showing ${shown} of ${total} ${nouns}`;
 });
 
-function toggle(value: string, isChecked: boolean) {
+function setFilterValueChecked(value: string, isChecked: boolean) {
   const facet = props.planning.activeFacet;
   if (isChecked) {
     props.planning.addFilterValues(facet, [value]);

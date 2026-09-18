@@ -1,6 +1,6 @@
 <template>
   <FullScreenLayout
-    :backTo="{ name: 'group', params: { groupId } }"
+    :backRoute="{ name: 'group', params: { groupId } }"
     backLabel="Back to group"
   >
     <template #bar>

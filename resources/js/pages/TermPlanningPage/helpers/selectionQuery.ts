@@ -1,8 +1,3 @@
-/**
- * What the page has open, as URL query: a section's sheet, an hour's
- * list, a leave's panel, or a combination.
- */
-
 import type { UrlQuery } from "@/utils/urlQuery";
 import { sectionIdOfMeetingId } from "./sectionPlacement";
 import { WEEKDAY_CODES } from "./scheduleDays";
@@ -35,8 +30,9 @@ export function encodeSelection(selection: Selection | null): UrlQuery {
       return { hour: encodeHour(selection) };
 
     case "meeting": {
-      // A section being created has a negative id and no row to link to, so
-      // its block names nothing; see `decodePositiveId`.
+      // A section being created has a negative id and no row
+      // to link to, so its block names nothing. See
+      // `decodePositiveId`.
       const sectionId = sectionIdOfMeetingId(selection.meetingId);
       return sectionId === null || sectionId < 1
         ? {}
@@ -85,6 +81,8 @@ function decodeHour(raw: string | undefined): HourSelection | null {
 }
 
 function decodePositiveId(raw: string | undefined): number | null {
+  if (raw === undefined) return null;
   const id = Number(raw);
-  return raw !== undefined && Number.isInteger(id) && id > 0 ? id : null;
+  const isPositiveInteger = Number.isInteger(id) && id > 0;
+  return isPositiveInteger ? id : null;
 }

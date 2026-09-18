@@ -163,12 +163,6 @@ import {
   type TimelineAxis,
 } from "../helpers/timelineAxis";
 import { formatMonthDay } from "@/utils/dateLabels";
-import {
-  AXIS_HEADER_HEIGHT,
-  HISTORY_PX_PER_DAY,
-  LEAVE_TRACK_MIN_WIDTH,
-  NAME_COLUMN_WIDTH,
-} from "../layout";
 
 const props = defineProps<{
   axis: TimelineAxis;
@@ -188,6 +182,10 @@ const props = defineProps<{
 const scroller = ref<HTMLElement | null>(null);
 const { width: scrollerWidth } = useElementSize(scroller);
 
+const NAME_COLUMN_WIDTH = 220;
+const AXIS_HEADER_HEIGHT = 58;
+const HISTORY_PX_PER_DAY = 2.2;
+const LEAVE_TRACK_MIN_WIDTH = 480;
 const MIN_TICK_SPACING_PX = 36;
 const TODAY_LABEL_CLEARANCE_PX = 30;
 const DATES_MIN_BAND_PX = 170;

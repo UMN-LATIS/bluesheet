@@ -29,7 +29,10 @@ import type {
 
 export type LeavePlanningView = ReturnType<typeof useLeavePlanningView>;
 
-/** Returns a `reactive`, so destructuring the result stops tracking. */
+/**
+ * Returns a `reactive`, so destructuring the result stops
+ * tracking.
+ */
 export function useLeavePlanningView(
   context: Readonly<Ref<ViewContext>>,
   runEffect: (effect: Effect) => void,
@@ -46,7 +49,7 @@ export function useLeavePlanningView(
     requestedRange: computed(() => state.value.range),
     timelineRange: computed(() => selectTimelineRange(context.value)),
     axis: computed(() => selectAxis(context.value)),
-    isHistoryRequested: computed(() => state.value.isHistoryShown),
+    isHistoryRequested: computed(() => state.value.isHistoryRequested),
     isHistoryShown: computed(() =>
       selectIsHistoryShown(context.value, state.value),
     ),

@@ -52,7 +52,7 @@ describe("the URL", () => {
     ]);
 
     expect(state.range).toEqual({ startTermId: 1269, endTermId: 1273 });
-    expect(state.isHistoryShown).toBe(true);
+    expect(state.isHistoryRequested).toBe(true);
     expect(state.view).toBe("tas");
     expect(state.filters.course).toEqual(["ANTH-1001"]);
     expect(state.selection).toEqual({

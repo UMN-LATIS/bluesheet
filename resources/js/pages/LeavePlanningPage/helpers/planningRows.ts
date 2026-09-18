@@ -41,11 +41,12 @@ export interface CourseHistory {
   courses: CourseRow[];
 }
 
-const allows = (chosen: string[], value: string) =>
-  chosen.length === 0 || chosen.includes(value);
+const allows = (chosenValues: string[], value: string) =>
+  chosenValues.length === 0 || chosenValues.includes(value);
 
-const allowsAny = (chosen: string[], values: string[]) =>
-  chosen.length === 0 || values.some((value) => chosen.includes(value));
+const allowsAny = (chosenValues: string[], values: string[]) =>
+  chosenValues.length === 0 ||
+  values.some((value) => chosenValues.includes(value));
 
 const matchesPerson = (person: PlanningPerson, filters: PlanningFilters) =>
   allows(filters.person, String(person.emplid)) &&
@@ -97,6 +98,22 @@ function leavesByEmplidOf(leaves: PlanningLeave[], filters: PlanningFilters) {
   return leavesByEmplid;
 }
 
+function sectionsByEmplidOf(sections: TeachingSection[], roles: string[]) {
+  const sectionsByEmplid = new Map<number, TeachingSection[]>();
+  for (const section of sections) {
+    const emplids = new Set(
+      section.instructors
+        .filter((instructor) => roles.includes(instructor.role))
+        .map((instructor): number => instructor.emplid),
+    );
+    for (const emplid of emplids) {
+      const personSections = sectionsByEmplid.get(emplid) ?? [];
+      sectionsByEmplid.set(emplid, [...personSections, section]);
+    }
+  }
+  return sectionsByEmplid;
+}
+
 export function leaveRowsOf(
   timeline: LeaveTimeline,
   filters: PlanningFilters,
@@ -119,19 +136,7 @@ export function personHistoryRowsOf(
   filters: PlanningFilters,
 ): PersonHistoryRow[] {
   const roles = ROLES_BY_VIEW[view];
-  const sectionsByEmplid = new Map<number, TeachingSection[]>();
-  for (const section of history.sections) {
-    const emplids = new Set(
-      section.instructors
-        .filter((instructor) => roles.includes(instructor.role))
-        .map((instructor): number => instructor.emplid),
-    );
-    for (const emplid of emplids) {
-      const personSections = sectionsByEmplid.get(emplid) ?? [];
-      sectionsByEmplid.set(emplid, [...personSections, section]);
-    }
-  }
-
+  const sectionsByEmplid = sectionsByEmplidOf(history.sections, roles);
   const leavesByEmplid = leavesByEmplidOf(leaves, filters);
 
   const isOnRoster = (person: PlanningPerson) =>

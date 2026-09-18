@@ -3,7 +3,6 @@
 namespace App\Library\LeavePlanning;
 
 use App\Library\Sis\Crosslist;
-use App\Library\TermPlan\TermLock;
 use App\LocalClassInstructor;
 use App\LocalClassSection;
 use App\SisClassInstructor;
@@ -18,9 +17,12 @@ class TeachingHistory {
      * @return Collection<int, array>
      *   sorted by term, course, then section
      */
-    public static function sectionsBetween(int $academicOrg, int $startTermCode, int $endTermCode): Collection {
-        $readOnlyTermCodes = TermLock::readOnlyTermCodesBetween($academicOrg, $startTermCode, $endTermCode);
-
+    public static function sectionsBetween(
+        int $academicOrg,
+        int $startTermCode,
+        int $endTermCode,
+        Collection $readOnlyTermCodes,
+    ): Collection {
         return self::publishedSections($academicOrg, $readOnlyTermCodes)
             ->concat(self::plannedSections($academicOrg, $startTermCode, $endTermCode, $readOnlyTermCodes))
             ->sortBy(fn(array $section) => [
@@ -98,7 +100,8 @@ class TeachingHistory {
 
     /**
      * e.g. "ANTH-1001-003-FA26". A row id in the key would
-     * change it when the SIS publishes a planned section.
+     * break `?section=` links when the SIS publishes a
+     * planned section.
      */
     private static function keyOf(SisClassSection|LocalClassSection $section): string {
         $termLabel = TermCodeLabel::of($section->term_code);

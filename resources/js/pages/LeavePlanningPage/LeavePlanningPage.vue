@@ -1,6 +1,6 @@
 <template>
   <FullScreenLayout
-    :backTo="{ name: 'group', params: { groupId } }"
+    :backRoute="{ name: 'group', params: { groupId } }"
     backLabel="Back to group"
   >
     <template #bar>
@@ -8,7 +8,7 @@
         :groupId="groupId"
         :terms="terms"
         :range="planning.timelineRange"
-        :canShowHistory="canShowHistory"
+        :canViewCourses="canViewCourses"
         :isHistoryShown="planning.isHistoryShown"
         :view="planning.view"
         :activeFilterCount="planning.activeFilterCount"
@@ -46,7 +46,7 @@
           :nameHeading="nameHeading"
           :isHistoryShown="planning.isHistoryShown"
           :groupId="groupId"
-          :canViewTermPlanning="canShowHistory"
+          :canViewTermPlanning="canViewCourses"
           :plannedTermIds="planning.plannedTermIds"
           :plannableTermIds="planning.plannableTermIds"
           :trailingScrollRoomPx="trailingScrollRoomPx"
@@ -90,10 +90,10 @@
           v-if="planning.selectedLeave"
           :leave="planning.selectedLeave"
           :person="planning.peopleByEmplid.get(planning.selectedLeave.emplid)"
-          :otherLeaves="otherLeavesOfSelected"
+          :otherLeaves="otherLeavesOfSelectedLeave"
           :terms="termsOverlapping(terms, planning.selectedLeave)"
           :groupId="groupId"
-          :canViewTermPlanning="canShowHistory"
+          :canViewTermPlanning="canViewCourses"
           @close="planning.deselect"
           @selectLeave="planning.selectLeave"
         />
@@ -158,7 +158,9 @@ import { useCoursePermissionsQuery } from "./queries/useCoursePermissionsQuery";
 import { useLeavePlanningView } from "./useLeavePlanningView/useLeavePlanningView";
 import { OWNED_QUERY_KEYS } from "./useLeavePlanningView/viewQuery";
 import type { Effect, TeachingView } from "./useLeavePlanningView/types";
-import { PANEL_CLEARANCE, PANEL_WIDTH } from "./layout";
+
+const PANEL_WIDTH = { medium: 380, large: 404 } as const;
+const PANEL_CLEARANCE = 24;
 
 const props = defineProps<{ groupId: number }>();
 
@@ -183,22 +185,24 @@ const termsQuery = useSisTermsQuery();
 const terms = computed(() => termsQuery.data.value ?? []);
 
 const coursePermissionsQuery = useCoursePermissionsQuery(groupId);
-const canShowHistory = computed(
+const canViewCourses = computed(
   () => coursePermissionsQuery.data.value?.viewAny ?? false,
 );
 const canPlanTerms = computed(
   () => coursePermissionsQuery.data.value?.create ?? false,
 );
 
-// Every read below that sits in a query key must stay off
-// `context`: useQuery reads its key during setup, before the
-// queries that `context` reads have been declared.
+// A useLeaveTimelineQuery/useTeachingHistoryQuery argument
+// that reads a `planning` field built from `timelineQuery`
+// or `teachingHistoryQuery` data throws a ReferenceError:
+// useQuery reads its key now, before those queries below
+// are declared.
 const planning = useLeavePlanningView(
   computed(() => ({
     timeline: timelineQuery.data.value ?? null,
     teachingHistory: teachingHistoryQuery.data.value ?? null,
     terms: terms.value,
-    canShowHistory: canShowHistory.value,
+    canViewCourses: canViewCourses.value,
     canPlanTerms: canPlanTerms.value,
   })),
   runEffect,
@@ -219,7 +223,7 @@ const timelineQuery = useLeaveTimelineQuery(
 const teachingHistoryQuery = useTeachingHistoryQuery(
   groupId,
   computed(() => timelineQuery.data.value?.range ?? null),
-  computed(() => planning.isHistoryRequested && canShowHistory.value),
+  computed(() => planning.isHistoryRequested && canViewCourses.value),
 );
 
 onKeyStroke("Escape", () => {
@@ -297,7 +301,7 @@ const trailingScrollRoomPx = computed(() => {
   return panelWidthPx.value + PANEL_CLEARANCE;
 });
 
-const otherLeavesOfSelected = computed(() => {
+const otherLeavesOfSelectedLeave = computed(() => {
   const selectedLeave = planning.selectedLeave;
   if (!selectedLeave) return [];
   const isOtherLeaveOfSamePerson = (leave: PlanningLeave) =>

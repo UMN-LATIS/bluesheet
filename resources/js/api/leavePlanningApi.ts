@@ -12,9 +12,9 @@ export async function fetchLeavePlanningGroups(): Promise<T.PlanningGroup[]> {
 }
 
 /**
- * `startTermId` or `endTermId` left null is chosen by the
- * server from the department's leaves. Null when the user
- * may not read the group's leaves.
+ * A null `startTermId` becomes a year before the current
+ * term, a null `endTermId` a year after it. Returns null
+ * when the user may not read the group's leaves.
  */
 export async function fetchLeaveTimeline(
   groupId: T.Group["id"],

@@ -48,7 +48,7 @@
     </button>
 
     <button
-      v-if="canShowHistory"
+      v-if="canViewCourses"
       type="button"
       :aria-pressed="isHistoryShown"
       class="tw-flex tw-min-h-11 tw-cursor-pointer tw-items-center tw-gap-2 tw-whitespace-nowrap tw-rounded-full tw-border tw-border-solid tw-bg-surface-bright tw-py-1.5 tw-pl-2 tw-pr-3 tw-text-xs tw-font-semibold hover:tw-bg-surface roomy:tw-min-h-0"
@@ -130,7 +130,7 @@ const props = defineProps<{
   groupId: number;
   terms: PlanningTerm[];
   range: PlanningTermRange | null;
-  canShowHistory: boolean;
+  canViewCourses: boolean;
   isHistoryShown: boolean;
   view: TeachingView;
   activeFilterCount: number;
@@ -164,8 +164,9 @@ function chooseGroup(event: Event) {
   router.push({
     name: "leavePlanning",
     params: { groupId: select.value },
-    // Keep only these keys: filters and a selection name this
-    // department's people, and match nothing in another one.
+    // Keep only these keys: filters and a selection name
+    // this department's people, and match nothing in
+    // another one.
     query: pick(route.query, ["start", "end", "history", "view"]),
   });
 }

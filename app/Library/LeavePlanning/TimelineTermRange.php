@@ -9,9 +9,12 @@ class TimelineTermRange {
     private const TERM_CODES_PER_YEAR = 10;
 
     /**
-     * A requested side is kept as given, and an unrequested
-     * side moves to meet it. When both are requested, the
-     * caller must reject a start after the end.
+     * A requested side is kept as given. An unrequested
+     * start defaults to a year before the current term, and
+     * an unrequested end defaults to a year after it, then
+     * each is clamped so it never crosses a requested side.
+     * When both are requested, the caller must reject a
+     * start after the end.
      *
      * @param Collection<int, SisTerm> $terms must not be empty
      * @param string $today as `Y-m-d`

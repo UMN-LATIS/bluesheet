@@ -24,8 +24,8 @@ export type Selection =
   | { kind: "section"; sectionKey: string };
 
 /**
- * `startTermId` or `endTermId` left null is chosen by the
- * server from the department's leaves.
+ * A null `startTermId` becomes a year before the current
+ * term, a null `endTermId` a year after it.
  */
 export interface RequestedRange {
   startTermId: number | null;
@@ -34,7 +34,7 @@ export interface RequestedRange {
 
 export interface ViewState {
   range: RequestedRange;
-  isHistoryShown: boolean;
+  isHistoryRequested: boolean;
   view: TeachingView;
   filters: PlanningFilters;
   activeFacet: FilterFacet;
@@ -45,7 +45,7 @@ export interface ViewContext {
   timeline: LeaveTimeline | null;
   teachingHistory: TeachingHistory | null;
   terms: PlanningTerm[];
-  canShowHistory: boolean;
+  canViewCourses: boolean;
   canPlanTerms: boolean;
 }
 

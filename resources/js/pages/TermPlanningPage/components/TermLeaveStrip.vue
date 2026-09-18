@@ -15,7 +15,8 @@
     >
       <li v-for="leave in leaves" :key="leave.id" class="tw-list-none">
         <!-- Dropping "group" loses the chip's hover
-             underline, which TermLeaveChip draws with group-hover. -->
+             underline, which TermLeaveChip draws with
+             group-hover. -->
         <button
           type="button"
           class="group tw-inline-flex tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0"

@@ -26,12 +26,19 @@ class GroupTeachingHistoryController extends Controller {
             return ['people' => [], 'sections' => [], 'readOnlyTermIds' => []];
         }
 
-        $sections = TeachingHistory::sectionsBetween((int) $deptId, $validated['start'], $validated['end']);
+        $readOnlyTermCodes = TermLock::readOnlyTermCodesBetween((int) $deptId, $validated['start'], $validated['end']);
+
+        $sections = TeachingHistory::sectionsBetween(
+            (int) $deptId,
+            $validated['start'],
+            $validated['end'],
+            $readOnlyTermCodes,
+        );
 
         $appointedEmplids = SisAppointment::where('dept_id', $deptId)->pluck('emplid');
         $instructorEmplids = $sections->pluck('instructors')->flatten(1)->pluck('emplid');
 
-        $readOnlyTermIds = TermLock::readOnlyTermCodesBetween((int) $deptId, $validated['start'], $validated['end'])
+        $readOnlyTermIds = $readOnlyTermCodes
             ->map(fn ($termCode) => (int) $termCode)
             ->sort()
             ->values();

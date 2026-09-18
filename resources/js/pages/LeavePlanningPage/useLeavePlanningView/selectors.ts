@@ -43,7 +43,7 @@ interface RowCounts {
 }
 
 export const selectIsHistoryShown = (context: ViewContext, state: ViewState) =>
-  state.isHistoryShown && context.canShowHistory;
+  state.isHistoryRequested && context.canViewCourses;
 
 export const selectVisibleFacets = (
   context: ViewContext,

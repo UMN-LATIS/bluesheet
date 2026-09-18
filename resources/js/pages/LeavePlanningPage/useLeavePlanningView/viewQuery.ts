@@ -72,7 +72,7 @@ export function decodeViewQuery(query: UrlQuery): UrlBackedState {
       startTermId: positiveIntegerOf(query.start),
       endTermId: positiveIntegerOf(query.end),
     },
-    isHistoryShown: query.history === "1",
+    isHistoryRequested: query.history === "1",
     view: viewOf(query.view),
     filters,
     selection: selectionOf(query),
@@ -88,7 +88,7 @@ export function encodeViewQuery(state: UrlBackedState): UrlQuery {
   if (state.range.endTermId !== null) {
     query.end = String(state.range.endTermId);
   }
-  if (state.isHistoryShown) query.history = "1";
+  if (state.isHistoryRequested) query.history = "1";
   if (state.view !== DEFAULT_VIEW) query.view = state.view;
 
   for (const facet of FILTER_FACETS) {
@@ -100,7 +100,7 @@ export function encodeViewQuery(state: UrlBackedState): UrlQuery {
 
   const { component } = state.filters;
   const isDefaultComponents = isEqual(component, DEFAULT_COMPONENTS);
-  if (state.isHistoryShown && !isDefaultComponents) {
+  if (state.isHistoryRequested && !isDefaultComponents) {
     query.component = component.join(",");
   }
 

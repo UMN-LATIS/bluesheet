@@ -17,7 +17,7 @@ import {
 
 export const initialState = (): ViewState => ({
   range: { startTermId: null, endTermId: null },
-  isHistoryShown: false,
+  isHistoryRequested: false,
   view: DEFAULT_VIEW,
   filters: defaultFilters(),
   activeFacet: "person",
@@ -43,7 +43,7 @@ function reduce(state: ViewState, event: ViewEvent): ViewState {
     case "urlChanged": {
       const urlState = decodeViewQuery(event.query);
       const stateWithUrl = { ...state, ...urlState };
-      if (urlState.isHistoryShown) return stateWithUrl;
+      if (urlState.isHistoryRequested) return stateWithUrl;
       return withoutHistory(stateWithUrl);
     }
 
@@ -73,9 +73,9 @@ function reduce(state: ViewState, event: ViewEvent): ViewState {
     }
 
     case "historyToggled":
-      return state.isHistoryShown
+      return state.isHistoryRequested
         ? withoutHistory(state)
-        : { ...state, isHistoryShown: true };
+        : { ...state, isHistoryRequested: true };
 
     case "viewSelected":
       return { ...state, view: event.view };
@@ -99,7 +99,9 @@ function reduce(state: ViewState, event: ViewEvent): ViewState {
       );
 
     case "filtersCleared": {
-      const filters = state.isHistoryShown ? emptyFilters() : defaultFilters();
+      const filters = state.isHistoryRequested
+        ? emptyFilters()
+        : defaultFilters();
       return { ...state, filters };
     }
 
@@ -135,7 +137,7 @@ function withoutHistory(state: ViewState): ViewState {
 
   return {
     ...state,
-    isHistoryShown: false,
+    isHistoryRequested: false,
     filters,
     selection: isSectionSelected ? null : state.selection,
     activeFacet: isSectionFacetOpen ? "person" : state.activeFacet,

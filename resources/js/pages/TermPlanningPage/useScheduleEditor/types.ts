@@ -87,8 +87,8 @@ export type Interaction =
     } & TimeRange);
 
 /**
- * A grid block by meeting id, a tray chip by section id, a heatmap hour, or a
- * chip in the leave strip.
+ * A grid block by meeting id, a tray chip by section id, a
+ * heatmap hour, or a chip in the leave strip.
  */
 export type Selection =
   | { kind: "meeting"; meetingId: string }

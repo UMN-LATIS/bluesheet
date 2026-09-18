@@ -16,8 +16,8 @@
       class="tw-flex tw-h-12 tw-flex-none tw-items-center tw-gap-3 tw-px-3 roomy:tw-h-[52px] roomy:tw-gap-4 roomy:tw-px-4"
     >
       <router-link
-        v-if="backTo"
-        :to="backTo"
+        v-if="backRoute"
+        :to="backRoute"
         :aria-label="backLabel"
         :title="backLabel"
         class="-tw-mr-1 tw-flex tw-h-9 tw-w-9 tw-flex-none tw-items-center tw-justify-center tw-rounded-full tw-text-on-surface-variant tw-no-underline hover:tw-bg-surface-container-high hover:tw-text-on-surface hover:tw-no-underline"
@@ -58,7 +58,7 @@ import BlockM from "@/components/BlockM.vue";
 import { ArrowLeftIcon } from "@/icons";
 
 defineProps<{
-  backTo?: RouteLocationRaw;
+  backRoute?: RouteLocationRaw;
   backLabel?: string;
 }>();
 </script>

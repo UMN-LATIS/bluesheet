@@ -69,17 +69,14 @@ export const selectHasEdits = (sectionId: number, state: EditorState) =>
 export const selectActiveFilterCount = (state: EditorState): number =>
   FILTER_FACETS.reduce((sum, facet) => sum + state.filters[facet].length, 0);
 
-/*
- * The readings of `Selection` the canvases and the leave strip need. They
- * live here rather than in each caller so that a new variant of the union is
- * a type error in one file instead of a silent miss elsewhere.
- */
-
 /** The chip or card the day list marks, if a section is what is selected. */
 export const selectSelectedSectionId = (state: EditorState): number | null =>
   state.selection?.kind === "section" ? state.selection.sectionId : null;
 
-/** The chip the leave strip marks, if a leave is what is selected. */
+/**
+ * The chip the leave strip marks, if a leave is what
+ * is selected.
+ */
 export const selectSelectedLeaveId = (state: EditorState): number | null =>
   state.selection?.kind === "leave" ? state.selection.leaveId : null;
 

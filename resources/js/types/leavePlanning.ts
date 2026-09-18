@@ -39,7 +39,10 @@ export interface PlanningTermRange {
 }
 
 export interface LeaveTimeline {
-  /** Null when the group names no SIS department. */
+  /**
+   * Null when the group names no SIS department, or
+   * when no undergrad terms exist.
+   */
   range: PlanningTermRange | null;
   people: PlanningPerson[];
   leaves: PlanningLeave[];

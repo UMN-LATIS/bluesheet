@@ -19,8 +19,8 @@ export function stackIntoLanes<
   );
 
   const itemsWithLane = itemsInStartOrder.map((item) => {
-    const freeLane = laneEnds.findIndex((end) => end < item.startDate);
-    const lane = freeLane === -1 ? laneEnds.length : freeLane;
+    const freeLaneIndex = laneEnds.findIndex((end) => end < item.startDate);
+    const lane = freeLaneIndex === -1 ? laneEnds.length : freeLaneIndex;
     laneEnds[lane] = item.endDate;
     return { item, lane };
   });
