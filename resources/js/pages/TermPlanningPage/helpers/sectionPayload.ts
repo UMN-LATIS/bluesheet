@@ -7,7 +7,7 @@ import type { PlannedSection } from "../types";
  * accident.
  */
 export interface SectionPayload {
-  termId: number;
+  termCode: number;
   courseCode: string;
   subject: string;
   catalogNumber: string;
@@ -25,7 +25,7 @@ export interface SectionPayload {
 
 export function toSectionPayload(section: PlannedSection): SectionPayload {
   return {
-    termId: section.termId,
+    termCode: section.termCode,
     courseCode: section.courseCode,
     subject: section.subject,
     catalogNumber: section.catalogNumber,

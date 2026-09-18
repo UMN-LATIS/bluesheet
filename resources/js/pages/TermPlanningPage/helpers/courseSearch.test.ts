@@ -16,7 +16,7 @@ describe("searchCourses", () => {
       catalogNumber,
       title,
       credits: 3,
-      lastOfferedTermId: null,
+      lastOfferedTermCode: null,
       source,
     };
   };

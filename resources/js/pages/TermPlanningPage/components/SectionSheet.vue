@@ -81,7 +81,7 @@
       <CoursePicker
         v-if="isNew"
         :groupId="groupId"
-        :termCode="section.termId"
+        :termCode="section.termCode"
         :modelValue="draft.courseCode ?? null"
         @update:modelValue="chooseCourse"
       />
@@ -735,9 +735,9 @@ const courseInstructorsQuery = useCourseInstructorsQuery(
 
 const termsQuery = useSisTermsQuery();
 
-const nameOfTerm = (termId: number) =>
-  termsQuery.data.value?.find(({ id }) => id === termId)?.name ??
-  String(termId);
+const nameOfTerm = (termCode: number) =>
+  termsQuery.data.value?.find((term) => term.termCode === termCode)?.name ??
+  String(termCode);
 
 const leavesFor = (option: ComboBoxOptionType): TermLeave[] =>
   typeof option.id === "number"
@@ -786,7 +786,7 @@ function rosterGroupedBy(roles: string[], taughtLabel: string) {
     })
     .map(({ person, row }) => ({
       ...optionFor(person),
-      annotation: nameOfTerm(row.lastTermId),
+      annotation: nameOfTerm(row.lastTermCode),
       group: taughtLabel,
     }));
 

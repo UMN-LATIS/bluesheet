@@ -18,10 +18,14 @@
           </label>
           <select
             :id="fieldId('from')"
-            v-model.number="sourceTermId"
+            v-model.number="sourceTermCode"
             class="tw-min-h-11 tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-py-1.5 tw-pl-3.5 tw-pr-8 tw-text-[13px] tw-font-semibold tw-text-on-surface"
           >
-            <option v-for="term in sourceTerms" :key="term.id" :value="term.id">
+            <option
+              v-for="term in sourceTerms"
+              :key="term.termCode"
+              :value="term.termCode"
+            >
               {{ term.name }}
             </option>
           </select>
@@ -252,7 +256,7 @@ const props = defineProps<{
   termCode: number | null;
   termName: string;
   isTermEmpty: boolean;
-  suggestedSourceTermId: number | null;
+  suggestedSourceTermCode: number | null;
 }>();
 
 const emit = defineEmits<{ close: []; imported: [ImportResult] }>();
@@ -260,7 +264,7 @@ const emit = defineEmits<{ close: []; imported: [ImportResult] }>();
 const modalId = useId();
 const fieldId = (field: string) => `${modalId}-${field}`;
 
-const sourceTermId = ref<number | null>(null);
+const sourceTermCode = ref<number | null>(null);
 const selectedIds = ref(new Set<number>());
 const search = ref("");
 const activeFacet = ref<FilterFacet>("course");
@@ -270,18 +274,18 @@ const error = ref("");
 const termsQuery = useSisGroupTermsQuery(computed(() => props.groupId));
 
 const sourceTerms = computed(() =>
-  (termsQuery.data.value ?? []).filter((term) => term.id !== props.termCode),
+  (termsQuery.data.value ?? []).filter((term) => term.termCode !== props.termCode),
 );
 
 const sourceTermName = computed(
   () =>
-    sourceTerms.value.find((term) => term.id === sourceTermId.value)?.name ??
+    sourceTerms.value.find((term) => term.termCode === sourceTermCode.value)?.name ??
     "",
 );
 
 const sourceQuery = useSisSectionsQuery(
   computed(() => props.groupId),
-  sourceTermId,
+  sourceTermCode,
 );
 
 const sourceSections = computed(() => sourceQuery.data.value ?? []);
@@ -445,19 +449,19 @@ function seedSelection() {
   selectedIds.value = props.isTermEmpty ? everySourceSectionId() : new Set();
 }
 
-const defaultSourceTermId = () =>
-  props.suggestedSourceTermId ?? sourceTerms.value[0]?.id ?? null;
+const defaultSourceTermCode = () =>
+  props.suggestedSourceTermCode ?? sourceTerms.value[0]?.termCode ?? null;
 
 watch(sourceSections, seedSelection);
 
 // Terms can arrive after the modal opens. Without this,
-// sourceTermId stays null and Import stays disabled.
+// sourceTermCode stays null and Import stays disabled.
 watch(sourceTerms, () => {
-  if (!props.show || sourceTermId.value !== null) return;
-  sourceTermId.value = defaultSourceTermId();
+  if (!props.show || sourceTermCode.value !== null) return;
+  sourceTermCode.value = defaultSourceTermCode();
 });
 
-watch(sourceTermId, () => {
+watch(sourceTermCode, () => {
   search.value = "";
 });
 
@@ -466,7 +470,7 @@ watch(
   (isOpen) => {
     if (!isOpen) return;
 
-    sourceTermId.value = defaultSourceTermId();
+    sourceTermCode.value = defaultSourceTermCode();
     seedSelection();
     search.value = "";
     activeFacet.value = "course";
@@ -485,7 +489,7 @@ async function submit() {
 
   try {
     const created = await importSections.mutateAsync({
-      sourceTermId: sourceTermId.value!,
+      sourceTermCode: sourceTermCode.value!,
       sectionIds: [...selectedIds.value],
       include: include.value,
     });

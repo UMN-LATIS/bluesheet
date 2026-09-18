@@ -27,17 +27,17 @@ export function useTermSchedule(
   /** The term the URL names, or failing that the one we are in today. */
   const term = computed(() => {
     const terms = termsQuery.data.value ?? [];
-    const namedTerm = terms.find(({ id }) => id === termCode.value);
+    const namedTerm = terms.find((t) => t.termCode === termCode.value);
 
     return namedTerm ?? currentTerm(terms, today.value);
   });
 
   /** The term actually on screen, which the URL may not name. */
-  const activeTermCode = computed(() => term.value?.id ?? null);
+  const activeTermCode = computed(() => term.value?.termCode ?? null);
 
   /** Newest first, since planning looks forward. */
   const termOptions = computed(() =>
-    [...(termsQuery.data.value ?? [])].sort((a, b) => b.id - a.id),
+    [...(termsQuery.data.value ?? [])].sort((a, b) => b.termCode - a.termCode),
   );
 
   const employeesQuery = useSisEmployeesQuery(groupId);

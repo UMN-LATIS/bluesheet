@@ -68,13 +68,16 @@ export function axisFor(
 ): TimelineAxis | null {
   const termsInRange = terms
     .filter(isDated)
-    .filter(({ id }) => id >= range.startTermId && id <= range.endTermId)
-    .sort((a, b) => a.id - b.id);
+    .filter(
+      ({ termCode }) =>
+        termCode >= range.startTermCode && termCode <= range.endTermCode,
+    )
+    .sort((a, b) => a.termCode - b.termCode);
 
   const firstTerm = termsInRange.at(0);
   const lastTerm = termsInRange.at(-1);
-  if (firstTerm?.id !== range.startTermId) return null;
-  if (!lastTerm || lastTerm.id !== range.endTermId) return null;
+  if (firstTerm?.termCode !== range.startTermCode) return null;
+  if (!lastTerm || lastTerm.termCode !== range.endTermCode) return null;
 
   const startDay = dayNumberOf(firstTerm.startDate);
   const dayCount = dayNumberOf(lastTerm.endDate) + 1 - startDay;

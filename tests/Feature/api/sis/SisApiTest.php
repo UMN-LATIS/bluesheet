@@ -78,7 +78,7 @@ describe('GET /api/sis/terms', function () {
 
         expect($res->status())->toBe(200);
         expect($res->json())->toEqual([[
-            'id' => TERM,
+            'termCode' => TERM,
             'name' => 'Fall 2026',
             'startDate' => '2026-09-08',
             'endDate' => '2026-12-23',
@@ -92,7 +92,7 @@ describe('GET /api/sis/terms', function () {
         actingAs($this->admin);
         $res = getJson('/api/sis/terms');
 
-        expect(collect($res->json())->pluck('id')->all())->toEqual([TERM, OTHER_TERM]);
+        expect(collect($res->json())->pluck('termCode')->all())->toEqual([TERM, OTHER_TERM]);
     });
 });
 
@@ -141,7 +141,7 @@ describe('GET /api/sis/groups/:groupId/sections', function () {
         expect($res->json()[0])->toMatchArray([
             'id' => $section->id,
             'classNumber' => $section->class_number,
-            'termId' => TERM,
+            'termCode' => TERM,
             'courseCode' => 'AFRO-4406',
             'subject' => 'AFRO',
             'catalogNumber' => '4406',
@@ -289,7 +289,7 @@ describe('GET /api/sis/groups/:groupId/courses', function () {
             'catalogNumber' => '4406',
             'title' => 'African Cinema and Media',
             'credits' => 4,
-            'lastOfferedTermId' => TERM,
+            'lastOfferedTermCode' => TERM,
         ]]);
     });
 

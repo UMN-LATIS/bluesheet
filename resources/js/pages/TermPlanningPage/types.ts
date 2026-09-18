@@ -50,8 +50,7 @@ export interface SisGroup {
 }
 
 export interface SisTerm {
-  /** The term code, e.g. 1269. */
-  id: number;
+  termCode: number;
   name: string;
   startDate: string | null;
   endDate: string | null;
@@ -112,7 +111,7 @@ export interface SisSection {
   id: number;
   /** Null on a planned section: the SIS assigns class numbers. */
   classNumber: number | null;
-  termId: number;
+  termCode: number;
   courseCode: string;
   subject: string;
   catalogNumber: string;
@@ -143,6 +142,6 @@ export interface PlannableCourse {
   title: string;
   credits: number | null;
   /** Null on a course nobody has offered, which is why it was named here. */
-  lastOfferedTermId: number | null;
+  lastOfferedTermCode: number | null;
   source: "sis" | "local";
 }

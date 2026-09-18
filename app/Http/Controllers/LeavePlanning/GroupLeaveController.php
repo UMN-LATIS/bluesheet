@@ -48,8 +48,8 @@ class GroupLeaveController extends Controller {
 
         $range = TimelineTermRange::of($terms, $today, $requestedStart, $requestedEnd);
 
-        $startTerm = $terms->firstWhere('term_code', $range['startTermId']);
-        $endTerm = $terms->firstWhere('term_code', $range['endTermId']);
+        $startTerm = $terms->firstWhere('term_code', $range['startTermCode']);
+        $endTerm = $terms->firstWhere('term_code', $range['endTermCode']);
 
         $leaves = self::leavesInDepartment($deptId)
             ->where('start_date', '<=', $endTerm->ends_on)

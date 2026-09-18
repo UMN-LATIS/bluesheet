@@ -12,7 +12,7 @@ class SisSectionResource extends JsonResource {
         return [
             'id' => $this->id,
             'classNumber' => $this->class_number,
-            'termId' => $this->term_code,
+            'termCode' => $this->term_code,
             'courseCode' => $this->course_code,
             'subject' => $this->subject,
             'catalogNumber' => $this->catalog_number,

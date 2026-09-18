@@ -137,7 +137,7 @@
         :termCode="activeTermCode"
         :termName="term?.name ?? ''"
         :isTermEmpty="isTermEmpty"
-        :suggestedSourceTermId="suggestedSourceTerm?.id ?? null"
+        :suggestedSourceTermCode="suggestedSourceTerm?.termCode ?? null"
         @close="isImportOpen = false"
         @imported="onImported"
       />
@@ -360,7 +360,9 @@ const suggestedSourceTerm = computed(() => {
   const aYearBack = activeTermCode.value - TERM_CODE_YEAR_STEP;
 
   return (
-    (groupTermsQuery.data.value ?? []).find((term) => term.id === aYearBack) ??
+    (groupTermsQuery.data.value ?? []).find(
+      (term) => term.termCode === aYearBack,
+    ) ??
     null
   );
 });
@@ -488,7 +490,7 @@ const newSection = computed<PlannedSection | null>(() => {
   return {
     id: NEW_SECTION_ID,
     classNumber: null,
-    termId: activeTermCode.value,
+    termCode: activeTermCode.value,
     courseCode: "",
     subject: "",
     catalogNumber: "",

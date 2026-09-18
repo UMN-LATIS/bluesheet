@@ -8,25 +8,25 @@ import type {
 } from "@/types";
 
 export const SPRING_2026: PlanningTerm = {
-  id: 1263,
+  termCode: 1263,
   name: "Spring 2026",
   startDate: "2026-01-20",
   endDate: "2026-05-13",
 };
 export const SUMMER_2026: PlanningTerm = {
-  id: 1265,
+  termCode: 1265,
   name: "Summer 2026",
   startDate: "2026-05-18",
   endDate: "2026-08-14",
 };
 export const FALL_2026: PlanningTerm = {
-  id: 1269,
+  termCode: 1269,
   name: "Fall 2026",
   startDate: "2026-09-08",
   endDate: "2026-12-23",
 };
 export const SPRING_2027: PlanningTerm = {
-  id: 1273,
+  termCode: 1273,
   name: "Spring 2027",
   startDate: "2027-01-19",
   endDate: "2027-05-12",
@@ -78,15 +78,15 @@ export function leave(
 
 export function section(
   courseCode: string,
-  termId: number,
+  termCode: number,
   instructors: [emplid: number, role: string][],
   overrides: Partial<TeachingSection> = {},
 ): TeachingSection {
   const [subject, catalogNumber] = courseCode.split("-");
   const sectionNumber = overrides.section ?? "001";
   return {
-    key: `${courseCode}-${sectionNumber}-${termId}`,
-    termId,
+    key: `${courseCode}-${sectionNumber}-${termCode}`,
+    termCode,
     courseCode,
     subject,
     catalogNumber,
@@ -104,10 +104,10 @@ export function section(
 export const timelineOf = (
   people: PlanningPerson[],
   leaves: PlanningLeave[],
-  range = { startTermId: FALL_2026.id, endTermId: SPRING_2027.id },
+  range = { startTermCode: FALL_2026.termCode, endTermCode: SPRING_2027.termCode },
 ): LeaveTimeline => ({ range, people, leaves });
 
 export const historyOf = (
   people: PlanningPerson[],
   sections: TeachingSection[],
-): TeachingHistory => ({ people, sections, readOnlyTermIds: [] });
+): TeachingHistory => ({ people, sections, readOnlyTermCodes: [] });

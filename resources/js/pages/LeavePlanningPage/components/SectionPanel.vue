@@ -105,7 +105,7 @@ const ROLE_LABELS: Record<string, string> = {
 
 const termPlanningPage = computed(() => ({
   name: "termPlanning",
-  params: { groupId: props.groupId, termCode: props.section.termId },
+  params: { groupId: props.groupId, termCode: props.section.termCode },
 }));
 
 const listedPeopleWithRoles = (roles: string[]): ListedPerson[] =>

@@ -171,7 +171,7 @@ describe('GET /api/leave-planning/groups/:groupId/leaves', function () {
 
         expect($res->status())->toBe(200);
         expect($res->json())->toEqual([
-            'range' => ['startTermId' => 1269, 'endTermId' => 1269],
+            'range' => ['startTermCode' => 1269, 'endTermCode' => 1269],
             'people' => [[
                 'emplid' => $user->emplid,
                 'userId' => $user->id,
@@ -202,16 +202,16 @@ describe('GET /api/leave-planning/groups/:groupId/leaves', function () {
     it('opens on the terms from a year before the current one to a year after it', function () {
         actingAs($this->admin);
 
-        expect(getJson($this->url)->json('range'))->toBe(['startTermId' => 1259, 'endTermId' => 1279]);
+        expect(getJson($this->url)->json('range'))->toBe(['startTermCode' => 1259, 'endTermCode' => 1279]);
     });
 
     it('fills in the side of the range that was not requested', function () {
         actingAs($this->admin);
 
         expect(getJson("{$this->url}?end=1265")->json('range'))
-            ->toBe(['startTermId' => 1259, 'endTermId' => 1265]);
+            ->toBe(['startTermCode' => 1259, 'endTermCode' => 1265]);
         expect(getJson("{$this->url}?start=1265")->json('range'))
-            ->toBe(['startTermId' => 1265, 'endTermId' => 1279]);
+            ->toBe(['startTermCode' => 1265, 'endTermCode' => 1279]);
     });
 
     it('takes today as the date in Minnesota, not in UTC', function () {
@@ -219,7 +219,7 @@ describe('GET /api/leave-planning/groups/:groupId/leaves', function () {
 
         actingAs($this->admin);
 
-        expect(getJson($this->url)->json('range'))->toBe(['startTermId' => 1259, 'endTermId' => 1279]);
+        expect(getJson($this->url)->json('range'))->toBe(['startTermCode' => 1259, 'endTermCode' => 1279]);
     });
 
     it('includes cancelled leaves in range', function () {
@@ -328,7 +328,7 @@ describe('GET /api/leave-planning/groups/:groupId/teaching-history', function ()
         expect($res->status())->toBe(200);
         expect($res->json('sections'))->toEqual([[
             'key' => 'ANTH-1001-003-FA26',
-            'termId' => 1269,
+            'termCode' => 1269,
             'courseCode' => 'ANTH-1001',
             'subject' => 'ANTH',
             'catalogNumber' => '1001',
@@ -403,7 +403,7 @@ describe('GET /api/leave-planning/groups/:groupId/teaching-history', function ()
         actingAs($this->admin);
 
         expect(getJson("{$this->url}?start=1275&end=1275")->json('sections'))->toBe([]);
-        expect(getJson("{$this->url}?start=1275&end=1275")->json('readOnlyTermIds'))->toBe([1275]);
+        expect(getJson("{$this->url}?start=1275&end=1275")->json('readOnlyTermCodes'))->toBe([1275]);
     });
 
     it('lists the terms the SIS has published as read-only', function () {
@@ -413,7 +413,7 @@ describe('GET /api/leave-planning/groups/:groupId/teaching-history', function ()
 
         actingAs($this->admin);
 
-        expect(getJson("{$this->url}?start=1263&end=1275")->json('readOnlyTermIds'))->toBe([1269]);
+        expect(getJson("{$this->url}?start=1263&end=1275")->json('readOnlyTermCodes'))->toBe([1269]);
     });
 
     it('leaves out a planned section in a term the SIS does not know', function () {

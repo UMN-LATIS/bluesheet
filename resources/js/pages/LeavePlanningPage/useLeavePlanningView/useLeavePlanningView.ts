@@ -11,8 +11,8 @@ import {
   selectLeaveRows,
   selectPeopleByEmplid,
   selectPersonHistoryRows,
-  selectPlannableTermIds,
-  selectPlannedTermIds,
+  selectPlannableTermCodes,
+  selectPlannedTermCodes,
   selectRowCounts,
   selectSelectedLeave,
   selectSelectedSection,
@@ -73,9 +73,9 @@ export function useLeavePlanningView(
       selectCourseHistory(context.value, state.value.filters),
     ),
     rowCounts: computed(() => selectRowCounts(context.value, state.value)),
-    plannedTermIds: computed(() => selectPlannedTermIds(context.value)),
-    plannableTermIds: computed(() =>
-      selectPlannableTermIds(context.value, state.value),
+    plannedTermCodes: computed(() => selectPlannedTermCodes(context.value)),
+    plannableTermCodes: computed(() =>
+      selectPlannableTermCodes(context.value, state.value),
     ),
     peopleByEmplid: computed(() => selectPeopleByEmplid(context.value)),
     selection: computed(() => state.value.selection),
@@ -87,10 +87,10 @@ export function useLeavePlanningView(
     ),
 
     urlChanged: (query: UrlQuery) => dispatch({ type: "urlChanged", query }),
-    selectRangeStart: (termId: number) =>
-      dispatch({ type: "rangeStartSelected", termId }),
-    selectRangeEnd: (termId: number) =>
-      dispatch({ type: "rangeEndSelected", termId }),
+    selectRangeStart: (termCode: number) =>
+      dispatch({ type: "rangeStartSelected", termCode }),
+    selectRangeEnd: (termCode: number) =>
+      dispatch({ type: "rangeEndSelected", termCode }),
     toggleHistory: () => dispatch({ type: "historyToggled" }),
     selectView: (view: TeachingView) =>
       dispatch({ type: "viewSelected", view }),

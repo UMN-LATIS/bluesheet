@@ -23,10 +23,13 @@ class GroupTeachingHistoryController extends Controller {
         $deptId = $group->sis_dept_id;
 
         if ($deptId === null) {
-            return ['people' => [], 'sections' => [], 'readOnlyTermIds' => []];
+            return ['people' => [], 'sections' => [], 'readOnlyTermCodes' => []];
         }
 
-        $readOnlyTermCodes = TermLock::readOnlyTermCodesBetween((int) $deptId, $validated['start'], $validated['end']);
+        $readOnlyTermCodes = TermLock::readOnlyTermCodesBetween((int) $deptId, $validated['start'], $validated['end'])
+            ->map(fn ($termCode) => (int) $termCode)
+            ->sort()
+            ->values();
 
         $sections = TeachingHistory::sectionsBetween(
             (int) $deptId,
@@ -38,15 +41,10 @@ class GroupTeachingHistoryController extends Controller {
         $appointedEmplids = SisAppointment::where('dept_id', $deptId)->pluck('emplid');
         $instructorEmplids = $sections->pluck('instructors')->flatten(1)->pluck('emplid');
 
-        $readOnlyTermIds = $readOnlyTermCodes
-            ->map(fn ($termCode) => (int) $termCode)
-            ->sort()
-            ->values();
-
         return [
             'people' => PlanningPeople::forEmplids($deptId, $appointedEmplids->concat($instructorEmplids)),
             'sections' => $sections,
-            'readOnlyTermIds' => $readOnlyTermIds,
+            'readOnlyTermCodes' => $readOnlyTermCodes,
         ];
     }
 }

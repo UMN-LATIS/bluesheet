@@ -69,8 +69,8 @@ export function decodeViewQuery(query: UrlQuery): UrlBackedState {
 
   return {
     range: {
-      startTermId: positiveIntegerOf(query.start),
-      endTermId: positiveIntegerOf(query.end),
+      startTermCode: positiveIntegerOf(query.start),
+      endTermCode: positiveIntegerOf(query.end),
     },
     isHistoryRequested: query.history === "1",
     view: viewOf(query.view),
@@ -82,11 +82,11 @@ export function decodeViewQuery(query: UrlQuery): UrlBackedState {
 export function encodeViewQuery(state: UrlBackedState): UrlQuery {
   const query: UrlQuery = {};
 
-  if (state.range.startTermId !== null) {
-    query.start = String(state.range.startTermId);
+  if (state.range.startTermCode !== null) {
+    query.start = String(state.range.startTermCode);
   }
-  if (state.range.endTermId !== null) {
-    query.end = String(state.range.endTermId);
+  if (state.range.endTermCode !== null) {
+    query.end = String(state.range.endTermCode);
   }
   if (state.isHistoryRequested) query.history = "1";
   if (state.view !== DEFAULT_VIEW) query.view = state.view;

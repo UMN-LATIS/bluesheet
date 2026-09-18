@@ -32,9 +32,9 @@
       >
         <TermPlanningLink
           v-for="termLabel in termLabels"
-          :key="termLabel.term.id"
+          :key="termLabel.term.termCode"
           :groupId="groupId"
-          :termId="termLabel.term.id"
+          :termCode="termLabel.term.termCode"
           :canViewTermPlanning="canViewTermPlanning"
           class="group tw-absolute tw-top-2 tw-flex tw-h-6 tw-items-center tw-gap-1.5 tw-overflow-hidden tw-whitespace-nowrap tw-rounded-md tw-px-2 tw-no-underline hover:tw-no-underline"
           :class="{
@@ -125,7 +125,7 @@
         />
         <div
           v-for="{ term, left, width } in axis.terms"
-          :key="term.id"
+          :key="term.termCode"
           class="tw-absolute tw-inset-y-0 tw-border-0 tw-border-x tw-border-solid tw-border-outline-variant"
           :style="{ left: `${left * 100}%`, width: `${width * 100}%` }"
         />
@@ -170,8 +170,8 @@ const props = defineProps<{
   isHistoryShown: boolean;
   groupId: number;
   canViewTermPlanning: boolean;
-  plannedTermIds: Set<number>;
-  plannableTermIds: Set<number>;
+  plannedTermCodes: Set<number>;
+  plannableTermCodes: Set<number>;
   trailingScrollRoomPx: number;
   /** "YYYY-MM-DD" */
   today: string;
@@ -214,8 +214,8 @@ const currentTermColumn = computed(
 
 type TermBandTone = "plain" | "link" | "current";
 
-const toneOf = (termId: number): TermBandTone => {
-  if (termId === currentTermColumn.value?.term.id) return "current";
+const toneOf = (termCode: number): TermBandTone => {
+  if (termCode === currentTermColumn.value?.term.termCode) return "current";
   if (props.canViewTermPlanning) return "link";
   return "plain";
 };
@@ -227,9 +227,9 @@ const termLabels = computed(() =>
     const endLabel = formatMonthDay(term.endDate);
     return {
       ...axisTerm,
-      tone: toneOf(term.id),
-      isPlanned: props.isHistoryShown && props.plannedTermIds.has(term.id),
-      isPlannable: props.plannableTermIds.has(term.id),
+      tone: toneOf(term.termCode),
+      isPlanned: props.isHistoryShown && props.plannedTermCodes.has(term.termCode),
+      isPlannable: props.plannableTermCodes.has(term.termCode),
       hasRoomForDates: axisTerm.width * trackWidth.value >= DATES_MIN_BAND_PX,
       dateRangeLabel: `${startLabel} – ${endLabel}`,
     };

@@ -7,13 +7,13 @@ const GROUP_ID_KEY_INDEX = 2;
 
 export function useLeaveTimelineQuery(
   groupId: Readonly<Ref<number>>,
-  startTermId: Readonly<Ref<number | null>>,
-  endTermId: Readonly<Ref<number | null>>,
+  startTermCode: Readonly<Ref<number | null>>,
+  endTermCode: Readonly<Ref<number | null>>,
 ) {
   return useQuery({
-    queryKey: ["leavePlanning", "leaves", groupId, startTermId, endTermId],
+    queryKey: ["leavePlanning", "leaves", groupId, startTermCode, endTermCode],
     queryFn: () =>
-      fetchLeaveTimeline(groupId.value, startTermId.value, endTermId.value),
+      fetchLeaveTimeline(groupId.value, startTermCode.value, endTermCode.value),
     placeholderData: (
       previous: LeaveTimeline | null | undefined,
       previousQuery,

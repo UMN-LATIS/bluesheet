@@ -83,8 +83,8 @@ export const mostSectionsInOneTerm = (
 function groupByTerm(sections: TeachingSection[]) {
   const sectionsByTerm = new Map<number, TeachingSection[]>();
   for (const section of sections) {
-    const termSections = sectionsByTerm.get(section.termId) ?? [];
-    sectionsByTerm.set(section.termId, [...termSections, section]);
+    const termSections = sectionsByTerm.get(section.termCode) ?? [];
+    sectionsByTerm.set(section.termCode, [...termSections, section]);
   }
   return sectionsByTerm;
 }
@@ -198,7 +198,7 @@ export function courseHistoryOf(
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([courseCode, courseSections]) => {
       const latestSection = courseSections.reduce((latest, section) =>
-        section.termId > latest.termId ? section : latest,
+        section.termCode > latest.termCode ? section : latest,
       );
       return {
         courseCode,

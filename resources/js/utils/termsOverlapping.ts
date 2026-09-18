@@ -11,5 +11,5 @@ export function termsOverlapping(
     term.startDate <= range.endDate &&
     term.endDate >= range.startDate;
 
-  return terms.filter(overlapsRange).sort((a, b) => a.id - b.id);
+  return terms.filter(overlapsRange).sort((a, b) => a.termCode - b.termCode);
 }

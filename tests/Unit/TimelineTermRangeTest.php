@@ -28,33 +28,33 @@ function rangeOn(string $today, ?int $start = null, ?int $end = null): array {
 }
 
 it('opens from the same term a year before the current one to the same term a year after', function () {
-    expect(rangeOn('2026-10-01'))->toBe(['startTermId' => 1259, 'endTermId' => 1279]);
+    expect(rangeOn('2026-10-01'))->toBe(['startTermCode' => 1259, 'endTermCode' => 1279]);
 });
 
 it('uses the next term as current between terms', function () {
-    expect(rangeOn('2026-08-25'))->toBe(['startTermId' => 1259, 'endTermId' => 1279]);
+    expect(rangeOn('2026-08-25'))->toBe(['startTermCode' => 1259, 'endTermCode' => 1279]);
 });
 
 it('starts at the earliest term when the terms do not reach back a year', function () {
-    expect(rangeOn('2026-03-01'))->toBe(['startTermId' => 1255, 'endTermId' => 1273]);
+    expect(rangeOn('2026-03-01'))->toBe(['startTermCode' => 1255, 'endTermCode' => 1273]);
 });
 
 it('ends at the latest term when the terms do not reach forward a year', function () {
-    expect(rangeOn('2027-03-01'))->toBe(['startTermId' => 1263, 'endTermId' => 1279]);
+    expect(rangeOn('2027-03-01'))->toBe(['startTermCode' => 1263, 'endTermCode' => 1279]);
 });
 
 it('keeps a requested start and moves the default end up to meet it', function () {
-    expect(rangeOn('2026-03-01', start: 1279))->toBe(['startTermId' => 1279, 'endTermId' => 1279]);
+    expect(rangeOn('2026-03-01', start: 1279))->toBe(['startTermCode' => 1279, 'endTermCode' => 1279]);
 });
 
 it('keeps a requested end and moves the default start back to meet it', function () {
-    expect(rangeOn('2026-10-01', end: 1255))->toBe(['startTermId' => 1255, 'endTermId' => 1255]);
+    expect(rangeOn('2026-10-01', end: 1255))->toBe(['startTermCode' => 1255, 'endTermCode' => 1255]);
 });
 
 it('keeps both requested sides as given', function () {
-    expect(rangeOn('2026-10-01', 1265, 1273))->toBe(['startTermId' => 1265, 'endTermId' => 1273]);
+    expect(rangeOn('2026-10-01', 1265, 1273))->toBe(['startTermCode' => 1265, 'endTermCode' => 1273]);
 });
 
 it('treats the last term as current once every term has ended', function () {
-    expect(rangeOn('2028-03-01'))->toBe(['startTermId' => 1269, 'endTermId' => 1279]);
+    expect(rangeOn('2028-03-01'))->toBe(['startTermCode' => 1269, 'endTermCode' => 1279]);
 });

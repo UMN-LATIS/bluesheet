@@ -1,7 +1,7 @@
 <template>
   <router-link
     v-if="canViewTermPlanning"
-    :to="{ name: 'termPlanning', params: { groupId, termCode: termId } }"
+    :to="{ name: 'termPlanning', params: { groupId, termCode: termCode } }"
   >
     <slot />
   </router-link>
@@ -13,7 +13,7 @@
 <script setup lang="ts">
 defineProps<{
   groupId: number;
-  termId: number;
+  termCode: number;
   canViewTermPlanning: boolean;
 }>();
 </script>

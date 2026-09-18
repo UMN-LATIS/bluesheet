@@ -15,11 +15,11 @@
         </span>
       </template>
       <template v-if="terms.length > 0" #meta>
-        <template v-for="(term, index) in terms" :key="term.id">
+        <template v-for="(term, index) in terms" :key="term.termCode">
           <template v-if="index > 0">, </template>
           <TermPlanningLink
             :groupId="groupId"
-            :termId="term.id"
+            :termCode="term.termCode"
             :canViewTermPlanning="canViewTermPlanning"
             :class="{
               'tw-text-primary hover:tw-underline': canViewTermPlanning,

@@ -57,7 +57,7 @@ class GroupSectionController extends Controller {
         $section = DB::transaction(function () use ($validated, $academicOrg) {
             $section = LocalClassSection::create([
                 ...$this->toColumns($validated),
-                'term_code' => $validated['termId'],
+                'term_code' => $validated['termCode'],
                 'academic_org' => $academicOrg,
                 'created_by' => auth()->id(),
                 'updated_by' => auth()->id(),
@@ -81,7 +81,7 @@ class GroupSectionController extends Controller {
         // term whose lock was never checked. Refused before validating, so
         // nothing is checked against a term the section is not in.
         abort_if(
-            (int) $request->input('termId') !== $section->term_code,
+            (int) $request->input('termCode') !== $section->term_code,
             422,
             'A section cannot be moved to another term.'
         );
@@ -124,7 +124,7 @@ class GroupSectionController extends Controller {
         }
 
         $academicOrg = (int) $group->sis_dept_id;
-        $termCode ??= (int) $request->input('termId');
+        $termCode ??= (int) $request->input('termCode');
 
         if (TermLock::isReadOnly($academicOrg, $termCode)) {
             abort(403, 'The SIS has published this term, so it can no longer be planned here.');
@@ -145,7 +145,7 @@ class GroupSectionController extends Controller {
     /** @return array<string, mixed> */
     private function rules(Request $request, int $academicOrg, ?LocalClassSection $existing = null): array {
         return [
-            'termId' => 'required|integer',
+            'termCode' => 'required|integer',
             'courseCode' => 'required|string|max:255',
             'subject' => 'required|string|max:255',
             'catalogNumber' => 'required|string|max:255',
@@ -184,7 +184,7 @@ class GroupSectionController extends Controller {
     private function sectionNumberIsFree(Request $request, int $academicOrg, ?LocalClassSection $existing): Unique {
         $rule = Rule::unique('local_class_sections', 'class_section')
             ->where('academic_org', $academicOrg)
-            ->where('term_code', $request->input('termId'))
+            ->where('term_code', $request->input('termCode'))
             ->where('course_code', $request->input('courseCode'));
 
         return $existing === null ? $rule : $rule->ignore($existing);

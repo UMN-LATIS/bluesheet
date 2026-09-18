@@ -18,7 +18,7 @@ class TimelineTermRange {
      *
      * @param Collection<int, SisTerm> $terms must not be empty
      * @param string $today as `Y-m-d`
-     * @return array{startTermId: int, endTermId: int}
+     * @return array{startTermCode: int, endTermCode: int}
      */
     public static function of(
         Collection $terms,
@@ -48,7 +48,7 @@ class TimelineTermRange {
             $end = max($start, $end);
         }
 
-        return ['startTermId' => $start, 'endTermId' => $end];
+        return ['startTermCode' => $start, 'endTermCode' => $end];
     }
 
     private static function termOnOrAfter(Collection $terms, string $date): ?int {

@@ -12,19 +12,19 @@ export async function fetchLeavePlanningGroups(): Promise<T.PlanningGroup[]> {
 }
 
 /**
- * A null `startTermId` becomes a year before the current
- * term, a null `endTermId` a year after it. Returns null
+ * A null `startTermCode` becomes a year before the current
+ * term, a null `endTermCode` a year after it. Returns null
  * when the user may not read the group's leaves.
  */
 export async function fetchLeaveTimeline(
   groupId: T.Group["id"],
-  startTermId: number | null,
-  endTermId: number | null,
+  startTermCode: number | null,
+  endTermCode: number | null,
 ): Promise<T.LeaveTimeline | null> {
   const res = await axios.get<T.LeaveTimeline>(
     `/api/leave-planning/groups/${groupId}/leaves`,
     {
-      params: { start: startTermId, end: endTermId },
+      params: { start: startTermCode, end: endTermCode },
       // Counting 403 as an answer keeps it out of the
       // error interceptor, which raises the global error
       // modal.
@@ -37,12 +37,12 @@ export async function fetchLeaveTimeline(
 
 export async function fetchTeachingHistory(
   groupId: T.Group["id"],
-  startTermId: number,
-  endTermId: number,
+  startTermCode: number,
+  endTermCode: number,
 ): Promise<T.TeachingHistory> {
   const res = await axios.get<T.TeachingHistory>(
     `/api/leave-planning/groups/${groupId}/teaching-history`,
-    { params: { start: startTermId, end: endTermId } },
+    { params: { start: startTermCode, end: endTermCode } },
   );
 
   return res.data;

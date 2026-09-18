@@ -38,7 +38,7 @@ class CourseUnion {
             'catalogNumber' => $course->catalog_number,
             'title' => $course->title,
             'credits' => $course->credits,
-            'lastOfferedTermId' => $course->last_offered_term_code,
+            'lastOfferedTermCode' => $course->last_offered_term_code,
             'source' => 'sis',
         ];
     }
@@ -52,7 +52,7 @@ class CourseUnion {
             'title' => $course->title,
             'credits' => $course->credits,
             // nobody has offered it, which is why it is here at all
-            'lastOfferedTermId' => null,
+            'lastOfferedTermCode' => null,
             'source' => 'local',
         ];
     }

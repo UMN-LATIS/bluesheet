@@ -26,7 +26,7 @@ class TeachingHistory {
         return self::publishedSections($academicOrg, $readOnlyTermCodes)
             ->concat(self::plannedSections($academicOrg, $startTermCode, $endTermCode, $readOnlyTermCodes))
             ->sortBy(fn(array $section) => [
-                $section['termId'],
+                $section['termCode'],
                 $section['subject'],
                 $section['catalogNumber'],
                 $section['section'],
@@ -80,7 +80,7 @@ class TeachingHistory {
     private static function sharedFields(SisClassSection|LocalClassSection $section): array {
         return [
             'key' => self::keyOf($section),
-            'termId' => $section->term_code,
+            'termCode' => $section->term_code,
             'courseCode' => $section->course_code,
             'subject' => $section->subject,
             'catalogNumber' => $section->catalog_number,

@@ -24,12 +24,12 @@ export type Selection =
   | { kind: "section"; sectionKey: string };
 
 /**
- * A null `startTermId` becomes a year before the current
- * term, a null `endTermId` a year after it.
+ * A null `startTermCode` becomes a year before the current
+ * term, a null `endTermCode` a year after it.
  */
 export interface RequestedRange {
-  startTermId: number | null;
-  endTermId: number | null;
+  startTermCode: number | null;
+  endTermCode: number | null;
 }
 
 export interface ViewState {
@@ -51,8 +51,8 @@ export interface ViewContext {
 
 export type ViewEvent =
   | { type: "urlChanged"; query: UrlQuery }
-  | { type: "rangeStartSelected"; termId: number }
-  | { type: "rangeEndSelected"; termId: number }
+  | { type: "rangeStartSelected"; termCode: number }
+  | { type: "rangeEndSelected"; termCode: number }
   | { type: "historyToggled" }
   | { type: "viewSelected"; view: TeachingView }
   | { type: "facetOpened"; facet: FilterFacet }

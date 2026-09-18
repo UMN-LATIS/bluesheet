@@ -62,7 +62,7 @@ function publishTermInSis(int $termCode = PUBLISHED_TERM): void {
 /** The body the page sends, which is the section shape it already renders. */
 function sectionPayload(array $overrides = []): array {
     return [
-        'termId' => PLANNABLE_TERM,
+        'termCode' => PLANNABLE_TERM,
         'courseCode' => 'ANTH-1001',
         'subject' => 'ANTH',
         'catalogNumber' => '1001',
@@ -140,7 +140,7 @@ describe('GET /api/term-planning/groups/:groupId/sections', function () {
             'id' => $section->id,
             // the SIS assigns class numbers and has not seen this section
             'classNumber' => null,
-            'termId' => PLANNABLE_TERM,
+            'termCode' => PLANNABLE_TERM,
             'courseCode' => 'ANTH-1001',
             'section' => '001',
             'title' => 'Human Evolution',
@@ -222,7 +222,7 @@ describe('POST /api/term-planning/groups/:groupId/sections', function () {
         publishTermInSis();
 
         actingAs($this->admin);
-        $res = postJson(sectionsUrl($this->group), sectionPayload(['termId' => PUBLISHED_TERM]));
+        $res = postJson(sectionsUrl($this->group), sectionPayload(['termCode' => PUBLISHED_TERM]));
 
         expect($res->status())->toBe(403);
         expect(LocalClassSection::count())->toBe(0);
@@ -368,7 +368,7 @@ describe('PUT /api/term-planning/groups/:groupId/sections/:id', function () {
         $section = plannedSection();
 
         actingAs($this->admin);
-        $res = putJson(sectionsUrl($this->group) . "/{$section->id}", sectionPayload(['termId' => 1279]));
+        $res = putJson(sectionsUrl($this->group) . "/{$section->id}", sectionPayload(['termCode' => 1279]));
 
         expect($res->status())->toBe(422);
     });
@@ -379,7 +379,7 @@ describe('PUT /api/term-planning/groups/:groupId/sections/:id', function () {
 
         actingAs($this->admin);
         $res = putJson(sectionsUrl($this->group) . "/{$section->id}", sectionPayload([
-            'termId' => PUBLISHED_TERM,
+            'termCode' => PUBLISHED_TERM,
             'title' => 'Too late',
         ]));
 
@@ -554,7 +554,7 @@ describe('POST /api/term-planning/groups/:groupId/courses', function () {
             'subject' => 'ANTH',
             'title' => 'Field Methods',
             'source' => 'local',
-            'lastOfferedTermId' => null,
+            'lastOfferedTermCode' => null,
         ]);
 
         $course = LocalCourse::sole();
@@ -662,7 +662,7 @@ describe('GET /api/term-planning/groups/:groupId/course-instructors', function (
         $response = getJson(historyUrl($this->group, 'ANTH-1001'));
 
         $response->assertOk()->assertJson([
-            ['emplid' => 101, 'role' => 'PI', 'lastTermId' => PUBLISHED_TERM, 'isPlanned' => false],
+            ['emplid' => 101, 'role' => 'PI', 'lastTermCode' => PUBLISHED_TERM, 'isPlanned' => false],
         ]);
     });
 
@@ -688,7 +688,7 @@ describe('GET /api/term-planning/groups/:groupId/course-instructors', function (
         $response = getJson(historyUrl($this->group, 'ANTH-1001'));
 
         $response->assertOk()->assertJson([
-            ['emplid' => 202, 'role' => 'PI', 'lastTermId' => PLANNABLE_TERM, 'isPlanned' => true],
+            ['emplid' => 202, 'role' => 'PI', 'lastTermCode' => PLANNABLE_TERM, 'isPlanned' => true],
         ]);
     });
 
@@ -732,8 +732,8 @@ function publishedSection(array $attributes = []): SisClassSection {
 
 function importBody(array $sections, array $overrides = []): array {
     return [
-        'termId' => PLANNABLE_TERM,
-        'sourceTermId' => PUBLISHED_TERM,
+        'termCode' => PLANNABLE_TERM,
+        'sourceTermCode' => PUBLISHED_TERM,
         'sectionIds' => collect($sections)->pluck('id')->all(),
         ...$overrides,
     ];
@@ -793,7 +793,7 @@ describe('POST /api/term-planning/groups/:groupId/sections/batch', function () {
         $source = publishedSection();
         actingAs($this->admin);
 
-        postJson(batchUrl($this->group), importBody([$source], ['termId' => PUBLISHED_TERM]))
+        postJson(batchUrl($this->group), importBody([$source], ['termCode' => PUBLISHED_TERM]))
             ->assertForbidden();
 
         expect(LocalClassSection::count())->toBe(0);
@@ -822,8 +822,8 @@ describe('POST /api/term-planning/groups/:groupId/sections/batch', function () {
         actingAs($this->admin);
 
         postJson(batchUrl($this->group), [
-            'termId' => PLANNABLE_TERM,
-            'sourceTermId' => PUBLISHED_TERM,
+            'termCode' => PLANNABLE_TERM,
+            'sourceTermCode' => PUBLISHED_TERM,
             'sectionIds' => [123456],
         ])->assertStatus(422);
 
@@ -846,8 +846,8 @@ describe('POST .../sections/batch, choosing what comes over', function () {
 
     function importWith(Group $group, array $include): array {
         $body = [
-            'termId' => PLANNABLE_TERM,
-            'sourceTermId' => PUBLISHED_TERM,
+            'termCode' => PLANNABLE_TERM,
+            'sourceTermCode' => PUBLISHED_TERM,
             'sectionIds' => [test()->source->id],
             'include' => $include,
         ];
@@ -913,7 +913,7 @@ describe('DELETE /api/term-planning/groups/:groupId/sections/batch', function ()
         $created = postJson(batchUrl($this->group), importBody([$source]))->json();
 
         deleteJson(batchUrl($this->group), [
-            'termId' => PLANNABLE_TERM,
+            'termCode' => PLANNABLE_TERM,
             'sectionIds' => collect($created)->pluck('id')->all(),
         ])->assertNoContent();
 
@@ -926,7 +926,7 @@ describe('DELETE /api/term-planning/groups/:groupId/sections/batch', function ()
         actingAs($this->admin);
 
         deleteJson(batchUrl($this->group), [
-            'termId' => PLANNABLE_TERM,
+            'termCode' => PLANNABLE_TERM,
             'sectionIds' => [$kept->id, 999999],
         ])->assertNoContent();
 
@@ -942,7 +942,7 @@ describe('DELETE /api/term-planning/groups/:groupId/sections/batch', function ()
         actingAs($this->admin);
 
         deleteJson(batchUrl($this->group), [
-            'termId' => PLANNABLE_TERM,
+            'termCode' => PLANNABLE_TERM,
             'sectionIds' => [$mine->id, $theirs->id],
         ])->assertNoContent();
 

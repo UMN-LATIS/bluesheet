@@ -60,7 +60,7 @@ describe('CourseUnion', function () {
     });
 
     it('reports no last offering for a course the SIS has never seen', function () {
-        expect(union([], [localCourse()])->first()['lastOfferedTermId'])->toBeNull();
+        expect(union([], [localCourse()])->first()['lastOfferedTermCode'])->toBeNull();
     });
 
     it('orders by subject and catalog number, whichever side a course came from', function () {

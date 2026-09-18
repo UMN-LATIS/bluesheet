@@ -47,8 +47,8 @@
           :isHistoryShown="planning.isHistoryShown"
           :groupId="groupId"
           :canViewTermPlanning="canViewCourses"
-          :plannedTermIds="planning.plannedTermIds"
-          :plannableTermIds="planning.plannableTermIds"
+          :plannedTermCodes="planning.plannedTermCodes"
+          :plannableTermCodes="planning.plannableTermCodes"
           :trailingScrollRoomPx="trailingScrollRoomPx"
           :today="today"
           :selectionKey="selectionKey"
@@ -100,7 +100,7 @@
         <SectionPanel
           v-else-if="planning.selectedSection"
           :section="planning.selectedSection"
-          :termName="termNameOf(planning.selectedSection.termId)"
+          :termName="termNameOf(planning.selectedSection.termCode)"
           :groupId="groupId"
           :peopleByEmplid="planning.peopleByEmplid"
           @close="planning.deselect"
@@ -216,8 +216,8 @@ watch(
 
 const timelineQuery = useLeaveTimelineQuery(
   groupId,
-  computed(() => planning.requestedRange.startTermId),
-  computed(() => planning.requestedRange.endTermId),
+  computed(() => planning.requestedRange.startTermCode),
+  computed(() => planning.requestedRange.endTermCode),
 );
 
 const teachingHistoryQuery = useTeachingHistoryQuery(
@@ -311,6 +311,7 @@ const otherLeavesOfSelectedLeave = computed(() => {
   );
 });
 
-const termNameOf = (termId: number) =>
-  terms.value.find(({ id }) => id === termId)?.name ?? String(termId);
+const termNameOf = (termCode: number) =>
+  terms.value.find((term) => term.termCode === termCode)?.name ??
+  String(termCode);
 </script>

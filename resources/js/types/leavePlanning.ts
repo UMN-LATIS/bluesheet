@@ -34,8 +34,8 @@ export interface PlanningLeave {
 }
 
 export interface PlanningTermRange {
-  startTermId: number;
-  endTermId: number;
+  startTermCode: number;
+  endTermCode: number;
 }
 
 export interface LeaveTimeline {
@@ -57,7 +57,7 @@ export interface TeachingInstructor {
 export interface TeachingSection {
   /** e.g. "ANTH-1001-003-FA26" */
   key: string;
-  termId: number;
+  termCode: number;
   courseCode: string;
   subject: string;
   catalogNumber: string;
@@ -78,7 +78,7 @@ export interface TeachingHistory {
   people: PlanningPerson[];
   sections: TeachingSection[];
   /** Terms in the range the SIS has published. */
-  readOnlyTermIds: number[];
+  readOnlyTermCodes: number[];
 }
 
 export interface PlanningGroup {
@@ -88,8 +88,7 @@ export interface PlanningGroup {
 }
 
 export interface PlanningTerm {
-  /** The term code, e.g. 1269. */
-  id: number;
+  termCode: number;
   name: string;
   startDate: string | null;
   endDate: string | null;

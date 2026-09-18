@@ -43,7 +43,7 @@ describe("the view query", () => {
       leaveId: "0",
     });
 
-    expect(state.range).toEqual({ startTermId: null, endTermId: null });
+    expect(state.range).toEqual({ startTermCode: null, endTermCode: null });
     expect(state.view).toBe("instructors");
     expect(state.selection).toBeNull();
   });

@@ -16,7 +16,7 @@ import {
 } from "./viewQuery";
 
 export const initialState = (): ViewState => ({
-  range: { startTermId: null, endTermId: null },
+  range: { startTermCode: null, endTermCode: null },
   isHistoryRequested: false,
   view: DEFAULT_VIEW,
   filters: defaultFilters(),
@@ -48,26 +48,26 @@ function reduce(state: ViewState, event: ViewEvent): ViewState {
     }
 
     case "rangeStartSelected": {
-      const { endTermId } = state.range;
-      const isEndBeforeStart = endTermId !== null && endTermId < event.termId;
+      const { endTermCode } = state.range;
+      const isEndBeforeStart = endTermCode !== null && endTermCode < event.termCode;
       return {
         ...state,
         range: {
-          startTermId: event.termId,
-          endTermId: isEndBeforeStart ? event.termId : endTermId,
+          startTermCode: event.termCode,
+          endTermCode: isEndBeforeStart ? event.termCode : endTermCode,
         },
       };
     }
 
     case "rangeEndSelected": {
-      const { startTermId } = state.range;
+      const { startTermCode } = state.range;
       const isStartAfterEnd =
-        startTermId !== null && startTermId > event.termId;
+        startTermCode !== null && startTermCode > event.termCode;
       return {
         ...state,
         range: {
-          startTermId: isStartAfterEnd ? event.termId : startTermId,
-          endTermId: event.termId,
+          startTermCode: isStartAfterEnd ? event.termCode : startTermCode,
+          endTermCode: event.termCode,
         },
       };
     }

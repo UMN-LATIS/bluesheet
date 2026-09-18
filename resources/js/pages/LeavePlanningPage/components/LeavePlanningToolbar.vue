@@ -99,14 +99,14 @@
       <TermSelect
         label="First term"
         :terms="termOptions"
-        :termId="range?.startTermId ?? null"
+        :termCode="range?.startTermCode ?? null"
         @choose="emit('selectRangeStart', $event)"
       />
       <span class="tw-text-[13px] tw-text-on-surface-variant">–</span>
       <TermSelect
         label="Last term"
         :terms="termOptions"
-        :termId="range?.endTermId ?? null"
+        :termCode="range?.endTermCode ?? null"
         @choose="emit('selectRangeEnd', $event)"
       />
     </div>
@@ -141,8 +141,8 @@ const emit = defineEmits<{
   openFilters: [];
   toggleHistory: [];
   selectView: [view: TeachingView];
-  selectRangeStart: [termId: number];
-  selectRangeEnd: [termId: number];
+  selectRangeStart: [termCode: number];
+  selectRangeEnd: [termCode: number];
 }>();
 
 const VIEW_OPTIONS: { value: TeachingView; label: string }[] = [
@@ -156,7 +156,7 @@ const router = useRouter();
 const { isLarge, isSmall } = useScreenSize();
 
 const termOptions = computed(() =>
-  props.terms.filter(isDated).sort((a, b) => a.id - b.id),
+  props.terms.filter(isDated).sort((a, b) => a.termCode - b.termCode),
 );
 
 function chooseGroup(event: Event) {

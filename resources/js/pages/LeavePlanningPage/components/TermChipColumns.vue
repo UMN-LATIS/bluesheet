@@ -1,7 +1,7 @@
 <template>
   <div
     v-for="termColumn in termColumns"
-    :key="termColumn.term.id"
+    :key="termColumn.term.termCode"
     class="tw-absolute tw-flex tw-flex-col tw-items-start tw-gap-1 tw-px-1.5"
     :style="{
       top: `${top}px`,
@@ -43,7 +43,7 @@ const byCourseThenSection = (a: TeachingSection, b: TeachingSection) =>
 const termColumns = computed(() =>
   props.axis.terms
     .map((axisTerm) => {
-      const sections = props.sectionsByTerm.get(axisTerm.term.id) ?? [];
+      const sections = props.sectionsByTerm.get(axisTerm.term.termCode) ?? [];
       return { ...axisTerm, sections: [...sections].sort(byCourseThenSection) };
     })
     .filter(({ sections }) => sections.length > 0),

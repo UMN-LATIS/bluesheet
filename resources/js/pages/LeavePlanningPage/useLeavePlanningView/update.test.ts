@@ -51,7 +51,7 @@ describe("the URL", () => {
       },
     ]);
 
-    expect(state.range).toEqual({ startTermId: 1269, endTermId: 1273 });
+    expect(state.range).toEqual({ startTermCode: 1269, endTermCode: 1273 });
     expect(state.isHistoryRequested).toBe(true);
     expect(state.view).toBe("tas");
     expect(state.filters.course).toEqual(["ANTH-1001"]);
@@ -77,26 +77,26 @@ describe("the URL", () => {
 describe("the term range", () => {
   it("moves the end up to a start chosen after it", () => {
     const state = after([
-      { type: "rangeEndSelected", termId: 1269 },
-      { type: "rangeStartSelected", termId: 1273 },
+      { type: "rangeEndSelected", termCode: 1269 },
+      { type: "rangeStartSelected", termCode: 1273 },
     ]);
 
-    expect(state.range).toEqual({ startTermId: 1273, endTermId: 1273 });
+    expect(state.range).toEqual({ startTermCode: 1273, endTermCode: 1273 });
   });
 
   it("moves the start back to an end chosen before it", () => {
     const state = after([
-      { type: "rangeStartSelected", termId: 1273 },
-      { type: "rangeEndSelected", termId: 1263 },
+      { type: "rangeStartSelected", termCode: 1273 },
+      { type: "rangeEndSelected", termCode: 1263 },
     ]);
 
-    expect(state.range).toEqual({ startTermId: 1263, endTermId: 1263 });
+    expect(state.range).toEqual({ startTermCode: 1263, endTermCode: 1263 });
   });
 
   it("leaves the unchosen side to the server", () => {
-    const state = after([{ type: "rangeStartSelected", termId: 1269 }]);
+    const state = after([{ type: "rangeStartSelected", termCode: 1269 }]);
 
-    expect(state.range).toEqual({ startTermId: 1269, endTermId: null });
+    expect(state.range).toEqual({ startTermCode: 1269, endTermCode: null });
   });
 });
 

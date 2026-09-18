@@ -131,13 +131,13 @@ export function selectRowCounts(
   };
 }
 
-export const selectPlannedTermIds = (context: ViewContext): Set<number> => {
+export const selectPlannedTermCodes = (context: ViewContext): Set<number> => {
   const sections = context.teachingHistory?.sections ?? [];
   const plannedSections = sections.filter(({ isPlanned }) => isPlanned);
-  return new Set(plannedSections.map(({ termId }) => termId));
+  return new Set(plannedSections.map(({ termCode }) => termCode));
 };
 
-export const selectPlannableTermIds = (
+export const selectPlannableTermCodes = (
   context: ViewContext,
   state: ViewState,
 ): Set<number> => {
@@ -145,9 +145,11 @@ export const selectPlannableTermIds = (
   const isHistoryShown = selectIsHistoryShown(context, state);
   if (!isHistoryShown || !canPlanTerms || !teachingHistory) return new Set();
 
-  const readOnlyTermIds = new Set(teachingHistory.readOnlyTermIds);
-  const termIds = (selectAxis(context)?.terms ?? []).map(({ term }) => term.id);
-  return new Set(termIds.filter((termId) => !readOnlyTermIds.has(termId)));
+  const readOnlyTermCodes = new Set(teachingHistory.readOnlyTermCodes);
+  const termCodes = (selectAxis(context)?.terms ?? []).map(
+    ({ term }) => term.termCode,
+  );
+  return new Set(termCodes.filter((termCode) => !readOnlyTermCodes.has(termCode)));
 };
 
 export const selectPeopleByEmplid = (

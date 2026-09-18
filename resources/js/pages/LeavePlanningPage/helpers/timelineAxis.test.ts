@@ -3,8 +3,8 @@ import { axisFor, dayNumberOf, fractionOf, spanOf } from "./timelineAxis";
 import { FALL_2026, SPRING_2027, TERMS } from "./planning.fixture";
 
 const fallThroughSpring = axisFor(TERMS, {
-  startTermId: FALL_2026.id,
-  endTermId: SPRING_2027.id,
+  startTermCode: FALL_2026.termCode,
+  endTermCode: SPRING_2027.termCode,
 })!;
 
 describe("axisFor", () => {
@@ -19,7 +19,7 @@ describe("axisFor", () => {
   it("places terms in order and the winter break between them", () => {
     const [fall, spring] = fallThroughSpring.terms;
 
-    expect(fall.term.id).toBe(1269);
+    expect(fall.term.termCode).toBe(1269);
     expect(fall.left).toBe(0);
     expect(spring.left + spring.width).toBeCloseTo(1);
     expect(fallThroughSpring.gaps).toHaveLength(1);
@@ -43,7 +43,7 @@ describe("axisFor", () => {
   });
 
   it("is null when the range names a term it has no dates for", () => {
-    expect(axisFor(TERMS, { startTermId: 1269, endTermId: 1279 })).toBeNull();
+    expect(axisFor(TERMS, { startTermCode: 1269, endTermCode: 1279 })).toBeNull();
   });
 });
 
