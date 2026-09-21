@@ -46,6 +46,11 @@
           {{ section.subject }} {{ section.catalogNumber }} ·
           {{ section.section }}
         </span>
+        <span
+          class="tw-flex-none tw-text-[9px] tw-font-bold tw-tracking-[0.07em] tw-text-on-surface-variant"
+        >
+          {{ section.component }}
+        </span>
         <NoteIcon
           v-if="section.notes.trim() !== ''"
           class="tw-h-3 tw-w-3 tw-flex-none tw-text-on-surface-variant"

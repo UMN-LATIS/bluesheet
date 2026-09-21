@@ -102,19 +102,6 @@
         Delete All&hellip;
       </MoreMenuItem>
     </MoreMenu>
-
-    <!--
-      Read-only is a property of the term, so it is named on the control
-      that picks one. Below `cramped` the bar has no width to spare, and
-      the strip under it says the same thing at greater length.
-    -->
-    <span
-      v-if="isReadOnly"
-      class="tw-hidden tw-flex-none tw-items-center tw-gap-1.5 cramped:tw-inline-flex tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-container tw-py-1 tw-pl-2 tw-pr-2.5 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-surface-variant"
-    >
-      <LockIcon class="tw-h-3 tw-w-3 tw-flex-none" />
-      Read only
-    </span>
   </div>
 </template>
 
@@ -122,7 +109,6 @@
 import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { omit, pick } from "lodash-es";
-import { LockIcon } from "@/icons";
 import Button from "@/components/Button.vue";
 import { MoreMenu, MoreMenuItem } from "@/components/MoreMenu";
 import { useGroupQuery } from "../queries/useGroupQuery";

@@ -54,15 +54,28 @@
           :unofficialCourseCodes="unofficialCourseCodes"
         />
       </FilterDock>
-
       <Pane
         as="section"
         :aria-label="`${VIEW_LABELS[activeView]} schedule`"
         :class="[
           'tw-flex tw-min-h-0 tw-min-w-0 tw-flex-1 tw-flex-col',
-          isReadOnly ? 'tw-bg-surface-inert' : '',
+          isReadOnly
+            ? 'tw-border-outline-variant tw-bg-surface tw-shadow-none'
+            : '',
         ]"
       >
+        <div
+          v-if="isReadOnly"
+          class="tw-flex tw-flex-none tw-items-center tw-gap-1.5 tw-px-3.5 tw-pb-1.5 tw-pt-2 tw-text-on-surface-variant"
+        >
+          <LockIcon class="tw-h-3.5 tw-w-3.5 tw-flex-none" aria-hidden="true" />
+          <span
+            class="tw-text-[11px] tw-font-bold tw-uppercase tw-tracking-[0.06em]"
+          >
+            {{ term?.name ?? "This term" }} &middot; Read only
+          </span>
+        </div>
+
         <Notification
           v-if="writeError"
           type="danger"
@@ -89,7 +102,7 @@
 
         <div
           v-else-if="activeView === 'week'"
-          class="scrollbar-always-visible tw-min-h-0 tw-flex-1 tw-overflow-auto tw-bg-surface-bright"
+          class="scrollbar-always-visible tw-min-h-0 tw-flex-1 tw-overflow-auto"
         >
           <ScheduleGrid
             :schedule="schedule"
@@ -250,6 +263,7 @@ import ImportModal, { type ImportResult } from "./components/ImportModal.vue";
 import HourSheet, { type HourEntry } from "./components/HourSheet.vue";
 import MeetingTimes from "./components/MeetingTimes.vue";
 import Pane from "@/components/planning/Pane.vue";
+import { LockIcon } from "@/icons";
 import PlanningToolbar from "./components/PlanningToolbar.vue";
 import ScheduleGrid from "./components/ScheduleGrid.vue";
 import ScheduleSidebar from "./components/ScheduleSidebar.vue";

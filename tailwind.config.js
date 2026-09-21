@@ -32,7 +32,6 @@ export default {
         surface: {
           DEFAULT: "var(--surface)",
           bright: "var(--surface-bright)",
-          inert: "var(--surface-inert)",
           container: "var(--surface-container)",
           "container-high": "var(--surface-container-high)",
         },

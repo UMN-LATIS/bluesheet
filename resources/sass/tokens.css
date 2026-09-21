@@ -9,9 +9,6 @@
    * chrome; `surface-bright` is a canvas raised off it, like the grid. */
   --surface: #f6f4f2;
   --surface-bright: #ffffff;
-  /* A canvas nobody can edit: off the white of a live grid, short of the
-   * page behind it, so the two are still told apart. */
-  --surface-inert: #f9f7f5;
   --surface-container: #efedea;
   --surface-container-high: #e6e2de;
 
