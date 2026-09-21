@@ -11,7 +11,7 @@
 import { computed, type Ref } from "vue";
 import dayjs from "dayjs";
 import { currentTerm } from "./helpers/currentTerm";
-import { useSisEmployeesQuery } from "./queries/useSisEmployeesQuery";
+import { useSisEmployeesQuery } from "@/queries/useSisEmployeesQuery";
 import { useSisSectionsQuery } from "./queries/useSisSectionsQuery";
 import { useSisTermsQuery } from "./queries/useSisTermsQuery";
 import { useTermPlanQuery } from "./queries/useTermPlanQuery";

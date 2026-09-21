@@ -189,6 +189,13 @@ export async function getPermissionsForSubgroupsOf(groupId: T.Group["id"]) {
   return res.data;
 }
 
+export async function fetchSisEmployeesForGroup(groupId: T.Group["id"]) {
+  const res = await axios.get<T.SisEmployee[]>(
+    `/api/sis/groups/${groupId}/employees`,
+  );
+  return res.data;
+}
+
 export async function getTermPayrollDates() {
   const res = await axios.get<T.TermPayrollDate[]>(`/api/terms/payrollDates`);
   return res.data;

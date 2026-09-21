@@ -24,6 +24,15 @@
   </div>
 
   <div class="tw-ml-auto tw-flex tw-flex-none tw-items-center tw-gap-2.5">
+    <Button
+      v-if="canCreateLeaves"
+      variant="secondary"
+      class="tw-text-xs"
+      @click="emit('createLeave')"
+    >
+      Create Leave
+    </Button>
+
     <button
       v-if="!isLarge"
       type="button"
@@ -74,12 +83,8 @@
       v-if="canViewCourses"
       type="button"
       :aria-pressed="isHistoryShown"
-      class="tw-flex tw-min-h-11 tw-cursor-pointer tw-items-center tw-gap-2 tw-whitespace-nowrap tw-rounded-full tw-border tw-border-solid tw-bg-surface-bright tw-py-1.5 tw-pl-2 tw-pr-3 tw-text-xs tw-font-semibold hover:tw-bg-surface roomy:tw-min-h-0"
-      :class="
-        isHistoryShown
-          ? 'tw-border-primary tw-text-primary'
-          : 'tw-border-outline tw-text-on-surface'
-      "
+      class="tw-flex tw-min-h-11 tw-cursor-pointer tw-items-center tw-gap-2 tw-whitespace-nowrap tw-rounded tw-border-none tw-bg-transparent tw-px-2 tw-py-1.5 tw-text-xs tw-font-semibold hover:tw-bg-surface roomy:tw-min-h-0"
+      :class="isHistoryShown ? 'tw-text-primary' : 'tw-text-on-surface'"
       @click="emit('toggleHistory')"
     >
       <span
@@ -114,6 +119,7 @@
 </template>
 
 <script setup lang="ts">
+import Button from "@/components/Button.vue";
 import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { pick } from "lodash-es";
@@ -131,6 +137,7 @@ const props = defineProps<{
   terms: PlanningTerm[];
   range: PlanningTermRange | null;
   canViewCourses: boolean;
+  canCreateLeaves: boolean;
   isHistoryShown: boolean;
   view: TeachingView;
   activeFilterCount: number;
@@ -138,6 +145,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
+  createLeave: [];
   openFilters: [];
   toggleHistory: [];
   selectView: [view: TeachingView];

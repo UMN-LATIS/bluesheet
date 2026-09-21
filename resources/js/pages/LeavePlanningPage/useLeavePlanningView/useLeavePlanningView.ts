@@ -6,6 +6,11 @@ import {
   selectActiveFilterCount,
   selectAxis,
   selectCourseHistory,
+  selectDraft,
+  selectIsDraftUnsaved,
+  selectIsDraftValid,
+  selectOpenLeaveId,
+  selectPanelMode,
   selectFacetTiles,
   selectIsHistoryShown,
   selectLeaveRows,
@@ -22,6 +27,7 @@ import { initialState, update } from "./update";
 import type {
   Effect,
   FilterFacet,
+  LeaveDraft,
   TeachingView,
   ViewContext,
   ViewEvent,
@@ -85,6 +91,12 @@ export function useLeavePlanningView(
     selectedSection: computed(() =>
       selectSelectedSection(context.value, state.value),
     ),
+    panelMode: computed(() => selectPanelMode(context.value, state.value)),
+    draft: computed(() => selectDraft(state.value)),
+    openLeaveId: computed(() => selectOpenLeaveId(state.value)),
+    isDraftUnsaved: computed(() => selectIsDraftUnsaved(state.value)),
+    isDraftValid: computed(() => selectIsDraftValid(state.value)),
+    pendingDismissal: computed(() => state.value.pendingDismissal),
 
     urlChanged: (query: UrlQuery) => dispatch({ type: "urlChanged", query }),
     selectRangeStart: (termCode: number) =>
@@ -105,5 +117,20 @@ export function useLeavePlanningView(
     selectSection: (sectionKey: string) =>
       dispatch({ type: "sectionSelected", sectionKey }),
     deselect: () => dispatch({ type: "deselected" }),
+    requestEdit: (draft: LeaveDraft) =>
+      dispatch({ type: "editRequested", draft }),
+    requestCreation: (
+      emplid: number | null,
+      startDate: string,
+      endDate: string,
+    ) => dispatch({ type: "creationRequested", emplid, startDate, endDate }),
+    editDraft: (change: Partial<LeaveDraft>) =>
+      dispatch({ type: "draftEdited", change }),
+    cancelDraft: () => dispatch({ type: "draftCancelled" }),
+    leavePersisted: (leaveId: number) =>
+      dispatch({ type: "leavePersisted", leaveId }),
+    leaveDeleted: () => dispatch({ type: "leaveDeleted" }),
+    confirmDismissal: () => dispatch({ type: "dismissalConfirmed" }),
+    cancelDismissal: () => dispatch({ type: "dismissalCancelled" }),
   });
 }

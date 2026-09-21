@@ -19,10 +19,12 @@ import {
   type FilterOption,
   type VisibleRecords,
 } from "../helpers/filterOptions";
+import { isEqual } from "lodash-es";
 import {
   FILTER_FACETS,
   HISTORY_FACETS,
   type FilterFacet,
+  type LeaveDraft,
   type PlanningFilters,
   type ViewContext,
   type ViewState,
@@ -292,4 +294,47 @@ export const selectSelectedSection = (
   if (!selectIsHistoryShown(context, state)) return null;
   const sections = context.teachingHistory?.sections ?? [];
   return sections.find(({ key }) => key === selection.sectionKey) ?? null;
+};
+
+/** What the panel is doing, which is what it renders from. */
+export type PanelMode =
+  | "closed"
+  | "readingLeave"
+  | "editingLeave"
+  | "creatingLeave"
+  | "readingSection";
+
+export const selectPanelMode = (
+  context: ViewContext,
+  state: ViewState,
+): PanelMode => {
+  if (state.editor?.kind === "creating") return "creatingLeave";
+  if (state.editor?.kind === "editing") return "editingLeave";
+  if (selectSelectedLeave(context, state)) return "readingLeave";
+  if (selectSelectedSection(context, state)) return "readingSection";
+  return "closed";
+};
+
+export const selectDraft = (state: ViewState): LeaveDraft | null =>
+  state.editor?.draft ?? null;
+
+export const selectIsDraftUnsaved = (state: ViewState): boolean =>
+  state.editor !== null && !isEqual(state.editor.draft, state.editor.opened);
+
+/** The leave whose permissions and artifacts the panel should load. */
+export const selectOpenLeaveId = (state: ViewState): number | null => {
+  if (state.editor?.kind === "editing") return state.editor.leaveId;
+  if (state.editor?.kind === "creating") return null;
+  return state.selection?.kind === "leave" ? state.selection.leaveId : null;
+};
+
+export const selectIsDraftValid = (state: ViewState): boolean => {
+  const draft = state.editor?.draft;
+  if (!draft) return false;
+
+  const hasDescription =
+    draft.description.trim() !== "" && draft.description.length <= 255;
+  const hasPerson = state.editor?.kind === "editing" || draft.emplid !== null;
+
+  return hasDescription && hasPerson && draft.endDate > draft.startDate;
 };

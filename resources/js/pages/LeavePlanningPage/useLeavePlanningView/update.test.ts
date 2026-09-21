@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { initialState, update } from "./update";
+import { leaveStatuses, leaveTypes } from "@/types";
 import type { ViewEvent, ViewState } from "./types";
 
 const after = (events: ViewEvent[], state: ViewState = initialState()) =>
@@ -170,5 +171,156 @@ describe("filters", () => {
     ]);
 
     expect(Object.values(state.filters).flat()).toEqual([]);
+  });
+});
+
+const savedDraft = {
+  emplid: 900,
+  description: "Fieldwork",
+  type: leaveTypes.SABBATICAL,
+  status: leaveStatuses.CONFIRMED,
+  startDate: "2026-09-01",
+  endDate: "2026-12-31",
+};
+
+describe("the editor", () => {
+  const openOnLeave = (leaveId: number) =>
+    after([{ type: "leaveSelected", leaveId }]);
+
+  const editing = (leaveId = 7) =>
+    after([{ type: "editRequested", draft: savedDraft }], openOnLeave(leaveId));
+
+  it("opens a selected leave for editing with the values it was given", () => {
+    const state = editing(7);
+
+    expect(state.editor).toEqual({
+      kind: "editing",
+      leaveId: 7,
+      draft: savedDraft,
+      opened: savedDraft,
+    });
+  });
+
+  it("refuses to edit when no leave is selected", () => {
+    const state = after([{ type: "editRequested", draft: savedDraft }]);
+
+    expect(state.editor).toBeNull();
+  });
+
+  it("opens a new leave on the dates the click named", () => {
+    const state = after([
+      {
+        type: "creationRequested",
+        emplid: 42,
+        startDate: "2026-08-31",
+        endDate: "2027-01-13",
+      },
+    ]);
+
+    expect(state.editor?.kind).toBe("creating");
+    expect(state.editor?.draft.emplid).toBe(42);
+    expect(state.editor?.draft.startDate).toBe("2026-08-31");
+    expect(state.selection).toBeNull();
+  });
+
+  it("keeps the untouched values as the baseline while the draft changes", () => {
+    const state = after(
+      [{ type: "draftEdited", change: { description: "Sabbatical" } }],
+      editing(7),
+    );
+
+    expect(state.editor?.draft.description).toBe("Sabbatical");
+    expect(state.editor?.opened.description).toBe("Fieldwork");
+  });
+
+  it("selects the created leave once the server has it", () => {
+    const state = after(
+      [
+        { type: "draftEdited", change: { description: "New" } },
+        { type: "leavePersisted", leaveId: 31 },
+      ],
+      after([
+        {
+          type: "creationRequested",
+          emplid: 42,
+          startDate: "2026-08-31",
+          endDate: "2027-01-13",
+        },
+      ]),
+    );
+
+    expect(state.selection).toEqual({ kind: "leave", leaveId: 31 });
+    expect(state.editor).toBeNull();
+  });
+
+  it("clears the panel after a delete", () => {
+    const state = after([{ type: "leaveDeleted" }], editing(7));
+
+    expect(state.selection).toBeNull();
+    expect(state.editor).toBeNull();
+  });
+});
+
+describe("discarding an unsaved draft", () => {
+  const dirtyEditorOn = (leaveId: number) => {
+    return after(
+      [
+        { type: "editRequested", draft: savedDraft },
+        { type: "draftEdited", change: { description: "Changed" } },
+      ],
+      after([{ type: "leaveSelected", leaveId }]),
+    );
+  };
+
+  it("holds a selection change rather than dropping the draft", () => {
+    const state = after(
+      [{ type: "leaveSelected", leaveId: 9 }],
+      dirtyEditorOn(7),
+    );
+
+    expect(state.pendingDismissal).toEqual({
+      type: "leaveSelected",
+      leaveId: 9,
+    });
+    expect(state.selection).toEqual({ kind: "leave", leaveId: 7 });
+    expect(state.editor?.draft.description).toBe("Changed");
+  });
+
+  it("lets an untouched draft go without asking", () => {
+    const state = after(
+      [
+        { type: "editRequested", draft: savedDraft },
+        { type: "leaveSelected", leaveId: 9 },
+      ],
+      after([{ type: "leaveSelected", leaveId: 7 }]),
+    );
+
+    expect(state.pendingDismissal).toBeNull();
+    expect(state.selection).toEqual({ kind: "leave", leaveId: 9 });
+  });
+
+  it("keeps the draft exactly as it was when the reader backs out", () => {
+    const held = dirtyEditorOn(7);
+    const asked = after([{ type: "leaveSelected", leaveId: 9 }], held);
+    const state = after([{ type: "dismissalCancelled" }], asked);
+
+    expect(state.pendingDismissal).toBeNull();
+    expect(state.editor).toEqual(held.editor);
+    expect(state.selection).toEqual({ kind: "leave", leaveId: 7 });
+  });
+
+  it("runs the held event and writes its URL once the reader confirms", () => {
+    const asked = after(
+      [{ type: "leaveSelected", leaveId: 9 }],
+      dirtyEditorOn(7),
+    );
+    const { state, effects } = update(asked, { type: "dismissalConfirmed" });
+
+    expect(state.selection).toEqual({ kind: "leave", leaveId: 9 });
+    expect(state.editor).toBeNull();
+    expect(state.pendingDismissal).toBeNull();
+    expect(effects).toEqual([
+      { type: "replaceUrlQuery", query: { leaveId: "9" } },
+    ]);
   });
 });

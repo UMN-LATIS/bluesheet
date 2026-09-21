@@ -3,6 +3,8 @@
 namespace App\Policies;
 
 use App\Constants\Permissions;
+use App\Leave;
+use App\LocalCourse;
 use App\User;
 use App\Group;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -37,5 +39,15 @@ class GroupPolicy
     {
         return $user->can(Permissions::CREATE_GROUPS)
             || ($maybeParentGroup && $user->managesGroup($maybeParentGroup));
+    }
+
+    /**
+     * Restating these two globals here instead lets the
+     * roster drift from what either planner itself allows.
+     */
+    public function viewRoster(User $user, Group $group): bool
+    {
+        return $user->can('viewAnyCoursesForGroup', [LocalCourse::class, $group])
+            || $user->can('viewAnyLeavesForGroup', [Leave::class, $group]);
     }
 }

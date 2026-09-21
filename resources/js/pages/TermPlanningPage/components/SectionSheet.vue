@@ -575,13 +575,14 @@ import PersonLeaveChip from "./PersonLeaveChip.vue";
 import SectionFacts from "./SectionFacts.vue";
 import SegmentedControl, { type SegmentedOption } from "./SegmentedControl.vue";
 import { ComboBox, type ComboBoxOptionType } from "@/components/ComboBox";
+import { lastNameFirst } from "@/utils/lastNameFirst";
+import type { SisEmployee } from "@/types";
 import { LockIcon } from "@/icons";
 import { colorOfType, labelOfComponent } from "@/utils/meetingTypeColors";
 import { DELIVERY_OPTIONS, labelOfDelivery } from "../constants/delivery";
 import {
   assistantsOf,
   instructorsOfRecord,
-  lastNameFirst,
   PRIMARY_ROLE,
   TA_ROLE,
 } from "../helpers/sectionPeople";
@@ -594,7 +595,6 @@ import type {
   PlannableCourse,
   PlannedSection,
   SisDay,
-  SisEmployee,
   SisSectionMeeting,
 } from "../types";
 import type { TermLeave } from "@/types";

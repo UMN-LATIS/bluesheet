@@ -280,7 +280,7 @@ import { buildFilterOptions } from "./helpers/filterOptions";
 import { leavesByEmplid } from "./helpers/leavesByEmplid";
 import { reachableFacetValues } from "./helpers/scheduleFilters";
 import { ASYNC_DAY_INDEX, WEEKDAY_NAMES } from "./helpers/scheduleDays";
-import { refusalMessage } from "./helpers/refusalMessage";
+import { refusalMessage } from "@/utils/refusalMessage";
 import { formatTimeRange } from "./helpers/timeScale";
 import { toSectionPayload } from "./helpers/sectionPayload";
 import { flattenQuery } from "@/utils/urlQuery";

@@ -5,6 +5,8 @@
     :name="lastFirstNameOf(row.person)"
     :detail="row.person.title"
     :height="row.height"
+    :isTrackClickable="canCreateLeaves"
+    @clickTrack="(fraction) => emit('createLeave', row.person.emplid, fraction)"
   >
     <LeaveBar
       v-for="{ item, lane } in row.itemsWithLane"
@@ -41,9 +43,13 @@ const props = defineProps<{
   axis: TimelineAxis;
   selectedLeaveId: number | null;
   emptyMessage: string;
+  canCreateLeaves: boolean;
 }>();
 
-const emit = defineEmits<{ selectLeave: [leaveId: number] }>();
+const emit = defineEmits<{
+  selectLeave: [leaveId: number];
+  createLeave: [emplid: number, fraction: number];
+}>();
 
 const LANE_HEIGHT = 30;
 const BAR_HEIGHT = 24;

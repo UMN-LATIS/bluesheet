@@ -42,7 +42,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import Modal from "@/components/Modal.vue";
-import { refusalMessage } from "../helpers/refusalMessage";
+import { refusalMessage } from "@/utils/refusalMessage";
 import { useSectionBatch } from "../queries/useSectionBatch";
 
 const props = defineProps<{

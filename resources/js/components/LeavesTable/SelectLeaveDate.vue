@@ -58,6 +58,7 @@ import { ComboBox, ComboBoxOptionType } from "@/components/ComboBox";
 import InputGroup from "../InputGroup.vue";
 import Button from "../Button.vue";
 import dayjs from "dayjs";
+import * as T from "@/types";
 import { useTermPayrollDatesStore } from "@/stores/useTermPayrollDateStore";
 import XIcon from "@/icons/XIcon.vue";
 
@@ -68,6 +69,9 @@ const props = withDefaults(
     isOptionDisabled?: (opt: ComboBoxOptionType) => boolean;
     validator?: (value: unknown) => boolean;
     errorText?: string;
+    /** Callers already holding the dates pass them rather than
+     * waking the Pinia store a second time. */
+    payrollDates?: T.TermPayrollDate[];
   }>(),
   {
     modelValue: "",
@@ -75,6 +79,7 @@ const props = withDefaults(
     isOptionDisabled: () => false,
     validator: () => true,
     errorText: "",
+    payrollDates: undefined,
   },
 );
 
@@ -85,8 +90,13 @@ defineEmits<{
 const showCustomDateInput = ref(false);
 const termPayrollDatesStore = useTermPayrollDatesStore();
 onMounted(async () => {
+  if (props.payrollDates) return;
   await termPayrollDatesStore.init();
 });
+
+const payrollDates = computed(
+  () => props.payrollDates ?? termPayrollDatesStore.termPayrollDates,
+);
 
 const isCustomDate = computed(
   () =>
@@ -95,7 +105,7 @@ const isCustomDate = computed(
 );
 
 const comboboxOptions = computed(() => {
-  return termPayrollDatesStore.termPayrollDates
+  return payrollDates.value
     .map((termPayrollDate) => {
       const date =
         props.variant === "start"

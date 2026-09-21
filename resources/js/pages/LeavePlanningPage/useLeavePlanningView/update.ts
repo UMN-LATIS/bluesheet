@@ -1,7 +1,10 @@
 import { isEqual } from "lodash-es";
+import { leaveStatuses, leaveTypes } from "@/types";
 import {
   HISTORY_FACETS,
+  type Editor,
   type FilterFacet,
+  type LeaveDraft,
   type Next,
   type PlanningFilters,
   type ViewEvent,
@@ -22,9 +25,48 @@ export const initialState = (): ViewState => ({
   filters: defaultFilters(),
   activeFacet: "person",
   selection: null,
+  editor: null,
+  pendingDismissal: null,
+});
+
+const DISCARDS_DRAFT: ViewEvent["type"][] = [
+  "leaveSelected",
+  "sectionSelected",
+  "deselected",
+  "creationRequested",
+  "urlChanged",
+];
+
+const isUnsaved = (editor: Editor | null): boolean =>
+  editor !== null && !isEqual(editor.draft, editor.opened);
+
+export const draftFor = (
+  emplid: number | null,
+  startDate: string,
+  endDate: string,
+): LeaveDraft => ({
+  emplid,
+  description: "",
+  type: leaveTypes.SABBATICAL,
+  status: leaveStatuses.PENDING,
+  startDate,
+  endDate,
 });
 
 export function update(state: ViewState, event: ViewEvent): Next {
+  // Releasing the held event through `reduce` instead skips
+  // the effect below, so confirming a discard changes the
+  // selection without writing it to the URL.
+  if (event.type === "dismissalConfirmed") {
+    const held = state.pendingDismissal;
+    if (held === null) return { state, effects: [] };
+    return update({ ...state, editor: null, pendingDismissal: null }, held);
+  }
+
+  if (isUnsaved(state.editor) && DISCARDS_DRAFT.includes(event.type)) {
+    return { state: { ...state, pendingDismissal: event }, effects: [] };
+  }
+
   const nextState = reduce(state, event);
 
   if (event.type === "urlChanged") return { state: nextState, effects: [] };
@@ -49,7 +91,8 @@ function reduce(state: ViewState, event: ViewEvent): ViewState {
 
     case "rangeStartSelected": {
       const { endTermCode } = state.range;
-      const isEndBeforeStart = endTermCode !== null && endTermCode < event.termCode;
+      const isEndBeforeStart =
+        endTermCode !== null && endTermCode < event.termCode;
       return {
         ...state,
         range: {
@@ -106,16 +149,68 @@ function reduce(state: ViewState, event: ViewEvent): ViewState {
     }
 
     case "leaveSelected":
-      return { ...state, selection: { kind: "leave", leaveId: event.leaveId } };
+      return {
+        ...state,
+        selection: { kind: "leave", leaveId: event.leaveId },
+        editor: null,
+      };
 
     case "sectionSelected":
       return {
         ...state,
         selection: { kind: "section", sectionKey: event.sectionKey },
+        editor: null,
       };
 
     case "deselected":
-      return { ...state, selection: null };
+      return { ...state, selection: null, editor: null };
+
+    case "editRequested": {
+      if (state.selection?.kind !== "leave") return state;
+      return {
+        ...state,
+        editor: {
+          kind: "editing",
+          leaveId: state.selection.leaveId,
+          draft: event.draft,
+          opened: event.draft,
+        },
+      };
+    }
+
+    case "creationRequested": {
+      const draft = draftFor(event.emplid, event.startDate, event.endDate);
+      return {
+        ...state,
+        selection: null,
+        editor: { kind: "creating", draft, opened: draft },
+      };
+    }
+
+    case "draftEdited": {
+      if (state.editor === null) return state;
+      const draft = { ...state.editor.draft, ...event.change };
+      return { ...state, editor: { ...state.editor, draft } };
+    }
+
+    case "draftCancelled":
+      return { ...state, editor: null };
+
+    case "leavePersisted":
+      return {
+        ...state,
+        editor: null,
+        selection: { kind: "leave", leaveId: event.leaveId },
+      };
+
+    case "leaveDeleted":
+      return { ...state, editor: null, selection: null };
+
+    case "dismissalConfirmed":
+      return state;
+
+    case "dismissalCancelled":
+      return { ...state, pendingDismissal: null };
   }
 }
 
