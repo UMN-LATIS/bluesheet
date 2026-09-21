@@ -205,6 +205,7 @@ export function useScheduleEditor(
       dispatch({ type: "sectionEditsPersisted", sectionId, saved }),
 
     /* Creating and deleting, which the sheet drives. */
+    startCreatingSection: () => dispatch({ type: "sectionCreationRequested" }),
     markSectionCreated: (sectionId: number) =>
       dispatch({ type: "sectionCreated", sectionId }),
     discardNewSection: () => dispatch({ type: "newSectionDiscarded" }),

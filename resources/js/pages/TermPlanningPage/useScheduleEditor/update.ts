@@ -653,6 +653,19 @@ function reduce(
         selection: { kind: "section", sectionId: event.sectionId },
       };
 
+    case "sectionCreationRequested":
+      return {
+        ...state,
+        drafts: {
+          ...state.drafts,
+          // Keeping what is there makes a second press a no-op. Writing `{}`
+          // instead wipes the times off a rectangle already drawn out, and
+          // "keeps the times of a rectangle already drawn out" fails.
+          [NEW_SECTION_ID]: state.drafts[NEW_SECTION_ID] ?? {},
+        },
+        selection: { kind: "section", sectionId: NEW_SECTION_ID },
+      };
+
     case "newSectionDiscarded":
       return { ...withoutDraft(state, NEW_SECTION_ID), selection: null };
 

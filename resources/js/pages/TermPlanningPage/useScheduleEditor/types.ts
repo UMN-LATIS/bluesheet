@@ -251,6 +251,12 @@ export type EditorEvent =
    * stood for it can go and the sheet can reopen on the real thing.
    */
   | { type: "sectionCreated"; sectionId: number }
+  /**
+   * Create Section was pressed, rather than a rectangle drawn on the grid, so
+   * the new section starts with no meeting times and the sheet is where it
+   * gets them.
+   */
+  | { type: "sectionCreationRequested" }
   /** The sheet closed on a section that was never created. */
   | { type: "newSectionDiscarded" }
   /**

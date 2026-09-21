@@ -998,6 +998,50 @@ describe("days and times in the sheet", () => {
   });
 });
 
+describe("Create Section", () => {
+  it("opens the sheet on a section with no meeting times", () => {
+    const state = after([{ type: "sectionCreationRequested" }]);
+
+    expect(selectIsNewSectionSelected(state)).toBe(true);
+    expect(drawn(state)).toBeUndefined();
+  });
+
+  it("keeps the times of a rectangle already drawn out", () => {
+    const state = after([
+      ...draw(0, 540, 590),
+      { type: "sectionCreationRequested" },
+    ]);
+
+    expect(drawn(state)).toEqual([
+      { days: ["mon"], startTime: "09:00", endTime: "09:50" },
+    ]);
+  });
+
+  it("asks before dropping edits to a section already open", () => {
+    const section = plannedSection(1, []);
+    const context = contextOf(section);
+    const editing = after(
+      [
+        { type: "selectedSection", sectionId: 1 },
+        { type: "sectionFieldEdited", sectionId: 1, change: { notes: "hi" } },
+      ],
+      initialState(),
+      context,
+    );
+
+    const asked = update(
+      editing,
+      { type: "sectionCreationRequested" },
+      context,
+    ).state;
+
+    expect(asked.pendingDismissal?.event).toEqual({
+      type: "sectionCreationRequested",
+    });
+    expect(selectIsNewSectionSelected(asked)).toBe(false);
+  });
+});
+
 describe("a read-only term", () => {
   const section = plannedSection(1, [
     { days: ["mon"], startTime: "09:00", endTime: "09:50" },
@@ -1010,6 +1054,13 @@ describe("a read-only term", () => {
 
   const locked = (events: EditorEvent[]) =>
     after(events, initialState(), lockedContext);
+
+  it("refuses Create Section", () => {
+    const state = locked([{ type: "sectionCreationRequested" }]);
+
+    expect(selectIsNewSectionSelected(state)).toBe(false);
+    expect(state.drafts).toEqual({});
+  });
 
   it("refuses an edit to a section", () => {
     const state = locked([

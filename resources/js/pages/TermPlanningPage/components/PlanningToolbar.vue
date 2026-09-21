@@ -85,6 +85,15 @@
       Import
     </button>
 
+    <Button
+      v-if="!isReadOnly"
+      variant="secondary"
+      class="tw-whitespace-nowrap tw-text-xs"
+      @click="emit('createSection')"
+    >
+      Create Section
+    </Button>
+
     <MoreMenu v-if="!isReadOnly && plannedSectionCount > 0">
       <MoreMenuItem
         class="tw-whitespace-nowrap tw-text-red-600"
@@ -114,6 +123,7 @@ import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { omit, pick } from "lodash-es";
 import { LockIcon } from "@/icons";
+import Button from "@/components/Button.vue";
 import { MoreMenu, MoreMenuItem } from "@/components/MoreMenu";
 import { useGroupQuery } from "../queries/useGroupQuery";
 import { useSisGroupsQuery } from "../queries/useSisGroupsQuery";
@@ -136,6 +146,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   selectView: [view: ScheduleView];
+  createSection: [];
   openImport: [];
   deleteAll: [];
 }>();
