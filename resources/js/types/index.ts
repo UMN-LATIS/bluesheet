@@ -212,15 +212,10 @@ export interface Leave {
   start_date: ISODate;
   end_date: ISODate;
   artifacts?: LeaveArtifact[];
-  termIds?: Term["id"][]; // leave overlaps with these terms
   created_at: ISODateTime;
   updated_at: ISODateTime;
   deleted_at?: ISODateTime | null;
   canCurrentUser?: ApiResourceItemPermissions;
-}
-
-export interface LeaveWithPerson extends Leave {
-  person: Person;
 }
 
 /**
@@ -251,107 +246,7 @@ export interface NewLeave {
   artifacts?: LeaveArtifact[];
 }
 
-export interface Term {
-  id: number;
-  name: string;
-  startDate: ISODate;
-  endDate: ISODate;
-}
-
 export type TermCode = "FA" | "SP" | "SU";
-
-export const enrollmentRoleMap = {
-  PI: "Instructor", // Primary Instructor
-  TA: "Teaching Assistant",
-} as const;
-
-export type EnrollmentRole = keyof typeof enrollmentRoleMap;
-
-export interface Person {
-  id: User["id"];
-  emplid: number;
-  title: string;
-  jobCodes: string[];
-  hasActiveDeptAppointment: boolean;
-  givenName: string;
-  surName: string;
-  displayName: string;
-  email: string;
-  academicAppointments: string[]; // ["Faculty", "Staff"]
-  leaveIds: Leave["id"][];
-  midcareerEligible: boolean;
-  sslEligible: boolean;
-  sslApplyEligible: boolean;
-}
-
-export interface Enrollment {
-  id: `${Person["emplid"]}_${CourseSection["id"]}`;
-  dbId: number | null;
-  emplid: Person["emplid"];
-  sectionId: CourseSection["id"];
-  sectionDbId: CourseSection["dbId"];
-  role: EnrollmentRole;
-}
-
-export interface AcademicDepartment {
-  groupId: Group["id"];
-  deptId: number;
-  name: string;
-  abbreviation: string;
-}
-
-export interface CourseSection {
-  id: `${Course["id"]}-${CourseSection["classSection"]}-${Term["id"]}`;
-  classNumber: ApiCourseSectionRecord["classNumber"];
-  dbId: ApiCourseSectionRecord["dbId"];
-  courseId: Course["id"]; // short code like "HIST-1001W"
-  termId: Term["id"];
-  classSection: string; // "001"
-  waitlistCap: number;
-  waitlistTotal: number;
-  enrollmentCap: number;
-  enrollmentTotal: number;
-  isCancelled: boolean;
-  isPublished: boolean; // true if from bandaid, false if from app DB
-  groupId: Group["id"];
-  source: "sis" | "local";
-}
-
-export interface CourseSectionWithEnrollments extends CourseSection {
-  enrollments: Enrollment[];
-}
-
-export type CourseShortCode = `${Course["subject"]}-${Course["catalogNumber"]}`;
-
-export interface Course {
-  id: CourseShortCode; // subject-catalogNumber
-  courseCode: CourseShortCode;
-  subject: string; // HIST
-  catalogNumber: string; // "1001W"
-  title: string; // course name
-  courseType: string; // "LEC"
-  courseLevel: string; //"UGRD" | "GRAD";
-  source: "sis" | "local";
-}
-
-type CourseSectionId =
-  `${Course["id"]}-${CourseSection["classSection"]}-${Term["id"]}`;
-
-export interface ApiCourseSectionRecord {
-  id: CourseSectionId;
-  classNumber: number | null; // null if from db
-  dbId: number | null; // null if from sis (bandaid)
-  termId: number;
-  courseId: CourseShortCode; // subject-catalogNumber
-  classSection: string; // "001"
-  enrollmentCap: number;
-  enrollmentTotal: number;
-  waitlistCap: number;
-  waitlistTotal: number;
-  enrollments: Enrollment[];
-  isCancelled: boolean;
-  isPublished: boolean; // true if from bandaid,
-}
 
 // api response types
 export interface ApiUserResponse extends BaseUser {
@@ -365,9 +260,6 @@ export interface ApiUserLookupResponse {
   items: UserLookupItem[];
 }
 
-// used for api requests via Bandaid
-export type InstructorRole = EnrollmentRole;
-
 export type LoadState = "idle" | "loading" | "complete" | "error";
 
 export interface CustomAxiosRequestConfig extends AxiosRequestConfig {
@@ -377,110 +269,6 @@ export interface CustomAxiosRequestConfig extends AxiosRequestConfig {
 export interface SelectOption {
   text: string;
   value: string | number;
-}
-
-export type DragDropMeta = Record<string, unknown>;
-
-export interface DropEvent<
-  ItemType,
-  MetaDataType extends DragDropMeta = DragDropMeta,
-> {
-  item: ItemType;
-  sourceListId: DragListId;
-  targetListId: DragListId;
-  sourceListMeta: MetaDataType;
-  targetListMeta: MetaDataType;
-}
-
-export interface DragListItem {
-  id: number | string;
-  [key: string]: unknown;
-}
-
-export type DragListId = string | number;
-
-export interface CoursePlanningFilters {
-  startTermId: number | null;
-  endTermId: number | null;
-  excludedCourseLevels: Set<string>;
-  excludedCourseTypes: Set<string>;
-  excludedAcadAppts: Set<string>;
-  minSectionEnrollment: number;
-  includedEnrollmentRoles: Set<EnrollmentRole>;
-  onlyActiveAppointments: boolean;
-  search: string;
-  inPlanningMode: boolean;
-}
-
-export interface SerializedCoursePlanningFilters {
-  startTermId: number | null;
-  endTermId: number | null;
-  excludedCourseLevels: string[];
-  excludedCourseTypes: string[];
-  excludedAcadAppts: string[];
-  minSectionEnrollment: number;
-  includedEnrollmentRoles: EnrollmentRole[];
-  onlyActiveAppointments: boolean;
-  search: string;
-  inPlanningMode: boolean;
-}
-
-export interface JoinedEnrollmentRecord {
-  id: Enrollment["id"];
-  person: Person;
-  enrollment: Enrollment;
-  section: CourseSection;
-  course: Course;
-  term: Term;
-}
-
-export interface CoursePlanningLookups {
-  personLookupByEmplid: Record<Person["emplid"], Person>;
-  personLookupByUserId: Record<Person["id"], Person>;
-  termLookup: Record<Term["id"], Term>;
-  courseLookup: Record<Course["id"], Course>;
-  sectionLookup: Record<CourseSection["id"], CourseSection>;
-  enrollmentLookup: Record<Enrollment["id"], Enrollment>;
-  leaveLookup: Record<Leave["id"], Leave>;
-}
-
-export interface PersonTableTermRecord {
-  term: Term;
-  enrollments: JoinedEnrollmentRecord[];
-  leaves: Leave[];
-}
-
-export type PersonTableRow = [Person, ...PersonTableTermRecord[]];
-
-export interface PersonSpreadsheetRowRecord {
-  id: string; // emplid
-  surName: Person["surName"];
-  givenName: Person["givenName"];
-  academicAppointments: string; // joined academic appointments
-  [termName: string]: string; // concatenated list of leaves and enrollments
-}
-
-export interface TermLeaves {
-  term: Term;
-  leaves: LeaveWithPerson[];
-}
-
-export type LeaveRow = ["leaves", ...TermLeaves[]];
-
-// TODO: make this the same shape as PersonTableTermRecord
-export interface CourseTableTermRecord {
-  term: Term;
-  joinedEnrollments: JoinedEnrollmentRecord[];
-}
-
-export type CourseTableRow = [Course, ...CourseTableTermRecord[]];
-
-export interface CourseSpreadsheetRowRecord {
-  id: string; // course id
-  title: string;
-  courseLevel: string;
-  courseType: string;
-  [termName: string]: string; // concatenated list of people
 }
 
 export type SpreadsheetRecords = Record<string, string | number>[];
@@ -530,3 +318,4 @@ export interface TermPayrollDate {
   payroll_start_date: ISODate;
   payroll_end_date: ISODate;
 }
+export * from "./leavePlanning";

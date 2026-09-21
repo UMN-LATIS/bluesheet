@@ -21,7 +21,7 @@ class LocalSectionResource extends JsonResource {
             'id' => $this->id,
             // the SIS assigns class numbers, and it has not seen this section
             'classNumber' => null,
-            'termId' => $this->term_code,
+            'termCode' => $this->term_code,
             'courseCode' => $this->course_code,
             'subject' => $this->subject,
             'catalogNumber' => $this->catalog_number,

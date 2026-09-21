@@ -1,5 +1,8 @@
 <template>
-  <FullScreenLayout>
+  <FullScreenLayout
+    :backRoute="{ name: 'group', params: { groupId } }"
+    backLabel="Back to group"
+  >
     <template #bar>
       <PlanningToolbar
         :groupId="groupId"
@@ -134,7 +137,7 @@
         :termCode="activeTermCode"
         :termName="term?.name ?? ''"
         :isTermEmpty="isTermEmpty"
-        :suggestedSourceTermId="suggestedSourceTerm?.id ?? null"
+        :suggestedSourceTermCode="suggestedSourceTerm?.termCode ?? null"
         @close="isImportOpen = false"
         @imported="onImported"
       />
@@ -149,7 +152,14 @@
         @deleted="onDeletedAll"
       />
 
-      <SheetMount v-if="schedule.openHour || selectedSection">
+      <SheetMount
+        v-if="
+          schedule.openHour ||
+          selectedSection ||
+          selectedLeave ||
+          isSelectedLeaveLoading
+        "
+      >
         <HourSheet
           v-if="schedule.openHour"
           :dayIndex="schedule.openHour.dayIndex"
@@ -178,6 +188,21 @@
           @create="createDrawnSection"
           @discard="schedule.discardNewSection"
           @delete="deleteSelectedSection"
+        />
+        <LeavePanel
+          v-else-if="selectedLeave"
+          :leave="selectedLeave"
+          :person="selectedLeavePerson"
+          :otherLeaves="otherLeavesOfSelectedLeave"
+          :terms="termsOverlappingSelectedLeave"
+          :groupId="groupId"
+          canViewTermPlanning
+          @close="schedule.deselect"
+          @selectLeave="schedule.selectLeave"
+        />
+        <LeavePanelLoading
+          v-else-if="isSelectedLeaveLoading"
+          @close="schedule.deselect"
         />
       </SheetMount>
 
@@ -211,7 +236,11 @@
     <TermLeaveStrip
       v-if="termLeaves.length > 0"
       :leaves="termLeaves"
+      :groupId="groupId"
+      :termCode="activeTermCode"
+      :selectedLeaveId="schedule.selectedLeaveId"
       class="tw-flex-none tw-border-0 tw-border-t tw-border-solid tw-border-outline-variant"
+      @select="schedule.selectLeave"
     />
   </FullScreenLayout>
 </template>
@@ -228,6 +257,8 @@ import { useEventListener } from "@vueuse/core";
 import { omit } from "lodash-es";
 import FullScreenLayout from "@/layouts/FullScreenLayout.vue";
 import Notification from "@/components/Notification.vue";
+import LeavePanel from "@/components/planning/LeavePanel.vue";
+import LeavePanelLoading from "@/components/planning/LeavePanelLoading.vue";
 import CoverageHeatmap from "./components/CoverageHeatmap.vue";
 import DayView from "./components/DayView.vue";
 import DeleteAllModal from "./components/DeleteAllModal.vue";
@@ -236,7 +267,7 @@ import ImportBanner from "./components/ImportBanner.vue";
 import ImportModal, { type ImportResult } from "./components/ImportModal.vue";
 import HourSheet, { type HourEntry } from "./components/HourSheet.vue";
 import MeetingTimes from "./components/MeetingTimes.vue";
-import Pane from "./components/Pane.vue";
+import Pane from "@/components/planning/Pane.vue";
 import PlanningToolbar from "./components/PlanningToolbar.vue";
 import ScheduleGrid from "./components/ScheduleGrid.vue";
 import ScheduleSidebar from "./components/ScheduleSidebar.vue";
@@ -252,10 +283,12 @@ import { ASYNC_DAY_INDEX, WEEKDAY_NAMES } from "./helpers/scheduleDays";
 import { refusalMessage } from "./helpers/refusalMessage";
 import { formatTimeRange } from "./helpers/timeScale";
 import { toSectionPayload } from "./helpers/sectionPayload";
-import { flattenQuery } from "./helpers/urlQuery";
+import { flattenQuery } from "@/utils/urlQuery";
+import { termsOverlapping } from "@/utils/termsOverlapping";
 import type { ScheduleView } from "./helpers/viewQuery";
 import { useSisGroupTermsQuery } from "./queries/useSisGroupTermsQuery";
 import { useSisGroupLeavesQuery } from "./queries/useSisGroupLeavesQuery";
+import { useTermLeaveTimelineQuery } from "./queries/useTermLeaveTimelineQuery";
 import { useTermPlanCoursesQuery } from "./queries/useTermPlanCoursesQuery";
 import { useSectionBatch } from "./queries/useSectionBatch";
 import { useTermPlanMutations } from "./queries/useTermPlanMutations";
@@ -265,7 +298,7 @@ import { useScheduleEditor } from "./useScheduleEditor";
 import { NEW_SECTION_ID } from "./useScheduleEditor/types";
 import type { Effect } from "./useScheduleEditor/types";
 import { EDITOR_QUERY_KEYS } from "./useScheduleEditor/update";
-import { useScreenSize } from "./useScreenSize";
+import { useScreenSize } from "@/utils/useScreenSize";
 import { useTermSchedule } from "./useTermSchedule";
 
 const props = defineProps<{
@@ -337,7 +370,9 @@ const suggestedSourceTerm = computed(() => {
   const aYearBack = activeTermCode.value - TERM_CODE_YEAR_STEP;
 
   return (
-    (groupTermsQuery.data.value ?? []).find((term) => term.id === aYearBack) ??
+    (groupTermsQuery.data.value ?? []).find(
+      (term) => term.termCode === aYearBack,
+    ) ??
     null
   );
 });
@@ -465,7 +500,7 @@ const newSection = computed<PlannedSection | null>(() => {
   return {
     id: NEW_SECTION_ID,
     classNumber: null,
-    termId: activeTermCode.value,
+    termCode: activeTermCode.value,
     courseCode: "",
     subject: "",
     catalogNumber: "",
@@ -682,5 +717,42 @@ const selectedSection = computed(() => {
     localSections.value.find(({ id }) => id === schedule.selectedSectionId) ??
     null
   );
+});
+
+const leaveTimelineQuery = useTermLeaveTimelineQuery(
+  groupId,
+  activeTermCode,
+  computed(() => schedule.selectedLeaveId !== null),
+);
+
+const isSelectedLeaveLoading = computed(
+  () => schedule.selectedLeaveId !== null && leaveTimelineQuery.isLoading.value,
+);
+
+const selectedLeave = computed(
+  () =>
+    leaveTimelineQuery.data.value?.leaves.find(
+      ({ id }) => id === schedule.selectedLeaveId,
+    ) ?? null,
+);
+
+const selectedLeavePerson = computed(() =>
+  leaveTimelineQuery.data.value?.people.find(
+    ({ emplid }) => emplid === selectedLeave.value?.emplid,
+  ),
+);
+
+const otherLeavesOfSelectedLeave = computed(() => {
+  const leave = selectedLeave.value;
+  if (!leave) return [];
+
+  return (leaveTimelineQuery.data.value?.leaves ?? []).filter(
+    (other) => other.emplid === leave.emplid && other.id !== leave.id,
+  );
+});
+
+const termsOverlappingSelectedLeave = computed(() => {
+  const leave = selectedLeave.value;
+  return leave ? termsOverlapping(termOptions.value, leave) : [];
 });
 </script>

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Group;
-use App\Course;
+use App\LocalCourse;
 use Illuminate\Http\Request;
 
 class CoursePermissionController extends Controller {
@@ -11,8 +11,8 @@ class CoursePermissionController extends Controller {
         abort_if(!$request->user(), 401);
 
         return [
-            'viewAny' => $request->user()->can('viewAnyCoursesForGroup', [Course::class, $group]),
-            'create' => $request->user()->can('editAnyCoursesForGroup', [Course::class, $group]),
+            'viewAny' => $request->user()->can('viewAnyCoursesForGroup', [LocalCourse::class, $group]),
+            'create' => $request->user()->can('editAnyCoursesForGroup', [LocalCourse::class, $group]),
         ];
     }
 }

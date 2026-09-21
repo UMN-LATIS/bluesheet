@@ -1,0 +1,120 @@
+<?php
+
+namespace App\Library\LeavePlanning;
+
+use App\Library\Sis\Crosslist;
+use App\LocalClassInstructor;
+use App\LocalClassSection;
+use App\SisClassInstructor;
+use App\SisClassSection;
+use App\SisTerm;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
+
+class TeachingHistory {
+    private const INDEPENDENT_STUDY = 'IND';
+
+    /**
+     * @return Collection<int, array>
+     *   sorted by term, course, then section
+     */
+    public static function sectionsBetween(
+        int $academicOrg,
+        int $startTermCode,
+        int $endTermCode,
+        Collection $readOnlyTermCodes,
+    ): Collection {
+        return self::publishedSections($academicOrg, $readOnlyTermCodes)
+            ->concat(self::plannedSections($academicOrg, $startTermCode, $endTermCode, $readOnlyTermCodes))
+            ->sortBy(fn(array $section) => [
+                $section['termCode'],
+                $section['subject'],
+                $section['catalogNumber'],
+                $section['section'],
+            ])
+            ->values();
+    }
+
+    private static function publishedSections(int $academicOrg, Collection $readOnlyTermCodes): Collection {
+        return SisClassSection::query()
+            ->where('academic_org', $academicOrg)
+            ->whereIn('term_code', $readOnlyTermCodes)
+            ->whereIn('term_code', self::undergradTermCodes())
+            ->where('is_cancelled', false)
+            ->where('component', '!=', self::INDEPENDENT_STUDY)
+            ->with('instructors')
+            ->get()
+            ->map(fn(SisClassSection $section) => [
+                ...self::sharedFields($section),
+                'career' => $section->academic_career,
+                'enrollmentTotal' => $section->enrollment_total,
+                'isPlanned' => false,
+                'crosslist' => Crosslist::describe($section),
+            ]);
+    }
+
+    private static function plannedSections(
+        int $academicOrg,
+        int $startTermCode,
+        int $endTermCode,
+        Collection $readOnlyTermCodes,
+    ): Collection {
+        return LocalClassSection::query()
+            ->where('academic_org', $academicOrg)
+            ->whereBetween('term_code', [$startTermCode, $endTermCode])
+            ->whereIn('term_code', self::undergradTermCodes())
+            ->whereNotIn('term_code', $readOnlyTermCodes)
+            ->where('is_cancelled', false)
+            ->where('component', '!=', self::INDEPENDENT_STUDY)
+            ->with('instructors')
+            ->get()
+            ->map(fn(LocalClassSection $section) => [
+                ...self::sharedFields($section),
+                'career' => null,
+                'enrollmentTotal' => null,
+                'isPlanned' => true,
+                'crosslist' => null,
+            ]);
+    }
+
+    /**
+     * The terms the page can draw. A term code outside this set has no band on
+     * the timeline axis, and one whose last digit is not 3, 5, or 9 makes
+     * `keyOf` throw.
+     */
+    private static function undergradTermCodes(): Builder {
+        return SisTerm::undergrad()->select('term_code');
+    }
+
+    private static function sharedFields(SisClassSection|LocalClassSection $section): array {
+        return [
+            'key' => self::keyOf($section),
+            'termCode' => $section->term_code,
+            'courseCode' => $section->course_code,
+            'subject' => $section->subject,
+            'catalogNumber' => $section->catalog_number,
+            'section' => $section->class_section,
+            'title' => $section->title,
+            'component' => $section->component,
+            'enrollmentCap' => $section->enrollment_cap,
+            'instructors' => $section->instructors
+                ->map(fn(SisClassInstructor|LocalClassInstructor $instructor) => [
+                    'emplid' => (int) $instructor->emplid,
+                    'role' => $instructor->role,
+                ])
+                ->sortBy(['role', 'emplid'])
+                ->values(),
+        ];
+    }
+
+    /**
+     * e.g. "ANTH-1001-003-FA26". A row id in the key would
+     * break `?section=` links when the SIS publishes a
+     * planned section.
+     */
+    private static function keyOf(SisClassSection|LocalClassSection $section): string {
+        $termLabel = TermCodeLabel::of($section->term_code);
+
+        return "{$section->course_code}-{$section->class_section}-{$termLabel}";
+    }
+}

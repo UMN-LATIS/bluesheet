@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\TermPlanning;
 
-use App\Course;
 use App\Group;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TermPlanning\LocalSectionResource;
 use App\Library\TermPlan\MeetingShape;
 use App\Library\TermPlan\TermLock;
 use App\LocalClassSection;
+use App\LocalCourse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -28,7 +28,7 @@ class GroupSectionController extends Controller {
     private const DAY_NAMES = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
     public function index(Request $request, Group $group) {
-        $this->authorize('viewAnyCoursesForGroup', [Course::class, $group]);
+        $this->authorize('viewAnyCoursesForGroup', [LocalCourse::class, $group]);
 
         $termCode = (int) $request->validate(['term' => 'required|integer'])['term'];
         $academicOrg = $group->sis_dept_id === null ? null : (int) $group->sis_dept_id;
@@ -57,7 +57,7 @@ class GroupSectionController extends Controller {
         $section = DB::transaction(function () use ($validated, $academicOrg) {
             $section = LocalClassSection::create([
                 ...$this->toColumns($validated),
-                'term_code' => $validated['termId'],
+                'term_code' => $validated['termCode'],
                 'academic_org' => $academicOrg,
                 'created_by' => auth()->id(),
                 'updated_by' => auth()->id(),
@@ -81,7 +81,7 @@ class GroupSectionController extends Controller {
         // term whose lock was never checked. Refused before validating, so
         // nothing is checked against a term the section is not in.
         abort_if(
-            (int) $request->input('termId') !== $section->term_code,
+            (int) $request->input('termCode') !== $section->term_code,
             422,
             'A section cannot be moved to another term.'
         );
@@ -117,14 +117,14 @@ class GroupSectionController extends Controller {
      * on a delete, because a delete carries no body.
      */
     private function authorizeWrite(Request $request, Group $group, ?int $termCode = null): int {
-        $this->authorize('editAnyCoursesForGroup', [Course::class, $group]);
+        $this->authorize('editAnyCoursesForGroup', [LocalCourse::class, $group]);
 
         if ($group->sis_dept_id === null) {
             abort(403, 'This group has no department to plan for.');
         }
 
         $academicOrg = (int) $group->sis_dept_id;
-        $termCode ??= (int) $request->input('termId');
+        $termCode ??= (int) $request->input('termCode');
 
         if (TermLock::isReadOnly($academicOrg, $termCode)) {
             abort(403, 'The SIS has published this term, so it can no longer be planned here.');
@@ -145,7 +145,7 @@ class GroupSectionController extends Controller {
     /** @return array<string, mixed> */
     private function rules(Request $request, int $academicOrg, ?LocalClassSection $existing = null): array {
         return [
-            'termId' => 'required|integer',
+            'termCode' => 'required|integer',
             'courseCode' => 'required|string|max:255',
             'subject' => 'required|string|max:255',
             'catalogNumber' => 'required|string|max:255',
@@ -184,7 +184,7 @@ class GroupSectionController extends Controller {
     private function sectionNumberIsFree(Request $request, int $academicOrg, ?LocalClassSection $existing): Unique {
         $rule = Rule::unique('local_class_sections', 'class_section')
             ->where('academic_org', $academicOrg)
-            ->where('term_code', $request->input('termId'))
+            ->where('term_code', $request->input('termCode'))
             ->where('course_code', $request->input('courseCode'));
 
         return $existing === null ? $rule : $rule->ignore($existing);

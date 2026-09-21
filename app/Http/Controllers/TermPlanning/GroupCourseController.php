@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\TermPlanning;
 
-use App\Course;
 use App\Group;
 use App\Http\Controllers\Controller;
 use App\Library\TermPlan\CourseUnion;
@@ -19,7 +18,7 @@ use Illuminate\Validation\Rule;
  */
 class GroupCourseController extends Controller {
     public function index(Group $group) {
-        $this->authorize('viewAnyCoursesForGroup', [Course::class, $group]);
+        $this->authorize('viewAnyCoursesForGroup', [LocalCourse::class, $group]);
 
         if ($group->sis_dept_id === null) {
             return [];
@@ -34,7 +33,7 @@ class GroupCourseController extends Controller {
     }
 
     public function store(Request $request, Group $group) {
-        $this->authorize('editAnyCoursesForGroup', [Course::class, $group]);
+        $this->authorize('editAnyCoursesForGroup', [LocalCourse::class, $group]);
 
         if ($group->sis_dept_id === null) {
             abort(403, 'This group has no department to plan for.');

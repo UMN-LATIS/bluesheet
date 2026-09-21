@@ -100,8 +100,6 @@ class Group extends Resource
 
             HasMany::make('Artifacts', 'artifacts', GroupArtifact::class),
 
-            HasMany::make('Course Sections', 'courseSections', CourseSection::class),
-
             BelongsToMany::make('Favorite Users', 'favoriteUsers', User::class),
         ];
     }

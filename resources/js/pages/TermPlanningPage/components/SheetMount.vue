@@ -33,8 +33,8 @@
 </template>
 
 <script setup lang="ts">
-import Pane from "./Pane.vue";
-import { useScreenSize } from "../useScreenSize";
+import Pane from "@/components/planning/Pane.vue";
+import { useScreenSize } from "@/utils/useScreenSize";
 
 const { isLarge, isSmall } = useScreenSize();
 </script>

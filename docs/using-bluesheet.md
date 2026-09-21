@@ -123,8 +123,10 @@ The description field allows you to add additional context for the leave - for e
 
 ![Viewing Leaves](./leaves.png)
 
-## Faculty Leaves Planning Report
+## Leave Planning
 
-BlueSheet Managers can use the Faculty Leaves Planning Report to quickly get a sense of how leaves and other scheduling issues might impact course planning. The Faculty Leaves Planning Report link is attached to any academic department in BlueSheet. If you don't see the report and believe you should have access, [contact support](mailto:latistecharch@umn.edu).
+BlueSheet Managers can use Leave Planning to see how leaves might affect course planning. The Leave Planning link is under "Planning" on any academic department in BlueSheet. If you don't see it and believe you should have access, [contact support](mailto:latistecharch@umn.edu).
 
-The Faculty Leaves Planning Report displays a grid of semesters and instructors, with entries for courses taught and leave data. Courses in the future are generally only available for one or two semesters.
+Leave Planning shows each leave as a bar on a timeline of semesters, starting a year before the current semester and ending a year after it. Choose different start and end semesters in the toolbar, and narrow the list with the filters. Click a leave to see its details.
+
+If you can view course plans, turn on "Teaching history" to see the courses each instructor and TA taught or is planned to teach, or switch to the Courses view to see who teaches each course. Click a semester's heading to open it in Term Planning. If you can also edit course plans, semesters the registrar hasn't published yet are marked "Plan term".

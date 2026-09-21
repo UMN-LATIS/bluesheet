@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Sis;
 
-use App\Course;
 use App\Group;
 use App\Http\Controllers\Controller;
+use App\LocalCourse;
 use Illuminate\Http\Request;
 
 /**
@@ -23,7 +23,7 @@ class GroupController extends Controller {
             ->filter(fn (Group $group) => $group->sis_dept_id !== null)
             ->filter(fn (Group $group) => $user->can(
                 'viewAnyCoursesForGroup',
-                [Course::class, $group]
+                [LocalCourse::class, $group]
             ))
             ->map(fn (Group $group) => [
                 'id' => $group->id,

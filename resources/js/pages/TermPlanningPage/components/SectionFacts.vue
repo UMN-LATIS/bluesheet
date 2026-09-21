@@ -158,11 +158,11 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import Disclosure from "./Disclosure.vue";
-import FactValue from "./FactValue.vue";
-import FieldDivider from "./FieldDivider.vue";
-import FieldLabel from "./FieldLabel.vue";
+import FactValue from "@/components/planning/FactValue.vue";
+import FieldDivider from "@/components/planning/FieldDivider.vue";
+import FieldLabel from "@/components/planning/FieldLabel.vue";
 import PersonRecord from "./PersonRecord.vue";
-import { labelOfComponent } from "../constants/meetingTypeColors";
+import { labelOfComponent } from "@/utils/meetingTypeColors";
 import { labelOfDelivery } from "../constants/delivery";
 import { daysMetSpelled } from "../helpers/scheduleDays";
 import { assistantsOf, instructorsOfRecord } from "../helpers/sectionPeople";

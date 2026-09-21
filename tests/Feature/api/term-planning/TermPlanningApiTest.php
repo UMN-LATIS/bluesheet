@@ -1,11 +1,13 @@
 <?php
 
 use App\Console\Commands\ImportSisData;
+use App\Constants\Permissions;
 use App\Group;
 use App\LocalClassInstructor;
 use App\LocalClassMeeting;
 use App\LocalClassSection;
 use App\LocalCourse;
+use App\Membership;
 use App\SisCourse;
 use App\SisClassMeeting;
 use App\SisClassSection;
@@ -32,6 +34,15 @@ beforeEach(function () {
     $this->group = Group::factory()->create(['dept_id' => (string) DEPT]);
     $this->admin = User::where('umndid', 'admin')->first();
     $this->basicUser = User::where('umndid', 'basic_user')->first();
+
+    $this->groupManager = User::factory()->create();
+    Membership::factory()->create([
+        'user_id' => $this->groupManager->id,
+        'group_id' => $this->group->id,
+        'admin' => true,
+    ]);
+    $this->coursesViewer = User::factory()->create()->givePermissionTo(Permissions::VIEW_PLANNED_COURSES);
+    $this->coursesEditor = User::factory()->create()->givePermissionTo(Permissions::EDIT_PLANNED_COURSES);
 });
 
 /** A planned section in this group's department, with the given overrides. */
@@ -51,7 +62,7 @@ function publishTermInSis(int $termCode = PUBLISHED_TERM): void {
 /** The body the page sends, which is the section shape it already renders. */
 function sectionPayload(array $overrides = []): array {
     return [
-        'termId' => PLANNABLE_TERM,
+        'termCode' => PLANNABLE_TERM,
         'courseCode' => 'ANTH-1001',
         'subject' => 'ANTH',
         'catalogNumber' => '1001',
@@ -129,7 +140,7 @@ describe('GET /api/term-planning/groups/:groupId/sections', function () {
             'id' => $section->id,
             // the SIS assigns class numbers and has not seen this section
             'classNumber' => null,
-            'termId' => PLANNABLE_TERM,
+            'termCode' => PLANNABLE_TERM,
             'courseCode' => 'ANTH-1001',
             'section' => '001',
             'title' => 'Human Evolution',
@@ -172,6 +183,16 @@ describe('GET /api/term-planning/groups/:groupId/sections', function () {
 
         expect($res->status())->toBe(403);
     });
+
+    it('admits a group manager and a view-permission user', function (User $user) {
+        actingAs($user);
+        $res = getJson(sectionsUrl($this->group) . '?term=' . PLANNABLE_TERM);
+
+        expect($res->status())->toBe(200);
+    })->with([
+        'group manager' => fn () => $this->groupManager,
+        'view-permission user' => fn () => $this->coursesViewer,
+    ]);
 });
 
 describe('POST /api/term-planning/groups/:groupId/sections', function () {
@@ -201,7 +222,7 @@ describe('POST /api/term-planning/groups/:groupId/sections', function () {
         publishTermInSis();
 
         actingAs($this->admin);
-        $res = postJson(sectionsUrl($this->group), sectionPayload(['termId' => PUBLISHED_TERM]));
+        $res = postJson(sectionsUrl($this->group), sectionPayload(['termCode' => PUBLISHED_TERM]));
 
         expect($res->status())->toBe(403);
         expect(LocalClassSection::count())->toBe(0);
@@ -209,6 +230,24 @@ describe('POST /api/term-planning/groups/:groupId/sections', function () {
 
     it('requires the user to have edit privileges', function () {
         actingAs($this->basicUser);
+        $res = postJson(sectionsUrl($this->group), sectionPayload());
+
+        expect($res->status())->toBe(403);
+        expect(LocalClassSection::count())->toBe(0);
+    });
+
+    it('lets a group manager and an edit-permission user create a section', function (User $user) {
+        actingAs($user);
+        $res = postJson(sectionsUrl($this->group), sectionPayload());
+
+        expect($res->status())->toBe(201);
+    })->with([
+        'group manager' => fn () => $this->groupManager,
+        'edit-permission user' => fn () => $this->coursesEditor,
+    ]);
+
+    it('refuses a view-permission-only user', function () {
+        actingAs($this->coursesViewer);
         $res = postJson(sectionsUrl($this->group), sectionPayload());
 
         expect($res->status())->toBe(403);
@@ -329,7 +368,7 @@ describe('PUT /api/term-planning/groups/:groupId/sections/:id', function () {
         $section = plannedSection();
 
         actingAs($this->admin);
-        $res = putJson(sectionsUrl($this->group) . "/{$section->id}", sectionPayload(['termId' => 1279]));
+        $res = putJson(sectionsUrl($this->group) . "/{$section->id}", sectionPayload(['termCode' => 1279]));
 
         expect($res->status())->toBe(422);
     });
@@ -340,7 +379,7 @@ describe('PUT /api/term-planning/groups/:groupId/sections/:id', function () {
 
         actingAs($this->admin);
         $res = putJson(sectionsUrl($this->group) . "/{$section->id}", sectionPayload([
-            'termId' => PUBLISHED_TERM,
+            'termCode' => PUBLISHED_TERM,
             'title' => 'Too late',
         ]));
 
@@ -515,7 +554,7 @@ describe('POST /api/term-planning/groups/:groupId/courses', function () {
             'subject' => 'ANTH',
             'title' => 'Field Methods',
             'source' => 'local',
-            'lastOfferedTermId' => null,
+            'lastOfferedTermCode' => null,
         ]);
 
         $course = LocalCourse::sole();
@@ -623,7 +662,7 @@ describe('GET /api/term-planning/groups/:groupId/course-instructors', function (
         $response = getJson(historyUrl($this->group, 'ANTH-1001'));
 
         $response->assertOk()->assertJson([
-            ['emplid' => 101, 'role' => 'PI', 'lastTermId' => PUBLISHED_TERM, 'isPlanned' => false],
+            ['emplid' => 101, 'role' => 'PI', 'lastTermCode' => PUBLISHED_TERM, 'isPlanned' => false],
         ]);
     });
 
@@ -649,7 +688,7 @@ describe('GET /api/term-planning/groups/:groupId/course-instructors', function (
         $response = getJson(historyUrl($this->group, 'ANTH-1001'));
 
         $response->assertOk()->assertJson([
-            ['emplid' => 202, 'role' => 'PI', 'lastTermId' => PLANNABLE_TERM, 'isPlanned' => true],
+            ['emplid' => 202, 'role' => 'PI', 'lastTermCode' => PLANNABLE_TERM, 'isPlanned' => true],
         ]);
     });
 
@@ -693,8 +732,8 @@ function publishedSection(array $attributes = []): SisClassSection {
 
 function importBody(array $sections, array $overrides = []): array {
     return [
-        'termId' => PLANNABLE_TERM,
-        'sourceTermId' => PUBLISHED_TERM,
+        'termCode' => PLANNABLE_TERM,
+        'sourceTermCode' => PUBLISHED_TERM,
         'sectionIds' => collect($sections)->pluck('id')->all(),
         ...$overrides,
     ];
@@ -754,7 +793,7 @@ describe('POST /api/term-planning/groups/:groupId/sections/batch', function () {
         $source = publishedSection();
         actingAs($this->admin);
 
-        postJson(batchUrl($this->group), importBody([$source], ['termId' => PUBLISHED_TERM]))
+        postJson(batchUrl($this->group), importBody([$source], ['termCode' => PUBLISHED_TERM]))
             ->assertForbidden();
 
         expect(LocalClassSection::count())->toBe(0);
@@ -783,8 +822,8 @@ describe('POST /api/term-planning/groups/:groupId/sections/batch', function () {
         actingAs($this->admin);
 
         postJson(batchUrl($this->group), [
-            'termId' => PLANNABLE_TERM,
-            'sourceTermId' => PUBLISHED_TERM,
+            'termCode' => PLANNABLE_TERM,
+            'sourceTermCode' => PUBLISHED_TERM,
             'sectionIds' => [123456],
         ])->assertStatus(422);
 
@@ -807,8 +846,8 @@ describe('POST .../sections/batch, choosing what comes over', function () {
 
     function importWith(Group $group, array $include): array {
         $body = [
-            'termId' => PLANNABLE_TERM,
-            'sourceTermId' => PUBLISHED_TERM,
+            'termCode' => PLANNABLE_TERM,
+            'sourceTermCode' => PUBLISHED_TERM,
             'sectionIds' => [test()->source->id],
             'include' => $include,
         ];
@@ -874,7 +913,7 @@ describe('DELETE /api/term-planning/groups/:groupId/sections/batch', function ()
         $created = postJson(batchUrl($this->group), importBody([$source]))->json();
 
         deleteJson(batchUrl($this->group), [
-            'termId' => PLANNABLE_TERM,
+            'termCode' => PLANNABLE_TERM,
             'sectionIds' => collect($created)->pluck('id')->all(),
         ])->assertNoContent();
 
@@ -887,7 +926,7 @@ describe('DELETE /api/term-planning/groups/:groupId/sections/batch', function ()
         actingAs($this->admin);
 
         deleteJson(batchUrl($this->group), [
-            'termId' => PLANNABLE_TERM,
+            'termCode' => PLANNABLE_TERM,
             'sectionIds' => [$kept->id, 999999],
         ])->assertNoContent();
 
@@ -903,7 +942,7 @@ describe('DELETE /api/term-planning/groups/:groupId/sections/batch', function ()
         actingAs($this->admin);
 
         deleteJson(batchUrl($this->group), [
-            'termId' => PLANNABLE_TERM,
+            'termCode' => PLANNABLE_TERM,
             'sectionIds' => [$mine->id, $theirs->id],
         ])->assertNoContent();
 
@@ -926,7 +965,7 @@ describe('GET /api/sis/groups/:groupId/terms', function () {
 
         $res = getJson("/api/sis/groups/{$this->group->id}/terms");
 
-        expect(collect($res->json())->pluck('id')->all())->toBe([PUBLISHED_TERM]);
+        expect(collect($res->json())->pluck('termCode')->all())->toBe([PUBLISHED_TERM]);
     });
 
     it('leaves out a term only another department has sections in', function () {
@@ -939,7 +978,7 @@ describe('GET /api/sis/groups/:groupId/terms', function () {
 
         $res = getJson("/api/sis/groups/{$this->group->id}/terms");
 
-        expect(collect($res->json())->pluck('id')->all())->not->toContain(1269);
+        expect(collect($res->json())->pluck('termCode')->all())->not->toContain(1269);
     });
 
     it('leaves out independent study, which the picker never offers', function () {

@@ -33,8 +33,6 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
             \App\Nova\Membership::class,
             \App\Nova\Leave::class,
             \App\Nova\LeaveArtifact::class,
-            \App\Nova\Course::class,
-            \App\Nova\CourseSection::class,
             \App\Nova\Permission::class,
             \App\Nova\SpatieRole::class,
             \App\Nova\ParentOrganization::class,

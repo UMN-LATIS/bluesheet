@@ -22,7 +22,7 @@ describe("toSectionPayload", () => {
 
   it("sends what a scheduler set", () => {
     expect(toSectionPayload(section)).toMatchObject({
-      termId: 1269,
+      termCode: 1269,
       courseCode: "ANTH-1001",
       section: "001",
       title: "Understanding Cultures",

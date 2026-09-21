@@ -7,7 +7,7 @@ export interface CourseInstructor {
   emplid: number;
   /** "PI", "TA", "SI"; the same person can appear once per role they held. */
   role: string;
-  lastTermId: number;
+  lastTermCode: number;
   /** True when that term is one this department planned, not one the SIS ran. */
   isPlanned: boolean;
 }

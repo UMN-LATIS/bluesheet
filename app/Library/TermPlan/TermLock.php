@@ -3,6 +3,7 @@
 namespace App\Library\TermPlan;
 
 use App\SisClassSection;
+use Illuminate\Support\Collection;
 
 /**
  * Who owns a term: the SIS or the schedulers.
@@ -31,5 +32,14 @@ class TermLock {
 
     public static function isEditable(?int $academicOrg, int $termCode): bool {
         return !self::isReadOnly($academicOrg, $termCode);
+    }
+
+    /** @return Collection<int, int> term codes */
+    public static function readOnlyTermCodesBetween(int $academicOrg, int $startTermCode, int $endTermCode): Collection {
+        return SisClassSection::query()
+            ->where('academic_org', $academicOrg)
+            ->whereBetween('term_code', [$startTermCode, $endTermCode])
+            ->distinct()
+            ->pluck('term_code');
     }
 }

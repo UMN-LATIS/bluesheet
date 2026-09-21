@@ -16,17 +16,17 @@ use Illuminate\Support\Collection;
  * naming the instructor of record is worse than offering nobody.
  */
 class CourseTeachingHistory {
-    /** @return Collection<int, array{emplid: int, role: string, lastTermId: int, isPlanned: bool}> */
+    /** @return Collection<int, array{emplid: int, role: string, lastTermCode: int, isPlanned: bool}> */
     public static function of(int $academicOrg, string $courseCode): Collection {
         return self::taughtTerms($academicOrg, $courseCode)
             ->concat(self::plannedTerms($academicOrg, $courseCode))
             ->groupBy(fn(array $row) => $row['emplid'] . '-' . $row['role'])
-            ->map(fn(Collection $rows) => $rows->sortByDesc('lastTermId')->first())
-            ->sortByDesc('lastTermId')
+            ->map(fn(Collection $rows) => $rows->sortByDesc('lastTermCode')->first())
+            ->sortByDesc('lastTermCode')
             ->values();
     }
 
-    /** @return Collection<int, array{emplid: int, role: string, lastTermId: int, isPlanned: bool}> */
+    /** @return Collection<int, array{emplid: int, role: string, lastTermCode: int, isPlanned: bool}> */
     private static function taughtTerms(int $academicOrg, string $courseCode): Collection {
         return SisClassInstructor::query()
             ->join('sis_class_sections', 'sis_class_sections.id', '=', 'sis_class_instructors.sis_class_section_id')
@@ -38,12 +38,12 @@ class CourseTeachingHistory {
             ->map(fn($row) => [
                 'emplid' => (int) $row->emplid,
                 'role' => $row->role,
-                'lastTermId' => (int) $row->last_term_code,
+                'lastTermCode' => (int) $row->last_term_code,
                 'isPlanned' => false,
             ]);
     }
 
-    /** @return Collection<int, array{emplid: int, role: string, lastTermId: int, isPlanned: bool}> */
+    /** @return Collection<int, array{emplid: int, role: string, lastTermCode: int, isPlanned: bool}> */
     private static function plannedTerms(int $academicOrg, string $courseCode): Collection {
         return LocalClassInstructor::query()
             ->join('local_class_sections', 'local_class_sections.id', '=', 'local_class_instructors.local_class_section_id')
@@ -55,7 +55,7 @@ class CourseTeachingHistory {
             ->map(fn($row) => [
                 'emplid' => (int) $row->emplid,
                 'role' => $row->role,
-                'lastTermId' => (int) $row->last_term_code,
+                'lastTermCode' => (int) $row->last_term_code,
                 'isPlanned' => true,
             ]);
     }

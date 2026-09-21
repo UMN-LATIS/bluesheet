@@ -1,6 +1,4 @@
-/** What the page has open, as URL query: a section's sheet, an hour's list, or both. */
-
-import type { UrlQuery } from "../types";
+import type { UrlQuery } from "@/utils/urlQuery";
 import { sectionIdOfMeetingId } from "./sectionPlacement";
 import { WEEKDAY_CODES } from "./scheduleDays";
 import {
@@ -16,7 +14,7 @@ import type { HourSelection, Selection } from "../useScheduleEditor/types";
  * `sectionId` rather than `section`: that name is already a filter facet, and
  * a sheet opened on a section must not also check it in the filters.
  */
-export const SELECTION_KEYS = ["sectionId", "hour"];
+export const SELECTION_KEYS = ["sectionId", "hour", "leaveId"];
 
 /**
  * What a link can name. A grid block is left out: it stands for the section it
@@ -32,8 +30,9 @@ export function encodeSelection(selection: Selection | null): UrlQuery {
       return { hour: encodeHour(selection) };
 
     case "meeting": {
-      // A section being created has a negative id and no row to link to, so
-      // its block names nothing; see `decodeSectionId`.
+      // A section being created has a negative id and no row
+      // to link to, so its block names nothing. See
+      // `decodePositiveId`.
       const sectionId = sectionIdOfMeetingId(selection.meetingId);
       return sectionId === null || sectionId < 1
         ? {}
@@ -46,16 +45,24 @@ export function encodeSelection(selection: Selection | null): UrlQuery {
         // Both keys: the hour the sheet's back link returns to.
         ...(selection.from ? { hour: encodeHour(selection.from) } : {}),
       };
+
+    case "leave":
+      return { leaveId: String(selection.leaveId) };
   }
 }
 
 export function decodeSelection(query: UrlQuery): SheetSelection | null {
   const hour = decodeHour(query.hour);
-  const sectionId = decodeSectionId(query.sectionId);
+  const sectionId = decodePositiveId(query.sectionId);
 
-  if (sectionId === null) return hour;
+  if (sectionId !== null) {
+    return { kind: "section", sectionId, ...(hour ? { from: hour } : {}) };
+  }
 
-  return { kind: "section", sectionId, ...(hour ? { from: hour } : {}) };
+  const leaveId = decodePositiveId(query.leaveId);
+  if (leaveId !== null) return { kind: "leave", leaveId };
+
+  return hour;
 }
 
 /** "tue-14:00": the day it sits under and the hour it begins. */
@@ -73,9 +80,9 @@ function decodeHour(raw: string | undefined): HourSelection | null {
   return isOnTheGrid ? { kind: "hour", dayIndex, startMinute } : null;
 }
 
-function decodeSectionId(raw: string | undefined): number | null {
-  const sectionId = Number(raw);
-  return raw !== undefined && Number.isInteger(sectionId) && sectionId > 0
-    ? sectionId
-    : null;
+function decodePositiveId(raw: string | undefined): number | null {
+  if (raw === undefined) return null;
+  const id = Number(raw);
+  const isPositiveInteger = Number.isInteger(id) && id > 0;
+  return isPositiveInteger ? id : null;
 }

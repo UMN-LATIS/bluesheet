@@ -1,7 +1,9 @@
 <?php
 
+use App\Constants\Permissions;
 use App\Group;
 use App\Leave;
+use App\Membership;
 use App\SisAppointment;
 use App\SisClassInstructor;
 use App\SisClassMeeting;
@@ -26,6 +28,14 @@ beforeEach(function () {
 
     $this->admin = User::where('umndid', 'admin')->first();
     $this->basicUser = User::where('umndid', 'basic_user')->first();
+
+    $this->groupManager = User::factory()->create();
+    Membership::factory()->create([
+        'user_id' => $this->groupManager->id,
+        'group_id' => $this->group->id,
+        'admin' => true,
+    ]);
+    $this->coursesViewer = User::factory()->create()->givePermissionTo(Permissions::VIEW_PLANNED_COURSES);
 });
 
 /** A section in this test group's department, with the given overrides. */
@@ -68,7 +78,7 @@ describe('GET /api/sis/terms', function () {
 
         expect($res->status())->toBe(200);
         expect($res->json())->toEqual([[
-            'id' => TERM,
+            'termCode' => TERM,
             'name' => 'Fall 2026',
             'startDate' => '2026-09-08',
             'endDate' => '2026-12-23',
@@ -82,7 +92,7 @@ describe('GET /api/sis/terms', function () {
         actingAs($this->admin);
         $res = getJson('/api/sis/terms');
 
-        expect(collect($res->json())->pluck('id')->all())->toEqual([TERM, OTHER_TERM]);
+        expect(collect($res->json())->pluck('termCode')->all())->toEqual([TERM, OTHER_TERM]);
     });
 });
 
@@ -131,7 +141,7 @@ describe('GET /api/sis/groups/:groupId/sections', function () {
         expect($res->json()[0])->toMatchArray([
             'id' => $section->id,
             'classNumber' => $section->class_number,
-            'termId' => TERM,
+            'termCode' => TERM,
             'courseCode' => 'AFRO-4406',
             'subject' => 'AFRO',
             'catalogNumber' => '4406',
@@ -279,7 +289,7 @@ describe('GET /api/sis/groups/:groupId/courses', function () {
             'catalogNumber' => '4406',
             'title' => 'African Cinema and Media',
             'credits' => 4,
-            'lastOfferedTermId' => TERM,
+            'lastOfferedTermCode' => TERM,
         ]]);
     });
 
@@ -310,6 +320,15 @@ describe('GET /api/sis/groups/:groupId/courses', function () {
 
         expect($res->status())->toBe(403);
     });
+
+    it('admits a group manager and a view-permission user', function (User $user) {
+        actingAs($user);
+
+        expect(getJson("/api/sis/groups/{$this->group->id}/courses")->status())->toBe(200);
+    })->with([
+        'group manager' => fn () => $this->groupManager,
+        'view-permission user' => fn () => $this->coursesViewer,
+    ]);
 });
 
 describe('GET /api/sis/groups/:groupId/employees', function () {

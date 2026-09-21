@@ -71,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-import { colorOfType } from "../constants/meetingTypeColors";
+import { colorOfType } from "@/utils/meetingTypeColors";
 import { NoteIcon } from "@/icons";
 import { instructorsOfRecord } from "../helpers/sectionPeople";
 import type { PlannedSection, SisInstructor } from "../types";

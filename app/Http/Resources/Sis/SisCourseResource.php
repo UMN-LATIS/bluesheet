@@ -18,7 +18,7 @@ class SisCourseResource extends JsonResource {
             'catalogNumber' => $this->catalog_number,
             'title' => $this->title,
             'credits' => $this->credits,
-            'lastOfferedTermId' => $this->last_offered_term_code,
+            'lastOfferedTermCode' => $this->last_offered_term_code,
         ];
     }
 }

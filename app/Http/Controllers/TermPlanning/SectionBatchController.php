@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\TermPlanning;
 
-use App\Course;
 use App\Group;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TermPlanning\LocalSectionResource;
@@ -13,6 +12,7 @@ use App\Library\TermPlan\TermLock;
 use App\LocalClassInstructor;
 use App\LocalClassMeeting;
 use App\LocalClassSection;
+use App\LocalCourse;
 use App\SisClassMeeting;
 use App\SisClassSection;
 use Illuminate\Http\Request;
@@ -23,8 +23,8 @@ use Illuminate\Support\Facades\DB;
 class SectionBatchController extends Controller {
     public function store(Request $request, Group $group) {
         $validated = $request->validate([
-            'termId' => 'required|integer',
-            'sourceTermId' => 'required|integer',
+            'termCode' => 'required|integer',
+            'sourceTermCode' => 'required|integer',
             'sectionIds' => 'required|array|min:1',
             'sectionIds.*' => 'required|integer',
             'include' => 'sometimes|array',
@@ -34,12 +34,12 @@ class SectionBatchController extends Controller {
             'include.sectionNumbers' => 'sometimes|boolean',
         ]);
 
-        $this->authorize('editAnyCoursesForGroup', [Course::class, $group]);
+        $this->authorize('editAnyCoursesForGroup', [LocalCourse::class, $group]);
         abort_if($group->sis_dept_id === null, 403, 'This group has no department to plan for.');
 
         $academicOrg = (int) $group->sis_dept_id;
         abort_if(
-            TermLock::isReadOnly($academicOrg, $validated['termId']),
+            TermLock::isReadOnly($academicOrg, $validated['termCode']),
             403,
             'The SIS has published this term, so it can no longer be planned here.'
         );
@@ -47,7 +47,7 @@ class SectionBatchController extends Controller {
         $options = ImportOptions::fromRequestInclude($validated['include'] ?? []);
 
         $sources = SisClassSection::query()
-            ->forDepartmentTerm($academicOrg, $validated['sourceTermId'])
+            ->forDepartmentTerm($academicOrg, $validated['sourceTermCode'])
             ->whereIn('id', $validated['sectionIds'])
             ->where('is_cancelled', false)
             ->where('component', '!=', 'IND')
@@ -57,7 +57,7 @@ class SectionBatchController extends Controller {
         abort_if($sources->isEmpty(), 422, 'None of those sections are in that term.');
 
         $created = DB::transaction(
-            fn() => $this->copyInto($sources, $academicOrg, $validated['termId'], $options)
+            fn() => $this->copyInto($sources, $academicOrg, $validated['termCode'], $options)
         );
 
         return LocalSectionResource::collection($this->reload($created));
@@ -65,17 +65,17 @@ class SectionBatchController extends Controller {
 
     public function destroy(Request $request, Group $group) {
         $validated = $request->validate([
-            'termId' => 'required|integer',
+            'termCode' => 'required|integer',
             'sectionIds' => 'required|array|min:1',
             'sectionIds.*' => 'required|integer',
         ]);
 
-        $this->authorize('editAnyCoursesForGroup', [Course::class, $group]);
+        $this->authorize('editAnyCoursesForGroup', [LocalCourse::class, $group]);
         abort_if($group->sis_dept_id === null, 403, 'This group has no department to plan for.');
 
         $academicOrg = (int) $group->sis_dept_id;
         abort_if(
-            TermLock::isReadOnly($academicOrg, $validated['termId']),
+            TermLock::isReadOnly($academicOrg, $validated['termCode']),
             403,
             'The SIS has published this term, so it can no longer be planned here.'
         );
@@ -84,7 +84,7 @@ class SectionBatchController extends Controller {
         // the `deleted` event and Auditable logs nothing.
         DB::transaction(
             fn() => LocalClassSection::query()
-                ->forDepartmentTerm($academicOrg, $validated['termId'])
+                ->forDepartmentTerm($academicOrg, $validated['termCode'])
                 ->whereIn('id', $validated['sectionIds'])
                 ->get()
                 ->each->delete()

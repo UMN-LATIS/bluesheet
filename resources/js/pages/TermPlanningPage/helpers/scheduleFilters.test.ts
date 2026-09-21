@@ -26,7 +26,7 @@ const instructor = (
 const section = (id: number, extra: Partial<SisSection> = {}): SisSection => ({
   id,
   classNumber: 50000 + id,
-  termId: 1269,
+  termCode: 1269,
   courseCode: "ANTH-1001",
   subject: "ANTH",
   catalogNumber: "1001",

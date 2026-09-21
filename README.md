@@ -83,7 +83,7 @@ docker compose exec mariadb mariadb -uroot -ppassword -e "CREATE DATABASE IF NOT
 
 ## Local Development with Bandaid
 
-Some features of BlueSheet require access to [Bandaid](https://github.com/UMN-LATIS/Bandaid) API (e.g. the Faculty Leaves Planning Report page).
+Some features of BlueSheet require access to [Bandaid](https://github.com/UMN-LATIS/Bandaid) API (e.g. the nightly SIS and leave imports).
 
 To connect to Bandaid for local development:
 

@@ -24,8 +24,8 @@ import GroupAdminsReportPage from "./pages/reports/GroupAdmins.vue";
 import EligibilityReportPage from "./pages/reports/EligibilityReport.vue";
 import DeptLeavesReportPage from "./pages/reports/DeptLeavesReportPage.vue";
 import UnitReportPage from "./pages/reports/UnitReport.vue";
-import CoursePlanningPage from "@/pages/CoursePlanningPage/CoursePlanningPage.vue";
 import TermPlanningPage from "@/pages/TermPlanningPage/TermPlanningPage.vue";
+import LeavePlanningPage from "@/pages/LeavePlanningPage/LeavePlanningPage.vue";
 import { parseIntFromRouteParam as parseIntFromParam } from "@/utils";
 
 // test routes
@@ -41,7 +41,7 @@ export const router = createRouter({
 
   // Restore the scroll position on back/forward, go to the top on a new page.
   // The removed `<RouterView>` key did this as a side effect of remounting.
-  // A page that rewrites its own query string, like course planning filters,
+  // A page that rewrites its own query string, like Term Planning's filters,
   // stays where the reader left it.
   scrollBehavior: (to, from, savedPosition) => {
     if (savedPosition) return savedPosition;
@@ -57,6 +57,7 @@ export const router = createRouter({
       component: UserHomePage,
       props: (route) => ({
         userId: parseIntFromParam(route.params.userId),
+        isShowingPastLeaves: route.query.showPastLeaves === "true",
       }),
     },
     {
@@ -163,14 +164,17 @@ export const router = createRouter({
     },
     {
       path: "/course-planning/groups/:groupId",
-      component: CoursePlanningPage,
-      props: (route) => ({
-        groupId: parseIntFromParam(route.params.groupId),
+      redirect: (to) => ({
+        name: "leavePlanning",
+        params: { groupId: to.params.groupId },
       }),
     },
     {
       path: "/reports/schedulingReport/:groupId",
-      redirect: (to) => `/course-planning/groups/${to.params.groupId}`,
+      redirect: (to) => ({
+        name: "leavePlanning",
+        params: { groupId: to.params.groupId },
+      }),
     },
     {
       name: "termPlanning",
@@ -179,6 +183,14 @@ export const router = createRouter({
       props: (route) => ({
         groupId: parseIntFromParam(route.params.groupId),
         termCode: parseIntFromParam(route.params.termCode),
+      }),
+    },
+    {
+      name: "leavePlanning",
+      path: "/leave-planning/groups/:groupId",
+      component: LeavePlanningPage,
+      props: (route) => ({
+        groupId: parseIntFromParam(route.params.groupId),
       }),
     },
     {
@@ -209,7 +221,7 @@ router.onError((error) => {
 router.beforeResolve((to, from, next) => {
   // clear any errors in our error store
   // this prevents the error modal from persisting across pages.
-  // A page that replaces its own query string, like course planning
+  // A page that replaces its own query string, like Term Planning's
   // filters, keeps its modal.
   if (to.path !== from.path) {
     const errorStore = useErrorStore();

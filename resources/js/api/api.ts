@@ -59,11 +59,6 @@ export async function getUserLeaves(userId: number): Promise<T.Leave[]> {
   return res.data;
 }
 
-export async function fetchTerms() {
-  const res = await axios.get<T.Term[]>(`/api/terms`);
-  return res.data;
-}
-
 export async function fetchGroup(groupId: number) {
   const res = await axios.get<T.Group>(`/api/group/${groupId}`);
   return res.data;

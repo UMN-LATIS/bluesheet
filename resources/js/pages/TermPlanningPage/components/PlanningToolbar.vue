@@ -90,13 +90,13 @@
       <span class="tw-sr-only">Term</span>
       <select
         class="tw-min-h-11 tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-py-1.5 tw-pl-3.5 tw-pr-8 tw-text-[13px] tw-font-semibold tw-text-on-surface roomy:tw-min-h-0"
-        :value="term?.id"
+        :value="term?.termCode"
         @change="goToTerm(($event.target as HTMLSelectElement).value)"
       >
         <option
           v-for="option in termOptions"
-          :key="option.id"
-          :value="option.id"
+          :key="option.termCode"
+          :value="option.termCode"
         >
           {{ labelOfTerm(option) }}
         </option>
@@ -146,7 +146,7 @@ import { useGroupQuery } from "../queries/useGroupQuery";
 import { useSisGroupsQuery } from "../queries/useSisGroupsQuery";
 import type { ScheduleView } from "../helpers/viewQuery";
 import type { SisGroup, SisTerm } from "../types";
-import { useScreenSize } from "../useScreenSize";
+import { useScreenSize } from "@/utils/useScreenSize";
 
 const props = defineProps<{
   groupId: number;

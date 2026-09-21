@@ -37,4 +37,7 @@
   --brand-container: #f7f0f1;
   --accent: #ffcc33;
   --on-accent: #3d2f00;
+  /* The current term: its header, then its column. */
+  --accent-container: #fef3c7;
+  --accent-container-low: #fffcf0;
 }

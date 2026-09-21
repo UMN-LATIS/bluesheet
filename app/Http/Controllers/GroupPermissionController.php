@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Auth;
-use App\{Group, Course, Leave};
+use App\{Group, Leave};
 
 class GroupPermissionController extends Controller {
     public function subgroups(Request $request, Group $parentGroup) {

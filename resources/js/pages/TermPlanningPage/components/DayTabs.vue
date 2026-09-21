@@ -49,7 +49,7 @@
 
 <script setup lang="ts">
 import { DAY_TAB_NAMES, isAsyncDay } from "../helpers/scheduleDays";
-import type { ScreenSize } from "../useScreenSize";
+import type { ScreenSize } from "@/utils/useScreenSize";
 
 const props = defineProps<{
   dayIndex: number;

@@ -92,7 +92,7 @@
 <script setup lang="ts">
 import { computed, ref, useId, watch } from "vue";
 import Modal from "@/components/Modal.vue";
-import FieldLabel from "./FieldLabel.vue";
+import FieldLabel from "@/components/planning/FieldLabel.vue";
 import { refusalMessage } from "../helpers/refusalMessage";
 import { useTermPlanMutations } from "../queries/useTermPlanMutations";
 import type { PlannableCourse } from "../types";

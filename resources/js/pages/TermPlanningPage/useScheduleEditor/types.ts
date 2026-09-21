@@ -7,8 +7,8 @@ import type {
   SisSection,
   SisSectionMeeting,
   TimeRange,
-  UrlQuery,
 } from "../types";
+import type { UrlQuery } from "@/utils/urlQuery";
 import type { ScheduleView } from "../helpers/viewQuery";
 
 /**
@@ -86,7 +86,10 @@ export type Interaction =
       dayIndex: number;
     } & TimeRange);
 
-/** A grid block by meeting id, a tray chip by section id, or a heatmap hour. */
+/**
+ * A grid block by meeting id, a tray chip by section id, a
+ * heatmap hour, or a chip in the leave strip.
+ */
 export type Selection =
   | { kind: "meeting"; meetingId: string }
   | {
@@ -97,6 +100,7 @@ export type Selection =
        */
       from?: HourSelection;
     }
+  | { kind: "leave"; leaveId: number }
   | HourSelection;
 
 /** A cell of the coverage heatmap: one hour of one day. */
@@ -184,6 +188,7 @@ export type EditorEvent =
    */
   | { type: "selectedSection"; sectionId: number; from?: HourSelection }
   | { type: "selectedHour"; dayIndex: number; startMinute: number }
+  | { type: "selectedLeave"; leaveId: number }
   | { type: "filterValuesAdded"; facet: FilterFacet; values: string[] }
   | { type: "filterValuesRemoved"; facet: FilterFacet; values: string[] }
   | { type: "filtersCleared" }

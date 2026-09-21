@@ -27,6 +27,13 @@ describe("encodeSelection", () => {
     expect(decodeSelection(encodeSelection(selection))).toEqual(selection);
   });
 
+  it("round-trips a leave", () => {
+    const selection = { kind: "leave", leaveId: 42 } as const;
+
+    expect(encodeSelection(selection)).toEqual({ leaveId: "42" });
+    expect(decodeSelection(encodeSelection(selection))).toEqual(selection);
+  });
+
   it("names the section a selected grid block belongs to", () => {
     const selection = { kind: "meeting", meetingId: "s412:mon:1010" } as const;
 
@@ -67,6 +74,18 @@ describe("decodeSelection", () => {
 
   it("keeps the section when its hour cannot be read", () => {
     expect(decodeSelection({ sectionId: "412", hour: "nope" })).toEqual({
+      kind: "section",
+      sectionId: 412,
+    });
+  });
+
+  it("ignores a leave id that is not one", () => {
+    expect(decodeSelection({ leaveId: "abc" })).toBeNull();
+    expect(decodeSelection({ leaveId: "-3" })).toBeNull();
+  });
+
+  it("prefers the section when both a section and a leave are named", () => {
+    expect(decodeSelection({ sectionId: "412", leaveId: "7" })).toEqual({
       kind: "section",
       sectionId: 412,
     });

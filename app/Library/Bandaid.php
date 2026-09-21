@@ -216,17 +216,6 @@ class Bandaid {
         }
     }
 
-    public function getDeptScheduleForTerm(int $deptId, int $term): array {
-        try {
-            $result = $this->cachedGet('/classes/list/' . $deptId . "/" . $term);
-            return $result;
-        } catch (RequestException $e) {
-            $msg = $e->getMessage();
-            $errorMessage = 'getDepartmentSchedule Error: ' . $msg;
-            throw new RuntimeException($errorMessage);
-        }
-    }
-
     /**
      * Get academic terms which coincide with the given date range
      *
@@ -296,47 +285,4 @@ class Bandaid {
         }
     }
 
-    /**
-     * gets a list of ALL classes taught by instructors in a department,
-     * including classes in other departments.
-     *
-     * @param int $deptId - the department id
-     * @param ?int $termCode (optional) - if not provided, will get all terms
-     * @return array<object{
-     *   id: int,
-     *   TERM: int,
-     *   INSTRUCTOR_EMPLID: int,
-     *   ACADEMIC_ORG: int,
-     *   SUBJECT: string,
-     *   CLASS_SECTION: string,
-     *   INSTRUCTOR_ROLE: string,
-     *   CATALOG_NUMBER: string,
-     *   CLASS_NUMBER: int,
-     *   ACADEMIC_CAREER: string,
-     *   DESCRIPTION: string,
-     *   COMPONENT_CLASS: string,
-     *   ENROLLMENT_CAP: int,
-     *   ENROLLMENT_TOTAL: int,
-     *   WAITLIST_CAP: int,
-     *   WAITLIST_TOTAL: int,
-     *   CANCELLED: int,
-     *   COURSE_CROSSLIST: mixed
-     * }>
-     */
-    public function getAllClassesForDeptInstructors(int $deptId, ?int $termCode = null): array
-    {
-        try {
-            $url = "/classes/listAll/{$deptId}";
-            if ($termCode) {
-                $url .= "/{$termCode}";
-            }
-
-            $result = $this->cachedGet($url);
-            return $result;
-        } catch (RequestException $e) {
-            $msg = $e->getMessage();
-            $errorMessage = 'getAllClassesForDeptInstructors Error: ' . $msg;
-            throw new RuntimeException($errorMessage);
-        }
-    }
 }

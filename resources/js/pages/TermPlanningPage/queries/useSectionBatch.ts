@@ -19,7 +19,7 @@ export const defaultImportOptions = (): ImportOptions => ({
 });
 
 export interface ImportRequest {
-  sourceTermId: number;
+  sourceTermCode: number;
   sectionIds: number[];
   include: ImportOptions;
 }
@@ -38,13 +38,13 @@ export function useSectionBatch(
 
   const importSections = useMutation({
     mutationFn: async ({
-      sourceTermId,
+      sourceTermCode,
       sectionIds,
       include,
     }: ImportRequest) => {
       const res = await axios.post<PlannedSection[]>(url(), {
-        termId: termCode.value,
-        sourceTermId,
+        termCode: termCode.value,
+        sourceTermCode,
         sectionIds,
         include,
       });
@@ -58,7 +58,7 @@ export function useSectionBatch(
       // axios.delete's 2nd argument is config, not a body. Drop
       // the `data:` wrapper and the request carries nothing, and
       // the endpoint refuses it as a missing sectionIds field.
-      axios.delete(url(), { data: { termId: termCode.value, sectionIds } }),
+      axios.delete(url(), { data: { termCode: termCode.value, sectionIds } }),
     onSuccess: refetchTermPlan,
   });
 
