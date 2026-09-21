@@ -965,7 +965,7 @@ describe('GET /api/sis/groups/:groupId/terms', function () {
 
         $res = getJson("/api/sis/groups/{$this->group->id}/terms");
 
-        expect(collect($res->json())->pluck('id')->all())->toBe([PUBLISHED_TERM]);
+        expect(collect($res->json())->pluck('termCode')->all())->toBe([PUBLISHED_TERM]);
     });
 
     it('leaves out a term only another department has sections in', function () {
@@ -978,7 +978,7 @@ describe('GET /api/sis/groups/:groupId/terms', function () {
 
         $res = getJson("/api/sis/groups/{$this->group->id}/terms");
 
-        expect(collect($res->json())->pluck('id')->all())->not->toContain(1269);
+        expect(collect($res->json())->pluck('termCode')->all())->not->toContain(1269);
     });
 
     it('leaves out independent study, which the picker never offers', function () {
