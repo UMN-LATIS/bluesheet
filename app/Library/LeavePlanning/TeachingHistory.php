@@ -8,6 +8,7 @@ use App\LocalClassSection;
 use App\SisClassInstructor;
 use App\SisClassSection;
 use App\SisTerm;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 class TeachingHistory {
@@ -38,6 +39,7 @@ class TeachingHistory {
         return SisClassSection::query()
             ->where('academic_org', $academicOrg)
             ->whereIn('term_code', $readOnlyTermCodes)
+            ->whereIn('term_code', self::undergradTermCodes())
             ->where('is_cancelled', false)
             ->where('component', '!=', self::INDEPENDENT_STUDY)
             ->with('instructors')
@@ -57,12 +59,10 @@ class TeachingHistory {
         int $endTermCode,
         Collection $readOnlyTermCodes,
     ): Collection {
-        $undergradTermCodes = SisTerm::undergrad()->select('term_code');
-
         return LocalClassSection::query()
             ->where('academic_org', $academicOrg)
             ->whereBetween('term_code', [$startTermCode, $endTermCode])
-            ->whereIn('term_code', $undergradTermCodes)
+            ->whereIn('term_code', self::undergradTermCodes())
             ->whereNotIn('term_code', $readOnlyTermCodes)
             ->where('is_cancelled', false)
             ->where('component', '!=', self::INDEPENDENT_STUDY)
@@ -75,6 +75,15 @@ class TeachingHistory {
                 'isPlanned' => true,
                 'crosslist' => null,
             ]);
+    }
+
+    /**
+     * The terms the page can draw. A term code outside this set has no band on
+     * the timeline axis, and one whose last digit is not 3, 5, or 9 makes
+     * `keyOf` throw.
+     */
+    private static function undergradTermCodes(): Builder {
+        return SisTerm::undergrad()->select('term_code');
     }
 
     private static function sharedFields(SisClassSection|LocalClassSection $section): array {

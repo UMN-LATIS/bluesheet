@@ -152,7 +152,14 @@
         @deleted="onDeletedAll"
       />
 
-      <SheetMount v-if="schedule.openHour || selectedSection || selectedLeave">
+      <SheetMount
+        v-if="
+          schedule.openHour ||
+          selectedSection ||
+          selectedLeave ||
+          isSelectedLeaveLoading
+        "
+      >
         <HourSheet
           v-if="schedule.openHour"
           :dayIndex="schedule.openHour.dayIndex"
@@ -192,6 +199,10 @@
           canViewTermPlanning
           @close="schedule.deselect"
           @selectLeave="schedule.selectLeave"
+        />
+        <LeavePanelLoading
+          v-else-if="isSelectedLeaveLoading"
+          @close="schedule.deselect"
         />
       </SheetMount>
 
@@ -247,6 +258,7 @@ import { omit } from "lodash-es";
 import FullScreenLayout from "@/layouts/FullScreenLayout.vue";
 import Notification from "@/components/Notification.vue";
 import LeavePanel from "@/components/planning/LeavePanel.vue";
+import LeavePanelLoading from "@/components/planning/LeavePanelLoading.vue";
 import CoverageHeatmap from "./components/CoverageHeatmap.vue";
 import DayView from "./components/DayView.vue";
 import DeleteAllModal from "./components/DeleteAllModal.vue";
@@ -336,8 +348,6 @@ const leavesQuery = useSisGroupLeavesQuery(groupId, activeTermCode);
 const termLeaves = computed(() => leavesQuery.data.value ?? []);
 
 const termLeavesByEmplid = computed(() => leavesByEmplid(termLeaves.value));
-
-const leaveTimelineQuery = useTermLeaveTimelineQuery(groupId, activeTermCode);
 
 const isImportOpen = ref(false);
 const isDeleteAllOpen = ref(false);
@@ -708,6 +718,16 @@ const selectedSection = computed(() => {
     null
   );
 });
+
+const leaveTimelineQuery = useTermLeaveTimelineQuery(
+  groupId,
+  activeTermCode,
+  computed(() => schedule.selectedLeaveId !== null),
+);
+
+const isSelectedLeaveLoading = computed(
+  () => schedule.selectedLeaveId !== null && leaveTimelineQuery.isLoading.value,
+);
 
 const selectedLeave = computed(
   () =>

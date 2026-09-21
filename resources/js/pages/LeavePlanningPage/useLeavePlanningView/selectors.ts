@@ -149,7 +149,9 @@ export const selectPlannableTermCodes = (
   const termCodes = (selectAxis(context)?.terms ?? []).map(
     ({ term }) => term.termCode,
   );
-  return new Set(termCodes.filter((termCode) => !readOnlyTermCodes.has(termCode)));
+  return new Set(
+    termCodes.filter((termCode) => !readOnlyTermCodes.has(termCode)),
+  );
 };
 
 export const selectPeopleByEmplid = (
@@ -167,6 +169,13 @@ function uniqueSections(sections: TeachingSection[]): TeachingSection[] {
     sections.map((section) => [section.key, section]),
   );
   return [...sectionsByKey.values()];
+}
+
+function uniquePeople(people: PlanningPerson[]): PlanningPerson[] {
+  const peopleByEmplid = new Map(
+    people.map((person) => [person.emplid, person]),
+  );
+  return [...peopleByEmplid.values()];
 }
 
 function visibleRecordsOf(
@@ -196,7 +205,10 @@ function visibleRecordsOf(
       .filter((person): person is PlanningPerson => person !== undefined);
 
     return {
-      people: [...instructors, ...peopleOnLeave.map(({ person }) => person)],
+      people: uniquePeople([
+        ...instructors,
+        ...peopleOnLeave.map(({ person }) => person),
+      ]),
       leaves: peopleOnLeave.flatMap(({ leaves }) => leaves),
       sections,
       isHistoryShown: true,

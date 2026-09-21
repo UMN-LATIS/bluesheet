@@ -425,6 +425,20 @@ describe('GET /api/leave-planning/groups/:groupId/teaching-history', function ()
         expect(getJson("{$this->url}?start=1263&end=1273")->json('sections'))->toBe([]);
     });
 
+    it('leaves out a published section in a term with no undergraduate dates', function () {
+        SisTerm::factory()->create([
+            'term_code' => 1267,
+            'academic_career' => 'MED',
+            'description' => 'Fall 2026 Medicine',
+        ]);
+        taughtSection(departmentMember()->emplid, ['term_code' => 1267]);
+
+        actingAs($this->admin);
+
+        expect(getJson("{$this->url}?start=1263&end=1273")->status())->toBe(200);
+        expect(getJson("{$this->url}?start=1263&end=1273")->json('sections'))->toBe([]);
+    });
+
     it('reports eligibility flags for each person', function () {
         departmentMember(['midcareer_eligible' => true, 'ssl_apply_eligible' => true]);
 
