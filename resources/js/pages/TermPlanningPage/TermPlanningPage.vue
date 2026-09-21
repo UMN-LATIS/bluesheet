@@ -13,10 +13,7 @@
         :view="activeView"
         :isReadOnly="isReadOnly"
         :plannedSectionCount="sections.length"
-        :activeFilterCount="schedule.activeFilterCount"
-        :isFilterPanelOpen="isFilterPanelOpen"
         @selectView="schedule.selectView"
-        @openFilters="isFilterPanelOpen = true"
         @openImport="openImport"
         @deleteAll="isDeleteAllOpen = true"
       />
@@ -40,7 +37,14 @@
     <div
       class="tw-relative tw-flex tw-min-h-0 tw-flex-1 tw-gap-3 tw-px-3 tw-pb-3 roomy:tw-px-4 roomy:tw-pb-4"
     >
-      <Pane v-if="isLarge" class="tw-w-[304px] tw-flex-none">
+      <FilterDock
+        :appliedFilters="appliedFilters"
+        :isOpen="isFilterPanelOpen"
+        :isDocked="isLarge"
+        :isSmall="isSmall"
+        :activeFilterCount="schedule.activeFilterCount"
+        @toggle="isFilterPanelOpen = !isFilterPanelOpen"
+      >
         <ScheduleSidebar
           :options="filterOptions"
           :schedule="schedule"
@@ -48,7 +52,7 @@
           :leavesByEmplid="termLeavesByEmplid"
           :unofficialCourseCodes="unofficialCourseCodes"
         />
-      </Pane>
+      </FilterDock>
 
       <Pane
         as="section"
@@ -205,32 +209,6 @@
           @close="schedule.deselect"
         />
       </SheetMount>
-
-      <!-- Summoned, so it closes again; a click on the canvas behind it is
-           how a panel opened by mistake gets out of the way. -->
-      <template v-if="isFilterPanelOpen && !isLarge">
-        <div
-          class="tw-absolute tw-inset-0 tw-z-40 tw-bg-black/20"
-          @click="isFilterPanelOpen = false"
-        />
-        <Pane
-          :class="
-            isSmall
-              ? 'tw-fixed tw-inset-0 tw-z-50 tw-rounded-none tw-border-0 tw-shadow-none'
-              : 'tw-absolute tw-inset-y-0 tw-left-3 tw-z-50 tw-w-[304px] tw-shadow-[18px_0_44px_rgba(38,38,38,0.16)]'
-          "
-        >
-          <ScheduleSidebar
-            :options="filterOptions"
-            :schedule="schedule"
-            :reachable="reachableValues"
-            :leavesByEmplid="termLeavesByEmplid"
-            :unofficialCourseCodes="unofficialCourseCodes"
-            isDismissible
-            @close="isFilterPanelOpen = false"
-          />
-        </Pane>
-      </template>
     </div>
 
     <TermLeaveStrip
@@ -271,6 +249,7 @@ import Pane from "@/components/planning/Pane.vue";
 import PlanningToolbar from "./components/PlanningToolbar.vue";
 import ScheduleGrid from "./components/ScheduleGrid.vue";
 import ScheduleSidebar from "./components/ScheduleSidebar.vue";
+import FilterDock from "@/components/planning/FilterDock.vue";
 import SectionBlock from "./components/SectionBlock.vue";
 import SectionSheet from "./components/SectionSheet.vue";
 import SheetMount from "./components/SheetMount.vue";
@@ -279,6 +258,7 @@ import { bandsForDay } from "./helpers/dayBands";
 import { buildFilterOptions } from "./helpers/filterOptions";
 import { leavesByEmplid } from "./helpers/leavesByEmplid";
 import { reachableFacetValues } from "./helpers/scheduleFilters";
+import { appliedScheduleFilters } from "./helpers/appliedScheduleFilters";
 import { ASYNC_DAY_INDEX, WEEKDAY_NAMES } from "./helpers/scheduleDays";
 import { refusalMessage } from "@/utils/refusalMessage";
 import { formatTimeRange } from "./helpers/timeScale";
@@ -325,13 +305,9 @@ const VIEW_LABELS: Record<ScheduleView, string> = {
   heatmap: "Coverage",
 };
 
-const isFilterPanelOpen = ref(false);
+const isFilterPanelOpen = ref(isLarge.value);
 
-// A panel summoned on a narrow screen has no business staying open once the
-// window is wide enough to dock it.
-watch(isLarge, (isDocked) => {
-  if (isDocked) isFilterPanelOpen.value = false;
-});
+watch(isLarge, (isWide) => (isFilterPanelOpen.value = isWide));
 
 const {
   today,
@@ -372,8 +348,7 @@ const suggestedSourceTerm = computed(() => {
   return (
     (groupTermsQuery.data.value ?? []).find(
       (term) => term.termCode === aYearBack,
-    ) ??
-    null
+    ) ?? null
   );
 });
 
@@ -440,6 +415,10 @@ const filterOptions = computed(() => buildFilterOptions(localSections.value));
 /** What the filters panel still has reason to list; see `isInView` there. */
 const reachableValues = computed(() =>
   reachableFacetValues(localSections.value, schedule.filters),
+);
+
+const appliedFilters = computed(() =>
+  appliedScheduleFilters(filterOptions.value, schedule.filters),
 );
 
 const sectionOf = (meetingId: string) =>

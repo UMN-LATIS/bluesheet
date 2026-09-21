@@ -34,33 +34,6 @@
   </div>
 
   <div class="tw-ml-auto tw-flex tw-flex-none tw-items-center tw-gap-2.5">
-    <!--
-      Only where a panel has to be summoned. Docked, the filters are
-      already on screen and a button to reveal them would say nothing.
-    -->
-    <button
-      v-if="!isLarge"
-      type="button"
-      class="tw-flex tw-min-h-11 tw-cursor-pointer tw-items-center tw-gap-1.5 tw-rounded-full tw-border tw-border-solid tw-bg-surface-bright tw-px-3 tw-text-xs tw-font-semibold hover:tw-bg-surface roomy:tw-min-h-0 roomy:tw-py-1.5"
-      :class="
-        activeFilterCount > 0
-          ? 'tw-border-primary tw-text-primary'
-          : 'tw-border-outline tw-text-on-surface'
-      "
-      :aria-expanded="isFilterPanelOpen"
-      aria-label="Filters"
-      title="Filters"
-      @click="emit('openFilters')"
-    >
-      <FilterIcon aria-hidden="true" />
-      <span
-        v-if="activeFilterCount > 0"
-        class="tw-rounded-full tw-bg-primary tw-px-1.5 tw-text-[10px] tw-leading-4 tw-text-on-primary"
-      >
-        {{ activeFilterCount }}
-      </span>
-    </button>
-
     <!-- A week of lanes cannot be read on a phone, so that one option
          drops out; the switch itself stays, since the day list and the
          heatmap are both worth having there. -->
@@ -140,7 +113,7 @@
 import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { omit, pick } from "lodash-es";
-import { FilterIcon, LockIcon } from "@/icons";
+import { LockIcon } from "@/icons";
 import { MoreMenu, MoreMenuItem } from "@/components/MoreMenu";
 import { useGroupQuery } from "../queries/useGroupQuery";
 import { useSisGroupsQuery } from "../queries/useSisGroupsQuery";
@@ -157,16 +130,12 @@ const props = defineProps<{
   view: ScheduleView;
   isReadOnly: boolean;
   plannedSectionCount: number;
-  /** Across every facet, which is what the filter button's badge shows. */
-  activeFilterCount: number;
-  isFilterPanelOpen: boolean;
   /** Today, as "YYYY-MM-DD"; the term list marks the one we are inside. */
   today: string;
 }>();
 
 const emit = defineEmits<{
   selectView: [view: ScheduleView];
-  openFilters: [];
   openImport: [];
   deleteAll: [];
 }>();
@@ -174,7 +143,7 @@ const emit = defineEmits<{
 const route = useRoute();
 const router = useRouter();
 
-const { isLarge, isSmall } = useScreenSize();
+const { isSmall } = useScreenSize();
 
 const VIEW_OPTIONS: { value: ScheduleView; label: string }[] = [
   { value: "day", label: "Day" },
