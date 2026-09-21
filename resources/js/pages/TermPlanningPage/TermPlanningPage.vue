@@ -14,6 +14,7 @@
         :isReadOnly="isReadOnly"
         :plannedSectionCount="sections.length"
         @selectView="schedule.selectView"
+        @createSection="schedule.startCreatingSection"
         @openImport="openImport"
         @deleteAll="isDeleteAllOpen = true"
       />
@@ -57,7 +58,10 @@
       <Pane
         as="section"
         :aria-label="`${VIEW_LABELS[activeView]} schedule`"
-        class="tw-flex tw-min-h-0 tw-min-w-0 tw-flex-1 tw-flex-col"
+        :class="[
+          'tw-flex tw-min-h-0 tw-min-w-0 tw-flex-1 tw-flex-col',
+          isReadOnly ? 'tw-bg-surface-inert' : '',
+        ]"
       >
         <Notification
           v-if="writeError"
@@ -189,7 +193,7 @@
           :isReadOnly="isReadOnly"
           @back="goBackToHour"
           @close="closeSheet"
-          @create="createDrawnSection"
+          @create="createNewSection"
           @discard="schedule.discardNewSection"
           @delete="deleteSelectedSection"
         />
@@ -515,13 +519,13 @@ const showRefusal = (refusal: unknown) => {
 };
 
 /**
- * Read synchronously by `createDrawnSection` rather than watched, because two
+ * Read synchronously by `createNewSection` rather than watched, because two
  * clicks land before Vue has re-rendered the button as disabled, and the
  * second would POST the same section again.
  */
 const isSavingNewSection = ref(false);
 
-async function createDrawnSection() {
+async function createNewSection() {
   const standIn = newSection.value;
   if (!standIn || isSavingNewSection.value) return;
 

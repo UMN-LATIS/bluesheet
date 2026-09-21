@@ -1,5 +1,5 @@
 <template>
-  <div class="tw-bg-surface-bright">
+  <div :class="canvasClass">
     <!-- --day-label-offset: where DayColumn pins a scrolling day's name -->
     <div
       class="tw-flex tw-w-max tw-min-w-full tw-items-start"
@@ -11,7 +11,8 @@
       -->
       <div
         ref="gutter"
-        class="tw-sticky tw-left-0 tw-z-40 tw-flex tw-flex-none tw-border-0 tw-border-r tw-border-solid tw-border-outline tw-bg-surface-bright"
+        class="tw-sticky tw-left-0 tw-z-40 tw-flex tw-flex-none tw-border-0 tw-border-r tw-border-solid tw-border-outline"
+        :class="canvasClass"
       >
         <TimeAxis />
       </div>
@@ -121,6 +122,11 @@ const props = defineProps<{
   /** Which section the sheet is open on, so its chip can show it. */
   selectedSectionId: number | null;
 }>();
+
+/** A closed term is a record, not a workspace, so its canvas comes off white. */
+const canvasClass = computed(() =>
+  props.schedule.isReadOnly ? "tw-bg-surface-inert" : "tw-bg-surface-bright",
+);
 
 const days = ref<HTMLElement | null>(null);
 const gutter = ref<HTMLElement | null>(null);

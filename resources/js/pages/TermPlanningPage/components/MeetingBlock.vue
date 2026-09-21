@@ -40,7 +40,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import MeetingTimes from "./MeetingTimes.vue";
-import { colorOfType } from "@/utils/meetingTypeColors";
+import { colorOfType, mutedColorOfType } from "@/utils/meetingTypeColors";
 import { heightOf, topOf } from "../helpers/timeScale";
 
 const props = defineProps<{
@@ -69,7 +69,9 @@ const appearance = computed(() => {
     return "tw-border-dashed tw-border-brand tw-bg-brand-container tw-text-brand";
   }
 
-  const type = colorOfType(props.component);
+  const type = props.isReadOnly
+    ? mutedColorOfType(props.component)
+    : colorOfType(props.component);
   // A dashed edge rather than a color of its own: the block keeps saying what
   // component it is, and the same dashes mark the Async column and the draft.
   const edge = props.isUnofficial ? "tw-border-dashed" : "";

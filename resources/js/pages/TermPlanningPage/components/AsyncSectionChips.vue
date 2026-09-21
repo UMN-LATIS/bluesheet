@@ -26,8 +26,8 @@
         type="button"
         class="tw-flex tw-w-full tw-cursor-pointer tw-items-center tw-gap-[7px] tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-border-l-[3px] tw-py-[3px] tw-pl-3 tw-pr-[5px] tw-text-[11px] tw-leading-tight tw-text-on-surface hover:tw-border-outline"
         :class="[
-          colorOfType(section.component).tint,
-          colorOfType(section.component).rail,
+          chipColorOf(section.component).tint,
+          chipColorOf(section.component).rail,
           section.id === selectedSectionId && [
             'tw-outline tw-outline-2 tw-outline-offset-0',
             // Ink where nothing can be acted on; see MeetingBlock.
@@ -71,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-import { colorOfType } from "@/utils/meetingTypeColors";
+import { colorOfType, mutedColorOfType } from "@/utils/meetingTypeColors";
 import { NoteIcon } from "@/icons";
 import { instructorsOfRecord } from "../helpers/sectionPeople";
 import type { PlannedSection, SisInstructor } from "../types";
@@ -88,6 +88,11 @@ const props = withDefaults(
   }>(),
   { layout: "wrap" },
 );
+
+const chipColorOf = (component: string) =>
+  props.schedule.isReadOnly
+    ? mutedColorOfType(component)
+    : colorOfType(component);
 
 const leadInstructorOf = (section: PlannedSection): SisInstructor | undefined =>
   instructorsOfRecord(section.instructors)[0];

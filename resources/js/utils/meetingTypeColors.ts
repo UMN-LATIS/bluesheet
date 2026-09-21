@@ -83,6 +83,25 @@ export function colorOfType(component: string | undefined): MeetingTypeColor {
 }
 
 /**
+ * The same block in a term nobody can edit. Color here says what kind of
+ * meeting a block is, and a closed term is not being planned, so the type
+ * drops to the page's own warm greys and the block reads as a record rather
+ * than a thing to move. The code and the label stay, since the block still
+ * says which type it is in words.
+ */
+export function mutedColorOfType(
+  component: string | undefined,
+): MeetingTypeColor {
+  return {
+    ...colorOfType(component),
+    tint: "tw-bg-surface-container",
+    rail: "tw-border-l-outline",
+    dot: "tw-bg-outline",
+    badge: "tw-bg-surface-container tw-border-outline",
+  };
+}
+
+/**
  * What a component code means, for the places that have room to say it: the
  * Types list in the filters panel, and the sheet's component select.
  */
