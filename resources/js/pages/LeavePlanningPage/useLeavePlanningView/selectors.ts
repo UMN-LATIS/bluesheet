@@ -20,6 +20,7 @@ import {
   type VisibleRecords,
 } from "../helpers/filterOptions";
 import { isEqual } from "lodash-es";
+import type { AppliedFilter } from "@/utils/appliedFilterSummary";
 import {
   FILTER_FACETS,
   HISTORY_FACETS,
@@ -274,12 +275,6 @@ export const selectActiveFilterCount = (
     (count, facet) => count + state.filters[facet].length,
     0,
   );
-
-export interface AppliedFilter {
-  facet: FilterFacet;
-  /** What the reader picked, in the words the panel showed them. */
-  values: string[];
-}
 
 export const selectAppliedFilters = (
   context: ViewContext,

@@ -1,6 +1,6 @@
 <!--
   The filter panel and the control that opens it are one object: shut, the
-  panel is a rail the width of its own toggle.
+  panel is a rail the width of its own toggle. The panel itself is the slot.
 -->
 <template>
   <Pane
@@ -14,12 +14,12 @@
         :activeFilterCount="activeFilterCount"
         @toggle="emit('toggle')"
       />
-      <PlanningSidebar :planning="planning" />
+      <slot />
     </template>
 
     <FilterRail
       v-else
-      :appliedFilters="planning.appliedFilters"
+      :appliedFilters="appliedFilters"
       :activeFilterCount="activeFilterCount"
       @toggle="emit('toggle')"
     />
@@ -42,20 +42,19 @@
         :activeFilterCount="activeFilterCount"
         @toggle="emit('toggle')"
       />
-      <PlanningSidebar :planning="planning" />
+      <slot />
     </Pane>
   </template>
 </template>
 
 <script setup lang="ts">
-import Pane from "@/components/planning/Pane.vue";
+import Pane from "./Pane.vue";
 import FilterRail from "./FilterRail.vue";
-import PlanningSidebar from "./PlanningSidebar.vue";
 import RailToggle from "./RailToggle.vue";
-import type { LeavePlanningView } from "../useLeavePlanningView/useLeavePlanningView";
+import type { AppliedFilter } from "@/utils/appliedFilterSummary";
 
 defineProps<{
-  planning: LeavePlanningView;
+  appliedFilters: AppliedFilter[];
   isOpen: boolean;
   /** Wide enough to stand the panel beside the canvas instead of over it. */
   isDocked: boolean;

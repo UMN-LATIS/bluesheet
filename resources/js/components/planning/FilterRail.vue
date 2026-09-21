@@ -45,8 +45,10 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { ChevronRightIcon, FilterIcon } from "@/icons";
-import { summarizeAppliedFilters } from "../helpers/appliedFilterSummary";
-import type { AppliedFilter } from "../useLeavePlanningView/selectors";
+import {
+  summarizeAppliedFilters,
+  type AppliedFilter,
+} from "@/utils/appliedFilterSummary";
 
 const props = defineProps<{
   appliedFilters: AppliedFilter[];

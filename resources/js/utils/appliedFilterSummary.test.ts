@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { summarizeAppliedFilters } from "./appliedFilterSummary";
-import type { AppliedFilter } from "../useLeavePlanningView/selectors";
+import type { AppliedFilter } from "./appliedFilterSummary";
 
 const applied = (values: string[]): AppliedFilter => ({
   facet: "status",

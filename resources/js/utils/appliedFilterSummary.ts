@@ -1,4 +1,8 @@
-import type { AppliedFilter } from "../useLeavePlanningView/selectors";
+/** What a reader picked in one facet, in the words the filter panel showed them. */
+export interface AppliedFilter {
+  facet: string;
+  values: string[];
+}
 
 /**
  * A person reads "Olsen, Mallory", so joining values with a comma would make

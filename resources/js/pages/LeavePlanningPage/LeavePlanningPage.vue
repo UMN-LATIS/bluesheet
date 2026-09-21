@@ -20,13 +20,15 @@
       class="tw-relative tw-flex tw-min-h-0 tw-flex-1 tw-gap-3 tw-px-3 tw-pb-3 roomy:tw-px-4 roomy:tw-pb-4"
     >
       <FilterDock
-        :planning="planning"
+        :appliedFilters="planning.appliedFilters"
         :isOpen="isFilterPanelOpen"
         :isDocked="isLarge"
         :isSmall="isSmall"
         :activeFilterCount="planning.activeFilterCount"
         @toggle="isFilterPanelOpen = !isFilterPanelOpen"
-      />
+      >
+        <PlanningSidebar :planning="planning" />
+      </FilterDock>
 
       <Pane
         as="section"
@@ -175,7 +177,8 @@ import { flattenQuery } from "@/utils/urlQuery";
 import { termsOverlapping } from "@/utils/termsOverlapping";
 import { useScreenSize } from "@/utils/useScreenSize";
 import LeavePlanningToolbar from "./components/LeavePlanningToolbar.vue";
-import FilterDock from "./components/FilterDock.vue";
+import FilterDock from "@/components/planning/FilterDock.vue";
+import PlanningSidebar from "./components/PlanningSidebar.vue";
 import AxisRange from "./components/AxisRange.vue";
 import TimelineCanvas from "./components/TimelineCanvas.vue";
 import LeaveRows from "./components/LeaveRows.vue";
