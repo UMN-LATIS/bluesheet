@@ -38,12 +38,7 @@
           :value="modelValue"
           :aria-label="`${dateLabel}, custom date`"
           class="tw-w-full tw-border-none tw-bg-transparent tw-p-0 tw-text-sm focus:tw-outline-none"
-          @input="
-            $emit(
-              'update:modelValue',
-              ($event.target as HTMLInputElement).value,
-            )
-          "
+          @input="emitDate"
         />
         <span class="tw-text-xs tw-text-neutral-500">Custom date</span>
       </div>
@@ -78,8 +73,7 @@ const props = withDefaults(
     isOptionDisabled?: (opt: ComboBoxOptionType) => boolean;
     validator?: (value: unknown) => boolean;
     errorText?: string;
-    /** Callers already holding the dates pass them rather than
-     * waking the Pinia store a second time. */
+    /** Omit to fetch through useTermPayrollDatesStore on mount. */
     payrollDates?: T.TermPayrollDate[];
   }>(),
   {
@@ -92,9 +86,12 @@ const props = withDefaults(
   },
 );
 
-defineEmits<{
+const emit = defineEmits<{
   (event: "update:modelValue", value: string): void;
 }>();
+
+const emitDate = (event: Event) =>
+  emit("update:modelValue", (event.target as HTMLInputElement).value);
 
 const dateLabel = computed(() =>
   props.variant === "start" ? "Leave start date" : "Leave end date",

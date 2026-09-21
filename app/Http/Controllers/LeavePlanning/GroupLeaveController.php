@@ -67,7 +67,7 @@ class GroupLeaveController extends Controller {
         return [
             'range' => $range,
             'people' => PlanningPeople::forEmplids($deptId, $leaveEmplids),
-            'leaves' => $leaves->map(fn(Leave $leave) => self::describe($leave)),
+            'leaves' => $leaves->map(fn(Leave $leave) => self::toPlanningLeaveArray($leave)),
         ];
     }
 
@@ -83,7 +83,7 @@ class GroupLeaveController extends Controller {
             'type' => ['required', Rule::in(Leave::TYPES)],
         ]);
 
-        $owner = self::leaveOwnerIn($group, $validated['emplid'], $userService);
+        $owner = self::findOrCreateLeaveOwnerIn($group, $validated['emplid'], $userService);
 
         // Dropping this as redundant lets a group manager
         // write leaves for any appointee in the department,
@@ -95,7 +95,7 @@ class GroupLeaveController extends Controller {
             'user_id' => $owner->id,
         ]);
 
-        return self::describe($leave->load('user'));
+        return self::toPlanningLeaveArray($leave->load('user'));
     }
 
     /**
@@ -105,7 +105,7 @@ class GroupLeaveController extends Controller {
      * to this department, or the directory does not know
      * them.
      */
-    private static function leaveOwnerIn(Group $group, int $emplid, UserService $userService): User {
+    private static function findOrCreateLeaveOwnerIn(Group $group, int $emplid, UserService $userService): User {
         $deptId = $group->sis_dept_id;
 
         $isAppointed = $deptId !== null && SisAppointment::query()
@@ -134,7 +134,7 @@ class GroupLeaveController extends Controller {
      * Renaming a key here blanks the leave bars and fails
      * LeavePlanningApiTest, which asserts this array whole.
      */
-    private static function describe(Leave $leave): array {
+    private static function toPlanningLeaveArray(Leave $leave): array {
         return [
             'id' => $leave->id,
             'emplid' => $leave->user->emplid,

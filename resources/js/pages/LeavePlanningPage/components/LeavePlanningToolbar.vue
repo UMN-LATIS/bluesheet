@@ -63,7 +63,7 @@ import Button from "@/components/Button.vue";
 import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { pick } from "lodash-es";
-import type { PlanningGroup, PlanningTerm } from "@/types";
+import type { PlanningGroup } from "@/types";
 import { useScreenSize } from "@/utils/useScreenSize";
 import { useGroupQuery } from "../queries/useGroupQuery";
 import { useLeavePlanningGroupsQuery } from "../queries/useLeavePlanningGroupsQuery";
@@ -71,8 +71,6 @@ import type { TeachingView } from "../useLeavePlanningView/types";
 
 const props = defineProps<{
   groupId: number;
-  terms: PlanningTerm[];
-  canViewCourses: boolean;
   canCreateLeaves: boolean;
   isHistoryShown: boolean;
   view: TeachingView;

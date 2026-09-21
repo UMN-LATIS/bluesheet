@@ -29,7 +29,7 @@ export const initialState = (): ViewState => ({
   pendingDismissal: null,
 });
 
-const DISCARDS_DRAFT: ViewEvent["type"][] = [
+const DRAFT_DISCARDING_EVENTS: ViewEvent["type"][] = [
   "leaveSelected",
   "sectionSelected",
   "deselected",
@@ -38,7 +38,7 @@ const DISCARDS_DRAFT: ViewEvent["type"][] = [
 ];
 
 const isUnsaved = (editor: Editor | null): boolean =>
-  editor !== null && !isEqual(editor.draft, editor.opened);
+  editor !== null && !isEqual(editor.draft, editor.openedDraft);
 
 export const draftFor = (
   emplid: number | null,
@@ -54,16 +54,16 @@ export const draftFor = (
 });
 
 export function update(state: ViewState, event: ViewEvent): Next {
-  // Releasing the held event through `reduce` instead skips
-  // the effect below, so confirming a discard changes the
-  // selection without writing it to the URL.
+  // Releasing the held event through `reduce` instead
+  // skips the `replaceUrlQuery` effect, so confirming a
+  // discard changes the selection without writing the URL.
   if (event.type === "dismissalConfirmed") {
     const held = state.pendingDismissal;
     if (held === null) return { state, effects: [] };
     return update({ ...state, editor: null, pendingDismissal: null }, held);
   }
 
-  if (isUnsaved(state.editor) && DISCARDS_DRAFT.includes(event.type)) {
+  if (isUnsaved(state.editor) && DRAFT_DISCARDING_EVENTS.includes(event.type)) {
     return { state: { ...state, pendingDismissal: event }, effects: [] };
   }
 
@@ -170,10 +170,10 @@ function reduce(state: ViewState, event: ViewEvent): ViewState {
       return {
         ...state,
         editor: {
-          kind: "editing",
+          kind: "editingLeave",
           leaveId: state.selection.leaveId,
           draft: event.draft,
-          opened: event.draft,
+          openedDraft: event.draft,
         },
       };
     }
@@ -183,7 +183,7 @@ function reduce(state: ViewState, event: ViewEvent): ViewState {
       return {
         ...state,
         selection: null,
-        editor: { kind: "creating", draft, opened: draft },
+        editor: { kind: "creatingLeave", draft, openedDraft: draft },
       };
     }
 

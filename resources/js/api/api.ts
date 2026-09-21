@@ -189,7 +189,7 @@ export async function getPermissionsForSubgroupsOf(groupId: T.Group["id"]) {
   return res.data;
 }
 
-export async function fetchSisEmployeesForGroup(groupId: T.Group["id"]) {
+export async function getSisEmployeesForGroup(groupId: T.Group["id"]) {
   const res = await axios.get<T.SisEmployee[]>(
     `/api/sis/groups/${groupId}/employees`,
   );

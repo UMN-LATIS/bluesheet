@@ -206,7 +206,7 @@
           :isReadOnly="isReadOnly"
           @back="goBackToHour"
           @close="closeSheet"
-          @create="createNewSection"
+          @create="saveNewSection"
           @discard="schedule.discardNewSection"
           @delete="deleteSelectedSection"
         />
@@ -533,13 +533,13 @@ const showRefusal = (refusal: unknown) => {
 };
 
 /**
- * Read synchronously by `createNewSection` rather than watched, because two
+ * Read synchronously by `saveNewSection` rather than watched, because two
  * clicks land before Vue has re-rendered the button as disabled, and the
  * second would POST the same section again.
  */
 const isSavingNewSection = ref(false);
 
-async function createNewSection() {
+async function saveNewSection() {
   const standIn = newSection.value;
   if (!standIn || isSavingNewSection.value) return;
 

@@ -123,9 +123,8 @@ const props = defineProps<{
   selectedSectionId: number | null;
 }>();
 
-/** A closed term is a record, not a workspace, so its canvas comes off white. */
 const canvasClass = computed(() =>
-  props.schedule.isReadOnly ? "tw-bg-surface-inert" : "tw-bg-surface-bright",
+  props.schedule.isReadOnly ? "tw-bg-surface" : "tw-bg-surface-bright",
 );
 
 const days = ref<HTMLElement | null>(null);

@@ -6,8 +6,6 @@
     <template #bar>
       <LeavePlanningToolbar
         :groupId="groupId"
-        :terms="terms"
-        :canViewCourses="canViewCourses"
         :canCreateLeaves="canCreateLeaves"
         :isHistoryShown="planning.isHistoryShown"
         :view="planning.view"
@@ -42,7 +40,7 @@
           {{ unavailableMessage }}
         </p>
 
-        <AxisRange
+        <TimelineHeaderBar
           v-if="!unavailableMessage"
           :terms="terms"
           :range="planning.timelineRange"
@@ -102,11 +100,15 @@
 
       <PanelMount v-if="isPanelOpen" :panelWidthPx="panelWidthPx">
         <LeavePanel
-          v-if="panelLeave || planning.draft"
-          :leave="panelLeave"
+          v-if="planning.selectedLeave || planning.draft"
+          :leave="planning.selectedLeave"
           :person="panelPerson"
           :otherLeaves="otherLeavesOfSelectedLeave"
-          :terms="panelLeave ? termsOverlapping(terms, panelLeave) : []"
+          :terms="
+            planning.selectedLeave
+              ? termsOverlapping(terms, planning.selectedLeave)
+              : []
+          "
           :groupId="groupId"
           :canViewTermPlanning="canViewCourses"
           :draft="planning.draft"
@@ -170,7 +172,7 @@ import { onKeyStroke } from "@vueuse/core";
 import { useRoute, useRouter } from "vue-router";
 import { omit } from "lodash-es";
 import dayjs from "dayjs";
-import type { PlanningLeave } from "@/types";
+import type { LeaveStatus, LeaveType, PlanningLeave } from "@/types";
 import FullScreenLayout from "@/layouts/FullScreenLayout.vue";
 import Pane from "@/components/planning/Pane.vue";
 import { flattenQuery } from "@/utils/urlQuery";
@@ -179,7 +181,7 @@ import { useScreenSize } from "@/utils/useScreenSize";
 import LeavePlanningToolbar from "./components/LeavePlanningToolbar.vue";
 import FilterDock from "@/components/planning/FilterDock.vue";
 import PlanningSidebar from "./components/PlanningSidebar.vue";
-import AxisRange from "./components/AxisRange.vue";
+import TimelineHeaderBar from "./components/TimelineHeaderBar.vue";
 import TimelineCanvas from "./components/TimelineCanvas.vue";
 import LeaveRows from "./components/LeaveRows.vue";
 import PersonHistoryRows from "./components/PersonHistoryRows.vue";
@@ -195,7 +197,7 @@ import { useLeavePermissionsQuery } from "./queries/useLeavePermissionsQuery";
 import { useLeavePermissionsForGroupQuery } from "./queries/useLeavePermissionsForGroupQuery";
 import { useSisEmployeesQuery } from "@/queries/useSisEmployeesQuery";
 import { useTermPayrollDatesQuery } from "./queries/useTermPayrollDatesQuery";
-import { seededRangeFor } from "./helpers/seededRange";
+import { newLeaveDatesAt } from "./helpers/newLeaveDates";
 import { refusalMessage } from "@/utils/refusalMessage";
 import type { ArtifactPayload } from "@/api/leavePlanningApi";
 import { useTeachingHistoryQuery } from "./queries/useTeachingHistoryQuery";
@@ -366,12 +368,10 @@ const rosterQuery = useSisEmployeesQuery(groupId, canCreateLeaves);
 
 const mutations = useLeaveMutations(groupId);
 
-/** The leave the panel is on, which stays put while it is being edited. */
-const panelLeave = computed(() => planning.selectedLeave);
-
 const panelPerson = computed(() => {
-  const emplid = panelLeave.value?.emplid ?? planning.draft?.emplid;
-  if (emplid === null || emplid === undefined) return undefined;
+  const leaveEmplid = planning.selectedLeave?.emplid ?? null;
+  const emplid = leaveEmplid ?? planning.draft?.emplid ?? null;
+  if (emplid === null) return undefined;
   return planning.peopleByEmplid.get(emplid);
 });
 
@@ -389,7 +389,7 @@ const isSaving = computed(
 const refusal = ref<string | null>(null);
 
 watch(
-  () => planning.panelMode,
+  () => [openLeaveId.value, planning.draft],
   () => (refusal.value = null),
 );
 
@@ -397,7 +397,7 @@ function startCreatingAt(emplid: number, fraction: number) {
   const axis = planning.axis;
   if (!axis) return;
 
-  const range = seededRangeFor(
+  const range = newLeaveDatesAt(
     axis,
     payrollDatesQuery.data.value ?? [],
     fraction,
@@ -411,7 +411,7 @@ function startCreatingAt(emplid: number, fraction: number) {
 function startCreatingWithoutPerson() {
   const axis = planning.axis;
   const range = axis
-    ? seededRangeFor(axis, payrollDatesQuery.data.value ?? [], 0.5)
+    ? newLeaveDatesAt(axis, payrollDatesQuery.data.value ?? [], 0.5)
     : null;
 
   refusal.value = null;
@@ -423,7 +423,7 @@ function startCreatingWithoutPerson() {
 }
 
 const startEditing = () => {
-  const leave = panelLeave.value;
+  const leave = planning.selectedLeave;
   if (!leave) return;
   refusal.value = null;
   planning.requestEdit({
@@ -439,6 +439,14 @@ const startEditing = () => {
 const REFUSED =
   "That change could not be saved. Check your connection and try again.";
 
+type LeaveWrite = {
+  description: string;
+  start_date: string;
+  end_date: string;
+  status: LeaveStatus;
+  type: LeaveType;
+};
+
 async function saveDraft() {
   const draft = planning.draft;
   if (!draft) return;
@@ -452,47 +460,56 @@ async function saveDraft() {
     type: draft.type,
   };
 
-  try {
-    const editedLeaveId =
-      planning.selection?.kind === "leave" ? planning.selection.leaveId : null;
+  const editedLeaveId =
+    planning.selection?.kind === "leave" ? planning.selection.leaveId : null;
 
+  try {
     if (editedLeaveId === null) {
-      if (draft.emplid === null) return;
-      const created = await mutations.createLeave.mutateAsync({
-        ...fields,
-        emplid: draft.emplid,
-      });
-      planning.leavePersisted(created.id);
+      await createLeaveFromDraft(draft.emplid, fields);
       return;
     }
-
-    const userId = panelLeave.value?.userId;
-    if (userId === undefined) return;
-
-    await mutations.saveLeave.mutateAsync({
-      leaveId: editedLeaveId,
-      payload: { ...fields, user_id: userId },
-    });
-    planning.leavePersisted(editedLeaveId);
+    await saveLeaveEdits(editedLeaveId, fields);
   } catch (error) {
     refusal.value = refusalMessage(error) ?? REFUSED;
   }
 }
 
+async function createLeaveFromDraft(emplid: number | null, fields: LeaveWrite) {
+  if (emplid === null) return;
+  const created = await mutations.createLeave.mutateAsync({
+    ...fields,
+    emplid,
+  });
+  planning.markLeavePersisted(created.id);
+}
+
+async function saveLeaveEdits(leaveId: number, fields: LeaveWrite) {
+  const userId = planning.selectedLeave?.userId;
+  if (userId === undefined) return;
+
+  await mutations.saveLeave.mutateAsync({
+    leaveId,
+    payload: { ...fields, user_id: userId },
+  });
+  planning.markLeavePersisted(leaveId);
+}
+
 async function deleteSelectedLeave() {
-  const leaveId = panelLeave.value?.id;
+  const leaveId = planning.selectedLeave?.id;
   if (leaveId === undefined) return;
   refusal.value = null;
 
   try {
     await mutations.deleteLeave.mutateAsync(leaveId);
-    planning.leaveDeleted();
+    planning.markLeaveDeleted();
   } catch (error) {
     refusal.value = refusalMessage(error) ?? REFUSED;
   }
 }
 
-const withOpenLeave = async (write: (leaveId: number) => Promise<unknown>) => {
+const writeToOpenLeave = async (
+  write: (leaveId: number) => Promise<unknown>,
+) => {
   const leaveId = openLeaveId.value;
   if (leaveId === null) return;
   refusal.value = null;
@@ -505,17 +522,17 @@ const withOpenLeave = async (write: (leaveId: number) => Promise<unknown>) => {
 };
 
 const createArtifact = (payload: ArtifactPayload) =>
-  withOpenLeave((leaveId) =>
+  writeToOpenLeave((leaveId) =>
     mutations.createArtifact.mutateAsync({ leaveId, payload }),
   );
 
 const saveArtifact = (artifactId: number, payload: ArtifactPayload) =>
-  withOpenLeave((leaveId) =>
+  writeToOpenLeave((leaveId) =>
     mutations.saveArtifact.mutateAsync({ leaveId, artifactId, payload }),
   );
 
 const deleteArtifact = (artifactId: number) =>
-  withOpenLeave((leaveId) =>
+  writeToOpenLeave((leaveId) =>
     mutations.deleteArtifact.mutateAsync({ leaveId, artifactId }),
   );
 

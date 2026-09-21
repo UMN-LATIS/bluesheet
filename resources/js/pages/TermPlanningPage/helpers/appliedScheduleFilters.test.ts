@@ -64,25 +64,25 @@ describe("appliedScheduleFilters", () => {
   it("names a course as the panel prints it, not as the filter stores it", () => {
     expect(
       appliedScheduleFilters(options, filters({ course: ["ANTH-1001"] })),
-    ).toEqual([{ facet: "course", values: ["ANTH 1001"] }]);
+    ).toEqual([{ values: ["ANTH 1001"] }]);
   });
 
   it("names a person last name first", () => {
     expect(
       appliedScheduleFilters(options, filters({ person: ["4542085"] })),
-    ).toEqual([{ facet: "person", values: ["Tippett, Nandi"] }]);
+    ).toEqual([{ values: ["Tippett, Nandi"] }]);
   });
 
   it("names the unassigned row rather than its stored value", () => {
     expect(
       appliedScheduleFilters(options, filters({ person: [TBA_PERSON] })),
-    ).toEqual([{ facet: "person", values: ["TBA"] }]);
+    ).toEqual([{ values: ["TBA"] }]);
   });
 
   it("drops the middot from a section label so it reads as one value", () => {
     expect(
       appliedScheduleFilters(options, filters({ section: ["2"] })),
-    ).toEqual([{ facet: "section", values: ["ANTH 3011 002"] }]);
+    ).toEqual([{ values: ["ANTH 3011 002"] }]);
   });
 
   it("lists facets in the order the panel lists them", () => {
@@ -90,6 +90,6 @@ describe("appliedScheduleFilters", () => {
       options,
       filters({ component: ["LAB"], course: ["ANTH-3011"] }),
     );
-    expect(applied.map(({ facet }) => facet)).toEqual(["course", "component"]);
+    expect(applied).toEqual([{ values: ["ANTH 3011"] }, { values: ["LAB"] }]);
   });
 });

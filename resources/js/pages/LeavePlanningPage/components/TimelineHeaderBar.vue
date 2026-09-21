@@ -1,4 +1,3 @@
-<!-- The span the timeline draws, set at the head of the axis it scopes. -->
 <template>
   <div
     class="tw-flex tw-flex-none tw-items-center tw-gap-1.5 tw-border-0 tw-border-b tw-border-solid tw-border-outline-variant tw-px-3 tw-py-1.5"

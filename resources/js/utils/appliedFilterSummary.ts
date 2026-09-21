@@ -1,6 +1,5 @@
 /** What a reader picked in one facet, in the words the filter panel showed them. */
 export interface AppliedFilter {
-  facet: string;
   values: string[];
 }
 
@@ -22,9 +21,11 @@ export function summarizeAppliedFilters(applied: AppliedFilter[]): string {
   let width = 0;
 
   for (const value of values) {
-    const grown =
-      width === 0 ? value.length : width + SEPARATOR.length + value.length;
-    if (shown.length > 0 && grown > MAX_CHARACTERS) break;
+    const isFirst = shown.length === 0;
+    const grown = isFirst
+      ? value.length
+      : width + SEPARATOR.length + value.length;
+    if (!isFirst && grown > MAX_CHARACTERS) break;
 
     shown.push(value);
     width = grown;

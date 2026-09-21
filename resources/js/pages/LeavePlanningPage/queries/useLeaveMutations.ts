@@ -9,7 +9,7 @@ import {
   saveLeaveEdits,
   type ArtifactPayload,
   type NewLeavePayload,
-  type SavedLeavePayload,
+  type ExistingLeavePayload,
 } from "@/api/leavePlanningApi";
 import { leaveArtifactsQueryKey } from "./useLeaveArtifactsQuery";
 
@@ -38,7 +38,7 @@ export function useLeaveMutations(groupId: Readonly<Ref<number>>) {
       payload,
     }: {
       leaveId: number;
-      payload: SavedLeavePayload;
+      payload: ExistingLeavePayload;
     }) => saveLeaveEdits(leaveId, payload),
     onSuccess: refetchTimeline,
   });

@@ -41,10 +41,6 @@ class GroupPolicy
             || ($maybeParentGroup && $user->managesGroup($maybeParentGroup));
     }
 
-    /**
-     * Restating these two globals here instead lets the
-     * roster drift from what either planner itself allows.
-     */
     public function viewRoster(User $user, Group $group): bool
     {
         return $user->can('viewAnyCoursesForGroup', [LocalCourse::class, $group])

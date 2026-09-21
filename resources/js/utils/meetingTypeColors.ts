@@ -82,18 +82,15 @@ export function colorOfType(component: string | undefined): MeetingTypeColor {
   return (component && MEETING_TYPE_COLORS[component]) || OTHER_TYPE_COLOR;
 }
 
-/**
- * The same block in a term nobody can edit. Color here says what kind of
- * meeting a block is, and a closed term is not being planned, so the type
- * drops to the page's own warm greys and the block reads as a record rather
- * than a thing to move. The code and the label stay, since the block still
- * says which type it is in words.
- */
-export function mutedColorOfType(
+export function colorOfTypeInTerm(
   component: string | undefined,
+  isReadOnly: boolean,
 ): MeetingTypeColor {
+  const type = colorOfType(component);
+  if (!isReadOnly) return type;
+
   return {
-    ...colorOfType(component),
+    ...type,
     tint: "tw-bg-surface-container",
     rail: "tw-border-l-outline",
     dot: "tw-bg-outline",

@@ -46,13 +46,15 @@ export interface LeaveDraft {
   endDate: string;
 }
 
-/**
- * Non-null exactly when the panel is in edit mode.
- * `draft` differing from `opened` is what unsaved means.
- */
+/** `draft` differing from `openedDraft` is what unsaved means. */
 export type Editor =
-  | { kind: "editing"; leaveId: number; draft: LeaveDraft; opened: LeaveDraft }
-  | { kind: "creating"; draft: LeaveDraft; opened: LeaveDraft };
+  | {
+      kind: "editingLeave";
+      leaveId: number;
+      draft: LeaveDraft;
+      openedDraft: LeaveDraft;
+    }
+  | { kind: "creatingLeave"; draft: LeaveDraft; openedDraft: LeaveDraft };
 
 /**
  * A null `startTermCode` becomes a year before the current
@@ -70,6 +72,7 @@ export interface ViewState {
   filters: PlanningFilters;
   activeFacet: FilterFacet;
   selection: Selection | null;
+  /** Non-null exactly when the panel is in edit mode. */
   editor: Editor | null;
   /**
    * The event held back because running it would drop an

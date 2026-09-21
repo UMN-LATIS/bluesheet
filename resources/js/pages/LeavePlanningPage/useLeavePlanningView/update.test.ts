@@ -194,10 +194,10 @@ describe("the editor", () => {
     const state = editing(7);
 
     expect(state.editor).toEqual({
-      kind: "editing",
+      kind: "editingLeave",
       leaveId: 7,
       draft: savedDraft,
-      opened: savedDraft,
+      openedDraft: savedDraft,
     });
   });
 
@@ -217,7 +217,7 @@ describe("the editor", () => {
       },
     ]);
 
-    expect(state.editor?.kind).toBe("creating");
+    expect(state.editor?.kind).toBe("creatingLeave");
     expect(state.editor?.draft.emplid).toBe(42);
     expect(state.editor?.draft.startDate).toBe("2026-08-31");
     expect(state.selection).toBeNull();
@@ -230,7 +230,7 @@ describe("the editor", () => {
     );
 
     expect(state.editor?.draft.description).toBe("Sabbatical");
-    expect(state.editor?.opened.description).toBe("Fieldwork");
+    expect(state.editor?.openedDraft.description).toBe("Fieldwork");
   });
 
   it("selects the created leave once the server has it", () => {

@@ -51,18 +51,17 @@ function labelsByValue(
   }
 }
 
-/** What is checked, named as the filter panel names it, facet by facet. */
 export function appliedScheduleFilters(
   options: FilterOptions,
   filters: ScheduleFilters,
 ): AppliedFilter[] {
   return FILTER_FACETS.flatMap((facet) => {
-    const chosen = filters[facet];
-    if (chosen.length === 0) return [];
+    const chosenValues = filters[facet];
+    if (chosenValues.length === 0) return [];
 
     const labels = labelsByValue(facet, options);
     return [
-      { facet, values: chosen.map((value) => labels.get(value) ?? value) },
+      { values: chosenValues.map((value) => labels.get(value) ?? value) },
     ];
   });
 }

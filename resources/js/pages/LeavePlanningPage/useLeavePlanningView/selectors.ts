@@ -19,7 +19,6 @@ import {
   type FilterOption,
   type VisibleRecords,
 } from "../helpers/filterOptions";
-import { isEqual } from "lodash-es";
 import type { AppliedFilter } from "@/utils/appliedFilterSummary";
 import {
   FILTER_FACETS,
@@ -281,8 +280,8 @@ export const selectAppliedFilters = (
   state: ViewState,
 ): AppliedFilter[] =>
   selectVisibleFacets(context, state).flatMap((facet) => {
-    const chosen = state.filters[facet];
-    if (chosen.length === 0) return [];
+    const chosenValues = state.filters[facet];
+    if (chosenValues.length === 0) return [];
 
     const records = visibleRecordsOf(
       context,
@@ -297,10 +296,7 @@ export const selectAppliedFilters = (
     );
 
     return [
-      {
-        facet,
-        values: chosen.map((value) => labelOfValue.get(value) ?? value),
-      },
+      { values: chosenValues.map((value) => labelOfValue.get(value) ?? value) },
     ];
   });
 
@@ -325,35 +321,13 @@ export const selectSelectedSection = (
   return sections.find(({ key }) => key === selection.sectionKey) ?? null;
 };
 
-/** What the panel is doing, which is what it renders from. */
-export type PanelMode =
-  | "closed"
-  | "readingLeave"
-  | "editingLeave"
-  | "creatingLeave"
-  | "readingSection";
-
-export const selectPanelMode = (
-  context: ViewContext,
-  state: ViewState,
-): PanelMode => {
-  if (state.editor?.kind === "creating") return "creatingLeave";
-  if (state.editor?.kind === "editing") return "editingLeave";
-  if (selectSelectedLeave(context, state)) return "readingLeave";
-  if (selectSelectedSection(context, state)) return "readingSection";
-  return "closed";
-};
-
 export const selectDraft = (state: ViewState): LeaveDraft | null =>
   state.editor?.draft ?? null;
 
-export const selectIsDraftUnsaved = (state: ViewState): boolean =>
-  state.editor !== null && !isEqual(state.editor.draft, state.editor.opened);
-
 /** The leave whose permissions and artifacts the panel should load. */
 export const selectOpenLeaveId = (state: ViewState): number | null => {
-  if (state.editor?.kind === "editing") return state.editor.leaveId;
-  if (state.editor?.kind === "creating") return null;
+  if (state.editor?.kind === "editingLeave") return state.editor.leaveId;
+  if (state.editor?.kind === "creatingLeave") return null;
   return state.selection?.kind === "leave" ? state.selection.leaveId : null;
 };
 
@@ -363,7 +337,8 @@ export const selectIsDraftValid = (state: ViewState): boolean => {
 
   const hasDescription =
     draft.description.trim() !== "" && draft.description.length <= 255;
-  const hasPerson = state.editor?.kind === "editing" || draft.emplid !== null;
+  const hasPerson =
+    state.editor?.kind === "editingLeave" || draft.emplid !== null;
 
   return hasDescription && hasPerson && draft.endDate > draft.startDate;
 };

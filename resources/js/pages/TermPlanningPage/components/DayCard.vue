@@ -77,7 +77,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { colorOfType, mutedColorOfType } from "@/utils/meetingTypeColors";
+import { colorOfTypeInTerm } from "@/utils/meetingTypeColors";
 import type { DayBandItem } from "../helpers/dayBands";
 import { assistantNames, leadInstructorName } from "../helpers/sectionPeople";
 import { formatTimeRange } from "../helpers/timeScale";
@@ -96,9 +96,7 @@ const props = defineProps<{
 const isStacked = computed(() => props.size !== "small");
 
 const color = computed(() =>
-  props.isReadOnly
-    ? mutedColorOfType(props.item.section.component)
-    : colorOfType(props.item.section.component),
+  colorOfTypeInTerm(props.item.section.component, Boolean(props.isReadOnly)),
 );
 
 const code = computed(

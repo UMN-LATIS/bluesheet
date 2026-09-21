@@ -4,7 +4,7 @@
     placeholder="Search the department…"
     :showLabel="false"
     :options="options"
-    :modelValue="chosen"
+    :modelValue="chosenOption"
     strategy="fixed"
     teleportTo="body"
     @update:modelValue="(option) => emit('choose', numberOrNull(option?.id))"
@@ -32,7 +32,7 @@ const options = computed<ComboBoxOptionType[]>(() =>
   })),
 );
 
-const chosen = computed(
+const chosenOption = computed(
   () => options.value.find(({ id }) => id === props.emplid) ?? null,
 );
 

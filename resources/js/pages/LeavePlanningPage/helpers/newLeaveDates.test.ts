@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { TermPayrollDate } from "@/types";
 import { axisFor, fractionOf } from "./timelineAxis";
-import { seededRangeFor } from "./seededRange";
+import { newLeaveDatesAt } from "./newLeaveDates";
 import { FALL_2026, SPRING_2027, SUMMER_2026, TERMS } from "./planning.fixture";
 
 const axis = axisFor(TERMS, {
@@ -29,9 +29,9 @@ const PAYROLL_DATES = [
 const midTerm = (startDate: string, endDate: string) =>
   (fractionOf(axis, startDate) + fractionOf(axis, endDate)) / 2;
 
-describe("seededRangeFor", () => {
+describe("newLeaveDatesAt", () => {
   it("uses the payroll period of the term under the click", () => {
-    const range = seededRangeFor(
+    const range = newLeaveDatesAt(
       axis,
       PAYROLL_DATES,
       midTerm("2026-09-08", "2026-12-23"),
@@ -44,7 +44,7 @@ describe("seededRangeFor", () => {
   });
 
   it("falls back to the term's own dates when it has no payroll row", () => {
-    const range = seededRangeFor(
+    const range = newLeaveDatesAt(
       axis,
       PAYROLL_DATES,
       midTerm("2026-05-18", "2026-08-14"),
@@ -57,7 +57,7 @@ describe("seededRangeFor", () => {
   });
 
   it("falls back for a term the hand-seeded table never reached", () => {
-    const range = seededRangeFor(
+    const range = newLeaveDatesAt(
       axis,
       PAYROLL_DATES,
       midTerm("2027-01-19", "2027-05-12"),
@@ -73,6 +73,6 @@ describe("seededRangeFor", () => {
     const [breakBetweenTerms] = axis.gaps;
     const fraction = breakBetweenTerms.left + breakBetweenTerms.width / 2;
 
-    expect(seededRangeFor(axis, PAYROLL_DATES, fraction)).toBeNull();
+    expect(newLeaveDatesAt(axis, PAYROLL_DATES, fraction)).toBeNull();
   });
 });

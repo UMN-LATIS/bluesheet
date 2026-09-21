@@ -3,7 +3,6 @@ import { summarizeAppliedFilters } from "./appliedFilterSummary";
 import type { AppliedFilter } from "./appliedFilterSummary";
 
 const applied = (values: string[]): AppliedFilter => ({
-  facet: "status",
   values,
 });
 

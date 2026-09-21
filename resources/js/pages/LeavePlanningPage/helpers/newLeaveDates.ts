@@ -1,25 +1,20 @@
 import type { TermPayrollDate } from "@/types";
 import type { TimelineAxis } from "./timelineAxis";
 
-export interface SeededRange {
+export interface NewLeaveDates {
   startDate: string;
   endDate: string;
 }
 
 /**
  * The dates a new leave opens with, for a click at `fraction` across the
- * axis. Null when the click landed between two terms, where there is no term
- * to seed from.
- *
- * Payroll dates are preferred because a leave is a paid period, but
- * `term_payroll_dates` covers only fall and spring from 2024 to 2030, so most
- * of the axis falls back to the term's own dates.
+ * axis. Null when the click landed between two terms.
  */
-export function seededRangeFor(
+export function newLeaveDatesAt(
   axis: TimelineAxis,
   payrollDates: TermPayrollDate[],
   fraction: number,
-): SeededRange | null {
+): NewLeaveDates | null {
   const axisTerm = axis.terms.find(
     ({ left, width }) => fraction >= left && fraction < left + width,
   );

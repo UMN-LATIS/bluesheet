@@ -8,10 +8,8 @@ import {
   selectAxis,
   selectCourseHistory,
   selectDraft,
-  selectIsDraftUnsaved,
   selectIsDraftValid,
   selectOpenLeaveId,
-  selectPanelMode,
   selectFacetTiles,
   selectIsHistoryShown,
   selectLeaveRows,
@@ -57,7 +55,6 @@ export function useLeavePlanningView(
     timelineRange: computed(() => selectTimelineRange(context.value)),
     axis: computed(() => selectAxis(context.value)),
     isHistoryRequested: computed(() => state.value.isHistoryRequested),
-    canViewCourses: computed(() => context.value.canViewCourses),
     isHistoryShown: computed(() =>
       selectIsHistoryShown(context.value, state.value),
     ),
@@ -96,10 +93,8 @@ export function useLeavePlanningView(
     selectedSection: computed(() =>
       selectSelectedSection(context.value, state.value),
     ),
-    panelMode: computed(() => selectPanelMode(context.value, state.value)),
     draft: computed(() => selectDraft(state.value)),
     openLeaveId: computed(() => selectOpenLeaveId(state.value)),
-    isDraftUnsaved: computed(() => selectIsDraftUnsaved(state.value)),
     isDraftValid: computed(() => selectIsDraftValid(state.value)),
     pendingDismissal: computed(() => state.value.pendingDismissal),
 
@@ -132,9 +127,9 @@ export function useLeavePlanningView(
     editDraft: (change: Partial<LeaveDraft>) =>
       dispatch({ type: "draftEdited", change }),
     cancelDraft: () => dispatch({ type: "draftCancelled" }),
-    leavePersisted: (leaveId: number) =>
+    markLeavePersisted: (leaveId: number) =>
       dispatch({ type: "leavePersisted", leaveId }),
-    leaveDeleted: () => dispatch({ type: "leaveDeleted" }),
+    markLeaveDeleted: () => dispatch({ type: "leaveDeleted" }),
     confirmDismissal: () => dispatch({ type: "dismissalConfirmed" }),
     cancelDismissal: () => dispatch({ type: "dismissalCancelled" }),
   });

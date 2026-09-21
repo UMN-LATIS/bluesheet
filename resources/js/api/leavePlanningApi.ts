@@ -48,15 +48,6 @@ export async function fetchTeachingHistory(
   return res.data;
 }
 
-export async function fetchLeavePlanningPeople(
-  groupId: T.Group["id"],
-): Promise<T.PlanningPerson[]> {
-  const res = await axios.get<T.PlanningPerson[]>(
-    `/api/leave-planning/groups/${groupId}/people`,
-  );
-  return res.data;
-}
-
 export async function fetchLeavePermissions(
   leaveId: number,
 ): Promise<T.ApiResourceItemPermissions> {
@@ -84,7 +75,7 @@ export interface NewLeavePayload {
   type: T.LeaveType;
 }
 
-export type SavedLeavePayload = Omit<NewLeavePayload, "emplid"> & {
+export type ExistingLeavePayload = Omit<NewLeavePayload, "emplid"> & {
   user_id: number;
 };
 
@@ -111,7 +102,7 @@ export async function createLeaveInGroup(
 
 export async function saveLeaveEdits(
   leaveId: number,
-  payload: SavedLeavePayload,
+  payload: ExistingLeavePayload,
 ): Promise<void> {
   await axios.put(`/api/leaves/${leaveId}`, payload, WRITE_CONFIG);
 }

@@ -41,18 +41,18 @@ beforeEach(function () {
     ];
 });
 
-function appointedPerson(int $emplid, string $deptId = '22222'): void {
+function createAppointedPerson(int $emplid, string $deptId = '22222'): void {
     SisEmployee::factory()->create(['emplid' => $emplid]);
     SisAppointment::factory()->create(['emplid' => $emplid, 'dept_id' => $deptId]);
 }
 
-function leavesOwnedBy(int $emplid): int {
+function countLeavesOwnedBy(int $emplid): int {
     return Leave::whereHas('user', fn($query) => $query->where('emplid', $emplid))->count();
 }
 
 describe('POST /api/leave-planning/groups/:groupId/leaves', function () {
     it('creates a leave for someone in a group the user manages', function () {
-        appointedPerson(5000001);
+        createAppointedPerson(5000001);
         $owner = User::factory()->create(['emplid' => 5000001]);
         Membership::factory()->create([
             'user_id' => $owner->id,
@@ -70,24 +70,24 @@ describe('POST /api/leave-planning/groups/:groupId/leaves', function () {
                 'description' => 'Fieldwork in Oaxaca',
             ]);
 
-        expect(leavesOwnedBy(5000001))->toBe(1);
+        expect(countLeavesOwnedBy(5000001))->toBe(1);
     });
 
     it('refuses an appointee who is in no group the user manages', function () {
         expect(FIXTURE_INSTRUCTOR_EMPLIDS)->not->toContain(5000002);
 
-        appointedPerson(5000002);
+        createAppointedPerson(5000002);
         User::factory()->create(['emplid' => 5000002]);
 
         actingAs($this->manager)
             ->postJson($this->url, [...$this->leavePayload, 'emplid' => 5000002])
             ->assertForbidden();
 
-        expect(leavesOwnedBy(5000002))->toBe(0);
+        expect(countLeavesOwnedBy(5000002))->toBe(0);
     });
 
     it('creates the BlueSheet user for an appointee who has none', function () {
-        appointedPerson(100);
+        createAppointedPerson(100);
 
         expect(User::where('emplid', 100)->exists())->toBeFalse();
 
@@ -97,7 +97,7 @@ describe('POST /api/leave-planning/groups/:groupId/leaves', function () {
 
         $owner = User::where('emplid', 100)->first();
         expect($owner)->not->toBeNull();
-        expect(leavesOwnedBy(100))->toBe(1);
+        expect(countLeavesOwnedBy(100))->toBe(1);
     });
 
     it('rejects an emplid with no appointment in the department', function () {
@@ -108,22 +108,22 @@ describe('POST /api/leave-planning/groups/:groupId/leaves', function () {
             ->assertStatus(422)
             ->assertJsonValidationErrors('emplid');
 
-        expect(leavesOwnedBy(5000003))->toBe(0);
+        expect(countLeavesOwnedBy(5000003))->toBe(0);
     });
 
     it('refuses a user who may not create leaves for the group', function () {
-        appointedPerson(5000004);
+        createAppointedPerson(5000004);
         User::factory()->create(['emplid' => 5000004]);
 
         actingAs(User::where('umndid', 'basic_user')->first())
             ->postJson($this->url, [...$this->leavePayload, 'emplid' => 5000004])
             ->assertForbidden();
 
-        expect(leavesOwnedBy(5000004))->toBe(0);
+        expect(countLeavesOwnedBy(5000004))->toBe(0);
     });
 
     it('rejects an end date on or before the start date', function () {
-        appointedPerson(5000005);
+        createAppointedPerson(5000005);
         $owner = User::factory()->create(['emplid' => 5000005]);
         Membership::factory()->create([
             'user_id' => $owner->id,

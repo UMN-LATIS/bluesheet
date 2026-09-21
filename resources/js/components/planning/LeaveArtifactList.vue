@@ -26,12 +26,7 @@
           :label="artifact.label"
           :target="artifact.target"
           @cancel="editingId = null"
-          @save="
-            (payload) => {
-              editingId = null;
-              emit('save', Number(artifact.id), payload);
-            }
-          "
+          @save="(payload) => saveEdit(Number(artifact.id), payload)"
         />
         <div
           v-else
@@ -76,15 +71,7 @@
       </li>
 
       <li v-if="isAdding">
-        <LeaveArtifactFields
-          @cancel="isAdding = false"
-          @save="
-            (payload) => {
-              isAdding = false;
-              emit('create', payload);
-            }
-          "
-        />
+        <LeaveArtifactFields @cancel="isAdding = false" @save="saveNew" />
       </li>
     </ul>
   </div>
@@ -108,6 +95,16 @@ const emit = defineEmits<{
   save: [artifactId: number, payload: ArtifactPayload];
   delete: [artifactId: number];
 }>();
+
+const saveEdit = (artifactId: number, payload: ArtifactPayload) => {
+  editingId.value = null;
+  emit("save", artifactId, payload);
+};
+
+const saveNew = (payload: ArtifactPayload) => {
+  isAdding.value = false;
+  emit("create", payload);
+};
 
 const isAdding = ref(false);
 const editingId = ref<number | string | null>(null);

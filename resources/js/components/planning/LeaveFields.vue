@@ -1,4 +1,3 @@
-<!-- The editable twin of the facts LeavePanel shows. -->
 <template>
   <div class="tw-flex tw-flex-col tw-gap-3.5">
     <div>

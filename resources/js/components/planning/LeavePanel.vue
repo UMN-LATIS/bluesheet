@@ -110,16 +110,13 @@
           </div>
         </div>
 
-        <ConfirmDelete
+        <DeleteConfirmation
           v-if="isConfirmingDelete"
           @cancel="isConfirmingDelete = false"
-          @confirm="
-            isConfirmingDelete = false;
-            emit('delete');
-          "
+          @confirm="confirmDelete"
         >
           Delete this leave? Its artifacts go with it.
-        </ConfirmDelete>
+        </DeleteConfirmation>
 
         <div v-else-if="isEditable" class="tw-flex tw-gap-2">
           <Button variant="secondary" @click="emit('requestEdit')">Edit</Button>
@@ -210,7 +207,7 @@ import {
 import type { ArtifactPayload } from "@/api/leavePlanningApi";
 import type { LeaveDraft } from "@/pages/LeavePlanningPage/useLeavePlanningView/types";
 import { getLeaveTypeLabel } from "@/utils/leaveTypeHelpers";
-import ConfirmDelete from "@/components/planning/ConfirmDelete.vue";
+import DeleteConfirmation from "@/components/planning/DeleteConfirmation.vue";
 import FactValue from "@/components/planning/FactValue.vue";
 import FieldDivider from "@/components/planning/FieldDivider.vue";
 import FieldLabel from "@/components/planning/FieldLabel.vue";
@@ -267,6 +264,11 @@ const emit = defineEmits<{
   saveArtifact: [artifactId: number, payload: ArtifactPayload];
   deleteArtifact: [artifactId: number];
 }>();
+
+const confirmDelete = () => {
+  isConfirmingDelete.value = false;
+  emit("delete");
+};
 
 const isConfirmingDelete = ref(false);
 
