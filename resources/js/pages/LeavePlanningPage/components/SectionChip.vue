@@ -4,7 +4,7 @@
     :data-selection-key="`section-${section.key}`"
     :title="`${section.subject} ${section.catalogNumber} · ${section.section} · ${section.title}`"
     :aria-pressed="isSelected"
-    class="tw-inline-flex tw-h-[22px] tw-max-w-full tw-flex-none tw-cursor-pointer tw-items-center tw-gap-1.5 tw-overflow-hidden tw-whitespace-nowrap tw-rounded-md tw-pl-1.5 tw-pr-2 tw-text-[11px] tw-leading-none tw-text-on-surface"
+    class="tw-flex tw-h-[22px] tw-w-full tw-flex-none tw-cursor-pointer tw-items-center tw-gap-1.5 tw-overflow-hidden tw-whitespace-nowrap tw-rounded-md tw-pl-1.5 tw-pr-2 tw-text-[11px] tw-leading-none tw-text-on-surface"
     :class="[
       colors.tint,
       colors.rail,

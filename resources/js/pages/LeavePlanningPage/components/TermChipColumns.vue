@@ -2,7 +2,7 @@
   <div
     v-for="termColumn in termColumns"
     :key="termColumn.term.termCode"
-    class="tw-absolute tw-flex tw-flex-col tw-items-start tw-gap-1 tw-px-1.5"
+    class="tw-absolute tw-flex tw-flex-col tw-gap-1 tw-px-1.5"
     :style="{
       top: `${top}px`,
       left: `${termColumn.left * 100}%`,

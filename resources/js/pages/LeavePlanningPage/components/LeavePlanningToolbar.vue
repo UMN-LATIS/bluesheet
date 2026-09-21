@@ -47,6 +47,29 @@
       </span>
     </button>
 
+    <div
+      v-if="isHistoryShown"
+      role="group"
+      aria-label="View"
+      class="tw-inline-flex tw-gap-0.5 tw-rounded-full tw-bg-outline-variant tw-p-0.5"
+    >
+      <button
+        v-for="option in VIEW_OPTIONS"
+        :key="option.value"
+        type="button"
+        class="tw-cursor-pointer tw-rounded-full tw-border-none tw-px-3.5 tw-py-1.5 tw-text-xs tw-font-semibold"
+        :class="
+          view === option.value
+            ? 'tw-bg-surface-bright tw-text-on-surface tw-shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
+            : 'tw-bg-transparent tw-text-on-surface-variant hover:tw-text-on-surface'
+        "
+        :aria-pressed="view === option.value"
+        @click="emit('selectView', option.value)"
+      >
+        {{ option.label }}
+      </button>
+    </div>
+
     <button
       v-if="canViewCourses"
       type="button"
@@ -71,29 +94,6 @@
       </span>
       Teaching history
     </button>
-
-    <div
-      v-if="isHistoryShown"
-      role="group"
-      aria-label="View"
-      class="tw-inline-flex tw-gap-0.5 tw-rounded-full tw-bg-outline-variant tw-p-0.5"
-    >
-      <button
-        v-for="option in VIEW_OPTIONS"
-        :key="option.value"
-        type="button"
-        class="tw-cursor-pointer tw-rounded-full tw-border-none tw-px-3.5 tw-py-1.5 tw-text-xs tw-font-semibold"
-        :class="
-          view === option.value
-            ? 'tw-bg-surface-bright tw-text-on-surface tw-shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
-            : 'tw-bg-transparent tw-text-on-surface-variant hover:tw-text-on-surface'
-        "
-        :aria-pressed="view === option.value"
-        @click="emit('selectView', option.value)"
-      >
-        {{ option.label }}
-      </button>
-    </div>
 
     <div class="tw-flex tw-items-center tw-gap-1.5">
       <TermSelect
