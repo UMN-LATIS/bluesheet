@@ -11,7 +11,7 @@
       -->
       <div
         ref="gutter"
-        class="tw-sticky tw-left-0 tw-z-40 tw-flex tw-flex-none tw-border-0 tw-border-r tw-border-solid tw-border-outline"
+        class="tw-sticky tw-left-0 tw-z-40 tw-flex tw-flex-none tw-border-0 tw-border-r tw-border-solid tw-border-outline tw-bg-surface-bright"
         :class="canvasClass"
       >
         <TimeAxis />

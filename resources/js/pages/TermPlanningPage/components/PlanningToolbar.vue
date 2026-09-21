@@ -76,18 +76,18 @@
       </select>
     </label>
 
-    <button
-      v-if="!isReadOnly"
-      type="button"
-      class="tw-flex tw-min-h-11 tw-flex-none tw-cursor-pointer tw-items-center tw-gap-1.5 tw-rounded-full tw-border tw-border-solid tw-border-primary tw-bg-primary tw-px-4 tw-text-xs tw-font-bold tw-text-on-primary hover:tw-bg-primary/90 roomy:tw-min-h-0 roomy:tw-py-1.5"
-      @click="emit('openImport')"
-    >
-      Import
-    </button>
-
     <Button
       v-if="!isReadOnly"
       variant="secondary"
+      class="tw-text-xs"
+      @click="emit('openImport')"
+    >
+      Import</Button
+    >
+
+    <Button
+      v-if="!isReadOnly"
+      variant="primary"
       class="tw-whitespace-nowrap tw-text-xs"
       @click="emit('createSection')"
     >

@@ -66,7 +66,7 @@
       >
         <div
           v-if="isReadOnly"
-          class="tw-flex tw-flex-none tw-items-center tw-gap-1.5 tw-px-3.5 tw-pb-1.5 tw-pt-2 tw-text-on-surface-variant"
+          class="tw-flex tw-flex-none tw-items-center tw-gap-1.5 tw-px-3.5 tw-pb-1.5 tw-pt-2 tw-bg-surface-bright tw-text-on-surface-variant tw-border-b tw-border-outline-variant tw-border-solid tw-border-0"
         >
           <LockIcon class="tw-h-3.5 tw-w-3.5 tw-flex-none" aria-hidden="true" />
           <span
