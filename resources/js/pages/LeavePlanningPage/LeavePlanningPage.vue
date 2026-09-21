@@ -7,28 +7,26 @@
       <LeavePlanningToolbar
         :groupId="groupId"
         :terms="terms"
-        :range="planning.timelineRange"
         :canViewCourses="canViewCourses"
         :canCreateLeaves="canCreateLeaves"
         :isHistoryShown="planning.isHistoryShown"
         :view="planning.view"
-        :activeFilterCount="planning.activeFilterCount"
-        :isFilterPanelOpen="isFilterPanelOpen"
         @createLeave="startCreatingWithoutPerson"
-        @openFilters="isFilterPanelOpen = true"
-        @toggleHistory="planning.toggleHistory"
         @selectView="planning.selectView"
-        @selectRangeStart="planning.selectRangeStart"
-        @selectRangeEnd="planning.selectRangeEnd"
       />
     </template>
 
     <div
       class="tw-relative tw-flex tw-min-h-0 tw-flex-1 tw-gap-3 tw-px-3 tw-pb-3 roomy:tw-px-4 roomy:tw-pb-4"
     >
-      <Pane v-if="isLarge" class="tw-w-[304px] tw-flex-none">
-        <PlanningSidebar :planning="planning" />
-      </Pane>
+      <FilterDock
+        :planning="planning"
+        :isOpen="isFilterPanelOpen"
+        :isDocked="isLarge"
+        :isSmall="isSmall"
+        :activeFilterCount="planning.activeFilterCount"
+        @toggle="isFilterPanelOpen = !isFilterPanelOpen"
+      />
 
       <Pane
         as="section"
@@ -42,8 +40,19 @@
           {{ unavailableMessage }}
         </p>
 
+        <AxisRange
+          v-if="!unavailableMessage"
+          :terms="terms"
+          :range="planning.timelineRange"
+          :canViewCourses="canViewCourses"
+          :isHistoryShown="planning.isHistoryShown"
+          @selectRangeStart="planning.selectRangeStart"
+          @selectRangeEnd="planning.selectRangeEnd"
+          @toggleHistory="planning.toggleHistory"
+        />
+
         <TimelineCanvas
-          v-else-if="planning.axis"
+          v-if="!unavailableMessage && planning.axis"
           :axis="planning.axis"
           :nameHeading="nameHeading"
           :isHistoryShown="planning.isHistoryShown"
@@ -149,26 +158,6 @@
           </div>
         </div>
       </div>
-
-      <template v-if="isFilterPanelOpen && !isLarge">
-        <div
-          class="tw-absolute tw-inset-0 tw-z-40 tw-bg-black/20"
-          @click="isFilterPanelOpen = false"
-        />
-        <Pane
-          :class="
-            isSmall
-              ? 'tw-fixed tw-inset-0 tw-z-50 tw-rounded-none tw-border-0 tw-shadow-none'
-              : 'tw-absolute tw-inset-y-0 tw-left-3 tw-z-50 tw-w-[304px] tw-shadow-[18px_0_44px_rgba(38,38,38,0.16)]'
-          "
-        >
-          <PlanningSidebar
-            :planning="planning"
-            isDismissible
-            @close="isFilterPanelOpen = false"
-          />
-        </Pane>
-      </template>
     </div>
   </FullScreenLayout>
 </template>
@@ -186,7 +175,8 @@ import { flattenQuery } from "@/utils/urlQuery";
 import { termsOverlapping } from "@/utils/termsOverlapping";
 import { useScreenSize } from "@/utils/useScreenSize";
 import LeavePlanningToolbar from "./components/LeavePlanningToolbar.vue";
-import PlanningSidebar from "./components/PlanningSidebar.vue";
+import FilterDock from "./components/FilterDock.vue";
+import AxisRange from "./components/AxisRange.vue";
 import TimelineCanvas from "./components/TimelineCanvas.vue";
 import LeaveRows from "./components/LeaveRows.vue";
 import PersonHistoryRows from "./components/PersonHistoryRows.vue";
@@ -223,7 +213,9 @@ const { isLarge, isSmall } = useScreenSize();
 
 const groupId = computed(() => props.groupId);
 const today = computed(() => dayjs().format("YYYY-MM-DD"));
-const isFilterPanelOpen = ref(false);
+const isFilterPanelOpen = ref(isLarge.value);
+
+watch(isLarge, (isWide) => (isFilterPanelOpen.value = isWide));
 
 const runEffect = (effect: Effect) => {
   switch (effect.type) {
@@ -284,7 +276,7 @@ onKeyStroke("Escape", () => {
     planning.cancelDismissal();
     return;
   }
-  if (isFilterPanelOpen.value) {
+  if (isFilterPanelOpen.value && !isLarge.value) {
     isFilterPanelOpen.value = false;
     return;
   }

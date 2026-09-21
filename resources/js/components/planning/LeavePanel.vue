@@ -276,8 +276,8 @@ watch(
 );
 
 const title = computed(() => {
-  if (props.person) return props.person.name;
-  return props.leave ? "Unknown person" : "New leave";
+  if (!props.leave) return "New leave";
+  return props.person ? `${props.person.name}’s leave` : "Leave";
 });
 
 const subtitle = computed(() =>

@@ -275,6 +275,40 @@ export const selectActiveFilterCount = (
     0,
   );
 
+export interface AppliedFilter {
+  facet: FilterFacet;
+  /** What the reader picked, in the words the panel showed them. */
+  values: string[];
+}
+
+export const selectAppliedFilters = (
+  context: ViewContext,
+  state: ViewState,
+): AppliedFilter[] =>
+  selectVisibleFacets(context, state).flatMap((facet) => {
+    const chosen = state.filters[facet];
+    if (chosen.length === 0) return [];
+
+    const records = visibleRecordsOf(
+      context,
+      state,
+      withoutFacet(state.filters, facet),
+    );
+    const labelOfValue = new Map(
+      filterOptionsFor(facet, records).map(({ value, label }) => [
+        value,
+        label,
+      ]),
+    );
+
+    return [
+      {
+        facet,
+        values: chosen.map((value) => labelOfValue.get(value) ?? value),
+      },
+    ];
+  });
+
 export const selectSelectedLeave = (
   context: ViewContext,
   state: ViewState,

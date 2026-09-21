@@ -3,21 +3,6 @@
     aria-label="Filters"
     class="tw-flex tw-h-full tw-w-full tw-min-h-0 tw-flex-col tw-bg-surface-bright"
   >
-    <div
-      v-if="isDismissible"
-      class="tw-flex tw-flex-none tw-items-center tw-gap-2 tw-px-3.5 tw-pt-3"
-    >
-      <span class="tw-text-[13px] tw-font-bold">Filters</span>
-      <button
-        type="button"
-        class="tw-ml-auto tw-flex tw-h-11 tw-w-11 tw-flex-none tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-text-xl tw-leading-none tw-text-on-surface-variant hover:tw-bg-surface-container hover:tw-text-on-surface"
-        aria-label="Close filters"
-        @click="emit('close')"
-      >
-        ×
-      </button>
-    </div>
-
     <div class="tw-flex-none tw-p-3.5 tw-pb-0">
       <label class="tw-sr-only" for="leave-planning-filter-search">
         {{ searchPlaceholder }}
@@ -120,24 +105,11 @@ import { XIcon } from "@/icons";
 import FacetTile from "@/components/planning/FacetTile.vue";
 import FilterRow from "@/components/planning/FilterRow.vue";
 import type { LeavePlanningView } from "../useLeavePlanningView/useLeavePlanningView";
-import type { FilterFacet } from "../useLeavePlanningView/types";
-import type { FilterOption } from "../helpers/filterOptions";
+import { FACET_LABELS, type FilterOption } from "../helpers/filterOptions";
 
 const props = defineProps<{
   planning: LeavePlanningView;
-  isDismissible?: boolean;
 }>();
-
-const emit = defineEmits<{ close: [] }>();
-
-const FACET_LABELS: Record<FilterFacet, string> = {
-  person: "People",
-  course: "Courses",
-  component: "Component",
-  category: "Appointment",
-  leaveType: "Leave type",
-  status: "Status",
-};
 
 const searchInput = ref("");
 

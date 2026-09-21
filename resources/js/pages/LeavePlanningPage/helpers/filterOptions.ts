@@ -62,6 +62,15 @@ const filterOptionOf = (
   swatchClass: extra.swatchClass ?? null,
 });
 
+export const FACET_LABELS: Record<FilterFacet, string> = {
+  person: "People",
+  course: "Courses",
+  component: "Component",
+  category: "Appointment",
+  leaveType: "Leave type",
+  status: "Status",
+};
+
 export function lastFirstNameOf(person: PlanningPerson): string {
   const lastFirst = [person.lastName, person.firstName]
     .filter(Boolean)

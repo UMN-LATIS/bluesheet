@@ -1,8 +1,8 @@
 <template>
-  <label class="tw-m-0 tw-flex tw-items-center tw-font-normal">
+  <label class="tw-relative tw-m-0 tw-flex tw-items-center tw-font-normal">
     <span class="tw-sr-only">{{ label }}</span>
     <select
-      class="tw-min-h-11 tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-py-1.5 tw-pl-3.5 tw-pr-8 tw-text-[13px] tw-font-semibold tw-text-on-surface roomy:tw-min-h-0"
+      class="tw-min-h-11 tw-appearance-none tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-py-1.5 tw-pl-3.5 tw-pr-9 tw-text-[13px] tw-font-semibold tw-text-on-surface roomy:tw-min-h-0"
       :value="termCode ?? ''"
       @change="chooseTerm"
     >
@@ -11,10 +11,15 @@
         {{ term.name }}
       </option>
     </select>
+    <ChevronDownIcon
+      aria-hidden="true"
+      class="tw-pointer-events-none tw-absolute tw-right-3.5 !tw-h-3.5 !tw-w-3.5 tw-text-on-surface-variant"
+    />
   </label>
 </template>
 
 <script setup lang="ts">
+import { ChevronDownIcon } from "@/icons";
 import type { PlanningTerm } from "@/types";
 
 defineProps<{

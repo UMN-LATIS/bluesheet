@@ -4,6 +4,7 @@ import {
   selectActiveFacet,
   selectActiveFacetOptions,
   selectActiveFilterCount,
+  selectAppliedFilters,
   selectAxis,
   selectCourseHistory,
   selectDraft,
@@ -56,6 +57,7 @@ export function useLeavePlanningView(
     timelineRange: computed(() => selectTimelineRange(context.value)),
     axis: computed(() => selectAxis(context.value)),
     isHistoryRequested: computed(() => state.value.isHistoryRequested),
+    canViewCourses: computed(() => context.value.canViewCourses),
     isHistoryShown: computed(() =>
       selectIsHistoryShown(context.value, state.value),
     ),
@@ -68,6 +70,9 @@ export function useLeavePlanningView(
     ),
     activeFilterCount: computed(() =>
       selectActiveFilterCount(context.value, state.value),
+    ),
+    appliedFilters: computed(() =>
+      selectAppliedFilters(context.value, state.value),
     ),
     leaveRows: computed(() =>
       selectLeaveRows(context.value, state.value.filters),
