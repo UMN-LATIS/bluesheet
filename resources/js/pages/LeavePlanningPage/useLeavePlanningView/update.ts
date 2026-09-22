@@ -3,6 +3,7 @@ import { leaveStatuses, leaveTypes } from "@/types";
 import {
   HISTORY_FACETS,
   type Editor,
+  type Effect,
   type FilterFacet,
   type LeaveDraft,
   type Next,
@@ -27,6 +28,9 @@ export const initialState = (): ViewState => ({
   selection: null,
   editor: null,
   pendingDismissal: null,
+  refusal: null,
+  isConfirmingDelete: false,
+  isFilterPanelOpen: false,
 });
 
 const DRAFT_DISCARDING_EVENTS: ViewEvent["type"][] = [
@@ -36,6 +40,30 @@ const DRAFT_DISCARDING_EVENTS: ViewEvent["type"][] = [
   "creationRequested",
   "urlChanged",
 ];
+
+/**
+ * Events after which the panel is showing something else, so a refusal or a
+ * delete question raised against what it showed before no longer applies.
+ */
+const PANEL_MOVED_ON: ViewEvent["type"][] = [
+  "leaveSelected",
+  "sectionSelected",
+  "deselected",
+  "editRequested",
+  "creationRequested",
+  "draftCancelled",
+  "leavePersisted",
+  "leaveDeleted",
+  "urlChanged",
+];
+
+const selectionKeyOf = (state: ViewState): string | null => {
+  const { selection } = state;
+  if (selection === null) return null;
+  return selection.kind === "leave"
+    ? `leave-${selection.leaveId}`
+    : `section-${selection.sectionKey}`;
+};
 
 const isUnsaved = (editor: Editor | null): boolean =>
   editor !== null && !isEqual(editor.draft, editor.openedDraft);
@@ -67,17 +95,26 @@ export function update(state: ViewState, event: ViewEvent): Next {
     return { state: { ...state, pendingDismissal: event }, effects: [] };
   }
 
-  const nextState = reduce(state, event);
+  const reduced = reduce(state, event);
+  const nextState = PANEL_MOVED_ON.includes(event.type)
+    ? { ...reduced, refusal: null, isConfirmingDelete: false }
+    : reduced;
 
-  if (event.type === "urlChanged") return { state: nextState, effects: [] };
+  const effects: Effect[] = [];
 
-  const query = encodeViewQuery(nextState);
-  const isQueryUnchanged = isEqual(query, encodeViewQuery(state));
+  const key = selectionKeyOf(nextState);
+  if (key !== null && key !== selectionKeyOf(state)) {
+    effects.push({ type: "scrollToSelection", key });
+  }
 
-  return {
-    state: nextState,
-    effects: isQueryUnchanged ? [] : [{ type: "replaceUrlQuery", query }],
-  };
+  if (event.type !== "urlChanged") {
+    const query = encodeViewQuery(nextState);
+    if (!isEqual(query, encodeViewQuery(state))) {
+      effects.push({ type: "replaceUrlQuery", query });
+    }
+  }
+
+  return { state: nextState, effects };
 }
 
 function reduce(state: ViewState, event: ViewEvent): ViewState {
@@ -211,6 +248,21 @@ function reduce(state: ViewState, event: ViewEvent): ViewState {
 
     case "dismissalCancelled":
       return { ...state, pendingDismissal: null };
+
+    case "writeRefused":
+      return { ...state, refusal: event.message };
+
+    case "deleteRequested":
+      return { ...state, isConfirmingDelete: true };
+
+    case "deleteCancelled":
+      return { ...state, isConfirmingDelete: false };
+
+    case "filterPanelToggled":
+      return { ...state, isFilterPanelOpen: !state.isFilterPanelOpen };
+
+    case "breakpointChanged":
+      return { ...state, isFilterPanelOpen: event.isWide };
   }
 }
 

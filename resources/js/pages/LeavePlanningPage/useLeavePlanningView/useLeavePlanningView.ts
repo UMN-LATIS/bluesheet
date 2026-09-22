@@ -97,6 +97,9 @@ export function useLeavePlanningView(
     openLeaveId: computed(() => selectOpenLeaveId(state.value)),
     isDraftValid: computed(() => selectIsDraftValid(state.value)),
     pendingDismissal: computed(() => state.value.pendingDismissal),
+    refusal: computed(() => state.value.refusal),
+    isConfirmingDelete: computed(() => state.value.isConfirmingDelete),
+    isFilterPanelOpen: computed(() => state.value.isFilterPanelOpen),
 
     urlChanged: (query: UrlQuery) => dispatch({ type: "urlChanged", query }),
     selectRangeStart: (termCode: number) =>
@@ -131,6 +134,13 @@ export function useLeavePlanningView(
       dispatch({ type: "leavePersisted", leaveId }),
     markLeaveDeleted: () => dispatch({ type: "leaveDeleted" }),
     confirmDismissal: () => dispatch({ type: "dismissalConfirmed" }),
+    refuseWrite: (message: string) =>
+      dispatch({ type: "writeRefused", message }),
+    requestDelete: () => dispatch({ type: "deleteRequested" }),
+    cancelDelete: () => dispatch({ type: "deleteCancelled" }),
+    toggleFilterPanel: () => dispatch({ type: "filterPanelToggled" }),
+    changeBreakpoint: (isWide: boolean) =>
+      dispatch({ type: "breakpointChanged", isWide }),
     cancelDismissal: () => dispatch({ type: "dismissalCancelled" }),
   });
 }

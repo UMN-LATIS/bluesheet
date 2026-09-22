@@ -112,15 +112,15 @@
 
         <DeleteConfirmation
           v-if="isConfirmingDelete"
-          @cancel="isConfirmingDelete = false"
-          @confirm="confirmDelete"
+          @cancel="emit('cancelDelete')"
+          @confirm="emit('delete')"
         >
           Delete this leave? Its artifacts go with it.
         </DeleteConfirmation>
 
         <div v-else-if="isEditable" class="tw-flex tw-gap-2">
           <Button variant="secondary" @click="emit('requestEdit')">Edit</Button>
-          <Button variant="danger" @click="isConfirmingDelete = true">
+          <Button variant="danger" @click="emit('requestDelete')">
             Delete
           </Button>
         </div>
@@ -193,7 +193,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed } from "vue";
 import { ArrowRightIcon } from "@/icons";
 import {
   leaveStatuses,
@@ -236,6 +236,7 @@ const props = withDefaults(
     isDraftValid?: boolean;
     isSaving?: boolean;
     refusal?: string | null;
+    isConfirmingDelete?: boolean;
     artifacts?: LeaveArtifact[];
     roster?: SisEmployee[];
     payrollDates?: TermPayrollDate[];
@@ -245,6 +246,7 @@ const props = withDefaults(
     isEditable: false,
     isDraftValid: false,
     isSaving: false,
+    isConfirmingDelete: false,
     refusal: null,
     artifacts: () => [],
     roster: () => [],
@@ -256,6 +258,8 @@ const emit = defineEmits<{
   close: [];
   selectLeave: [leaveId: number];
   requestEdit: [];
+  requestDelete: [];
+  cancelDelete: [];
   edit: [change: Partial<LeaveDraft>];
   save: [];
   cancel: [];
@@ -264,18 +268,6 @@ const emit = defineEmits<{
   saveArtifact: [artifactId: number, payload: ArtifactPayload];
   deleteArtifact: [artifactId: number];
 }>();
-
-const confirmDelete = () => {
-  isConfirmingDelete.value = false;
-  emit("delete");
-};
-
-const isConfirmingDelete = ref(false);
-
-watch(
-  () => props.leave?.id,
-  () => (isConfirmingDelete.value = false),
-);
 
 const title = computed(() => {
   if (!props.leave) return "New leave";

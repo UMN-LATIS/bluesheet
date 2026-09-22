@@ -19,11 +19,11 @@
     >
       <FilterDock
         :appliedFilters="planning.appliedFilters"
-        :isOpen="isFilterPanelOpen"
+        :isOpen="planning.isFilterPanelOpen"
         :isDocked="isLarge"
         :isSmall="isSmall"
         :activeFilterCount="planning.activeFilterCount"
-        @toggle="isFilterPanelOpen = !isFilterPanelOpen"
+        @toggle="planning.toggleFilterPanel"
       >
         <PlanningSidebar :planning="planning" />
       </FilterDock>
@@ -53,6 +53,7 @@
 
         <TimelineCanvas
           v-if="!unavailableMessage && planning.axis"
+          ref="timelineCanvas"
           :axis="planning.axis"
           :nameHeading="nameHeading"
           :isHistoryShown="planning.isHistoryShown"
@@ -62,7 +63,6 @@
           :plannableTermCodes="planning.plannableTermCodes"
           :trailingScrollRoomPx="trailingScrollRoomPx"
           :today="today"
-          :selectionKey="selectionKey"
         >
           <LeaveRows
             v-if="!planning.isHistoryShown"
@@ -115,7 +115,8 @@
           :isEditable="isSelectedLeaveEditable"
           :isDraftValid="planning.isDraftValid"
           :isSaving="isSaving"
-          :refusal="refusal"
+          :refusal="planning.refusal"
+          :isConfirmingDelete="planning.isConfirmingDelete"
           :artifacts="artifactsQuery.data.value ?? []"
           :roster="rosterQuery.data.value ?? []"
           :payrollDates="payrollDatesQuery.data.value ?? []"
@@ -125,6 +126,8 @@
           @edit="planning.editDraft"
           @save="saveDraft"
           @cancel="planning.cancelDraft"
+          @requestDelete="planning.requestDelete"
+          @cancelDelete="planning.cancelDelete"
           @delete="deleteSelectedLeave"
           @createArtifact="createArtifact"
           @saveArtifact="saveArtifact"
@@ -218,9 +221,11 @@ const { isLarge, isSmall } = useScreenSize();
 
 const groupId = computed(() => props.groupId);
 const today = computed(() => dayjs().format("YYYY-MM-DD"));
-const isFilterPanelOpen = ref(isLarge.value);
+watch(isLarge, (isWide) => planning.changeBreakpoint(isWide));
 
-watch(isLarge, (isWide) => (isFilterPanelOpen.value = isWide));
+const timelineCanvas = ref<{
+  scrollToSelection: (key: string) => void;
+} | null>(null);
 
 const runEffect = (effect: Effect) => {
   switch (effect.type) {
@@ -228,6 +233,9 @@ const runEffect = (effect: Effect) => {
       router.replace({
         query: { ...omit(route.query, OWNED_QUERY_KEYS), ...effect.query },
       });
+      return;
+    case "scrollToSelection":
+      timelineCanvas.value?.scrollToSelection(effect.key);
   }
 };
 
@@ -281,8 +289,8 @@ onKeyStroke("Escape", () => {
     planning.cancelDismissal();
     return;
   }
-  if (isFilterPanelOpen.value && !isLarge.value) {
-    isFilterPanelOpen.value = false;
+  if (planning.isFilterPanelOpen && !isLarge.value) {
+    planning.toggleFilterPanel();
     return;
   }
   if (planning.draft) {
@@ -338,14 +346,6 @@ const selectedLeaveId = computed(() =>
 const selectedSectionKey = computed(() =>
   planning.selection?.kind === "section" ? planning.selection.sectionKey : null,
 );
-const selectionKey = computed(() => {
-  if (selectedLeaveId.value !== null) return `leave-${selectedLeaveId.value}`;
-  if (selectedSectionKey.value !== null) {
-    return `section-${selectedSectionKey.value}`;
-  }
-  return null;
-});
-
 const isPanelOpen = computed(
   () =>
     planning.selectedLeave !== null ||
@@ -386,13 +386,6 @@ const isSaving = computed(
     mutations.deleteLeave.isPending.value,
 );
 
-const refusal = ref<string | null>(null);
-
-watch(
-  () => [openLeaveId.value, planning.draft],
-  () => (refusal.value = null),
-);
-
 function startCreatingAt(emplid: number, fraction: number) {
   const axis = planning.axis;
   if (!axis) return;
@@ -404,7 +397,6 @@ function startCreatingAt(emplid: number, fraction: number) {
   );
   if (!range) return;
 
-  refusal.value = null;
   planning.requestCreation(emplid, range.startDate, range.endDate);
 }
 
@@ -414,7 +406,6 @@ function startCreatingWithoutPerson() {
     ? newLeaveDatesAt(axis, payrollDatesQuery.data.value ?? [], 0.5)
     : null;
 
-  refusal.value = null;
   planning.requestCreation(
     null,
     range?.startDate ?? today.value,
@@ -425,7 +416,6 @@ function startCreatingWithoutPerson() {
 const startEditing = () => {
   const leave = planning.selectedLeave;
   if (!leave) return;
-  refusal.value = null;
   planning.requestEdit({
     emplid: leave.emplid,
     description: leave.description,
@@ -450,7 +440,6 @@ type LeaveWrite = {
 async function saveDraft() {
   const draft = planning.draft;
   if (!draft) return;
-  refusal.value = null;
 
   const fields = {
     description: draft.description,
@@ -468,9 +457,9 @@ async function saveDraft() {
       await createLeaveFromDraft(draft.emplid, fields);
       return;
     }
-    await saveLeaveEdits(editedLeaveId, fields);
+    await saveEditedLeave(editedLeaveId, fields);
   } catch (error) {
-    refusal.value = refusalMessage(error) ?? REFUSED;
+    planning.refuseWrite(refusalMessage(error) ?? REFUSED);
   }
 }
 
@@ -483,7 +472,7 @@ async function createLeaveFromDraft(emplid: number | null, fields: LeaveWrite) {
   planning.markLeavePersisted(created.id);
 }
 
-async function saveLeaveEdits(leaveId: number, fields: LeaveWrite) {
+async function saveEditedLeave(leaveId: number, fields: LeaveWrite) {
   const userId = planning.selectedLeave?.userId;
   if (userId === undefined) return;
 
@@ -497,13 +486,12 @@ async function saveLeaveEdits(leaveId: number, fields: LeaveWrite) {
 async function deleteSelectedLeave() {
   const leaveId = planning.selectedLeave?.id;
   if (leaveId === undefined) return;
-  refusal.value = null;
 
   try {
     await mutations.deleteLeave.mutateAsync(leaveId);
     planning.markLeaveDeleted();
   } catch (error) {
-    refusal.value = refusalMessage(error) ?? REFUSED;
+    planning.refuseWrite(refusalMessage(error) ?? REFUSED);
   }
 }
 
@@ -512,12 +500,11 @@ const writeToOpenLeave = async (
 ) => {
   const leaveId = openLeaveId.value;
   if (leaveId === null) return;
-  refusal.value = null;
 
   try {
     await write(leaveId);
   } catch (error) {
-    refusal.value = refusalMessage(error) ?? REFUSED;
+    planning.refuseWrite(refusalMessage(error) ?? REFUSED);
   }
 };
 

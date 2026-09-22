@@ -66,7 +66,12 @@ const selectionOf = (query: UrlQuery): Selection | null => {
  */
 type UrlBackedState = Omit<
   ViewState,
-  "activeFacet" | "editor" | "pendingDismissal"
+  | "activeFacet"
+  | "editor"
+  | "pendingDismissal"
+  | "refusal"
+  | "isConfirmingDelete"
+  | "isFilterPanelOpen"
 >;
 
 export function decodeViewQuery(query: UrlQuery): UrlBackedState {

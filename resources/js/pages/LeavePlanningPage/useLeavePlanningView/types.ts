@@ -80,6 +80,11 @@ export interface ViewState {
    * `dismissalCancelled`.
    */
   pendingDismissal: ViewEvent | null;
+  /** The server's word on the last refused write. */
+  refusal: string | null;
+  /** The panel is asking whether to delete the open leave. */
+  isConfirmingDelete: boolean;
+  isFilterPanelOpen: boolean;
 }
 
 export interface ViewContext {
@@ -118,9 +123,18 @@ export type ViewEvent =
   /** The reader let the held event through, losing the draft. */
   | { type: "dismissalConfirmed" }
   /** The reader kept the draft, so the held event never happened. */
-  | { type: "dismissalCancelled" };
+  | { type: "dismissalCancelled" }
+  /** A write came back refused, carrying what the server said. */
+  | { type: "writeRefused"; message: string }
+  | { type: "deleteRequested" }
+  | { type: "deleteCancelled" }
+  | { type: "filterPanelToggled" }
+  /** The window crossed the width that docks the filter panel. */
+  | { type: "breakpointChanged"; isWide: boolean };
 
-export type Effect = { type: "replaceUrlQuery"; query: UrlQuery };
+export type Effect =
+  | { type: "replaceUrlQuery"; query: UrlQuery }
+  | { type: "scrollToSelection"; key: string };
 
 export interface Next {
   state: ViewState;

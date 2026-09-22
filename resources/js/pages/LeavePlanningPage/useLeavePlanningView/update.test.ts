@@ -183,10 +183,10 @@ const savedDraft = {
   endDate: "2026-12-31",
 };
 
-describe("the editor", () => {
-  const openOnLeave = (leaveId: number) =>
-    after([{ type: "leaveSelected", leaveId }]);
+const openOnLeave = (leaveId: number) =>
+  after([{ type: "leaveSelected", leaveId }]);
 
+describe("the editor", () => {
   const editing = (leaveId = 7) =>
     after([{ type: "editRequested", draft: savedDraft }], openOnLeave(leaveId));
 
@@ -320,7 +320,97 @@ describe("discarding an unsaved draft", () => {
     expect(state.editor).toBeNull();
     expect(state.pendingDismissal).toBeNull();
     expect(effects).toEqual([
+      { type: "scrollToSelection", key: "leave-9" },
       { type: "replaceUrlQuery", query: { leaveId: "9" } },
     ]);
+  });
+});
+
+describe("the refusal banner", () => {
+  const refused = (state?: ViewState) =>
+    after(
+      [{ type: "writeRefused", message: "End date must be later." }],
+      state,
+    );
+
+  it("holds the server's message", () => {
+    expect(refused().refusal).toBe("End date must be later.");
+  });
+
+  it("survives typing, so a failed save can be corrected", () => {
+    const state = after(
+      [
+        { type: "editRequested", draft: savedDraft },
+        { type: "writeRefused", message: "End date must be later." },
+        { type: "draftEdited", change: { description: "Sabbatical" } },
+      ],
+      openOnLeave(7),
+    );
+
+    expect(state.refusal).toBe("End date must be later.");
+  });
+
+  it("clears once the panel is showing something else", () => {
+    const state = after([{ type: "leaveSelected", leaveId: 9 }], refused());
+
+    expect(state.refusal).toBeNull();
+  });
+});
+
+describe("the delete question", () => {
+  it("opens and closes", () => {
+    const asked = after([{ type: "deleteRequested" }]);
+    expect(asked.isConfirmingDelete).toBe(true);
+    expect(after([{ type: "deleteCancelled" }], asked).isConfirmingDelete).toBe(
+      false,
+    );
+  });
+
+  it("closes when the panel moves to another leave", () => {
+    const asked = after([{ type: "deleteRequested" }]);
+    const moved = after([{ type: "leaveSelected", leaveId: 9 }], asked);
+
+    expect(moved.isConfirmingDelete).toBe(false);
+  });
+});
+
+describe("the filter panel", () => {
+  it("opens where the window is wide enough to dock it", () => {
+    expect(
+      after([{ type: "breakpointChanged", isWide: true }]).isFilterPanelOpen,
+    ).toBe(true);
+    expect(
+      after([{ type: "breakpointChanged", isWide: false }]).isFilterPanelOpen,
+    ).toBe(false);
+  });
+
+  it("toggles", () => {
+    expect(after([{ type: "filterPanelToggled" }]).isFilterPanelOpen).toBe(
+      true,
+    );
+  });
+});
+
+describe("scrolling to the selection", () => {
+  it("is asked for when a leave is selected", () => {
+    const { effects } = update(initialState(), {
+      type: "leaveSelected",
+      leaveId: 7,
+    });
+
+    expect(effects).toContainEqual({
+      type: "scrollToSelection",
+      key: "leave-7",
+    });
+  });
+
+  it("is not asked for again when the selection has not moved", () => {
+    const selected = after([{ type: "leaveSelected", leaveId: 7 }]);
+    const { effects } = update(selected, {
+      type: "facetOpened",
+      facet: "status",
+    });
+
+    expect(effects).toEqual([]);
   });
 });
