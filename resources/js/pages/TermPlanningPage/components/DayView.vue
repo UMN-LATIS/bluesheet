@@ -102,7 +102,12 @@
               :isSelected="isItemSelected(item)"
               :isEdited="schedule.hasEdits(item.section.id)"
               :isReadOnly="schedule.isReadOnly"
-              @click="schedule.selectSection(item.section.id)"
+              @click="
+                schedule.dispatch({
+                  type: 'selectedSection',
+                  sectionId: item.section.id,
+                })
+              "
             />
           </div>
         </section>

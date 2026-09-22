@@ -25,7 +25,7 @@
         :total="tile.totalCount"
         :checkedCount="tile.checkedCount"
         :isActive="planning.activeFacet === tile.facet"
-        @click="planning.openFacet(tile.facet)"
+        @click="planning.dispatch({ type: 'facetOpened', facet: tile.facet })"
       />
     </div>
 
@@ -44,7 +44,7 @@
             : 'tw-cursor-default tw-border-outline-variant tw-bg-transparent tw-text-on-surface-variant tw-opacity-60'
         "
         :disabled="!isNarrowed"
-        @click="planning.clearFilters"
+        @click="planning.dispatch({ type: 'filtersCleared' })"
       >
         <XIcon class="!tw-h-3.5 !tw-w-3.5" aria-hidden="true" />
         Clear all
@@ -64,7 +64,11 @@
         type="button"
         class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[11px] tw-font-semibold tw-text-primary hover:tw-underline"
         @click="
-          planning.removeFilterValues(planning.activeFacet, checkedValues)
+          planning.dispatch({
+            type: 'filterValuesRemoved',
+            facet: planning.activeFacet,
+            values: checkedValues,
+          })
         "
       >
         Clear
@@ -144,9 +148,17 @@ const narrowingSummary = computed(() => {
 function setFilterValueChecked(value: string, isChecked: boolean) {
   const facet = props.planning.activeFacet;
   if (isChecked) {
-    props.planning.addFilterValues(facet, [value]);
+    props.planning.dispatch({
+      type: "filterValuesAdded",
+      facet: facet,
+      values: [value],
+    });
     return;
   }
-  props.planning.removeFilterValues(facet, [value]);
+  props.planning.dispatch({
+    type: "filterValuesRemoved",
+    facet: facet,
+    values: [value],
+  });
 }
 </script>

@@ -13,8 +13,10 @@
         :view="activeView"
         :isReadOnly="isReadOnly"
         :plannedSectionCount="sections.length"
-        @selectView="schedule.selectView"
-        @createSection="schedule.startCreatingSection"
+        @selectView="
+          (view) => schedule.dispatch({ type: 'viewSelected', view })
+        "
+        @createSection="schedule.dispatch({ type: 'sectionCreationRequested' })"
         @openImport="openImport"
         @deleteAll="isDeleteAllOpen = true"
       />
@@ -27,7 +29,7 @@
       :isUndoing="undoImport.isPending.value"
       @show="showImported"
       @undo="undoLastImport"
-      @dismiss="schedule.dismissImport"
+      @dismiss="schedule.dispatch({ type: 'importDismissed' })"
     />
 
     <!--
@@ -44,7 +46,7 @@
         :isDocked="isLarge"
         :isSmall="isSmall"
         :activeFilterCount="schedule.activeFilterCount"
-        @toggle="schedule.toggleFilterPanel"
+        @toggle="schedule.dispatch({ type: 'filterPanelToggled' })"
       >
         <ScheduleSidebar
           :options="filterOptions"
@@ -82,7 +84,7 @@
           title="Not saved"
           isDismissable
           class="tw-mt-3 tw-flex-none"
-          @dismiss="schedule.dismissWriteError"
+          @dismiss="schedule.dispatch({ type: 'writeErrorDismissed' })"
         >
           {{ schedule.writeError }}
         </Notification>
@@ -97,7 +99,9 @@
           :counts="dayCounts"
           :schedule="schedule"
           :size="size"
-          @selectDay="schedule.selectDay"
+          @selectDay="
+            (dayIndex) => schedule.dispatch({ type: 'daySelected', dayIndex })
+          "
         />
 
         <div
@@ -139,7 +143,7 @@
             :dayNames="WEEKDAY_NAMES"
             :asyncCount="placed.unscheduled.length"
             :schedule="schedule"
-            @showAsync="schedule.showAsyncDay"
+            @showAsync="schedule.dispatch({ type: 'asyncDayShown' })"
           />
         </div>
       </Pane>
@@ -188,8 +192,10 @@
           :startMinute="schedule.openHour.startMinute"
           :entries="hourEntries"
           :schedule="schedule"
-          @close="schedule.deselect"
-          @showInWeek="schedule.selectView('week')"
+          @close="schedule.dispatch({ type: 'deselected' })"
+          @showInWeek="
+            schedule.dispatch({ type: 'viewSelected', view: 'week' })
+          "
         />
         <SectionSheet
           v-else-if="selectedSection"
@@ -207,7 +213,7 @@
           @back="goBackToHour"
           @close="closeSheet"
           @create="saveNewSection"
-          @discard="schedule.discardNewSection"
+          @discard="schedule.dispatch({ type: 'newSectionDiscarded' })"
           @delete="deleteSelectedSection"
         />
         <LeavePanel
@@ -218,12 +224,14 @@
           :terms="termsOverlappingSelectedLeave"
           :groupId="groupId"
           canViewTermPlanning
-          @close="schedule.deselect"
-          @selectLeave="schedule.selectLeave"
+          @close="schedule.dispatch({ type: 'deselected' })"
+          @selectLeave="
+            (leaveId) => schedule.dispatch({ type: 'selectedLeave', leaveId })
+          "
         />
         <LeavePanelLoading
           v-else-if="isSelectedLeaveLoading"
-          @close="schedule.deselect"
+          @close="schedule.dispatch({ type: 'deselected' })"
         />
       </SheetMount>
     </div>
@@ -235,7 +243,9 @@
       :termCode="activeTermCode"
       :selectedLeaveId="schedule.selectedLeaveId"
       class="tw-flex-none tw-border-0 tw-border-t tw-border-solid tw-border-outline-variant"
-      @select="schedule.selectLeave"
+      @select="
+        (leaveId) => schedule.dispatch({ type: 'selectedLeave', leaveId })
+      "
     />
   </FullScreenLayout>
 </template>
@@ -323,7 +333,9 @@ const VIEW_LABELS: Record<ScheduleView, string> = {
   heatmap: "Coverage",
 };
 
-watch(isLarge, (isWide) => schedule.changeBreakpoint(isWide));
+watch(isLarge, (isWide) =>
+  schedule.dispatch({ type: "breakpointChanged", isWide: isWide }),
+);
 
 const {
   today,
@@ -379,10 +391,11 @@ function openImport() {
 function onImported({ sections, sourceTermName }: ImportResult) {
   isImportOpen.value = false;
 
-  schedule.markSectionsImported(
-    sections.map((section) => section.id),
-    sourceTermName,
-  );
+  schedule.dispatch({
+    type: "sectionsImported",
+    sectionIds: sections.map((section) => section.id),
+    sourceTermName: sourceTermName,
+  });
 }
 
 const plannedSectionIds = computed(() =>
@@ -391,13 +404,16 @@ const plannedSectionIds = computed(() =>
 
 function onDeletedAll() {
   isDeleteAllOpen.value = false;
-  schedule.markAllSectionsDeleted();
+  schedule.dispatch({ type: "allSectionsDeleted" });
 }
 
 function showImported(): void {
   if (!schedule.lastImport) return;
 
-  schedule.showImportedSections(schedule.lastImport.sectionIds);
+  schedule.dispatch({
+    type: "importedSectionsShown",
+    sectionIds: schedule.lastImport.sectionIds,
+  });
 }
 
 async function undoLastImport() {
@@ -406,7 +422,7 @@ async function undoLastImport() {
 
   try {
     await undoImport.mutateAsync(importToUndo.sectionIds);
-    schedule.markImportUndone();
+    schedule.dispatch({ type: "importUndone" });
   } catch (refusal) {
     showRefusal(refusal);
   }
@@ -520,7 +536,10 @@ const REFUSED =
   "That change could not be saved. Check your connection and try again.";
 
 const showRefusal = (refusal: unknown) =>
-  schedule.refuseWrite(refusalMessage(refusal) ?? REFUSED);
+  schedule.dispatch({
+    type: "writeRefused",
+    message: refusalMessage(refusal) ?? REFUSED,
+  });
 
 /**
  * Read synchronously by `saveNewSection` rather than watched, because two
@@ -540,7 +559,7 @@ async function saveNewSection() {
       toSectionPayload(schedule.draftSection(standIn)),
     );
 
-    schedule.markSectionCreated(created.id);
+    schedule.dispatch({ type: "sectionCreated", sectionId: created.id });
   } catch (refusal) {
     showRefusal(refusal);
   } finally {
@@ -554,7 +573,7 @@ async function deleteSelectedSection() {
 
   try {
     await deleteSection.mutateAsync(section.id);
-    schedule.markSectionDeleted(section.id);
+    schedule.dispatch({ type: "sectionDeleted", sectionId: section.id });
   } catch (refusal) {
     showRefusal(refusal);
   }
@@ -563,8 +582,8 @@ async function deleteSelectedSection() {
 /** Closing the sheet on a section nobody created is discarding it. */
 const closeSheet = () =>
   schedule.isNewSectionSelected
-    ? schedule.discardNewSection()
-    : schedule.deselect();
+    ? schedule.dispatch({ type: "newSectionDiscarded" })
+    : schedule.dispatch({ type: "deselected" });
 
 const coursesQuery = useTermPlanCoursesQuery(groupId);
 
@@ -625,7 +644,7 @@ onBeforeRouteUpdate((to, from) => {
   if (isSameTermPlan) return true;
   if (hasUnsavedWork.value && !window.confirm(LEAVING_UNSAVED)) return false;
 
-  schedule.contextChanged();
+  schedule.dispatch({ type: "contextChanged" });
   return true;
 });
 
@@ -640,7 +659,12 @@ useTermPlanAutosave({
   sections: localSections,
   pendingEdits: computed(() => schedule.pendingEdits),
   save: (section) => saveSection.mutateAsync(section),
-  onSaved: (sectionId, saved) => schedule.markEditsPersisted(sectionId, saved),
+  onSaved: (sectionId, saved) =>
+    schedule.dispatch({
+      type: "sectionEditsPersisted",
+      sectionId: sectionId,
+      saved: saved,
+    }),
   onRefused: showRefusal,
 });
 
@@ -649,7 +673,8 @@ useTermPlanAutosave({
 // raises no effect for it, which is what stops the two answering each other.
 watch(
   () => route.query,
-  (query) => schedule.urlChanged(flattenQuery(query)),
+  (query) =>
+    schedule.dispatch({ type: "urlChanged", query: flattenQuery(query) }),
   { immediate: true },
 );
 
@@ -663,7 +688,12 @@ const returnTo = computed(() => {
 
 const goBackToHour = () => {
   const hour = schedule.hourReturnedTo;
-  if (hour) schedule.selectHour(hour.dayIndex, hour.startMinute);
+  if (hour)
+    schedule.dispatch({
+      type: "selectedHour",
+      dayIndex: hour.dayIndex,
+      startMinute: hour.startMinute,
+    });
 };
 
 /** The sections whose meetings overlap the selected hour, as the grid shows them. */

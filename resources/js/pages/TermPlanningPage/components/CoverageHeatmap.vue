@@ -48,7 +48,13 @@
           :style="cellStyle(row.counts[dayIndex])"
           :aria-pressed="isSelected(dayIndex, row.startMinute)"
           :aria-label="`${day} ${formatHour(row.startMinute)}, ${row.counts[dayIndex]} sections`"
-          @click="schedule.selectHour(dayIndex, row.startMinute)"
+          @click="
+            schedule.dispatch({
+              type: 'selectedHour',
+              dayIndex: dayIndex,
+              startMinute: row.startMinute,
+            })
+          "
         >
           {{ row.counts[dayIndex] === 0 ? "" : row.counts[dayIndex] }}
         </button>

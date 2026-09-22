@@ -10,7 +10,9 @@
         :isHistoryShown="planning.isHistoryShown"
         :view="planning.view"
         @createLeave="startCreatingWithoutPerson"
-        @selectView="planning.selectView"
+        @selectView="
+          (view) => planning.dispatch({ type: 'viewSelected', view })
+        "
       />
     </template>
 
@@ -23,7 +25,7 @@
         :isDocked="isLarge"
         :isSmall="isSmall"
         :activeFilterCount="planning.activeFilterCount"
-        @toggle="planning.toggleFilterPanel"
+        @toggle="planning.dispatch({ type: 'filterPanelToggled' })"
       >
         <PlanningSidebar :planning="planning" />
       </FilterDock>
@@ -46,9 +48,15 @@
           :range="planning.timelineRange"
           :canViewCourses="canViewCourses"
           :isHistoryShown="planning.isHistoryShown"
-          @selectRangeStart="planning.selectRangeStart"
-          @selectRangeEnd="planning.selectRangeEnd"
-          @toggleHistory="planning.toggleHistory"
+          @selectRangeStart="
+            (termCode) =>
+              planning.dispatch({ type: 'rangeStartSelected', termCode })
+          "
+          @selectRangeEnd="
+            (termCode) =>
+              planning.dispatch({ type: 'rangeEndSelected', termCode })
+          "
+          @toggleHistory="planning.dispatch({ type: 'historyToggled' })"
         />
 
         <TimelineCanvas
@@ -71,7 +79,9 @@
             :selectedLeaveId="selectedLeaveId"
             :emptyMessage="emptyMessage"
             :canCreateLeaves="canCreateLeaves"
-            @selectLeave="planning.selectLeave"
+            @selectLeave="
+              (leaveId) => planning.dispatch({ type: 'leaveSelected', leaveId })
+            "
             @createLeave="startCreatingAt"
           />
           <CourseHistoryRows
@@ -82,8 +92,13 @@
             :selectedLeaveId="selectedLeaveId"
             :selectedSectionKey="selectedSectionKey"
             :emptyMessage="emptyMessage"
-            @selectLeave="planning.selectLeave"
-            @selectSection="planning.selectSection"
+            @selectLeave="
+              (leaveId) => planning.dispatch({ type: 'leaveSelected', leaveId })
+            "
+            @selectSection="
+              (sectionKey) =>
+                planning.dispatch({ type: 'sectionSelected', sectionKey })
+            "
           />
           <PersonHistoryRows
             v-else
@@ -92,8 +107,13 @@
             :selectedLeaveId="selectedLeaveId"
             :selectedSectionKey="selectedSectionKey"
             :emptyMessage="emptyMessage"
-            @selectLeave="planning.selectLeave"
-            @selectSection="planning.selectSection"
+            @selectLeave="
+              (leaveId) => planning.dispatch({ type: 'leaveSelected', leaveId })
+            "
+            @selectSection="
+              (sectionKey) =>
+                planning.dispatch({ type: 'sectionSelected', sectionKey })
+            "
           />
         </TimelineCanvas>
       </Pane>
@@ -120,14 +140,16 @@
           :artifacts="artifactsQuery.data.value ?? []"
           :roster="rosterQuery.data.value ?? []"
           :payrollDates="payrollDatesQuery.data.value ?? []"
-          @close="planning.deselect"
-          @selectLeave="planning.selectLeave"
+          @close="planning.dispatch({ type: 'deselected' })"
+          @selectLeave="
+            (leaveId) => planning.dispatch({ type: 'leaveSelected', leaveId })
+          "
           @requestEdit="startEditing"
-          @edit="planning.editDraft"
+          @edit="(change) => planning.dispatch({ type: 'draftEdited', change })"
           @save="saveDraft"
-          @cancel="planning.cancelDraft"
-          @requestDelete="planning.requestDelete"
-          @cancelDelete="planning.cancelDelete"
+          @cancel="planning.dispatch({ type: 'draftCancelled' })"
+          @requestDelete="planning.dispatch({ type: 'deleteRequested' })"
+          @cancelDelete="planning.dispatch({ type: 'deleteCancelled' })"
           @delete="deleteSelectedLeave"
           @createArtifact="createArtifact"
           @saveArtifact="saveArtifact"
@@ -139,7 +161,7 @@
           :termName="termNameOf(planning.selectedSection.termCode)"
           :groupId="groupId"
           :peopleByEmplid="planning.peopleByEmplid"
-          @close="planning.deselect"
+          @close="planning.dispatch({ type: 'deselected' })"
         />
       </PanelMount>
 
@@ -156,10 +178,16 @@
             This leave has changes you haven’t saved. Leaving now discards them.
           </p>
           <div class="tw-flex tw-justify-end tw-gap-2">
-            <Button variant="secondary" @click="planning.cancelDismissal">
+            <Button
+              variant="secondary"
+              @click="planning.dispatch({ type: 'dismissalCancelled' })"
+            >
               Keep editing
             </Button>
-            <Button variant="danger" @click="planning.confirmDismissal">
+            <Button
+              variant="danger"
+              @click="planning.dispatch({ type: 'dismissalConfirmed' })"
+            >
               Discard
             </Button>
           </div>
@@ -221,7 +249,9 @@ const { isLarge, isSmall } = useScreenSize();
 
 const groupId = computed(() => props.groupId);
 const today = computed(() => dayjs().format("YYYY-MM-DD"));
-watch(isLarge, (isWide) => planning.changeBreakpoint(isWide));
+watch(isLarge, (isWide) =>
+  planning.dispatch({ type: "breakpointChanged", isWide: isWide }),
+);
 
 const timelineCanvas = ref<{
   scrollToSelection: (key: string) => void;
@@ -268,7 +298,8 @@ const planning = useLeavePlanningView(
 
 watch(
   () => route.query,
-  (query) => planning.urlChanged(flattenQuery(query)),
+  (query) =>
+    planning.dispatch({ type: "urlChanged", query: flattenQuery(query) }),
   { immediate: true },
 );
 
@@ -286,18 +317,18 @@ const teachingHistoryQuery = useTeachingHistoryQuery(
 
 onKeyStroke("Escape", () => {
   if (planning.pendingDismissal) {
-    planning.cancelDismissal();
+    planning.dispatch({ type: "dismissalCancelled" });
     return;
   }
   if (planning.isFilterPanelOpen && !isLarge.value) {
-    planning.toggleFilterPanel();
+    planning.dispatch({ type: "filterPanelToggled" });
     return;
   }
   if (planning.draft) {
-    planning.cancelDraft();
+    planning.dispatch({ type: "draftCancelled" });
     return;
   }
-  planning.deselect();
+  planning.dispatch({ type: "deselected" });
 });
 
 const unavailableMessage = computed(() => {
@@ -397,7 +428,12 @@ function startCreatingAt(emplid: number, fraction: number) {
   );
   if (!range) return;
 
-  planning.requestCreation(emplid, range.startDate, range.endDate);
+  planning.dispatch({
+    type: "creationRequested",
+    emplid: emplid,
+    startDate: range.startDate,
+    endDate: range.endDate,
+  });
 }
 
 function startCreatingWithoutPerson() {
@@ -406,23 +442,27 @@ function startCreatingWithoutPerson() {
     ? newLeaveDatesAt(axis, payrollDatesQuery.data.value ?? [], 0.5)
     : null;
 
-  planning.requestCreation(
-    null,
-    range?.startDate ?? today.value,
-    range?.endDate ?? today.value,
-  );
+  planning.dispatch({
+    type: "creationRequested",
+    emplid: null,
+    startDate: range?.startDate ?? today.value,
+    endDate: range?.endDate ?? today.value,
+  });
 }
 
 const startEditing = () => {
   const leave = planning.selectedLeave;
   if (!leave) return;
-  planning.requestEdit({
-    emplid: leave.emplid,
-    description: leave.description,
-    type: leave.type,
-    status: leave.status,
-    startDate: leave.startDate,
-    endDate: leave.endDate,
+  planning.dispatch({
+    type: "editRequested",
+    draft: {
+      emplid: leave.emplid,
+      description: leave.description,
+      type: leave.type,
+      status: leave.status,
+      startDate: leave.startDate,
+      endDate: leave.endDate,
+    },
   });
 };
 
@@ -459,7 +499,10 @@ async function saveDraft() {
     }
     await saveEditedLeave(editedLeaveId, fields);
   } catch (error) {
-    planning.refuseWrite(refusalMessage(error) ?? REFUSED);
+    planning.dispatch({
+      type: "writeRefused",
+      message: refusalMessage(error) ?? REFUSED,
+    });
   }
 }
 
@@ -469,7 +512,7 @@ async function createLeaveFromDraft(emplid: number | null, fields: LeaveWrite) {
     ...fields,
     emplid,
   });
-  planning.markLeavePersisted(created.id);
+  planning.dispatch({ type: "leavePersisted", leaveId: created.id });
 }
 
 async function saveEditedLeave(leaveId: number, fields: LeaveWrite) {
@@ -480,7 +523,7 @@ async function saveEditedLeave(leaveId: number, fields: LeaveWrite) {
     leaveId,
     payload: { ...fields, user_id: userId },
   });
-  planning.markLeavePersisted(leaveId);
+  planning.dispatch({ type: "leavePersisted", leaveId: leaveId });
 }
 
 async function deleteSelectedLeave() {
@@ -489,9 +532,12 @@ async function deleteSelectedLeave() {
 
   try {
     await mutations.deleteLeave.mutateAsync(leaveId);
-    planning.markLeaveDeleted();
+    planning.dispatch({ type: "leaveDeleted" });
   } catch (error) {
-    planning.refuseWrite(refusalMessage(error) ?? REFUSED);
+    planning.dispatch({
+      type: "writeRefused",
+      message: refusalMessage(error) ?? REFUSED,
+    });
   }
 }
 
@@ -504,7 +550,10 @@ const writeToOpenLeave = async (
   try {
     await write(leaveId);
   } catch (error) {
-    planning.refuseWrite(refusalMessage(error) ?? REFUSED);
+    planning.dispatch({
+      type: "writeRefused",
+      message: refusalMessage(error) ?? REFUSED,
+    });
   }
 };
 

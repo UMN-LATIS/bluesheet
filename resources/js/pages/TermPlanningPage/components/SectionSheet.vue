@@ -128,7 +128,12 @@
         <FieldHeader
           label="Meets"
           :actionLabel="patterns.length > 0 ? 'Add meeting' : undefined"
-          @act="schedule.addMeetingPattern(section.id)"
+          @act="
+            schedule.dispatch({
+              type: 'meetingPatternAdded',
+              sectionId: section.id,
+            })
+          "
         />
         <div class="tw-flex tw-flex-col tw-gap-2">
           <div
@@ -151,7 +156,13 @@
                     ? `Remove meeting time ${patternIndex + 1}`
                     : 'Remove meeting time, leaving the section asynchronous'
                 "
-                @click="schedule.removeMeetingPattern(section.id, patternIndex)"
+                @click="
+                  schedule.dispatch({
+                    type: 'meetingPatternRemoved',
+                    sectionId: section.id,
+                    patternIndex: patternIndex,
+                  })
+                "
               >
                 ×
               </button>
@@ -173,7 +184,10 @@
                   :aria-label="`Start time ${patternIndex + 1}`"
                   class="field-control"
                   @input="
-                    schedule.editMeetingTime(section.id, patternIndex, {
+                    schedule.dispatch({
+                      type: 'meetingTimeEdited',
+                      sectionId: section.id,
+                      patternIndex,
                       startTime: valueOf($event),
                     })
                   "
@@ -187,7 +201,10 @@
                   :aria-label="`End time ${patternIndex + 1}`"
                   class="field-control"
                   @input="
-                    schedule.editMeetingTime(section.id, patternIndex, {
+                    schedule.dispatch({
+                      type: 'meetingTimeEdited',
+                      sectionId: section.id,
+                      patternIndex,
                       endTime: valueOf($event),
                     })
                   "
@@ -408,14 +425,14 @@
         <button
           type="button"
           class="tw-min-h-11 tw-cursor-pointer tw-rounded-full tw-border-none tw-bg-brand tw-px-5 tw-text-[13px] tw-font-bold tw-text-white"
-          @click="schedule.confirmDismissal"
+          @click="schedule.dispatch({ type: 'dismissalConfirmed' })"
         >
           Discard changes
         </button>
         <button
           type="button"
           class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[13px] tw-font-semibold tw-text-on-surface-variant hover:tw-underline"
-          @click="schedule.cancelDismissal"
+          @click="schedule.dispatch({ type: 'dismissalCancelled' })"
         >
           Keep editing
         </button>
@@ -474,7 +491,7 @@
         <button
           type="button"
           class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[13px] tw-font-semibold tw-text-on-surface-variant hover:tw-underline"
-          @click="schedule.cancelDelete"
+          @click="schedule.dispatch({ type: 'deleteCancelled' })"
         >
           Keep it
         </button>
@@ -538,7 +555,9 @@
         class="tw-min-h-11 tw-rounded-full tw-border-none tw-bg-primary tw-px-6 tw-text-[13px] tw-font-bold tw-text-on-primary disabled:tw-cursor-default disabled:tw-bg-surface-container-high disabled:tw-text-on-surface-variant"
         :class="{ 'tw-cursor-pointer': isDirty && problems.length === 0 }"
         :disabled="!isDirty || problems.length > 0"
-        @click="schedule.saveDraft(section.id)"
+        @click="
+          schedule.dispatch({ type: 'draftSaved', sectionId: section.id })
+        "
       >
         Save
       </button>
@@ -546,7 +565,9 @@
         v-if="isDirty"
         type="button"
         class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[13px] tw-font-semibold tw-text-on-surface-variant hover:tw-underline"
-        @click="schedule.cancelDraft(section.id)"
+        @click="
+          schedule.dispatch({ type: 'draftCancelled', sectionId: section.id })
+        "
       >
         Discard
       </button>
@@ -554,7 +575,7 @@
       <button
         type="button"
         class="tw-ml-auto tw-min-h-11 tw-cursor-pointer tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-px-5 tw-text-[13px] tw-font-bold tw-text-brand hover:tw-border-brand"
-        @click="schedule.requestDelete"
+        @click="schedule.dispatch({ type: 'deleteRequested' })"
       >
         Delete…
       </button>
@@ -590,6 +611,7 @@ import { formatTimeRange, minutesFromClock } from "../helpers/timeScale";
 import { useCourseInstructorsQuery } from "../queries/useCourseInstructorsQuery";
 import { useSisTermsQuery } from "../queries/useSisTermsQuery";
 import { NEW_SECTION_ID } from "../useScheduleEditor/types";
+import type { SectionEdit } from "../useScheduleEditor/types";
 import type {
   Delivery,
   PlannableCourse,
@@ -660,8 +682,12 @@ const isNew = computed(() => props.section.id === NEW_SECTION_ID);
 
 const isDirty = computed(() => props.schedule.isDraftDirty(props.section));
 
-const edit = (change: Parameters<ScheduleEditor["editSection"]>[1]) =>
-  props.schedule.editSection(props.section.id, change);
+const edit = (change: SectionEdit) =>
+  props.schedule.dispatch({
+    type: "sectionFieldEdited",
+    sectionId: props.section.id,
+    change: change,
+  });
 
 const valueOf = (event: Event) =>
   (event.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement)
@@ -685,12 +711,16 @@ const patterns = computed(() =>
 
 const pressDay = (patternIndex: number, day: string) =>
   day === ASYNC
-    ? props.schedule.makeAsynchronous(props.section.id)
-    : props.schedule.toggleMeetingDay(
-        props.section.id,
-        patternIndex,
-        day as SisDay,
-      );
+    ? props.schedule.dispatch({
+        type: "madeAsynchronous",
+        sectionId: props.section.id,
+      })
+    : props.schedule.dispatch({
+        type: "meetingDayToggled",
+        sectionId: props.section.id,
+        patternIndex: patternIndex,
+        day: day as SisDay,
+      });
 
 const durationOf = (pattern: SisSectionMeeting) =>
   minutesFromClock(pattern.endTime) - minutesFromClock(pattern.startTime);
@@ -915,14 +945,19 @@ const describePattern = (pattern: SisSectionMeeting) =>
 
 // straight through the draft to the saved edits: the prompt has already asked
 function removeMeetingOnly(patternIndex: number) {
-  props.schedule.removeMeetingPattern(props.section.id, patternIndex);
-  props.schedule.saveDraft(props.section.id);
+  props.schedule.dispatch({
+    type: "meetingPatternRemoved",
+    sectionId: props.section.id,
+    patternIndex: patternIndex,
+  });
+  props.schedule.dispatch({ type: "draftSaved", sectionId: props.section.id });
 
-  if (draft.value.meetings.length === 0) props.schedule.cancelDelete();
+  if (draft.value.meetings.length === 0)
+    props.schedule.dispatch({ type: "deleteCancelled" });
 }
 
 function confirmDelete() {
-  props.schedule.cancelDelete();
+  props.schedule.dispatch({ type: "deleteCancelled" });
   emit("delete");
 }
 </script>

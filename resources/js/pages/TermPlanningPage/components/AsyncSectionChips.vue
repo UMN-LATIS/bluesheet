@@ -40,7 +40,9 @@
             'tw-border-dashed',
         ]"
         :aria-pressed="section.id === selectedSectionId"
-        @click="schedule.selectSection(section.id)"
+        @click="
+          schedule.dispatch({ type: 'selectedSection', sectionId: section.id })
+        "
       >
         <span class="tw-min-w-0 tw-truncate tw-font-semibold">
           {{ section.subject }} {{ section.catalogNumber }} ·

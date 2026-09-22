@@ -261,8 +261,16 @@ const leavesFor = (person: PersonOption): TermLeave[] =>
 
 const toggle = (facet: FilterFacet, values: string[], isNowChecked: boolean) =>
   isNowChecked
-    ? props.schedule.addFilterValues(facet, values)
-    : props.schedule.removeFilterValues(facet, values);
+    ? props.schedule.dispatch({
+        type: "filterValuesAdded",
+        facet: facet,
+        values: values,
+      })
+    : props.schedule.dispatch({
+        type: "filterValuesRemoved",
+        facet: facet,
+        values: values,
+      });
 
 /** Across every facet, not just the list in view. */
 const activeFilterCount = computed(() =>
@@ -270,7 +278,11 @@ const activeFilterCount = computed(() =>
 );
 
 const clearFacet = (facet: FilterFacet) =>
-  props.schedule.removeFilterValues(facet, filters.value[facet]);
+  props.schedule.dispatch({
+    type: "filterValuesRemoved",
+    facet: facet,
+    values: filters.value[facet],
+  });
 
 const isSearching = computed(() => search.value.trim() !== "");
 
@@ -282,7 +294,7 @@ const isNarrowed = computed(
 /** The search narrows the lists as a checked value does, so it clears too. */
 const clearAll = () => {
   search.value = "";
-  props.schedule.clearFilters();
+  props.schedule.dispatch({ type: "filtersCleared" });
 };
 
 const narrowingSummary = computed(() => {
@@ -301,7 +313,11 @@ const narrowingSummary = computed(() => {
 
 const showUnassigned = () => {
   activeFacet.value = "person";
-  props.schedule.addFilterValues("person", [TBA_PERSON]);
+  props.schedule.dispatch({
+    type: "filterValuesAdded",
+    facet: "person",
+    values: [TBA_PERSON],
+  });
 };
 
 /**

@@ -1,5 +1,4 @@
 import { computed, reactive, shallowRef, type Ref } from "vue";
-import type { UrlQuery } from "@/utils/urlQuery";
 import {
   selectActiveFacet,
   selectActiveFacetOptions,
@@ -23,14 +22,7 @@ import {
   selectTimelineRange,
 } from "./selectors";
 import { initialState, update } from "./update";
-import type {
-  Effect,
-  FilterFacet,
-  LeaveDraft,
-  TeachingView,
-  ViewContext,
-  ViewEvent,
-} from "./types";
+import type { Effect, ViewContext, ViewEvent } from "./types";
 
 export type LeavePlanningView = ReturnType<typeof useLeavePlanningView>;
 
@@ -51,6 +43,8 @@ export function useLeavePlanningView(
   };
 
   return reactive({
+    /* The only way in: every transition is a ViewEvent. */
+    dispatch,
     requestedRange: computed(() => state.value.range),
     timelineRange: computed(() => selectTimelineRange(context.value)),
     axis: computed(() => selectAxis(context.value)),
@@ -100,47 +94,5 @@ export function useLeavePlanningView(
     refusal: computed(() => state.value.refusal),
     isConfirmingDelete: computed(() => state.value.isConfirmingDelete),
     isFilterPanelOpen: computed(() => state.value.isFilterPanelOpen),
-
-    urlChanged: (query: UrlQuery) => dispatch({ type: "urlChanged", query }),
-    selectRangeStart: (termCode: number) =>
-      dispatch({ type: "rangeStartSelected", termCode }),
-    selectRangeEnd: (termCode: number) =>
-      dispatch({ type: "rangeEndSelected", termCode }),
-    toggleHistory: () => dispatch({ type: "historyToggled" }),
-    selectView: (view: TeachingView) =>
-      dispatch({ type: "viewSelected", view }),
-    openFacet: (facet: FilterFacet) => dispatch({ type: "facetOpened", facet }),
-    addFilterValues: (facet: FilterFacet, values: string[]) =>
-      dispatch({ type: "filterValuesAdded", facet, values }),
-    removeFilterValues: (facet: FilterFacet, values: string[]) =>
-      dispatch({ type: "filterValuesRemoved", facet, values }),
-    clearFilters: () => dispatch({ type: "filtersCleared" }),
-    selectLeave: (leaveId: number) =>
-      dispatch({ type: "leaveSelected", leaveId }),
-    selectSection: (sectionKey: string) =>
-      dispatch({ type: "sectionSelected", sectionKey }),
-    deselect: () => dispatch({ type: "deselected" }),
-    requestEdit: (draft: LeaveDraft) =>
-      dispatch({ type: "editRequested", draft }),
-    requestCreation: (
-      emplid: number | null,
-      startDate: string,
-      endDate: string,
-    ) => dispatch({ type: "creationRequested", emplid, startDate, endDate }),
-    editDraft: (change: Partial<LeaveDraft>) =>
-      dispatch({ type: "draftEdited", change }),
-    cancelDraft: () => dispatch({ type: "draftCancelled" }),
-    markLeavePersisted: (leaveId: number) =>
-      dispatch({ type: "leavePersisted", leaveId }),
-    markLeaveDeleted: () => dispatch({ type: "leaveDeleted" }),
-    confirmDismissal: () => dispatch({ type: "dismissalConfirmed" }),
-    refuseWrite: (message: string) =>
-      dispatch({ type: "writeRefused", message }),
-    requestDelete: () => dispatch({ type: "deleteRequested" }),
-    cancelDelete: () => dispatch({ type: "deleteCancelled" }),
-    toggleFilterPanel: () => dispatch({ type: "filterPanelToggled" }),
-    changeBreakpoint: (isWide: boolean) =>
-      dispatch({ type: "breakpointChanged", isWide }),
-    cancelDismissal: () => dispatch({ type: "dismissalCancelled" }),
   });
 }

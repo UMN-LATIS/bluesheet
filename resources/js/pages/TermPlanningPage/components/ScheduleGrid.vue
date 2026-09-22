@@ -26,8 +26,8 @@
         class="tw-flex tw-items-start"
         @pointerdown="onPointerDown"
         @pointermove="onPointerMove"
-        @pointerup="schedule.release()"
-        @pointercancel="schedule.cancel()"
+        @pointerup="schedule.dispatch({ type: 'released' })"
+        @pointercancel="schedule.dispatch({ type: 'canceled' })"
       >
         <DayColumn
           v-for="(day, dayIndex) in WEEKDAY_NAMES"
@@ -155,23 +155,36 @@ function onPointerDown(event: PointerEvent) {
   days.value?.setPointerCapture(event.pointerId);
 
   if (!meetingId) {
-    props.schedule.pressEmptySpace(at.dayIndex, at.minute);
+    props.schedule.dispatch({
+      type: "pressedEmptySpace",
+      dayIndex: at.dayIndex,
+      minute: at.minute,
+    });
     return;
   }
 
   // A read-only week keeps its blocks and loses its handles: the press below
   // opens the sheet on release, and `update` refuses everything else.
   if (!props.schedule.isReadOnly && (edge === "start" || edge === "end")) {
-    props.schedule.pressMeetingEdge(meetingId, edge, at.minute);
+    props.schedule.dispatch({
+      type: "pressedMeetingEdge",
+      meetingId: meetingId,
+      edge: edge,
+      minute: at.minute,
+    });
   } else {
-    props.schedule.pressMeeting(meetingId, at.minute);
+    props.schedule.dispatch({
+      type: "pressedMeeting",
+      meetingId: meetingId,
+      minute: at.minute,
+    });
   }
 }
 
 // on the window: the grid never holds focus
 function onKeyDown(event: KeyboardEvent) {
   if (event.key !== "Escape") return;
-  props.schedule.cancel();
+  props.schedule.dispatch({ type: "canceled" });
 }
 
 onMounted(() => window.addEventListener("keydown", onKeyDown));
@@ -182,7 +195,12 @@ function onPointerMove(event: PointerEvent) {
   if (!props.schedule.isGestureInFlight) return;
 
   const at = positionOf(event);
-  if (at) props.schedule.movePointer(at.dayIndex, at.minute);
+  if (at)
+    props.schedule.dispatch({
+      type: "pointerMoved",
+      dayIndex: at.dayIndex,
+      minute: at.minute,
+    });
 }
 
 /**
