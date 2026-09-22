@@ -9,7 +9,7 @@
       v-if="!showCustomDateInput"
       :data-cy="`select-leave-date-combobox-${variant}`"
       :modelValue="localComboBoxValue"
-      :label="variant === 'start' ? 'Leave Start Date' : 'Leave End Date'"
+      :label="dateLabel"
       :showLabel="false"
       :options="comboboxOptions"
       teleportTo="body"
@@ -26,25 +26,30 @@
         <Button @click="showCustomDateInput = true"> Custom Date </Button>
       </template>
     </ComboBox>
-    <div v-else class="tw-flex">
-      <InputGroup
-        :data-cy="`select-leave-date-input-${variant}`"
-        label="Custom Leave Start Date"
-        type="date"
-        :modelValue="modelValue"
-        :showLabel="false"
-        class="tw-w-40"
-        :validator="validator"
-        :validateWhenUntouched="true"
-        @update:modelValue="$emit('update:modelValue', $event)"
-      />
+    <div
+      v-else
+      class="tw-flex tw-w-40 tw-items-center tw-justify-between tw-gap-1 tw-rounded-md tw-border tw-border-solid tw-px-4 tw-py-3 focus-within:tw-ring-2 focus-within:tw-ring-blue-500"
+      :class="isDateValid ? 'tw-border-neutral-300' : 'tw-border-red-500'"
+    >
+      <div class="tw-flex tw-min-w-0 tw-flex-1 tw-flex-col tw-items-start">
+        <input
+          :data-cy="`select-leave-date-input-${variant}`"
+          type="date"
+          :value="modelValue"
+          :aria-label="`${dateLabel}, custom date`"
+          class="tw-w-full tw-border-none tw-bg-transparent tw-p-0 tw-text-sm focus:tw-outline-none"
+          @input="emitDate"
+        />
+        <span class="tw-text-xs tw-text-neutral-500">Custom date</span>
+      </div>
       <button
-        class="tw-bg-transparent tw-border-none"
-        title="cancel custom date"
-        @click="showCustomDateInput = !showCustomDateInput"
+        type="button"
+        class="tw-flex tw-h-6 tw-w-6 tw-flex-none tw-cursor-pointer tw-items-center tw-justify-center tw-border-none tw-bg-transparent tw-text-neutral-900"
+        title="Pick a term date instead"
+        @click="showCustomDateInput = false"
       >
-        <XIcon />
-        <span class="sr-only">Cancel custom date</span>
+        <XIcon class="!tw-h-4 !tw-w-4" />
+        <span class="tw-sr-only">Pick a term date instead</span>
       </button>
     </div>
     <span v-if="!isDateValid && errorText" class="tw-text-xs tw-text-red-600">{{
@@ -55,9 +60,9 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, watch } from "vue";
 import { ComboBox, ComboBoxOptionType } from "@/components/ComboBox";
-import InputGroup from "../InputGroup.vue";
 import Button from "../Button.vue";
 import dayjs from "dayjs";
+import * as T from "@/types";
 import { useTermPayrollDatesStore } from "@/stores/useTermPayrollDateStore";
 import XIcon from "@/icons/XIcon.vue";
 
@@ -68,6 +73,8 @@ const props = withDefaults(
     isOptionDisabled?: (opt: ComboBoxOptionType) => boolean;
     validator?: (value: unknown) => boolean;
     errorText?: string;
+    /** Omit to fetch through useTermPayrollDatesStore on mount. */
+    payrollDates?: T.TermPayrollDate[];
   }>(),
   {
     modelValue: "",
@@ -75,18 +82,31 @@ const props = withDefaults(
     isOptionDisabled: () => false,
     validator: () => true,
     errorText: "",
+    payrollDates: undefined,
   },
 );
 
-defineEmits<{
+const emit = defineEmits<{
   (event: "update:modelValue", value: string): void;
 }>();
+
+const emitDate = (event: Event) =>
+  emit("update:modelValue", (event.target as HTMLInputElement).value);
+
+const dateLabel = computed(() =>
+  props.variant === "start" ? "Leave start date" : "Leave end date",
+);
 
 const showCustomDateInput = ref(false);
 const termPayrollDatesStore = useTermPayrollDatesStore();
 onMounted(async () => {
+  if (props.payrollDates) return;
   await termPayrollDatesStore.init();
 });
+
+const payrollDates = computed(
+  () => props.payrollDates ?? termPayrollDatesStore.termPayrollDates,
+);
 
 const isCustomDate = computed(
   () =>
@@ -95,7 +115,7 @@ const isCustomDate = computed(
 );
 
 const comboboxOptions = computed(() => {
-  return termPayrollDatesStore.termPayrollDates
+  return payrollDates.value
     .map((termPayrollDate) => {
       const date =
         props.variant === "start"

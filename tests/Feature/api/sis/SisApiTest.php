@@ -386,6 +386,23 @@ describe('GET /api/sis/groups/:groupId/employees', function () {
         expect($res->json()[0]['positionTitle'])->toBe('Professor');
     });
 
+    it('admits someone who may read the department\'s leaves but not its courses', function () {
+        $leavesViewer = User::factory()->create()
+            ->givePermissionTo(Permissions::VIEW_ANY_LEAVES);
+
+        actingAs($leavesViewer);
+        $res = getJson("/api/sis/groups/{$this->group->id}/employees");
+
+        expect($res->status())->toBe(200);
+    });
+
+    it('admits someone who may read the department\'s courses but not its leaves', function () {
+        actingAs($this->coursesViewer);
+        $res = getJson("/api/sis/groups/{$this->group->id}/employees");
+
+        expect($res->status())->toBe(200);
+    });
+
     it('requires the user to have read privileges', function () {
         actingAs($this->basicUser);
         $res = getJson("/api/sis/groups/{$this->group->id}/employees");

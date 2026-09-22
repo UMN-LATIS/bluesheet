@@ -82,6 +82,22 @@ export function colorOfType(component: string | undefined): MeetingTypeColor {
   return (component && MEETING_TYPE_COLORS[component]) || OTHER_TYPE_COLOR;
 }
 
+export function colorOfTypeInTerm(
+  component: string | undefined,
+  isReadOnly: boolean,
+): MeetingTypeColor {
+  const type = colorOfType(component);
+  if (!isReadOnly) return type;
+
+  return {
+    ...type,
+    tint: "tw-bg-surface-container",
+    rail: "tw-border-l-outline",
+    dot: "tw-bg-outline",
+    badge: "tw-bg-surface-container tw-border-outline",
+  };
+}
+
 /**
  * What a component code means, for the places that have room to say it: the
  * Types list in the filters panel, and the sheet's component select.

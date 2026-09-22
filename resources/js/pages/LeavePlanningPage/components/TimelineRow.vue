@@ -25,7 +25,12 @@
         {{ detail }}
       </span>
     </div>
-    <div class="tw-relative tw-flex-none" :style="{ width: 'var(--lp-track)' }">
+    <div
+      class="tw-relative tw-flex-none"
+      :class="{ 'tw-cursor-copy': isTrackClickable }"
+      :style="{ width: 'var(--lp-track)' }"
+      @click="clickTrack"
+    >
       <slot />
     </div>
   </div>
@@ -34,10 +39,28 @@
 <script setup lang="ts">
 import { RouterLink, type RouteLocationRaw } from "vue-router";
 
-defineProps<{
-  name: string;
-  nameLink?: RouteLocationRaw;
-  detail: string | null;
-  height: number;
-}>();
+const props = withDefaults(
+  defineProps<{
+    name: string;
+    nameLink?: RouteLocationRaw;
+    detail: string | null;
+    height: number;
+    isTrackClickable?: boolean;
+  }>(),
+  { nameLink: undefined, isTrackClickable: false },
+);
+
+const emit = defineEmits<{ clickTrack: [fraction: number] }>();
+
+function clickTrack(event: MouseEvent) {
+  if (!props.isTrackClickable) return;
+
+  // A bar is a button inside the track, so its click
+  // bubbles here; without this, selecting a leave also
+  // opens the create form on top of it.
+  const track = event.currentTarget as HTMLElement;
+  if (event.target !== track) return;
+
+  emit("clickTrack", event.offsetX / track.clientWidth);
+}
 </script>

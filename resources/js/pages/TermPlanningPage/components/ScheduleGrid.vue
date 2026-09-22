@@ -1,5 +1,5 @@
 <template>
-  <div class="tw-bg-surface-bright">
+  <div :class="canvasClass">
     <!-- --day-label-offset: where DayColumn pins a scrolling day's name -->
     <div
       class="tw-flex tw-w-max tw-min-w-full tw-items-start"
@@ -12,6 +12,7 @@
       <div
         ref="gutter"
         class="tw-sticky tw-left-0 tw-z-40 tw-flex tw-flex-none tw-border-0 tw-border-r tw-border-solid tw-border-outline tw-bg-surface-bright"
+        :class="canvasClass"
       >
         <TimeAxis />
       </div>
@@ -25,8 +26,8 @@
         class="tw-flex tw-items-start"
         @pointerdown="onPointerDown"
         @pointermove="onPointerMove"
-        @pointerup="schedule.release()"
-        @pointercancel="schedule.cancel()"
+        @pointerup="schedule.dispatch({ type: 'released' })"
+        @pointercancel="schedule.dispatch({ type: 'canceled' })"
       >
         <DayColumn
           v-for="(day, dayIndex) in WEEKDAY_NAMES"
@@ -122,6 +123,10 @@ const props = defineProps<{
   selectedSectionId: number | null;
 }>();
 
+const canvasClass = computed(() =>
+  props.schedule.isReadOnly ? "tw-bg-surface" : "tw-bg-surface-bright",
+);
+
 const days = ref<HTMLElement | null>(null);
 const gutter = ref<HTMLElement | null>(null);
 const { width: gutterWidth } = useElementSize(gutter);
@@ -150,23 +155,36 @@ function onPointerDown(event: PointerEvent) {
   days.value?.setPointerCapture(event.pointerId);
 
   if (!meetingId) {
-    props.schedule.pressEmptySpace(at.dayIndex, at.minute);
+    props.schedule.dispatch({
+      type: "pressedEmptySpace",
+      dayIndex: at.dayIndex,
+      minute: at.minute,
+    });
     return;
   }
 
   // A read-only week keeps its blocks and loses its handles: the press below
   // opens the sheet on release, and `update` refuses everything else.
   if (!props.schedule.isReadOnly && (edge === "start" || edge === "end")) {
-    props.schedule.pressMeetingEdge(meetingId, edge, at.minute);
+    props.schedule.dispatch({
+      type: "pressedMeetingEdge",
+      meetingId: meetingId,
+      edge: edge,
+      minute: at.minute,
+    });
   } else {
-    props.schedule.pressMeeting(meetingId, at.minute);
+    props.schedule.dispatch({
+      type: "pressedMeeting",
+      meetingId: meetingId,
+      minute: at.minute,
+    });
   }
 }
 
 // on the window: the grid never holds focus
 function onKeyDown(event: KeyboardEvent) {
   if (event.key !== "Escape") return;
-  props.schedule.cancel();
+  props.schedule.dispatch({ type: "canceled" });
 }
 
 onMounted(() => window.addEventListener("keydown", onKeyDown));
@@ -177,7 +195,12 @@ function onPointerMove(event: PointerEvent) {
   if (!props.schedule.isGestureInFlight) return;
 
   const at = positionOf(event);
-  if (at) props.schedule.movePointer(at.dayIndex, at.minute);
+  if (at)
+    props.schedule.dispatch({
+      type: "pointerMoved",
+      dayIndex: at.dayIndex,
+      minute: at.minute,
+    });
 }
 
 /**

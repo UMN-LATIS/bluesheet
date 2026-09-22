@@ -12,13 +12,15 @@
       </span>
     </div>
     <div class="tw-truncate">
-      <span class="component-code tw-me-1">{{ section.component }}</span
-      >{{ instructorName }}
+      {{ instructorName }}
     </div>
     <div v-if="assistants" class="assistants tw-truncate tw-opacity-70">
       TA {{ assistants }}
     </div>
     <div class="time-range tw-truncate tw-opacity-50">{{ timeRange }}</div>
+    <div class="component-code tw-truncate tw-opacity-50">
+      {{ section.component }}
+    </div>
     <NoteIcon
       v-if="hasNote"
       class="tw-absolute tw-bottom-0 tw-right-0 tw-h-3 tw-w-3 tw-opacity-60"
@@ -62,24 +64,9 @@ const timeRange = computed(() =>
 </script>
 
 <style scoped>
-/*
- * What the block has room to say, asked of the block rather than measured in
- * script. Its content box runs 19px narrower and 10px shorter than the lane
- * and the class's length in minutes; see MeetingBlock. So the meeting type
- * joins the instructor at a 120px lane, the times appear on a class of 50
- * minutes or more, and the assistants, a fourth line at 14.3px each, need a
- * class of 70 minutes to sit under the three above them.
- */
-.component-code,
 .assistants,
 .time-range {
   display: none;
-}
-
-@container meeting-block (min-width: 101px) {
-  .component-code {
-    display: inline;
-  }
 }
 
 @container meeting-block (min-height: 40px) {

@@ -6,7 +6,7 @@
 import type { SisInstructor, SisSection } from "../types";
 import { TBA_PERSON } from "../types";
 import { daysMetLabel } from "./scheduleDays";
-import { lastNameFirst } from "./sectionPeople";
+import { lastNameFirst } from "@/utils/lastNameFirst";
 
 export interface CourseOption {
   /** The filter value: `section.courseCode`, e.g. "HIST-1082". */

@@ -19,10 +19,12 @@ import {
   type FilterOption,
   type VisibleRecords,
 } from "../helpers/filterOptions";
+import type { AppliedFilter } from "@/utils/appliedFilterSummary";
 import {
   FILTER_FACETS,
   HISTORY_FACETS,
   type FilterFacet,
+  type LeaveDraft,
   type PlanningFilters,
   type ViewContext,
   type ViewState,
@@ -273,6 +275,36 @@ export const selectActiveFilterCount = (
     0,
   );
 
+export const selectAppliedFilters = (
+  context: ViewContext,
+  state: ViewState,
+): AppliedFilter[] =>
+  selectVisibleFacets(context, state).flatMap((facet) => {
+    const chosenValues = state.filters[facet];
+    if (chosenValues.length === 0) return [];
+
+    const records = visibleRecordsOf(
+      context,
+      state,
+      withoutFacet(state.filters, facet),
+    );
+    const labelOfValue = new Map(
+      filterOptionsFor(facet, records).map(({ value, label }) => [
+        value,
+        label,
+      ]),
+    );
+
+    return [
+      { values: chosenValues.map((value) => labelOfValue.get(value) ?? value) },
+    ];
+  });
+
+export const selectIsFilterPanelOpen = (
+  context: ViewContext,
+  state: ViewState,
+): boolean => state.filterPanelOverride ?? context.isWide;
+
 export const selectSelectedLeave = (
   context: ViewContext,
   state: ViewState,
@@ -292,4 +324,32 @@ export const selectSelectedSection = (
   if (!selectIsHistoryShown(context, state)) return null;
   const sections = context.teachingHistory?.sections ?? [];
   return sections.find(({ key }) => key === selection.sectionKey) ?? null;
+};
+
+export const selectDraft = (state: ViewState): LeaveDraft | null =>
+  state.editor?.draft ?? null;
+
+/** The leave whose permissions and artifacts the panel should load. */
+export const selectOpenLeaveId = (state: ViewState): number | null => {
+  if (state.editor?.kind === "editingLeave") return state.editor.leaveId;
+  if (state.editor?.kind === "creatingLeave") return null;
+  return state.selection?.kind === "leave" ? state.selection.leaveId : null;
+};
+
+export const selectIsDraftValid = (state: ViewState): boolean => {
+  const draft = state.editor?.draft;
+  if (!draft) return false;
+
+  const hasDescription =
+    draft.description.trim() !== "" && draft.description.length <= 255;
+  const hasPerson =
+    state.editor?.kind === "editingLeave" || draft.emplid !== null;
+  const hasBothDates = draft.startDate !== "" && draft.endDate !== "";
+
+  return (
+    hasDescription &&
+    hasPerson &&
+    hasBothDates &&
+    draft.endDate > draft.startDate
+  );
 };

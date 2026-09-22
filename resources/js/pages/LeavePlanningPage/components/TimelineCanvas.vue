@@ -153,7 +153,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from "vue";
+import { computed, nextTick, ref } from "vue";
 import { useElementSize } from "@vueuse/core";
 import { ArrowRightIcon, PencilIcon } from "@/icons";
 import TermPlanningLink from "@/components/planning/TermPlanningLink.vue";
@@ -175,8 +175,6 @@ const props = defineProps<{
   trailingScrollRoomPx: number;
   /** "YYYY-MM-DD" */
   today: string;
-  /** Matches a `data-selection-key` inside the rows. */
-  selectionKey: string | null;
 }>();
 
 const scroller = ref<HTMLElement | null>(null);
@@ -228,7 +226,8 @@ const termLabels = computed(() =>
     return {
       ...axisTerm,
       tone: toneOf(term.termCode),
-      isPlanned: props.isHistoryShown && props.plannedTermCodes.has(term.termCode),
+      isPlanned:
+        props.isHistoryShown && props.plannedTermCodes.has(term.termCode),
       isPlannable: props.plannableTermCodes.has(term.termCode),
       hasRoomForDates: axisTerm.width * trackWidth.value >= DATES_MIN_BAND_PX,
       dateRangeLabel: `${startLabel} – ${endLabel}`,
@@ -252,19 +251,16 @@ const monthTicks = computed(() => {
   });
 });
 
-watch(
-  () => props.selectionKey,
-  async (key) => {
-    if (key === null) return;
-    await nextTick();
-    scroller.value
-      ?.querySelector(`[data-selection-key="${CSS.escape(key)}"]`)
-      ?.scrollIntoView({
-        block: "nearest",
-        inline: "nearest",
-        behavior: "smooth",
-      });
-  },
-  { immediate: true, flush: "post" },
-);
+async function scrollToSelection(key: string) {
+  await nextTick();
+  scroller.value
+    ?.querySelector(`[data-selection-key="${CSS.escape(key)}"]`)
+    ?.scrollIntoView({
+      block: "nearest",
+      inline: "nearest",
+      behavior: "smooth",
+    });
+}
+
+defineExpose({ scrollToSelection });
 </script>

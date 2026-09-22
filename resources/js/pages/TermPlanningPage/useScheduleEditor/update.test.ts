@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { emptyFilters, initialState, update } from "./update";
-import { selectIsNewSectionSelected } from "./selectors";
+import {
+  selectIsFilterPanelOpen,
+  selectIsNewSectionSelected,
+} from "./selectors";
 import { plannedSection } from "../helpers/plannedSection.fixture";
 import { NEW_SECTION_ID } from "./types";
 import type {
@@ -10,12 +13,16 @@ import type {
   SectionEdit,
 } from "./types";
 
-const emptyContext: ScheduleContext = { sections: [], isReadOnly: false };
+const emptyContext: ScheduleContext = {
+  sections: [],
+  isReadOnly: false,
+  isWide: true,
+};
 
 /** The term as the server sent it; the editor places the blocks itself. */
 const contextOf = (
   ...sections: ReturnType<typeof plannedSection>[]
-): ScheduleContext => ({ sections, isReadOnly: false });
+): ScheduleContext => ({ sections, isReadOnly: false, isWide: true });
 
 const after = (
   events: EditorEvent[],
@@ -998,6 +1005,50 @@ describe("days and times in the sheet", () => {
   });
 });
 
+describe("Create Section", () => {
+  it("opens the sheet on a section with no meeting times", () => {
+    const state = after([{ type: "sectionCreationRequested" }]);
+
+    expect(selectIsNewSectionSelected(state)).toBe(true);
+    expect(drawn(state)).toBeUndefined();
+  });
+
+  it("keeps the times of a rectangle already drawn out", () => {
+    const state = after([
+      ...draw(0, 540, 590),
+      { type: "sectionCreationRequested" },
+    ]);
+
+    expect(drawn(state)).toEqual([
+      { days: ["mon"], startTime: "09:00", endTime: "09:50" },
+    ]);
+  });
+
+  it("asks before dropping edits to a section already open", () => {
+    const section = plannedSection(1, []);
+    const context = contextOf(section);
+    const editing = after(
+      [
+        { type: "selectedSection", sectionId: 1 },
+        { type: "sectionFieldEdited", sectionId: 1, change: { notes: "hi" } },
+      ],
+      initialState(),
+      context,
+    );
+
+    const asked = update(
+      editing,
+      { type: "sectionCreationRequested" },
+      context,
+    ).state;
+
+    expect(asked.pendingDismissal?.event).toEqual({
+      type: "sectionCreationRequested",
+    });
+    expect(selectIsNewSectionSelected(asked)).toBe(false);
+  });
+});
+
 describe("a read-only term", () => {
   const section = plannedSection(1, [
     { days: ["mon"], startTime: "09:00", endTime: "09:50" },
@@ -1010,6 +1061,13 @@ describe("a read-only term", () => {
 
   const locked = (events: EditorEvent[]) =>
     after(events, initialState(), lockedContext);
+
+  it("refuses Create Section", () => {
+    const state = locked([{ type: "sectionCreationRequested" }]);
+
+    expect(selectIsNewSectionSelected(state)).toBe(false);
+    expect(state.drafts).toEqual({});
+  });
 
   it("refuses an edit to a section", () => {
     const state = locked([
@@ -1736,5 +1794,103 @@ describe("asking before unsaved sheet edits are dropped", () => {
         query: expect.objectContaining({ sectionId: "1" }),
       },
     ]);
+  });
+});
+
+describe("the write-error banner", () => {
+  const refused = (state?: EditorState) =>
+    after(
+      [{ type: "writeRefused", message: "Section 001 already exists." }],
+      state,
+    );
+
+  it("holds the server's message", () => {
+    expect(refused().writeError).toBe("Section 001 already exists.");
+  });
+
+  it("survives editing the sheet, so a failed save can be corrected", () => {
+    const context = contextOf(plannedSection(1, []));
+    const state = after(
+      [
+        { type: "selectedSection", sectionId: 1 },
+        { type: "writeRefused", message: "Section 001 already exists." },
+        {
+          type: "sectionFieldEdited",
+          sectionId: 1,
+          change: { section: "002" },
+        },
+      ],
+      initialState(),
+      context,
+    );
+
+    expect(state.writeError).toBe("Section 001 already exists.");
+  });
+
+  it("is dismissed by the reader", () => {
+    expect(
+      after([{ type: "writeErrorDismissed" }], refused()).writeError,
+    ).toBeNull();
+  });
+
+  it("clears once the sheet is showing something else", () => {
+    const state = after([{ type: "selectedSection", sectionId: 9 }], refused());
+
+    expect(state.writeError).toBeNull();
+  });
+
+  it("is still accepted on a term that locked mid-save", () => {
+    const locked: ScheduleContext = {
+      sections: [],
+      isReadOnly: true,
+      isWide: true,
+    };
+    const state = after(
+      [{ type: "writeRefused", message: "This term is published." }],
+      initialState(),
+      locked,
+    );
+
+    expect(state.writeError).toBe("This term is published.");
+  });
+});
+
+describe("the delete question", () => {
+  it("opens and closes", () => {
+    const asked = after([{ type: "deleteRequested" }]);
+    expect(asked.isConfirmingDelete).toBe(true);
+    expect(after([{ type: "deleteCancelled" }], asked).isConfirmingDelete).toBe(
+      false,
+    );
+  });
+
+  it("closes when the sheet moves to another section", () => {
+    const asked = after([{ type: "deleteRequested" }]);
+
+    expect(
+      after([{ type: "selectedSection", sectionId: 9 }], asked)
+        .isConfirmingDelete,
+    ).toBe(false);
+  });
+});
+
+describe("the filter panel", () => {
+  const wide = { ...emptyContext, isWide: true };
+  const narrow = { ...emptyContext, isWide: false };
+
+  it("follows the width until the reader says otherwise", () => {
+    expect(selectIsFilterPanelOpen(wide, initialState())).toBe(true);
+    expect(selectIsFilterPanelOpen(narrow, initialState())).toBe(false);
+  });
+
+  it("holds the reader's choice, even on a read-only term", () => {
+    const locked = { ...emptyContext, isReadOnly: true, isWide: true };
+    const shut = after(
+      [{ type: "filterPanelOverridden", isOpen: false }],
+      initialState(),
+      locked,
+    );
+
+    expect(selectIsFilterPanelOpen(locked, shut)).toBe(false);
   });
 });

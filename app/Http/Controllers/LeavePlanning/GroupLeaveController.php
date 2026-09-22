@@ -7,11 +7,14 @@ use App\Http\Controllers\Controller;
 use App\Leave;
 use App\Library\LeavePlanning\PlanningPeople;
 use App\Library\LeavePlanning\TimelineTermRange;
+use App\Library\UserService;
 use App\SisAppointment;
 use App\SisTerm;
+use App\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -64,16 +67,83 @@ class GroupLeaveController extends Controller {
         return [
             'range' => $range,
             'people' => PlanningPeople::forEmplids($deptId, $leaveEmplids),
-            'leaves' => $leaves->map(fn(Leave $leave) => [
-                'id' => $leave->id,
-                'emplid' => $leave->user->emplid,
-                'userId' => $leave->user_id,
-                'type' => $leave->type,
-                'status' => $leave->status,
-                'startDate' => $leave->start_date,
-                'endDate' => $leave->end_date,
-                'description' => $leave->description,
-            ]),
+            'leaves' => $leaves->map(fn(Leave $leave) => self::toPlanningLeaveArray($leave)),
+        ];
+    }
+
+    public function store(Request $request, Group $group, UserService $userService) {
+        $this->authorize('createLeavesForGroup', [Leave::class, $group]);
+
+        $validated = $request->validate([
+            'emplid' => ['required', 'integer'],
+            'description' => ['required', 'string', 'max:255'],
+            'start_date' => ['required', 'date'],
+            'end_date' => ['required', 'date', 'after:start_date'],
+            'status' => ['required', Rule::in(Leave::STATUSES)],
+            'type' => ['required', Rule::in(Leave::TYPES)],
+        ]);
+
+        $owner = self::findOrCreateLeaveOwnerIn($group, $validated['emplid'], $userService);
+
+        // Dropping this as redundant lets a group manager
+        // write leaves for any appointee in the department,
+        // which PostLeavePlanningLeaveTest asserts is refused.
+        $this->authorize('modifyLeavesForUser', [Leave::class, $owner]);
+
+        $leave = Leave::create([
+            ...Arr::except($validated, 'emplid'),
+            'user_id' => $owner->id,
+        ]);
+
+        return self::toPlanningLeaveArray($leave->load('user'));
+    }
+
+    /**
+     * Creates the user from the directory when BlueSheet
+     * holds no row for the emplid. Throws
+     * ValidationException when the person is not appointed
+     * to this department, or the directory does not know
+     * them.
+     */
+    private static function findOrCreateLeaveOwnerIn(Group $group, int $emplid, UserService $userService): User {
+        $deptId = $group->sis_dept_id;
+
+        $isAppointed = $deptId !== null && SisAppointment::query()
+            ->where('dept_id', $deptId)
+            ->where('emplid', $emplid)
+            ->exists();
+
+        if (!$isAppointed) {
+            throw ValidationException::withMessages([
+                'emplid' => 'That person holds no appointment in this department.',
+            ]);
+        }
+
+        $owner = $userService->findOrCreateByEmplId($emplid);
+
+        if ($owner === null) {
+            throw ValidationException::withMessages([
+                'emplid' => 'That person could not be found in the University directory.',
+            ]);
+        }
+
+        return $owner;
+    }
+
+    /**
+     * Renaming a key here blanks the leave bars and fails
+     * LeavePlanningApiTest, which asserts this array whole.
+     */
+    private static function toPlanningLeaveArray(Leave $leave): array {
+        return [
+            'id' => $leave->id,
+            'emplid' => $leave->user->emplid,
+            'userId' => $leave->user_id,
+            'type' => $leave->type,
+            'status' => $leave->status,
+            'startDate' => $leave->start_date,
+            'endDate' => $leave->end_date,
+            'description' => $leave->description,
         ];
     }
 

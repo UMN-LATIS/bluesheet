@@ -10,19 +10,16 @@
 
 import { computed, reactive, type Ref, shallowRef } from "vue";
 import dayjs from "dayjs";
-import type { FilterFacet, SisSection } from "../types";
-import type { UrlQuery } from "@/utils/urlQuery";
-import type { ScheduleView } from "../helpers/viewQuery";
+import type { SisSection } from "../types";
 import { dayIndexOfWeekday } from "../helpers/scheduleDays";
 import { sectionProblems } from "./validation";
-import type { SectionEdit } from "./types";
-import type { SisDay } from "../types";
 import {
   selectActiveFilterCount,
   selectDraftSection,
   selectHasEdits,
   selectHourReturnedTo,
   selectIsCreatingSection,
+  selectIsFilterPanelOpen,
   selectIsDraftDirty,
   selectIsNewSectionSelected,
   selectLocalSections,
@@ -37,13 +34,7 @@ import {
   selectWeekView,
 } from "./selectors";
 import { initialState, update } from "./update";
-import type {
-  EditorEvent,
-  Effect,
-  HourSelection,
-  MeetingEdge,
-  ScheduleContext,
-} from "./types";
+import type { EditorEvent, Effect, ScheduleContext } from "./types";
 
 export type ScheduleEditor = ReturnType<typeof useScheduleEditor>;
 
@@ -65,6 +56,8 @@ export function useScheduleEditor(
   };
 
   return reactive({
+    /* The only way in: every transition is a ViewEvent. */
+    dispatch,
     /* Reads: what the schedule is, and what the page has open. */
     meetings: computed(() => selectMeetings(context.value, state.value)),
     /** The term with this browser's edits on it, before the filters. */
@@ -78,6 +71,11 @@ export function useScheduleEditor(
     dayIndex: computed(() => state.value.dayIndex),
     /** Whether this term takes edits at all; see `ScheduleContext`. */
     isReadOnly: computed(() => context.value.isReadOnly),
+    writeError: computed(() => state.value.writeError),
+    isConfirmingDelete: computed(() => state.value.isConfirmingDelete),
+    isFilterPanelOpen: computed(() =>
+      selectIsFilterPanelOpen(context.value, state.value),
+    ),
     selection: computed(() => state.value.selection),
     activeFilterCount: computed(() => selectActiveFilterCount(state.value)),
 
@@ -115,103 +113,7 @@ export function useScheduleEditor(
     weekView: (dayCount: number) =>
       selectWeekView(context.value, state.value, dayCount),
 
-    /* The week grid's pointer gestures, in the order one arrives. */
-    pressEmptySpace: (dayIndex: number, minute: number) =>
-      dispatch({ type: "pressedEmptySpace", dayIndex, minute }),
-    pressMeeting: (meetingId: string, minute: number) =>
-      dispatch({ type: "pressedMeeting", meetingId, minute }),
-    pressMeetingEdge: (meetingId: string, edge: MeetingEdge, minute: number) =>
-      dispatch({ type: "pressedMeetingEdge", meetingId, edge, minute }),
-    movePointer: (dayIndex: number, minute: number) =>
-      dispatch({ type: "pointerMoved", dayIndex, minute }),
-    release: () => dispatch({ type: "released" }),
-    /**
-     * Escape. Mid-gesture this discards the
-     * gesture. At rest it clears the selection.
-     */
-    cancel: () => dispatch({ type: "canceled" }),
-
-    /* Opening and closing the detail sheet. */
-    deselect: () => dispatch({ type: "deselected" }),
-    selectSection: (sectionId: number, from?: HourSelection) =>
-      dispatch({
-        type: "selectedSection",
-        sectionId,
-        ...(from ? { from } : {}),
-      }),
-    selectHour: (dayIndex: number, startMinute: number) =>
-      dispatch({ type: "selectedHour", dayIndex, startMinute }),
-    selectLeave: (leaveId: number) =>
-      dispatch({ type: "selectedLeave", leaveId }),
-    /* Narrowing the term. */
-    addFilterValues: (facet: FilterFacet, values: string[]) =>
-      dispatch({ type: "filterValuesAdded", facet, values }),
-    removeFilterValues: (facet: FilterFacet, values: string[]) =>
-      dispatch({ type: "filterValuesRemoved", facet, values }),
-    clearFilters: () => dispatch({ type: "filtersCleared" }),
-
-    /* The import banner: what it stands for, and its three buttons. */
     /** The import the banner is about, or null when no banner is showing. */
     lastImport: computed(() => state.value.lastImport),
-    markSectionsImported: (sectionIds: number[], sourceTermName: string) =>
-      dispatch({ type: "sectionsImported", sectionIds, sourceTermName }),
-    showImportedSections: (sectionIds: number[]) =>
-      dispatch({ type: "importedSectionsShown", sectionIds }),
-    markImportUndone: () => dispatch({ type: "importUndone" }),
-    dismissImport: () => dispatch({ type: "importDismissed" }),
-
-    /* Which canvas, which day, and the URL that names them. */
-    selectView: (view: ScheduleView) =>
-      dispatch({ type: "viewSelected", view }),
-    selectDay: (dayIndex: number) =>
-      dispatch({ type: "daySelected", dayIndex }),
-    showAsyncDay: () => dispatch({ type: "asyncDayShown" }),
-    /** The URL changed: first load, the back button, or our own effect. */
-    urlChanged: (query: UrlQuery) => dispatch({ type: "urlChanged", query }),
-    /** Another department or term is showing, so nothing held is about it. */
-    contextChanged: () => dispatch({ type: "contextChanged" }),
-
-    /* Editing a section through the sheet: draft, then save. */
-    editSection: (sectionId: number, change: SectionEdit) =>
-      dispatch({ type: "sectionFieldEdited", sectionId, change }),
-    toggleMeetingDay: (sectionId: number, patternIndex: number, day: SisDay) =>
-      dispatch({ type: "meetingDayToggled", sectionId, patternIndex, day }),
-    editMeetingTime: (
-      sectionId: number,
-      patternIndex: number,
-      times: { startTime?: string; endTime?: string },
-    ) =>
-      dispatch({
-        type: "meetingTimeEdited",
-        sectionId,
-        patternIndex,
-        ...times,
-      }),
-    addMeetingPattern: (sectionId: number) =>
-      dispatch({ type: "meetingPatternAdded", sectionId }),
-    removeMeetingPattern: (sectionId: number, patternIndex: number) =>
-      dispatch({ type: "meetingPatternRemoved", sectionId, patternIndex }),
-    makeAsynchronous: (sectionId: number) =>
-      dispatch({ type: "madeAsynchronous", sectionId }),
-    saveDraft: (sectionId: number) =>
-      dispatch({ type: "draftSaved", sectionId }),
-    cancelDraft: (sectionId: number) =>
-      dispatch({ type: "draftCancelled", sectionId }),
-    cancelSection: (sectionId: number) =>
-      dispatch({ type: "sectionCancelled", sectionId }),
-    revertSection: (sectionId: number) =>
-      dispatch({ type: "sectionEditsReverted", sectionId }),
-    markEditsPersisted: (sectionId: number, saved: SectionEdit) =>
-      dispatch({ type: "sectionEditsPersisted", sectionId, saved }),
-
-    /* Creating and deleting, which the sheet drives. */
-    markSectionCreated: (sectionId: number) =>
-      dispatch({ type: "sectionCreated", sectionId }),
-    discardNewSection: () => dispatch({ type: "newSectionDiscarded" }),
-    confirmDismissal: () => dispatch({ type: "dismissalConfirmed" }),
-    cancelDismissal: () => dispatch({ type: "dismissalCancelled" }),
-    markSectionDeleted: (sectionId: number) =>
-      dispatch({ type: "sectionDeleted", sectionId }),
-    markAllSectionsDeleted: () => dispatch({ type: "allSectionsDeleted" }),
   });
 }

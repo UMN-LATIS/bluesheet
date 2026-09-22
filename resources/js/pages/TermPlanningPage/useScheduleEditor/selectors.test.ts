@@ -24,6 +24,7 @@ const context: ScheduleContext = {
     ]),
   ],
   isReadOnly: false,
+  isWide: true,
 };
 
 const MON_9 = "s1:mon:0900";

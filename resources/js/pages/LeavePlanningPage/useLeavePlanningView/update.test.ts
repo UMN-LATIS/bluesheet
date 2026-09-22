@@ -1,6 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { initialState, update } from "./update";
-import type { ViewEvent, ViewState } from "./types";
+import { leaveStatuses, leaveTypes } from "@/types";
+import type { ViewContext, ViewEvent, ViewState } from "./types";
+import { selectIsFilterPanelOpen } from "./selectors";
+
+const contextFixture: ViewContext = {
+  timeline: null,
+  teachingHistory: null,
+  terms: [],
+  canViewCourses: false,
+  canPlanTerms: false,
+  isWide: true,
+};
 
 const after = (events: ViewEvent[], state: ViewState = initialState()) =>
   events.reduce((current, event) => update(current, event).state, state);
@@ -170,5 +181,326 @@ describe("filters", () => {
     ]);
 
     expect(Object.values(state.filters).flat()).toEqual([]);
+  });
+});
+
+const savedDraft = {
+  emplid: 900,
+  description: "Fieldwork",
+  type: leaveTypes.SABBATICAL,
+  status: leaveStatuses.CONFIRMED,
+  startDate: "2026-09-01",
+  endDate: "2026-12-31",
+};
+
+const openOnLeave = (leaveId: number) =>
+  after([{ type: "leaveSelected", leaveId }]);
+
+describe("the editor", () => {
+  const editing = (leaveId = 7) =>
+    after([{ type: "editRequested", draft: savedDraft }], openOnLeave(leaveId));
+
+  it("opens a selected leave for editing with the values it was given", () => {
+    const state = editing(7);
+
+    expect(state.editor).toEqual({
+      kind: "editingLeave",
+      leaveId: 7,
+      draft: savedDraft,
+      openedDraft: savedDraft,
+    });
+  });
+
+  it("refuses to edit when no leave is selected", () => {
+    const state = after([{ type: "editRequested", draft: savedDraft }]);
+
+    expect(state.editor).toBeNull();
+  });
+
+  it("opens a new leave on the dates the click named", () => {
+    const state = after([
+      {
+        type: "creationRequested",
+        emplid: 42,
+        startDate: "2026-08-31",
+        endDate: "2027-01-13",
+      },
+    ]);
+
+    expect(state.editor?.kind).toBe("creatingLeave");
+    expect(state.editor?.draft.emplid).toBe(42);
+    expect(state.editor?.draft.startDate).toBe("2026-08-31");
+    expect(state.selection).toBeNull();
+  });
+
+  it("keeps the untouched values as the baseline while the draft changes", () => {
+    const state = after(
+      [{ type: "draftEdited", change: { description: "Sabbatical" } }],
+      editing(7),
+    );
+
+    expect(state.editor?.draft.description).toBe("Sabbatical");
+    expect(state.editor?.openedDraft.description).toBe("Fieldwork");
+  });
+
+  it("selects the created leave once the server has it", () => {
+    const state = after(
+      [
+        { type: "draftEdited", change: { description: "New" } },
+        { type: "leavePersisted", leaveId: 31 },
+      ],
+      after([
+        {
+          type: "creationRequested",
+          emplid: 42,
+          startDate: "2026-08-31",
+          endDate: "2027-01-13",
+        },
+      ]),
+    );
+
+    expect(state.selection).toEqual({ kind: "leave", leaveId: 31 });
+    expect(state.editor).toBeNull();
+  });
+
+  it("clears the panel after a delete", () => {
+    const state = after([{ type: "leaveDeleted" }], editing(7));
+
+    expect(state.selection).toBeNull();
+    expect(state.editor).toBeNull();
+  });
+});
+
+describe("discarding an unsaved draft", () => {
+  const dirtyEditorOn = (leaveId: number) => {
+    return after(
+      [
+        { type: "editRequested", draft: savedDraft },
+        { type: "draftEdited", change: { description: "Changed" } },
+      ],
+      after([{ type: "leaveSelected", leaveId }]),
+    );
+  };
+
+  it("holds a selection change rather than dropping the draft", () => {
+    const state = after(
+      [{ type: "leaveSelected", leaveId: 9 }],
+      dirtyEditorOn(7),
+    );
+
+    expect(state.pendingDismissal).toEqual({
+      type: "leaveSelected",
+      leaveId: 9,
+    });
+    expect(state.selection).toEqual({ kind: "leave", leaveId: 7 });
+    expect(state.editor?.draft.description).toBe("Changed");
+  });
+
+  it("lets an untouched draft go without asking", () => {
+    const state = after(
+      [
+        { type: "editRequested", draft: savedDraft },
+        { type: "leaveSelected", leaveId: 9 },
+      ],
+      after([{ type: "leaveSelected", leaveId: 7 }]),
+    );
+
+    expect(state.pendingDismissal).toBeNull();
+    expect(state.selection).toEqual({ kind: "leave", leaveId: 9 });
+  });
+
+  it("keeps the draft exactly as it was when the reader backs out", () => {
+    const held = dirtyEditorOn(7);
+    const asked = after([{ type: "leaveSelected", leaveId: 9 }], held);
+    const state = after([{ type: "dismissalCancelled" }], asked);
+
+    expect(state.pendingDismissal).toBeNull();
+    expect(state.editor).toEqual(held.editor);
+    expect(state.selection).toEqual({ kind: "leave", leaveId: 7 });
+  });
+
+  it("runs the held event and writes its URL once the reader confirms", () => {
+    const asked = after(
+      [{ type: "leaveSelected", leaveId: 9 }],
+      dirtyEditorOn(7),
+    );
+    const { state, effects } = update(asked, { type: "dismissalConfirmed" });
+
+    expect(state.selection).toEqual({ kind: "leave", leaveId: 9 });
+    expect(state.editor).toBeNull();
+    expect(state.pendingDismissal).toBeNull();
+    expect(effects).toEqual([
+      { type: "scrollToSelection", key: "leave-9" },
+      { type: "replaceUrlQuery", query: { leaveId: "9" } },
+    ]);
+  });
+
+  it("does not ask when a filter change echoes back through the URL", () => {
+    const filtered = update(dirtyEditorOn(7), {
+      type: "filterValuesAdded",
+      facet: "status",
+      values: ["confirmed"],
+    });
+    const written = filtered.effects.find(
+      (effect) => effect.type === "replaceUrlQuery",
+    );
+    expect(written).toBeDefined();
+    if (written?.type !== "replaceUrlQuery") return;
+
+    const state = after(
+      [{ type: "urlChanged", query: written.query }],
+      filtered.state,
+    );
+
+    expect(state.pendingDismissal).toBeNull();
+    expect(state.editor).toEqual(filtered.state.editor);
+  });
+
+  it("holds a URL that names another leave", () => {
+    const state = after(
+      [{ type: "urlChanged", query: { leaveId: "9" } }],
+      dirtyEditorOn(7),
+    );
+
+    expect(state.pendingDismissal).toEqual({
+      type: "urlChanged",
+      query: { leaveId: "9" },
+    });
+    expect(state.selection).toEqual({ kind: "leave", leaveId: 7 });
+  });
+
+  it("drops an untouched draft when the URL names another leave", () => {
+    const state = after(
+      [
+        { type: "editRequested", draft: savedDraft },
+        { type: "urlChanged", query: { leaveId: "9" } },
+      ],
+      openOnLeave(7),
+    );
+
+    expect(state.editor).toBeNull();
+    expect(state.selection).toEqual({ kind: "leave", leaveId: 9 });
+  });
+
+  it("drops an untouched new leave when the URL selects one", () => {
+    const state = after([
+      {
+        type: "creationRequested",
+        emplid: 900,
+        startDate: "2026-09-01",
+        endDate: "2026-12-31",
+      },
+      { type: "urlChanged", query: { leaveId: "9" } },
+    ]);
+
+    expect(state.editor).toBeNull();
+    expect(state.selection).toEqual({ kind: "leave", leaveId: 9 });
+  });
+});
+
+describe("the refusal banner", () => {
+  const refused = (state?: ViewState) =>
+    after(
+      [{ type: "writeRefused", message: "End date must be later." }],
+      state,
+    );
+
+  it("holds the server's message", () => {
+    expect(refused().refusal).toBe("End date must be later.");
+  });
+
+  it("survives typing, so a failed save can be corrected", () => {
+    const state = after(
+      [
+        { type: "editRequested", draft: savedDraft },
+        { type: "writeRefused", message: "End date must be later." },
+        { type: "draftEdited", change: { description: "Sabbatical" } },
+      ],
+      openOnLeave(7),
+    );
+
+    expect(state.refusal).toBe("End date must be later.");
+  });
+
+  it("clears once the panel is showing something else", () => {
+    const state = after([{ type: "leaveSelected", leaveId: 9 }], refused());
+
+    expect(state.refusal).toBeNull();
+  });
+
+  it("survives a filter change echoing back through the URL", () => {
+    const filtered = update(refused(openOnLeave(7)), {
+      type: "filterValuesAdded",
+      facet: "status",
+      values: ["confirmed"],
+    });
+    const written = filtered.effects.find(
+      (effect) => effect.type === "replaceUrlQuery",
+    );
+    if (written?.type !== "replaceUrlQuery") throw new Error("no URL write");
+
+    const state = after(
+      [{ type: "urlChanged", query: written.query }],
+      filtered.state,
+    );
+
+    expect(state.refusal).toBe("End date must be later.");
+  });
+});
+
+describe("the delete question", () => {
+  it("opens and closes", () => {
+    const asked = after([{ type: "deleteRequested" }]);
+    expect(asked.isConfirmingDelete).toBe(true);
+    expect(after([{ type: "deleteCancelled" }], asked).isConfirmingDelete).toBe(
+      false,
+    );
+  });
+
+  it("closes when the panel moves to another leave", () => {
+    const asked = after([{ type: "deleteRequested" }]);
+    const moved = after([{ type: "leaveSelected", leaveId: 9 }], asked);
+
+    expect(moved.isConfirmingDelete).toBe(false);
+  });
+});
+
+describe("the filter panel", () => {
+  const wide = { ...contextFixture, isWide: true };
+  const narrow = { ...contextFixture, isWide: false };
+
+  it("follows the width until the reader says otherwise", () => {
+    expect(selectIsFilterPanelOpen(wide, initialState())).toBe(true);
+    expect(selectIsFilterPanelOpen(narrow, initialState())).toBe(false);
+  });
+
+  it("holds the reader's choice against the width", () => {
+    const shut = after([{ type: "filterPanelOverridden", isOpen: false }]);
+
+    expect(selectIsFilterPanelOpen(wide, shut)).toBe(false);
+  });
+});
+
+describe("scrolling to the selection", () => {
+  it("is asked for when a leave is selected", () => {
+    const { effects } = update(initialState(), {
+      type: "leaveSelected",
+      leaveId: 7,
+    });
+
+    expect(effects).toContainEqual({
+      type: "scrollToSelection",
+      key: "leave-7",
+    });
+  });
+
+  it("is not asked for again when the selection has not moved", () => {
+    const selected = after([{ type: "leaveSelected", leaveId: 7 }]);
+    const { effects } = update(selected, {
+      type: "facetOpened",
+      facet: "status",
+    });
+
+    expect(effects).toEqual([]);
   });
 });

@@ -99,7 +99,28 @@ export const initialState = (dayIndex = 0): EditorState => ({
   view: DEFAULT_VIEW,
   dayIndex,
   lastImport: null,
+  writeError: null,
+  isConfirmingDelete: false,
+  filterPanelOverride: null,
 });
+
+/**
+ * Events after which the sheet is showing something else, so a refusal or a
+ * delete question raised against what it showed before no longer applies.
+ */
+const SHEET_MOVED_ON: EditorEvent["type"][] = [
+  "selectedSection",
+  "selectedHour",
+  "selectedLeave",
+  "deselected",
+  "canceled",
+  "sectionCreated",
+  "sectionDeleted",
+  "allSectionsDeleted",
+  "newSectionDiscarded",
+  "contextChanged",
+  "urlChanged",
+];
 
 /**
  * Every query key the editor owns. The page clears these before writing an
@@ -161,6 +182,11 @@ const READING_EVENTS: EditorEvent["type"][] = [
   "importUndone",
   "viewSelected",
   "daySelected",
+  "filterPanelOverridden",
+  // a term that locked mid-save still has to show and drop what came back
+  "writeRefused",
+  "writeErrorDismissed",
+  "deleteCancelled",
   "asyncDayShown",
   "urlChanged",
   "dismissalCancelled",
@@ -202,9 +228,13 @@ export function update(
     };
   }
 
+  const settled = SHEET_MOVED_ON.includes(event.type)
+    ? { ...nextState, writeError: null, isConfirmingDelete: false }
+    : nextState;
+
   return {
-    state: nextState,
-    effects: effectsOf(event, state, nextState),
+    state: settled,
+    effects: effectsOf(event, state, settled),
   };
 }
 
@@ -653,8 +683,36 @@ function reduce(
         selection: { kind: "section", sectionId: event.sectionId },
       };
 
+    case "sectionCreationRequested":
+      return {
+        ...state,
+        drafts: {
+          ...state.drafts,
+          // Keeping what is there makes a second press a no-op. Writing `{}`
+          // instead wipes the times off a rectangle already drawn out, and
+          // "keeps the times of a rectangle already drawn out" fails.
+          [NEW_SECTION_ID]: state.drafts[NEW_SECTION_ID] ?? {},
+        },
+        selection: { kind: "section", sectionId: NEW_SECTION_ID },
+      };
+
     case "newSectionDiscarded":
       return { ...withoutDraft(state, NEW_SECTION_ID), selection: null };
+
+    case "writeRefused":
+      return { ...state, writeError: event.message };
+
+    case "writeErrorDismissed":
+      return { ...state, writeError: null };
+
+    case "deleteRequested":
+      return { ...state, isConfirmingDelete: true };
+
+    case "deleteCancelled":
+      return { ...state, isConfirmingDelete: false };
+
+    case "filterPanelOverridden":
+      return { ...state, filterPanelOverride: event.isOpen };
 
     // answered in `update`, which never lets them reach here
     case "dismissalConfirmed":

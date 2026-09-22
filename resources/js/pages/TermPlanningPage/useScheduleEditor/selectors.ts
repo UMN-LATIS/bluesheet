@@ -203,6 +203,11 @@ export function selectAbandonsUnsavedWork(
 }
 
 /** A rectangle drawn on the grid that Create has not been pressed on yet. */
+export const selectIsFilterPanelOpen = (
+  context: ScheduleContext,
+  state: EditorState,
+): boolean => state.filterPanelOverride ?? context.isWide;
+
 export const selectIsCreatingSection = (state: EditorState): boolean =>
   state.drafts[NEW_SECTION_ID] !== undefined;
 

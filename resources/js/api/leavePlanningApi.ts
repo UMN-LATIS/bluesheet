@@ -47,3 +47,95 @@ export async function fetchTeachingHistory(
 
   return res.data;
 }
+
+export async function fetchLeavePermissions(
+  leaveId: number,
+): Promise<T.ApiResourceItemPermissions> {
+  const res = await axios.get<T.ApiResourceItemPermissions>(
+    `/api/permissions/leaves/${leaveId}`,
+  );
+  return res.data;
+}
+
+export async function fetchLeaveArtifacts(
+  leaveId: number,
+): Promise<T.LeaveArtifact[]> {
+  const res = await axios.get<{ data: T.LeaveArtifact[] }>(
+    `/api/leaves/${leaveId}/artifacts`,
+  );
+  return res.data.data;
+}
+
+export interface NewLeavePayload {
+  emplid: number;
+  description: string;
+  start_date: string;
+  end_date: string;
+  status: T.LeaveStatus;
+  type: T.LeaveType;
+}
+
+export type ExistingLeavePayload = Omit<NewLeavePayload, "emplid"> & {
+  user_id: number;
+};
+
+export type ArtifactPayload = Pick<T.LeaveArtifact, "label" | "target">;
+
+// Without this the axios interceptor raises the
+// global error modal over the panel, and the panel's own
+// message never gets read.
+const WRITE_CONFIG: T.CustomAxiosRequestConfig = {
+  skipErrorNotifications: true,
+};
+
+export async function createLeaveInGroup(
+  groupId: T.Group["id"],
+  payload: NewLeavePayload,
+): Promise<T.PlanningLeave> {
+  const res = await axios.post<T.PlanningLeave>(
+    `/api/leave-planning/groups/${groupId}/leaves`,
+    payload,
+    WRITE_CONFIG,
+  );
+  return res.data;
+}
+
+export async function saveLeaveEdits(
+  leaveId: number,
+  payload: ExistingLeavePayload,
+): Promise<void> {
+  await axios.put(`/api/leaves/${leaveId}`, payload, WRITE_CONFIG);
+}
+
+export async function removeLeave(leaveId: number): Promise<void> {
+  await axios.delete(`/api/leaves/${leaveId}`, WRITE_CONFIG);
+}
+
+export async function addArtifactToLeave(
+  leaveId: number,
+  payload: ArtifactPayload,
+): Promise<void> {
+  await axios.post(`/api/leaves/${leaveId}/artifacts`, payload, WRITE_CONFIG);
+}
+
+export async function saveArtifactEdits(
+  leaveId: number,
+  artifactId: number,
+  payload: ArtifactPayload,
+): Promise<void> {
+  await axios.put(
+    `/api/leaves/${leaveId}/artifacts/${artifactId}`,
+    payload,
+    WRITE_CONFIG,
+  );
+}
+
+export async function removeArtifactFromLeave(
+  leaveId: number,
+  artifactId: number,
+): Promise<void> {
+  await axios.delete(
+    `/api/leaves/${leaveId}/artifacts/${artifactId}`,
+    WRITE_CONFIG,
+  );
+}

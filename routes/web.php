@@ -144,6 +144,7 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
     Route::prefix('leave-planning')->group(function () {
         Route::get('/groups', [LeavePlanningGroupController::class, 'index']);
         Route::get('/groups/{group}/leaves', [LeavePlanningGroupLeaveController::class, 'index']);
+        Route::post('/groups/{group}/leaves', [LeavePlanningGroupLeaveController::class, 'store']);
         Route::get('/groups/{group}/teaching-history', [LeavePlanningGroupTeachingHistoryController::class, 'index']);
     });
 

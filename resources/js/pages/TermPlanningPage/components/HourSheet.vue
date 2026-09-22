@@ -58,14 +58,14 @@
         type="button"
         class="tw-flex tw-min-h-[54px] tw-cursor-pointer tw-items-center tw-gap-2.5 tw-rounded-[10px] tw-border tw-border-l-4 tw-border-solid tw-border-outline-variant tw-px-3 tw-py-2 tw-text-left tw-text-on-surface hover:tw-border-outline"
         :class="[
-          colorOfType(entry.section.component).tint,
-          colorOfType(entry.section.component).rail,
+          colorOfTypeInTerm(entry.section.component, schedule.isReadOnly).tint,
+          colorOfTypeInTerm(entry.section.component, schedule.isReadOnly).rail,
         ]"
         @click="
-          schedule.selectSection(entry.section.id, {
-            kind: 'hour',
-            dayIndex,
-            startMinute,
+          schedule.dispatch({
+            type: 'selectedSection',
+            sectionId: entry.section.id,
+            from: { kind: 'hour', dayIndex, startMinute },
           })
         "
       >
@@ -109,7 +109,7 @@
 
 <script setup lang="ts">
 import { ArrowRightIcon } from "@/icons";
-import { colorOfType } from "@/utils/meetingTypeColors";
+import { colorOfTypeInTerm } from "@/utils/meetingTypeColors";
 import { leadInstructorName } from "../helpers/sectionPeople";
 import { formatTimeRange } from "../helpers/timeScale";
 import type { SisSection, TimeRange } from "../types";

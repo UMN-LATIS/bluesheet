@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Sis;
 use App\Group;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Sis\SisEmployeeResource;
-use App\LocalCourse;
 use App\SisAppointment;
 use Illuminate\Support\Collection;
 
@@ -15,7 +14,7 @@ class GroupEmployeeController extends Controller {
      * faculty on leave still appear.
      */
     public function index(Group $group) {
-        $this->authorize('viewAnyCoursesForGroup', [LocalCourse::class, $group]);
+        $this->authorize('viewRoster', $group);
 
         if ($group->sis_dept_id === null) {
             return SisEmployeeResource::collection([]);

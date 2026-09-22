@@ -77,7 +77,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { colorOfType } from "@/utils/meetingTypeColors";
+import { colorOfTypeInTerm } from "@/utils/meetingTypeColors";
 import type { DayBandItem } from "../helpers/dayBands";
 import { assistantNames, leadInstructorName } from "../helpers/sectionPeople";
 import { formatTimeRange } from "../helpers/timeScale";
@@ -95,7 +95,9 @@ const props = defineProps<{
 // ever opens the sheet. Moving or resizing a meeting happens there instead.
 const isStacked = computed(() => props.size !== "small");
 
-const color = computed(() => colorOfType(props.item.section.component));
+const color = computed(() =>
+  colorOfTypeInTerm(props.item.section.component, Boolean(props.isReadOnly)),
+);
 
 const code = computed(
   () =>

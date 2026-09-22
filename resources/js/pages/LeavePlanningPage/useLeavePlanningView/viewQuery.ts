@@ -59,7 +59,20 @@ const selectionOf = (query: UrlQuery): Selection | null => {
   return null;
 };
 
-type UrlBackedState = Omit<ViewState, "activeFacet">;
+/**
+ * Adding `editor` or `pendingDismissal` here puts an
+ * unsaved draft in a shareable link, and opening that link
+ * restores a form nobody saved.
+ */
+type UrlBackedState = Omit<
+  ViewState,
+  | "activeFacet"
+  | "editor"
+  | "pendingDismissal"
+  | "refusal"
+  | "isConfirmingDelete"
+  | "filterPanelOverride"
+>;
 
 export function decodeViewQuery(query: UrlQuery): UrlBackedState {
   const filters = defaultFilters();

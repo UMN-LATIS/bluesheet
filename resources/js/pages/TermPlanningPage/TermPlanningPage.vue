@@ -13,10 +13,10 @@
         :view="activeView"
         :isReadOnly="isReadOnly"
         :plannedSectionCount="sections.length"
-        :activeFilterCount="schedule.activeFilterCount"
-        :isFilterPanelOpen="isFilterPanelOpen"
-        @selectView="schedule.selectView"
-        @openFilters="isFilterPanelOpen = true"
+        @selectView="
+          (view) => schedule.dispatch({ type: 'viewSelected', view })
+        "
+        @createSection="schedule.dispatch({ type: 'sectionCreationRequested' })"
         @openImport="openImport"
         @deleteAll="isDeleteAllOpen = true"
       />
@@ -29,7 +29,7 @@
       :isUndoing="undoImport.isPending.value"
       @show="showImported"
       @undo="undoLastImport"
-      @dismiss="schedule.dismissImport"
+      @dismiss="schedule.dispatch({ type: 'importDismissed' })"
     />
 
     <!--
@@ -40,7 +40,19 @@
     <div
       class="tw-relative tw-flex tw-min-h-0 tw-flex-1 tw-gap-3 tw-px-3 tw-pb-3 roomy:tw-px-4 roomy:tw-pb-4"
     >
-      <Pane v-if="isLarge" class="tw-w-[304px] tw-flex-none">
+      <FilterDock
+        :appliedFilters="appliedFilters"
+        :isOpen="schedule.isFilterPanelOpen"
+        :isDocked="isLarge"
+        :isSmall="isSmall"
+        :activeFilterCount="schedule.activeFilterCount"
+        @toggle="
+          schedule.dispatch({
+            type: 'filterPanelOverridden',
+            isOpen: !schedule.isFilterPanelOpen,
+          })
+        "
+      >
         <ScheduleSidebar
           :options="filterOptions"
           :schedule="schedule"
@@ -48,22 +60,38 @@
           :leavesByEmplid="termLeavesByEmplid"
           :unofficialCourseCodes="unofficialCourseCodes"
         />
-      </Pane>
-
+      </FilterDock>
       <Pane
         as="section"
         :aria-label="`${VIEW_LABELS[activeView]} schedule`"
-        class="tw-flex tw-min-h-0 tw-min-w-0 tw-flex-1 tw-flex-col"
+        :class="[
+          'tw-flex tw-min-h-0 tw-min-w-0 tw-flex-1 tw-flex-col',
+          isReadOnly
+            ? 'tw-border-outline-variant tw-bg-surface tw-shadow-none'
+            : '',
+        ]"
       >
+        <div
+          v-if="isReadOnly"
+          class="tw-flex tw-flex-none tw-items-center tw-gap-1.5 tw-px-3.5 tw-pb-1.5 tw-pt-2 tw-bg-surface-bright tw-text-on-surface-variant tw-border-b tw-border-outline-variant tw-border-solid tw-border-0"
+        >
+          <LockIcon class="tw-h-3.5 tw-w-3.5 tw-flex-none" aria-hidden="true" />
+          <span
+            class="tw-text-[11px] tw-font-bold tw-uppercase tw-tracking-[0.06em]"
+          >
+            {{ term?.name ?? "This term" }} &middot; Read only
+          </span>
+        </div>
+
         <Notification
-          v-if="writeError"
+          v-if="schedule.writeError"
           type="danger"
           title="Not saved"
           isDismissable
           class="tw-mt-3 tw-flex-none"
-          @dismiss="writeError = null"
+          @dismiss="schedule.dispatch({ type: 'writeErrorDismissed' })"
         >
-          {{ writeError }}
+          {{ schedule.writeError }}
         </Notification>
 
         <DayView
@@ -76,12 +104,14 @@
           :counts="dayCounts"
           :schedule="schedule"
           :size="size"
-          @selectDay="schedule.selectDay"
+          @selectDay="
+            (dayIndex) => schedule.dispatch({ type: 'daySelected', dayIndex })
+          "
         />
 
         <div
           v-else-if="activeView === 'week'"
-          class="scrollbar-always-visible tw-min-h-0 tw-flex-1 tw-overflow-auto tw-bg-surface-bright"
+          class="scrollbar-always-visible tw-min-h-0 tw-flex-1 tw-overflow-auto"
         >
           <ScheduleGrid
             :schedule="schedule"
@@ -118,7 +148,7 @@
             :dayNames="WEEKDAY_NAMES"
             :asyncCount="placed.unscheduled.length"
             :schedule="schedule"
-            @showAsync="schedule.showAsyncDay"
+            @showAsync="schedule.dispatch({ type: 'asyncDayShown' })"
           />
         </div>
       </Pane>
@@ -167,8 +197,10 @@
           :startMinute="schedule.openHour.startMinute"
           :entries="hourEntries"
           :schedule="schedule"
-          @close="schedule.deselect"
-          @showInWeek="schedule.selectView('week')"
+          @close="schedule.dispatch({ type: 'deselected' })"
+          @showInWeek="
+            schedule.dispatch({ type: 'viewSelected', view: 'week' })
+          "
         />
         <SectionSheet
           v-else-if="selectedSection"
@@ -185,8 +217,8 @@
           :isReadOnly="isReadOnly"
           @back="goBackToHour"
           @close="closeSheet"
-          @create="createDrawnSection"
-          @discard="schedule.discardNewSection"
+          @create="saveNewSection"
+          @discard="schedule.dispatch({ type: 'newSectionDiscarded' })"
           @delete="deleteSelectedSection"
         />
         <LeavePanel
@@ -197,40 +229,16 @@
           :terms="termsOverlappingSelectedLeave"
           :groupId="groupId"
           canViewTermPlanning
-          @close="schedule.deselect"
-          @selectLeave="schedule.selectLeave"
+          @close="schedule.dispatch({ type: 'deselected' })"
+          @selectLeave="
+            (leaveId) => schedule.dispatch({ type: 'selectedLeave', leaveId })
+          "
         />
         <LeavePanelLoading
           v-else-if="isSelectedLeaveLoading"
-          @close="schedule.deselect"
+          @close="schedule.dispatch({ type: 'deselected' })"
         />
       </SheetMount>
-
-      <!-- Summoned, so it closes again; a click on the canvas behind it is
-           how a panel opened by mistake gets out of the way. -->
-      <template v-if="isFilterPanelOpen && !isLarge">
-        <div
-          class="tw-absolute tw-inset-0 tw-z-40 tw-bg-black/20"
-          @click="isFilterPanelOpen = false"
-        />
-        <Pane
-          :class="
-            isSmall
-              ? 'tw-fixed tw-inset-0 tw-z-50 tw-rounded-none tw-border-0 tw-shadow-none'
-              : 'tw-absolute tw-inset-y-0 tw-left-3 tw-z-50 tw-w-[304px] tw-shadow-[18px_0_44px_rgba(38,38,38,0.16)]'
-          "
-        >
-          <ScheduleSidebar
-            :options="filterOptions"
-            :schedule="schedule"
-            :reachable="reachableValues"
-            :leavesByEmplid="termLeavesByEmplid"
-            :unofficialCourseCodes="unofficialCourseCodes"
-            isDismissible
-            @close="isFilterPanelOpen = false"
-          />
-        </Pane>
-      </template>
     </div>
 
     <TermLeaveStrip
@@ -240,7 +248,9 @@
       :termCode="activeTermCode"
       :selectedLeaveId="schedule.selectedLeaveId"
       class="tw-flex-none tw-border-0 tw-border-t tw-border-solid tw-border-outline-variant"
-      @select="schedule.selectLeave"
+      @select="
+        (leaveId) => schedule.dispatch({ type: 'selectedLeave', leaveId })
+      "
     />
   </FullScreenLayout>
 </template>
@@ -268,9 +278,11 @@ import ImportModal, { type ImportResult } from "./components/ImportModal.vue";
 import HourSheet, { type HourEntry } from "./components/HourSheet.vue";
 import MeetingTimes from "./components/MeetingTimes.vue";
 import Pane from "@/components/planning/Pane.vue";
+import { LockIcon } from "@/icons";
 import PlanningToolbar from "./components/PlanningToolbar.vue";
 import ScheduleGrid from "./components/ScheduleGrid.vue";
 import ScheduleSidebar from "./components/ScheduleSidebar.vue";
+import FilterDock from "@/components/planning/FilterDock.vue";
 import SectionBlock from "./components/SectionBlock.vue";
 import SectionSheet from "./components/SectionSheet.vue";
 import SheetMount from "./components/SheetMount.vue";
@@ -279,8 +291,9 @@ import { bandsForDay } from "./helpers/dayBands";
 import { buildFilterOptions } from "./helpers/filterOptions";
 import { leavesByEmplid } from "./helpers/leavesByEmplid";
 import { reachableFacetValues } from "./helpers/scheduleFilters";
+import { appliedScheduleFilters } from "./helpers/appliedScheduleFilters";
 import { ASYNC_DAY_INDEX, WEEKDAY_NAMES } from "./helpers/scheduleDays";
-import { refusalMessage } from "./helpers/refusalMessage";
+import { refusalMessage } from "@/utils/refusalMessage";
 import { formatTimeRange } from "./helpers/timeScale";
 import { toSectionPayload } from "./helpers/sectionPayload";
 import { flattenQuery } from "@/utils/urlQuery";
@@ -325,14 +338,6 @@ const VIEW_LABELS: Record<ScheduleView, string> = {
   heatmap: "Coverage",
 };
 
-const isFilterPanelOpen = ref(false);
-
-// A panel summoned on a narrow screen has no business staying open once the
-// window is wide enough to dock it.
-watch(isLarge, (isDocked) => {
-  if (isDocked) isFilterPanelOpen.value = false;
-});
-
 const {
   today,
   term,
@@ -372,8 +377,7 @@ const suggestedSourceTerm = computed(() => {
   return (
     (groupTermsQuery.data.value ?? []).find(
       (term) => term.termCode === aYearBack,
-    ) ??
-    null
+    ) ?? null
   );
 });
 
@@ -388,10 +392,11 @@ function openImport() {
 function onImported({ sections, sourceTermName }: ImportResult) {
   isImportOpen.value = false;
 
-  schedule.markSectionsImported(
-    sections.map((section) => section.id),
-    sourceTermName,
-  );
+  schedule.dispatch({
+    type: "sectionsImported",
+    sectionIds: sections.map((section) => section.id),
+    sourceTermName: sourceTermName,
+  });
 }
 
 const plannedSectionIds = computed(() =>
@@ -400,13 +405,16 @@ const plannedSectionIds = computed(() =>
 
 function onDeletedAll() {
   isDeleteAllOpen.value = false;
-  schedule.markAllSectionsDeleted();
+  schedule.dispatch({ type: "allSectionsDeleted" });
 }
 
 function showImported(): void {
   if (!schedule.lastImport) return;
 
-  schedule.showImportedSections(schedule.lastImport.sectionIds);
+  schedule.dispatch({
+    type: "importedSectionsShown",
+    sectionIds: schedule.lastImport.sectionIds,
+  });
 }
 
 async function undoLastImport() {
@@ -415,7 +423,7 @@ async function undoLastImport() {
 
   try {
     await undoImport.mutateAsync(importToUndo.sectionIds);
-    schedule.markImportUndone();
+    schedule.dispatch({ type: "importUndone" });
   } catch (refusal) {
     showRefusal(refusal);
   }
@@ -440,6 +448,10 @@ const filterOptions = computed(() => buildFilterOptions(localSections.value));
 /** What the filters panel still has reason to list; see `isInView` there. */
 const reachableValues = computed(() =>
   reachableFacetValues(localSections.value, schedule.filters),
+);
+
+const appliedFilters = computed(() =>
+  appliedScheduleFilters(filterOptions.value, schedule.filters),
 );
 
 const sectionOf = (meetingId: string) =>
@@ -480,7 +492,11 @@ const runEffect = (effect: Effect) => {
 // Held here rather than inside a view, so that the toolbar, the filters panel,
 // every view, and the detail sheet all read and change the same schedule.
 const schedule = useScheduleEditor(
-  computed(() => ({ sections: sections.value, isReadOnly: isReadOnly.value })),
+  computed(() => ({
+    sections: sections.value,
+    isReadOnly: isReadOnly.value,
+    isWide: isLarge.value,
+  })),
   runEffect,
 );
 
@@ -521,40 +537,34 @@ const newSection = computed<PlannedSection | null>(() => {
   };
 });
 
-/**
- * The last write the server refused. Every write clears it first, so the
- * banner names what just happened rather than something already recovered
- * from, and the reader can dismiss what is left.
- */
-const writeError = ref<string | null>(null);
-
 const REFUSED =
   "That change could not be saved. Check your connection and try again.";
 
-const showRefusal = (refusal: unknown) => {
-  writeError.value = refusalMessage(refusal) ?? REFUSED;
-};
+const showRefusal = (refusal: unknown) =>
+  schedule.dispatch({
+    type: "writeRefused",
+    message: refusalMessage(refusal) ?? REFUSED,
+  });
 
 /**
- * Read synchronously by `createDrawnSection` rather than watched, because two
+ * Read synchronously by `saveNewSection` rather than watched, because two
  * clicks land before Vue has re-rendered the button as disabled, and the
  * second would POST the same section again.
  */
 const isSavingNewSection = ref(false);
 
-async function createDrawnSection() {
+async function saveNewSection() {
   const standIn = newSection.value;
   if (!standIn || isSavingNewSection.value) return;
 
   isSavingNewSection.value = true;
-  writeError.value = null;
 
   try {
     const created = await createSection.mutateAsync(
       toSectionPayload(schedule.draftSection(standIn)),
     );
 
-    schedule.markSectionCreated(created.id);
+    schedule.dispatch({ type: "sectionCreated", sectionId: created.id });
   } catch (refusal) {
     showRefusal(refusal);
   } finally {
@@ -566,11 +576,9 @@ async function deleteSelectedSection() {
   const section = selectedSection.value;
   if (!section) return;
 
-  writeError.value = null;
-
   try {
     await deleteSection.mutateAsync(section.id);
-    schedule.markSectionDeleted(section.id);
+    schedule.dispatch({ type: "sectionDeleted", sectionId: section.id });
   } catch (refusal) {
     showRefusal(refusal);
   }
@@ -579,8 +587,8 @@ async function deleteSelectedSection() {
 /** Closing the sheet on a section nobody created is discarding it. */
 const closeSheet = () =>
   schedule.isNewSectionSelected
-    ? schedule.discardNewSection()
-    : schedule.deselect();
+    ? schedule.dispatch({ type: "newSectionDiscarded" })
+    : schedule.dispatch({ type: "deselected" });
 
 const coursesQuery = useTermPlanCoursesQuery(groupId);
 
@@ -641,7 +649,7 @@ onBeforeRouteUpdate((to, from) => {
   if (isSameTermPlan) return true;
   if (hasUnsavedWork.value && !window.confirm(LEAVING_UNSAVED)) return false;
 
-  schedule.contextChanged();
+  schedule.dispatch({ type: "contextChanged" });
   return true;
 });
 
@@ -656,7 +664,12 @@ useTermPlanAutosave({
   sections: localSections,
   pendingEdits: computed(() => schedule.pendingEdits),
   save: (section) => saveSection.mutateAsync(section),
-  onSaved: (sectionId, saved) => schedule.markEditsPersisted(sectionId, saved),
+  onSaved: (sectionId, saved) =>
+    schedule.dispatch({
+      type: "sectionEditsPersisted",
+      sectionId: sectionId,
+      saved: saved,
+    }),
   onRefused: showRefusal,
 });
 
@@ -665,7 +678,8 @@ useTermPlanAutosave({
 // raises no effect for it, which is what stops the two answering each other.
 watch(
   () => route.query,
-  (query) => schedule.urlChanged(flattenQuery(query)),
+  (query) =>
+    schedule.dispatch({ type: "urlChanged", query: flattenQuery(query) }),
   { immediate: true },
 );
 
@@ -679,7 +693,12 @@ const returnTo = computed(() => {
 
 const goBackToHour = () => {
   const hour = schedule.hourReturnedTo;
-  if (hour) schedule.selectHour(hour.dayIndex, hour.startMinute);
+  if (hour)
+    schedule.dispatch({
+      type: "selectedHour",
+      dayIndex: hour.dayIndex,
+      startMinute: hour.startMinute,
+    });
 };
 
 /** The sections whose meetings overlap the selected hour, as the grid shows them. */

@@ -26,8 +26,8 @@
         type="button"
         class="tw-flex tw-w-full tw-cursor-pointer tw-items-center tw-gap-[7px] tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-border-l-[3px] tw-py-[3px] tw-pl-3 tw-pr-[5px] tw-text-[11px] tw-leading-tight tw-text-on-surface hover:tw-border-outline"
         :class="[
-          colorOfType(section.component).tint,
-          colorOfType(section.component).rail,
+          colorOfTypeInTerm(section.component, schedule.isReadOnly).tint,
+          colorOfTypeInTerm(section.component, schedule.isReadOnly).rail,
           section.id === selectedSectionId && [
             'tw-outline tw-outline-2 tw-outline-offset-0',
             // Ink where nothing can be acted on; see MeetingBlock.
@@ -40,11 +40,18 @@
             'tw-border-dashed',
         ]"
         :aria-pressed="section.id === selectedSectionId"
-        @click="schedule.selectSection(section.id)"
+        @click="
+          schedule.dispatch({ type: 'selectedSection', sectionId: section.id })
+        "
       >
         <span class="tw-min-w-0 tw-truncate tw-font-semibold">
           {{ section.subject }} {{ section.catalogNumber }} ·
           {{ section.section }}
+        </span>
+        <span
+          class="tw-flex-none tw-text-[9px] tw-font-bold tw-tracking-[0.07em] tw-text-on-surface-variant"
+        >
+          {{ section.component }}
         </span>
         <NoteIcon
           v-if="section.notes.trim() !== ''"
@@ -71,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-import { colorOfType } from "@/utils/meetingTypeColors";
+import { colorOfTypeInTerm } from "@/utils/meetingTypeColors";
 import { NoteIcon } from "@/icons";
 import { instructorsOfRecord } from "../helpers/sectionPeople";
 import type { PlannedSection, SisInstructor } from "../types";

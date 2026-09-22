@@ -233,7 +233,7 @@ import {
   countValuesWithAnySelection,
   withSectionsSelected,
 } from "../helpers/sectionSelection";
-import { refusalMessage } from "../helpers/refusalMessage";
+import { refusalMessage } from "@/utils/refusalMessage";
 import {
   defaultImportOptions,
   useSectionBatch,

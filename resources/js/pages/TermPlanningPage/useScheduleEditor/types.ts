@@ -27,6 +27,8 @@ export interface ScheduleContext {
    * reach `update` — so the refusal lives here too.
    */
   isReadOnly: boolean;
+  /** Wide enough to dock the filter panel beside the canvas. */
+  isWide: boolean;
 }
 
 /** Sparse: an absent field is unchanged. */
@@ -162,6 +164,12 @@ export interface EditorState {
   dayIndex: number;
   /** The import the banner stands for, or null when no banner is showing. */
   lastImport: LastImport | null;
+  /** The server's word on the last refused write. */
+  writeError: string | null;
+  /** The sheet is asking whether to delete the open section. */
+  isConfirmingDelete: boolean;
+  /** Null follows the width; true or false is the reader overruling it. */
+  filterPanelOverride: boolean | null;
 }
 
 /** Past-tense facts from the UI; minutes arrive unsnapped. */
@@ -251,8 +259,20 @@ export type EditorEvent =
    * stood for it can go and the sheet can reopen on the real thing.
    */
   | { type: "sectionCreated"; sectionId: number }
+  /**
+   * Create Section was pressed, rather than a rectangle drawn on the grid, so
+   * the new section starts with no meeting times and the sheet is where it
+   * gets them.
+   */
+  | { type: "sectionCreationRequested" }
   /** The sheet closed on a section that was never created. */
   | { type: "newSectionDiscarded" }
+  /** A write came back refused, carrying what the server said. */
+  | { type: "writeRefused"; message: string }
+  | { type: "writeErrorDismissed" }
+  | { type: "deleteRequested" }
+  | { type: "deleteCancelled" }
+  | { type: "filterPanelOverridden"; isOpen: boolean }
   /**
    * The server no longer has this section. Its overlay and its draft go with
    * it; leaving either would save a section back into existence.

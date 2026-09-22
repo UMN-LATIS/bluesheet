@@ -1,4 +1,10 @@
-import type { LeaveTimeline, PlanningTerm, TeachingHistory } from "@/types";
+import type {
+  LeaveStatus,
+  LeaveTimeline,
+  LeaveType,
+  PlanningTerm,
+  TeachingHistory,
+} from "@/types";
 import type { UrlQuery } from "@/utils/urlQuery";
 
 export const TEACHING_VIEWS = ["instructors", "tas", "courses"] as const;
@@ -24,6 +30,33 @@ export type Selection =
   | { kind: "section"; sectionKey: string };
 
 /**
+ * Complete, never sparse. Making these optional to mean
+ * "unchanged" sends undefined to an endpoint that requires
+ * all five, and the save fails validation.
+ */
+export interface LeaveDraft {
+  /** Null until the person is picked, when creating from the toolbar. */
+  emplid: number | null;
+  description: string;
+  type: LeaveType;
+  status: LeaveStatus;
+  /** "YYYY-MM-DD" */
+  startDate: string;
+  /** "YYYY-MM-DD" */
+  endDate: string;
+}
+
+/** `draft` differing from `openedDraft` is what unsaved means. */
+export type Editor =
+  | {
+      kind: "editingLeave";
+      leaveId: number;
+      draft: LeaveDraft;
+      openedDraft: LeaveDraft;
+    }
+  | { kind: "creatingLeave"; draft: LeaveDraft; openedDraft: LeaveDraft };
+
+/**
  * A null `startTermCode` becomes a year before the current
  * term, a null `endTermCode` a year after it.
  */
@@ -39,6 +72,20 @@ export interface ViewState {
   filters: PlanningFilters;
   activeFacet: FilterFacet;
   selection: Selection | null;
+  /** Non-null exactly when the panel is in edit mode. */
+  editor: Editor | null;
+  /**
+   * The event held back because running it would drop an
+   * unsaved draft. Released by `dismissalConfirmed` or
+   * `dismissalCancelled`.
+   */
+  pendingDismissal: ViewEvent | null;
+  /** The server's word on the last refused write. */
+  refusal: string | null;
+  /** The panel is asking whether to delete the open leave. */
+  isConfirmingDelete: boolean;
+  /** Null follows the width; true or false is the reader overruling it. */
+  filterPanelOverride: boolean | null;
 }
 
 export interface ViewContext {
@@ -47,6 +94,8 @@ export interface ViewContext {
   terms: PlanningTerm[];
   canViewCourses: boolean;
   canPlanTerms: boolean;
+  /** Wide enough to dock the filter panel beside the canvas. */
+  isWide: boolean;
 }
 
 export type ViewEvent =
@@ -61,9 +110,32 @@ export type ViewEvent =
   | { type: "filtersCleared" }
   | { type: "leaveSelected"; leaveId: number }
   | { type: "sectionSelected"; sectionKey: string }
-  | { type: "deselected" };
+  | { type: "deselected" }
+  | { type: "editRequested"; draft: LeaveDraft }
+  | {
+      type: "creationRequested";
+      emplid: number | null;
+      startDate: string;
+      endDate: string;
+    }
+  | { type: "draftEdited"; change: Partial<LeaveDraft> }
+  | { type: "draftCancelled" }
+  /** The server has the leave now, under this id. */
+  | { type: "leavePersisted"; leaveId: number }
+  | { type: "leaveDeleted" }
+  /** The reader let the held event through, losing the draft. */
+  | { type: "dismissalConfirmed" }
+  /** The reader kept the draft, so the held event never happened. */
+  | { type: "dismissalCancelled" }
+  /** A write came back refused, carrying what the server said. */
+  | { type: "writeRefused"; message: string }
+  | { type: "deleteRequested" }
+  | { type: "deleteCancelled" }
+  | { type: "filterPanelOverridden"; isOpen: boolean };
 
-export type Effect = { type: "replaceUrlQuery"; query: UrlQuery };
+export type Effect =
+  | { type: "replaceUrlQuery"; query: UrlQuery }
+  | { type: "scrollToSelection"; key: string };
 
 export interface Next {
   state: ViewState;

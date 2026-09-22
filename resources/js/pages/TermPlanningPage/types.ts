@@ -82,16 +82,6 @@ export interface SisCrosslist {
   isPrimary: boolean;
 }
 
-export interface SisEmployee {
-  emplid: number;
-  name: string | null;
-  firstName: string | null;
-  lastName: string | null;
-  internetId: string | null;
-  positionTitle: string | null;
-  category: string | null;
-}
-
 /** How a section is taught, which the SIS has no column for. */
 export type Delivery = "onCampus" | "blended" | "online";
 

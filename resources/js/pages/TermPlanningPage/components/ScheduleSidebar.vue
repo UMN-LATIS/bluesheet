@@ -3,21 +3,6 @@
     aria-label="Filters"
     class="tw-flex tw-h-full tw-w-full tw-flex-col tw-min-h-0 tw-bg-surface-bright"
   >
-    <div
-      v-if="isDismissible"
-      class="tw-flex tw-flex-none tw-items-center tw-gap-2 tw-px-3.5 tw-pt-3"
-    >
-      <span class="tw-text-[13px] tw-font-bold">Filters</span>
-      <button
-        type="button"
-        class="tw-ml-auto tw-flex tw-h-11 tw-w-11 tw-flex-none tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-text-xl tw-leading-none tw-text-on-surface-variant hover:tw-bg-surface-container hover:tw-text-on-surface"
-        aria-label="Close filters"
-        @click="emit('close')"
-      >
-        ×
-      </button>
-    </div>
-
     <div class="tw-flex-none tw-p-3.5 tw-pb-0">
       <label class="tw-sr-only" for="schedule-filter-search">
         Search courses, people, sections
@@ -261,11 +246,7 @@ const props = defineProps<{
   leavesByEmplid: Map<number, TermLeave[]>;
   /** Per facet, the values the other facets' checked values leave standing. */
   reachable: ReachableFacetValues;
-  /** Mounted as an overlay that can be closed, rather than docked. */
-  isDismissible?: boolean;
 }>();
-
-const emit = defineEmits<{ close: [] }>();
 
 const search = ref("");
 const activeFacet = ref<FilterFacet>("course");
@@ -280,8 +261,16 @@ const leavesFor = (person: PersonOption): TermLeave[] =>
 
 const toggle = (facet: FilterFacet, values: string[], isNowChecked: boolean) =>
   isNowChecked
-    ? props.schedule.addFilterValues(facet, values)
-    : props.schedule.removeFilterValues(facet, values);
+    ? props.schedule.dispatch({
+        type: "filterValuesAdded",
+        facet: facet,
+        values: values,
+      })
+    : props.schedule.dispatch({
+        type: "filterValuesRemoved",
+        facet: facet,
+        values: values,
+      });
 
 /** Across every facet, not just the list in view. */
 const activeFilterCount = computed(() =>
@@ -289,7 +278,11 @@ const activeFilterCount = computed(() =>
 );
 
 const clearFacet = (facet: FilterFacet) =>
-  props.schedule.removeFilterValues(facet, filters.value[facet]);
+  props.schedule.dispatch({
+    type: "filterValuesRemoved",
+    facet: facet,
+    values: filters.value[facet],
+  });
 
 const isSearching = computed(() => search.value.trim() !== "");
 
@@ -301,7 +294,7 @@ const isNarrowed = computed(
 /** The search narrows the lists as a checked value does, so it clears too. */
 const clearAll = () => {
   search.value = "";
-  props.schedule.clearFilters();
+  props.schedule.dispatch({ type: "filtersCleared" });
 };
 
 const narrowingSummary = computed(() => {
@@ -320,7 +313,11 @@ const narrowingSummary = computed(() => {
 
 const showUnassigned = () => {
   activeFacet.value = "person";
-  props.schedule.addFilterValues("person", [TBA_PERSON]);
+  props.schedule.dispatch({
+    type: "filterValuesAdded",
+    facet: "person",
+    values: [TBA_PERSON],
+  });
 };
 
 /**

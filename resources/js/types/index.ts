@@ -246,8 +246,6 @@ export interface NewLeave {
   artifacts?: LeaveArtifact[];
 }
 
-export type TermCode = "FA" | "SP" | "SU";
-
 // api response types
 export interface ApiUserResponse extends BaseUser {
   leaves?: Leave[];
@@ -310,9 +308,20 @@ export interface ApiLeaveDateOptions {
   endDateOptions: LeaveDateOption[];
 }
 
+/** A roster entry, read off the appointment that placed the person there. */
+export interface SisEmployee {
+  emplid: number;
+  name: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  internetId: string | null;
+  positionTitle: string | null;
+  category: string | null;
+}
+
 export interface TermPayrollDate {
   id: number;
-  term_code: TermCode;
+  term_code: number;
   semester: string; // "Spring", "Fall"
   year: number; // academic year
   payroll_start_date: ISODate;

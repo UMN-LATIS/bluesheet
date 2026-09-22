@@ -6,27 +6,34 @@
     <template #bar>
       <LeavePlanningToolbar
         :groupId="groupId"
-        :terms="terms"
-        :range="planning.timelineRange"
-        :canViewCourses="canViewCourses"
+        :canCreateLeaves="canCreateLeaves"
         :isHistoryShown="planning.isHistoryShown"
         :view="planning.view"
-        :activeFilterCount="planning.activeFilterCount"
-        :isFilterPanelOpen="isFilterPanelOpen"
-        @openFilters="isFilterPanelOpen = true"
-        @toggleHistory="planning.toggleHistory"
-        @selectView="planning.selectView"
-        @selectRangeStart="planning.selectRangeStart"
-        @selectRangeEnd="planning.selectRangeEnd"
+        @createLeave="startCreatingWithoutPerson"
+        @selectView="
+          (view) => planning.dispatch({ type: 'viewSelected', view })
+        "
       />
     </template>
 
     <div
       class="tw-relative tw-flex tw-min-h-0 tw-flex-1 tw-gap-3 tw-px-3 tw-pb-3 roomy:tw-px-4 roomy:tw-pb-4"
     >
-      <Pane v-if="isLarge" class="tw-w-[304px] tw-flex-none">
+      <FilterDock
+        :appliedFilters="planning.appliedFilters"
+        :isOpen="planning.isFilterPanelOpen"
+        :isDocked="isLarge"
+        :isSmall="isSmall"
+        :activeFilterCount="planning.activeFilterCount"
+        @toggle="
+          planning.dispatch({
+            type: 'filterPanelOverridden',
+            isOpen: !planning.isFilterPanelOpen,
+          })
+        "
+      >
         <PlanningSidebar :planning="planning" />
-      </Pane>
+      </FilterDock>
 
       <Pane
         as="section"
@@ -40,8 +47,26 @@
           {{ unavailableMessage }}
         </p>
 
+        <TimelineHeaderBar
+          v-if="!unavailableMessage"
+          :terms="terms"
+          :range="planning.timelineRange"
+          :canViewCourses="canViewCourses"
+          :isHistoryShown="planning.isHistoryShown"
+          @selectRangeStart="
+            (termCode) =>
+              planning.dispatch({ type: 'rangeStartSelected', termCode })
+          "
+          @selectRangeEnd="
+            (termCode) =>
+              planning.dispatch({ type: 'rangeEndSelected', termCode })
+          "
+          @toggleHistory="planning.dispatch({ type: 'historyToggled' })"
+        />
+
         <TimelineCanvas
-          v-else-if="planning.axis"
+          v-if="!unavailableMessage && planning.axis"
+          ref="timelineCanvas"
           :axis="planning.axis"
           :nameHeading="nameHeading"
           :isHistoryShown="planning.isHistoryShown"
@@ -51,7 +76,6 @@
           :plannableTermCodes="planning.plannableTermCodes"
           :trailingScrollRoomPx="trailingScrollRoomPx"
           :today="today"
-          :selectionKey="selectionKey"
         >
           <LeaveRows
             v-if="!planning.isHistoryShown"
@@ -59,7 +83,11 @@
             :axis="planning.axis"
             :selectedLeaveId="selectedLeaveId"
             :emptyMessage="emptyMessage"
-            @selectLeave="planning.selectLeave"
+            :canCreateLeaves="canCreateLeaves"
+            @selectLeave="
+              (leaveId) => planning.dispatch({ type: 'leaveSelected', leaveId })
+            "
+            @createLeave="startCreatingAt"
           />
           <CourseHistoryRows
             v-else-if="planning.view === 'courses'"
@@ -69,8 +97,13 @@
             :selectedLeaveId="selectedLeaveId"
             :selectedSectionKey="selectedSectionKey"
             :emptyMessage="emptyMessage"
-            @selectLeave="planning.selectLeave"
-            @selectSection="planning.selectSection"
+            @selectLeave="
+              (leaveId) => planning.dispatch({ type: 'leaveSelected', leaveId })
+            "
+            @selectSection="
+              (sectionKey) =>
+                planning.dispatch({ type: 'sectionSelected', sectionKey })
+            "
           />
           <PersonHistoryRows
             v-else
@@ -79,23 +112,53 @@
             :selectedLeaveId="selectedLeaveId"
             :selectedSectionKey="selectedSectionKey"
             :emptyMessage="emptyMessage"
-            @selectLeave="planning.selectLeave"
-            @selectSection="planning.selectSection"
+            @selectLeave="
+              (leaveId) => planning.dispatch({ type: 'leaveSelected', leaveId })
+            "
+            @selectSection="
+              (sectionKey) =>
+                planning.dispatch({ type: 'sectionSelected', sectionKey })
+            "
           />
         </TimelineCanvas>
       </Pane>
 
       <PanelMount v-if="isPanelOpen" :panelWidthPx="panelWidthPx">
         <LeavePanel
-          v-if="planning.selectedLeave"
+          v-if="planning.selectedLeave || planning.draft"
           :leave="planning.selectedLeave"
-          :person="planning.peopleByEmplid.get(planning.selectedLeave.emplid)"
+          :person="panelPerson"
           :otherLeaves="otherLeavesOfSelectedLeave"
-          :terms="termsOverlapping(terms, planning.selectedLeave)"
+          :terms="
+            planning.selectedLeave
+              ? termsOverlapping(terms, planning.selectedLeave)
+              : []
+          "
           :groupId="groupId"
           :canViewTermPlanning="canViewCourses"
-          @close="planning.deselect"
-          @selectLeave="planning.selectLeave"
+          :draft="planning.draft"
+          :isEditable="isSelectedLeaveEditable"
+          :isDraftValid="planning.isDraftValid"
+          :isSaving="isSaving"
+          :refusal="planning.refusal"
+          :isConfirmingDelete="planning.isConfirmingDelete"
+          :artifacts="artifactsQuery.data.value ?? []"
+          :roster="rosterQuery.data.value ?? []"
+          :payrollDates="payrollDatesQuery.data.value ?? []"
+          @close="planning.dispatch({ type: 'deselected' })"
+          @selectLeave="
+            (leaveId) => planning.dispatch({ type: 'leaveSelected', leaveId })
+          "
+          @requestEdit="startEditing"
+          @edit="(change) => planning.dispatch({ type: 'draftEdited', change })"
+          @save="saveDraft"
+          @cancel="planning.dispatch({ type: 'draftCancelled' })"
+          @requestDelete="planning.dispatch({ type: 'deleteRequested' })"
+          @cancelDelete="planning.dispatch({ type: 'deleteCancelled' })"
+          @delete="deleteSelectedLeave"
+          @createArtifact="createArtifact"
+          @saveArtifact="saveArtifact"
+          @deleteArtifact="deleteArtifact"
         />
         <SectionPanel
           v-else-if="planning.selectedSection"
@@ -103,29 +166,38 @@
           :termName="termNameOf(planning.selectedSection.termCode)"
           :groupId="groupId"
           :peopleByEmplid="planning.peopleByEmplid"
-          @close="planning.deselect"
+          @close="planning.dispatch({ type: 'deselected' })"
         />
       </PanelMount>
 
-      <template v-if="isFilterPanelOpen && !isLarge">
+      <div
+        v-if="planning.pendingDismissal"
+        class="tw-absolute tw-inset-0 tw-z-[60] tw-flex tw-items-center tw-justify-center tw-bg-black/20"
+      >
         <div
-          class="tw-absolute tw-inset-0 tw-z-40 tw-bg-black/20"
-          @click="isFilterPanelOpen = false"
-        />
-        <Pane
-          :class="
-            isSmall
-              ? 'tw-fixed tw-inset-0 tw-z-50 tw-rounded-none tw-border-0 tw-shadow-none'
-              : 'tw-absolute tw-inset-y-0 tw-left-3 tw-z-50 tw-w-[304px] tw-shadow-[18px_0_44px_rgba(38,38,38,0.16)]'
-          "
+          role="alertdialog"
+          aria-label="Unsaved leave"
+          class="tw-w-[320px] tw-rounded-xl tw-bg-surface-bright tw-p-4 tw-shadow-lg"
         >
-          <PlanningSidebar
-            :planning="planning"
-            isDismissible
-            @close="isFilterPanelOpen = false"
-          />
-        </Pane>
-      </template>
+          <p class="tw-m-0 tw-mb-3 tw-text-[13.5px]">
+            This leave has changes you haven’t saved. Leaving now discards them.
+          </p>
+          <div class="tw-flex tw-justify-end tw-gap-2">
+            <Button
+              variant="secondary"
+              @click="planning.dispatch({ type: 'dismissalCancelled' })"
+            >
+              Keep editing
+            </Button>
+            <Button
+              variant="danger"
+              @click="planning.dispatch({ type: 'dismissalConfirmed' })"
+            >
+              Discard
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   </FullScreenLayout>
 </template>
@@ -136,22 +208,34 @@ import { onKeyStroke } from "@vueuse/core";
 import { useRoute, useRouter } from "vue-router";
 import { omit } from "lodash-es";
 import dayjs from "dayjs";
-import type { PlanningLeave } from "@/types";
+import type { LeaveStatus, LeaveType, PlanningLeave } from "@/types";
 import FullScreenLayout from "@/layouts/FullScreenLayout.vue";
 import Pane from "@/components/planning/Pane.vue";
 import { flattenQuery } from "@/utils/urlQuery";
 import { termsOverlapping } from "@/utils/termsOverlapping";
 import { useScreenSize } from "@/utils/useScreenSize";
 import LeavePlanningToolbar from "./components/LeavePlanningToolbar.vue";
+import FilterDock from "@/components/planning/FilterDock.vue";
 import PlanningSidebar from "./components/PlanningSidebar.vue";
+import TimelineHeaderBar from "./components/TimelineHeaderBar.vue";
 import TimelineCanvas from "./components/TimelineCanvas.vue";
 import LeaveRows from "./components/LeaveRows.vue";
 import PersonHistoryRows from "./components/PersonHistoryRows.vue";
 import CourseHistoryRows from "./components/CourseHistoryRows.vue";
 import PanelMount from "./components/PanelMount.vue";
 import LeavePanel from "@/components/planning/LeavePanel.vue";
+import Button from "@/components/Button.vue";
 import SectionPanel from "./components/SectionPanel.vue";
 import { useLeaveTimelineQuery } from "./queries/useLeaveTimelineQuery";
+import { useLeaveArtifactsQuery } from "./queries/useLeaveArtifactsQuery";
+import { useLeaveMutations } from "./queries/useLeaveMutations";
+import { useLeavePermissionsQuery } from "./queries/useLeavePermissionsQuery";
+import { useLeavePermissionsForGroupQuery } from "./queries/useLeavePermissionsForGroupQuery";
+import { useSisEmployeesQuery } from "@/queries/useSisEmployeesQuery";
+import { useTermPayrollDatesQuery } from "./queries/useTermPayrollDatesQuery";
+import { newLeaveDatesAt } from "./helpers/newLeaveDates";
+import { refusalMessage } from "@/utils/refusalMessage";
+import type { ArtifactPayload } from "@/api/leavePlanningApi";
 import { useTeachingHistoryQuery } from "./queries/useTeachingHistoryQuery";
 import { useSisTermsQuery } from "./queries/useSisTermsQuery";
 import { useCoursePermissionsQuery } from "./queries/useCoursePermissionsQuery";
@@ -170,7 +254,9 @@ const { isLarge, isSmall } = useScreenSize();
 
 const groupId = computed(() => props.groupId);
 const today = computed(() => dayjs().format("YYYY-MM-DD"));
-const isFilterPanelOpen = ref(false);
+const timelineCanvas = ref<{
+  scrollToSelection: (key: string) => void;
+} | null>(null);
 
 const runEffect = (effect: Effect) => {
   switch (effect.type) {
@@ -178,6 +264,9 @@ const runEffect = (effect: Effect) => {
       router.replace({
         query: { ...omit(route.query, OWNED_QUERY_KEYS), ...effect.query },
       });
+      return;
+    case "scrollToSelection":
+      timelineCanvas.value?.scrollToSelection(effect.key);
   }
 };
 
@@ -204,13 +293,15 @@ const planning = useLeavePlanningView(
     terms: terms.value,
     canViewCourses: canViewCourses.value,
     canPlanTerms: canPlanTerms.value,
+    isWide: isLarge.value,
   })),
   runEffect,
 );
 
 watch(
   () => route.query,
-  (query) => planning.urlChanged(flattenQuery(query)),
+  (query) =>
+    planning.dispatch({ type: "urlChanged", query: flattenQuery(query) }),
   { immediate: true },
 );
 
@@ -227,11 +318,19 @@ const teachingHistoryQuery = useTeachingHistoryQuery(
 );
 
 onKeyStroke("Escape", () => {
-  if (isFilterPanelOpen.value) {
-    isFilterPanelOpen.value = false;
+  if (planning.pendingDismissal) {
+    planning.dispatch({ type: "dismissalCancelled" });
     return;
   }
-  planning.deselect();
+  if (planning.isFilterPanelOpen && !isLarge.value) {
+    planning.dispatch({ type: "filterPanelOverridden", isOpen: false });
+    return;
+  }
+  if (planning.draft) {
+    planning.dispatch({ type: "draftCancelled" });
+    return;
+  }
+  planning.dispatch({ type: "deselected" });
 });
 
 const unavailableMessage = computed(() => {
@@ -280,17 +379,199 @@ const selectedLeaveId = computed(() =>
 const selectedSectionKey = computed(() =>
   planning.selection?.kind === "section" ? planning.selection.sectionKey : null,
 );
-const selectionKey = computed(() => {
-  if (selectedLeaveId.value !== null) return `leave-${selectedLeaveId.value}`;
-  if (selectedSectionKey.value !== null) {
-    return `section-${selectedSectionKey.value}`;
-  }
-  return null;
+const isPanelOpen = computed(
+  () =>
+    planning.selectedLeave !== null ||
+    planning.selectedSection !== null ||
+    planning.draft !== null,
+);
+
+const openLeaveId = computed(() => planning.openLeaveId);
+
+const artifactsQuery = useLeaveArtifactsQuery(openLeaveId);
+const leavePermissionsQuery = useLeavePermissionsQuery(openLeaveId);
+const groupLeavePermissionsQuery = useLeavePermissionsForGroupQuery(groupId);
+const payrollDatesQuery = useTermPayrollDatesQuery();
+
+const canCreateLeaves = computed(
+  () => groupLeavePermissionsQuery.data.value?.create ?? false,
+);
+
+const rosterQuery = useSisEmployeesQuery(groupId, canCreateLeaves);
+
+const mutations = useLeaveMutations(groupId);
+
+const panelPerson = computed(() => {
+  const leaveEmplid = planning.selectedLeave?.emplid ?? null;
+  const emplid = leaveEmplid ?? planning.draft?.emplid ?? null;
+  if (emplid === null) return undefined;
+  return planning.peopleByEmplid.get(emplid);
 });
 
-const isPanelOpen = computed(
-  () => planning.selectedLeave !== null || planning.selectedSection !== null,
+const isSelectedLeaveEditable = computed(
+  () => leavePermissionsQuery.data.value?.update ?? false,
 );
+
+const isSaving = computed(
+  () =>
+    mutations.createLeave.isPending.value ||
+    mutations.saveLeave.isPending.value ||
+    mutations.deleteLeave.isPending.value,
+);
+
+function startCreatingAt(emplid: number, fraction: number) {
+  const axis = planning.axis;
+  if (!axis) return;
+
+  const range = newLeaveDatesAt(
+    axis,
+    payrollDatesQuery.data.value ?? [],
+    fraction,
+  );
+  if (!range) return;
+
+  planning.dispatch({
+    type: "creationRequested",
+    emplid: emplid,
+    startDate: range.startDate,
+    endDate: range.endDate,
+  });
+}
+
+function startCreatingWithoutPerson() {
+  const axis = planning.axis;
+  const range = axis
+    ? newLeaveDatesAt(axis, payrollDatesQuery.data.value ?? [], 0.5)
+    : null;
+
+  planning.dispatch({
+    type: "creationRequested",
+    emplid: null,
+    startDate: range?.startDate ?? today.value,
+    endDate: range?.endDate ?? today.value,
+  });
+}
+
+const startEditing = () => {
+  const leave = planning.selectedLeave;
+  if (!leave) return;
+  planning.dispatch({
+    type: "editRequested",
+    draft: {
+      emplid: leave.emplid,
+      description: leave.description,
+      type: leave.type,
+      status: leave.status,
+      startDate: leave.startDate,
+      endDate: leave.endDate,
+    },
+  });
+};
+
+const REFUSED =
+  "That change could not be saved. Check your connection and try again.";
+
+type LeaveWrite = {
+  description: string;
+  start_date: string;
+  end_date: string;
+  status: LeaveStatus;
+  type: LeaveType;
+};
+
+async function saveDraft() {
+  const draft = planning.draft;
+  if (!draft) return;
+
+  const fields = {
+    description: draft.description,
+    start_date: draft.startDate,
+    end_date: draft.endDate,
+    status: draft.status,
+    type: draft.type,
+  };
+
+  const editedLeaveId = planning.openLeaveId;
+
+  try {
+    if (editedLeaveId === null) {
+      await createLeaveFromDraft(draft.emplid, fields);
+      return;
+    }
+    await saveEditedLeave(editedLeaveId, fields);
+  } catch (error) {
+    planning.dispatch({
+      type: "writeRefused",
+      message: refusalMessage(error) ?? REFUSED,
+    });
+  }
+}
+
+async function createLeaveFromDraft(emplid: number | null, fields: LeaveWrite) {
+  if (emplid === null) return;
+  const created = await mutations.createLeave.mutateAsync({
+    ...fields,
+    emplid,
+  });
+  planning.dispatch({ type: "leavePersisted", leaveId: created.id });
+}
+
+async function saveEditedLeave(leaveId: number, fields: LeaveWrite) {
+  const userId = planning.selectedLeave?.userId;
+  if (userId === undefined) return;
+
+  await mutations.saveLeave.mutateAsync({
+    leaveId,
+    payload: { ...fields, user_id: userId },
+  });
+  planning.dispatch({ type: "leavePersisted", leaveId: leaveId });
+}
+
+async function deleteSelectedLeave() {
+  const leaveId = planning.selectedLeave?.id;
+  if (leaveId === undefined) return;
+
+  try {
+    await mutations.deleteLeave.mutateAsync(leaveId);
+    planning.dispatch({ type: "leaveDeleted" });
+  } catch (error) {
+    planning.dispatch({
+      type: "writeRefused",
+      message: refusalMessage(error) ?? REFUSED,
+    });
+  }
+}
+
+const writeToOpenLeave = async (
+  write: (leaveId: number) => Promise<unknown>,
+) => {
+  const leaveId = openLeaveId.value;
+  if (leaveId === null) return;
+
+  try {
+    await write(leaveId);
+  } catch (error) {
+    planning.dispatch({
+      type: "writeRefused",
+      message: refusalMessage(error) ?? REFUSED,
+    });
+  }
+};
+
+const createArtifact = (payload: ArtifactPayload) =>
+  writeToOpenLeave((leaveId) =>
+    mutations.createArtifact.mutateAsync({ leaveId, payload }),
+  );
+
+const saveArtifact = (artifactId: number, payload: ArtifactPayload) =>
+  writeToOpenLeave((leaveId) =>
+    mutations.saveArtifact.mutateAsync({ leaveId, artifactId, payload }),
+  );
+
+const deleteArtifact = (artifactId: number) =>
+  writeToOpenLeave((leaveId) =>
+    mutations.deleteArtifact.mutateAsync({ leaveId, artifactId }),
+  );
 
 const panelWidthPx = computed(() =>
   isLarge.value ? PANEL_WIDTH.large : PANEL_WIDTH.medium,

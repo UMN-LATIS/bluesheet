@@ -3,21 +3,6 @@
     aria-label="Filters"
     class="tw-flex tw-h-full tw-w-full tw-min-h-0 tw-flex-col tw-bg-surface-bright"
   >
-    <div
-      v-if="isDismissible"
-      class="tw-flex tw-flex-none tw-items-center tw-gap-2 tw-px-3.5 tw-pt-3"
-    >
-      <span class="tw-text-[13px] tw-font-bold">Filters</span>
-      <button
-        type="button"
-        class="tw-ml-auto tw-flex tw-h-11 tw-w-11 tw-flex-none tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-text-xl tw-leading-none tw-text-on-surface-variant hover:tw-bg-surface-container hover:tw-text-on-surface"
-        aria-label="Close filters"
-        @click="emit('close')"
-      >
-        ×
-      </button>
-    </div>
-
     <div class="tw-flex-none tw-p-3.5 tw-pb-0">
       <label class="tw-sr-only" for="leave-planning-filter-search">
         {{ searchPlaceholder }}
@@ -40,7 +25,7 @@
         :total="tile.totalCount"
         :checkedCount="tile.checkedCount"
         :isActive="planning.activeFacet === tile.facet"
-        @click="planning.openFacet(tile.facet)"
+        @click="planning.dispatch({ type: 'facetOpened', facet: tile.facet })"
       />
     </div>
 
@@ -59,7 +44,7 @@
             : 'tw-cursor-default tw-border-outline-variant tw-bg-transparent tw-text-on-surface-variant tw-opacity-60'
         "
         :disabled="!isNarrowed"
-        @click="planning.clearFilters"
+        @click="planning.dispatch({ type: 'filtersCleared' })"
       >
         <XIcon class="!tw-h-3.5 !tw-w-3.5" aria-hidden="true" />
         Clear all
@@ -79,7 +64,11 @@
         type="button"
         class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-[11px] tw-font-semibold tw-text-primary hover:tw-underline"
         @click="
-          planning.removeFilterValues(planning.activeFacet, checkedValues)
+          planning.dispatch({
+            type: 'filterValuesRemoved',
+            facet: planning.activeFacet,
+            values: checkedValues,
+          })
         "
       >
         Clear
@@ -120,24 +109,11 @@ import { XIcon } from "@/icons";
 import FacetTile from "@/components/planning/FacetTile.vue";
 import FilterRow from "@/components/planning/FilterRow.vue";
 import type { LeavePlanningView } from "../useLeavePlanningView/useLeavePlanningView";
-import type { FilterFacet } from "../useLeavePlanningView/types";
-import type { FilterOption } from "../helpers/filterOptions";
+import { FACET_LABELS, type FilterOption } from "../helpers/filterOptions";
 
 const props = defineProps<{
   planning: LeavePlanningView;
-  isDismissible?: boolean;
 }>();
-
-const emit = defineEmits<{ close: [] }>();
-
-const FACET_LABELS: Record<FilterFacet, string> = {
-  person: "People",
-  course: "Courses",
-  component: "Component",
-  category: "Appointment",
-  leaveType: "Leave type",
-  status: "Status",
-};
 
 const searchInput = ref("");
 
@@ -172,9 +148,17 @@ const narrowingSummary = computed(() => {
 function setFilterValueChecked(value: string, isChecked: boolean) {
   const facet = props.planning.activeFacet;
   if (isChecked) {
-    props.planning.addFilterValues(facet, [value]);
+    props.planning.dispatch({
+      type: "filterValuesAdded",
+      facet: facet,
+      values: [value],
+    });
     return;
   }
-  props.planning.removeFilterValues(facet, [value]);
+  props.planning.dispatch({
+    type: "filterValuesRemoved",
+    facet: facet,
+    values: [value],
+  });
 }
 </script>
