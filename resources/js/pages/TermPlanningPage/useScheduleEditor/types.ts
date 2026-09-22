@@ -162,6 +162,11 @@ export interface EditorState {
   dayIndex: number;
   /** The import the banner stands for, or null when no banner is showing. */
   lastImport: LastImport | null;
+  /** The server's word on the last refused write. */
+  writeError: string | null;
+  /** The sheet is asking whether to delete the open section. */
+  isConfirmingDelete: boolean;
+  isFilterPanelOpen: boolean;
 }
 
 /** Past-tense facts from the UI; minutes arrive unsnapped. */
@@ -259,6 +264,14 @@ export type EditorEvent =
   | { type: "sectionCreationRequested" }
   /** The sheet closed on a section that was never created. */
   | { type: "newSectionDiscarded" }
+  /** A write came back refused, carrying what the server said. */
+  | { type: "writeRefused"; message: string }
+  | { type: "writeErrorDismissed" }
+  | { type: "deleteRequested" }
+  | { type: "deleteCancelled" }
+  | { type: "filterPanelToggled" }
+  /** The window crossed the width that docks the filter panel. */
+  | { type: "breakpointChanged"; isWide: boolean }
   /**
    * The server no longer has this section. Its overlay and its draft go with
    * it; leaving either would save a section back into existence.

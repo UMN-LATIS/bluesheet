@@ -78,6 +78,9 @@ export function useScheduleEditor(
     dayIndex: computed(() => state.value.dayIndex),
     /** Whether this term takes edits at all; see `ScheduleContext`. */
     isReadOnly: computed(() => context.value.isReadOnly),
+    writeError: computed(() => state.value.writeError),
+    isConfirmingDelete: computed(() => state.value.isConfirmingDelete),
+    isFilterPanelOpen: computed(() => state.value.isFilterPanelOpen),
     selection: computed(() => state.value.selection),
     activeFilterCount: computed(() => selectActiveFilterCount(state.value)),
 
@@ -206,6 +209,14 @@ export function useScheduleEditor(
 
     /* Creating and deleting, which the sheet drives. */
     startCreatingSection: () => dispatch({ type: "sectionCreationRequested" }),
+    refuseWrite: (message: string) =>
+      dispatch({ type: "writeRefused", message }),
+    dismissWriteError: () => dispatch({ type: "writeErrorDismissed" }),
+    requestDelete: () => dispatch({ type: "deleteRequested" }),
+    cancelDelete: () => dispatch({ type: "deleteCancelled" }),
+    toggleFilterPanel: () => dispatch({ type: "filterPanelToggled" }),
+    changeBreakpoint: (isWide: boolean) =>
+      dispatch({ type: "breakpointChanged", isWide }),
     markSectionCreated: (sectionId: number) =>
       dispatch({ type: "sectionCreated", sectionId }),
     discardNewSection: () => dispatch({ type: "newSectionDiscarded" }),

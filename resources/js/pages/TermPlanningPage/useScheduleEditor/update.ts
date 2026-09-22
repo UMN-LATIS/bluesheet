@@ -99,7 +99,28 @@ export const initialState = (dayIndex = 0): EditorState => ({
   view: DEFAULT_VIEW,
   dayIndex,
   lastImport: null,
+  writeError: null,
+  isConfirmingDelete: false,
+  isFilterPanelOpen: false,
 });
+
+/**
+ * Events after which the sheet is showing something else, so a refusal or a
+ * delete question raised against what it showed before no longer applies.
+ */
+const SHEET_MOVED_ON: EditorEvent["type"][] = [
+  "selectedSection",
+  "selectedHour",
+  "selectedLeave",
+  "deselected",
+  "canceled",
+  "sectionCreated",
+  "sectionDeleted",
+  "allSectionsDeleted",
+  "newSectionDiscarded",
+  "contextChanged",
+  "urlChanged",
+];
 
 /**
  * Every query key the editor owns. The page clears these before writing an
@@ -161,6 +182,12 @@ const READING_EVENTS: EditorEvent["type"][] = [
   "importUndone",
   "viewSelected",
   "daySelected",
+  "filterPanelToggled",
+  "breakpointChanged",
+  // a term that locked mid-save still has to show and drop what came back
+  "writeRefused",
+  "writeErrorDismissed",
+  "deleteCancelled",
   "asyncDayShown",
   "urlChanged",
   "dismissalCancelled",
@@ -202,9 +229,13 @@ export function update(
     };
   }
 
+  const settled = SHEET_MOVED_ON.includes(event.type)
+    ? { ...nextState, writeError: null, isConfirmingDelete: false }
+    : nextState;
+
   return {
-    state: nextState,
-    effects: effectsOf(event, state, nextState),
+    state: settled,
+    effects: effectsOf(event, state, settled),
   };
 }
 
@@ -668,6 +699,24 @@ function reduce(
 
     case "newSectionDiscarded":
       return { ...withoutDraft(state, NEW_SECTION_ID), selection: null };
+
+    case "writeRefused":
+      return { ...state, writeError: event.message };
+
+    case "writeErrorDismissed":
+      return { ...state, writeError: null };
+
+    case "deleteRequested":
+      return { ...state, isConfirmingDelete: true };
+
+    case "deleteCancelled":
+      return { ...state, isConfirmingDelete: false };
+
+    case "filterPanelToggled":
+      return { ...state, isFilterPanelOpen: !state.isFilterPanelOpen };
+
+    case "breakpointChanged":
+      return { ...state, isFilterPanelOpen: event.isWide };
 
     // answered in `update`, which never lets them reach here
     case "dismissalConfirmed":

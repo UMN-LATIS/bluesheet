@@ -1789,3 +1789,95 @@ describe("asking before unsaved sheet edits are dropped", () => {
     ]);
   });
 });
+
+describe("the write-error banner", () => {
+  const refused = (state?: EditorState) =>
+    after(
+      [{ type: "writeRefused", message: "Section 001 already exists." }],
+      state,
+    );
+
+  it("holds the server's message", () => {
+    expect(refused().writeError).toBe("Section 001 already exists.");
+  });
+
+  it("survives editing the sheet, so a failed save can be corrected", () => {
+    const context = contextOf(plannedSection(1, []));
+    const state = after(
+      [
+        { type: "selectedSection", sectionId: 1 },
+        { type: "writeRefused", message: "Section 001 already exists." },
+        {
+          type: "sectionFieldEdited",
+          sectionId: 1,
+          change: { section: "002" },
+        },
+      ],
+      initialState(),
+      context,
+    );
+
+    expect(state.writeError).toBe("Section 001 already exists.");
+  });
+
+  it("is dismissed by the reader", () => {
+    expect(
+      after([{ type: "writeErrorDismissed" }], refused()).writeError,
+    ).toBeNull();
+  });
+
+  it("clears once the sheet is showing something else", () => {
+    const state = after([{ type: "selectedSection", sectionId: 9 }], refused());
+
+    expect(state.writeError).toBeNull();
+  });
+
+  it("is still accepted on a term that locked mid-save", () => {
+    const locked: ScheduleContext = { sections: [], isReadOnly: true };
+    const state = after(
+      [{ type: "writeRefused", message: "This term is published." }],
+      initialState(),
+      locked,
+    );
+
+    expect(state.writeError).toBe("This term is published.");
+  });
+});
+
+describe("the delete question", () => {
+  it("opens and closes", () => {
+    const asked = after([{ type: "deleteRequested" }]);
+    expect(asked.isConfirmingDelete).toBe(true);
+    expect(after([{ type: "deleteCancelled" }], asked).isConfirmingDelete).toBe(
+      false,
+    );
+  });
+
+  it("closes when the sheet moves to another section", () => {
+    const asked = after([{ type: "deleteRequested" }]);
+
+    expect(
+      after([{ type: "selectedSection", sectionId: 9 }], asked)
+        .isConfirmingDelete,
+    ).toBe(false);
+  });
+});
+
+describe("the filter panel", () => {
+  it("opens where the window is wide enough to dock it", () => {
+    expect(
+      after([{ type: "breakpointChanged", isWide: true }]).isFilterPanelOpen,
+    ).toBe(true);
+  });
+
+  it("toggles, even on a read-only term", () => {
+    const locked: ScheduleContext = { sections: [], isReadOnly: true };
+    const state = after(
+      [{ type: "filterPanelToggled" }],
+      initialState(),
+      locked,
+    );
+
+    expect(state.isFilterPanelOpen).toBe(true);
+  });
+});

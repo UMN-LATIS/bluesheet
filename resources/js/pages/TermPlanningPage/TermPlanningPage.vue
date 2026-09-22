@@ -40,11 +40,11 @@
     >
       <FilterDock
         :appliedFilters="appliedFilters"
-        :isOpen="isFilterPanelOpen"
+        :isOpen="schedule.isFilterPanelOpen"
         :isDocked="isLarge"
         :isSmall="isSmall"
         :activeFilterCount="schedule.activeFilterCount"
-        @toggle="isFilterPanelOpen = !isFilterPanelOpen"
+        @toggle="schedule.toggleFilterPanel"
       >
         <ScheduleSidebar
           :options="filterOptions"
@@ -77,14 +77,14 @@
         </div>
 
         <Notification
-          v-if="writeError"
+          v-if="schedule.writeError"
           type="danger"
           title="Not saved"
           isDismissable
           class="tw-mt-3 tw-flex-none"
-          @dismiss="writeError = null"
+          @dismiss="schedule.dismissWriteError"
         >
-          {{ writeError }}
+          {{ schedule.writeError }}
         </Notification>
 
         <DayView
@@ -323,9 +323,7 @@ const VIEW_LABELS: Record<ScheduleView, string> = {
   heatmap: "Coverage",
 };
 
-const isFilterPanelOpen = ref(isLarge.value);
-
-watch(isLarge, (isWide) => (isFilterPanelOpen.value = isWide));
+watch(isLarge, (isWide) => schedule.changeBreakpoint(isWide));
 
 const {
   today,
@@ -518,19 +516,11 @@ const newSection = computed<PlannedSection | null>(() => {
   };
 });
 
-/**
- * The last write the server refused. Every write clears it first, so the
- * banner names what just happened rather than something already recovered
- * from, and the reader can dismiss what is left.
- */
-const writeError = ref<string | null>(null);
-
 const REFUSED =
   "That change could not be saved. Check your connection and try again.";
 
-const showRefusal = (refusal: unknown) => {
-  writeError.value = refusalMessage(refusal) ?? REFUSED;
-};
+const showRefusal = (refusal: unknown) =>
+  schedule.refuseWrite(refusalMessage(refusal) ?? REFUSED);
 
 /**
  * Read synchronously by `saveNewSection` rather than watched, because two
@@ -544,7 +534,6 @@ async function saveNewSection() {
   if (!standIn || isSavingNewSection.value) return;
 
   isSavingNewSection.value = true;
-  writeError.value = null;
 
   try {
     const created = await createSection.mutateAsync(
@@ -562,8 +551,6 @@ async function saveNewSection() {
 async function deleteSelectedSection() {
   const section = selectedSection.value;
   if (!section) return;
-
-  writeError.value = null;
 
   try {
     await deleteSection.mutateAsync(section.id);
