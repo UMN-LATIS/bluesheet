@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { emptyFilters, initialState, update } from "./update";
-import { selectIsNewSectionSelected } from "./selectors";
+import {
+  selectIsFilterPanelOpen,
+  selectIsNewSectionSelected,
+} from "./selectors";
 import { plannedSection } from "../helpers/plannedSection.fixture";
 import { NEW_SECTION_ID } from "./types";
 import type {
@@ -10,12 +13,16 @@ import type {
   SectionEdit,
 } from "./types";
 
-const emptyContext: ScheduleContext = { sections: [], isReadOnly: false };
+const emptyContext: ScheduleContext = {
+  sections: [],
+  isReadOnly: false,
+  isWide: true,
+};
 
 /** The term as the server sent it; the editor places the blocks itself. */
 const contextOf = (
   ...sections: ReturnType<typeof plannedSection>[]
-): ScheduleContext => ({ sections, isReadOnly: false });
+): ScheduleContext => ({ sections, isReadOnly: false, isWide: true });
 
 const after = (
   events: EditorEvent[],
@@ -1833,7 +1840,11 @@ describe("the write-error banner", () => {
   });
 
   it("is still accepted on a term that locked mid-save", () => {
-    const locked: ScheduleContext = { sections: [], isReadOnly: true };
+    const locked: ScheduleContext = {
+      sections: [],
+      isReadOnly: true,
+      isWide: true,
+    };
     const state = after(
       [{ type: "writeRefused", message: "This term is published." }],
       initialState(),
@@ -1864,20 +1875,22 @@ describe("the delete question", () => {
 });
 
 describe("the filter panel", () => {
-  it("opens where the window is wide enough to dock it", () => {
-    expect(
-      after([{ type: "breakpointChanged", isWide: true }]).isFilterPanelOpen,
-    ).toBe(true);
+  const wide = { ...emptyContext, isWide: true };
+  const narrow = { ...emptyContext, isWide: false };
+
+  it("follows the width until the reader says otherwise", () => {
+    expect(selectIsFilterPanelOpen(wide, initialState())).toBe(true);
+    expect(selectIsFilterPanelOpen(narrow, initialState())).toBe(false);
   });
 
-  it("toggles, even on a read-only term", () => {
-    const locked: ScheduleContext = { sections: [], isReadOnly: true };
-    const state = after(
-      [{ type: "filterPanelToggled" }],
+  it("holds the reader's choice, even on a read-only term", () => {
+    const locked = { ...emptyContext, isReadOnly: true, isWide: true };
+    const shut = after(
+      [{ type: "filterPanelOverridden", isOpen: false }],
       initialState(),
       locked,
     );
 
-    expect(state.isFilterPanelOpen).toBe(true);
+    expect(selectIsFilterPanelOpen(locked, shut)).toBe(false);
   });
 });

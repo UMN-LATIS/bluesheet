@@ -30,7 +30,7 @@ export const initialState = (): ViewState => ({
   pendingDismissal: null,
   refusal: null,
   isConfirmingDelete: false,
-  isFilterPanelOpen: false,
+  filterPanelOverride: null,
 });
 
 const DRAFT_DISCARDING_EVENTS: ViewEvent["type"][] = [
@@ -258,11 +258,8 @@ function reduce(state: ViewState, event: ViewEvent): ViewState {
     case "deleteCancelled":
       return { ...state, isConfirmingDelete: false };
 
-    case "filterPanelToggled":
-      return { ...state, isFilterPanelOpen: !state.isFilterPanelOpen };
-
-    case "breakpointChanged":
-      return { ...state, isFilterPanelOpen: event.isWide };
+    case "filterPanelOverridden":
+      return { ...state, filterPanelOverride: event.isOpen };
   }
 }
 

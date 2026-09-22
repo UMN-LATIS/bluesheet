@@ -25,7 +25,12 @@
         :isDocked="isLarge"
         :isSmall="isSmall"
         :activeFilterCount="planning.activeFilterCount"
-        @toggle="planning.dispatch({ type: 'filterPanelToggled' })"
+        @toggle="
+          planning.dispatch({
+            type: 'filterPanelOverridden',
+            isOpen: !planning.isFilterPanelOpen,
+          })
+        "
       >
         <PlanningSidebar :planning="planning" />
       </FilterDock>
@@ -249,10 +254,6 @@ const { isLarge, isSmall } = useScreenSize();
 
 const groupId = computed(() => props.groupId);
 const today = computed(() => dayjs().format("YYYY-MM-DD"));
-watch(isLarge, (isWide) =>
-  planning.dispatch({ type: "breakpointChanged", isWide: isWide }),
-);
-
 const timelineCanvas = ref<{
   scrollToSelection: (key: string) => void;
 } | null>(null);
@@ -292,6 +293,7 @@ const planning = useLeavePlanningView(
     terms: terms.value,
     canViewCourses: canViewCourses.value,
     canPlanTerms: canPlanTerms.value,
+    isWide: isLarge.value,
   })),
   runEffect,
 );
@@ -321,7 +323,7 @@ onKeyStroke("Escape", () => {
     return;
   }
   if (planning.isFilterPanelOpen && !isLarge.value) {
-    planning.dispatch({ type: "filterPanelToggled" });
+    planning.dispatch({ type: "filterPanelOverridden", isOpen: false });
     return;
   }
   if (planning.draft) {

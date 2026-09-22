@@ -46,7 +46,12 @@
         :isDocked="isLarge"
         :isSmall="isSmall"
         :activeFilterCount="schedule.activeFilterCount"
-        @toggle="schedule.dispatch({ type: 'filterPanelToggled' })"
+        @toggle="
+          schedule.dispatch({
+            type: 'filterPanelOverridden',
+            isOpen: !schedule.isFilterPanelOpen,
+          })
+        "
       >
         <ScheduleSidebar
           :options="filterOptions"
@@ -333,10 +338,6 @@ const VIEW_LABELS: Record<ScheduleView, string> = {
   heatmap: "Coverage",
 };
 
-watch(isLarge, (isWide) =>
-  schedule.dispatch({ type: "breakpointChanged", isWide: isWide }),
-);
-
 const {
   today,
   term,
@@ -491,7 +492,11 @@ const runEffect = (effect: Effect) => {
 // Held here rather than inside a view, so that the toolbar, the filters panel,
 // every view, and the detail sheet all read and change the same schedule.
 const schedule = useScheduleEditor(
-  computed(() => ({ sections: sections.value, isReadOnly: isReadOnly.value })),
+  computed(() => ({
+    sections: sections.value,
+    isReadOnly: isReadOnly.value,
+    isWide: isLarge.value,
+  })),
   runEffect,
 );
 

@@ -84,7 +84,8 @@ export interface ViewState {
   refusal: string | null;
   /** The panel is asking whether to delete the open leave. */
   isConfirmingDelete: boolean;
-  isFilterPanelOpen: boolean;
+  /** Null follows the width; true or false is the reader overruling it. */
+  filterPanelOverride: boolean | null;
 }
 
 export interface ViewContext {
@@ -93,6 +94,8 @@ export interface ViewContext {
   terms: PlanningTerm[];
   canViewCourses: boolean;
   canPlanTerms: boolean;
+  /** Wide enough to dock the filter panel beside the canvas. */
+  isWide: boolean;
 }
 
 export type ViewEvent =
@@ -128,9 +131,7 @@ export type ViewEvent =
   | { type: "writeRefused"; message: string }
   | { type: "deleteRequested" }
   | { type: "deleteCancelled" }
-  | { type: "filterPanelToggled" }
-  /** The window crossed the width that docks the filter panel. */
-  | { type: "breakpointChanged"; isWide: boolean };
+  | { type: "filterPanelOverridden"; isOpen: boolean };
 
 export type Effect =
   | { type: "replaceUrlQuery"; query: UrlQuery }

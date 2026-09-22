@@ -300,6 +300,11 @@ export const selectAppliedFilters = (
     ];
   });
 
+export const selectIsFilterPanelOpen = (
+  context: ViewContext,
+  state: ViewState,
+): boolean => state.filterPanelOverride ?? context.isWide;
+
 export const selectSelectedLeave = (
   context: ViewContext,
   state: ViewState,

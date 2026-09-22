@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { initialState, update } from "./update";
 import { leaveStatuses, leaveTypes } from "@/types";
-import type { ViewEvent, ViewState } from "./types";
+import type { ViewContext, ViewEvent, ViewState } from "./types";
+import { selectIsFilterPanelOpen } from "./selectors";
+
+const contextFixture: ViewContext = {
+  timeline: null,
+  teachingHistory: null,
+  terms: [],
+  canViewCourses: false,
+  canPlanTerms: false,
+  isWide: true,
+};
 
 const after = (events: ViewEvent[], state: ViewState = initialState()) =>
   events.reduce((current, event) => update(current, event).state, state);
@@ -375,19 +385,18 @@ describe("the delete question", () => {
 });
 
 describe("the filter panel", () => {
-  it("opens where the window is wide enough to dock it", () => {
-    expect(
-      after([{ type: "breakpointChanged", isWide: true }]).isFilterPanelOpen,
-    ).toBe(true);
-    expect(
-      after([{ type: "breakpointChanged", isWide: false }]).isFilterPanelOpen,
-    ).toBe(false);
+  const wide = { ...contextFixture, isWide: true };
+  const narrow = { ...contextFixture, isWide: false };
+
+  it("follows the width until the reader says otherwise", () => {
+    expect(selectIsFilterPanelOpen(wide, initialState())).toBe(true);
+    expect(selectIsFilterPanelOpen(narrow, initialState())).toBe(false);
   });
 
-  it("toggles", () => {
-    expect(after([{ type: "filterPanelToggled" }]).isFilterPanelOpen).toBe(
-      true,
-    );
+  it("holds the reader's choice against the width", () => {
+    const shut = after([{ type: "filterPanelOverridden", isOpen: false }]);
+
+    expect(selectIsFilterPanelOpen(wide, shut)).toBe(false);
   });
 });
 

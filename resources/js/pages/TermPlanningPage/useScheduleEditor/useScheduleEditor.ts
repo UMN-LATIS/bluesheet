@@ -19,6 +19,7 @@ import {
   selectHasEdits,
   selectHourReturnedTo,
   selectIsCreatingSection,
+  selectIsFilterPanelOpen,
   selectIsDraftDirty,
   selectIsNewSectionSelected,
   selectLocalSections,
@@ -72,7 +73,9 @@ export function useScheduleEditor(
     isReadOnly: computed(() => context.value.isReadOnly),
     writeError: computed(() => state.value.writeError),
     isConfirmingDelete: computed(() => state.value.isConfirmingDelete),
-    isFilterPanelOpen: computed(() => state.value.isFilterPanelOpen),
+    isFilterPanelOpen: computed(() =>
+      selectIsFilterPanelOpen(context.value, state.value),
+    ),
     selection: computed(() => state.value.selection),
     activeFilterCount: computed(() => selectActiveFilterCount(state.value)),
 

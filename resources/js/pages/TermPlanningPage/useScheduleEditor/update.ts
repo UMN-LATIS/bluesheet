@@ -101,7 +101,7 @@ export const initialState = (dayIndex = 0): EditorState => ({
   lastImport: null,
   writeError: null,
   isConfirmingDelete: false,
-  isFilterPanelOpen: false,
+  filterPanelOverride: null,
 });
 
 /**
@@ -182,8 +182,7 @@ const READING_EVENTS: EditorEvent["type"][] = [
   "importUndone",
   "viewSelected",
   "daySelected",
-  "filterPanelToggled",
-  "breakpointChanged",
+  "filterPanelOverridden",
   // a term that locked mid-save still has to show and drop what came back
   "writeRefused",
   "writeErrorDismissed",
@@ -712,11 +711,8 @@ function reduce(
     case "deleteCancelled":
       return { ...state, isConfirmingDelete: false };
 
-    case "filterPanelToggled":
-      return { ...state, isFilterPanelOpen: !state.isFilterPanelOpen };
-
-    case "breakpointChanged":
-      return { ...state, isFilterPanelOpen: event.isWide };
+    case "filterPanelOverridden":
+      return { ...state, filterPanelOverride: event.isOpen };
 
     // answered in `update`, which never lets them reach here
     case "dismissalConfirmed":

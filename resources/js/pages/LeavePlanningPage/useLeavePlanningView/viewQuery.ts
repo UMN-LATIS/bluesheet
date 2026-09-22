@@ -71,7 +71,7 @@ type UrlBackedState = Omit<
   | "pendingDismissal"
   | "refusal"
   | "isConfirmingDelete"
-  | "isFilterPanelOpen"
+  | "filterPanelOverride"
 >;
 
 export function decodeViewQuery(query: UrlQuery): UrlBackedState {

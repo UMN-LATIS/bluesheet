@@ -27,6 +27,8 @@ export interface ScheduleContext {
    * reach `update` — so the refusal lives here too.
    */
   isReadOnly: boolean;
+  /** Wide enough to dock the filter panel beside the canvas. */
+  isWide: boolean;
 }
 
 /** Sparse: an absent field is unchanged. */
@@ -166,7 +168,8 @@ export interface EditorState {
   writeError: string | null;
   /** The sheet is asking whether to delete the open section. */
   isConfirmingDelete: boolean;
-  isFilterPanelOpen: boolean;
+  /** Null follows the width; true or false is the reader overruling it. */
+  filterPanelOverride: boolean | null;
 }
 
 /** Past-tense facts from the UI; minutes arrive unsnapped. */
@@ -269,9 +272,7 @@ export type EditorEvent =
   | { type: "writeErrorDismissed" }
   | { type: "deleteRequested" }
   | { type: "deleteCancelled" }
-  | { type: "filterPanelToggled" }
-  /** The window crossed the width that docks the filter panel. */
-  | { type: "breakpointChanged"; isWide: boolean }
+  | { type: "filterPanelOverridden"; isOpen: boolean }
   /**
    * The server no longer has this section. Its overlay and its draft go with
    * it; leaving either would save a section back into existence.

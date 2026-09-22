@@ -33,6 +33,7 @@ const contextTeaching = (view: TeachingView): [ViewContext, ViewState] => [
     terms: TERMS,
     canViewCourses: true,
     canPlanTerms: false,
+    isWide: true,
   },
   {
     ...initialState(),

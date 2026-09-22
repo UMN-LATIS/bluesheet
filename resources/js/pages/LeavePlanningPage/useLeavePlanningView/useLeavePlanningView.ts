@@ -8,6 +8,7 @@ import {
   selectCourseHistory,
   selectDraft,
   selectIsDraftValid,
+  selectIsFilterPanelOpen,
   selectOpenLeaveId,
   selectFacetTiles,
   selectIsHistoryShown,
@@ -93,6 +94,8 @@ export function useLeavePlanningView(
     pendingDismissal: computed(() => state.value.pendingDismissal),
     refusal: computed(() => state.value.refusal),
     isConfirmingDelete: computed(() => state.value.isConfirmingDelete),
-    isFilterPanelOpen: computed(() => state.value.isFilterPanelOpen),
+    isFilterPanelOpen: computed(() =>
+      selectIsFilterPanelOpen(context.value, state.value),
+    ),
   });
 }
