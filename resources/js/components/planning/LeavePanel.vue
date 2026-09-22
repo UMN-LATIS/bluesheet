@@ -135,6 +135,7 @@
         <FieldDivider />
 
         <LeaveArtifactList
+          :key="leave.id"
           :artifacts="artifacts"
           :isEditable="isEditable"
           @create="(payload) => emit('createArtifact', payload)"

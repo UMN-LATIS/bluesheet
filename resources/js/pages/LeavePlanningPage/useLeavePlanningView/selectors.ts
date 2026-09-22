@@ -344,6 +344,12 @@ export const selectIsDraftValid = (state: ViewState): boolean => {
     draft.description.trim() !== "" && draft.description.length <= 255;
   const hasPerson =
     state.editor?.kind === "editingLeave" || draft.emplid !== null;
+  const hasBothDates = draft.startDate !== "" && draft.endDate !== "";
 
-  return hasDescription && hasPerson && draft.endDate > draft.startDate;
+  return (
+    hasDescription &&
+    hasPerson &&
+    hasBothDates &&
+    draft.endDate > draft.startDate
+  );
 };

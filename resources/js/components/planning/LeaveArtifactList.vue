@@ -34,7 +34,7 @@
         >
           <div class="tw-min-w-0 tw-flex-1">
             <a
-              v-if="isValidUrl(artifact.target)"
+              v-if="isHttpUrl(artifact.target)"
               :href="artifact.target"
               target="_blank"
               rel="noopener noreferrer nofollow"
@@ -81,7 +81,7 @@
 import { ref } from "vue";
 import type { LeaveArtifact } from "@/types";
 import type { ArtifactPayload } from "@/api/leavePlanningApi";
-import { isValidUrl } from "@/utils/isValidUrl";
+import { isHttpUrl } from "@/utils/isHttpUrl";
 import FieldLabel from "./FieldLabel.vue";
 import LeaveArtifactFields from "./LeaveArtifactFields.vue";
 

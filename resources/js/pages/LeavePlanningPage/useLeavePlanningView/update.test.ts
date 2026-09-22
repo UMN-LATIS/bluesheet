@@ -334,6 +334,68 @@ describe("discarding an unsaved draft", () => {
       { type: "replaceUrlQuery", query: { leaveId: "9" } },
     ]);
   });
+
+  it("does not ask when a filter change echoes back through the URL", () => {
+    const filtered = update(dirtyEditorOn(7), {
+      type: "filterValuesAdded",
+      facet: "status",
+      values: ["confirmed"],
+    });
+    const written = filtered.effects.find(
+      (effect) => effect.type === "replaceUrlQuery",
+    );
+    expect(written).toBeDefined();
+    if (written?.type !== "replaceUrlQuery") return;
+
+    const state = after(
+      [{ type: "urlChanged", query: written.query }],
+      filtered.state,
+    );
+
+    expect(state.pendingDismissal).toBeNull();
+    expect(state.editor).toEqual(filtered.state.editor);
+  });
+
+  it("holds a URL that names another leave", () => {
+    const state = after(
+      [{ type: "urlChanged", query: { leaveId: "9" } }],
+      dirtyEditorOn(7),
+    );
+
+    expect(state.pendingDismissal).toEqual({
+      type: "urlChanged",
+      query: { leaveId: "9" },
+    });
+    expect(state.selection).toEqual({ kind: "leave", leaveId: 7 });
+  });
+
+  it("drops an untouched draft when the URL names another leave", () => {
+    const state = after(
+      [
+        { type: "editRequested", draft: savedDraft },
+        { type: "urlChanged", query: { leaveId: "9" } },
+      ],
+      openOnLeave(7),
+    );
+
+    expect(state.editor).toBeNull();
+    expect(state.selection).toEqual({ kind: "leave", leaveId: 9 });
+  });
+
+  it("drops an untouched new leave when the URL selects one", () => {
+    const state = after([
+      {
+        type: "creationRequested",
+        emplid: 900,
+        startDate: "2026-09-01",
+        endDate: "2026-12-31",
+      },
+      { type: "urlChanged", query: { leaveId: "9" } },
+    ]);
+
+    expect(state.editor).toBeNull();
+    expect(state.selection).toEqual({ kind: "leave", leaveId: 9 });
+  });
 });
 
 describe("the refusal banner", () => {
@@ -364,6 +426,25 @@ describe("the refusal banner", () => {
     const state = after([{ type: "leaveSelected", leaveId: 9 }], refused());
 
     expect(state.refusal).toBeNull();
+  });
+
+  it("survives a filter change echoing back through the URL", () => {
+    const filtered = update(refused(openOnLeave(7)), {
+      type: "filterValuesAdded",
+      facet: "status",
+      values: ["confirmed"],
+    });
+    const written = filtered.effects.find(
+      (effect) => effect.type === "replaceUrlQuery",
+    );
+    if (written?.type !== "replaceUrlQuery") throw new Error("no URL write");
+
+    const state = after(
+      [{ type: "urlChanged", query: written.query }],
+      filtered.state,
+    );
+
+    expect(state.refusal).toBe("End date must be later.");
   });
 });
 

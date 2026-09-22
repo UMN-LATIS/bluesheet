@@ -55,6 +55,8 @@
           variant="start"
           :modelValue="draft.startDate"
           :payrollDates="payrollDates"
+          errorText="Start date is required"
+          :validator="(date) => date !== ''"
           @update:modelValue="(date) => edit({ startDate: date ?? '' })"
         />
       </div>

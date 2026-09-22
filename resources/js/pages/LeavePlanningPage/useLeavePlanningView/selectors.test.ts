@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { selectActiveFacetOptions } from "./selectors";
-import { initialState } from "./update";
+import { selectActiveFacetOptions, selectIsDraftValid } from "./selectors";
+import { initialState, update } from "./update";
 import type { TeachingView, ViewContext, ViewState } from "./types";
 import {
   FALL_2026,
@@ -53,5 +53,37 @@ describe("selectActiveFacetOptions", () => {
     );
 
     expect(annotationsByView).toEqual([[["Faculty", "1"]], [["Faculty", "1"]]]);
+  });
+});
+
+describe("selectIsDraftValid", () => {
+  const drafting = (startDate: string, endDate: string): ViewState =>
+    update(initialState(), {
+      type: "creationRequested",
+      emplid: 900,
+      startDate,
+      endDate,
+    }).state;
+
+  const described = (state: ViewState): ViewState =>
+    update(state, { type: "draftEdited", change: { description: "Fieldwork" } })
+      .state;
+
+  it("accepts a described leave whose end follows its start", () => {
+    expect(
+      selectIsDraftValid(described(drafting("2026-09-01", "2026-12-31"))),
+    ).toBe(true);
+  });
+
+  it("refuses a cleared start date", () => {
+    expect(selectIsDraftValid(described(drafting("", "2026-12-31")))).toBe(
+      false,
+    );
+  });
+
+  it("refuses a cleared end date", () => {
+    expect(selectIsDraftValid(described(drafting("2026-09-01", "")))).toBe(
+      false,
+    );
   });
 });

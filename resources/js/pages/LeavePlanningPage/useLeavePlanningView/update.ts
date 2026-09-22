@@ -38,7 +38,6 @@ const DRAFT_DISCARDING_EVENTS: ViewEvent["type"][] = [
   "sectionSelected",
   "deselected",
   "creationRequested",
-  "urlChanged",
 ];
 
 /**
@@ -54,8 +53,18 @@ const PANEL_MOVED_ON: ViewEvent["type"][] = [
   "draftCancelled",
   "leavePersisted",
   "leaveDeleted",
-  "urlChanged",
 ];
+
+/**
+ * Listing `urlChanged` in the two arrays above instead
+ * treats this editor's own `replaceUrlQuery` echoing back
+ * as navigation, and a filter change while a draft is open
+ * raises the discard question. update.test.ts asserts it
+ * does not.
+ */
+const isUrlMovingSelection = (state: ViewState, event: ViewEvent): boolean =>
+  event.type === "urlChanged" &&
+  !isEqual(decodeViewQuery(event.query).selection, state.selection);
 
 const selectionKeyOf = (state: ViewState): string | null => {
   const { selection } = state;
@@ -91,12 +100,17 @@ export function update(state: ViewState, event: ViewEvent): Next {
     return update({ ...state, editor: null, pendingDismissal: null }, held);
   }
 
-  if (isUnsaved(state.editor) && DRAFT_DISCARDING_EVENTS.includes(event.type)) {
+  const isDiscardingDraft =
+    DRAFT_DISCARDING_EVENTS.includes(event.type) ||
+    isUrlMovingSelection(state, event);
+  if (isUnsaved(state.editor) && isDiscardingDraft) {
     return { state: { ...state, pendingDismissal: event }, effects: [] };
   }
 
   const reduced = reduce(state, event);
-  const nextState = PANEL_MOVED_ON.includes(event.type)
+  const isPanelMovedOn =
+    PANEL_MOVED_ON.includes(event.type) || isUrlMovingSelection(state, event);
+  const nextState = isPanelMovedOn
     ? { ...reduced, refusal: null, isConfirmingDelete: false }
     : reduced;
 
@@ -121,7 +135,8 @@ function reduce(state: ViewState, event: ViewEvent): ViewState {
   switch (event.type) {
     case "urlChanged": {
       const urlState = decodeViewQuery(event.query);
-      const stateWithUrl = { ...state, ...urlState };
+      const editor = isUrlMovingSelection(state, event) ? null : state.editor;
+      const stateWithUrl = { ...state, ...urlState, editor };
       if (urlState.isHistoryRequested) return stateWithUrl;
       return withoutHistory(stateWithUrl);
     }

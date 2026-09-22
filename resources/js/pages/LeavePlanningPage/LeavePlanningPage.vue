@@ -491,8 +491,7 @@ async function saveDraft() {
     type: draft.type,
   };
 
-  const editedLeaveId =
-    planning.selection?.kind === "leave" ? planning.selection.leaveId : null;
+  const editedLeaveId = planning.openLeaveId;
 
   try {
     if (editedLeaveId === null) {
