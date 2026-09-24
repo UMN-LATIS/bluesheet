@@ -170,8 +170,12 @@
       <div class="row">
         <label for="roles" class="col-sm-3 col-form-label">Role:</label>
         <div class="col-sm-6">
+          <!--
+            Keep strategy="fixed". With "absolute", the
+            Modal's <dialog> clips the options (#248).
+          -->
           <ComboBox v-if="roles" id="roles" v-model="newRole" :options="filteredRoles" label="Role" :showLabel="false"
-            :canAddNewOption="true" @addNewOption="(newOption) => roles.push(newOption)" />
+            strategy="fixed" :canAddNewOption="true" @addNewOption="(newOption) => roles.push(newOption)" />
         </div>
         <div class="col-sm-3">
           <button class="btn btn-primary" style="white-space: nowrap" @click="lookupMember">

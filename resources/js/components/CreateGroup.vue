@@ -24,12 +24,17 @@
     <div class="form-group row">
       <label for="groupType" class="col-sm-3 col-form-label">Group Type</label>
       <div class="col-sm-6">
+        <!--
+          Keep strategy="fixed". With "absolute", the
+          Modal's <dialog> clips the options (#248).
+        -->
         <ComboBox
           v-if="groupTypes"
           id="groupTypes"
           v-model="groupType"
           :options="sortedGroupTypes"
           placeholder="Select..."
+          strategy="fixed"
           :canAddNewOptions="true"
           :nullable="true"
           label="Group Type"
