@@ -29,7 +29,7 @@
       <dt>More Info</dt>
       <dd>
         <a
-          :href="'http://myaccount.umn.edu/lookup?UID=' + usernameOnly"
+          :href="`https://udirectory.umn.edu/lookup?type=Internet+ID&CN=${usernameOnly}&campus=a&role=any`"
           target="_blank"
           class="tw-flex tw-items-baseline tw-text-bs-blue tw-gap-1"
         >
