@@ -89,6 +89,29 @@ describe("Groups UI", () => {
       cy.contains("McAdmin");
     });
 
+    it("shows the role options past the add member modal's edge", () => {
+      cy.visit("/group/1");
+      cy.contains("Edit Group").click();
+      cy.contains("Add Member").click();
+      cy.get("#roles input").click();
+
+      cy.get("dialog[open]").then(($dialog) => {
+        const dialogBottom = $dialog[0].getBoundingClientRect().bottom;
+
+        cy.get(".combobox__options").should(($options) => {
+          const options = $options[0];
+          const { left, width, bottom } = options.getBoundingClientRect();
+          const paintedNearBottom = options.ownerDocument.elementFromPoint(
+            left + width / 2,
+            bottom - 5,
+          );
+
+          expect(bottom).to.be.greaterThan(dialogBottom);
+          expect(options.contains(paintedNearBottom)).to.equal(true);
+        });
+      });
+    });
+
     it("requires url and label to add a group artifact", () => {
       cy.create("App\\Group").then((group) => {
         cy.visit(`/group/${group.id}`);
