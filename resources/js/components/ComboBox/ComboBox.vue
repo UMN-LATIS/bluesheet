@@ -376,6 +376,12 @@ function handleKeyDown(event: KeyboardEvent) {
     Escape: "Escape",
   };
 
+  // Let this Escape through. Consuming it stops a
+  // surrounding Modal's <dialog> from closing on Escape.
+  const isEscapeWithNothingToClose =
+    event.key === KEYS.Escape && !areOptionsOpen.value;
+  if (isEscapeWithNothingToClose) return;
+
   // open options
   areOptionsOpen.value = true;
 

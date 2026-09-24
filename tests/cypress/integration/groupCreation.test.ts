@@ -112,6 +112,20 @@ describe("Groups UI", () => {
       });
     });
 
+    it("adds a new role from the add member modal", () => {
+      cy.visit("/group/1");
+      cy.contains("Edit Group").click();
+      cy.contains("Add Member").click();
+      cy.get("#roles input").click();
+
+      cy.get(".combobox__options").within(() => {
+        cy.get("input[aria-label='New option value']").type("Visiting Scholar");
+        cy.get("[data-cy='add-new-option-button']").click();
+      });
+
+      cy.get("#roles").contains("Visiting Scholar");
+    });
+
     it("requires url and label to add a group artifact", () => {
       cy.create("App\\Group").then((group) => {
         cy.visit(`/group/${group.id}`);
