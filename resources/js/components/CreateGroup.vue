@@ -30,6 +30,7 @@
           v-model="groupType"
           :options="sortedGroupTypes"
           placeholder="Select..."
+          strategy="fixed"
           :canAddNewOptions="true"
           :nullable="true"
           label="Group Type"

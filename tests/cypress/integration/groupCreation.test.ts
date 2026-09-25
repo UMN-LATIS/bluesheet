@@ -89,6 +89,45 @@ describe("Groups UI", () => {
       cy.contains("McAdmin");
     });
 
+    it("shows the role options past the add member modal's edge", () => {
+      cy.visit("/group/1");
+      cy.contains("Edit Group").click();
+      cy.contains("Add Member").click();
+      cy.get("#roles input").click();
+
+      cy.get("dialog[open]").then(($dialog) => {
+        const dialogBottom = $dialog[0].getBoundingClientRect().bottom;
+
+        cy.get(".combobox__options").should(($options) => {
+          const options = $options[0];
+          const { left, width, bottom } = options.getBoundingClientRect();
+          const centerX = left + width / 2;
+          const nearBottomY = bottom - 5;
+          const elementNearBottom = options.ownerDocument.elementFromPoint(
+            centerX,
+            nearBottomY,
+          );
+
+          expect(bottom).to.be.greaterThan(dialogBottom);
+          expect(options.contains(elementNearBottom)).to.equal(true);
+        });
+      });
+    });
+
+    it("adds a new role from the add member modal", () => {
+      cy.visit("/group/1");
+      cy.contains("Edit Group").click();
+      cy.contains("Add Member").click();
+      cy.get("#roles input").click();
+
+      cy.get(".combobox__options").within(() => {
+        cy.get("input[aria-label='New option value']").type("Visiting Scholar");
+        cy.get("[data-cy='add-new-option-button']").click();
+      });
+
+      cy.get("#roles").contains("Visiting Scholar");
+    });
+
     it("requires url and label to add a group artifact", () => {
       cy.create("App\\Group").then((group) => {
         cy.visit(`/group/${group.id}`);

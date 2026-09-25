@@ -376,6 +376,10 @@ function handleKeyDown(event: KeyboardEvent) {
     Escape: "Escape",
   };
 
+  const isEscapeWithNothingToClose =
+    event.key === KEYS.Escape && !areOptionsOpen.value;
+  if (isEscapeWithNothingToClose) return;
+
   // open options
   areOptionsOpen.value = true;
 
@@ -384,9 +388,6 @@ function handleKeyDown(event: KeyboardEvent) {
   }
 
   event.preventDefault();
-  // the combobox has consumed this key. Without this, an Escape that closes
-  // the dropdown also reaches whatever the page listens for on window, and
-  // the term planner's grid reads that as cancelling what is being drawn.
   event.stopPropagation();
 
   switch (event.key) {

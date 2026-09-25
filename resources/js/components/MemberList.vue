@@ -128,7 +128,6 @@
               :label="`${member.user.displayName} Role`"
               :showLabel="false"
               :options="roles"
-              :canAddNewOption="true"
               class="tw-min-w-[10rem]"
               :canAddNewOptions="true"
               @addNewOption="$emit('update:roles', [...roles, $event])"
