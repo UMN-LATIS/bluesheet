@@ -101,13 +101,15 @@ describe("Groups UI", () => {
         cy.get(".combobox__options").should(($options) => {
           const options = $options[0];
           const { left, width, bottom } = options.getBoundingClientRect();
-          const paintedNearBottom = options.ownerDocument.elementFromPoint(
-            left + width / 2,
-            bottom - 5,
+          const centerX = left + width / 2;
+          const nearBottomY = bottom - 5;
+          const elementNearBottom = options.ownerDocument.elementFromPoint(
+            centerX,
+            nearBottomY,
           );
 
           expect(bottom).to.be.greaterThan(dialogBottom);
-          expect(options.contains(paintedNearBottom)).to.equal(true);
+          expect(options.contains(elementNearBottom)).to.equal(true);
         });
       });
     });
