@@ -38,6 +38,10 @@
               :currentSort="currentSort" :currentSortDir="currentSortDir" @sort="sort" />
           </th>
           <th>
+            <SortableLink sortLabel="HR Business Partner" sortElement="hrbusinesspartner.0.user.displayName"
+              :currentSort="currentSort" :currentSortDir="currentSortDir" @sort="sort" />
+          </th>
+          <th>
             <SortableLink sortLabel="HR Generalist" sortElement="hrgeneralist.0.user.displayName"
               :currentSort="currentSort" :currentSortDir="currentSortDir" @sort="sort" />
           </th>
@@ -45,10 +49,7 @@
             <SortableLink sortLabel="Payroll Specialist" sortElement="payrollspecialist.0.user.displayName"
               :currentSort="currentSort" :currentSortDir="currentSortDir" @sort="sort" />
           </th>
-          <th>
-            <SortableLink sortLabel="HR Business Partner" sortElement="hrbusinesspartner.0.user.displayName"
-              :currentSort="currentSort" :currentSortDir="currentSortDir" @sort="sort" />
-          </th>
+
         </tr>
       </thead>
       <tbody>
@@ -57,10 +58,13 @@
           <td>{{ department.zdept_id }}</td>
           <td>
             <router-link :to="{ name: 'group', params: { groupId: department.group.id } }">{{ department.department
-            }}</router-link>
+              }}</router-link>
           </td>
           <td>
             <UserWithLink :memberList="department.hrConsultant"></UserWithLink>
+          </td>
+          <td>
+            <UserWithLink :memberList="department.hrBusinessPartner"></UserWithLink>
           </td>
           <td>
             <UserWithLink :memberList="department.hrGeneralist"></UserWithLink>
@@ -68,9 +72,7 @@
           <td>
             <UserWithLink :memberList="department.payrollSpecialist"></UserWithLink>
           </td>
-          <td>
-            <UserWithLink :memberList="department.hrBusinessPartner"></UserWithLink>
-          </td>
+
         </tr>
       </tbody>
     </table>
