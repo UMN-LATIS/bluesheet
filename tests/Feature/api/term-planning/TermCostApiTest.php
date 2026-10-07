@@ -28,11 +28,6 @@ const COST_API_OTHER_DEPT = 33333;
 
 beforeEach(function () {
     $this->seed(TestDatabaseSeeder::class);
-    // Without this, PopulateUser binds to the campus LDAP
-    // server for each factory user, and every request
-    // returns HTTP 500 whenever that server cannot be
-    // reached.
-    config(['ldap.username' => null]);
 
     SisDepartment::factory()->create(['dept_id' => (string) COST_API_DEPT]);
     SisDepartment::factory()->create(['dept_id' => (string) COST_API_OTHER_DEPT]);
