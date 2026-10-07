@@ -9,5 +9,6 @@ class DatabaseSeeder extends Seeder {
         // The test fixtures double as the development environment, so that
         // `migrate:fresh --seed` produces an admin to sign in as.
         $this->call(TestDatabaseSeeder::class);
+        $this->call(TermCostSampleRatesSeeder::class);
     }
 }
