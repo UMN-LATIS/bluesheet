@@ -4,12 +4,14 @@ namespace App;
 
 use App\Library\TermPlan\Season;
 use App\Library\TermPlan\StudentStatus;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use OwenIt\Auditing\Auditable as AuditableTrait;
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
 class TaAppointmentRate extends Model implements AuditableContract {
     use AuditableTrait;
+    use HasFactory;
 
     protected $fillable = [
         'fiscal_year',
