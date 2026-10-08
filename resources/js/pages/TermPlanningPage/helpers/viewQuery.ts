@@ -3,7 +3,7 @@
 import type { UrlQuery } from "@/utils/urlQuery";
 import { DAY_TAB_CODES } from "./scheduleDays";
 
-export const SCHEDULE_VIEWS = ["day", "week", "heatmap"] as const;
+export const SCHEDULE_VIEWS = ["day", "week", "heatmap", "budget"] as const;
 
 export type ScheduleView = (typeof SCHEDULE_VIEWS)[number];
 
@@ -14,7 +14,18 @@ export type ScheduleView = (typeof SCHEDULE_VIEWS)[number];
 export const DEFAULT_VIEW: ScheduleView = "week";
 
 /** Every key this module owns; they are cleared and written together. */
-export const VIEW_KEYS = ["view", "day"];
+export const VIEW_KEYS = ["view", "day", "tab"];
+
+export const BUDGET_TABS = ["sections", "rules"] as const;
+
+export type BudgetTab = (typeof BUDGET_TABS)[number];
+
+export const DEFAULT_BUDGET_TAB: BudgetTab = "sections";
+
+/** Null when the URL names no tab. */
+export function decodeBudgetTab(query: UrlQuery): BudgetTab | null {
+  return BUDGET_TABS.find((tab) => tab === query.tab) ?? null;
+}
 
 /** An unknown view is not an error worth showing; the page opens as usual. */
 export function decodeView(query: UrlQuery): ScheduleView {

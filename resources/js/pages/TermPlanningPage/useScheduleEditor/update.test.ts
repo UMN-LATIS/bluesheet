@@ -4,6 +4,7 @@ import {
   selectIsFilterPanelOpen,
   selectIsNewSectionSelected,
 } from "./selectors";
+import { costAssumptions } from "../helpers/costAssumptions.fixture";
 import { plannedSection } from "../helpers/plannedSection.fixture";
 import { NEW_SECTION_ID } from "./types";
 import type {
@@ -17,12 +18,18 @@ const emptyContext: ScheduleContext = {
   sections: [],
   isReadOnly: false,
   isWide: true,
+  costAssumptions: null,
 };
 
 /** The term as the server sent it; the editor places the blocks itself. */
 const contextOf = (
   ...sections: ReturnType<typeof plannedSection>[]
-): ScheduleContext => ({ sections, isReadOnly: false, isWide: true });
+): ScheduleContext => ({
+  sections,
+  isReadOnly: false,
+  isWide: true,
+  costAssumptions: null,
+});
 
 const after = (
   events: EditorEvent[],
@@ -1844,6 +1851,7 @@ describe("the write-error banner", () => {
       sections: [],
       isReadOnly: true,
       isWide: true,
+      costAssumptions: null,
     };
     const state = after(
       [{ type: "writeRefused", message: "This term is published." }],
@@ -1894,3 +1902,218 @@ describe("the filter panel", () => {
     expect(selectIsFilterPanelOpen(locked, shut)).toBe(false);
   });
 });
+
+describe("budget view", () => {
+  const editable: ScheduleContext = {
+    ...emptyContext,
+    costAssumptions: costAssumptions({ canEdit: true }),
+  };
+  const urlOf = (event: EditorEvent, state = initialState()) =>
+    update(state, event, emptyContext).effects[0];
+
+  it("writes view=budget and the open tab to the URL", () => {
+    expect(urlOf({ type: "viewSelected", view: "budget" })).toEqual({
+      type: "replaceUrlQuery",
+      query: expect.objectContaining({ view: "budget", tab: "sections" }),
+    });
+  });
+
+  it("writes the tab the reader picks", () => {
+    const onBudget = after([{ type: "viewSelected", view: "budget" }]);
+
+    expect(urlOf({ type: "budgetTabSelected", tab: "rules" }, onBudget)).toEqual({
+      type: "replaceUrlQuery",
+      query: expect.objectContaining({ tab: "rules" }),
+    });
+  });
+
+  it("leaves the tab out of the URL on any other view", () => {
+    const effect = urlOf({ type: "viewSelected", view: "week" });
+
+    expect(effect?.type === "replaceUrlQuery" && "tab" in effect.query).toBe(
+      false,
+    );
+  });
+
+  it("opens the tab a link names", () => {
+    const state = after([
+      { type: "urlChanged", query: { view: "budget", tab: "rules" } },
+    ]);
+
+    expect(state.budgetTab).toBe("rules");
+  });
+
+  it("keeps the current tab when a link names none or an unknown one", () => {
+    const onRules = after([{ type: "budgetTabSelected", tab: "rules" }]);
+
+    expect(
+      after([{ type: "urlChanged", query: { view: "budget" } }], onRules)
+        .budgetTab,
+    ).toBe("rules");
+    expect(
+      after(
+        [{ type: "urlChanged", query: { view: "budget", tab: "nope" } }],
+        onRules,
+      ).budgetTab,
+    ).toBe("rules");
+  });
+
+  it("ignores a setting edit before the cost assumptions load", () => {
+    const state = after([
+      { type: "costSettingEdited", key: "unstaffedSectionCost", value: 1 },
+    ]);
+
+    expect(state.costSettingEdits).toEqual({});
+  });
+
+  it("ignores a setting edit from someone who cannot edit costs", () => {
+    const viewOnly = {
+      ...emptyContext,
+      costAssumptions: costAssumptions({ canEdit: false }),
+    };
+    const state = after(
+      [{ type: "costSettingEdited", key: "unstaffedSectionCost", value: 1 }],
+      initialState(),
+      viewOnly,
+    );
+
+    expect(state.costSettingEdits).toEqual({});
+  });
+
+  it("records a setting edit from someone who can edit costs", () => {
+    const state = after(
+      [{ type: "costSettingEdited", key: "unstaffedSectionCost", value: 1 }],
+      initialState(),
+      editable,
+    );
+
+    expect(state.costSettingEdits).toEqual({ unstaffedSectionCost: 1 });
+  });
+
+  it("records a setting edit on a published term", () => {
+    const state = after(
+      [{ type: "costSettingEdited", key: "unstaffedSectionCost", value: 1 }],
+      initialState(),
+      { ...editable, isReadOnly: true },
+    );
+
+    expect(state.costSettingEdits).toEqual({ unstaffedSectionCost: 1 });
+  });
+
+  it("drops a saved edit but keeps one typed while the save was in flight", () => {
+    const edited = after(
+      [{ type: "costSettingEdited", key: "unstaffedSectionCost", value: 1 }],
+      initialState(),
+      editable,
+    );
+    const persisted = after(
+      [
+        {
+          type: "costSettingEditsPersisted",
+          key: "unstaffedSectionCost",
+          saved: 1,
+        },
+      ],
+      edited,
+      editable,
+    );
+    const newer = after(
+      [
+        { type: "costSettingEdited", key: "unstaffedSectionCost", value: 2 },
+        {
+          type: "costSettingEditsPersisted",
+          key: "unstaffedSectionCost",
+          saved: 1,
+        },
+      ],
+      edited,
+      editable,
+    );
+
+    expect(persisted.costSettingEdits).toEqual({});
+    expect(newer.costSettingEdits).toEqual({ unstaffedSectionCost: 2 });
+  });
+
+  it("records a cleared setting as null until its save is back", () => {
+    const cleared = after(
+      [{ type: "costSettingEdited", key: "unstaffedSectionCost", value: null }],
+      initialState(),
+      editable,
+    );
+    const persisted = after(
+      [
+        {
+          type: "costSettingEditsPersisted",
+          key: "unstaffedSectionCost",
+          saved: null,
+        },
+      ],
+      cleared,
+      editable,
+    );
+
+    expect(cleared.costSettingEdits).toEqual({ unstaffedSectionCost: null });
+    expect(persisted.costSettingEdits).toEqual({});
+  });
+
+  it("writes typed comments into the section's edits, beside its other edits", () => {
+    const section = plannedSection(7, []);
+    const context = contextOf(section);
+    const state = after(
+      [
+        { type: "sectionNotesEdited", sectionId: 7, notes: "Ask Raman" },
+        { type: "sectionNotesEdited", sectionId: 7, notes: "Ask Raman?" },
+      ],
+      { ...initialState(), sectionEdits: { 7: { enrollmentCap: 40 } } },
+      context,
+    );
+
+    expect(state.sectionEdits[7]).toEqual({
+      enrollmentCap: 40,
+      notes: "Ask Raman?",
+    });
+  });
+
+  it("refuses typed comments on a published term", () => {
+    const state = after(
+      [{ type: "sectionNotesEdited", sectionId: 7, notes: "Ask Raman" }],
+      initialState(),
+      { ...contextOf(plannedSection(7, [])), isReadOnly: true },
+    );
+
+    expect(state.sectionEdits).toEqual({});
+  });
+
+  it("drops unsaved setting edits on moving to another department or term", () => {
+    const edited = after(
+      [{ type: "costSettingEdited", key: "unstaffedSectionCost", value: 1 }],
+      initialState(),
+      editable,
+    );
+
+    expect(
+      after([{ type: "contextChanged" }], edited, editable).costSettingEdits,
+    ).toEqual({});
+  });
+
+  it("copies typed comments into an open sheet's draft, so Save keeps them", () => {
+    const context = contextOf(plannedSection(7, []));
+    const state = after(
+      [
+        { type: "selectedSection", sectionId: 7 },
+        {
+          type: "sectionFieldEdited",
+          sectionId: 7,
+          change: { notes: "From the sheet" },
+        },
+        { type: "sectionNotesEdited", sectionId: 7, notes: "From the row" },
+        { type: "draftSaved", sectionId: 7 },
+      ],
+      initialState(),
+      context,
+    );
+
+    expect(state.sectionEdits[7]?.notes).toBe("From the row");
+  });
+});
+

@@ -23,8 +23,10 @@ import {
   SELECTION_KEYS,
 } from "../helpers/selectionQuery";
 import {
+  decodeBudgetTab,
   decodeDayIndex,
   decodeView,
+  DEFAULT_BUDGET_TAB,
   DEFAULT_VIEW,
   encodeDayIndex,
   VIEW_KEYS,
@@ -97,6 +99,8 @@ export const initialState = (dayIndex = 0): EditorState => ({
   selection: null,
   filters: defaultFilters(),
   view: DEFAULT_VIEW,
+  budgetTab: DEFAULT_BUDGET_TAB,
+  costSettingEdits: {},
   dayIndex,
   lastImport: null,
   writeError: null,
@@ -181,6 +185,12 @@ const READING_EVENTS: EditorEvent["type"][] = [
   "importDismissed",
   "importUndone",
   "viewSelected",
+  "budgetTabSelected",
+  // Removing these blocks cost edits on a read-only
+  // term (test: "records a setting edit on a
+  // published term").
+  "costSettingEdited",
+  "costSettingEditsPersisted",
   "daySelected",
   "filterPanelOverridden",
   // a term that locked mid-save still has to show and drop what came back
@@ -361,6 +371,7 @@ function urlQueryOf(state: EditorState): UrlQuery {
     ...encodeFilters(state.filters),
     ...encodeSelection(state.selection),
     view: state.view,
+    ...(state.view === "budget" ? { tab: state.budgetTab } : {}),
     // The day list shows one day at a time, so a link to it has to say which.
     // No other view has a day to name.
     ...(state.view === "day" ? { day: encodeDayIndex(state.dayIndex) } : {}),
@@ -545,6 +556,50 @@ function reduce(
     case "viewSelected":
       return { ...state, view: event.view };
 
+    case "budgetTabSelected":
+      return { ...state, budgetTab: event.tab };
+
+    case "costSettingEdited":
+      if (context.costAssumptions?.canEdit !== true) return state;
+
+      return {
+        ...state,
+        costSettingEdits: { ...state.costSettingEdits, [event.key]: event.value },
+      };
+
+    case "costSettingEditsPersisted":
+      return isEqual(state.costSettingEdits[event.key], event.saved)
+        ? {
+            ...state,
+            costSettingEdits: omitStringKey(state.costSettingEdits, event.key),
+          }
+        : state;
+
+    // An open sheet's draft is spread over sectionEdits on
+    // Save, so without the draft copy, Save would put the
+    // sheet's older notes back over these.
+    case "sectionNotesEdited":
+      return {
+        ...state,
+        drafts:
+          state.drafts[event.sectionId] === undefined
+            ? state.drafts
+            : {
+                ...state.drafts,
+                [event.sectionId]: {
+                  ...state.drafts[event.sectionId],
+                  notes: event.notes,
+                },
+              },
+        sectionEdits: {
+          ...state.sectionEdits,
+          [event.sectionId]: {
+            ...state.sectionEdits[event.sectionId],
+            notes: event.notes,
+          },
+        },
+      };
+
     case "daySelected":
       return { ...state, dayIndex: event.dayIndex };
 
@@ -557,6 +612,7 @@ function reduce(
       return {
         ...state,
         view: decodeView(event.query),
+        budgetTab: decodeBudgetTab(event.query) ?? state.budgetTab,
         // A URL that names no day is not asking for a particular one, so the
         // tab a scheduler last opened stays open under a view that has no day
         // to name.
@@ -576,6 +632,7 @@ function reduce(
         ...state,
         sectionEdits: {},
         drafts: {},
+        costSettingEdits: {},
         selection: null,
         lastPlacedId: null,
         interaction: { status: "idle" },
@@ -804,6 +861,9 @@ const withoutEntry = (state: EditorState, sectionId: number): EditorState => ({
   ...state,
   sectionEdits: omitKey(state.sectionEdits, sectionId),
 });
+
+const omitStringKey = <T>(record: Record<string, T>, key: string) =>
+  Object.fromEntries(Object.entries(record).filter(([held]) => held !== key));
 
 const omitKey = <T>(record: Record<number, T>, key: number) =>
   Object.fromEntries(

@@ -146,6 +146,7 @@ const VIEW_OPTIONS: { value: ScheduleView; label: string }[] = [
   { value: "day", label: "Day" },
   { value: "week", label: "Week" },
   { value: "heatmap", label: "Heatmap" },
+  { value: "budget", label: "Budget" },
 ];
 
 const viewOptions = computed(() =>

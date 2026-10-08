@@ -1,5 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { selectWeekView } from "./selectors";
+import {
+  selectLocalCostSettings,
+  selectSectionCosts,
+  selectShownSections,
+  selectWeekView,
+} from "./selectors";
+import {
+  costAssumptions,
+  costSetting,
+  jobCodeRate,
+  sisInstructor,
+} from "../helpers/costAssumptions.fixture";
 import { NEW_SECTION_ID } from "./types";
 import { selectLocalSection } from "./selectors";
 import { plannedSection } from "../helpers/plannedSection.fixture";
@@ -25,6 +36,7 @@ const context: ScheduleContext = {
   ],
   isReadOnly: false,
   isWide: true,
+  costAssumptions: null,
 };
 
 const MON_9 = "s1:mon:0900";
@@ -215,5 +227,97 @@ describe("selectWeekView with a meeting selected", () => {
 
     expect(monday.selectedMeetingId).toBeNull();
     expect(tuesday.selectedMeetingId).toBe(TUE_9);
+  });
+});
+
+describe("the budget view's selectors", () => {
+  const settings = [
+    costSetting("unstaffedSectionCost", 5000),
+    costSetting("unratedJobCodeCost", 4000),
+    costSetting("taAppointmentPercent", 25),
+    costSetting("isRecurringBudgetFree", false),
+    costSetting("isIndependentStudyFree", false),
+    costSetting("isFieldworkFree", false),
+  ];
+  const budgetContext: ScheduleContext = {
+    sections: [
+      plannedSection(1, [], {
+        instructors: [sisInstructor(1, "PI")],
+      }),
+      plannedSection(2, [], {
+        courseCode: "HIST-1082",
+        subject: "HIST",
+        catalogNumber: "1082",
+      }),
+    ],
+    isReadOnly: false,
+    isWide: true,
+    costAssumptions: costAssumptions({
+      settings,
+      people: [{ emplid: 1, jobCodes: ["U"] }],
+      jobCodes: [jobCodeRate("U", null)],
+    }),
+  };
+
+  it("selectShownSections applies the filters to sections with edits applied", () => {
+    const state: EditorState = {
+      ...atRest,
+      filters: { ...atRest.filters, component: [], course: ["ANTH-1001"] },
+      sectionEdits: { 1: { title: "Edited title" } },
+    };
+
+    const shown = selectShownSections(budgetContext, state);
+
+    expect(shown.map(({ id, title }) => [id, title])).toEqual([
+      [1, "Edited title"],
+    ]);
+  });
+
+  it("selectSectionCosts is null before the cost assumptions load", () => {
+    expect(
+      selectSectionCosts({ ...budgetContext, costAssumptions: null }, atRest),
+    ).toBeNull();
+  });
+
+  it("selectSectionCosts reflects a pending setting edit", () => {
+    const edited: EditorState = {
+      ...atRest,
+      costSettingEdits: { unratedJobCodeCost: 7000 },
+    };
+
+    expect(
+      selectSectionCosts(budgetContext, atRest)?.get(1)?.lines[0].amount,
+    ).toBe(4000);
+    expect(
+      selectSectionCosts(budgetContext, edited)?.get(1)?.lines[0].amount,
+    ).toBe(7000);
+  });
+
+  it("selectLocalCostSettings marks a pending key with the edited value", () => {
+    const shown = selectLocalCostSettings(budgetContext, {
+      ...atRest,
+      costSettingEdits: { unratedJobCodeCost: 7000 },
+    });
+
+    expect(shown.find(({ key }) => key === "unratedJobCodeCost")).toMatchObject({
+      value: 7000,
+      isPending: true,
+    });
+    expect(shown.find(({ key }) => key === "unstaffedSectionCost")).toMatchObject({
+      value: 5000,
+      isPending: false,
+    });
+  });
+
+  it("selectLocalCostSettings keeps the server value under a pending clear", () => {
+    const shown = selectLocalCostSettings(budgetContext, {
+      ...atRest,
+      costSettingEdits: { unratedJobCodeCost: null },
+    });
+
+    expect(shown.find(({ key }) => key === "unratedJobCodeCost")).toMatchObject({
+      value: 4000,
+      isPending: true,
+    });
   });
 });

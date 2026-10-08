@@ -139,6 +139,16 @@
           </ScheduleGrid>
         </div>
 
+        <BudgetView
+          v-else-if="activeView === 'budget'"
+          :schedule="schedule"
+          :assumptions="costAssumptionsQuery.data.value ?? null"
+          :isLoadingAssumptions="costAssumptionsQuery.isPending.value"
+          :hasAssumptionsError="costAssumptionsQuery.isError.value"
+          :history="enrollmentHistoryQuery.data.value ?? null"
+          :termName="term?.name ?? ''"
+        />
+
         <div
           v-else
           class="scrollbar-always-visible tw-min-h-0 tw-flex-1 tw-overflow-auto tw-bg-surface-bright"
@@ -269,6 +279,7 @@ import FullScreenLayout from "@/layouts/FullScreenLayout.vue";
 import Notification from "@/components/Notification.vue";
 import LeavePanel from "@/components/planning/LeavePanel.vue";
 import LeavePanelLoading from "@/components/planning/LeavePanelLoading.vue";
+import BudgetView from "./components/budget/BudgetView.vue";
 import CoverageHeatmap from "./components/CoverageHeatmap.vue";
 import DayView from "./components/DayView.vue";
 import DeleteAllModal from "./components/DeleteAllModal.vue";
@@ -303,8 +314,12 @@ import { useSisGroupTermsQuery } from "./queries/useSisGroupTermsQuery";
 import { useSisGroupLeavesQuery } from "./queries/useSisGroupLeavesQuery";
 import { useTermLeaveTimelineQuery } from "./queries/useTermLeaveTimelineQuery";
 import { useTermPlanCoursesQuery } from "./queries/useTermPlanCoursesQuery";
+import { useCostAssumptionsQuery } from "./queries/useCostAssumptionsQuery";
+import { useCostMutations } from "./queries/useCostMutations";
+import { useEnrollmentHistoryQuery } from "./queries/useEnrollmentHistoryQuery";
 import { useSectionBatch } from "./queries/useSectionBatch";
 import { useTermPlanMutations } from "./queries/useTermPlanMutations";
+import { useCostEditsAutosave } from "./useCostEditsAutosave";
 import { useTermPlanAutosave } from "./useTermPlanAutosave";
 import type { Meeting, PlannedSection } from "./types";
 import { useScheduleEditor } from "./useScheduleEditor";
@@ -336,6 +351,7 @@ const VIEW_LABELS: Record<ScheduleView, string> = {
   day: "Day",
   week: "Week",
   heatmap: "Coverage",
+  budget: "Budget",
 };
 
 const {
@@ -496,13 +512,30 @@ const schedule = useScheduleEditor(
     sections: sections.value,
     isReadOnly: isReadOnly.value,
     isWide: isLarge.value,
+    costAssumptions: costAssumptionsQuery.data.value ?? null,
   })),
   runEffect,
+);
+
+// Moved above `schedule`, this throws a ReferenceError:
+// its enabled flag reads `schedule.view`.
+const costAssumptionsQuery = useCostAssumptionsQuery(
+  groupId,
+  activeTermCode,
+  computed(() => schedule.view === "budget"),
 );
 
 const { createSection, saveSection, deleteSection } = useTermPlanMutations(
   groupId,
   activeTermCode,
+);
+
+const { saveSetting } = useCostMutations(groupId, activeTermCode);
+
+const enrollmentHistoryQuery = useEnrollmentHistoryQuery(
+  groupId,
+  activeTermCode,
+  computed(() => schedule.view === "budget"),
 );
 
 /**
@@ -625,6 +658,7 @@ const hasUnsavedWork = computed(
   () =>
     schedule.newSectionHasCourse ||
     Object.keys(schedule.pendingEdits).length > 0 ||
+    Object.keys(schedule.pendingCostSettingEdits).length > 0 ||
     localSections.value.some((section) => schedule.isDraftDirty(section)),
 );
 
@@ -670,6 +704,14 @@ useTermPlanAutosave({
       sectionId: sectionId,
       saved: saved,
     }),
+  onRefused: showRefusal,
+});
+
+useCostEditsAutosave({
+  pendingEdits: computed(() => schedule.pendingCostSettingEdits),
+  save: (key, value) => saveSetting.mutateAsync({ key, value }),
+  onSaved: (key, saved) =>
+    schedule.dispatch({ type: "costSettingEditsPersisted", key, saved }),
   onRefused: showRefusal,
 });
 

@@ -8,8 +8,9 @@ import type {
   SisSectionMeeting,
   TimeRange,
 } from "../types";
+import type { CostAssumptions, CostSettingValue } from "@/types";
 import type { UrlQuery } from "@/utils/urlQuery";
-import type { ScheduleView } from "../helpers/viewQuery";
+import type { BudgetTab, ScheduleView } from "../helpers/viewQuery";
 
 /**
  * Read by `update`, never written: the schedule as it stands, edits applied.
@@ -29,6 +30,8 @@ export interface ScheduleContext {
   isReadOnly: boolean;
   /** Wide enough to dock the filter panel beside the canvas. */
   isWide: boolean;
+  /** Null until the cost assumptions have loaded. */
+  costAssumptions: CostAssumptions | null;
 }
 
 /** Sparse: an absent field is unchanged. */
@@ -160,6 +163,12 @@ export interface EditorState {
   filters: ScheduleFilters;
   /** Which canvas is showing. */
   view: ScheduleView;
+  budgetTab: BudgetTab;
+  /**
+   * Cost settings changed here and not yet saved, by key.
+   * A null edit clears this fiscal year's value.
+   */
+  costSettingEdits: Record<string, CostSettingValue | null>;
   /** Which tab the day list is on: a weekday, or the Async day past them. */
   dayIndex: number;
   /** The import the banner stands for, or null when no banner is showing. */
@@ -212,6 +221,18 @@ export type EditorEvent =
   /** The reader closed the banner, so the offer to undo goes with it. */
   | { type: "importDismissed" }
   | { type: "viewSelected"; view: ScheduleView }
+  | { type: "budgetTabSelected"; tab: BudgetTab }
+  | { type: "costSettingEdited"; key: string; value: CostSettingValue | null }
+  /**
+   * The server has this value now. A newer edit to the same
+   * key stays.
+   */
+  | {
+      type: "costSettingEditsPersisted";
+      key: string;
+      saved: CostSettingValue | null;
+    }
+  | { type: "sectionNotesEdited"; sectionId: number; notes: string }
   | { type: "daySelected"; dayIndex: number }
   /** The heatmap's Async cell: one step to the day list, on the Async tab. */
   | { type: "asyncDayShown" }

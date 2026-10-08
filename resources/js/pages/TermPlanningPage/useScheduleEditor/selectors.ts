@@ -1,4 +1,7 @@
+import type { CostSetting } from "@/types";
 import type { Meeting, PlannedSection, SisSection, TimeRange } from "../types";
+import { costRuleSettingsOf } from "../helpers/costRules";
+import { estimateTermCost, type SectionCost } from "../helpers/termEstimate";
 import { FILTER_FACETS } from "../types";
 import { isEqual } from "lodash-es";
 import { type DayLayout, layOutDay } from "../helpers/dayLayout";
@@ -108,6 +111,55 @@ export const selectLocalSections = (
   state: EditorState,
 ): PlannedSection[] =>
   context.sections.map((section) => selectLocalSection(section, state));
+
+/** In the server's order. */
+export const selectShownSections = (
+  context: ScheduleContext,
+  state: EditorState,
+): PlannedSection[] =>
+  filterSections(selectLocalSections(context, state), state.filters);
+
+/**
+ * By section id, over the whole term. A TA's appointment is
+ * charged on one section of a course, so filtering first
+ * would move it. Null until the cost assumptions have
+ * loaded.
+ */
+export function selectSectionCosts(
+  context: ScheduleContext,
+  state: EditorState,
+): Map<number, SectionCost> | null {
+  const assumptions = context.costAssumptions;
+  if (!assumptions) return null;
+
+  return estimateTermCost({
+    sections: selectLocalSections(context, state),
+    assumptions,
+    settings: costRuleSettingsOf(assumptions.settings, state.costSettingEdits),
+  });
+}
+
+export interface LocalCostSetting extends CostSetting {
+  /** Changed here and not yet saved. */
+  isPending: boolean;
+}
+
+/** A null edit shows the server's value, still pending. */
+export function selectLocalCostSettings(
+  context: ScheduleContext,
+  state: EditorState,
+): LocalCostSetting[] {
+  return (context.costAssumptions?.settings ?? []).map((setting) => {
+    const pending = state.costSettingEdits[setting.key];
+    const isPending = pending !== undefined;
+
+    return {
+      ...setting,
+      value: pending ?? setting.value,
+      isPending,
+    };
+  });
+}
 
 /**
  * The sections the canvases draw, laid out in lanes. The filters are applied

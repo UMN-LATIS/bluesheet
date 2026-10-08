@@ -1,0 +1,227 @@
+<template>
+  <div class="scrollbar-always-visible tw-min-h-0 tw-flex-1 tw-overflow-auto">
+    <div
+      role="table"
+      aria-label="Sections and estimated costs"
+      class="tw-min-w-[1020px] tw-text-xs"
+    >
+      <div
+        role="row"
+        class="tw-sticky tw-top-0 tw-z-[2] tw-grid tw-border-0 tw-border-b tw-border-solid tw-border-outline tw-bg-surface-bright"
+        :style="{ gridTemplateColumns: GRID_TEMPLATE_COLUMNS }"
+      >
+        <CapsLabel
+          v-for="column in HEADINGS"
+          :key="column.label"
+          role="columnheader"
+          class="tw-overflow-hidden tw-whitespace-nowrap tw-border-0 tw-border-r tw-border-solid tw-border-surface-container tw-px-2 tw-py-[7px]"
+          :class="{ 'tw-text-right': column.isNumeric }"
+        >
+          {{ column.label }}
+        </CapsLabel>
+      </div>
+
+      <div
+        v-for="row in rows"
+        :key="row.sectionId"
+        role="row"
+        class="tw-grid tw-cursor-pointer hover:tw-bg-surface"
+        :class="{
+          'tw-bg-primary-container tw-shadow-[inset_3px_0_0_var(--primary)]':
+            rowStateOf(row) === 'selected',
+          'tw-bg-surface tw-text-on-surface-variant':
+            rowStateOf(row) === 'cancelled',
+          'tw-bg-accent-container-low': rowStateOf(row) === 'unstaffed',
+          'tw-bg-surface-bright': rowStateOf(row) === 'default',
+        }"
+        :style="{ gridTemplateColumns: GRID_TEMPLATE_COLUMNS }"
+        @click="emit('select', row.sectionId)"
+      >
+        <BudgetCell role="cell" class="tw-gap-[7px] tw-py-[5px]">
+          <span
+            class="tw-w-[3px] tw-flex-none tw-self-stretch tw-rounded-sm"
+            :class="colorOfType(row.component).dot"
+            aria-hidden="true"
+          />
+          <span class="tw-min-w-0">
+            <span class="tw-block tw-whitespace-nowrap tw-font-semibold">
+              <button
+                type="button"
+                class="tw-cursor-pointer tw-border-none tw-bg-transparent tw-p-0 tw-text-left tw-font-semibold tw-text-on-surface"
+                @click.stop="emit('select', row.sectionId)"
+              >
+                {{ row.courseLabel }}
+              </button>
+              <CapsLabel class="tw-ml-1">{{ row.component }}</CapsLabel>
+            </span>
+            <CellSubline>
+              {{ row.isCancelled ? "Cancelled" : row.title }}
+            </CellSubline>
+          </span>
+        </BudgetCell>
+
+        <BudgetCell
+          role="cell"
+          class="tw-whitespace-nowrap tw-text-on-surface-variant"
+        >
+          {{ row.meetingSummary }}
+        </BudgetCell>
+
+        <BudgetCell role="cell" align="end">{{ row.enrollmentCap }}</BudgetCell>
+
+        <BudgetCell role="cell" class="tw-pb-[3px] tw-pt-1">
+          <EnrollmentSparkline :history="row.history" />
+        </BudgetCell>
+
+        <BudgetCell role="cell" class="tw-py-[5px]">
+          <span class="tw-min-w-0">
+            <span
+              class="tw-block tw-truncate"
+              :class="{ 'tw-font-semibold tw-text-brand': row.isUnstaffed }"
+              :title="row.instructorName"
+            >
+              {{ row.instructorName }}
+            </span>
+            <CellSubline
+              v-if="row.instructorBasisLabel"
+              :title="row.instructorBasisLabel"
+            >
+              {{ row.instructorBasisLabel }}
+            </CellSubline>
+          </span>
+        </BudgetCell>
+
+        <BudgetCell
+          role="cell"
+          align="end"
+          class="tw-relative tw-whitespace-nowrap tw-font-semibold"
+          :class="{ 'tw-bg-accent-container-low': row.hasInstructorOverride }"
+        >
+          <template v-if="!row.isCancelled">
+            <MissingRate v-if="row.instructorCost === null" />
+            <template v-else>{{
+              formatWholeDollars(row.instructorCost)
+            }}</template>
+          </template>
+          <OverrideMarker v-if="row.hasInstructorOverride" />
+        </BudgetCell>
+
+        <BudgetCell
+          role="cell"
+          class="tw-truncate tw-whitespace-nowrap"
+          :class="{ 'tw-text-on-surface-variant': !row.assistantNames }"
+        >
+          {{ row.assistantNames || "–" }}
+        </BudgetCell>
+
+        <BudgetCell
+          role="cell"
+          align="end"
+          class="tw-whitespace-nowrap"
+          :title="row.taBasisLabel"
+        >
+          <span
+            v-if="row.taCostCell.kind === 'chargedOnOtherSection'"
+            class="tw-text-[11px] tw-text-on-surface-variant"
+          >
+            ↳ in {{ row.taCostCell.sectionLabel }}
+          </span>
+          <MissingRate v-else-if="row.taCostCell.kind === 'missingRate'" />
+          <span
+            v-else-if="row.taCostCell.kind === 'amount'"
+            class="tw-font-semibold"
+          >
+            {{ formatWholeDollars(row.taCostCell.dollars) }}
+          </span>
+        </BudgetCell>
+
+        <BudgetCell
+          role="cell"
+          :hasRightBorder="false"
+          class="tw-p-0"
+          @click.stop
+        >
+          <input
+            :value="row.notes"
+            :disabled="isReadOnly"
+            :aria-label="`Comments on ${row.courseLabel}`"
+            class="tw-h-full tw-min-h-10 tw-w-full tw-border-none tw-bg-transparent tw-px-2 tw-text-[11.5px] tw-text-on-surface tw-outline-none focus:tw-bg-surface-bright disabled:tw-cursor-default"
+            @input="onNotesInput(row.sectionId, $event)"
+          />
+        </BudgetCell>
+      </div>
+
+      <div
+        role="row"
+        class="tw-sticky tw-bottom-0 tw-grid tw-border-0 tw-border-t tw-border-solid tw-border-outline tw-bg-surface tw-font-bold"
+        :style="{ gridTemplateColumns: GRID_TEMPLATE_COLUMNS }"
+      >
+        <div role="cell" class="tw-col-span-5 tw-p-2">
+          Total · {{ rows.length }} sections
+        </div>
+        <TotalCell role="cell">{{
+          formatWholeDollars(totals.instructorCost)
+        }}</TotalCell>
+        <div role="cell" />
+        <TotalCell role="cell">{{
+          formatWholeDollars(totals.taCost)
+        }}</TotalCell>
+        <div role="cell" />
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { colorOfType } from "@/utils/meetingTypeColors";
+import BudgetCell from "./BudgetCell.vue";
+import CapsLabel from "./CapsLabel.vue";
+import CellSubline from "./CellSubline.vue";
+import EnrollmentSparkline from "./EnrollmentSparkline.vue";
+import MissingRate from "./MissingRate.vue";
+import OverrideMarker from "./OverrideMarker.vue";
+import TotalCell from "./TotalCell.vue";
+import type { BudgetRow } from "../../helpers/budgetRows";
+import { formatWholeDollars } from "../../helpers/money";
+import type { CostTotals } from "../../helpers/termEstimate";
+
+const props = defineProps<{
+  rows: BudgetRow[];
+  totals: CostTotals;
+  selectedSectionId: number | null;
+  isReadOnly: boolean;
+}>();
+
+const emit = defineEmits<{
+  select: [sectionId: number];
+  editNotes: [sectionId: number, notes: string];
+}>();
+
+const GRID_TEMPLATE_COLUMNS =
+  "minmax(170px,1.2fr) 112px 48px 172px minmax(140px,1fr) 86px 112px 80px minmax(110px,0.9fr)";
+
+const HEADINGS = [
+  { label: "Section", isNumeric: false },
+  { label: "Day / time", isNumeric: false },
+  { label: "Cap", isNumeric: true },
+  { label: "Prev. enrollment", isNumeric: false },
+  { label: "Instructor", isNumeric: false },
+  { label: "Est. cost", isNumeric: true },
+  { label: "TA support", isNumeric: false },
+  { label: "TA cost", isNumeric: true },
+  { label: "Comments", isNumeric: false },
+];
+
+type RowState = "selected" | "cancelled" | "unstaffed" | "default";
+
+function rowStateOf(row: BudgetRow): RowState {
+  if (row.sectionId === props.selectedSectionId) return "selected";
+  if (row.isCancelled) return "cancelled";
+  if (row.isUnstaffed) return "unstaffed";
+  return "default";
+}
+
+function onNotesInput(sectionId: number, event: Event) {
+  emit("editNotes", sectionId, (event.target as HTMLInputElement).value);
+}
+</script>

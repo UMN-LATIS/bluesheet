@@ -15,6 +15,7 @@ import { dayIndexOfWeekday } from "../helpers/scheduleDays";
 import { sectionProblems } from "./validation";
 import {
   selectActiveFilterCount,
+  selectLocalCostSettings,
   selectDraftSection,
   selectHasEdits,
   selectHourReturnedTo,
@@ -28,6 +29,8 @@ import {
   selectNewSectionHasCourse,
   selectOpenHour,
   selectPlaced,
+  selectSectionCosts,
+  selectShownSections,
   selectSelectedLeaveId,
   selectSelectedMeetingId,
   selectSelectedSectionId,
@@ -68,6 +71,20 @@ export function useScheduleEditor(
     placed: computed(() => selectPlaced(context.value, state.value)),
     filters: computed(() => state.value.filters),
     view: computed(() => state.value.view),
+    budgetTab: computed(() => state.value.budgetTab),
+    shownSections: computed(() =>
+      selectShownSections(context.value, state.value),
+    ),
+    /** Null until the cost assumptions have loaded. */
+    sectionCosts: computed(() =>
+      selectSectionCosts(context.value, state.value),
+    ),
+    costSettings: computed(() => selectLocalCostSettings(context.value, state.value)),
+    canEditCosts: computed(
+      () => context.value.costAssumptions?.canEdit === true,
+    ),
+    /** Unsaved cost setting edits, by key. */
+    pendingCostSettingEdits: computed(() => state.value.costSettingEdits),
     dayIndex: computed(() => state.value.dayIndex),
     /** Whether this term takes edits at all; see `ScheduleContext`. */
     isReadOnly: computed(() => context.value.isReadOnly),

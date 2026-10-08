@@ -258,6 +258,8 @@ describe('settings', function () {
             'unratedJobCodeCost',
             'taAppointmentPercent',
             'isRecurringBudgetFree',
+            'isIndependentStudyFree',
+            'isFieldworkFree',
             ...$annualLoadKeys,
         ]);
         foreach ($settings as $setting) {

@@ -43,6 +43,20 @@ final class CostSettings {
                 CostSettingType::Toggle,
                 true,
             ),
+            new CostSettingDefinition(
+                'isIndependentStudyFree',
+                'Independent study adds no cost',
+                'Sections with component IND count as $0.',
+                CostSettingType::Toggle,
+                true,
+            ),
+            new CostSettingDefinition(
+                'isFieldworkFree',
+                'Fieldwork adds no cost',
+                'Sections with component FWK count as $0.',
+                CostSettingType::Toggle,
+                true,
+            ),
             ...self::annualLoadDefinitions(),
         ];
 
