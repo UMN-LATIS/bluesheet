@@ -34,7 +34,9 @@ final class CostAssumptions {
 
     /** @return array<int, string> */
     public static function jobCodesHeldBy(int $academicOrg, int $emplid): array {
-        return self::jobCodesByEmplid($academicOrg, $emplid)->get($emplid, []);
+        $appointments = self::appointmentsByEmplid($academicOrg, $emplid)->get($emplid, collect());
+
+        return self::distinctJobCodes($appointments);
     }
 
     public static function describePersonChoice(TermCostPersonChoice $choice): array {
@@ -137,8 +139,12 @@ final class CostAssumptions {
     }
 
     private static function people(int $academicOrg): array {
-        return self::jobCodesByEmplid($academicOrg)
-            ->map(fn(array $jobCodes, int $emplid) => ['emplid' => $emplid, 'jobCodes' => $jobCodes])
+        return self::appointmentsByEmplid($academicOrg)
+            ->map(fn(Collection $appointments, int $emplid) => [
+                'emplid' => $emplid,
+                'jobCodes' => self::distinctJobCodes($appointments),
+                'positionTitles' => self::positionTitlesByJobCode($appointments),
+            ])
             ->values()
             ->all();
     }
@@ -153,14 +159,13 @@ final class CostAssumptions {
             ->all();
     }
 
-    /** @return Collection<int, array<int, string>> */
-    private static function jobCodesByEmplid(int $academicOrg, ?int $emplid = null): Collection {
+    /** @return Collection<int, Collection<int, SisAppointment>> */
+    private static function appointmentsByEmplid(int $academicOrg, ?int $emplid = null): Collection {
         return SisAppointment::query()
             ->where('dept_id', (string) $academicOrg)
             ->when($emplid !== null, fn($appointments) => $appointments->where('emplid', $emplid))
-            ->get(['emplid', 'job_code'])
-            ->groupBy('emplid')
-            ->map(self::distinctJobCodes(...));
+            ->get(['emplid', 'job_code', 'position_desc'])
+            ->groupBy('emplid');
     }
 
     /** @return array<int, string> */
@@ -170,6 +175,16 @@ final class CostAssumptions {
             ->unique()
             ->sort()
             ->values()
+            ->all();
+    }
+
+    /** @return array<string, string> without job codes that have no position description */
+    private static function positionTitlesByJobCode(Collection $appointments): array {
+        return $appointments
+            ->filter(fn(SisAppointment $appointment) => filled($appointment->position_desc))
+            ->mapWithKeys(fn(SisAppointment $appointment) => [
+                trim($appointment->job_code) => trim($appointment->position_desc),
+            ])
             ->all();
     }
 }

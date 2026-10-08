@@ -1,5 +1,6 @@
 import type {
   CostAssumptions,
+  CostPerson,
   CostSetting,
   CostSettingValue,
   JobCodeRate,
@@ -72,6 +73,12 @@ export const costRuleSettings = (
   isFieldworkFree: false,
   ...extra,
 });
+
+export const costPerson = (
+  emplid: number,
+  jobCodes: string[],
+  positionTitles: CostPerson["positionTitles"] = {},
+): CostPerson => ({ emplid, jobCodes, positionTitles });
 
 export const costAssumptions = (
   extra: Partial<CostAssumptions> = {},

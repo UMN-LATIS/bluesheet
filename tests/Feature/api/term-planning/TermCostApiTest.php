@@ -391,7 +391,26 @@ describe('people and person choices', function () {
 
         $people = getJson(costAssumptionsUrl($this->group))->json('people');
 
-        expect($people)->toBe([['emplid' => $employee->emplid, 'jobCodes' => ['9401', '9402']]]);
+        expect($people)->toHaveCount(1)
+            ->and($people[0]['emplid'])->toBe($employee->emplid)
+            ->and($people[0]['jobCodes'])->toBe(['9401', '9402']);
+    });
+
+    it('gives each job code the position title on the appointment, leaving out blank ones', function () {
+        $employee = SisEmployee::factory()->create();
+        $appoint = fn(string $jobCode, ?string $title, string $indicator) => SisAppointment::factory()->create([
+            'emplid' => $employee->emplid,
+            'dept_id' => (string) COST_API_DEPT,
+            'job_code' => $jobCode,
+            'position_desc' => $title,
+            'job_indicator' => $indicator,
+        ]);
+        $appoint('9401 ', 'Professor ', 'P');
+        $appoint('9702', null, 'S');
+
+        $people = getJson(costAssumptionsUrl($this->group))->json('people');
+
+        expect($people[0]['positionTitles'])->toBe(['9401' => 'Professor']);
     });
 
     it('leaves out a person appointed only in another department', function () {

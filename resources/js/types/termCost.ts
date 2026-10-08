@@ -55,6 +55,11 @@ export interface CostSetting {
 export interface CostPerson {
   emplid: number;
   jobCodes: string[];
+  /**
+   * By job code, from the person's appointment. Missing
+   * when the appointment has no position description.
+   */
+  positionTitles: Partial<Record<string, string>>;
 }
 
 export interface PersonChoice {

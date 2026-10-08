@@ -50,23 +50,11 @@ interface CostContext {
  * By section id. A cancelled section is present with no
  * lines.
  */
-export function estimateTermCost(input: EstimateInput): Map<number, SectionCost> {
+export function estimateTermCost(
+  input: EstimateInput,
+): Map<number, SectionCost> {
   const { sections, assumptions, settings } = input;
-  const ratesByJobCode = new Map<string, JobCodeRate>(
-    assumptions.jobCodes.map((rate) => [rate.code, rate]),
-  );
-  const jobCodesByEmplid = new Map(
-    assumptions.people.map((person) => [person.emplid, person.jobCodes]),
-  );
-  const personChoices = new Map(
-    assumptions.personChoices.map((choice) => [choice.emplid, choice]),
-  );
-  const pricingOfEmplid = (emplid: number): PersonPricing =>
-    pricingOf(
-      jobCodesByEmplid.get(emplid) ?? [],
-      personChoices.get(emplid),
-      ratesByJobCode,
-    );
+  const pricingOfEmplid = pricingByEmplidOf(assumptions);
 
   const liveSections = sections.filter(({ isCancelled }) => !isCancelled);
   const crosslistOwnerByListing = blockOwners(liveSections);
@@ -101,7 +89,31 @@ export function estimateTermCost(input: EstimateInput): Map<number, SectionCost>
   );
 }
 
-function costLinesOf(section: PlannedSection, context: CostContext): CostLine[] {
+export function pricingByEmplidOf(
+  assumptions: CostAssumptions,
+): (emplid: number) => PersonPricing {
+  const ratesByJobCode = new Map<string, JobCodeRate>(
+    assumptions.jobCodes.map((rate) => [rate.code, rate]),
+  );
+  const jobCodesByEmplid = new Map(
+    assumptions.people.map((person) => [person.emplid, person.jobCodes]),
+  );
+  const personChoices = new Map(
+    assumptions.personChoices.map((choice) => [choice.emplid, choice]),
+  );
+
+  return (emplid) =>
+    pricingOf(
+      jobCodesByEmplid.get(emplid) ?? [],
+      personChoices.get(emplid),
+      ratesByJobCode,
+    );
+}
+
+function costLinesOf(
+  section: PlannedSection,
+  context: CostContext,
+): CostLine[] {
   if (section.isCancelled) return [];
 
   const { pricingOfEmplid, settings } = context;
@@ -150,8 +162,9 @@ function taLineOf(
   const { pricingOfEmplid, chargedSectionIdByTaCourse, assumptions, settings } =
     context;
   const chargedSectionId =
-    chargedSectionIdByTaCourse.get(taCourseKey(ta.emplid, section.courseCode)) ??
-    section.id;
+    chargedSectionIdByTaCourse.get(
+      taCourseKey(ta.emplid, section.courseCode),
+    ) ?? section.id;
 
   if (chargedSectionId !== section.id) {
     return {
@@ -189,7 +202,9 @@ export interface CostTotals {
 export function totalsOf(costs: SectionCost[]): CostTotals {
   const lines = costs.flatMap(({ lines }) => lines);
   const overriddenEmplids = new Set(
-    lines.filter(({ basis }) => basis.kind === "override").map(({ emplid }) => emplid),
+    lines
+      .filter(({ basis }) => basis.kind === "override")
+      .map(({ emplid }) => emplid),
   );
   const isRecurringBudgetSection = (cost: SectionCost) =>
     cost.lines.some(({ basis }) => basis.kind === "recurringBudget");
@@ -238,7 +253,10 @@ function crosslistPartnerLines(
   }));
 }
 
-function freeComponentLines(component: string, people: SisInstructor[]): CostLine[] {
+function freeComponentLines(
+  component: string,
+  people: SisInstructor[],
+): CostLine[] {
   const basis: CostBasis = { kind: "freeComponent", component };
 
   if (people.length === 0) {
@@ -256,7 +274,9 @@ function freeComponentLines(component: string, people: SisInstructor[]): CostLin
 const taCourseKey = (emplid: number, courseCode: string) =>
   `${emplid}|${courseCode}`;
 
-function chargedSectionIdByTaCourseOf(sections: PlannedSection[]): Map<string, number> {
+function chargedSectionIdByTaCourseOf(
+  sections: PlannedSection[],
+): Map<string, number> {
   const byPreference = [...sections].sort(lecturesThenSectionNumber);
   const charged = new Map<string, number>();
 
@@ -270,7 +290,10 @@ function chargedSectionIdByTaCourseOf(sections: PlannedSection[]): Map<string, n
   return charged;
 }
 
-function lecturesThenSectionNumber(a: PlannedSection, b: PlannedSection): number {
+function lecturesThenSectionNumber(
+  a: PlannedSection,
+  b: PlannedSection,
+): number {
   const isLecture = (section: PlannedSection) => section.component === "LEC";
   if (isLecture(a) !== isLecture(b)) return isLecture(a) ? -1 : 1;
 

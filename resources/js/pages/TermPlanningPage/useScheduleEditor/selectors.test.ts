@@ -7,6 +7,7 @@ import {
 } from "./selectors";
 import {
   costAssumptions,
+  costPerson,
   costSetting,
   jobCodeRate,
   sisInstructor,
@@ -254,7 +255,7 @@ describe("the budget view's selectors", () => {
     isWide: true,
     costAssumptions: costAssumptions({
       settings,
-      people: [{ emplid: 1, jobCodes: ["U"] }],
+      people: [costPerson(1, ["U"])],
       jobCodes: [jobCodeRate("U", null)],
     }),
   };

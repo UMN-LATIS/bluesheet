@@ -1,9 +1,14 @@
-import type { PlannedSection } from "../types";
+import type { CostAssumptions } from "@/types";
+import type { PlannedSection, SisInstructor } from "../types";
 import { describeCostBasis } from "./costBasis";
 import type { EnrollmentPoint } from "./enrollmentHistory";
 import { daysMetLabel } from "./scheduleDays";
 import { instructorsOfRecord, TA_ROLE } from "./sectionPeople";
-import type { CostLine, SectionCost } from "./termEstimate";
+import {
+  pricingByEmplidOf,
+  type CostLine,
+  type SectionCost,
+} from "./termEstimate";
 import { formatTimeRange, minutesFromClock } from "./timeScale";
 
 export type TaCostCell =
@@ -23,6 +28,11 @@ export interface BudgetRow {
   isCancelled: boolean;
   isUnstaffed: boolean;
   instructorName: string;
+  /**
+   * The job code and title of each instructor of record,
+   * or how the cost was reached when there is none.
+   */
+  instructorSubline: string;
   /**
    * How the instructor cost was reached. Empty when nothing
    * was costed.
@@ -47,17 +57,48 @@ export interface BudgetRow {
 export const courseLabelOf = (section: PlannedSection) =>
   `${section.subject} ${section.catalogNumber}-${section.section}`;
 
+/**
+ * "9401 · Professor". The title is the admin's for the job
+ * code, else the one on the person's appointment.
+ */
+export function jobLabelsOf(
+  assumptions: CostAssumptions,
+): (emplid: number) => string {
+  const pricingOfEmplid = pricingByEmplidOf(assumptions);
+  const positionTitlesByEmplid = new Map(
+    assumptions.people.map((person) => [person.emplid, person.positionTitles]),
+  );
+
+  return (emplid) => {
+    const { jobCode, rate } = pricingOfEmplid(emplid);
+    if (jobCode === null) return "No job code in this department";
+
+    const title = rate?.title ?? positionTitlesByEmplid.get(emplid)?.[jobCode];
+    return title ? `${jobCode} · ${title}` : jobCode;
+  };
+}
+
 export function budgetRowOf(
   section: PlannedSection,
   cost: SectionCost | undefined,
   history: EnrollmentPoint[],
   labelOfSection: (sectionId: number) => string,
+  jobLabelOfEmplid: (emplid: number) => string,
 ): BudgetRow {
   const lines = cost?.lines ?? [];
   const instructorLines = lines.filter(({ role }) => role !== "ta");
   const taLines = lines.filter(({ role }) => role === "ta");
   const assistantNames = assistantNamesOf(section, taLines);
-  const isUnstaffed = instructorLines.some(({ role }) => role === "unstaffedSection");
+  const isUnstaffed = instructorLines.some(
+    ({ role }) => role === "unstaffedSection",
+  );
+  const leads = instructorsOfRecord(section.instructors);
+  const instructorBasisLabel = instructorLines[0]
+    ? describeCostBasis(instructorLines[0].basis, labelOfSection)
+    : "";
+  const leadJobLabels = [
+    ...new Set(leads.map(({ emplid }) => jobLabelOfEmplid(emplid))),
+  ];
 
   return {
     sectionId: section.id,
@@ -69,10 +110,12 @@ export function budgetRowOf(
     history,
     isCancelled: section.isCancelled,
     isUnstaffed,
-    instructorName: instructorNameOf(section, isUnstaffed, taLines.length > 0),
-    instructorBasisLabel: instructorLines[0]
-      ? describeCostBasis(instructorLines[0].basis, labelOfSection)
-      : "",
+    instructorName: instructorNameOf(leads, isUnstaffed, taLines.length > 0),
+    instructorSubline:
+      leadJobLabels.length > 0
+        ? leadJobLabels.join(", ")
+        : instructorBasisLabel,
+    instructorBasisLabel,
     instructorCost: sumOrNull(instructorLines),
     hasInstructorOverride: instructorLines.some(
       ({ basis }) => basis.kind === "override",
@@ -97,27 +140,35 @@ function meetingSummaryOf(section: PlannedSection): string {
 }
 
 function instructorNameOf(
-  section: PlannedSection,
+  leads: SisInstructor[],
   isUnstaffed: boolean,
   hasAssistants: boolean,
 ): string {
   if (isUnstaffed) return "TBA";
 
-  const leads = instructorsOfRecord(section.instructors);
   if (leads.length === 0) return hasAssistants ? "Taught by TA" : "—";
 
-  return leads.map(({ name, lastName }) => name ?? lastName ?? "Unknown").join(", ");
+  return leads
+    .map(({ name, lastName }) => name ?? lastName ?? "Unknown")
+    .join(", ");
 }
 
-function assistantNamesOf(section: PlannedSection, taLines: CostLine[]): string {
+function assistantNamesOf(
+  section: PlannedSection,
+  taLines: CostLine[],
+): string {
   const percentOf = (emplid: number) => {
     const basis = taLines.find((line) => line.emplid === emplid)?.basis;
-    return basis?.kind === "taAppointment" ? ` ${basis.appointmentPercent}%` : "";
+    return basis?.kind === "taAppointment"
+      ? ` ${basis.appointmentPercent}%`
+      : "";
   };
 
   return section.instructors
     .filter(({ role }) => role === TA_ROLE)
-    .map(({ emplid, lastName }) => `${lastName ?? "Unknown"}${percentOf(emplid)}`)
+    .map(
+      ({ emplid, lastName }) => `${lastName ?? "Unknown"}${percentOf(emplid)}`,
+    )
     .join(", ");
 }
 
@@ -131,7 +182,9 @@ function taCostCellOf(
 
   if (chargedHereLines.length > 0) {
     const dollars = sumOrNull(chargedHereLines);
-    return dollars === null ? { kind: "missingRate" } : { kind: "amount", dollars };
+    return dollars === null
+      ? { kind: "missingRate" }
+      : { kind: "amount", dollars };
   }
 
   const otherSectionBasis = taLines[0]?.basis;

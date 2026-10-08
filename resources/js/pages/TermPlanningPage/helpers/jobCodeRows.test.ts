@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   costAssumptions,
+  costPerson,
   jobCodeRate,
 } from "./costAssumptions.fixture";
 import { jobCodeRowsOf, rateNoteOf } from "./jobCodeRows";
@@ -12,9 +13,9 @@ describe("jobCodeRowsOf", () => {
       jobCodeRate("T", null, { instructorType: "teaching_assistant" }),
     ],
     people: [
-      { emplid: 1, jobCodes: ["B", "A"] },
-      { emplid: 2, jobCodes: ["T"] },
-      { emplid: 3, jobCodes: ["Z"] },
+      costPerson(1, ["B", "A"]),
+      costPerson(2, ["T"]),
+      costPerson(3, ["Z"]),
     ],
   });
 

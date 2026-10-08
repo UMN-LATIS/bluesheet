@@ -68,7 +68,11 @@ import BudgetHeader from "./BudgetHeader.vue";
 import BudgetTabBar from "./BudgetTabBar.vue";
 import RulesTab from "./RulesTab.vue";
 import SectionsTable from "./SectionsTable.vue";
-import { budgetRowOf, courseLabelOf } from "../../helpers/budgetRows";
+import {
+  budgetRowOf,
+  courseLabelOf,
+  jobLabelsOf,
+} from "../../helpers/budgetRows";
 import {
   enrollmentSeriesBySection,
   historyKeyOf,
@@ -100,6 +104,10 @@ const labelOfSection = (sectionId: number) => {
   );
   return section ? courseLabelOf(section) : "another section";
 };
+
+const jobLabelOfEmplid = computed(() =>
+  props.assumptions ? jobLabelsOf(props.assumptions) : () => "",
+);
 
 const teachingEmplids = computed(
   () =>
@@ -136,6 +144,7 @@ const rows = computed(() =>
       props.schedule.sectionCosts?.get(section.id),
       historyOf(section),
       labelOfSection,
+      jobLabelOfEmplid.value,
     ),
   ),
 );

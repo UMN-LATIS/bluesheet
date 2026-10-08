@@ -3,6 +3,7 @@ import type { CostPerson, PersonChoice } from "@/types";
 import type { PlannedSection } from "../types";
 import {
   costAssumptions,
+  costPerson,
   costRuleSettings,
   jobCodeRate,
   personChoice,
@@ -17,11 +18,11 @@ const section = (id: number, extra: Partial<PlannedSection> = {}) =>
   plannedSection(id, [], { section: String(id).padStart(3, "0"), ...extra });
 
 const people: CostPerson[] = [
-  { emplid: 1, jobCodes: ["A"] },
-  { emplid: 2, jobCodes: ["B"] },
-  { emplid: 3, jobCodes: ["R"] },
-  { emplid: 10, jobCodes: [] },
-  { emplid: 11, jobCodes: [] },
+  costPerson(1, ["A"]),
+  costPerson(2, ["B"]),
+  costPerson(3, ["R"]),
+  costPerson(10, []),
+  costPerson(11, []),
 ];
 
 const assumptions = costAssumptions({
@@ -48,7 +49,9 @@ const estimate = (
 
 describe("estimateTermCost", () => {
   it("costs a section with a PI at the PI's job code rate", () => {
-    const costs = estimate([section(1, { instructors: [sisInstructor(1, "PI")] })]);
+    const costs = estimate([
+      section(1, { instructors: [sisInstructor(1, "PI")] }),
+    ]);
 
     expect(costs.get(1)).toMatchObject({
       instructorCost: 4000,
@@ -61,7 +64,10 @@ describe("estimateTermCost", () => {
   it("adds the totals across sections", () => {
     const costs = estimate([
       section(1, { instructors: [sisInstructor(1, "PI")] }),
-      section(2, { courseCode: "ANTH-2001", instructors: [sisInstructor(2, "PI")] }),
+      section(2, {
+        courseCode: "ANTH-2001",
+        instructors: [sisInstructor(2, "PI")],
+      }),
     ]);
 
     expect(totalsOf([...costs.values()]).total).toBe(10000);
@@ -69,10 +75,14 @@ describe("estimateTermCost", () => {
 
   it("costs team-taught PIs each at their own rate", () => {
     const costs = estimate([
-      section(1, { instructors: [sisInstructor(1, "PI"), sisInstructor(2, "PI")] }),
+      section(1, {
+        instructors: [sisInstructor(1, "PI"), sisInstructor(2, "PI")],
+      }),
     ]);
 
-    expect(costs.get(1)?.lines.map(({ emplid, amount }) => [emplid, amount])).toEqual([
+    expect(
+      costs.get(1)?.lines.map(({ emplid, amount }) => [emplid, amount]),
+    ).toEqual([
       [1, 4000],
       [2, 6000],
     ]);
@@ -94,10 +104,16 @@ describe("estimateTermCost", () => {
   });
 
   it("gives a TA-only section a TA line and no instructor cost", () => {
-    const costs = estimate([section(1, { instructors: [sisInstructor(10, "TA")] })]);
+    const costs = estimate([
+      section(1, { instructors: [sisInstructor(10, "TA")] }),
+    ]);
 
     expect(costs.get(1)?.lines.map(({ role }) => role)).toEqual(["ta"]);
-    expect(costs.get(1)).toMatchObject({ instructorCost: 0, taCost: 9000, total: 9000 });
+    expect(costs.get(1)).toMatchObject({
+      instructorCost: 0,
+      taCost: 9000,
+      total: 9000,
+    });
   });
 
   it("charges a TA once, on the lecture, across a lecture and two discussions", () => {
@@ -129,7 +145,10 @@ describe("estimateTermCost", () => {
     ]);
 
     expect(costs.get(2)?.lines[0].amount).toBe(9000);
-    expect(costs.get(1)?.lines[0].basis).toEqual({ kind: "chargedOnOtherSection", sectionId: 2 });
+    expect(costs.get(1)?.lines[0].basis).toEqual({
+      kind: "chargedOnOtherSection",
+      sectionId: 2,
+    });
   });
 
   it("charges the same TA once per course", () => {
@@ -223,7 +242,11 @@ describe("estimateTermCost", () => {
 
   it("leaves the amount null and out of the totals when the TA rate is missing", () => {
     const costs = estimate(
-      [section(1, { instructors: [sisInstructor(1, "PI"), sisInstructor(10, "TA")] })],
+      [
+        section(1, {
+          instructors: [sisInstructor(1, "PI"), sisInstructor(10, "TA")],
+        }),
+      ],
       costRuleSettings({ taAppointmentPercent: 50 }),
     );
 
@@ -239,7 +262,9 @@ describe("estimateTermCost", () => {
   });
 
   it("prices a person absent from assumptions.people at the unrated job code cost", () => {
-    const costs = estimate([section(1, { instructors: [sisInstructor(99, "PI")] })]);
+    const costs = estimate([
+      section(1, { instructors: [sisInstructor(99, "PI")] }),
+    ]);
 
     expect(costs.get(1)?.lines[0]).toMatchObject({
       amount: 7000,
@@ -261,8 +286,13 @@ describe("estimateTermCost", () => {
 describe("totalsOf", () => {
   it("sums instructor, TA, and total cost over sections", () => {
     const costs = estimate([
-      section(1, { instructors: [sisInstructor(1, "PI"), sisInstructor(10, "TA")] }),
-      section(2, { courseCode: "ANTH-2001", instructors: [sisInstructor(2, "PI")] }),
+      section(1, {
+        instructors: [sisInstructor(1, "PI"), sisInstructor(10, "TA")],
+      }),
+      section(2, {
+        courseCode: "ANTH-2001",
+        instructors: [sisInstructor(2, "PI")],
+      }),
     ]);
 
     expect(totalsOf([...costs.values()])).toMatchObject({
@@ -277,8 +307,14 @@ describe("totalsOf", () => {
     const costs = estimate(
       [
         section(1, { instructors: [sisInstructor(1, "PI")] }),
-        section(2, { courseCode: "ANTH-2001", instructors: [sisInstructor(1, "PI")] }),
-        section(3, { courseCode: "ANTH-3001", instructors: [sisInstructor(2, "PI")] }),
+        section(2, {
+          courseCode: "ANTH-2001",
+          instructors: [sisInstructor(1, "PI")],
+        }),
+        section(3, {
+          courseCode: "ANTH-3001",
+          instructors: [sisInstructor(2, "PI")],
+        }),
       ],
       costRuleSettings(),
       [personChoice(1, { overrideCost: 0 })],
@@ -289,9 +325,16 @@ describe("totalsOf", () => {
 
   it("counts two people with overrides as two", () => {
     const costs = estimate(
-      [section(1, { instructors: [sisInstructor(1, "PI"), sisInstructor(2, "PI")] })],
+      [
+        section(1, {
+          instructors: [sisInstructor(1, "PI"), sisInstructor(2, "PI")],
+        }),
+      ],
       costRuleSettings(),
-      [personChoice(1, { overrideCost: 0 }), personChoice(2, { overrideCost: 100 })],
+      [
+        personChoice(1, { overrideCost: 0 }),
+        personChoice(2, { overrideCost: 100 }),
+      ],
     );
 
     expect(totalsOf([...costs.values()]).overrideCount).toBe(2);
@@ -305,7 +348,10 @@ describe("totalsOf", () => {
           courseCode: "ANTH-2001",
           instructors: [sisInstructor(3, "PI"), sisInstructor(10, "TA")],
         }),
-        section(3, { courseCode: "ANTH-3001", instructors: [sisInstructor(1, "PI")] }),
+        section(3, {
+          courseCode: "ANTH-3001",
+          instructors: [sisInstructor(1, "PI")],
+        }),
       ],
       costRuleSettings({ isRecurringBudgetFree: true }),
     );
@@ -388,4 +434,3 @@ describe("estimateTermCost with crosslisted sections", () => {
     expect(costs.get(1)?.total).toBe(4000);
   });
 });
-

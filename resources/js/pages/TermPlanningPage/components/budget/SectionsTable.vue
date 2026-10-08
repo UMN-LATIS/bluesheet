@@ -3,7 +3,7 @@
     <div
       role="table"
       aria-label="Sections and estimated costs"
-      class="tw-min-w-[1020px] tw-text-xs"
+      class="tw-min-w-[1044px] tw-text-xs"
     >
       <div
         role="row"
@@ -60,11 +60,10 @@
           </span>
         </BudgetCell>
 
-        <BudgetCell
-          role="cell"
-          class="tw-whitespace-nowrap tw-text-on-surface-variant"
-        >
-          {{ row.meetingSummary }}
+        <BudgetCell role="cell" class="tw-text-on-surface-variant">
+          <span class="tw-truncate" :title="row.meetingSummary">
+            {{ row.meetingSummary }}
+          </span>
         </BudgetCell>
 
         <BudgetCell role="cell" align="end">{{ row.enrollmentCap }}</BudgetCell>
@@ -83,10 +82,10 @@
               {{ row.instructorName }}
             </span>
             <CellSubline
-              v-if="row.instructorBasisLabel"
-              :title="row.instructorBasisLabel"
+              v-if="row.instructorSubline"
+              :title="row.instructorSubline"
             >
-              {{ row.instructorBasisLabel }}
+              {{ row.instructorSubline }}
             </CellSubline>
           </span>
         </BudgetCell>
@@ -96,6 +95,7 @@
           align="end"
           class="tw-relative tw-whitespace-nowrap tw-font-semibold"
           :class="{ 'tw-bg-accent-container-low': row.hasInstructorOverride }"
+          :title="row.instructorBasisLabel"
         >
           <template v-if="!row.isCancelled">
             <MissingRate v-if="row.instructorCost === null" />
@@ -108,10 +108,11 @@
 
         <BudgetCell
           role="cell"
-          class="tw-truncate tw-whitespace-nowrap"
           :class="{ 'tw-text-on-surface-variant': !row.assistantNames }"
         >
-          {{ row.assistantNames || "–" }}
+          <span class="tw-truncate" :title="row.assistantNames">
+            {{ row.assistantNames || "–" }}
+          </span>
         </BudgetCell>
 
         <BudgetCell
@@ -198,7 +199,7 @@ const emit = defineEmits<{
 }>();
 
 const GRID_TEMPLATE_COLUMNS =
-  "minmax(170px,1.2fr) 112px 48px 172px minmax(140px,1fr) 86px 112px 80px minmax(110px,0.9fr)";
+  "minmax(170px,1.2fr) 136px 48px 172px minmax(140px,1fr) 86px 112px 80px minmax(110px,0.9fr)";
 
 const HEADINGS = [
   { label: "Section", isNumeric: false },
