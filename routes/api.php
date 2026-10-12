@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\LeaveController;
+use App\Http\Controllers\Remote\GroupController as RemoteGroupController;
 use Illuminate\Http\Request;
 
 /*

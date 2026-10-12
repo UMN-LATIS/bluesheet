@@ -15,6 +15,7 @@ class GroupController extends Controller {
             'parent_organization_id',
             'active_group',
             'group_type_id',
+            'deleted_at',
         ]);
     }
 }
