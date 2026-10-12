@@ -23,7 +23,10 @@ class RoleHolderController extends Controller {
             ->get(['id', 'group_title', 'dept_id', 'parent_group_id', 'active_group', 'deleted_at'])
             ->keyBy('id');
         $departments = $groupsIncludingDeletedById->filter(self::isActiveDepartment(...));
-        $currentMembershipsByGroupAndRole = self::currentMembershipsInActiveGroups($roleIds)
+        $currentMembershipsByGroupAndRole = Membership::with('user', 'role')
+            ->whereIn('role_id', $roleIds)
+            ->currentHolder()
+            ->get()
             ->groupBy(['group_id', 'role_id']);
 
         $rows = [];
@@ -45,22 +48,6 @@ class RoleHolderController extends Controller {
 
     private static function isActiveDepartment(Group $group): bool {
         return !$group->trashed() && $group->active_group && $group->sis_dept_id !== null;
-    }
-
-    /**
-     * @param list<int> $roleIds
-     * @return Collection<int, Membership>
-     */
-    private static function currentMembershipsInActiveGroups(array $roleIds): Collection {
-        return Membership::with('user', 'role')
-            ->whereIn('role_id', $roleIds)
-            ->whereHas('group', fn($query) => $query->where('active_group', true))
-            // Without this, a soft-deleted user's membership
-            // arrives with a null `user`, and roleHolderRow
-            // throws calling ->only().
-            ->whereHas('user')
-            ->where(fn($query) => $query->whereNull('end_date')->orWhere('end_date', '>', date('Y-m-d')))
-            ->get();
     }
 
     private static function roleHolderRow(Group $department, int $holderGroupId, Membership $membership): array {

@@ -44,4 +44,14 @@ class Membership extends Model implements Auditable
     	return $this->belongsTo("App\User");
     }
 
+    public function scopeCurrentHolder($query) {
+        return $query
+            ->whereHas('group', fn($query) => $query->where('active_group', true))
+            // Without this, a soft-deleted user's
+            // membership arrives with a null `user`, and
+            // RoleHolderController::roleHolderRow
+            // throws calling ->only().
+            ->whereHas('user')
+            ->where(fn($query) => $query->whereNull('end_date')->orWhere('end_date', '>', date('Y-m-d')));
+    }
 }
