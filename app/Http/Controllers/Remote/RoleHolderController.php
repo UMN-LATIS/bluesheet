@@ -33,7 +33,8 @@ class RoleHolderController extends Controller {
                 if ($holderGroupId === null) {
                     continue;
                 }
-                foreach ($currentMembershipsByGroupAndRole[$holderGroupId][$roleId] as $membership) {
+                $holderMemberships = $currentMembershipsByGroupAndRole[$holderGroupId][$roleId];
+                foreach ($holderMemberships as $membership) {
                     $rows[] = self::roleHolderRow($department, $holderGroupId, $membership);
                 }
             }
@@ -53,12 +54,12 @@ class RoleHolderController extends Controller {
     private static function currentMembershipsInActiveGroups(array $roleIds): Collection {
         return Membership::with('user', 'role')
             ->whereIn('role_id', $roleIds)
-            ->whereHas('group', fn ($query) => $query->where('active_group', true))
+            ->whereHas('group', fn($query) => $query->where('active_group', true))
             // Without this, a soft-deleted user's membership
             // arrives with a null `user`, and roleHolderRow
             // throws calling ->only().
             ->whereHas('user')
-            ->where(fn ($query) => $query->whereNull('end_date')->orWhere('end_date', '>', date('Y-m-d')))
+            ->where(fn($query) => $query->whereNull('end_date')->orWhere('end_date', '>', date('Y-m-d')))
             ->get();
     }
 
