@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\Remote\GroupController as RemoteGroupController;
+use App\Http\Controllers\Remote\RoleHolderController;
 use Illuminate\Http\Request;
 
 /*
@@ -19,4 +20,5 @@ Route::group(['prefix' => '/remote/', 'middleware' => 'auth:sanctum'], function 
     Route::get('role/{role}', 'GroupController@role');
     Route::get('leaves', [LeaveController::class, 'index']);
     Route::get('groups', [RemoteGroupController::class, 'index']);
+    Route::get('role-holders', [RoleHolderController::class, 'index']);
 });
