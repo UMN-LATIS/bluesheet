@@ -17,4 +17,5 @@ use Illuminate\Http\Request;
 Route::group(['prefix' => '/remote/', 'middleware' => 'auth:sanctum'], function () {
     Route::get('role/{role}', 'GroupController@role');
     Route::get('leaves', [LeaveController::class, 'index']);
+    Route::get('groups', [RemoteGroupController::class, 'index']);
 });
