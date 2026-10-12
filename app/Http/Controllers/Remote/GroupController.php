@@ -7,7 +7,7 @@ use App\Http\Controllers\Controller;
 
 class GroupController extends Controller {
     public function index() {
-        return Group::with('groupType:id,label')->get([
+        return Group::withTrashed()->with('groupType:id,label')->get([
             'id',
             'group_title',
             'dept_id',
