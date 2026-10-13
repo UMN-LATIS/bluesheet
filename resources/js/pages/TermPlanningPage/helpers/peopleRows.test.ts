@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { SisEmployee } from "@/types";
+import type { SisEmployee, TermLeave } from "@/types";
 import type { PlannedSection } from "../types";
 import {
   costAssumptions,
@@ -47,6 +47,7 @@ const tablesOf = (
   sections: PlannedSection[],
   overrides = rateOverrides(),
   roster: SisEmployee[] = [],
+  leavesByEmplid = new Map<number, TermLeave[]>(),
 ) =>
   peopleTablesOf(
     sections,
@@ -59,6 +60,7 @@ const tablesOf = (
     assumptions,
     overrides,
     roster,
+    leavesByEmplid,
   );
 
 const pi = (emplid: number) => sisInstructor(emplid, "PI");
@@ -209,6 +211,52 @@ describe("peopleTablesOf", () => {
         isUnderLoad: true,
       },
     ]);
+  });
+
+  describe("with leaves", () => {
+    const leave = (emplid: number): TermLeave => ({
+      id: 90 + emplid,
+      userId: 900 + emplid,
+      emplid,
+      name: `On Leave ${emplid}`,
+      lastName: "Leave",
+      type: "sabbatical",
+      status: "confirmed",
+      startDate: "2026-08-31",
+      endDate: "2027-05-31",
+    });
+
+    it("lists a person on leave who teaches nothing, not as under load", () => {
+      const { instructors } = tablesOf(
+        [],
+        rateOverrides(),
+        [],
+        new Map([[1, [leave(1)]]]),
+      );
+
+      expect(instructors).toMatchObject([
+        {
+          emplid: 1,
+          name: "On Leave 1",
+          loadLabel: "0 of 2",
+          isUnderLoad: false,
+          total: 0,
+          leaves: [{ id: 91 }],
+        },
+      ]);
+    });
+
+    it("attaches the leave to a person who also teaches", () => {
+      const { instructors } = tablesOf(
+        [section(1, { instructors: [pi(2)] })],
+        rateOverrides(),
+        [],
+        new Map([[2, [leave(2)]]]),
+      );
+
+      expect(instructors[0]).toMatchObject({ emplid: 2, total: 10000 });
+      expect(instructors[0].leaves).toHaveLength(1);
+    });
   });
 
   it("leaves cancelled sections out", () => {

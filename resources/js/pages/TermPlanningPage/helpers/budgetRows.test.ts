@@ -156,8 +156,8 @@ describe("budgetRowOf", () => {
       }),
     ]);
 
-    expect(lecture.paidOnLectureLabel).toBeNull();
-    expect(lab.paidOnLectureLabel).toBe("Label 1");
+    expect(lecture.paidElsewhereLabel).toBeNull();
+    expect(lab.paidElsewhereLabel).toBe("Label 1");
   });
 
   it("leaves the instructor cost null when a line has no rate", () => {

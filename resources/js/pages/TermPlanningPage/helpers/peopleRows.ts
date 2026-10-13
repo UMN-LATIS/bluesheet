@@ -1,4 +1,4 @@
-import type { CostAssumptions, SisEmployee } from "@/types";
+import type { CostAssumptions, SisEmployee, TermLeave } from "@/types";
 import type { PlannedSection } from "../types";
 import type { RateOverrides } from "./costOverrides";
 import {
@@ -40,6 +40,8 @@ export interface PersonRow {
   hasMissingRate: boolean;
   hasLineOverride: boolean;
   paidSections: PaidSection[];
+  /** Leaves that overlap the term. */
+  leaves: TermLeave[];
 }
 
 export interface PeopleTables {
@@ -67,8 +69,8 @@ const shortLabelOf = ({ catalogNumber, section }: PlannedSection) =>
   `${catalogNumber}-${section}`;
 
 /**
- * Everyone charged this term, plus anyone on the roster
- * whose job code expects a load.
+ * Everyone charged this term, plus anyone on leave and
+ * anyone on the roster whose job code expects a load.
  */
 export function peopleTablesOf(
   sections: PlannedSection[],
@@ -76,6 +78,7 @@ export function peopleTablesOf(
   assumptions: CostAssumptions,
   rateOverrides: RateOverrides,
   roster: SisEmployee[],
+  leavesByEmplid: Map<number, TermLeave[]>,
 ): PeopleTables {
   const pricingOfEmplid = pricingByEmplidOf(assumptions, rateOverrides);
   const termRates = termRatesOf(assumptions, rateOverrides);
@@ -109,11 +112,13 @@ export function peopleTablesOf(
     const pricing = pricingOfEmplid(emplid);
     const { jobCode, rate } = pricing;
     const isTa = lines.length > 0 && lines.every(({ role }) => role === "ta");
+    const leaves = leavesByEmplid.get(emplid) ?? [];
     const person =
       rosterByEmplid.get(emplid) ??
       charges
         .flatMap(({ section }) => section.instructors)
-        .find((instructor) => instructor.emplid === emplid);
+        .find((instructor) => instructor.emplid === emplid) ??
+      leaves[0];
     const rateWithoutOverride = isTa
       ? taAppointmentRateOf(pricing, termRates)
       : instructorRateOf(pricing, termRates);
@@ -144,8 +149,13 @@ export function peopleTablesOf(
       loadLabel: isTa
         ? `${paidCount * TA_APPOINTMENT_PERCENT}%`
         : loadLabelOf(paidCount, expectedCount),
-      isUnderLoad: !isTa && expectedCount !== null && paidCount < expectedCount,
+      isUnderLoad:
+        !isTa &&
+        leaves.length === 0 &&
+        expectedCount !== null &&
+        paidCount < expectedCount,
       ...chargeSummaryOf(charges),
+      leaves,
     };
 
     return { isTa, row };
@@ -153,13 +163,15 @@ export function peopleTablesOf(
 
   const hasExpectedLoad = ({ emplid }: SisEmployee) =>
     (pricingOfEmplid(emplid).rate?.annualLoad ?? 0) > 0;
-  const idleRoster = roster.filter(
-    (employee) =>
-      !chargesByEmplid.has(employee.emplid) && hasExpectedLoad(employee),
-  );
+  const idleEmplids = new Set([
+    ...roster.filter(hasExpectedLoad).map(({ emplid }) => emplid),
+    ...leavesByEmplid.keys(),
+  ]);
   const rows = [
     ...[...chargesByEmplid].map(([emplid, charges]) => rowOf(emplid, charges)),
-    ...idleRoster.map(({ emplid }) => rowOf(emplid, [])),
+    ...[...idleEmplids]
+      .filter((emplid) => !chargesByEmplid.has(emplid))
+      .map((emplid) => rowOf(emplid, [])),
   ].sort((a, b) => a.row.name.localeCompare(b.row.name));
   const rowsWhere = (isTaWanted: boolean) =>
     rows.filter(({ isTa }) => isTa === isTaWanted).map(({ row }) => row);
@@ -190,6 +202,7 @@ function unstaffedRowsOf(charges: Charge[], rate: number | null): PersonRow[] {
       loadLabel: String(paidCount),
       isUnderLoad: false,
       ...chargeSummaryOf(charges),
+      leaves: [],
     },
   ];
 }

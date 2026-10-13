@@ -148,6 +148,7 @@
           :history="enrollmentHistoryQuery.data.value ?? null"
           :termName="term?.name ?? ''"
           :roster="roster"
+          :leavesByEmplid="termLeavesByEmplid"
         />
 
         <div
@@ -838,6 +839,7 @@ const selectedPersonBudget = computed(() => {
     assumptions,
     rateOverrides,
     roster.value,
+    termLeavesByEmplid.value,
   );
   const isEmplid = ({ emplid }: { emplid: number | null }) =>
     emplid === selectedEmplid;

@@ -51,6 +51,7 @@
           :canEdit="schedule.canEditCosts"
           @selectSection="selectSection"
           @selectPerson="selectPerson"
+          @selectLeave="selectLeave"
           @editRate="editPersonRate"
         />
 
@@ -63,6 +64,7 @@
           :canEdit="schedule.canEditCosts"
           @selectSection="selectSection"
           @selectPerson="selectPerson"
+          @selectLeave="selectLeave"
           @editRate="editPersonRate"
         />
 
@@ -89,7 +91,12 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import type { CostAssumptions, EnrollmentHistory, SisEmployee } from "@/types";
+import type {
+  CostAssumptions,
+  EnrollmentHistory,
+  SisEmployee,
+  TermLeave,
+} from "@/types";
 import BudgetHeader from "./BudgetHeader.vue";
 import BudgetTabBar from "./BudgetTabBar.vue";
 import PeopleTable from "./PeopleTable.vue";
@@ -118,6 +125,7 @@ const props = defineProps<{
   history: EnrollmentHistory | null;
   termName: string;
   roster: SisEmployee[];
+  leavesByEmplid: Map<number, TermLeave[]>;
 }>();
 
 const seriesByKey = computed(() =>
@@ -152,6 +160,7 @@ const peopleTables = computed(() =>
         props.assumptions,
         props.schedule.rateOverrides,
         props.roster,
+        props.leavesByEmplid,
       )
     : { instructors: [], tas: [] },
 );
@@ -161,6 +170,9 @@ const editPersonRate = (emplid: number, amount: number | null) =>
     type: "rateOverrideEdited",
     edit: { rate: { kind: "person", emplid }, amount },
   });
+
+const selectLeave = (leaveId: number) =>
+  props.schedule.dispatch({ type: "selectedLeave", leaveId });
 
 const selectPerson = (emplid: number) =>
   props.schedule.dispatch({ type: "selectedPerson", emplid });

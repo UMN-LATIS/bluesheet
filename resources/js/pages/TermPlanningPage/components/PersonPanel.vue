@@ -13,7 +13,10 @@
         >
           {{ budget.jobCode }}
         </span>
-        <span v-if="budget" class="tw-text-[11px] tw-text-on-surface-variant">
+        <span
+          v-if="budget && budget.fundLabel !== '—'"
+          class="tw-text-[11px] tw-text-on-surface-variant"
+        >
           {{ budget.fundLabel }}
         </span>
         <button

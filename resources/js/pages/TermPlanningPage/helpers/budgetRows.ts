@@ -44,10 +44,10 @@ export interface BudgetRow {
   instructorCost: number | null;
   hasInstructorOverride: boolean;
   /**
-   * The lecture this section's instructor cost is paid on.
-   * Null when the section is paid on its own section.
+   * The section this section's instructor cost is paid on.
+   * Null when it is paid here, or on more than one section.
    */
-  paidOnLectureLabel: string | null;
+  paidElsewhereLabel: string | null;
   /**
    * Empty when nothing on the section can be overridden.
    */
@@ -91,7 +91,7 @@ export function budgetRowOf(
     instructorName: instructorNameOf(leads, isUnstaffed, taLines.length > 0),
     instructorCost: sumOrNull(instructorLines),
     hasInstructorOverride: instructorLines.some(isOverriddenLine),
-    paidOnLectureLabel: paidOnLectureLabelOf(instructorLines, labelOfSection),
+    paidElsewhereLabel: paidElsewhereLabelOf(instructorLines, labelOfSection),
     instructorLines: overridableLinesOf(
       section,
       instructorLines.filter(({ role }) => role === "instructor"),
@@ -106,17 +106,22 @@ export function budgetRowOf(
 
 const isOverriddenLine = ({ basis }: CostLine) => basis.kind === "lineOverride";
 
-function paidOnLectureLabelOf(
+function paidSectionIdOf({ basis }: CostLine): number | null {
+  if (basis.kind === "paidOnLecture") return basis.lectureSectionId;
+  if (basis.kind === "chargedOnOtherSection") return basis.sectionId;
+
+  return null;
+}
+
+function paidElsewhereLabelOf(
   instructorLines: CostLine[],
   labelOfSection: (sectionId: number) => string,
 ): string | null {
-  const [first] = instructorLines;
-  if (first?.basis.kind !== "paidOnLecture") return null;
-  if (!instructorLines.every(({ basis }) => basis.kind === "paidOnLecture")) {
-    return null;
-  }
+  const paidSectionIds = new Set(instructorLines.map(paidSectionIdOf));
+  const [onlyPaidSectionId] = paidSectionIds;
+  if (paidSectionIds.size !== 1 || onlyPaidSectionId == null) return null;
 
-  return labelOfSection(first.basis.lectureSectionId);
+  return labelOfSection(onlyPaidSectionId);
 }
 
 function overridableLinesOf(

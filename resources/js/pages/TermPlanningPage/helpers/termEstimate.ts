@@ -100,11 +100,18 @@ export function estimateTermCost(
     return amount === undefined ? line : overriddenLine(line, amount);
   };
 
+  const linesBySectionId = paidOncePerMeetingTime(
+    liveSections,
+    new Map(
+      sections.map((section) => [section.id, costLinesOf(section, context)]),
+    ),
+  );
+
   return new Map(
     sections.map((section) => [
       section.id,
       sectionCostOf(
-        costLinesOf(section, context).map((line) =>
+        (linesBySectionId.get(section.id) ?? []).map((line) =>
           withLineOverride(section, line),
         ),
       ),
@@ -345,7 +352,7 @@ const taCourseKey = (emplid: number, courseCode: string) =>
 function chargedSectionIdByTaCourseOf(
   sections: PlannedSection[],
 ): Map<string, number> {
-  const byPreference = [...sections].sort(lecturesThenSectionNumber);
+  const byPreference = [...sections].sort(lecturesThenCourseAndSection);
   const charged = new Map<string, number>();
 
   for (const section of byPreference) {
@@ -358,14 +365,65 @@ function chargedSectionIdByTaCourseOf(
   return charged;
 }
 
-function lecturesThenSectionNumber(
+function lecturesThenCourseAndSection(
   a: PlannedSection,
   b: PlannedSection,
 ): number {
   const isLecture = (section: PlannedSection) => section.component === LECTURE;
   if (isLecture(a) !== isLecture(b)) return isLecture(a) ? -1 : 1;
 
-  return a.section.localeCompare(b.section);
+  return (
+    a.courseCode.localeCompare(b.courseCode) ||
+    a.section.localeCompare(b.section)
+  );
+}
+
+function meetingTimeKeyOf({ meetings }: PlannedSection): string | null {
+  if (meetings.length === 0) return null;
+
+  return meetings
+    .map(
+      ({ days, startTime, endTime }) =>
+        `${[...days].sort().join(",")} ${startTime}-${endTime}`,
+    )
+    .sort()
+    .join("|");
+}
+
+function paidOncePerMeetingTime(
+  sections: PlannedSection[],
+  linesBySectionId: Map<number, CostLine[]>,
+): Map<number, CostLine[]> {
+  const paidSectionIdByPersonMeeting = new Map<string, number>();
+  const result = new Map(linesBySectionId);
+
+  for (const section of [...sections].sort(lecturesThenCourseAndSection)) {
+    const meetingTimeKey = meetingTimeKeyOf(section);
+    if (meetingTimeKey === null) continue;
+
+    const lines = linesBySectionId.get(section.id) ?? [];
+    result.set(
+      section.id,
+      lines.map((line): CostLine => {
+        if (line.emplid === null || line.basis.kind !== "rate") return line;
+
+        const key = `${line.emplid}|${meetingTimeKey}`;
+        const paidSectionId = paidSectionIdByPersonMeeting.get(key);
+        if (paidSectionId === undefined) {
+          paidSectionIdByPersonMeeting.set(key, section.id);
+          return line;
+        }
+
+        return {
+          ...line,
+          amount: 0,
+          basis: { kind: "chargedOnOtherSection", sectionId: paidSectionId },
+        };
+      }),
+    );
+  }
+
+  return result;
 }
 
 const sum = (amounts: number[]) =>

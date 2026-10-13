@@ -26,7 +26,7 @@
       >
         <BudgetCell
           role="cell"
-          class="tw-font-semibold"
+          class="tw-flex-col tw-items-start tw-justify-center tw-gap-0.5 tw-py-1 tw-font-semibold"
           :class="{ 'tw-text-brand': row.emplid === null }"
         >
           <button
@@ -39,6 +39,12 @@
             {{ row.name }}
           </button>
           <span v-else class="tw-truncate">{{ row.name }}</span>
+          <LeaveBadge
+            v-for="leave in row.leaves"
+            :key="leave.id"
+            :leave="leave"
+            @click="emit('selectLeave', leave.id)"
+          />
         </BudgetCell>
         <BudgetCell role="cell" class="tw-tabular-nums">
           {{ row.jobCode }}
@@ -117,6 +123,7 @@
 import { computed } from "vue";
 import BudgetCell from "./BudgetCell.vue";
 import CapsLabel from "./CapsLabel.vue";
+import LeaveBadge from "./LeaveBadge.vue";
 import MissingRate from "./MissingRate.vue";
 import OverrideMarker from "./OverrideMarker.vue";
 import RateInputCell from "./RateInputCell.vue";
@@ -135,11 +142,12 @@ const props = defineProps<{
 const emit = defineEmits<{
   selectSection: [sectionId: number];
   selectPerson: [emplid: number];
+  selectLeave: [leaveId: number];
   editRate: [emplid: number, amount: number | null];
 }>();
 
 const GRID_TEMPLATE_COLUMNS =
-  "minmax(150px,1.2fr) 76px minmax(150px,1.3fr) 84px 120px 76px 108px minmax(180px,1.6fr)";
+  "minmax(180px,1.2fr) 76px minmax(150px,1.3fr) 84px 120px 76px 108px minmax(180px,1.6fr)";
 
 const headings = computed(() => [
   { label: "Name", isNumeric: false },

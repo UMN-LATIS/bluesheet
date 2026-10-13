@@ -98,10 +98,10 @@
             @editLine="(edit) => emit('editLine', edit)"
           >
             <span
-              v-if="row.paidOnLectureLabel"
+              v-if="row.paidElsewhereLabel"
               class="tw-text-[11px] tw-font-normal tw-text-on-surface-variant"
             >
-              ↳ in {{ row.paidOnLectureLabel }}
+              ↳ in {{ row.paidElsewhereLabel }}
             </span>
             <MissingRate v-else-if="row.instructorCost === null" />
             <template v-else>{{
