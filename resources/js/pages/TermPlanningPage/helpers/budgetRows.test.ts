@@ -43,7 +43,7 @@ const rowsOf = (
       costs.get(section.id),
       [],
       labelOfSection,
-      jobLabelsOf(assumptions),
+      jobLabelsOf(assumptions, rateOverrides()),
     ),
   );
 };
@@ -339,6 +339,7 @@ describe("jobLabelsOf", () => {
   const labelOf = (people: ReturnType<typeof costPerson>[]) =>
     jobLabelsOf(
       costAssumptions({ jobCodes: [jobCodeRate("A", 4000)], people }),
+      rateOverrides(),
     );
 
   it("uses the admin's title for a job code entered in Nova", () => {

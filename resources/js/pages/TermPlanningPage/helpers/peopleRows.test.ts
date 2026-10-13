@@ -53,6 +53,7 @@ const groupsOf = (sections: PlannedSection[]) =>
       lineOverridesByKey: lineOverridesByKeyOf([], {}),
     }),
     assumptions,
+    rateOverrides(),
     roster,
     (emplid) => `Job of ${emplid}`,
   );
@@ -129,6 +130,15 @@ describe("fundGroupsOf", () => {
     });
   });
 
+  it("counts only sections led toward the load of someone who also TAs", () => {
+    const [ui] = groupsOf([
+      section(1, { instructors: [pi(2)] }),
+      section(2, { instructors: [sisInstructor(2, "TA")] }),
+    ]);
+
+    expect(ui.people[0]).toMatchObject({ emplid: 2, loadLabel: "1 of 3" });
+  });
+
   it("totals each group", () => {
     const groups = groupsOf([
       section(1, { instructors: [pi(2)] }),
@@ -143,6 +153,7 @@ describe("fundGroupsOf", () => {
       [],
       new Map(),
       assumptions,
+      rateOverrides(),
       [employee(1, "Priya Raman"), employee(3, "Staff Person")],
       (emplid) => `Job of ${emplid}`,
     );

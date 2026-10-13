@@ -64,13 +64,9 @@ export function jobCodeRateRowsOf(
   const instructors = assumptions.people.filter(({ emplid }) =>
     instructorEmplids.has(emplid),
   );
-  const isPricedPerAppointment = (code: string) =>
-    ratesByCode.get(code)?.instructorType === "teaching_assistant";
   const heldCodes = [
     ...new Set(instructors.flatMap(({ jobCodes }) => jobCodes)),
-  ]
-    .filter((code) => !isPricedPerAppointment(code))
-    .sort();
+  ].sort();
   const positionTitleOf = (code: string) =>
     instructors.map(({ positionTitles }) => positionTitles[code]).find(Boolean);
 

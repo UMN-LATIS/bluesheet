@@ -41,9 +41,10 @@ const rowsOf = (overrides = rateOverrides()) =>
   jobCodeRateRowsOf(assumptions, overrides, new Set([1, 2, 3, 4]), "Fall 2026");
 
 describe("jobCodeRateRowsOf", () => {
-  it("lists this term's instructors' codes, skips TA codes, and ends with TBA", () => {
+  it("lists this term's instructors' codes, TA codes too, then TBA", () => {
     expect(rowsOf().map(({ code }) => code)).toEqual([
       "9401",
+      "9511",
       "9517",
       "9753",
       "TBA",

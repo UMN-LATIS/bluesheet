@@ -46,8 +46,9 @@ interface CourseRate {
 export function pricingOf(
   jobCodesHeld: string[],
   ratesByJobCode: Map<string, JobCodeRate>,
+  overrides: RateOverrides,
 ): PersonPricing {
-  const jobCode = highestRateJobCode(jobCodesHeld, ratesByJobCode);
+  const jobCode = highestRateJobCode(jobCodesHeld, ratesByJobCode, overrides);
   const isAbd = jobCodesHeld.some(
     (code) => ratesByJobCode.get(code)?.studentStatus === "abd",
   );
@@ -65,9 +66,12 @@ const UNRATED_SORTS_LAST = -1;
 function highestRateJobCode(
   jobCodes: string[],
   ratesByJobCode: Map<string, JobCodeRate>,
+  overrides: RateOverrides,
 ): string | null {
   const costOf = (jobCode: string) =>
-    ratesByJobCode.get(jobCode)?.costPerCourse ?? UNRATED_SORTS_LAST;
+    overrides.costPerCourseByJobCode.get(jobCode) ??
+    ratesByJobCode.get(jobCode)?.costPerCourse ??
+    UNRATED_SORTS_LAST;
 
   return [...jobCodes].sort((a, b) => costOf(b) - costOf(a))[0] ?? null;
 }

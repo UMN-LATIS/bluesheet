@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { refusalOfDollars } from "../../helpers/dollarAmounts";
 
 const props = defineProps<{
@@ -43,6 +43,11 @@ const props = defineProps<{
 const emit = defineEmits<{ change: [amount: number | null] }>();
 
 const refusal = ref<string | null>(null);
+
+watch(
+  () => props.amount,
+  () => (refusal.value = null),
+);
 
 const shownAmount = computed(() => {
   const { amount } = props;

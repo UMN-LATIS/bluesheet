@@ -191,14 +191,13 @@ describe('job code rates', function () {
         actingAs($this->groupManager);
     });
 
-    it('describes a job code with its type, annual load, and student status', function () {
+    it('describes a job code with its type, annual load, and student status, and lists the migrated TBA row', function () {
         JobCode::factory()->create([
             'code' => '9519',
             'instructor_type' => InstructorType::TeachingAssistant,
             'annual_load' => 2,
             'student_status' => StudentStatus::Abd,
         ]);
-        JobCode::factory()->create(['code' => JobCode::UNSTAFFED_CODE, 'instructor_type' => null, 'annual_load' => null]);
 
         $rows = collect(getJson(costAssumptionsUrl($this->group))->json('jobCodes'))->keyBy('code');
 

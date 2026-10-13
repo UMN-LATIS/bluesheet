@@ -1,6 +1,7 @@
 import type { CostAssumptions } from "@/types";
 import type { PlannedSection, SisInstructor } from "../types";
 import { describeCostBasis } from "./costBasis";
+import type { RateOverrides } from "./costOverrides";
 import type { EnrollmentPoint } from "./enrollmentHistory";
 import { daysMetLabel } from "./scheduleDays";
 import { instructorsOfRecord, TA_ROLE } from "./sectionPeople";
@@ -92,8 +93,9 @@ export const courseLabelOf = (section: PlannedSection) =>
  */
 export function jobLabelsOf(
   assumptions: CostAssumptions,
+  rateOverrides: RateOverrides,
 ): (emplid: number) => string {
-  const pricingOfEmplid = pricingByEmplidOf(assumptions);
+  const pricingOfEmplid = pricingByEmplidOf(assumptions, rateOverrides);
   const positionTitlesByEmplid = new Map(
     assumptions.people.map((person) => [person.emplid, person.positionTitles]),
   );

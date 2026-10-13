@@ -62,7 +62,7 @@ export function estimateTermCost(
   input: EstimateInput,
 ): Map<number, SectionCost> {
   const { sections, assumptions, rateOverrides, lineOverridesByKey } = input;
-  const pricingOfEmplid = pricingByEmplidOf(assumptions);
+  const pricingOfEmplid = pricingByEmplidOf(assumptions, rateOverrides);
 
   const liveSections = sections.filter(({ isCancelled }) => !isCancelled);
   const crosslistOwnerByListing = blockOwners(liveSections);
@@ -123,6 +123,7 @@ export function estimateTermCost(
 
 export function pricingByEmplidOf(
   assumptions: CostAssumptions,
+  rateOverrides: RateOverrides,
 ): (emplid: number) => PersonPricing {
   const ratesByJobCode = ratesByJobCodeOf(assumptions);
   const jobCodesByEmplid = new Map(
@@ -130,7 +131,11 @@ export function pricingByEmplidOf(
   );
 
   return (emplid) =>
-    pricingOf(jobCodesByEmplid.get(emplid) ?? [], ratesByJobCode);
+    pricingOf(
+      jobCodesByEmplid.get(emplid) ?? [],
+      ratesByJobCode,
+      rateOverrides,
+    );
 }
 
 const ratesByJobCodeOf = (assumptions: CostAssumptions) =>

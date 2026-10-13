@@ -35,15 +35,14 @@
         class="tw-grid tw-grid-cols-[minmax(0,1.3fr)_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,2fr)] tw-text-xs"
       >
         <div role="row" class="tw-contents">
-          <CapsLabel
+          <ColumnHeading
             v-for="heading in HEADINGS"
             :key="heading.label"
             role="columnheader"
-            class="tw-border-0 tw-border-b tw-border-solid tw-border-outline-variant tw-px-2 tw-py-[7px]"
             :class="{ 'tw-text-right': heading.isNumeric }"
           >
             {{ heading.label }}
-          </CapsLabel>
+          </ColumnHeading>
         </div>
         <div
           v-for="person in fundGroup.people"
@@ -131,7 +130,7 @@
 <script setup lang="ts">
 import { colorOfType } from "@/utils/meetingTypeColors";
 import BudgetCell from "./BudgetCell.vue";
-import CapsLabel from "./CapsLabel.vue";
+import ColumnHeading from "./ColumnHeading.vue";
 import MissingRate from "./MissingRate.vue";
 import OverrideMarker from "./OverrideMarker.vue";
 import { formatWholeDollars } from "../../helpers/money";

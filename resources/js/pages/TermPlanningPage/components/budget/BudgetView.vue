@@ -120,7 +120,9 @@ const labelOfSection = (sectionId: number) => {
 };
 
 const jobLabelOfEmplid = computed(() =>
-  props.assumptions ? jobLabelsOf(props.assumptions) : () => "",
+  props.assumptions && props.schedule.rateOverrides
+    ? jobLabelsOf(props.assumptions, props.schedule.rateOverrides)
+    : () => "",
 );
 
 const instructorEmplids = computed(
@@ -133,11 +135,14 @@ const instructorEmplids = computed(
 );
 
 const fundGroups = computed(() =>
-  props.assumptions && props.schedule.sectionCosts
+  props.assumptions &&
+  props.schedule.sectionCosts &&
+  props.schedule.rateOverrides
     ? fundGroupsOf(
         props.schedule.localSections,
         props.schedule.sectionCosts,
         props.assumptions,
+        props.schedule.rateOverrides,
         props.roster,
         jobLabelOfEmplid.value,
       )

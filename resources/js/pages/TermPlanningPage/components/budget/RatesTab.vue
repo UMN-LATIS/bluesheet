@@ -17,13 +17,9 @@
       <div
         class="tw-grid tw-grid-cols-[72px_minmax(0,1.4fr)_minmax(0,1.2fr)_minmax(0,0.6fr)_120px_32px_minmax(0,1.8fr)] [&>*]:tw-py-1 tw-border-0 tw-border-t tw-border-solid tw-border-outline tw-text-xs"
       >
-        <CapsLabel
-          v-for="heading in JOB_CODE_HEADINGS"
-          :key="heading"
-          :class="HEADING_CLASS"
-        >
+        <ColumnHeading v-for="heading in JOB_CODE_HEADINGS" :key="heading">
           {{ heading }}
-        </CapsLabel>
+        </ColumnHeading>
         <template v-for="row in jobCodeRows" :key="row.code">
           <BudgetCell :hasRightBorder="false" class="tw-font-semibold">
             {{ row.codeLabel }}
@@ -94,12 +90,10 @@
         <div
           class="tw-grid tw-grid-cols-[minmax(0,1fr)_minmax(0,1fr)_120px_32px_120px_32px] [&>*]:tw-py-1 tw-border-0 tw-border-t tw-border-solid tw-border-outline tw-text-xs"
         >
-          <CapsLabel :class="HEADING_CLASS">Appointment</CapsLabel>
-          <CapsLabel :class="HEADING_CLASS">Hours</CapsLabel>
-          <CapsLabel :class="[HEADING_CLASS, 'tw-col-span-2']"
-            >Regular</CapsLabel
-          >
-          <CapsLabel :class="[HEADING_CLASS, 'tw-col-span-2']">ABD</CapsLabel>
+          <ColumnHeading>Appointment</ColumnHeading>
+          <ColumnHeading>Hours</ColumnHeading>
+          <ColumnHeading class="tw-col-span-2">Regular</ColumnHeading>
+          <ColumnHeading class="tw-col-span-2">ABD</ColumnHeading>
           <template v-for="row in taRows" :key="row.appointmentPercent">
             <BudgetCell :hasRightBorder="false" class="tw-font-semibold">
               {{ row.appointmentPercent }}% appointment
@@ -151,6 +145,7 @@ import { computed } from "vue";
 import type { CostAssumptions, StudentStatus } from "@/types";
 import BudgetCell from "./BudgetCell.vue";
 import CapsLabel from "./CapsLabel.vue";
+import ColumnHeading from "./ColumnHeading.vue";
 import DollarInput from "./DollarInput.vue";
 import ResetAllButton from "./ResetAllButton.vue";
 import ResetButton from "./ResetButton.vue";
@@ -186,8 +181,6 @@ const JOB_CODE_HEADINGS = [
   "",
   "Source",
 ];
-const HEADING_CLASS =
-  "tw-border-0 tw-border-b tw-border-solid tw-border-outline-variant tw-px-2 !tw-py-[7px]";
 const STUDENT_STATUSES: StudentStatus[] = ["regular", "abd"];
 const STATUS_LABELS: Record<StudentStatus, string> = {
   regular: "regular",

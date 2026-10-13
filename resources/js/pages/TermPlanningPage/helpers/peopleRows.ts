@@ -6,6 +6,7 @@ import type {
 } from "@/types";
 import type { PlannedSection } from "../types";
 import { courseLabelOf } from "./budgetRows";
+import type { RateOverrides } from "./costOverrides";
 import { TA_APPOINTMENT_PERCENT } from "./costRules";
 import {
   pricingByEmplidOf,
@@ -107,10 +108,14 @@ export function fundGroupsOf(
   sections: PlannedSection[],
   costsBySectionId: Map<number, SectionCost>,
   assumptions: CostAssumptions,
+  rateOverrides: RateOverrides,
   roster: SisEmployee[],
   jobLabelOfEmplid: (emplid: number) => string,
 ): FundGroup[] {
-  const pricingOfEmplid = pricingByEmplidOf(assumptions);
+  const pricingOfEmplid = pricingByEmplidOf(assumptions, rateOverrides);
+  const rosterByEmplid = new Map(
+    roster.map((employee) => [employee.emplid, employee]),
+  );
   const liveSections = sections.filter(({ isCancelled }) => !isCancelled);
   const chargesByEmplid = new Map<number, Charge[]>();
 
@@ -118,10 +123,9 @@ export function fundGroupsOf(
     for (const line of costsBySectionId.get(section.id)?.lines ?? []) {
       if (line.emplid === null) continue;
 
-      chargesByEmplid.set(line.emplid, [
-        ...(chargesByEmplid.get(line.emplid) ?? []),
-        { section, line },
-      ]);
+      const charges = chargesByEmplid.get(line.emplid) ?? [];
+      charges.push({ section, line });
+      chargesByEmplid.set(line.emplid, charges);
     }
   }
 
@@ -131,7 +135,7 @@ export function fundGroupsOf(
     const isTa = lines.length > 0 && lines.every(({ role }) => role === "ta");
     const fund = fundOf(rate, isTa);
     const person =
-      roster.find((employee) => employee.emplid === emplid) ??
+      rosterByEmplid.get(emplid) ??
       charges
         .flatMap(({ section }) => section.instructors)
         .find((instructor) => instructor.emplid === emplid);
@@ -143,7 +147,10 @@ export function fundGroupsOf(
       ),
     ];
     const allSections = new Set(charges.map(({ section }) => section));
-    const paidLineCount = lines.filter(isPaid).length;
+    const loadRole = isTa ? "ta" : "instructor";
+    const paidLineCount = lines.filter(
+      (line) => line.role === loadRole && isPaid(line),
+    ).length;
     const expectedSectionCount =
       rate?.annualLoad == null
         ? null
