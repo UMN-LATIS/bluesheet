@@ -75,7 +75,7 @@ describe("jobCodeRateRowsOf", () => {
     expect(candidate).toMatchObject({
       title: "Ph D Candidate Grad Instr",
       amount: null,
-      source: "No rate entered · costs the Unstaffed rate",
+      source: "No rate in Nova · costs the Unstaffed rate",
     });
   });
 

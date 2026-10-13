@@ -27,6 +27,8 @@ export interface OverridableLine {
   defaultAmount: number | null;
   reason: string | null;
   isOverridden: boolean;
+  /** The lecture that pays this line. Null when it pays its own. */
+  paidOnLectureLabel: string | null;
 }
 
 export interface BudgetRow {
@@ -144,12 +146,13 @@ export function budgetRowOf(
     instructorLines: overridableLinesOf(
       section,
       instructorLines.filter(({ role }) => role === "instructor"),
+      labelOfSection,
     ),
     assistantNames,
     taBasisLabel: taBasisLabelOf(taLines, labelOfSection),
     taCostCell: taCostCellOf(taLines, labelOfSection),
     hasTaOverride: taLines.some(isOverridden),
-    taLines: overridableLinesOf(section, taLines),
+    taLines: overridableLinesOf(section, taLines, labelOfSection),
     notes: section.notes,
   };
 }
@@ -174,6 +177,7 @@ function paidOnLectureLabelOf(
 function overridableLinesOf(
   section: PlannedSection,
   lines: CostLine[],
+  labelOfSection: (sectionId: number) => string,
 ): OverridableLine[] {
   return lines.flatMap(({ emplid, amount, basis }) => {
     if (emplid === null || basis.kind === "chargedOnOtherSection") return [];
@@ -193,6 +197,10 @@ function overridableLinesOf(
         defaultAmount: isOverridden ? basis.replacedAmount : amount,
         reason: isOverridden ? basis.reason : null,
         isOverridden,
+        paidOnLectureLabel:
+          basis.kind === "paidOnLecture"
+            ? labelOfSection(basis.lectureSectionId)
+            : null,
       },
     ];
   });
@@ -230,9 +238,10 @@ function assistantNamesOf(
 ): string {
   const percentOf = (emplid: number) => {
     const basis = taLines.find((line) => line.emplid === emplid)?.basis;
-    return basis?.kind === "taAppointment"
-      ? ` ${basis.appointmentPercent}%`
-      : "";
+    if (basis?.kind !== "taAppointment") return "";
+
+    const abd = basis.studentStatus === "abd" ? " ABD" : "";
+    return ` ${basis.appointmentPercent}%${abd}`;
   };
 
   return section.instructors

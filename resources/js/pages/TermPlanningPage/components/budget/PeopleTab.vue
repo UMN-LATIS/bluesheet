@@ -3,6 +3,13 @@
     class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-gap-7 tw-overflow-auto tw-px-[18px] tw-py-4"
   >
     <p
+      v-if="isFiltered"
+      class="tw-m-0 tw-text-[11.5px] tw-text-on-surface-variant"
+    >
+      People, loads, and costs here cover every section this term, not only the
+      filtered ones.
+    </p>
+    <p
       v-if="groups.length === 0"
       class="tw-m-0 tw-text-sm tw-text-on-surface-variant"
     >
@@ -85,7 +92,7 @@
             class="tw-flex-wrap tw-gap-1 tw-py-1"
           >
             <button
-              v-for="chip in person.sections"
+              v-for="chip in person.paidSections"
               :key="chip.sectionId"
               type="button"
               class="tw-inline-flex tw-cursor-pointer tw-items-center tw-whitespace-nowrap tw-rounded-full tw-border tw-border-l-[3px] tw-border-solid tw-border-outline-variant tw-px-2 tw-py-px tw-text-[11px] tw-font-semibold tw-text-on-surface hover:tw-border-outline"
@@ -98,6 +105,12 @@
             >
               {{ chip.label }}
             </button>
+            <span
+              v-if="person.unpaidSectionCount > 0"
+              class="tw-text-[11px] tw-text-on-surface-variant"
+            >
+              +{{ person.unpaidSectionCount }} at no added cost
+            </span>
           </BudgetCell>
         </div>
       </div>
@@ -122,7 +135,7 @@ import OverrideMarker from "./OverrideMarker.vue";
 import { formatWholeDollars } from "../../helpers/money";
 import type { PeopleGroup } from "../../helpers/peopleRows";
 
-defineProps<{ groups: PeopleGroup[] }>();
+defineProps<{ groups: PeopleGroup[]; isFiltered: boolean }>();
 
 const emit = defineEmits<{ selectSection: [sectionId: number] }>();
 

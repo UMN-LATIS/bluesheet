@@ -110,7 +110,10 @@ describe("peopleGroupsOf", () => {
     ]);
 
     expect(recurring.people[0].loadLabel).toBe("1 of 2");
-    expect(recurring.people[0].sections).toHaveLength(2);
+    expect(recurring.people[0]).toMatchObject({
+      paidSections: [{ sectionId: 1 }],
+      unpaidSectionCount: 1,
+    });
   });
 
   it("shows a TA's appointment and cost", () => {

@@ -1,5 +1,10 @@
 <template>
-  <span v-if="hasHistory" class="tw-flex tw-items-center tw-gap-0.5">
+  <span
+    v-if="hasHistory"
+    role="img"
+    :aria-label="summary"
+    class="tw-flex tw-items-center tw-gap-0.5"
+  >
     <span
       v-for="tile in tiles"
       :key="tile.termCode"
@@ -65,6 +70,10 @@ function titleOf(termLabel: string, offering: EnrollmentHistorySection | null) {
 
   return `${termLabel}: ${enrollmentTotal}/${enrollmentCap}${percentFull} · ${leadInstructorLastName ?? "no instructor"}`;
 }
+
+const summary = computed(() =>
+  tiles.value.map(({ title }) => title).join("; "),
+);
 
 const tiles = computed(() =>
   props.history.map(({ termCode, offering }) => ({

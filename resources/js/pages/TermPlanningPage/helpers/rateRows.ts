@@ -76,11 +76,11 @@ export function jobCodeRateRowsOf(
     return {
       rate: { kind: "jobCode", jobCode: code },
       code,
-      title: rate?.title ?? positionTitleOf(code) ?? "Not in the job code list",
+      title: rate?.title ?? positionTitleOf(code) ?? "Not in Nova",
       instructorTypeLabel: rate?.instructorType
         ? INSTRUCTOR_TYPE_LABELS[rate.instructorType]
-        : "",
-      fundLabel: rate?.instructorType ? FUND_LABELS[rate.instructorType] : "",
+        : "—",
+      fundLabel: rate?.instructorType ? FUND_LABELS[rate.instructorType] : "—",
       amount: termAmount ?? novaAmount,
       novaAmount,
       isChangedForTerm,
@@ -150,8 +150,8 @@ function novaSourceOf(
 ): string {
   if (rate?.costPerCourse == null) {
     return code === UNSTAFFED_JOB_CODE
-      ? "No rate entered · unstaffed sections show No rate"
-      : "No rate entered · costs the Unstaffed rate";
+      ? "No rate in Nova · unstaffed sections show No rate"
+      : "No rate in Nova · costs the Unstaffed rate";
   }
 
   const { rateFiscalYear } = rate;

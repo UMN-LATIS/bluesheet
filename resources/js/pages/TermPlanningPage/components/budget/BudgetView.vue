@@ -13,6 +13,8 @@
         :shownCount="schedule.shownSections.length"
         :totalCount="schedule.localSections.length"
         :termName="termName"
+        :isSectionDataLocked="schedule.isReadOnly"
+        :canEditCosts="schedule.canEditCosts"
       />
 
       <div
@@ -44,6 +46,9 @@
         <PeopleTab
           v-else-if="schedule.budgetTab === 'people'"
           :groups="peopleGroups"
+          :isFiltered="
+            schedule.shownSections.length !== schedule.localSections.length
+          "
           @selectSection="selectSection"
         />
 

@@ -143,6 +143,7 @@ describe("budgetRowOf", () => {
         defaultAmount: 4000,
         reason: "Buyout",
         isOverridden: true,
+        paidOnLectureLabel: null,
       },
     ]);
   });

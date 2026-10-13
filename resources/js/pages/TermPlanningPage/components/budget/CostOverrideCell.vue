@@ -3,8 +3,9 @@
     v-if="canEdit && lines.length > 0"
     ref="anchor"
     type="button"
+    aria-haspopup="dialog"
     :aria-expanded="isOpen"
-    :aria-label="`Change ${costLabel} for ${courseLabel}`"
+    :aria-label="`Change ${costLabel} for ${courseLabel}${isOverridden ? ', changed for this section' : ''}`"
     :title="basisLabel"
     class="tw-relative tw-flex tw-h-full tw-w-full tw-cursor-pointer tw-items-center tw-justify-end tw-whitespace-nowrap tw-border-none tw-bg-transparent tw-px-2 tw-text-xs tw-font-semibold tw-tabular-nums tw-text-on-surface hover:tw-underline"
     @click.stop="isOpen = !isOpen"
@@ -27,7 +28,10 @@
       role="dialog"
       :aria-label="`${costLabel} for ${courseLabel}`"
       class="tw-z-[70] tw-flex tw-w-[300px] tw-flex-col tw-gap-3 tw-rounded-[10px] tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-p-3 tw-text-xs tw-shadow-lg"
-      :style="floatingStyles"
+      :style="{
+        ...floatingStyles,
+        visibility: middlewareData.hide?.referenceHidden ? 'hidden' : 'visible',
+      }"
       @keydown.esc="close"
     >
       <CapsLabel>{{ costLabel }} · {{ courseLabel }}</CapsLabel>
@@ -57,16 +61,20 @@
             />
           </span>
         </div>
-        <input
+        <label
           v-if="line.isOverridden"
-          :value="line.reason ?? ''"
-          :aria-label="`Why ${line.name}'s cost differs`"
-          placeholder="Why does this differ?"
-          class="tw-min-h-8 tw-rounded-lg tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-px-2.5 tw-text-xs tw-text-on-surface"
-          @input="editReason(line, $event)"
-        />
+          class="tw-m-0 tw-flex tw-flex-col tw-gap-0.5"
+        >
+          <CapsLabel>Reason</CapsLabel>
+          <input
+            :value="line.reason ?? ''"
+            placeholder="Why does this differ?"
+            class="tw-min-h-8 tw-rounded-lg tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-px-2.5 tw-text-xs tw-text-on-surface"
+            @input="editReason(line, $event)"
+          />
+        </label>
         <span class="tw-text-[11px] tw-text-on-surface-variant">
-          Default {{ defaultLabelOf(line) }}. Applies to this section only.
+          {{ helpTextOf(line) }}
         </span>
       </div>
     </div>
@@ -74,7 +82,14 @@
 </template>
 
 <script setup lang="ts">
-import { autoUpdate, flip, offset, shift, useFloating } from "@floating-ui/vue";
+import {
+  autoUpdate,
+  flip,
+  hide,
+  offset,
+  shift,
+  useFloating,
+} from "@floating-ui/vue";
 import { onClickOutside } from "@vueuse/core";
 import { nextTick, ref, watch } from "vue";
 import CapsLabel from "./CapsLabel.vue";
@@ -100,10 +115,10 @@ const isOpen = ref(false);
 const anchor = ref<HTMLElement | null>(null);
 const panel = ref<HTMLElement | null>(null);
 
-const { floatingStyles } = useFloating(anchor, panel, {
+const { floatingStyles, middlewareData } = useFloating(anchor, panel, {
   placement: "bottom-end",
   strategy: "fixed",
-  middleware: [offset(4), flip(), shift({ padding: 8 })],
+  middleware: [offset(4), flip(), shift({ padding: 8 }), hide()],
   whileElementsMounted: autoUpdate,
 });
 
@@ -122,6 +137,11 @@ function close() {
 
 const defaultLabelOf = ({ defaultAmount }: OverridableLine) =>
   defaultAmount === null ? "no rate" : formatWholeDollars(defaultAmount);
+
+const helpTextOf = (line: OverridableLine) =>
+  line.paidOnLectureLabel !== null && !line.isOverridden
+    ? `Paid on ${line.paidOnLectureLabel}. Enter an amount only if this section is paid separately.`
+    : `Default ${defaultLabelOf(line)}. Applies to this section only.`;
 
 function emitEdit(
   line: OverridableLine,

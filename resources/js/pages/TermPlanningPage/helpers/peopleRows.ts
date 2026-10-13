@@ -27,7 +27,9 @@ export interface PersonRow {
   cost: number;
   hasMissingRate: boolean;
   hasOverride: boolean;
-  sections: SectionChip[];
+  paidSections: SectionChip[];
+  /** Labs paid on a lecture, free sections, and the like. */
+  unpaidSectionCount: number;
 }
 
 export interface PeopleGroup {
@@ -52,8 +54,8 @@ const GROUPS: Omit<PeopleGroup, "total" | "people">[] = [
   },
   {
     fund: "unlisted",
-    label: "Not in the job code list",
-    note: "Costed at the Unstaffed rate",
+    label: "Job code not in Nova",
+    note: "Costed at the Unstaffed rate unless the Rates tab sets one",
   },
 ];
 
@@ -72,6 +74,14 @@ const UNPAID_SECTION_KINDS = [
   "chargedOnOtherSection",
 ];
 
+const isPaid = ({ basis }: CostLine) =>
+  !UNPAID_SECTION_KINDS.includes(basis.kind);
+
+interface Charge {
+  section: PlannedSection;
+  line: CostLine;
+}
+
 /**
  * Everyone charged this term, plus anyone on the roster
  * whose job code expects a load. Empty groups are left out.
@@ -85,27 +95,21 @@ export function peopleGroupsOf(
 ): PeopleGroup[] {
   const pricingOfEmplid = pricingByEmplidOf(assumptions);
   const liveSections = sections.filter(({ isCancelled }) => !isCancelled);
-  const linesByEmplid = new Map<number, CostLine[]>();
-  const sectionsByEmplid = new Map<number, PlannedSection[]>();
+  const chargesByEmplid = new Map<number, Charge[]>();
 
   for (const section of liveSections) {
     for (const line of costsBySectionId.get(section.id)?.lines ?? []) {
       if (line.emplid === null) continue;
 
-      linesByEmplid.set(line.emplid, [
-        ...(linesByEmplid.get(line.emplid) ?? []),
-        line,
+      chargesByEmplid.set(line.emplid, [
+        ...(chargesByEmplid.get(line.emplid) ?? []),
+        { section, line },
       ]);
-      if (!sectionsByEmplid.get(line.emplid)?.includes(section)) {
-        sectionsByEmplid.set(line.emplid, [
-          ...(sectionsByEmplid.get(line.emplid) ?? []),
-          section,
-        ]);
-      }
     }
   }
 
-  const rowOf = (emplid: number, lines: CostLine[]): PersonRow => {
+  const rowOf = (emplid: number, charges: Charge[]): PersonRow => {
+    const lines = charges.map(({ line }) => line);
     const { rate } = pricingOfEmplid(emplid);
     const isTa = lines.length > 0 && lines.every(({ role }) => role === "ta");
     const fund = rate?.instructorType
@@ -113,15 +117,20 @@ export function peopleGroupsOf(
       : isTa
         ? "taGi"
         : "unlisted";
-    const personSections = sectionsByEmplid.get(emplid) ?? [];
     const person =
       roster.find((employee) => employee.emplid === emplid) ??
-      personSections
-        .flatMap(({ instructors }) => instructors)
+      charges
+        .flatMap(({ section }) => section.instructors)
         .find((instructor) => instructor.emplid === emplid);
-    const paidLineCount = lines.filter(
-      ({ basis }) => !UNPAID_SECTION_KINDS.includes(basis.kind),
-    ).length;
+    const paidSections = [
+      ...new Set(
+        charges
+          .filter(({ line }) => isPaid(line))
+          .map(({ section }) => section),
+      ),
+    ];
+    const allSections = new Set(charges.map(({ section }) => section));
+    const paidLineCount = lines.filter(isPaid).length;
     const expected =
       rate?.annualLoad == null ? null : Math.ceil(rate.annualLoad / 2);
 
@@ -135,23 +144,25 @@ export function peopleGroupsOf(
       cost: lines.reduce((total, { amount }) => total + (amount ?? 0), 0),
       hasMissingRate: lines.some(({ amount }) => amount === null),
       hasOverride: lines.some(({ basis }) => basis.kind === "lineOverride"),
-      sections: personSections
+      paidSections: paidSections
         .map((section) => ({
           sectionId: section.id,
           label: courseLabelOf(section),
           component: section.component,
         }))
         .sort((a, b) => a.label.localeCompare(b.label)),
+      unpaidSectionCount: allSections.size - paidSections.length,
     };
   };
 
   const expectsLoad = ({ emplid }: SisEmployee) =>
     (pricingOfEmplid(emplid).rate?.annualLoad ?? 0) > 0;
   const idleRoster = roster.filter(
-    (employee) => !linesByEmplid.has(employee.emplid) && expectsLoad(employee),
+    (employee) =>
+      !chargesByEmplid.has(employee.emplid) && expectsLoad(employee),
   );
   const rows = [
-    ...[...linesByEmplid].map(([emplid, lines]) => rowOf(emplid, lines)),
+    ...[...chargesByEmplid].map(([emplid, charges]) => rowOf(emplid, charges)),
     ...idleRoster.map(({ emplid }) => rowOf(emplid, [])),
   ].sort((a, b) => a.name.localeCompare(b.name));
 
