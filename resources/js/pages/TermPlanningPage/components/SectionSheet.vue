@@ -76,6 +76,7 @@
       v-if="isReadOnly"
       :section="section"
       :previousOfferings="previousOfferings"
+      :costDetails="costDetails"
       @openPerson="openPerson"
     />
 
@@ -398,6 +399,11 @@
           </p>
         </Disclosure>
 
+        <template v-if="costDetails">
+          <FieldDivider class="tw-mx-3" />
+          <SectionCostDisclosure :details="costDetails" />
+        </template>
+
         <FieldDivider class="tw-mx-3" />
 
         <Disclosure label="Notes" :summary="notesSummary" :isMarked="hasNote">
@@ -603,12 +609,15 @@ import FieldLabel from "@/components/planning/FieldLabel.vue";
 import PersonField from "./PersonField.vue";
 import PersonLeaveChip from "./PersonLeaveChip.vue";
 import PreviousEnrollment from "./PreviousEnrollment.vue";
+import SectionCostDisclosure from "./SectionCostDisclosure.vue";
 import SectionFacts from "./SectionFacts.vue";
 import SegmentedControl, { type SegmentedOption } from "./SegmentedControl.vue";
 import { ComboBox, type ComboBoxOptionType } from "@/components/ComboBox";
 import { lastNameFirst } from "@/utils/lastNameFirst";
 import type { EnrollmentHistory, SisEmployee } from "@/types";
+import { sectionLabelerOf } from "../helpers/budgetRows";
 import { previousOfferingsOf } from "../helpers/enrollmentHistory";
+import { sectionCostDetailsOf } from "../helpers/sectionCostRows";
 import { LockIcon } from "@/icons";
 import { colorOfType, labelOfComponent } from "@/utils/meetingTypeColors";
 import { DELIVERY_OPTIONS, labelOfDelivery } from "../constants/delivery";
@@ -896,6 +905,21 @@ const previousOfferings = computed(() =>
       )
     : [],
 );
+
+const costDetails = computed(() => {
+  const cost =
+    props.schedule.view === "budget"
+      ? props.schedule.sectionCosts?.get(props.section.id)
+      : undefined;
+
+  return cost
+    ? sectionCostDetailsOf(
+        props.section,
+        cost,
+        sectionLabelerOf(props.sections),
+      )
+    : null;
+});
 
 const hasNote = computed(() => draft.value.notes.trim() !== "");
 

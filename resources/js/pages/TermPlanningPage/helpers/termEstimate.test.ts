@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CostLineOverride, CostPerson } from "@/types";
-import type { PlannedSection } from "../types";
+import type { PlannedSection, SisSectionMeeting } from "../types";
 import {
   costAssumptions,
   costPerson,
@@ -168,6 +168,7 @@ describe("estimateTermCost", () => {
     expect(costs.get(1)?.lines[0].basis).toEqual({
       kind: "chargedOnOtherSection",
       sectionId: 2,
+      reason: "taOncePerCourse",
     });
   });
 
@@ -603,6 +604,7 @@ describe("estimateTermCost with crosslisted sections", () => {
     expect(costs.get(1)?.lines[0].basis).toEqual({
       kind: "chargedOnOtherSection",
       sectionId: 2,
+      reason: "crosslisted",
     });
   });
 
@@ -648,5 +650,96 @@ describe("estimateTermCost with crosslisted sections", () => {
     ]);
 
     expect(costs.get(1)?.total).toBe(4000);
+  });
+});
+
+describe("estimateTermCost with sections at the same meeting time", () => {
+  const monWed10: SisSectionMeeting[] = [
+    { days: ["mon", "wed"], startTime: "10:10", endTime: "11:00" },
+  ];
+  const pi = (emplid: number) => sisInstructor(emplid, "PI");
+  const honorsTwin = (extra: Partial<PlannedSection>) =>
+    section(2, { courseCode: "ANTH-1001H", section: "001", ...extra });
+
+  it("pays a PI once across an honors twin that is not crosslisted", () => {
+    const costs = estimate([
+      section(1, { section: "001", meetings: monWed10, instructors: [pi(1)] }),
+      honorsTwin({ meetings: monWed10, instructors: [pi(1)] }),
+    ]);
+
+    expect(costs.get(1)?.total).toBe(4000);
+    expect(costs.get(2)?.lines).toEqual([
+      {
+        role: "instructor",
+        emplid: 1,
+        amount: 0,
+        basis: {
+          kind: "chargedOnOtherSection",
+          sectionId: 1,
+          reason: "sameMeetingTime",
+        },
+      },
+    ]);
+  });
+
+  it("pays both sections when their meeting times differ", () => {
+    const costs = estimate([
+      section(1, { section: "001", meetings: monWed10, instructors: [pi(1)] }),
+      honorsTwin({
+        meetings: [{ ...monWed10[0], startTime: "11:15", endTime: "12:05" }],
+        instructors: [pi(1)],
+      }),
+    ]);
+
+    expect(costs.get(2)?.total).toBe(4000);
+  });
+
+  it("still pays a co-teacher who is only on the second section", () => {
+    const costs = estimate([
+      section(1, { section: "001", meetings: monWed10, instructors: [pi(1)] }),
+      honorsTwin({ meetings: monWed10, instructors: [pi(1), pi(2)] }),
+    ]);
+
+    expect(
+      costs.get(2)?.lines.map(({ emplid, amount }) => [emplid, amount]),
+    ).toEqual([
+      [1, 0],
+      [2, 6000],
+    ]);
+  });
+
+  it("charges a TA once across two courses at the same time", () => {
+    const ta = sisInstructor(10, "TA");
+    const costs = estimate([
+      section(1, { section: "001", meetings: monWed10, instructors: [ta] }),
+      honorsTwin({ meetings: monWed10, instructors: [ta] }),
+    ]);
+
+    expect(costs.get(1)?.taCost).toBe(9000);
+    expect(costs.get(2)?.lines[0].basis).toEqual({
+      kind: "chargedOnOtherSection",
+      sectionId: 1,
+      reason: "sameMeetingTime",
+    });
+  });
+
+  it("pays on the lecture when the other section is a lab", () => {
+    const costs = estimate([
+      section(1, {
+        courseCode: "ANTH-1000",
+        component: "LAB",
+        meetings: monWed10,
+        instructors: [pi(1)],
+      }),
+      section(2, {
+        courseCode: "ANTH-2000",
+        component: "LEC",
+        meetings: monWed10,
+        instructors: [pi(1)],
+      }),
+    ]);
+
+    expect(costs.get(2)?.total).toBe(4000);
+    expect(costs.get(1)?.total).toBe(0);
   });
 });

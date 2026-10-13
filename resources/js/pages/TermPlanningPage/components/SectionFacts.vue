@@ -141,6 +141,11 @@
         </div>
       </Disclosure>
 
+      <template v-if="costDetails">
+        <FieldDivider class="tw-mx-3" />
+        <SectionCostDisclosure :details="costDetails" />
+      </template>
+
       <FieldDivider class="tw-mx-3" />
 
       <Disclosure label="Notes" :summary="notesSummary">
@@ -169,7 +174,9 @@ import FieldDivider from "@/components/planning/FieldDivider.vue";
 import FieldLabel from "@/components/planning/FieldLabel.vue";
 import PersonRecord from "./PersonRecord.vue";
 import PreviousEnrollment from "./PreviousEnrollment.vue";
+import SectionCostDisclosure from "./SectionCostDisclosure.vue";
 import type { PreviousOffering } from "../helpers/enrollmentHistory";
+import type { SectionCostDetails } from "../helpers/sectionCostRows";
 import { labelOfComponent } from "@/utils/meetingTypeColors";
 import { labelOfDelivery } from "../constants/delivery";
 import { daysMetSpelled } from "../helpers/scheduleDays";
@@ -184,6 +191,7 @@ import type { PlannedSection, SisSectionMeeting } from "../types";
 const props = defineProps<{
   section: PlannedSection;
   previousOfferings: PreviousOffering[];
+  costDetails: SectionCostDetails | null;
 }>();
 
 const emit = defineEmits<{ openPerson: [emplid: number] }>();

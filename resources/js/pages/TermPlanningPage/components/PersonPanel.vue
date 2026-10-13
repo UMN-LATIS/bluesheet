@@ -133,6 +133,12 @@
                 {{ termSection.meetingSummary
                 }}{{ termSection.isTa ? " · TA" : "" }}
               </span>
+              <span
+                v-if="termSection.unpaidReason"
+                class="tw-mt-1 tw-block tw-text-[11px] tw-text-on-surface-variant"
+              >
+                {{ termSection.unpaidReason }}
+              </span>
             </span>
             <span
               v-if="termSection.amount !== undefined"

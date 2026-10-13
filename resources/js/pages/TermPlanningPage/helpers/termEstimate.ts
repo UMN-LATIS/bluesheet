@@ -247,7 +247,11 @@ function taLineOf(
       role: "ta",
       emplid: ta.emplid,
       amount: 0,
-      basis: { kind: "chargedOnOtherSection", sectionId: chargedSectionId },
+      basis: {
+        kind: "chargedOnOtherSection",
+        sectionId: chargedSectionId,
+        reason: "taOncePerCourse",
+      },
     };
   }
 
@@ -300,6 +304,7 @@ function crosslistPartnerLines(
   const basis: CostBasis = {
     kind: "chargedOnOtherSection",
     sectionId: ownerSectionId,
+    reason: "crosslisted",
   };
 
   if (people.length === 0) {
@@ -417,7 +422,11 @@ function paidOncePerMeetingTime(
         return {
           ...line,
           amount: 0,
-          basis: { kind: "chargedOnOtherSection", sectionId: paidSectionId },
+          basis: {
+            kind: "chargedOnOtherSection",
+            sectionId: paidSectionId,
+            reason: "sameMeetingTime",
+          },
         };
       }),
     );

@@ -1,6 +1,7 @@
 import type { TeachingHistory } from "@/types";
 import type { PlannedSection } from "../types";
-import { meetingSummaryOf } from "./budgetRows";
+import { meetingSummaryOf, sectionLabelerOf } from "./budgetRows";
+import { unpaidReasonOf } from "./costReason";
 import { fillColorOf, termNameOf } from "./enrollmentHistory";
 import { TA_ROLE } from "./sectionPeople";
 import type { SectionCost } from "./termEstimate";
@@ -17,6 +18,7 @@ export interface PersonTermSection {
    * has no rate, undefined outside the Budget view.
    */
   amount: number | null | undefined;
+  unpaidReason: string | null;
 }
 
 export interface TaughtSection {
@@ -51,6 +53,8 @@ export function personTermSectionsOf(
   sections: PlannedSection[],
   costsBySectionId: Map<number, SectionCost> | null,
 ): PersonTermSection[] {
+  const labelOfSection = sectionLabelerOf(sections);
+
   return sections
     .filter(({ isCancelled }) => !isCancelled)
     .flatMap((section) => {
@@ -75,6 +79,10 @@ export function personTermSectionsOf(
           meetingSummary: meetingSummaryOf(section.meetings),
           isTa: role === TA_ROLE,
           amount,
+          unpaidReason:
+            lines
+              ?.map(({ basis }) => unpaidReasonOf(basis, labelOfSection))
+              .find((reason) => reason !== null) ?? null,
         },
       ];
     })

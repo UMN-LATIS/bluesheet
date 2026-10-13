@@ -7,4 +7,13 @@ export type CostBasis =
     }
   | { kind: "freeComponent" }
   | { kind: "paidOnLecture"; lectureSectionId: number }
-  | { kind: "chargedOnOtherSection"; sectionId: number };
+  | {
+      kind: "chargedOnOtherSection";
+      sectionId: number;
+      reason: ChargedElsewhereReason;
+    };
+
+export type ChargedElsewhereReason =
+  | "crosslisted"
+  | "sameMeetingTime"
+  | "taOncePerCourse";

@@ -98,10 +98,11 @@
             @editLine="(edit) => emit('editLine', edit)"
           >
             <span
-              v-if="row.paidElsewhereLabel"
-              class="tw-text-[11px] tw-font-normal tw-text-on-surface-variant"
+              v-if="row.paidElsewhere"
+              class="tw-cursor-help tw-text-[11px] tw-font-normal tw-text-on-surface-variant"
+              :title="row.paidElsewhere.reason"
             >
-              ↳ in {{ row.paidElsewhereLabel }}
+              ↳ in {{ row.paidElsewhere.sectionLabel }}
             </span>
             <MissingRate v-else-if="row.instructorCost === null" />
             <template v-else>{{
@@ -130,7 +131,8 @@
         >
           <span
             v-if="row.taCostCell.kind === 'chargedOnOtherSection'"
-            class="tw-text-[11px] tw-text-on-surface-variant"
+            class="tw-cursor-help tw-text-[11px] tw-text-on-surface-variant"
+            :title="row.taCostCell.reason"
           >
             ↳ in {{ row.taCostCell.sectionLabel }}
           </span>

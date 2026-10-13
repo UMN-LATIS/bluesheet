@@ -62,6 +62,37 @@ describe("personTermSectionsOf", () => {
 
     expect(personTermSectionsOf(7, sections, costs)[0].amount).toBe(4000);
   });
+
+  it("says why a section the person is on does not pay them", () => {
+    const costs = new Map<number, SectionCost>([
+      [
+        2,
+        {
+          instructorCost: 0,
+          taCost: 0,
+          total: 0,
+          lines: [
+            {
+              role: "ta",
+              emplid: 7,
+              amount: 0,
+              basis: {
+                kind: "chargedOnOtherSection",
+                sectionId: 1,
+                reason: "taOncePerCourse",
+              },
+            },
+          ],
+        },
+      ],
+    ]);
+
+    expect(
+      personTermSectionsOf(7, sections, costs).map(
+        ({ unpaidReason }) => unpaidReason,
+      ),
+    ).toEqual([null, "Paid on ANTH 1001-001. A TA is paid once per course."]);
+  });
 });
 
 describe("taughtTermsOf", () => {

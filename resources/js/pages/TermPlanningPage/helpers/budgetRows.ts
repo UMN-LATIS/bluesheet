@@ -3,6 +3,7 @@ import type {
   SisInstructor,
   SisSectionMeeting,
 } from "../types";
+import { chargedElsewhereReasonOf, unpaidReasonOf } from "./costReason";
 import type { EnrollmentPoint } from "./enrollmentHistory";
 import { daysMetLabel } from "./scheduleDays";
 import { instructorsOfRecord, TA_ROLE } from "./sectionPeople";
@@ -10,10 +11,15 @@ import type { CostLine, SectionCost } from "./termEstimate";
 import { formatTimeRange, minutesFromClock } from "./timeScale";
 
 export type TaCostCell =
-  | { kind: "chargedOnOtherSection"; sectionLabel: string }
+  | { kind: "chargedOnOtherSection"; sectionLabel: string; reason: string }
   | { kind: "missingRate" }
   | { kind: "amount"; dollars: number }
   | { kind: "none" };
+
+export interface PaidElsewhere {
+  sectionLabel: string;
+  reason: string;
+}
 
 export interface OverridableLine {
   courseCode: string;
@@ -47,7 +53,7 @@ export interface BudgetRow {
    * The section this section's instructor cost is paid on.
    * Null when it is paid here, or on more than one section.
    */
-  paidElsewhereLabel: string | null;
+  paidElsewhere: PaidElsewhere | null;
   /**
    * Empty when nothing on the section can be overridden.
    */
@@ -62,6 +68,13 @@ export interface BudgetRow {
 
 export const courseLabelOf = (section: PlannedSection) =>
   `${section.subject} ${section.catalogNumber}-${section.section}`;
+
+export const sectionLabelerOf =
+  (sections: PlannedSection[]) =>
+  (sectionId: number): string => {
+    const section = sections.find(({ id }) => id === sectionId);
+    return section ? courseLabelOf(section) : "another section";
+  };
 
 export function budgetRowOf(
   section: PlannedSection,
@@ -91,7 +104,7 @@ export function budgetRowOf(
     instructorName: instructorNameOf(leads, isUnstaffed, taLines.length > 0),
     instructorCost: sumOrNull(instructorLines),
     hasInstructorOverride: instructorLines.some(isOverriddenLine),
-    paidElsewhereLabel: paidElsewhereLabelOf(instructorLines, labelOfSection),
+    paidElsewhere: paidElsewhereOf(instructorLines, labelOfSection),
     instructorLines: overridableLinesOf(
       section,
       instructorLines.filter(({ role }) => role === "instructor"),
@@ -113,15 +126,19 @@ function paidSectionIdOf({ basis }: CostLine): number | null {
   return null;
 }
 
-function paidElsewhereLabelOf(
+function paidElsewhereOf(
   instructorLines: CostLine[],
   labelOfSection: (sectionId: number) => string,
-): string | null {
+): PaidElsewhere | null {
   const paidSectionIds = new Set(instructorLines.map(paidSectionIdOf));
   const [onlyPaidSectionId] = paidSectionIds;
-  if (paidSectionIds.size !== 1 || onlyPaidSectionId == null) return null;
+  const [first] = instructorLines;
+  const reason = first ? unpaidReasonOf(first.basis, labelOfSection) : null;
+  if (paidSectionIds.size !== 1 || onlyPaidSectionId == null || !reason) {
+    return null;
+  }
 
-  return labelOfSection(onlyPaidSectionId);
+  return { sectionLabel: labelOfSection(onlyPaidSectionId), reason };
 }
 
 function overridableLinesOf(
@@ -204,6 +221,7 @@ function taCostCellOf(
     return {
       kind: "chargedOnOtherSection",
       sectionLabel: labelOfSection(otherSectionBasis.sectionId),
+      reason: chargedElsewhereReasonOf(otherSectionBasis, labelOfSection),
     };
   }
 

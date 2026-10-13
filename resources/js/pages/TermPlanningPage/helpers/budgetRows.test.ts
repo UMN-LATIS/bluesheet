@@ -156,8 +156,26 @@ describe("budgetRowOf", () => {
       }),
     ]);
 
-    expect(lecture.paidElsewhereLabel).toBeNull();
-    expect(lab.paidElsewhereLabel).toBe("Label 1");
+    expect(lecture.paidElsewhere).toBeNull();
+    expect(lab.paidElsewhere?.sectionLabel).toBe("Label 1");
+  });
+
+  it("points an instructor charged at the same meeting time at the section that pays", () => {
+    const pi = sisInstructor(1, "PI");
+    const [regular, honors] = rowsOf([
+      plannedSection(1, monday9, { instructors: [pi] }),
+      plannedSection(2, monday9, {
+        courseCode: "ANTH-1001H",
+        instructors: [pi],
+      }),
+    ]);
+
+    expect(regular.paidElsewhere).toBeNull();
+    expect(honors.paidElsewhere).toEqual({
+      sectionLabel: "Label 1",
+      reason:
+        "Paid on Label 1. It meets at the same time, and a person is paid once per meeting time.",
+    });
   });
 
   it("leaves the instructor cost null when a line has no rate", () => {
@@ -238,7 +256,11 @@ describe("budgetRowOf", () => {
     expect(lecture.taCostCell).toEqual({ kind: "amount", dollars: 9000 });
     expect(discussion).toMatchObject({
       assistantNames: "Last10",
-      taCostCell: { kind: "chargedOnOtherSection", sectionLabel: "Label 1" },
+      taCostCell: {
+        kind: "chargedOnOtherSection",
+        sectionLabel: "Label 1",
+        reason: "Paid on Label 1. A TA is paid once per course.",
+      },
     });
   });
 });
