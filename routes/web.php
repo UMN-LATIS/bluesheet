@@ -24,8 +24,7 @@ use App\Http\Controllers\LeavePlanning\GroupController as LeavePlanningGroupCont
 use App\Http\Controllers\LeavePlanning\GroupLeaveController as LeavePlanningGroupLeaveController;
 use App\Http\Controllers\LeavePlanning\GroupTeachingHistoryController as LeavePlanningGroupTeachingHistoryController;
 use App\Http\Controllers\TermPlanning\CostAssumptionController as TermPlanningCostAssumptionController;
-use App\Http\Controllers\TermPlanning\CostPersonChoiceController as TermPlanningCostPersonChoiceController;
-use App\Http\Controllers\TermPlanning\CostSettingController as TermPlanningCostSettingController;
+use App\Http\Controllers\TermPlanning\CostOverrideController as TermPlanningCostOverrideController;
 use App\Http\Controllers\TermPlanning\EnrollmentHistoryController as TermPlanningEnrollmentHistoryController;
 use App\Http\Controllers\TermPlanning\CourseInstructorController as TermPlanningCourseInstructorController;
 use App\Http\Controllers\TermPlanning\GroupCourseController as TermPlanningGroupCourseController;
@@ -133,9 +132,10 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
         Route::put('/groups/{group}/sections/{section}', [TermPlanningGroupSectionController::class, 'update']);
         Route::delete('/groups/{group}/sections/{section}', [TermPlanningGroupSectionController::class, 'destroy']);
         Route::get('/groups/{group}/cost-assumptions', [TermPlanningCostAssumptionController::class, 'index']);
-        Route::put('/groups/{group}/cost-settings/{key}', [TermPlanningCostSettingController::class, 'update']);
-        Route::put('/groups/{group}/cost-person-choices/{emplid}', [TermPlanningCostPersonChoiceController::class, 'update'])
-            ->where('emplid', '[0-9]{1,9}');
+        Route::put('/groups/{group}/cost-rate-overrides/job-codes/{jobCode}', [TermPlanningCostOverrideController::class, 'updateJobCodeRate']);
+        Route::put('/groups/{group}/cost-rate-overrides/ta-appointments/{appointmentPercent}/{studentStatus}', [TermPlanningCostOverrideController::class, 'updateTaAppointmentRate'])
+            ->where('appointmentPercent', '[0-9]{1,3}(\.[0-9]{1,2})?');
+        Route::put('/groups/{group}/cost-line-overrides', [TermPlanningCostOverrideController::class, 'updateLine']);
         Route::get('/groups/{group}/enrollment-history', [TermPlanningEnrollmentHistoryController::class, 'index']);
     });
 

@@ -1,6 +1,9 @@
-import type { CostSetting } from "@/types";
 import type { Meeting, PlannedSection, SisSection, TimeRange } from "../types";
-import { costRuleSettingsOf } from "../helpers/costRules";
+import {
+  lineOverridesByKeyOf,
+  rateOverridesOf,
+  type RateOverrides,
+} from "../helpers/costOverrides";
 import { estimateTermCost, type SectionCost } from "../helpers/termEstimate";
 import { FILTER_FACETS } from "../types";
 import { isEqual } from "lodash-es";
@@ -135,30 +138,26 @@ export function selectSectionCosts(
   return estimateTermCost({
     sections: selectLocalSections(context, state),
     assumptions,
-    settings: costRuleSettingsOf(assumptions.settings, state.costSettingEdits),
+    rateOverrides: rateOverridesOf(
+      assumptions.rateOverrides,
+      state.rateOverrideEdits,
+    ),
+    lineOverridesByKey: lineOverridesByKeyOf(
+      assumptions.lineOverrides,
+      state.lineOverrideEdits,
+    ),
   });
 }
 
-export interface LocalCostSetting extends CostSetting {
-  /** Changed here and not yet saved. */
-  isPending: boolean;
-}
-
-/** A null edit shows the server's value, still pending. */
-export function selectLocalCostSettings(
+/** Null until the cost assumptions have loaded. */
+export function selectRateOverrides(
   context: ScheduleContext,
   state: EditorState,
-): LocalCostSetting[] {
-  return (context.costAssumptions?.settings ?? []).map((setting) => {
-    const pending = state.costSettingEdits[setting.key];
-    const isPending = pending !== undefined;
+): RateOverrides | null {
+  const assumptions = context.costAssumptions;
+  if (!assumptions) return null;
 
-    return {
-      ...setting,
-      value: pending ?? setting.value,
-      isPending,
-    };
-  });
+  return rateOverridesOf(assumptions.rateOverrides, state.rateOverrideEdits);
 }
 
 /**

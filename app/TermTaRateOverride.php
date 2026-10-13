@@ -2,24 +2,29 @@
 
 namespace App;
 
+use App\Library\TermPlan\StudentStatus;
 use Illuminate\Database\Eloquent\Model;
 use OwenIt\Auditing\Auditable as AuditableTrait;
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
-class TermCostSetting extends Model implements AuditableContract {
+class TermTaRateOverride extends Model implements AuditableContract {
     use AuditableTrait;
 
     protected $fillable = [
         'academic_org',
-        'fiscal_year',
-        'key',
-        'value',
+        'term_code',
+        'appointment_percent',
+        'student_status',
+        'cost_per_term',
         'created_by',
         'updated_by',
     ];
 
     protected $casts = [
         'academic_org' => 'integer',
-        'fiscal_year' => 'integer',
+        'term_code' => 'integer',
+        'appointment_percent' => 'float',
+        'student_status' => StudentStatus::class,
+        'cost_per_term' => 'float',
     ];
 }

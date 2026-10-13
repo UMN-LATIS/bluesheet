@@ -5,6 +5,7 @@ use App\Group;
 use App\JobCode;
 use App\JobCodeRate;
 use App\Library\TermPlan\InstructorType;
+use App\Library\TermPlan\StudentStatus;
 use App\Library\TermPlan\Season;
 use App\Membership;
 use App\SisAppointment;
@@ -14,8 +15,10 @@ use App\SisClassSection;
 use App\SisDepartment;
 use App\SisEmployee;
 use App\TaAppointmentRate;
-use App\TermCostPersonChoice;
-use App\TermCostSetting;
+use App\LocalClassSection;
+use App\TermCostLineOverride;
+use App\TermJobCodeRateOverride;
+use App\TermTaRateOverride;
 use App\User;
 use Database\Seeders\TestDatabaseSeeder;
 
@@ -50,22 +53,51 @@ function costAssumptionsUrl(Group $group, ?int $term = TERM_FALL_2026): string {
     return "/api/term-planning/groups/{$group->id}/cost-assumptions{$query}";
 }
 
-function costSettingUrl(Group $group, string $key, int $term = TERM_FALL_2026): string {
-    return "/api/term-planning/groups/{$group->id}/cost-settings/{$key}?term={$term}";
+function jobCodeRateOverrideUrl(Group $group, string $jobCode, int $term = TERM_FALL_2026): string {
+    return "/api/term-planning/groups/{$group->id}/cost-rate-overrides/job-codes/{$jobCode}?term={$term}";
 }
 
-function personChoiceUrl(Group $group, int $emplid, int $term = TERM_FALL_2026): string {
-    return "/api/term-planning/groups/{$group->id}/cost-person-choices/{$emplid}?term={$term}";
+function taRateOverrideUrl(Group $group, string $appointmentPercent, string $studentStatus = 'regular', int $term = TERM_FALL_2026): string {
+    return "/api/term-planning/groups/{$group->id}/cost-rate-overrides/ta-appointments/{$appointmentPercent}/{$studentStatus}?term={$term}";
+}
+
+function lineOverrideUrl(Group $group, int $term = TERM_FALL_2026): string {
+    return "/api/term-planning/groups/{$group->id}/cost-line-overrides?term={$term}";
+}
+
+function lineOverrideBody(array $overrides = []): array {
+    return [
+        'courseCode' => 'ANTH-1001',
+        'section' => '001',
+        'emplid' => 100000001,
+        'amount' => 4500.25,
+        'reason' => 'Buyout',
+        ...$overrides,
+    ];
+}
+
+function localSection(array $attributes = []): LocalClassSection {
+    return LocalClassSection::factory()->create([
+        'academic_org' => COST_API_DEPT,
+        'term_code' => TERM_FALL_2026,
+        'course_code' => 'ANTH-1001',
+        'class_section' => '001',
+        ...$attributes,
+    ]);
+}
+
+function sisSection(array $attributes = []): SisClassSection {
+    return SisClassSection::factory()->create([
+        'academic_org' => COST_API_DEPT,
+        'term_code' => TERM_FALL_2026,
+        'course_code' => 'ANTH-1001',
+        'class_section' => '001',
+        ...$attributes,
+    ]);
 }
 
 function enrollmentHistoryUrl(Group $group, int $term = TERM_FALL_2026): string {
     return "/api/term-planning/groups/{$group->id}/enrollment-history?term={$term}";
-}
-
-function effectiveSetting(Group $group, string $key, int $term = TERM_FALL_2026): array {
-    $settings = getJson(costAssumptionsUrl($group, $term))->json('settings');
-
-    return collect($settings)->firstWhere('key', $key);
 }
 
 function appointedEmployee(string $jobCode, int $deptId = COST_API_DEPT): SisEmployee {
@@ -77,17 +109,6 @@ function appointedEmployee(string $jobCode, int $deptId = COST_API_DEPT): SisEmp
     ]);
 
     return $employee;
-}
-
-function personChoicePayload(array $overrides = []): array {
-    return [
-        'jobCode' => '9401',
-        'instructorType' => 'pa_instructor',
-        'studentStatus' => 'abd',
-        'overrideCost' => 5000.5,
-        'overrideReason' => 'Buyout',
-        ...$overrides,
-    ];
 }
 
 function enrollmentHistorySection(int $termCode, array $attributes = []): SisClassSection {
@@ -147,38 +168,43 @@ describe('GET cost-assumptions authorization', function () {
 });
 
 describe('PUT authorization', function () {
-    it('refuses a courses viewer saving a setting', function () {
+    it('refuses a courses viewer on every override', function () {
+        localSection();
         actingAs($this->coursesViewer);
 
-        expect(putJson(costSettingUrl($this->group, 'unstaffedSectionCost'), ['value' => 1])->status())->toBe(403);
+        expect(putJson(jobCodeRateOverrideUrl($this->group, 'TBA'), ['costPerCourse' => 1])->status())->toBe(403);
+        expect(putJson(taRateOverrideUrl($this->group, '25'), ['costPerTerm' => 1])->status())->toBe(403);
+        expect(putJson(lineOverrideUrl($this->group), lineOverrideBody())->status())->toBe(403);
     });
 
-    it('lets a courses editor save a setting', function () {
+    it('lets a courses editor save every override', function () {
+        localSection();
         actingAs($this->coursesEditor);
 
-        expect(putJson(costSettingUrl($this->group, 'unstaffedSectionCost'), ['value' => 1])->status())->toBe(200);
-    });
-
-    it('refuses a courses viewer saving a person choice', function () {
-        $employee = appointedEmployee('9401');
-
-        actingAs($this->coursesViewer);
-
-        expect(putJson(personChoiceUrl($this->group, $employee->emplid), personChoicePayload())->status())->toBe(403);
-    });
-
-    it('lets a courses editor save a person choice', function () {
-        $employee = appointedEmployee('9401');
-
-        actingAs($this->coursesEditor);
-
-        expect(putJson(personChoiceUrl($this->group, $employee->emplid), personChoicePayload())->status())->toBe(200);
+        expect(putJson(jobCodeRateOverrideUrl($this->group, 'TBA'), ['costPerCourse' => 1])->status())->toBe(200);
+        expect(putJson(taRateOverrideUrl($this->group, '25'), ['costPerTerm' => 1])->status())->toBe(200);
+        expect(putJson(lineOverrideUrl($this->group), lineOverrideBody())->status())->toBe(200);
     });
 });
 
 describe('job code rates', function () {
     beforeEach(function () {
         actingAs($this->groupManager);
+    });
+
+    it('describes a job code with its type, annual load, and student status', function () {
+        JobCode::factory()->create([
+            'code' => '9519',
+            'instructor_type' => InstructorType::TeachingAssistant,
+            'annual_load' => 2,
+            'student_status' => StudentStatus::Abd,
+        ]);
+        JobCode::factory()->create(['code' => JobCode::UNSTAFFED_CODE, 'instructor_type' => null, 'annual_load' => null]);
+
+        $rows = collect(getJson(costAssumptionsUrl($this->group))->json('jobCodes'))->keyBy('code');
+
+        expect($rows['9519'])->toMatchArray(['instructorType' => 'teaching_assistant', 'annualLoad' => 2, 'studentStatus' => 'abd']);
+        expect($rows['TBA'])->toMatchArray(['instructorType' => null, 'annualLoad' => null, 'studentStatus' => null]);
     });
 
     it('carries the latest earlier fiscal year forward and ignores later ones', function () {
@@ -244,142 +270,7 @@ describe('TA rates', function () {
     });
 });
 
-describe('settings', function () {
-    beforeEach(function () {
-        actingAs($this->groupManager);
-    });
-
-    it('lists every setting at its default when nothing is saved', function () {
-        $settings = getJson(costAssumptionsUrl($this->group))->json('settings');
-        $annualLoadKeys = array_map(fn(InstructorType $type) => "annualLoad.{$type->value}", InstructorType::cases());
-
-        expect(collect($settings)->pluck('key')->all())->toEqualCanonicalizing([
-            'unstaffedSectionCost',
-            'unratedJobCodeCost',
-            'taAppointmentPercent',
-            'isRecurringBudgetFree',
-            'isIndependentStudyFree',
-            'isFieldworkFree',
-            ...$annualLoadKeys,
-        ]);
-        foreach ($settings as $setting) {
-            expect($setting['value'])->toBe($setting['default']);
-            expect($setting['valueFiscalYear'])->toBeNull();
-        }
-    });
-
-    it('carries a saved value forward to later fiscal years', function () {
-        putJson(costSettingUrl($this->group, 'unstaffedSectionCost', TERM_SPRING_2026), ['value' => 12000]);
-
-        $setting = effectiveSetting($this->group, 'unstaffedSectionCost');
-
-        expect($setting['value'])->toBe(12000);
-        expect($setting['valueFiscalYear'])->toBe(2026);
-    });
-
-    it('prefers a value saved in the term fiscal year over an earlier one', function () {
-        putJson(costSettingUrl($this->group, 'unstaffedSectionCost', TERM_SPRING_2026), ['value' => 12000]);
-        putJson(costSettingUrl($this->group, 'unstaffedSectionCost'), ['value' => 13000]);
-
-        $setting = effectiveSetting($this->group, 'unstaffedSectionCost');
-
-        expect($setting['value'])->toBe(13000);
-        expect($setting['valueFiscalYear'])->toBe(2027);
-    });
-
-    it('falls back to the earlier fiscal year when the term fiscal year is cleared with null', function () {
-        putJson(costSettingUrl($this->group, 'unstaffedSectionCost', TERM_SPRING_2026), ['value' => 12000]);
-        putJson(costSettingUrl($this->group, 'unstaffedSectionCost'), ['value' => 13000]);
-        putJson(costSettingUrl($this->group, 'unstaffedSectionCost'), ['value' => null]);
-
-        $setting = effectiveSetting($this->group, 'unstaffedSectionCost');
-
-        expect($setting['value'])->toBe(12000);
-        expect($setting['valueFiscalYear'])->toBe(2026);
-    });
-
-    it('round-trips a false toggle as boolean false', function () {
-        putJson(costSettingUrl($this->group, 'isRecurringBudgetFree'), ['value' => false]);
-
-        $setting = effectiveSetting($this->group, 'isRecurringBudgetFree');
-
-        expect($setting['value'])->toBeFalse();
-        expect($setting['valueFiscalYear'])->toBe(2027);
-    });
-
-    it('reports each setting with the fiscal year its own value was saved in', function () {
-        putJson(costSettingUrl($this->group, 'unstaffedSectionCost', TERM_SPRING_2026), ['value' => 12000]);
-        putJson(costSettingUrl($this->group, 'unratedJobCodeCost'), ['value' => 13000]);
-
-        expect(effectiveSetting($this->group, 'unstaffedSectionCost')['valueFiscalYear'])->toBe(2026);
-        expect(effectiveSetting($this->group, 'unratedJobCodeCost')['valueFiscalYear'])->toBe(2027);
-    });
-
-    it('ignores a value saved for a later fiscal year', function () {
-        putJson(costSettingUrl($this->group, 'unstaffedSectionCost', 1279), ['value' => 14000]);
-
-        $setting = effectiveSetting($this->group, 'unstaffedSectionCost');
-
-        expect($setting['value'])->toBe($setting['default']);
-        expect($setting['valueFiscalYear'])->toBeNull();
-    });
-
-    it('saves the same new setting twice without error or a duplicate row', function () {
-        $first = putJson(costSettingUrl($this->group, 'unstaffedSectionCost'), ['value' => 100]);
-        $second = putJson(costSettingUrl($this->group, 'unstaffedSectionCost'), ['value' => 200]);
-
-        expect($first->status())->toBe(200);
-        expect($second->status())->toBe(200);
-        expect(effectiveSetting($this->group, 'unstaffedSectionCost')['value'])->toBe(200);
-        expect(TermCostSetting::where(['key' => 'unstaffedSectionCost', 'fiscal_year' => 2027])->count())->toBe(1);
-    });
-
-    it('rejects an appointment percent of zero', function () {
-        expect(putJson(costSettingUrl($this->group, 'taAppointmentPercent'), ['value' => 0])->status())->toBe(422);
-    });
-
-    it('rejects an appointment percent over 100', function () {
-        expect(putJson(costSettingUrl($this->group, 'taAppointmentPercent'), ['value' => 150])->status())->toBe(422);
-    });
-
-    it('rejects a fractional annual load', function () {
-        expect(putJson(costSettingUrl($this->group, 'annualLoad.pa_instructor'), ['value' => 2.5])->status())->toBe(422);
-    });
-
-    it('rejects a money value with more than two decimals', function () {
-        expect(putJson(costSettingUrl($this->group, 'unstaffedSectionCost'), ['value' => 12.345])->status())->toBe(422);
-    });
-
-    it('returns 404 for an unknown setting key', function () {
-        expect(putJson(costSettingUrl($this->group, 'bogus'), ['value' => 1])->status())->toBe(404);
-    });
-
-    it('responds with the effective setting', function () {
-        $res = putJson(costSettingUrl($this->group, 'unstaffedSectionCost'), ['value' => 13000]);
-
-        expect($res->json())->toMatchArray([
-            'key' => 'unstaffedSectionCost',
-            'value' => 13000.0,
-            'valueFiscalYear' => 2027,
-        ]);
-    });
-
-    it('ignores a setting saved by another department', function () {
-        TermCostSetting::create([
-            'academic_org' => COST_API_OTHER_DEPT,
-            'fiscal_year' => 2027,
-            'key' => 'unstaffedSectionCost',
-            'value' => 99999,
-        ]);
-
-        $setting = effectiveSetting($this->group, 'unstaffedSectionCost');
-
-        expect($setting['value'])->toBe($setting['default']);
-        expect($setting['valueFiscalYear'])->toBeNull();
-    });
-});
-
-describe('people and person choices', function () {
+describe('people', function () {
     beforeEach(function () {
         actingAs($this->groupManager);
     });
@@ -418,102 +309,235 @@ describe('people and person choices', function () {
 
         expect(getJson(costAssumptionsUrl($this->group))->json('people'))->toBe([]);
     });
+});
 
-    it('saves a person choice and shows it in personChoices', function () {
-        $employee = appointedEmployee('9401');
-
-        $res = putJson(personChoiceUrl($this->group, $employee->emplid), personChoicePayload());
-
-        $expected = [
-            'emplid' => $employee->emplid,
-            'jobCode' => '9401',
-            'instructorType' => 'pa_instructor',
-            'studentStatus' => 'abd',
-            'overrideCost' => 5000.5,
-            'overrideReason' => 'Buyout',
-        ];
-        expect($res->json())->toBe($expected);
-        expect(getJson(costAssumptionsUrl($this->group))->json('personChoices'))->toBe([$expected]);
+describe('rate overrides', function () {
+    beforeEach(function () {
+        actingAs($this->groupManager);
     });
 
-    it('shows a person choice only for the term it was saved for', function () {
-        $employee = appointedEmployee('9401');
-        putJson(personChoiceUrl($this->group, $employee->emplid, TERM_SPRING_2026), personChoicePayload());
+    it('lists a job code override for its own term only', function () {
+        putJson(jobCodeRateOverrideUrl($this->group, 'TBA'), ['costPerCourse' => 12000.5]);
 
-        expect(getJson(costAssumptionsUrl($this->group))->json('personChoices'))->toBe([]);
+        expect(getJson(costAssumptionsUrl($this->group))->json('rateOverrides.jobCodes'))
+            ->toBe([['jobCode' => 'TBA', 'costPerCourse' => 12000.5]]);
+        expect(getJson(costAssumptionsUrl($this->group, 1273))->json('rateOverrides.jobCodes'))->toBe([]);
     });
 
-    it('saves a choice without a job code for a person not appointed in the department', function () {
-        $emplid = 100000001;
-        $payload = personChoicePayload(['jobCode' => null]);
+    it('lists a TA override for its own term only', function () {
+        $res = putJson(taRateOverrideUrl($this->group, '12.5', 'abd'), ['costPerTerm' => 5000]);
 
-        $res = putJson(personChoiceUrl($this->group, $emplid), $payload);
+        expect($res->json())->toEqual(['appointmentPercent' => 12.5, 'studentStatus' => 'abd', 'costPerTerm' => 5000.0]);
+        expect(getJson(costAssumptionsUrl($this->group))->json('rateOverrides.taAppointments'))
+            ->toEqual([['appointmentPercent' => 12.5, 'studentStatus' => 'abd', 'costPerTerm' => 5000.0]]);
+        expect(getJson(costAssumptionsUrl($this->group, 1273))->json('rateOverrides.taAppointments'))->toBe([]);
+    });
 
+    it('keeps regular and ABD overrides of one appointment percent apart', function () {
+        putJson(taRateOverrideUrl($this->group, '25', 'regular'), ['costPerTerm' => 1]);
+        putJson(taRateOverrideUrl($this->group, '25', 'abd'), ['costPerTerm' => 2]);
+
+        expect(TermTaRateOverride::count())->toBe(2);
+    });
+
+    it('updates the same override instead of adding a row', function () {
+        putJson(jobCodeRateOverrideUrl($this->group, 'TBA'), ['costPerCourse' => 100]);
+        $res = putJson(jobCodeRateOverrideUrl($this->group, 'TBA'), ['costPerCourse' => 200]);
+
+        expect($res->json())->toEqual(['jobCode' => 'TBA', 'costPerCourse' => 200.0]);
+        expect(TermJobCodeRateOverride::count())->toBe(1);
+    });
+
+    it('deletes an override when the cost is null', function () {
+        putJson(jobCodeRateOverrideUrl($this->group, 'TBA'), ['costPerCourse' => 100]);
+        putJson(taRateOverrideUrl($this->group, '25'), ['costPerTerm' => 100]);
+
+        $jobCodeRes = putJson(jobCodeRateOverrideUrl($this->group, 'TBA'), ['costPerCourse' => null]);
+        $taRes = putJson(taRateOverrideUrl($this->group, '25'), ['costPerTerm' => null]);
+
+        expect($jobCodeRes->json())->toBe(['jobCode' => 'TBA', 'costPerCourse' => null]);
+        expect($taRes->json())->toEqual(['appointmentPercent' => 25.0, 'studentStatus' => 'regular', 'costPerTerm' => null]);
+        expect(TermJobCodeRateOverride::count())->toBe(0);
+        expect(TermTaRateOverride::count())->toBe(0);
+    });
+
+    it('records the acting user as creator and updater', function () {
+        putJson(jobCodeRateOverrideUrl($this->group, 'TBA'), ['costPerCourse' => 100]);
+
+        $saved = TermJobCodeRateOverride::first();
+        expect($saved->created_by)->toBe($this->groupManager->id);
+        expect($saved->updated_by)->toBe($this->groupManager->id);
+    });
+
+    it('accepts a job code from the job_codes table', function () {
+        JobCode::factory()->create(['code' => '9753']);
+
+        expect(putJson(jobCodeRateOverrideUrl($this->group, '9753'), ['costPerCourse' => 1])->status())->toBe(200);
+    });
+
+    it('accepts a job code held in the department, ignoring padding', function () {
+        appointedEmployee('9402 ');
+
+        expect(putJson(jobCodeRateOverrideUrl($this->group, '9402'), ['costPerCourse' => 1])->status())->toBe(200);
+    });
+
+    it('returns 404 for a job code held only in another department', function () {
+        appointedEmployee('9402', COST_API_OTHER_DEPT);
+
+        expect(putJson(jobCodeRateOverrideUrl($this->group, '9402'), ['costPerCourse' => 1])->status())->toBe(404);
+    });
+
+    it('returns 404 for an unknown job code', function () {
+        expect(putJson(jobCodeRateOverrideUrl($this->group, '0000'), ['costPerCourse' => 1])->status())->toBe(404);
+    });
+
+    it('rejects a negative cost', function () {
+        expect(putJson(jobCodeRateOverrideUrl($this->group, 'TBA'), ['costPerCourse' => -1])->status())->toBe(422);
+        expect(putJson(taRateOverrideUrl($this->group, '25'), ['costPerTerm' => -1])->status())->toBe(422);
+    });
+
+    it('rejects a cost with more than two decimals', function () {
+        expect(putJson(jobCodeRateOverrideUrl($this->group, 'TBA'), ['costPerCourse' => 12.345])->status())->toBe(422);
+    });
+
+    it('rejects a body that omits the cost', function () {
+        expect(putJson(jobCodeRateOverrideUrl($this->group, 'TBA'), [])->status())->toBe(422);
+    });
+
+    it('returns 404 for an appointment percent of zero or over 100', function () {
+        expect(putJson(taRateOverrideUrl($this->group, '0'), ['costPerTerm' => 1])->status())->toBe(404);
+        expect(putJson(taRateOverrideUrl($this->group, '100.5'), ['costPerTerm' => 1])->status())->toBe(404);
+        expect(putJson(taRateOverrideUrl($this->group, '101'), ['costPerTerm' => 1])->status())->toBe(404);
+    });
+
+    it('returns 404 for a malformed appointment percent', function () {
+        expect(putJson(taRateOverrideUrl($this->group, '12.345'), ['costPerTerm' => 1])->status())->toBe(404);
+        expect(putJson(taRateOverrideUrl($this->group, 'abc'), ['costPerTerm' => 1])->status())->toBe(404);
+    });
+
+    it('returns 404 for an unknown student status', function () {
+        expect(putJson(taRateOverrideUrl($this->group, '25', 'bogus'), ['costPerTerm' => 1])->status())->toBe(404);
+    });
+
+    it('returns 404 for a group with no department', function () {
+        $group = Group::factory()->create(['dept_id' => null]);
+        Membership::factory()->create(['user_id' => $this->groupManager->id, 'group_id' => $group->id, 'admin' => true]);
+
+        expect(putJson(jobCodeRateOverrideUrl($group, 'TBA'), ['costPerCourse' => 1])->status())->toBe(404);
+    });
+
+    it('ignores an override saved by another department', function () {
+        TermJobCodeRateOverride::create([
+            'academic_org' => COST_API_OTHER_DEPT,
+            'term_code' => TERM_FALL_2026,
+            'job_code' => 'TBA',
+            'cost_per_course' => 99999,
+        ]);
+
+        expect(getJson(costAssumptionsUrl($this->group))->json('rateOverrides.jobCodes'))->toBe([]);
+    });
+});
+
+describe('line overrides', function () {
+    beforeEach(function () {
+        actingAs($this->groupManager);
+    });
+
+    it('saves an override on a local section and lists it', function () {
+        localSection();
+
+        $res = putJson(lineOverrideUrl($this->group), lineOverrideBody());
+
+        $expected = lineOverrideBody();
         expect($res->status())->toBe(200);
-        expect(getJson(costAssumptionsUrl($this->group))->json('personChoices.0.emplid'))->toBe($emplid);
+        expect($res->json())->toBe($expected);
+        expect(getJson(costAssumptionsUrl($this->group))->json('lineOverrides'))->toBe([$expected]);
     });
 
-    it('returns 404 for an emplid of more than nine digits', function () {
-        $res = putJson(personChoiceUrl($this->group, 12345678901), personChoicePayload(['jobCode' => null]));
+    it('saves an override on a SIS section of a published term', function () {
+        sisSection();
 
-        expect($res->status())->toBe(404);
+        expect(putJson(lineOverrideUrl($this->group), lineOverrideBody())->status())->toBe(200);
+        expect(TermCostLineOverride::count())->toBe(1);
     });
 
-    it('rejects a job code the person does not hold in the department', function () {
-        $employee = appointedEmployee('9401');
+    it('updates the same override instead of adding a row', function () {
+        localSection();
 
-        $res = putJson(personChoiceUrl($this->group, $employee->emplid), personChoicePayload(['jobCode' => '9999']));
+        putJson(lineOverrideUrl($this->group), lineOverrideBody(['amount' => 1]));
+        putJson(lineOverrideUrl($this->group), lineOverrideBody(['amount' => 2]));
 
-        expect($res->status())->toBe(422);
+        expect(TermCostLineOverride::count())->toBe(1);
+        expect(TermCostLineOverride::first()->amount)->toBe(2.0);
     });
 
-    it('rejects an unknown instructor type', function () {
-        $employee = appointedEmployee('9401');
+    it('lists an override only for its own term and department', function () {
+        foreach ([[COST_API_DEPT, TERM_FALL_2026], [COST_API_DEPT, 1273], [COST_API_OTHER_DEPT, TERM_FALL_2026]] as [$academicOrg, $termCode]) {
+            TermCostLineOverride::create([
+                'academic_org' => $academicOrg,
+                'term_code' => $termCode,
+                'course_code' => 'ANTH-1001',
+                'class_section' => '001',
+                'emplid' => 100000001,
+                'amount' => 1,
+            ]);
+        }
 
-        $res = putJson(personChoiceUrl($this->group, $employee->emplid), personChoicePayload(['instructorType' => 'bogus']));
+        expect(getJson(costAssumptionsUrl($this->group))->json('lineOverrides'))->toHaveCount(1);
+        expect(getJson(costAssumptionsUrl($this->group, 1273))->json('lineOverrides'))->toHaveCount(1);
+    });
 
-        expect($res->status())->toBe(422);
+    it('deletes the override when the amount is null', function () {
+        localSection();
+        putJson(lineOverrideUrl($this->group), lineOverrideBody());
+
+        $res = putJson(lineOverrideUrl($this->group), lineOverrideBody(['amount' => null]));
+
+        expect($res->json())->toBe(lineOverrideBody(['amount' => null, 'reason' => null]));
+        expect(TermCostLineOverride::count())->toBe(0);
+    });
+
+    it('returns 404 for an unknown course or section', function () {
+        localSection();
+
+        expect(putJson(lineOverrideUrl($this->group), lineOverrideBody(['courseCode' => 'HIST-1001']))->status())->toBe(404);
+        expect(putJson(lineOverrideUrl($this->group), lineOverrideBody(['section' => '002']))->status())->toBe(404);
+    });
+
+    it('returns 404 for a section of another department', function () {
+        localSection(['academic_org' => COST_API_OTHER_DEPT]);
+        sisSection(['academic_org' => COST_API_OTHER_DEPT, 'course_code' => 'HIST-1001']);
+
+        expect(putJson(lineOverrideUrl($this->group), lineOverrideBody())->status())->toBe(404);
+        expect(putJson(lineOverrideUrl($this->group), lineOverrideBody(['courseCode' => 'HIST-1001']))->status())->toBe(404);
+    });
+
+    it('returns 404 for a section of another term', function () {
+        localSection(['term_code' => 1273]);
+
+        expect(putJson(lineOverrideUrl($this->group), lineOverrideBody())->status())->toBe(404);
+    });
+
+    it('rejects an emplid of zero or more than nine digits', function () {
+        localSection();
+
+        expect(putJson(lineOverrideUrl($this->group), lineOverrideBody(['emplid' => 0]))->status())->toBe(422);
+        expect(putJson(lineOverrideUrl($this->group), lineOverrideBody(['emplid' => 1234567890]))->status())->toBe(422);
+    });
+
+    it('rejects a negative amount and an over-long reason', function () {
+        localSection();
+
+        expect(putJson(lineOverrideUrl($this->group), lineOverrideBody(['amount' => -1]))->status())->toBe(422);
+        expect(putJson(lineOverrideUrl($this->group), lineOverrideBody(['reason' => str_repeat('a', 1001)]))->status())->toBe(422);
     });
 
     it('rejects a body that omits a field', function () {
-        $employee = appointedEmployee('9401');
-        $payload = personChoicePayload();
-        unset($payload['overrideReason']);
+        localSection();
+        $body = lineOverrideBody();
+        unset($body['reason']);
 
-        expect(putJson(personChoiceUrl($this->group, $employee->emplid), $payload)->status())->toBe(422);
-    });
-
-    it('deletes the row when all five fields are null', function () {
-        $employee = appointedEmployee('9401');
-        putJson(personChoiceUrl($this->group, $employee->emplid), personChoicePayload());
-
-        $res = putJson(personChoiceUrl($this->group, $employee->emplid), [
-            'jobCode' => null,
-            'instructorType' => null,
-            'studentStatus' => null,
-            'overrideCost' => null,
-            'overrideReason' => null,
-        ]);
-
-        expect($res->json())->toBe([
-            'emplid' => $employee->emplid,
-            'jobCode' => null,
-            'instructorType' => null,
-            'studentStatus' => null,
-            'overrideCost' => null,
-            'overrideReason' => null,
-        ]);
-        expect(getJson(costAssumptionsUrl($this->group))->json('personChoices'))->toBe([]);
-    });
-
-    it('records the acting user as creator and updater of a new choice', function () {
-        $employee = appointedEmployee('9401');
-
-        putJson(personChoiceUrl($this->group, $employee->emplid), personChoicePayload());
-
-        $saved = TermCostPersonChoice::where('emplid', $employee->emplid)->first();
-        expect($saved->created_by)->toBe($this->groupManager->id);
-        expect($saved->updated_by)->toBe($this->groupManager->id);
+        expect(putJson(lineOverrideUrl($this->group), $body)->status())->toBe(422);
     });
 });
 
@@ -523,14 +547,18 @@ describe('published terms', function () {
         actingAs($this->coursesEditor);
     });
 
-    it('still accepts a person choice', function () {
-        $employee = appointedEmployee('9401');
-
-        expect(putJson(personChoiceUrl($this->group, $employee->emplid), personChoicePayload())->status())->toBe(200);
+    it('still accepts a job code rate override', function () {
+        expect(putJson(jobCodeRateOverrideUrl($this->group, 'TBA'), ['costPerCourse' => 13000])->status())->toBe(200);
     });
 
-    it('still accepts a setting', function () {
-        expect(putJson(costSettingUrl($this->group, 'unstaffedSectionCost'), ['value' => 13000])->status())->toBe(200);
+    it('still accepts a TA rate override', function () {
+        expect(putJson(taRateOverrideUrl($this->group, '25'), ['costPerTerm' => 13000])->status())->toBe(200);
+    });
+
+    it('still accepts a line override', function () {
+        sisSection();
+
+        expect(putJson(lineOverrideUrl($this->group), lineOverrideBody())->status())->toBe(200);
     });
 });
 

@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { describeCostBasis, type CostBasis } from "./costBasis";
 
 const labelOfSection = (sectionId: number) => `Section #${sectionId}`;
-const describe_ = (basis: CostBasis) => describeCostBasis(basis, labelOfSection);
+const describe_ = (basis: CostBasis) =>
+  describeCostBasis(basis, labelOfSection);
 
 const jobCodeRateBasis = (
   extra: Partial<Extract<CostBasis, { kind: "jobCodeRate" }>> = {},
@@ -11,26 +12,25 @@ const jobCodeRateBasis = (
   jobCode: "9754",
   title: "Teaching Specialist",
   rateFiscalYear: 2027,
-  chosenBy: "planner",
   jobCodeCount: 1,
   ...extra,
 });
 
 describe("describeCostBasis", () => {
-  it("names an override and its reason", () => {
-    expect(describe_({ kind: "override", reason: "Grant funded" })).toBe(
-      "Override: Grant funded",
-    );
-  });
-
-  it("names an override without a reason", () => {
-    expect(describe_({ kind: "override", reason: null })).toBe("Override");
-  });
-
-  it("names the recurring budget type", () => {
+  it("names a line override, the amount it replaced, and its reason", () => {
     expect(
-      describe_({ kind: "recurringBudget", instructorType: "recurring_budget_pa" }),
-    ).toBe("Recurring budget P&A · no added cost");
+      describe_({
+        kind: "lineOverride",
+        reason: "Grant funded",
+        replacedAmount: 10000,
+      }),
+    ).toBe("Changed for this section, was $10,000 · Grant funded");
+  });
+
+  it("names a line override that replaced a line with no rate", () => {
+    expect(
+      describe_({ kind: "lineOverride", reason: null, replacedAmount: null }),
+    ).toBe("Changed for this section, was no rate");
   });
 
   it("names a free component by its label", () => {
@@ -49,12 +49,20 @@ describe("describeCostBasis", () => {
   });
 
   it("names a section paid on its course's lecture", () => {
-    expect(describe_({ kind: "paidOnLecture", component: "LAB" })).toBe(
-      "Lab in a course with a lecture · paid on the lecture",
-    );
-    expect(describe_({ kind: "paidOnLecture", component: "DIS" })).toBe(
-      "Discussion in a course with a lecture · paid on the lecture",
-    );
+    expect(
+      describe_({
+        kind: "paidOnLecture",
+        component: "LAB",
+        lectureSectionId: 3,
+      }),
+    ).toBe("Lab in a course with a lecture · paid on Section #3");
+    expect(
+      describe_({
+        kind: "paidOnLecture",
+        component: "DIS",
+        lectureSectionId: 3,
+      }),
+    ).toBe("Discussion in a course with a lecture · paid on Section #3");
   });
 
   it("describes a job code rate with a two digit fiscal year", () => {
@@ -63,39 +71,33 @@ describe("describeCostBasis", () => {
     );
   });
 
-  it("adds the job code count when the highest rate of several was chosen", () => {
-    expect(
-      describe_(jobCodeRateBasis({ chosenBy: "highestRate", jobCodeCount: 3 })),
-    ).toBe("9754 Teaching Specialist · FY27 rate · highest of 3 job codes");
+  it("adds the job code count when the person holds several", () => {
+    expect(describe_(jobCodeRateBasis({ jobCodeCount: 3 }))).toBe(
+      "9754 Teaching Specialist · FY27 rate · highest of 3 job codes",
+    );
   });
 
-  it("omits the job code count when the highest rate of one code was chosen", () => {
+  it("names a rate the planner changed for the term", () => {
     expect(
-      describe_(jobCodeRateBasis({ chosenBy: "highestRate", jobCodeCount: 1 })),
-    ).toBe("9754 Teaching Specialist · FY27 rate");
-  });
-
-  it("omits the job code count when the planner chose among several", () => {
-    expect(
-      describe_(jobCodeRateBasis({ chosenBy: "planner", jobCodeCount: 3 })),
-    ).toBe("9754 Teaching Specialist · FY27 rate");
+      describe_(jobCodeRateBasis({ title: null, rateFiscalYear: null })),
+    ).toBe("9754 · rate changed for this term");
   });
 
   it("names an unrated job code", () => {
     expect(describe_({ kind: "unratedJobCode", jobCode: "1234" })).toBe(
-      "1234 has no rate · unrated job code cost",
+      "1234 has no rate · Unstaffed rate",
     );
   });
 
   it("explains an unrated person with no job code", () => {
     expect(describe_({ kind: "unratedJobCode", jobCode: null })).toBe(
-      "No job code in this department · unrated job code cost",
+      "No job code in this department · Unstaffed rate",
     );
   });
 
   it("describes an unstaffed section", () => {
     expect(describe_({ kind: "unstaffedSection" })).toBe(
-      "No instructor yet · unstaffed section cost",
+      "No instructor yet · Unstaffed rate",
     );
   });
 
@@ -111,7 +113,7 @@ describe("describeCostBasis", () => {
     ).toBe("25% ABD TA, fall · FY27 rate");
   });
 
-  it("describes a TA appointment without a rate year", () => {
+  it("describes a TA appointment at the term's rate", () => {
     expect(
       describe_({
         kind: "taAppointment",
@@ -120,7 +122,7 @@ describe("describeCostBasis", () => {
         studentStatus: "regular",
         rateFiscalYear: null,
       }),
-    ).toBe("50% regular TA, spring");
+    ).toBe("50% regular TA, spring · rate changed for this term");
   });
 
   it("says which TA rate is missing", () => {

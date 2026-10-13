@@ -21,10 +21,19 @@
     >
       {{ option.label }}
     </button>
+    <span
+      class="tw-relative tw-ml-auto tw-flex tw-items-center tw-gap-1.5 tw-pl-3 tw-text-[11px] tw-text-on-surface-variant"
+    >
+      <span class="tw-relative tw-h-2 tw-w-2" aria-hidden="true">
+        <OverrideMarker />
+      </span>
+      Override
+    </span>
   </div>
 </template>
 
 <script setup lang="ts">
+import OverrideMarker from "./OverrideMarker.vue";
 import type { BudgetTab } from "../../helpers/viewQuery";
 
 defineProps<{ tab: BudgetTab }>();
@@ -33,6 +42,7 @@ const emit = defineEmits<{ select: [tab: BudgetTab] }>();
 
 const TABS: { value: BudgetTab; label: string }[] = [
   { value: "sections", label: "Sections" },
-  { value: "rules", label: "Rules & assumptions" },
+  { value: "people", label: "People" },
+  { value: "rates", label: "Rates" },
 ];
 </script>

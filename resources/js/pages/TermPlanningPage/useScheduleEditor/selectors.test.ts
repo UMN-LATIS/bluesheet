@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  selectLocalCostSettings,
+  selectRateOverrides,
   selectSectionCosts,
   selectShownSections,
   selectWeekView,
@@ -8,10 +8,10 @@ import {
 import {
   costAssumptions,
   costPerson,
-  costSetting,
   jobCodeRate,
   sisInstructor,
 } from "../helpers/costAssumptions.fixture";
+import { lineOverrideKeyOf, rateEditKeyOf } from "../helpers/costOverrides";
 import { NEW_SECTION_ID } from "./types";
 import { selectLocalSection } from "./selectors";
 import { plannedSection } from "../helpers/plannedSection.fixture";
@@ -232,14 +232,6 @@ describe("selectWeekView with a meeting selected", () => {
 });
 
 describe("the budget view's selectors", () => {
-  const settings = [
-    costSetting("unstaffedSectionCost", 5000),
-    costSetting("unratedJobCodeCost", 4000),
-    costSetting("taAppointmentPercent", 25),
-    costSetting("isRecurringBudgetFree", false),
-    costSetting("isIndependentStudyFree", false),
-    costSetting("isFieldworkFree", false),
-  ];
   const budgetContext: ScheduleContext = {
     sections: [
       plannedSection(1, [], {
@@ -254,9 +246,11 @@ describe("the budget view's selectors", () => {
     isReadOnly: false,
     isWide: true,
     costAssumptions: costAssumptions({
-      settings,
       people: [costPerson(1, ["U"])],
-      jobCodes: [jobCodeRate("U", null)],
+      jobCodes: [
+        jobCodeRate("U", null),
+        jobCodeRate("TBA", 4000, { instructorType: null }),
+      ],
     }),
   };
 
@@ -280,10 +274,13 @@ describe("the budget view's selectors", () => {
     ).toBeNull();
   });
 
-  it("selectSectionCosts reflects a pending setting edit", () => {
+  it("selectSectionCosts reflects a pending rate override", () => {
+    const rate = { kind: "jobCode", jobCode: "TBA" } as const;
     const edited: EditorState = {
       ...atRest,
-      costSettingEdits: { unratedJobCodeCost: 7000 },
+      rateOverrideEdits: {
+        [rateEditKeyOf(rate)]: { rate, amount: 7000 },
+      },
     };
 
     expect(
@@ -294,31 +291,56 @@ describe("the budget view's selectors", () => {
     ).toBe(7000);
   });
 
-  it("selectLocalCostSettings marks a pending key with the edited value", () => {
-    const shown = selectLocalCostSettings(budgetContext, {
+  it("selectSectionCosts reflects a pending line override", () => {
+    const key = lineOverrideKeyOf("ANTH-1001", "001", 1);
+    const edited: EditorState = {
       ...atRest,
-      costSettingEdits: { unratedJobCodeCost: 7000 },
-    });
+      lineOverrideEdits: {
+        [key]: {
+          courseCode: "ANTH-1001",
+          section: "001",
+          emplid: 1,
+          amount: 1234,
+          reason: "Buyout",
+        },
+      },
+    };
 
-    expect(shown.find(({ key }) => key === "unratedJobCodeCost")).toMatchObject({
-      value: 7000,
-      isPending: true,
-    });
-    expect(shown.find(({ key }) => key === "unstaffedSectionCost")).toMatchObject({
-      value: 5000,
-      isPending: false,
-    });
+    expect(
+      selectSectionCosts(budgetContext, edited)?.get(1)?.lines[0].amount,
+    ).toBe(1234);
   });
 
-  it("selectLocalCostSettings keeps the server value under a pending clear", () => {
-    const shown = selectLocalCostSettings(budgetContext, {
+  it("selectRateOverrides is null before the cost assumptions load", () => {
+    expect(
+      selectRateOverrides({ ...budgetContext, costAssumptions: null }, atRest),
+    ).toBeNull();
+  });
+
+  it("selectRateOverrides merges pending edits over the server's overrides", () => {
+    const rate = { kind: "jobCode", jobCode: "U" } as const;
+    const withServer: ScheduleContext = {
+      ...budgetContext,
+      costAssumptions: costAssumptions({
+        rateOverrides: {
+          jobCodes: [
+            { jobCode: "U", costPerCourse: 100 },
+            { jobCode: "G", costPerCourse: 200 },
+          ],
+          taAppointments: [],
+        },
+      }),
+    };
+    const shown = selectRateOverrides(withServer, {
       ...atRest,
-      costSettingEdits: { unratedJobCodeCost: null },
+      rateOverrideEdits: { [rateEditKeyOf(rate)]: { rate, amount: 150 } },
     });
 
-    expect(shown.find(({ key }) => key === "unratedJobCodeCost")).toMatchObject({
-      value: 4000,
-      isPending: true,
-    });
+    expect(shown?.costPerCourseByJobCode).toEqual(
+      new Map([
+        ["U", 150],
+        ["G", 200],
+      ]),
+    );
   });
 });

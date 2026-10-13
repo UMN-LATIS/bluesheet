@@ -17,6 +17,18 @@ export type TaCostCell =
   | { kind: "amount"; dollars: number }
   | { kind: "none" };
 
+export interface OverridableLine {
+  courseCode: string;
+  section: string;
+  emplid: number;
+  name: string;
+  amount: number | null;
+  /** The cost without the override. Null when it has no rate. */
+  defaultAmount: number | null;
+  reason: string | null;
+  isOverridden: boolean;
+}
+
 export interface BudgetRow {
   sectionId: number;
   courseLabel: string;
@@ -44,6 +56,13 @@ export interface BudgetRow {
    */
   instructorCost: number | null;
   hasInstructorOverride: boolean;
+  /**
+   * The lecture that pays this section's instructor cost.
+   * Null when this section pays its own.
+   */
+  paidOnLectureLabel: string | null;
+  /** Empty when nothing on the section can be overridden. */
+  instructorLines: OverridableLine[];
   assistantNames: string;
   /**
    * How the TA cost was reached. Empty when no TA is
@@ -51,6 +70,9 @@ export interface BudgetRow {
    */
   taBasisLabel: string;
   taCostCell: TaCostCell;
+  hasTaOverride: boolean;
+  /** Empty when no TA is charged on this section. */
+  taLines: OverridableLine[];
   notes: string;
 }
 
@@ -117,14 +139,63 @@ export function budgetRowOf(
         : instructorBasisLabel,
     instructorBasisLabel,
     instructorCost: sumOrNull(instructorLines),
-    hasInstructorOverride: instructorLines.some(
-      ({ basis }) => basis.kind === "override",
+    hasInstructorOverride: instructorLines.some(isOverridden),
+    paidOnLectureLabel: paidOnLectureLabelOf(instructorLines, labelOfSection),
+    instructorLines: overridableLinesOf(
+      section,
+      instructorLines.filter(({ role }) => role === "instructor"),
     ),
     assistantNames,
     taBasisLabel: taBasisLabelOf(taLines, labelOfSection),
     taCostCell: taCostCellOf(taLines, labelOfSection),
+    hasTaOverride: taLines.some(isOverridden),
+    taLines: overridableLinesOf(section, taLines),
     notes: section.notes,
   };
+}
+
+const isOverridden = ({ basis }: CostLine) => basis.kind === "lineOverride";
+
+function paidOnLectureLabelOf(
+  instructorLines: CostLine[],
+  labelOfSection: (sectionId: number) => string,
+): string | null {
+  const [first] = instructorLines;
+  const isPaidOnLecture = instructorLines.every(
+    ({ basis }) => basis.kind === "paidOnLecture",
+  );
+  if (!first || !isPaidOnLecture || first.basis.kind !== "paidOnLecture") {
+    return null;
+  }
+
+  return labelOfSection(first.basis.lectureSectionId);
+}
+
+function overridableLinesOf(
+  section: PlannedSection,
+  lines: CostLine[],
+): OverridableLine[] {
+  return lines.flatMap(({ emplid, amount, basis }) => {
+    if (emplid === null || basis.kind === "chargedOnOtherSection") return [];
+
+    const person = section.instructors.find(
+      (instructor) => instructor.emplid === emplid,
+    );
+    const isOverridden = basis.kind === "lineOverride";
+
+    return [
+      {
+        courseCode: section.courseCode,
+        section: section.section,
+        emplid,
+        name: person?.name ?? person?.lastName ?? "Unknown",
+        amount,
+        defaultAmount: isOverridden ? basis.replacedAmount : amount,
+        reason: isOverridden ? basis.reason : null,
+        isOverridden,
+      },
+    ];
+  });
 }
 
 function meetingSummaryOf(section: PlannedSection): string {

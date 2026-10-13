@@ -15,7 +15,15 @@ export type StudentStatus = "regular" | "abd";
 export interface JobCodeRate {
   code: string;
   title: string;
-  instructorType: InstructorType;
+  /** Null on the unstaffed (TBA) row. */
+  instructorType: InstructorType | null;
+  /** Courses per year. Null when not entered. */
+  annualLoad: number | null;
+  /**
+   * The TA appointment rate a TA holding this code is
+   * costed at. Null means regular.
+   */
+  studentStatus: StudentStatus | null;
   /**
    * Dollars per course. Null when no rate exists at or
    * before the fiscal year.
@@ -34,24 +42,6 @@ export interface TaAppointmentRate {
   source: string | null;
 }
 
-export type CostSettingType = "money" | "percent" | "count" | "toggle";
-
-export type CostSettingValue = number | boolean;
-
-export interface CostSetting {
-  key: string;
-  label: string;
-  description: string;
-  type: CostSettingType;
-  default: CostSettingValue;
-  value: CostSettingValue;
-  /**
-   * The fiscal year `value` was saved for. Null when it is
-   * the default.
-   */
-  valueFiscalYear: number | null;
-}
-
 export interface CostPerson {
   emplid: number;
   jobCodes: string[];
@@ -62,13 +52,26 @@ export interface CostPerson {
   positionTitles: Partial<Record<string, string>>;
 }
 
-export interface PersonChoice {
+/** A planner's rate for one department and one term. */
+export interface JobCodeRateOverride {
+  jobCode: string;
+  costPerCourse: number;
+}
+
+/** A planner's rate for one department and one term. */
+export interface TaRateOverride {
+  appointmentPercent: number;
+  studentStatus: StudentStatus;
+  costPerTerm: number;
+}
+
+/** A planner's cost for one person on one section. */
+export interface CostLineOverride {
+  courseCode: string;
+  section: string;
   emplid: number;
-  jobCode: string | null;
-  instructorType: InstructorType | null;
-  studentStatus: StudentStatus | null;
-  overrideCost: number | null;
-  overrideReason: string | null;
+  amount: number;
+  reason: string | null;
 }
 
 export interface CostAssumptions {
@@ -84,9 +87,12 @@ export interface CostAssumptions {
     fiscalYear: number | null;
     rates: TaAppointmentRate[];
   };
-  settings: CostSetting[];
   people: CostPerson[];
-  personChoices: PersonChoice[];
+  rateOverrides: {
+    jobCodes: JobCodeRateOverride[];
+    taAppointments: TaRateOverride[];
+  };
+  lineOverrides: CostLineOverride[];
   canEdit: boolean;
 }
 

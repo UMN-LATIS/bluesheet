@@ -6,8 +6,9 @@ use App\JobCode;
 use App\JobCodeRate;
 use App\SisAppointment;
 use App\TaAppointmentRate;
-use App\TermCostPersonChoice;
-use App\TermCostSetting;
+use App\TermCostLineOverride;
+use App\TermJobCodeRateOverride;
+use App\TermTaRateOverride;
 use Illuminate\Support\Collection;
 
 final class CostAssumptions {
@@ -20,34 +21,18 @@ final class CostAssumptions {
             'season' => Season::ofTerm($termCode)->value,
             'jobCodes' => self::jobCodes($fiscalYear),
             'taRates' => self::taRatesOfLatestYearEntered($fiscalYear),
-            'settings' => self::settings($academicOrg, $fiscalYear),
             'people' => self::people($academicOrg),
-            'personChoices' => self::personChoices($academicOrg, $termCode),
+            'rateOverrides' => [
+                'jobCodes' => self::jobCodeRateOverrides($academicOrg, $termCode),
+                'taAppointments' => self::taRateOverrides($academicOrg, $termCode),
+            ],
+            'lineOverrides' => self::lineOverrides($academicOrg, $termCode),
         ];
     }
 
-    public static function setting(int $academicOrg, int $fiscalYear, CostSettingDefinition $definition): array {
-        $departmentValue = self::departmentValuesByKey($academicOrg, $fiscalYear)->get($definition->key);
-
-        return self::describeSetting($definition, $departmentValue);
-    }
-
-    /** @return array<int, string> */
-    public static function jobCodesHeldBy(int $academicOrg, int $emplid): array {
-        $appointments = self::appointmentsByEmplid($academicOrg, $emplid)->get($emplid, collect());
-
-        return self::distinctJobCodes($appointments);
-    }
-
-    public static function describePersonChoice(TermCostPersonChoice $choice): array {
-        return [
-            'emplid' => $choice->emplid,
-            'jobCode' => $choice->job_code,
-            'instructorType' => $choice->instructor_type?->value,
-            'studentStatus' => $choice->student_status?->value,
-            'overrideCost' => $choice->override_cost,
-            'overrideReason' => $choice->override_reason,
-        ];
+    /** @return array<int, string> trimmed, distinct, sorted */
+    public static function jobCodesHeldInDepartment(int $academicOrg): array {
+        return self::distinctJobCodes(self::appointmentsOf($academicOrg));
     }
 
     private static function jobCodes(int $fiscalYear): array {
@@ -64,7 +49,9 @@ final class CostAssumptions {
                 return [
                     'code' => $jobCode->code,
                     'title' => $jobCode->title,
-                    'instructorType' => $jobCode->instructor_type->value,
+                    'instructorType' => $jobCode->instructor_type?->value,
+                    'annualLoad' => $jobCode->annual_load,
+                    'studentStatus' => $jobCode->student_status?->value,
                     'costPerCourse' => $latestRate === null ? null : (float) $latestRate->cost_per_course,
                     'rateFiscalYear' => $latestRate?->fiscal_year,
                     'source' => $latestRate?->source,
@@ -101,43 +88,6 @@ final class CostAssumptions {
         ];
     }
 
-    private static function settings(int $academicOrg, int $fiscalYear): array {
-        $departmentValuesByKey = self::departmentValuesByKey($academicOrg, $fiscalYear);
-
-        return collect(CostSettings::all())
-            ->map(fn(CostSettingDefinition $definition) => self::describeSetting(
-                $definition,
-                $departmentValuesByKey->get($definition->key),
-            ))
-            ->values()
-            ->all();
-    }
-
-    /** @return Collection<string, TermCostSetting> the latest at or before `$fiscalYear` */
-    private static function departmentValuesByKey(int $academicOrg, int $fiscalYear): Collection {
-        return TermCostSetting::query()
-            ->where('academic_org', $academicOrg)
-            ->where('fiscal_year', '<=', $fiscalYear)
-            ->orderByDesc('fiscal_year')
-            ->get()
-            ->unique('key')
-            ->keyBy('key');
-    }
-
-    private static function describeSetting(CostSettingDefinition $definition, ?TermCostSetting $departmentValue): array {
-        return [
-            'key' => $definition->key,
-            'label' => $definition->label,
-            'description' => $definition->description,
-            'type' => $definition->type->value,
-            'default' => $definition->default,
-            'value' => $departmentValue === null
-                ? $definition->default
-                : $definition->type->fromStored($departmentValue->value),
-            'valueFiscalYear' => $departmentValue?->fiscal_year,
-        ];
-    }
-
     private static function people(int $academicOrg): array {
         return self::appointmentsByEmplid($academicOrg)
             ->map(fn(Collection $appointments, int $emplid) => [
@@ -149,23 +99,62 @@ final class CostAssumptions {
             ->all();
     }
 
-    private static function personChoices(int $academicOrg, int $termCode): array {
-        return TermCostPersonChoice::query()
+    private static function jobCodeRateOverrides(int $academicOrg, int $termCode): array {
+        return TermJobCodeRateOverride::query()
             ->where('academic_org', $academicOrg)
             ->where('term_code', $termCode)
+            ->orderBy('job_code')
+            ->get()
+            ->map(fn(TermJobCodeRateOverride $override) => [
+                'jobCode' => $override->job_code,
+                'costPerCourse' => $override->cost_per_course,
+            ])
+            ->all();
+    }
+
+    private static function taRateOverrides(int $academicOrg, int $termCode): array {
+        return TermTaRateOverride::query()
+            ->where('academic_org', $academicOrg)
+            ->where('term_code', $termCode)
+            ->orderBy('appointment_percent')
+            ->orderBy('student_status')
+            ->get()
+            ->map(fn(TermTaRateOverride $override) => [
+                'appointmentPercent' => $override->appointment_percent,
+                'studentStatus' => $override->student_status->value,
+                'costPerTerm' => $override->cost_per_term,
+            ])
+            ->all();
+    }
+
+    private static function lineOverrides(int $academicOrg, int $termCode): array {
+        return TermCostLineOverride::query()
+            ->where('academic_org', $academicOrg)
+            ->where('term_code', $termCode)
+            ->orderBy('course_code')
+            ->orderBy('class_section')
             ->orderBy('emplid')
             ->get()
-            ->map(self::describePersonChoice(...))
+            ->map(fn(TermCostLineOverride $override) => [
+                'courseCode' => $override->course_code,
+                'section' => $override->class_section,
+                'emplid' => $override->emplid,
+                'amount' => $override->amount,
+                'reason' => $override->reason,
+            ])
             ->all();
     }
 
     /** @return Collection<int, Collection<int, SisAppointment>> */
-    private static function appointmentsByEmplid(int $academicOrg, ?int $emplid = null): Collection {
+    private static function appointmentsByEmplid(int $academicOrg): Collection {
+        return self::appointmentsOf($academicOrg)->groupBy('emplid');
+    }
+
+    /** @return Collection<int, SisAppointment> */
+    private static function appointmentsOf(int $academicOrg): Collection {
         return SisAppointment::query()
             ->where('dept_id', (string) $academicOrg)
-            ->when($emplid !== null, fn($appointments) => $appointments->where('emplid', $emplid))
-            ->get(['emplid', 'job_code', 'position_desc'])
-            ->groupBy('emplid');
+            ->get(['emplid', 'job_code', 'position_desc']);
     }
 
     /** @return array<int, string> */

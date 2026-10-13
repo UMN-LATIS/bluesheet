@@ -8,7 +8,11 @@ import type {
   SisSectionMeeting,
   TimeRange,
 } from "../types";
-import type { CostAssumptions, CostSettingValue } from "@/types";
+import type { CostAssumptions } from "@/types";
+import type {
+  LineOverrideEdit,
+  RateOverrideEdit,
+} from "../helpers/costOverrides";
 import type { UrlQuery } from "@/utils/urlQuery";
 import type { BudgetTab, ScheduleView } from "../helpers/viewQuery";
 
@@ -164,11 +168,10 @@ export interface EditorState {
   /** Which canvas is showing. */
   view: ScheduleView;
   budgetTab: BudgetTab;
-  /**
-   * Cost settings changed here and not yet saved, by key.
-   * A null edit clears this fiscal year's value.
-   */
-  costSettingEdits: Record<string, CostSettingValue | null>;
+  /** Not yet saved, by `rateEditKeyOf`. */
+  rateOverrideEdits: Record<string, RateOverrideEdit>;
+  /** Not yet saved, by `lineOverrideKeyOf`. */
+  lineOverrideEdits: Record<string, LineOverrideEdit>;
   /** Which tab the day list is on: a weekday, or the Async day past them. */
   dayIndex: number;
   /** The import the banner stands for, or null when no banner is showing. */
@@ -222,16 +225,18 @@ export type EditorEvent =
   | { type: "importDismissed" }
   | { type: "viewSelected"; view: ScheduleView }
   | { type: "budgetTabSelected"; tab: BudgetTab }
-  | { type: "costSettingEdited"; key: string; value: CostSettingValue | null }
+  | { type: "rateOverrideEdited"; edit: RateOverrideEdit }
   /**
    * The server has this value now. A newer edit to the same
    * key stays.
    */
-  | {
-      type: "costSettingEditsPersisted";
-      key: string;
-      saved: CostSettingValue | null;
-    }
+  | { type: "rateOverrideEditsPersisted"; key: string; saved: RateOverrideEdit }
+  | { type: "lineOverrideEdited"; edit: LineOverrideEdit }
+  /**
+   * The server has this value now. A newer edit to the same
+   * key stays.
+   */
+  | { type: "lineOverrideEditsPersisted"; key: string; saved: LineOverrideEdit }
   | { type: "sectionNotesEdited"; sectionId: number; notes: string }
   | { type: "daySelected"; dayIndex: number }
   /** The heatmap's Async cell: one step to the day list, on the Async tab. */

@@ -14,14 +14,16 @@ class TermCostSampleRatesSeeder extends Seeder {
     private const FISCAL_YEAR = 2027;
 
     private const JOB_CODES = [
-        ['code' => '9401', 'title' => 'Professor', 'instructor_type' => InstructorType::RecurringBudgetFaculty, 'cost_per_course' => 0],
-        ['code' => '9402', 'title' => 'Associate Professor', 'instructor_type' => InstructorType::RecurringBudgetFaculty, 'cost_per_course' => 0],
-        ['code' => '9403', 'title' => 'Assistant Professor', 'instructor_type' => InstructorType::RecurringBudgetFaculty, 'cost_per_course' => 0],
-        ['code' => '9753', 'title' => 'Lecturer', 'instructor_type' => InstructorType::PaInstructor, 'cost_per_course' => 10000],
-        ['code' => '9754', 'title' => 'Teaching Specialist', 'instructor_type' => InstructorType::PaInstructor, 'cost_per_course' => 8000],
-        ['code' => '9404', 'title' => 'Instructor (temporary)', 'instructor_type' => InstructorType::ContractVisiting, 'cost_per_course' => 9500],
-        ['code' => '9515', 'title' => 'Graduate Instructor', 'instructor_type' => InstructorType::GraduateInstructor, 'cost_per_course' => 10000],
-        ['code' => '9511', 'title' => 'Teaching Assistant', 'instructor_type' => InstructorType::TeachingAssistant],
+        ['code' => '9401', 'title' => 'Professor', 'instructor_type' => InstructorType::RecurringBudgetFaculty, 'annual_load' => 4, 'cost_per_course' => 0],
+        ['code' => '9402', 'title' => 'Associate Professor', 'instructor_type' => InstructorType::RecurringBudgetFaculty, 'annual_load' => 4, 'cost_per_course' => 0],
+        ['code' => '9403', 'title' => 'Assistant Professor', 'instructor_type' => InstructorType::RecurringBudgetFaculty, 'annual_load' => 4, 'cost_per_course' => 0],
+        ['code' => '9753', 'title' => 'Lecturer', 'instructor_type' => InstructorType::PaInstructor, 'annual_load' => 6, 'cost_per_course' => 10000],
+        ['code' => '9754', 'title' => 'Teaching Specialist', 'instructor_type' => InstructorType::PaInstructor, 'annual_load' => 6, 'cost_per_course' => 8000],
+        ['code' => '9404', 'title' => 'Instructor (temporary)', 'instructor_type' => InstructorType::ContractVisiting, 'annual_load' => 2, 'cost_per_course' => 9500],
+        ['code' => '9515', 'title' => 'Graduate Instructor', 'instructor_type' => InstructorType::GraduateInstructor, 'annual_load' => 2, 'cost_per_course' => 10000],
+        ['code' => '9511', 'title' => 'Teaching Assistant', 'instructor_type' => InstructorType::TeachingAssistant, 'annual_load' => 2],
+        ['code' => '9519', 'title' => 'PhD Candidate Teaching Asst', 'instructor_type' => InstructorType::TeachingAssistant, 'annual_load' => 2, 'student_status' => StudentStatus::Abd],
+        ['code' => JobCode::UNSTAFFED_CODE, 'title' => 'Unstaffed', 'instructor_type' => null, 'annual_load' => null, 'cost_per_course' => 10000],
     ];
 
     private const TA_RATES = [
@@ -36,7 +38,12 @@ class TermCostSampleRatesSeeder extends Seeder {
         foreach (self::JOB_CODES as $row) {
             $jobCode = JobCode::updateOrCreate(
                 ['code' => $row['code']],
-                ['title' => $row['title'], 'instructor_type' => $row['instructor_type']],
+                [
+                    'title' => $row['title'],
+                    'instructor_type' => $row['instructor_type'],
+                    'annual_load' => $row['annual_load'],
+                    'student_status' => $row['student_status'] ?? null,
+                ],
             );
 
             if (array_key_exists('cost_per_course', $row)) {

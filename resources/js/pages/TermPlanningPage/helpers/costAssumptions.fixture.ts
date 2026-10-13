@@ -1,14 +1,11 @@
 import type {
   CostAssumptions,
   CostPerson,
-  CostSetting,
-  CostSettingValue,
   JobCodeRate,
-  PersonChoice,
   TaAppointmentRate,
 } from "@/types";
 import type { SisInstructor } from "../types";
-import type { CostRuleSettings } from "./costRules";
+import type { RateOverrides } from "./costOverrides";
 
 export const jobCodeRate = (
   code: string,
@@ -18,6 +15,8 @@ export const jobCodeRate = (
   code,
   title: `Title ${code}`,
   instructorType: "contract_visiting",
+  annualLoad: null,
+  studentStatus: null,
   costPerCourse,
   rateFiscalYear: costPerCourse === null ? null : 2027,
   source: null,
@@ -36,41 +35,11 @@ export const taAppointmentRate = (
   ...extra,
 });
 
-export const costSetting = (
-  key: string,
-  value: CostSettingValue,
-): CostSetting => ({
-  key,
-  label: key,
-  description: "",
-  type: typeof value === "boolean" ? "toggle" : "money",
-  default: value,
-  value,
-  valueFiscalYear: null,
-});
-
-export const personChoice = (
-  emplid: number,
-  extra: Partial<PersonChoice> = {},
-): PersonChoice => ({
-  emplid,
-  jobCode: null,
-  instructorType: null,
-  studentStatus: null,
-  overrideCost: null,
-  overrideReason: null,
-  ...extra,
-});
-
-export const costRuleSettings = (
-  extra: Partial<CostRuleSettings> = {},
-): CostRuleSettings => ({
-  unstaffedSectionCost: 5000,
-  unratedJobCodeCost: 7000,
-  taAppointmentPercent: 25,
-  isRecurringBudgetFree: false,
-  isIndependentStudyFree: false,
-  isFieldworkFree: false,
+export const rateOverrides = (
+  extra: Partial<RateOverrides> = {},
+): RateOverrides => ({
+  costPerCourseByJobCode: new Map(),
+  costPerTermByTaRateKey: new Map(),
   ...extra,
 });
 
@@ -88,9 +57,9 @@ export const costAssumptions = (
   season: "fall",
   jobCodes: [],
   taRates: { fiscalYear: 2027, rates: [] },
-  settings: [],
   people: [],
-  personChoices: [],
+  rateOverrides: { jobCodes: [], taAppointments: [] },
+  lineOverrides: [],
   canEdit: true,
   ...extra,
 });

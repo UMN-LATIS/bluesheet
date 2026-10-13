@@ -31,6 +31,7 @@ import {
   encodeDayIndex,
   VIEW_KEYS,
 } from "../helpers/viewQuery";
+import { lineOverrideKeyOf, rateEditKeyOf } from "../helpers/costOverrides";
 import { ASYNC_DAY_INDEX } from "../helpers/scheduleDays";
 import {
   clockFromMinutes,
@@ -100,7 +101,8 @@ export const initialState = (dayIndex = 0): EditorState => ({
   filters: defaultFilters(),
   view: DEFAULT_VIEW,
   budgetTab: DEFAULT_BUDGET_TAB,
-  costSettingEdits: {},
+  rateOverrideEdits: {},
+  lineOverrideEdits: {},
   dayIndex,
   lastImport: null,
   writeError: null,
@@ -187,10 +189,12 @@ const READING_EVENTS: EditorEvent["type"][] = [
   "viewSelected",
   "budgetTabSelected",
   // Removing these blocks cost edits on a read-only
-  // term (test: "records a setting edit on a
+  // term (test: "records a rate override on a
   // published term").
-  "costSettingEdited",
-  "costSettingEditsPersisted",
+  "rateOverrideEdited",
+  "rateOverrideEditsPersisted",
+  "lineOverrideEdited",
+  "lineOverrideEditsPersisted",
   "daySelected",
   "filterPanelOverridden",
   // a term that locked mid-save still has to show and drop what came back
@@ -559,19 +563,49 @@ function reduce(
     case "budgetTabSelected":
       return { ...state, budgetTab: event.tab };
 
-    case "costSettingEdited":
+    case "rateOverrideEdited":
       if (context.costAssumptions?.canEdit !== true) return state;
 
       return {
         ...state,
-        costSettingEdits: { ...state.costSettingEdits, [event.key]: event.value },
+        rateOverrideEdits: {
+          ...state.rateOverrideEdits,
+          [rateEditKeyOf(event.edit.rate)]: event.edit,
+        },
       };
 
-    case "costSettingEditsPersisted":
-      return isEqual(state.costSettingEdits[event.key], event.saved)
+    case "rateOverrideEditsPersisted":
+      return isEqual(state.rateOverrideEdits[event.key], event.saved)
         ? {
             ...state,
-            costSettingEdits: omitStringKey(state.costSettingEdits, event.key),
+            rateOverrideEdits: omitStringKey(
+              state.rateOverrideEdits,
+              event.key,
+            ),
+          }
+        : state;
+
+    case "lineOverrideEdited": {
+      if (context.costAssumptions?.canEdit !== true) return state;
+
+      const { courseCode, section, emplid } = event.edit;
+      return {
+        ...state,
+        lineOverrideEdits: {
+          ...state.lineOverrideEdits,
+          [lineOverrideKeyOf(courseCode, section, emplid)]: event.edit,
+        },
+      };
+    }
+
+    case "lineOverrideEditsPersisted":
+      return isEqual(state.lineOverrideEdits[event.key], event.saved)
+        ? {
+            ...state,
+            lineOverrideEdits: omitStringKey(
+              state.lineOverrideEdits,
+              event.key,
+            ),
           }
         : state;
 
@@ -632,7 +666,8 @@ function reduce(
         ...state,
         sectionEdits: {},
         drafts: {},
-        costSettingEdits: {},
+        rateOverrideEdits: {},
+        lineOverrideEdits: {},
         selection: null,
         lastPlacedId: null,
         interaction: { status: "idle" },

@@ -147,6 +147,7 @@
           :hasAssumptionsError="costAssumptionsQuery.isError.value"
           :history="enrollmentHistoryQuery.data.value ?? null"
           :termName="term?.name ?? ''"
+          :roster="roster"
         />
 
         <div
@@ -530,7 +531,10 @@ const { createSection, saveSection, deleteSection } = useTermPlanMutations(
   activeTermCode,
 );
 
-const { saveSetting } = useCostMutations(groupId, activeTermCode);
+const { saveRateOverride, saveLineOverride } = useCostMutations(
+  groupId,
+  activeTermCode,
+);
 
 const enrollmentHistoryQuery = useEnrollmentHistoryQuery(
   groupId,
@@ -658,7 +662,8 @@ const hasUnsavedWork = computed(
   () =>
     schedule.newSectionHasCourse ||
     Object.keys(schedule.pendingEdits).length > 0 ||
-    Object.keys(schedule.pendingCostSettingEdits).length > 0 ||
+    Object.keys(schedule.pendingRateOverrideEdits).length > 0 ||
+    Object.keys(schedule.pendingLineOverrideEdits).length > 0 ||
     localSections.value.some((section) => schedule.isDraftDirty(section)),
 );
 
@@ -708,10 +713,18 @@ useTermPlanAutosave({
 });
 
 useCostEditsAutosave({
-  pendingEdits: computed(() => schedule.pendingCostSettingEdits),
-  save: (key, value) => saveSetting.mutateAsync({ key, value }),
+  pendingEdits: computed(() => schedule.pendingRateOverrideEdits),
+  save: (_key, edit) => saveRateOverride.mutateAsync(edit),
   onSaved: (key, saved) =>
-    schedule.dispatch({ type: "costSettingEditsPersisted", key, saved }),
+    schedule.dispatch({ type: "rateOverrideEditsPersisted", key, saved }),
+  onRefused: showRefusal,
+});
+
+useCostEditsAutosave({
+  pendingEdits: computed(() => schedule.pendingLineOverrideEdits),
+  save: (_key, edit) => saveLineOverride.mutateAsync(edit),
+  onSaved: (key, saved) =>
+    schedule.dispatch({ type: "lineOverrideEditsPersisted", key, saved }),
   onRefused: showRefusal,
 });
 

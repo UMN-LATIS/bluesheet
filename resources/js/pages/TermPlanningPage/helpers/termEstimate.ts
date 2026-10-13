@@ -2,13 +2,19 @@ import type { CostAssumptions, JobCodeRate } from "@/types";
 import type { PlannedSection, SisInstructor } from "../types";
 import type { CostBasis } from "./costBasis";
 import {
+  lineOverrideKeyOf,
+  type LineOverride,
+  type RateOverrides,
+} from "./costOverrides";
+import {
   costOfLeadInstructor,
   costOfTaAppointment,
-  type CostRuleSettings,
+  costOfUnstaffedSection,
   isFreeComponent,
   pricingOf,
   type PersonPricing,
   type PricedLine,
+  type RateBook,
 } from "./costRules";
 import { blockOwners } from "./sectionPlacement";
 import { assistantsOf, instructorsOfRecord, TA_ROLE } from "./sectionPeople";
@@ -37,7 +43,8 @@ export interface SectionCost {
 interface EstimateInput {
   sections: PlannedSection[];
   assumptions: CostAssumptions;
-  settings: CostRuleSettings;
+  rateOverrides: RateOverrides;
+  lineOverridesByKey: Map<string, LineOverride>;
 }
 
 interface CostContext {
@@ -45,9 +52,9 @@ interface CostContext {
   /** The partner a crosslisted section is costed on, or null. */
   crosslistOwnerOf: (section: PlannedSection) => number | null;
   chargedSectionIdByTaCourse: Map<string, number>;
-  hasLiveLecture: (section: PlannedSection) => boolean;
-  assumptions: CostAssumptions;
-  settings: CostRuleSettings;
+  /** Null when the course has no live lecture. */
+  lectureIdOf: (section: PlannedSection) => number | null;
+  rateBook: RateBook;
 }
 
 /**
@@ -57,7 +64,7 @@ interface CostContext {
 export function estimateTermCost(
   input: EstimateInput,
 ): Map<number, SectionCost> {
-  const { sections, assumptions, settings } = input;
+  const { sections, assumptions, rateOverrides, lineOverridesByKey } = input;
   const pricingOfEmplid = pricingByEmplidOf(assumptions);
 
   const liveSections = sections.filter(({ isCancelled }) => !isCancelled);
@@ -72,30 +79,46 @@ export function estimateTermCost(
     (crosslistOwnerOf(section) ?? section.id) === section.id;
 
   const sectionsThatCanChargeATa = liveSections.filter(
-    (section) =>
-      isCostedHere(section) && !isFreeComponent(section.component, settings),
+    (section) => isCostedHere(section) && !isFreeComponent(section.component),
   );
-  const courseCodesWithLiveLecture = new Set(
-    liveSections
-      .filter(({ component }) => component === LECTURE)
-      .map(({ courseCode }) => courseCode),
-  );
+  const lectureIdByCourseCode = firstLectureIdByCourseCodeOf(liveSections);
   const context: CostContext = {
     pricingOfEmplid,
     crosslistOwnerOf,
-    hasLiveLecture: ({ courseCode }) =>
-      courseCodesWithLiveLecture.has(courseCode),
+    lectureIdOf: ({ courseCode }) =>
+      lectureIdByCourseCode.get(courseCode) ?? null,
     chargedSectionIdByTaCourse: chargedSectionIdByTaCourseOf(
       sectionsThatCanChargeATa,
     ),
-    assumptions,
-    settings,
+    rateBook: {
+      ratesByJobCode: ratesByJobCodeOf(assumptions),
+      overrides: rateOverrides,
+      season: assumptions.season,
+      taRates: assumptions.taRates.rates,
+      taRateFiscalYear: assumptions.taRates.fiscalYear,
+    },
   };
+  const withLineOverride =
+    ({ courseCode, section }: PlannedSection) =>
+    (line: CostLine) => {
+      const override =
+        line.emplid === null
+          ? undefined
+          : lineOverridesByKey.get(
+              lineOverrideKeyOf(courseCode, section, line.emplid),
+            );
+
+      return override && isOverridable(line)
+        ? overriddenLine(line, override)
+        : line;
+    };
 
   return new Map(
     sections.map((section) => [
       section.id,
-      sectionCostOf(costLinesOf(section, context)),
+      sectionCostOf(
+        costLinesOf(section, context).map(withLineOverride(section)),
+      ),
     ]),
   );
 }
@@ -103,22 +126,33 @@ export function estimateTermCost(
 export function pricingByEmplidOf(
   assumptions: CostAssumptions,
 ): (emplid: number) => PersonPricing {
-  const ratesByJobCode = new Map<string, JobCodeRate>(
-    assumptions.jobCodes.map((rate) => [rate.code, rate]),
-  );
+  const ratesByJobCode = ratesByJobCodeOf(assumptions);
   const jobCodesByEmplid = new Map(
     assumptions.people.map((person) => [person.emplid, person.jobCodes]),
   );
-  const personChoices = new Map(
-    assumptions.personChoices.map((choice) => [choice.emplid, choice]),
-  );
 
   return (emplid) =>
-    pricingOf(
-      jobCodesByEmplid.get(emplid) ?? [],
-      personChoices.get(emplid),
-      ratesByJobCode,
-    );
+    pricingOf(jobCodesByEmplid.get(emplid) ?? [], ratesByJobCode);
+}
+
+const ratesByJobCodeOf = (assumptions: CostAssumptions) =>
+  new Map<string, JobCodeRate>(
+    assumptions.jobCodes.map((rate) => [rate.code, rate]),
+  );
+
+const isOverridable = ({ basis }: CostLine) =>
+  basis.kind !== "chargedOnOtherSection";
+
+function overriddenLine(line: CostLine, override: LineOverride): CostLine {
+  return {
+    ...line,
+    amount: override.amount,
+    basis: {
+      kind: "lineOverride",
+      reason: override.reason,
+      replacedAmount: line.amount,
+    },
+  };
 }
 
 function costLinesOf(
@@ -127,7 +161,7 @@ function costLinesOf(
 ): CostLine[] {
   if (section.isCancelled) return [];
 
-  const { pricingOfEmplid, settings } = context;
+  const { pricingOfEmplid, rateBook } = context;
   const leads = instructorsOfRecord(section.instructors);
   const tas = assistantsOf(section.instructors).filter(
     ({ role }) => role === TA_ROLE,
@@ -138,15 +172,20 @@ function costLinesOf(
     return crosslistPartnerLines(crosslistOwnerId, [...leads, ...tas]);
   }
 
-  if (isFreeComponent(section.component, settings)) {
+  if (isFreeComponent(section.component)) {
     return freeComponentLines(section.component, [...leads, ...tas]);
   }
 
+  const lectureId = context.lectureIdOf(section);
   const paidOnLecture: PricedLine | null =
-    section.component !== LECTURE && context.hasLiveLecture(section)
+    section.component !== LECTURE && lectureId !== null
       ? {
           amount: 0,
-          basis: { kind: "paidOnLecture", component: section.component },
+          basis: {
+            kind: "paidOnLecture",
+            component: section.component,
+            lectureSectionId: lectureId,
+          },
         }
       : null;
 
@@ -155,10 +194,7 @@ function costLinesOf(
       {
         role: "unstaffedSection",
         emplid: null,
-        ...(paidOnLecture ?? {
-          amount: settings.unstaffedSectionCost,
-          basis: { kind: "unstaffedSection" },
-        }),
+        ...(paidOnLecture ?? costOfUnstaffedSection(rateBook)),
       },
     ];
   }
@@ -168,7 +204,7 @@ function costLinesOf(
       role: "instructor",
       emplid: lead.emplid,
       ...(paidOnLecture ??
-        costOfLeadInstructor(pricingOfEmplid(lead.emplid), settings)),
+        costOfLeadInstructor(pricingOfEmplid(lead.emplid), rateBook)),
     }),
   );
   const taLines = tas.map((ta) => taLineOf(ta, section, context));
@@ -181,8 +217,7 @@ function taLineOf(
   section: PlannedSection,
   context: CostContext,
 ): CostLine {
-  const { pricingOfEmplid, chargedSectionIdByTaCourse, assumptions, settings } =
-    context;
+  const { pricingOfEmplid, chargedSectionIdByTaCourse, rateBook } = context;
   const chargedSectionId =
     chargedSectionIdByTaCourse.get(
       taCourseKey(ta.emplid, section.courseCode),
@@ -200,13 +235,7 @@ function taLineOf(
   return {
     role: "ta",
     emplid: ta.emplid,
-    ...costOfTaAppointment(
-      pricingOfEmplid(ta.emplid),
-      settings,
-      assumptions.season,
-      assumptions.taRates.rates,
-      assumptions.taRates.fiscalYear,
-    ),
+    ...costOfTaAppointment(pricingOfEmplid(ta.emplid), rateBook),
   };
 }
 
@@ -216,28 +245,16 @@ export interface CostTotals {
   total: number;
   /** Lines with no rate add nothing to the totals. */
   missingRateCount: number;
-  /** People with an override on a counted line. */
-  overrideCount: number;
-  recurringBudgetSectionCount: number;
 }
 
 export function totalsOf(costs: SectionCost[]): CostTotals {
   const lines = costs.flatMap(({ lines }) => lines);
-  const overriddenEmplids = new Set(
-    lines
-      .filter(({ basis }) => basis.kind === "override")
-      .map(({ emplid }) => emplid),
-  );
-  const isRecurringBudgetSection = (cost: SectionCost) =>
-    cost.lines.some(({ basis }) => basis.kind === "recurringBudget");
 
   return {
     instructorCost: sum(costs.map(({ instructorCost }) => instructorCost)),
     taCost: sum(costs.map(({ taCost }) => taCost)),
     total: sum(costs.map(({ total }) => total)),
     missingRateCount: lines.filter(({ amount }) => amount === null).length,
-    overrideCount: overriddenEmplids.size,
-    recurringBudgetSectionCount: costs.filter(isRecurringBudgetSection).length,
   };
 }
 
@@ -291,6 +308,23 @@ function freeComponentLines(
     amount: 0,
     basis,
   }));
+}
+
+function firstLectureIdByCourseCodeOf(
+  sections: PlannedSection[],
+): Map<string, number> {
+  const lectures = sections
+    .filter(({ component }) => component === LECTURE)
+    .sort((a, b) => a.section.localeCompare(b.section));
+  const firstIdByCourseCode = new Map<string, number>();
+
+  for (const { courseCode, id } of lectures) {
+    if (!firstIdByCourseCode.has(courseCode)) {
+      firstIdByCourseCode.set(courseCode, id);
+    }
+  }
+
+  return firstIdByCourseCode;
 }
 
 const taCourseKey = (emplid: number, courseCode: string) =>

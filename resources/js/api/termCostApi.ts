@@ -35,20 +35,44 @@ export async function fetchEnrollmentHistory(
   return res.data;
 }
 
-/**
- * A null `value` drops this fiscal year's value, so an
- * earlier year's or the default applies.
- */
-export async function saveCostSetting(
+/** A null cost restores Nova's rate for the term. */
+export async function saveJobCodeRateOverride(
   groupId: T.Group["id"],
   termCode: number,
-  key: string,
-  value: T.CostSettingValue | null,
-): Promise<T.CostSetting> {
-  const res = await axios.put<T.CostSetting>(
-    `/api/term-planning/groups/${groupId}/cost-settings/${key}`,
-    { value },
+  jobCode: string,
+  costPerCourse: number | null,
+): Promise<void> {
+  await axios.put(
+    `/api/term-planning/groups/${groupId}/cost-rate-overrides/job-codes/${encodeURIComponent(jobCode)}`,
+    { costPerCourse },
     { ...WRITE_CONFIG, params: { term: termCode } },
   );
-  return res.data;
+}
+
+/** A null cost restores Nova's rate for the term. */
+export async function saveTaRateOverride(
+  groupId: T.Group["id"],
+  termCode: number,
+  appointmentPercent: number,
+  studentStatus: T.StudentStatus,
+  costPerTerm: number | null,
+): Promise<void> {
+  await axios.put(
+    `/api/term-planning/groups/${groupId}/cost-rate-overrides/ta-appointments/${appointmentPercent}/${studentStatus}`,
+    { costPerTerm },
+    { ...WRITE_CONFIG, params: { term: termCode } },
+  );
+}
+
+/** A null amount restores the rate. */
+export async function saveCostLineOverride(
+  groupId: T.Group["id"],
+  termCode: number,
+  override: Omit<T.CostLineOverride, "amount"> & { amount: number | null },
+): Promise<void> {
+  await axios.put(
+    `/api/term-planning/groups/${groupId}/cost-line-overrides`,
+    override,
+    { ...WRITE_CONFIG, params: { term: termCode } },
+  );
 }

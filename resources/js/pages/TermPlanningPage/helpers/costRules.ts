@@ -1,120 +1,63 @@
 import type {
-  CostSetting,
-  CostSettingValue,
-  InstructorType,
   JobCodeRate,
-  PersonChoice,
   Season,
   StudentStatus,
   TaAppointmentRate,
 } from "@/types";
 import type { CostBasis } from "./costBasis";
+import { taRateKeyOf, type RateOverrides } from "./costOverrides";
 
-export interface CostRuleSettings {
-  unstaffedSectionCost: number;
-  unratedJobCodeCost: number;
-  taAppointmentPercent: number;
-  isRecurringBudgetFree: boolean;
-  isIndependentStudyFree: boolean;
-  isFieldworkFree: boolean;
-}
+export const UNSTAFFED_JOB_CODE = "TBA";
+
+export const TA_APPOINTMENT_PERCENT = 25;
+
+const FREE_COMPONENTS = ["IND", "FWK"];
+
+export const isFreeComponent = (component: string) =>
+  FREE_COMPONENTS.includes(component);
 
 export interface PersonPricing {
   jobCode: string | null;
   jobCodeCount: number;
-  chosenBy: "planner" | "highestRate";
   rate: JobCodeRate | null;
-  instructorType: InstructorType | null;
   studentStatus: StudentStatus;
-  overrideCost: number | null;
-  overrideReason: string | null;
 }
 
-/**
- * The amount is null when no rate exists and no setting
- * stands in for one.
- */
+export interface RateBook {
+  ratesByJobCode: Map<string, JobCodeRate>;
+  overrides: RateOverrides;
+  season: Season;
+  taRates: TaAppointmentRate[];
+  taRateFiscalYear: number | null;
+}
+
+/** The amount is null when no rate exists. */
 export interface PricedLine {
   amount: number | null;
   basis: CostBasis;
 }
 
-const RECURRING_BUDGET_TYPES: InstructorType[] = [
-  "recurring_budget_faculty",
-  "recurring_budget_pa",
-];
-
-/**
- * A pending edit wins over the server's value, except a
- * null edit. The server's answer to clearing a value is
- * the earlier year's, which only the refetch knows.
- *
- * @throws Error when the server sent no setting for a rule
- */
-export function costRuleSettingsOf(
-  settings: CostSetting[],
-  pendingEdits: Partial<Record<string, CostSettingValue | null>>,
-): CostRuleSettings {
-  const valueOf = (key: string): CostSettingValue => {
-    const pending = pendingEdits[key];
-    if (pending != null) return pending;
-
-    const setting = settings.find((candidate) => candidate.key === key);
-    if (!setting) throw new Error(`No cost setting is named ${key}`);
-
-    return setting.value;
-  };
-
-  return {
-    unstaffedSectionCost: Number(valueOf("unstaffedSectionCost")),
-    unratedJobCodeCost: Number(valueOf("unratedJobCodeCost")),
-    taAppointmentPercent: Number(valueOf("taAppointmentPercent")),
-    isRecurringBudgetFree: valueOf("isRecurringBudgetFree") === true,
-    isIndependentStudyFree: valueOf("isIndependentStudyFree") === true,
-    isFieldworkFree: valueOf("isFieldworkFree") === true,
-  };
-}
-
-export function isFreeComponent(
-  component: string,
-  settings: CostRuleSettings,
-): boolean {
-  return (
-    (component === "IND" && settings.isIndependentStudyFree) ||
-    (component === "FWK" && settings.isFieldworkFree)
-  );
+interface CourseRate {
+  amount: number;
+  /** Null when the term's override is the amount. */
+  rateFiscalYear: number | null;
 }
 
 export function pricingOf(
   jobCodesHeld: string[],
-  choice: PersonChoice | undefined,
   ratesByJobCode: Map<string, JobCodeRate>,
 ): PersonPricing {
-  const plannerJobCode = choice?.jobCode ?? null;
-  const chosenBy = plannerJobCode === null ? "highestRate" : "planner";
-  const jobCode =
-    plannerJobCode ?? highestRateJobCode(jobCodesHeld, ratesByJobCode);
-  const rate = rateOf(jobCode, ratesByJobCode);
+  const jobCode = highestRateJobCode(jobCodesHeld, ratesByJobCode);
+  const isAbd = jobCodesHeld.some(
+    (code) => ratesByJobCode.get(code)?.studentStatus === "abd",
+  );
 
   return {
     jobCode,
     jobCodeCount: jobCodesHeld.length,
-    chosenBy,
-    rate,
-    instructorType: choice?.instructorType ?? rate?.instructorType ?? null,
-    studentStatus: choice?.studentStatus ?? "regular",
-    overrideCost: choice?.overrideCost ?? null,
-    overrideReason: choice?.overrideReason ?? null,
+    rate: jobCode === null ? null : (ratesByJobCode.get(jobCode) ?? null),
+    studentStatus: isAbd ? "abd" : "regular",
   };
-}
-
-function rateOf(
-  jobCode: string | null,
-  ratesByJobCode: Map<string, JobCodeRate>,
-): JobCodeRate | null {
-  if (jobCode === null) return null;
-
-  return ratesByJobCode.get(jobCode) ?? null;
 }
 
 const UNRATED_SORTS_LAST = -1;
@@ -129,90 +72,88 @@ function highestRateJobCode(
   return [...jobCodes].sort((a, b) => costOf(b) - costOf(a))[0] ?? null;
 }
 
+function courseRateOf(jobCode: string, book: RateBook): CourseRate | null {
+  const termCost = book.overrides.costPerCourseByJobCode.get(jobCode);
+  if (termCost !== undefined) return { amount: termCost, rateFiscalYear: null };
+
+  const rate = book.ratesByJobCode.get(jobCode);
+  if (rate?.costPerCourse == null) return null;
+
+  return { amount: rate.costPerCourse, rateFiscalYear: rate.rateFiscalYear };
+}
+
+const unstaffedAmountOf = (book: RateBook) =>
+  courseRateOf(UNSTAFFED_JOB_CODE, book)?.amount ?? null;
+
+export function costOfUnstaffedSection(book: RateBook): PricedLine {
+  return {
+    amount: unstaffedAmountOf(book),
+    basis: { kind: "unstaffedSection" },
+  };
+}
+
 export function costOfLeadInstructor(
   pricing: PersonPricing,
-  settings: CostRuleSettings,
+  book: RateBook,
 ): PricedLine {
-  if (pricing.overrideCost !== null) {
-    return {
-      amount: pricing.overrideCost,
-      basis: { kind: "override", reason: pricing.overrideReason },
-    };
-  }
+  const { jobCode } = pricing;
+  const rate = jobCode === null ? null : courseRateOf(jobCode, book);
 
-  const { instructorType, rate } = pricing;
-  const isRecurringBudget =
-    instructorType !== null && RECURRING_BUDGET_TYPES.includes(instructorType);
-
-  if (isRecurringBudget && settings.isRecurringBudgetFree) {
+  if (jobCode === null || rate === null) {
     return {
-      amount: 0,
-      basis: { kind: "recurringBudget", instructorType },
-    };
-  }
-
-  if (rate?.costPerCourse != null && rate.rateFiscalYear !== null) {
-    return {
-      amount: rate.costPerCourse,
-      basis: {
-        kind: "jobCodeRate",
-        jobCode: rate.code,
-        title: rate.title,
-        rateFiscalYear: rate.rateFiscalYear,
-        chosenBy: pricing.chosenBy,
-        jobCodeCount: pricing.jobCodeCount,
-      },
+      amount: unstaffedAmountOf(book),
+      basis: { kind: "unratedJobCode", jobCode },
     };
   }
 
   return {
-    amount: settings.unratedJobCodeCost,
-    basis: { kind: "unratedJobCode", jobCode: pricing.jobCode },
+    amount: rate.amount,
+    basis: {
+      kind: "jobCodeRate",
+      jobCode,
+      title: pricing.rate?.title ?? null,
+      rateFiscalYear: rate.rateFiscalYear,
+      jobCodeCount: pricing.jobCodeCount,
+    },
   };
 }
 
 export function costOfTaAppointment(
   pricing: PersonPricing,
-  settings: CostRuleSettings,
-  season: Season,
-  taRates: TaAppointmentRate[],
-  taRateFiscalYear: number | null,
+  book: RateBook,
 ): PricedLine {
-  if (pricing.overrideCost !== null) {
-    return {
-      amount: pricing.overrideCost,
-      basis: { kind: "override", reason: pricing.overrideReason },
-    };
-  }
+  const { studentStatus } = pricing;
+  const appointment = {
+    appointmentPercent: TA_APPOINTMENT_PERCENT,
+    season: book.season,
+    studentStatus,
+  };
 
-  const appointmentPercent = settings.taAppointmentPercent;
-  const rate = taRates.find(
-    (candidate) =>
-      candidate.season === season &&
-      candidate.studentStatus === pricing.studentStatus &&
-      candidate.appointmentPercent === appointmentPercent,
+  const termCost = book.overrides.costPerTermByTaRateKey.get(
+    taRateKeyOf(TA_APPOINTMENT_PERCENT, studentStatus),
   );
-
-  if (!rate) {
+  if (termCost !== undefined) {
     return {
-      amount: null,
-      basis: {
-        kind: "noTaRate",
-        appointmentPercent,
-        season,
-        studentStatus: pricing.studentStatus,
-      },
+      amount: termCost,
+      basis: { kind: "taAppointment", ...appointment, rateFiscalYear: null },
     };
   }
+
+  const rate = book.taRates.find(
+    (candidate) =>
+      candidate.season === book.season &&
+      candidate.studentStatus === studentStatus &&
+      candidate.appointmentPercent === TA_APPOINTMENT_PERCENT,
+  );
+  if (!rate)
+    return { amount: null, basis: { kind: "noTaRate", ...appointment } };
 
   return {
     amount: rate.costPerTerm,
     basis: {
       kind: "taAppointment",
-      appointmentPercent,
-      season,
-      studentStatus: pricing.studentStatus,
-      rateFiscalYear: taRateFiscalYear,
+      ...appointment,
+      rateFiscalYear: book.taRateFiscalYear,
     },
   };
 }

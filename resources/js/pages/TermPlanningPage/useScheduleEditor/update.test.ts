@@ -5,6 +5,12 @@ import {
   selectIsNewSectionSelected,
 } from "./selectors";
 import { costAssumptions } from "../helpers/costAssumptions.fixture";
+import {
+  lineOverrideKeyOf,
+  rateEditKeyOf,
+  type LineOverrideEdit,
+  type RateOverrideEdit,
+} from "../helpers/costOverrides";
 import { plannedSection } from "../helpers/plannedSection.fixture";
 import { NEW_SECTION_ID } from "./types";
 import type {
@@ -1921,9 +1927,11 @@ describe("budget view", () => {
   it("writes the tab the reader picks", () => {
     const onBudget = after([{ type: "viewSelected", view: "budget" }]);
 
-    expect(urlOf({ type: "budgetTabSelected", tab: "rules" }, onBudget)).toEqual({
+    expect(
+      urlOf({ type: "budgetTabSelected", tab: "rates" }, onBudget),
+    ).toEqual({
       type: "replaceUrlQuery",
-      query: expect.objectContaining({ tab: "rules" }),
+      query: expect.objectContaining({ tab: "rates" }),
     });
   });
 
@@ -1937,81 +1945,93 @@ describe("budget view", () => {
 
   it("opens the tab a link names", () => {
     const state = after([
-      { type: "urlChanged", query: { view: "budget", tab: "rules" } },
+      { type: "urlChanged", query: { view: "budget", tab: "rates" } },
     ]);
 
-    expect(state.budgetTab).toBe("rules");
+    expect(state.budgetTab).toBe("rates");
   });
 
   it("keeps the current tab when a link names none or an unknown one", () => {
-    const onRules = after([{ type: "budgetTabSelected", tab: "rules" }]);
+    const onRates = after([{ type: "budgetTabSelected", tab: "rates" }]);
 
     expect(
-      after([{ type: "urlChanged", query: { view: "budget" } }], onRules)
+      after([{ type: "urlChanged", query: { view: "budget" } }], onRates)
         .budgetTab,
-    ).toBe("rules");
+    ).toBe("rates");
     expect(
       after(
         [{ type: "urlChanged", query: { view: "budget", tab: "nope" } }],
-        onRules,
+        onRates,
       ).budgetTab,
-    ).toBe("rules");
+    ).toBe("rates");
   });
 
-  it("ignores a setting edit before the cost assumptions load", () => {
-    const state = after([
-      { type: "costSettingEdited", key: "unstaffedSectionCost", value: 1 },
-    ]);
+  const rateEdit = (amount: number | null): RateOverrideEdit => ({
+    rate: { kind: "jobCode", jobCode: "U" },
+    amount,
+  });
+  const lineEdit = (amount: number | null): LineOverrideEdit => ({
+    courseCode: "ANTH-1001",
+    section: "001",
+    emplid: 2,
+    amount,
+    reason: null,
+  });
+  const RATE_KEY = rateEditKeyOf(rateEdit(1).rate);
+  const LINE_KEY = lineOverrideKeyOf("ANTH-1001", "001", 2);
 
-    expect(state.costSettingEdits).toEqual({});
+  it("ignores a rate override before the cost assumptions load", () => {
+    const state = after([{ type: "rateOverrideEdited", edit: rateEdit(1) }]);
+
+    expect(state.rateOverrideEdits).toEqual({});
   });
 
-  it("ignores a setting edit from someone who cannot edit costs", () => {
+  it("ignores a rate override from someone who cannot edit costs", () => {
     const viewOnly = {
       ...emptyContext,
       costAssumptions: costAssumptions({ canEdit: false }),
     };
     const state = after(
-      [{ type: "costSettingEdited", key: "unstaffedSectionCost", value: 1 }],
+      [{ type: "rateOverrideEdited", edit: rateEdit(1) }],
       initialState(),
       viewOnly,
     );
 
-    expect(state.costSettingEdits).toEqual({});
+    expect(state.rateOverrideEdits).toEqual({});
   });
 
-  it("records a setting edit from someone who can edit costs", () => {
+  it("records a rate override from someone who can edit costs", () => {
     const state = after(
-      [{ type: "costSettingEdited", key: "unstaffedSectionCost", value: 1 }],
+      [{ type: "rateOverrideEdited", edit: rateEdit(1) }],
       initialState(),
       editable,
     );
 
-    expect(state.costSettingEdits).toEqual({ unstaffedSectionCost: 1 });
+    expect(state.rateOverrideEdits).toEqual({ [RATE_KEY]: rateEdit(1) });
   });
 
-  it("records a setting edit on a published term", () => {
+  it("records a rate override on a published term", () => {
     const state = after(
-      [{ type: "costSettingEdited", key: "unstaffedSectionCost", value: 1 }],
+      [{ type: "rateOverrideEdited", edit: rateEdit(1) }],
       initialState(),
       { ...editable, isReadOnly: true },
     );
 
-    expect(state.costSettingEdits).toEqual({ unstaffedSectionCost: 1 });
+    expect(state.rateOverrideEdits).toEqual({ [RATE_KEY]: rateEdit(1) });
   });
 
-  it("drops a saved edit but keeps one typed while the save was in flight", () => {
+  it("drops a saved rate override but keeps one typed while the save was in flight", () => {
     const edited = after(
-      [{ type: "costSettingEdited", key: "unstaffedSectionCost", value: 1 }],
+      [{ type: "rateOverrideEdited", edit: rateEdit(1) }],
       initialState(),
       editable,
     );
     const persisted = after(
       [
         {
-          type: "costSettingEditsPersisted",
-          key: "unstaffedSectionCost",
-          saved: 1,
+          type: "rateOverrideEditsPersisted",
+          key: RATE_KEY,
+          saved: rateEdit(1),
         },
       ],
       edited,
@@ -2019,41 +2039,162 @@ describe("budget view", () => {
     );
     const newer = after(
       [
-        { type: "costSettingEdited", key: "unstaffedSectionCost", value: 2 },
+        { type: "rateOverrideEdited", edit: rateEdit(2) },
         {
-          type: "costSettingEditsPersisted",
-          key: "unstaffedSectionCost",
-          saved: 1,
+          type: "rateOverrideEditsPersisted",
+          key: RATE_KEY,
+          saved: rateEdit(1),
         },
       ],
       edited,
       editable,
     );
 
-    expect(persisted.costSettingEdits).toEqual({});
-    expect(newer.costSettingEdits).toEqual({ unstaffedSectionCost: 2 });
+    expect(persisted.rateOverrideEdits).toEqual({});
+    expect(newer.rateOverrideEdits).toEqual({ [RATE_KEY]: rateEdit(2) });
   });
 
-  it("records a cleared setting as null until its save is back", () => {
-    const cleared = after(
-      [{ type: "costSettingEdited", key: "unstaffedSectionCost", value: null }],
+  it("records a restored rate as a null amount until its save is back", () => {
+    const restored = after(
+      [{ type: "rateOverrideEdited", edit: rateEdit(null) }],
       initialState(),
       editable,
     );
     const persisted = after(
       [
         {
-          type: "costSettingEditsPersisted",
-          key: "unstaffedSectionCost",
-          saved: null,
+          type: "rateOverrideEditsPersisted",
+          key: RATE_KEY,
+          saved: rateEdit(null),
         },
       ],
-      cleared,
+      restored,
       editable,
     );
 
-    expect(cleared.costSettingEdits).toEqual({ unstaffedSectionCost: null });
-    expect(persisted.costSettingEdits).toEqual({});
+    expect(restored.rateOverrideEdits).toEqual({
+      [RATE_KEY]: rateEdit(null),
+    });
+    expect(persisted.rateOverrideEdits).toEqual({});
+  });
+
+  it("keys TA appointment rate overrides apart from job code overrides", () => {
+    const taEdit: RateOverrideEdit = {
+      rate: {
+        kind: "taAppointment",
+        appointmentPercent: 25,
+        studentStatus: "regular",
+      },
+      amount: 3,
+    };
+    const state = after(
+      [
+        { type: "rateOverrideEdited", edit: rateEdit(1) },
+        { type: "rateOverrideEdited", edit: taEdit },
+      ],
+      initialState(),
+      editable,
+    );
+
+    expect(Object.keys(state.rateOverrideEdits)).toHaveLength(2);
+  });
+
+  it("ignores a line override before the cost assumptions load", () => {
+    const state = after([{ type: "lineOverrideEdited", edit: lineEdit(1) }]);
+
+    expect(state.lineOverrideEdits).toEqual({});
+  });
+
+  it("ignores a line override from someone who cannot edit costs", () => {
+    const viewOnly = {
+      ...emptyContext,
+      costAssumptions: costAssumptions({ canEdit: false }),
+    };
+    const state = after(
+      [{ type: "lineOverrideEdited", edit: lineEdit(1) }],
+      initialState(),
+      viewOnly,
+    );
+
+    expect(state.lineOverrideEdits).toEqual({});
+  });
+
+  it("records a line override from someone who can edit costs", () => {
+    const state = after(
+      [{ type: "lineOverrideEdited", edit: lineEdit(1) }],
+      initialState(),
+      editable,
+    );
+
+    expect(state.lineOverrideEdits).toEqual({ [LINE_KEY]: lineEdit(1) });
+  });
+
+  it("records a line override on a published term", () => {
+    const state = after(
+      [{ type: "lineOverrideEdited", edit: lineEdit(1) }],
+      initialState(),
+      { ...editable, isReadOnly: true },
+    );
+
+    expect(state.lineOverrideEdits).toEqual({ [LINE_KEY]: lineEdit(1) });
+  });
+
+  it("drops a saved line override but keeps one typed while the save was in flight", () => {
+    const edited = after(
+      [{ type: "lineOverrideEdited", edit: lineEdit(1) }],
+      initialState(),
+      editable,
+    );
+    const persisted = after(
+      [
+        {
+          type: "lineOverrideEditsPersisted",
+          key: LINE_KEY,
+          saved: lineEdit(1),
+        },
+      ],
+      edited,
+      editable,
+    );
+    const newer = after(
+      [
+        { type: "lineOverrideEdited", edit: lineEdit(2) },
+        {
+          type: "lineOverrideEditsPersisted",
+          key: LINE_KEY,
+          saved: lineEdit(1),
+        },
+      ],
+      edited,
+      editable,
+    );
+
+    expect(persisted.lineOverrideEdits).toEqual({});
+    expect(newer.lineOverrideEdits).toEqual({ [LINE_KEY]: lineEdit(2) });
+  });
+
+  it("records a restored line as a null amount until its save is back", () => {
+    const restored = after(
+      [{ type: "lineOverrideEdited", edit: lineEdit(null) }],
+      initialState(),
+      editable,
+    );
+    const persisted = after(
+      [
+        {
+          type: "lineOverrideEditsPersisted",
+          key: LINE_KEY,
+          saved: lineEdit(null),
+        },
+      ],
+      restored,
+      editable,
+    );
+
+    expect(restored.lineOverrideEdits).toEqual({
+      [LINE_KEY]: lineEdit(null),
+    });
+    expect(persisted.lineOverrideEdits).toEqual({});
   });
 
   it("writes typed comments into the section's edits, beside its other edits", () => {
@@ -2084,16 +2225,19 @@ describe("budget view", () => {
     expect(state.sectionEdits).toEqual({});
   });
 
-  it("drops unsaved setting edits on moving to another department or term", () => {
+  it("drops unsaved rate and line overrides on moving to another department or term", () => {
     const edited = after(
-      [{ type: "costSettingEdited", key: "unstaffedSectionCost", value: 1 }],
+      [
+        { type: "rateOverrideEdited", edit: rateEdit(1) },
+        { type: "lineOverrideEdited", edit: lineEdit(1) },
+      ],
       initialState(),
       editable,
     );
+    const moved = after([{ type: "contextChanged" }], edited, editable);
 
-    expect(
-      after([{ type: "contextChanged" }], edited, editable).costSettingEdits,
-    ).toEqual({});
+    expect(moved.rateOverrideEdits).toEqual({});
+    expect(moved.lineOverrideEdits).toEqual({});
   });
 
   it("copies typed comments into an open sheet's draft, so Save keeps them", () => {
@@ -2116,4 +2260,3 @@ describe("budget view", () => {
     expect(state.sectionEdits[7]?.notes).toBe("From the row");
   });
 });
-

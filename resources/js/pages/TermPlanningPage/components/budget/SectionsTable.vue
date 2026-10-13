@@ -3,7 +3,7 @@
     <div
       role="table"
       aria-label="Sections and estimated costs"
-      class="tw-min-w-[1044px] tw-text-xs"
+      class="tw-min-w-[1068px] tw-text-xs"
     >
       <div
         role="row"
@@ -66,11 +66,11 @@
           </span>
         </BudgetCell>
 
-        <BudgetCell role="cell" align="end">{{ row.enrollmentCap }}</BudgetCell>
-
-        <BudgetCell role="cell" class="tw-pb-[3px] tw-pt-1">
-          <EnrollmentSparkline :history="row.history" />
+        <BudgetCell role="cell" class="tw-py-1">
+          <EnrollmentTiles :history="row.history" />
         </BudgetCell>
+
+        <BudgetCell role="cell" align="end">{{ row.enrollmentCap }}</BudgetCell>
 
         <BudgetCell role="cell" class="tw-py-[5px]">
           <span class="tw-min-w-0">
@@ -92,18 +92,30 @@
 
         <BudgetCell
           role="cell"
-          align="end"
-          class="tw-relative tw-whitespace-nowrap tw-font-semibold"
+          class="tw-px-0 tw-font-semibold"
           :class="{ 'tw-bg-accent-container-low': row.hasInstructorOverride }"
-          :title="row.instructorBasisLabel"
         >
-          <template v-if="!row.isCancelled">
-            <MissingRate v-if="row.instructorCost === null" />
+          <CostOverrideCell
+            v-if="!row.isCancelled"
+            :lines="row.instructorLines"
+            :isOverridden="row.hasInstructorOverride"
+            :canEdit="canEditCosts"
+            :courseLabel="row.courseLabel"
+            costLabel="Instructor cost"
+            :basisLabel="row.instructorBasisLabel"
+            @editLine="(edit) => emit('editLine', edit)"
+          >
+            <span
+              v-if="row.paidOnLectureLabel"
+              class="tw-text-[11px] tw-font-normal tw-text-on-surface-variant"
+            >
+              ↳ in {{ row.paidOnLectureLabel }}
+            </span>
+            <MissingRate v-else-if="row.instructorCost === null" />
             <template v-else>{{
               formatWholeDollars(row.instructorCost)
             }}</template>
-          </template>
-          <OverrideMarker v-if="row.hasInstructorOverride" />
+          </CostOverrideCell>
         </BudgetCell>
 
         <BudgetCell
@@ -119,6 +131,10 @@
           role="cell"
           align="end"
           class="tw-whitespace-nowrap"
+          :class="{
+            'tw-px-0 tw-font-semibold': row.taLines.length > 0,
+            'tw-bg-accent-container-low': row.hasTaOverride,
+          }"
           :title="row.taBasisLabel"
         >
           <span
@@ -127,13 +143,21 @@
           >
             ↳ in {{ row.taCostCell.sectionLabel }}
           </span>
-          <MissingRate v-else-if="row.taCostCell.kind === 'missingRate'" />
-          <span
-            v-else-if="row.taCostCell.kind === 'amount'"
-            class="tw-font-semibold"
+          <CostOverrideCell
+            v-else-if="row.taLines.length > 0"
+            :lines="row.taLines"
+            :isOverridden="row.hasTaOverride"
+            :canEdit="canEditCosts"
+            :courseLabel="row.courseLabel"
+            costLabel="TA cost"
+            :basisLabel="row.taBasisLabel"
+            @editLine="(edit) => emit('editLine', edit)"
           >
-            {{ formatWholeDollars(row.taCostCell.dollars) }}
-          </span>
+            <MissingRate v-if="row.taCostCell.kind === 'missingRate'" />
+            <template v-else-if="row.taCostCell.kind === 'amount'">{{
+              formatWholeDollars(row.taCostCell.dollars)
+            }}</template>
+          </CostOverrideCell>
         </BudgetCell>
 
         <BudgetCell
@@ -178,11 +202,12 @@ import { colorOfType } from "@/utils/meetingTypeColors";
 import BudgetCell from "./BudgetCell.vue";
 import CapsLabel from "./CapsLabel.vue";
 import CellSubline from "./CellSubline.vue";
-import EnrollmentSparkline from "./EnrollmentSparkline.vue";
+import CostOverrideCell from "./CostOverrideCell.vue";
+import EnrollmentTiles from "./EnrollmentTiles.vue";
 import MissingRate from "./MissingRate.vue";
-import OverrideMarker from "./OverrideMarker.vue";
 import TotalCell from "./TotalCell.vue";
 import type { BudgetRow } from "../../helpers/budgetRows";
+import type { LineOverrideEdit } from "../../helpers/costOverrides";
 import { formatWholeDollars } from "../../helpers/money";
 import type { CostTotals } from "../../helpers/termEstimate";
 
@@ -191,21 +216,23 @@ const props = defineProps<{
   totals: CostTotals;
   selectedSectionId: number | null;
   isReadOnly: boolean;
+  canEditCosts: boolean;
 }>();
 
 const emit = defineEmits<{
   select: [sectionId: number];
   editNotes: [sectionId: number, notes: string];
+  editLine: [edit: LineOverrideEdit];
 }>();
 
 const GRID_TEMPLATE_COLUMNS =
-  "minmax(170px,1.2fr) 136px 48px 172px minmax(140px,1fr) 86px 112px 80px minmax(110px,0.9fr)";
+  "minmax(170px,1.2fr) 136px 196px 48px minmax(140px,1fr) 86px 112px 80px minmax(110px,0.9fr)";
 
 const HEADINGS = [
   { label: "Section", isNumeric: false },
   { label: "Day / time", isNumeric: false },
-  { label: "Cap", isNumeric: true },
   { label: "Prev. enrollment", isNumeric: false },
+  { label: "Cap", isNumeric: true },
   { label: "Instructor", isNumeric: false },
   { label: "Est. cost", isNumeric: true },
   { label: "TA support", isNumeric: false },

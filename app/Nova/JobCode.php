@@ -3,10 +3,12 @@
 namespace App\Nova;
 
 use App\Library\TermPlan\InstructorType;
+use App\Library\TermPlan\StudentStatus;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -35,6 +37,7 @@ class JobCode extends Resource {
             Text::make('Code')
                 ->sortable()
                 ->rules('required', 'max:16')
+                ->help('TBA holds the rate for a section with no instructor, and for a job code with no rate.')
                 ->creationRules('unique:job_codes,code')
                 ->updateRules('unique:job_codes,code,{{resourceId}}'),
 
@@ -46,8 +49,21 @@ class JobCode extends Resource {
                 ->options(InstructorType::class)
                 ->displayUsingLabels()
                 ->sortable()
-                ->rules('required', Rule::enum(InstructorType::class))
-                ->help('The default for everyone holding this job code.'),
+                ->nullable()
+                ->rules('nullable', Rule::enum(InstructorType::class))
+                ->help('The default for everyone holding this job code. Blank for TBA.'),
+
+            Number::make('Annual Load', 'annual_load')
+                ->nullable()
+                ->rules('nullable', 'integer', 'min:0', 'max:40')
+                ->help('Courses a person with this job code teaches in a year. The People tab expects half of it each term.'),
+
+            Select::make('TA Student Status', 'student_status')
+                ->options(StudentStatus::class)
+                ->displayUsingLabels()
+                ->nullable()
+                ->rules('nullable', Rule::enum(StudentStatus::class))
+                ->help('For TA job codes: which TA appointment rate applies. Blank means regular.'),
 
             HasMany::make('Rates', 'rates', JobCodeRate::class),
         ];

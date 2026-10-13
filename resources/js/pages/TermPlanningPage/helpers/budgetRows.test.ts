@@ -2,13 +2,14 @@ import { describe, expect, it } from "vitest";
 import {
   costAssumptions,
   costPerson,
-  costRuleSettings,
   jobCodeRate,
-  personChoice,
+  rateOverrides,
   sisInstructor,
   taAppointmentRate,
 } from "./costAssumptions.fixture";
+import type { CostLineOverride } from "@/types";
 import { budgetRowOf, jobLabelsOf } from "./budgetRows";
+import { lineOverridesByKeyOf } from "./costOverrides";
 import { plannedSection } from "./plannedSection.fixture";
 import { estimateTermCost, type SectionCost } from "./termEstimate";
 import type { PlannedSection } from "../types";
@@ -17,19 +18,23 @@ const labelOfSection = (sectionId: number) => `Label ${sectionId}`;
 const jobLabelOfEmplid = (emplid: number) => `Job of ${emplid}`;
 
 const assumptions = costAssumptions({
-  jobCodes: [jobCodeRate("A", 4000)],
+  jobCodes: [
+    jobCodeRate("A", 4000),
+    jobCodeRate("TBA", 5000, { instructorType: null }),
+  ],
   taRates: { fiscalYear: 2027, rates: [taAppointmentRate(9000)] },
   people: [costPerson(1, ["A"]), costPerson(2, ["A"])],
 });
 
 const rowsOf = (
   sections: PlannedSection[],
-  choices = [] as ReturnType<typeof personChoice>[],
+  lineOverrides: CostLineOverride[] = [],
 ) => {
   const costs = estimateTermCost({
     sections,
-    assumptions: { ...assumptions, personChoices: choices },
-    settings: costRuleSettings(),
+    assumptions,
+    rateOverrides: rateOverrides(),
+    lineOverridesByKey: lineOverridesByKeyOf(lineOverrides, {}),
   });
 
   return sections.map((section) =>
@@ -38,7 +43,7 @@ const rowsOf = (
       costs.get(section.id),
       [],
       labelOfSection,
-      jobLabelsOf({ ...assumptions, personChoices: choices }),
+      jobLabelsOf(assumptions),
     ),
   );
 };
@@ -106,22 +111,78 @@ describe("budgetRowOf", () => {
   it("explains the cost under TBA on an unstaffed section", () => {
     const [row] = rowsOf([plannedSection(1, monday9)]);
 
-    expect(row.instructorSubline).toBe(
-      "No instructor yet · unstaffed section cost",
-    );
+    expect(row.instructorSubline).toBe("No instructor yet · Unstaffed rate");
   });
 
   it("flags an instructor whose cost is overridden", () => {
     const [row] = rowsOf(
       [plannedSection(1, monday9, { instructors: [sisInstructor(1, "PI")] })],
-      [personChoice(1, { overrideCost: 1234, overrideReason: "Buyout" })],
+      [
+        {
+          courseCode: "ANTH-1001",
+          section: "001",
+          emplid: 1,
+          amount: 1234,
+          reason: "Buyout",
+        },
+      ],
     );
 
     expect(row).toMatchObject({
       hasInstructorOverride: true,
       instructorCost: 1234,
-      instructorBasisLabel: "Override: Buyout",
+      instructorBasisLabel: "Changed for this section, was $4,000 · Buyout",
     });
+    expect(row.instructorLines).toEqual([
+      {
+        courseCode: "ANTH-1001",
+        section: "001",
+        emplid: 1,
+        name: "Person 1",
+        amount: 1234,
+        defaultAmount: 4000,
+        reason: "Buyout",
+        isOverridden: true,
+      },
+    ]);
+  });
+
+  it("lists no overridable instructor line on an unstaffed section", () => {
+    const [row] = rowsOf([plannedSection(1, monday9)]);
+
+    expect(row.instructorLines).toEqual([]);
+  });
+
+  it("lists a TA charged on the section as overridable, not one charged elsewhere", () => {
+    const ta = sisInstructor(2, "TA");
+    const [lecture, discussion] = rowsOf([
+      plannedSection(1, monday9, { component: "LEC", instructors: [ta] }),
+      plannedSection(2, monday9, {
+        section: "002",
+        component: "DIS",
+        instructors: [ta],
+      }),
+    ]);
+
+    expect(lecture.taLines).toMatchObject([
+      { emplid: 2, amount: 9000, isOverridden: false },
+    ]);
+    expect(discussion.taLines).toEqual([]);
+  });
+
+  it("points a lab's instructor cost at the lecture that pays it", () => {
+    const pi = sisInstructor(1, "PI");
+    const [lecture, lab] = rowsOf([
+      plannedSection(1, monday9, { component: "LEC", instructors: [pi] }),
+      plannedSection(2, monday9, {
+        section: "002",
+        component: "LAB",
+        instructors: [pi],
+      }),
+    ]);
+
+    expect(lecture.paidOnLectureLabel).toBeNull();
+    expect(lab.paidOnLectureLabel).toBe("Label 1");
   });
 
   it("leaves the instructor cost null when a line has no rate", () => {

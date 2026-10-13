@@ -1,17 +1,23 @@
 import type { InstructorType, Season, StudentStatus } from "@/types";
 import { fiscalYearLabel } from "./fiscalYear";
+import { formatWholeDollars } from "./money";
 
 export type CostBasis =
-  | { kind: "override"; reason: string | null }
-  | { kind: "recurringBudget"; instructorType: InstructorType }
+  | {
+      kind: "lineOverride";
+      reason: string | null;
+      /** Null when the replaced line had no rate. */
+      replacedAmount: number | null;
+    }
   | { kind: "freeComponent"; component: string }
-  | { kind: "paidOnLecture"; component: string }
+  | { kind: "paidOnLecture"; component: string; lectureSectionId: number }
   | {
       kind: "jobCodeRate";
       jobCode: string;
-      title: string;
-      rateFiscalYear: number;
-      chosenBy: "planner" | "highestRate";
+      /** Null when Nova does not list the job code. */
+      title: string | null;
+      /** Null when the term's override is the rate. */
+      rateFiscalYear: number | null;
       jobCodeCount: number;
     }
   | { kind: "unratedJobCode"; jobCode: string | null }
@@ -21,6 +27,7 @@ export type CostBasis =
       appointmentPercent: number;
       season: Season;
       studentStatus: StudentStatus;
+      /** Null when the term's override is the rate. */
       rateFiscalYear: number | null;
     }
   | {
@@ -61,41 +68,43 @@ export function describeCostBasis(
   labelOfSection: (sectionId: number) => string,
 ): string {
   switch (basis.kind) {
-    case "override":
-      return basis.reason ? `Override: ${basis.reason}` : "Override";
-
-    case "recurringBudget":
-      return `${INSTRUCTOR_TYPE_LABELS[basis.instructorType]} · no added cost`;
+    case "lineOverride": {
+      const replaced =
+        basis.replacedAmount === null
+          ? "no rate"
+          : formatWholeDollars(basis.replacedAmount);
+      const changed = `Changed for this section, was ${replaced}`;
+      return basis.reason ? `${changed} · ${basis.reason}` : changed;
+    }
 
     case "freeComponent":
       return `${COMPONENT_LABELS[basis.component] ?? basis.component} · no added cost`;
 
     case "paidOnLecture":
-      return `${COMPONENT_LABELS[basis.component] ?? basis.component} in a course with a lecture · paid on the lecture`;
+      return `${COMPONENT_LABELS[basis.component] ?? basis.component} in a course with a lecture · paid on ${labelOfSection(basis.lectureSectionId)}`;
 
     case "jobCodeRate": {
-      const rate = `${basis.jobCode} ${basis.title} · ${fiscalYearLabel(basis.rateFiscalYear)} rate`;
-      const isHighestOfSeveral =
-        basis.chosenBy === "highestRate" && basis.jobCodeCount > 1;
+      const jobCode = basis.title
+        ? `${basis.jobCode} ${basis.title}`
+        : basis.jobCode;
+      const rate = `${jobCode} · ${rateYearLabel(basis.rateFiscalYear)}`;
 
-      return isHighestOfSeveral
+      return basis.jobCodeCount > 1
         ? `${rate} · highest of ${basis.jobCodeCount} job codes`
         : rate;
     }
 
     case "unratedJobCode":
       return basis.jobCode
-        ? `${basis.jobCode} has no rate · unrated job code cost`
-        : "No job code in this department · unrated job code cost";
+        ? `${basis.jobCode} has no rate · Unstaffed rate`
+        : "No job code in this department · Unstaffed rate";
 
     case "unstaffedSection":
-      return "No instructor yet · unstaffed section cost";
+      return "No instructor yet · Unstaffed rate";
 
     case "taAppointment": {
       const appointment = `${basis.appointmentPercent}% ${STUDENT_STATUS_LABELS[basis.studentStatus]} TA, ${basis.season}`;
-      return basis.rateFiscalYear === null
-        ? appointment
-        : `${appointment} · ${fiscalYearLabel(basis.rateFiscalYear)} rate`;
+      return `${appointment} · ${rateYearLabel(basis.rateFiscalYear)}`;
     }
 
     case "noTaRate":
@@ -105,3 +114,8 @@ export function describeCostBasis(
       return `Counted on ${labelOfSection(basis.sectionId)}`;
   }
 }
+
+const rateYearLabel = (rateFiscalYear: number | null) =>
+  rateFiscalYear === null
+    ? "rate changed for this term"
+    : `${fiscalYearLabel(rateFiscalYear)} rate`;
