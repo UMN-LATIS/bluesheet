@@ -1,4 +1,8 @@
-import type { PlannedSection, SisInstructor } from "../types";
+import type {
+  PlannedSection,
+  SisInstructor,
+  SisSectionMeeting,
+} from "../types";
 import type { EnrollmentPoint } from "./enrollmentHistory";
 import { daysMetLabel } from "./scheduleDays";
 import { instructorsOfRecord, TA_ROLE } from "./sectionPeople";
@@ -79,7 +83,7 @@ export function budgetRowOf(
     courseLabel: courseLabelOf(section),
     component: section.component,
     title: section.title,
-    meetingSummary: meetingSummaryOf(section),
+    meetingSummary: meetingSummaryOf(section.meetings),
     enrollmentCap: section.enrollmentCap,
     history,
     isCancelled: section.isCancelled,
@@ -141,8 +145,9 @@ function overridableLinesOf(
   });
 }
 
-function meetingSummaryOf(section: PlannedSection): string {
-  const [first] = section.meetings;
+/** "MW 11:15a – 12:30p", from the first meeting's time. */
+export function meetingSummaryOf(meetings: SisSectionMeeting[]): string {
+  const [first] = meetings;
   if (!first) return "Async";
 
   const time = formatTimeRange(
@@ -150,7 +155,7 @@ function meetingSummaryOf(section: PlannedSection): string {
     minutesFromClock(first.endTime),
   );
 
-  return `${daysMetLabel(section.meetings)} ${time}`;
+  return `${daysMetLabel(meetings)} ${time}`;
 }
 
 function instructorNameOf(

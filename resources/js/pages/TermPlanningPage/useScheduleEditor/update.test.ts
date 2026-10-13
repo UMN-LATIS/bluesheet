@@ -734,6 +734,21 @@ describe("the URL", () => {
 
     expect(returned.state.selection).toEqual({ kind: "leave", leaveId: 42 });
   });
+
+  it("selecting a person writes their emplid to the URL", () => {
+    expect(step({ type: "selectedPerson", emplid: 5001 }).effects).toEqual([
+      {
+        type: "replaceUrlQuery",
+        query: { component: "LEC", view: "week", personId: "5001" },
+      },
+    ]);
+  });
+
+  it("a link naming a person restores that selection", () => {
+    const returned = step({ type: "urlChanged", query: { personId: "5001" } });
+
+    expect(returned.state.selection).toEqual({ kind: "person", emplid: 5001 });
+  });
 });
 
 describe("the sheet's draft", () => {

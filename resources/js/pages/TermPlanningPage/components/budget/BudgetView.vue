@@ -10,6 +10,7 @@
     <template v-else>
       <BudgetHeader
         :totals="shownTotals"
+        :termTotals="termTotals"
         :shownCount="schedule.shownSections.length"
         :totalCount="schedule.localSections.length"
         :termName="termName"
@@ -49,6 +50,7 @@
           costHeading="Cost / section"
           :canEdit="schedule.canEditCosts"
           @selectSection="selectSection"
+          @selectPerson="selectPerson"
           @editRate="editPersonRate"
         />
 
@@ -60,6 +62,7 @@
           costHeading="Cost / course"
           :canEdit="schedule.canEditCosts"
           @selectSection="selectSection"
+          @selectPerson="selectPerson"
           @editRate="editPersonRate"
         />
 
@@ -159,6 +162,9 @@ const editPersonRate = (emplid: number, amount: number | null) =>
     edit: { rate: { kind: "person", emplid }, amount },
   });
 
+const selectPerson = (emplid: number) =>
+  props.schedule.dispatch({ type: "selectedPerson", emplid });
+
 const selectSection = (sectionId: number) =>
   props.schedule.dispatch({ type: "selectedSection", sectionId });
 
@@ -170,6 +176,10 @@ const shownCosts = computed((): SectionCost[] =>
 );
 
 const shownTotals = computed(() => totalsOf(shownCosts.value));
+
+const termTotals = computed(() =>
+  totalsOf([...(props.schedule.sectionCosts?.values() ?? [])]),
+);
 
 const unavailableMessage = computed(() => {
   if (props.hasAssumptionsError) return "Cost assumptions could not be loaded.";

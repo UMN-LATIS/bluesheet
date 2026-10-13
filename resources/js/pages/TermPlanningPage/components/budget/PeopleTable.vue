@@ -29,7 +29,16 @@
           class="tw-font-semibold"
           :class="{ 'tw-text-brand': row.emplid === null }"
         >
-          <span class="tw-truncate" :title="row.name">{{ row.name }}</span>
+          <button
+            v-if="row.emplid !== null"
+            type="button"
+            class="tw-cursor-pointer tw-truncate tw-border-none tw-bg-transparent tw-p-0 tw-text-left tw-text-xs tw-font-semibold tw-text-on-surface hover:tw-underline"
+            :title="row.name"
+            @click="emit('selectPerson', row.emplid)"
+          >
+            {{ row.name }}
+          </button>
+          <span v-else class="tw-truncate">{{ row.name }}</span>
         </BudgetCell>
         <BudgetCell role="cell" class="tw-tabular-nums">
           {{ row.jobCode }}
@@ -125,6 +134,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   selectSection: [sectionId: number];
+  selectPerson: [emplid: number];
   editRate: [emplid: number, amount: number | null];
 }>();
 

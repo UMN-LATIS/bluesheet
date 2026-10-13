@@ -197,6 +197,7 @@
         v-if="
           schedule.openHour ||
           selectedSection ||
+          selectedPerson ||
           selectedLeave ||
           isSelectedLeaveLoading
         "
@@ -226,11 +227,30 @@
           :returnTo="returnTo"
           :termName="term?.name"
           :isReadOnly="isReadOnly"
+          :enrollmentHistory="enrollmentHistoryQuery.data.value ?? null"
+          :termCode="activeTermCode"
           @back="goBackToHour"
           @close="closeSheet"
           @create="saveNewSection"
           @discard="schedule.dispatch({ type: 'newSectionDiscarded' })"
           @delete="deleteSelectedSection"
+        />
+        <PersonPanel
+          v-else-if="selectedPerson"
+          :key="selectedPerson.emplid"
+          :name="selectedPerson.name"
+          :title="selectedPerson.title"
+          :budget="selectedPerson.budget"
+          :costLabel="selectedPerson.costLabel"
+          :canEditCosts="schedule.canEditCosts"
+          :termSections="selectedPerson.termSections"
+          :taughtTerms="selectedPerson.taughtTerms"
+          @close="schedule.dispatch({ type: 'deselected' })"
+          @selectSection="
+            (sectionId) =>
+              schedule.dispatch({ type: 'selectedSection', sectionId })
+          "
+          @editRate="editSelectedPersonRate"
         />
         <LeavePanel
           v-else-if="selectedLeave"
@@ -279,6 +299,10 @@ import { omit } from "lodash-es";
 import FullScreenLayout from "@/layouts/FullScreenLayout.vue";
 import Notification from "@/components/Notification.vue";
 import LeavePanel from "@/components/planning/LeavePanel.vue";
+import PersonPanel from "./components/PersonPanel.vue";
+import { peopleTablesOf } from "./helpers/peopleRows";
+import { personTermSectionsOf, taughtTermsOf } from "./helpers/personPanel";
+import { useTeachingHistoryQuery } from "./queries/useTeachingHistoryQuery";
 import LeavePanelLoading from "@/components/planning/LeavePanelLoading.vue";
 import BudgetView from "./components/budget/BudgetView.vue";
 import CoverageHeatmap from "./components/CoverageHeatmap.vue";
@@ -539,7 +563,6 @@ const { saveRateOverride, saveLineOverride } = useCostMutations(
 const enrollmentHistoryQuery = useEnrollmentHistoryQuery(
   groupId,
   activeTermCode,
-  computed(() => schedule.view === "budget"),
 );
 
 /**
@@ -792,6 +815,87 @@ const selectedSection = computed(() => {
     null
   );
 });
+
+const teachingHistoryQuery = useTeachingHistoryQuery(
+  groupId,
+  activeTermCode,
+  computed(() => schedule.selectedEmplid !== null),
+);
+
+const selectedPersonBudget = computed(() => {
+  const assumptions = costAssumptionsQuery.data.value;
+  const { selectedEmplid, sectionCosts, rateOverrides } = schedule;
+  const isCostable =
+    activeView.value === "budget" &&
+    assumptions &&
+    sectionCosts &&
+    rateOverrides;
+  if (selectedEmplid === null || !isCostable) return null;
+
+  const { instructors, tas } = peopleTablesOf(
+    localSections.value,
+    sectionCosts,
+    assumptions,
+    rateOverrides,
+    roster.value,
+  );
+  const isEmplid = ({ emplid }: { emplid: number | null }) =>
+    emplid === selectedEmplid;
+  const instructor = instructors.find(isEmplid);
+  if (instructor) return { row: instructor, costLabel: "Cost per section" };
+
+  const ta = tas.find(isEmplid);
+  return ta ? { row: ta, costLabel: "Cost per course" } : null;
+});
+
+const selectedPerson = computed(() => {
+  const emplid = schedule.selectedEmplid;
+  if (emplid === null) return null;
+
+  const history = teachingHistoryQuery.data.value;
+  const rosterEntry = roster.value.find(
+    (employee) => employee.emplid === emplid,
+  );
+  const historyPerson = history?.people.find(
+    (person) => person.emplid === emplid,
+  );
+  const sectionInstructor = localSections.value
+    .flatMap(({ instructors }) => instructors)
+    .find((instructor) => instructor.emplid === emplid);
+  const budget = selectedPersonBudget.value;
+
+  return {
+    emplid,
+    name:
+      rosterEntry?.name ??
+      sectionInstructor?.name ??
+      historyPerson?.name ??
+      "Unknown",
+    title:
+      budget?.row.title ||
+      rosterEntry?.positionTitle ||
+      historyPerson?.title ||
+      null,
+    budget: budget?.row ?? null,
+    costLabel: budget?.costLabel ?? "Cost per section",
+    termSections: personTermSectionsOf(
+      emplid,
+      localSections.value,
+      activeView.value === "budget" ? schedule.sectionCosts : null,
+    ),
+    taughtTerms: history ? taughtTermsOf(history, emplid) : null,
+  };
+});
+
+function editSelectedPersonRate(amount: number | null) {
+  const emplid = schedule.selectedEmplid;
+  if (emplid === null) return;
+
+  schedule.dispatch({
+    type: "rateOverrideEdited",
+    edit: { rate: { kind: "person", emplid }, amount },
+  });
+}
 
 const leaveTimelineQuery = useTermLeaveTimelineQuery(
   groupId,

@@ -86,6 +86,9 @@ export const selectSelectedSectionId = (state: EditorState): number | null =>
 export const selectSelectedLeaveId = (state: EditorState): number | null =>
   state.selection?.kind === "leave" ? state.selection.leaveId : null;
 
+export const selectSelectedEmplid = (state: EditorState): number | null =>
+  state.selection?.kind === "person" ? state.selection.emplid : null;
+
 /** The block the week grid marks, if a block is what is selected. */
 export const selectSelectedMeetingId = (state: EditorState): string | null =>
   state.selection?.kind === "meeting" ? state.selection.meetingId : null;

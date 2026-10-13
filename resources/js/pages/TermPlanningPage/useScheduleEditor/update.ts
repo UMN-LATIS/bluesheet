@@ -118,6 +118,7 @@ const SHEET_MOVED_ON: EditorEvent["type"][] = [
   "selectedSection",
   "selectedHour",
   "selectedLeave",
+  "selectedPerson",
   "deselected",
   "canceled",
   "sectionCreated",
@@ -177,6 +178,7 @@ const READING_EVENTS: EditorEvent["type"][] = [
   "selectedSection",
   "selectedHour",
   "selectedLeave",
+  "selectedPerson",
   // nothing was ever written, so there is nothing a locked term protects
   "newSectionDiscarded",
   "filterValuesAdded",
@@ -497,6 +499,12 @@ function reduce(
       return {
         ...state,
         selection: { kind: "leave", leaveId: event.leaveId },
+      };
+
+    case "selectedPerson":
+      return {
+        ...state,
+        selection: { kind: "person", emplid: event.emplid },
       };
 
     case "filterValuesAdded":

@@ -110,6 +110,7 @@ export type Selection =
       from?: HourSelection;
     }
   | { kind: "leave"; leaveId: number }
+  | { kind: "person"; emplid: number }
   | HourSelection;
 
 /** A cell of the coverage heatmap: one hour of one day. */
@@ -209,6 +210,7 @@ export type EditorEvent =
   | { type: "selectedSection"; sectionId: number; from?: HourSelection }
   | { type: "selectedHour"; dayIndex: number; startMinute: number }
   | { type: "selectedLeave"; leaveId: number }
+  | { type: "selectedPerson"; emplid: number }
   | { type: "filterValuesAdded"; facet: FilterFacet; values: string[] }
   | { type: "filterValuesRemoved"; facet: FilterFacet; values: string[] }
   | { type: "filtersCleared" }

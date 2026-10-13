@@ -11,17 +11,21 @@
       {{ initialsOf(instructor) }}
     </span>
     <div class="tw-min-w-0 tw-flex-1">
-      <p class="tw-m-0 tw-truncate tw-text-[13.5px]">
-        {{ instructor.name ?? "TBA" }}
-      </p>
+      <PersonNameButton
+        :name="instructor.name ?? 'TBA'"
+        @click="emit('open')"
+      />
       <p class="tw-m-0 tw-text-[11px] tw-text-on-surface-variant">{{ role }}</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import PersonNameButton from "./PersonNameButton.vue";
 import { initialsOf } from "../helpers/sectionPeople";
 import type { SisInstructor } from "../types";
 
 defineProps<{ instructor: SisInstructor; role: string }>();
+
+const emit = defineEmits<{ open: [] }>();
 </script>

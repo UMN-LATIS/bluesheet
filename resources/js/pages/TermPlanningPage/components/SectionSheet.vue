@@ -72,7 +72,12 @@
       </p>
     </div>
 
-    <SectionFacts v-if="isReadOnly" :section="section" />
+    <SectionFacts
+      v-if="isReadOnly"
+      :section="section"
+      :previousOfferings="previousOfferings"
+      @openPerson="openPerson"
+    />
 
     <div
       v-else
@@ -243,6 +248,7 @@
             :instructor="instructor"
             role="Instructor of record"
             @remove="removeInstructor(instructor.emplid)"
+            @open="openPerson(instructor.emplid)"
           />
           <p
             v-if="instructorsOnRecord.length === 0"
@@ -286,6 +292,7 @@
             :instructor="instructor"
             :role="instructor.role"
             @remove="removeInstructor(instructor.emplid)"
+            @open="openPerson(instructor.emplid)"
           />
           <p
             v-if="assistants.length === 0"
@@ -403,6 +410,8 @@
             @input="edit({ notes: valueOf($event) })"
           />
         </Disclosure>
+
+        <PreviousEnrollment :offerings="previousOfferings" />
       </div>
     </div>
 
@@ -593,11 +602,13 @@ import FieldHeader from "./FieldHeader.vue";
 import FieldLabel from "@/components/planning/FieldLabel.vue";
 import PersonField from "./PersonField.vue";
 import PersonLeaveChip from "./PersonLeaveChip.vue";
+import PreviousEnrollment from "./PreviousEnrollment.vue";
 import SectionFacts from "./SectionFacts.vue";
 import SegmentedControl, { type SegmentedOption } from "./SegmentedControl.vue";
 import { ComboBox, type ComboBoxOptionType } from "@/components/ComboBox";
 import { lastNameFirst } from "@/utils/lastNameFirst";
-import type { SisEmployee } from "@/types";
+import type { EnrollmentHistory, SisEmployee } from "@/types";
+import { previousOfferingsOf } from "../helpers/enrollmentHistory";
 import { LockIcon } from "@/icons";
 import { colorOfType, labelOfComponent } from "@/utils/meetingTypeColors";
 import { DELIVERY_OPTIONS, labelOfDelivery } from "../constants/delivery";
@@ -645,6 +656,9 @@ const props = defineProps<{
    * that would have written is gone rather than dimmed.
    */
   isReadOnly?: boolean;
+  /** Null until loaded, or when the term is not known. */
+  enrollmentHistory: EnrollmentHistory | null;
+  termCode: number | null;
 }>();
 
 const emit = defineEmits<{
@@ -868,6 +882,20 @@ const instructorsOnRecord = computed(() =>
 );
 
 const assistants = computed(() => assistantsOf(draft.value.instructors));
+
+const openPerson = (emplid: number) =>
+  props.schedule.dispatch({ type: "selectedPerson", emplid });
+
+const previousOfferings = computed(() =>
+  props.enrollmentHistory && props.termCode !== null
+    ? previousOfferingsOf(
+        props.enrollmentHistory,
+        props.section.courseCode,
+        props.section.section,
+        props.termCode,
+      )
+    : [],
+);
 
 const hasNote = computed(() => draft.value.notes.trim() !== "");
 

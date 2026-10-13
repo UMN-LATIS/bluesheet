@@ -58,6 +58,7 @@
           :key="instructor.emplid"
           :instructor="instructor"
           role="Instructor of record"
+          @open="emit('openPerson', instructor.emplid)"
         />
         <p
           v-if="instructorsOnRecord.length === 0"
@@ -81,6 +82,7 @@
           :key="instructor.emplid"
           :instructor="instructor"
           :role="instructor.role"
+          @open="emit('openPerson', instructor.emplid)"
         />
       </div>
       <p v-else class="tw-m-0 tw-text-[13px] tw-text-on-surface-variant">
@@ -90,7 +92,9 @@
 
     <FieldDivider />
 
-    <div class="tw-overflow-hidden tw-rounded-[10px] tw-bg-surface">
+    <div
+      class="tw-flex-none tw-overflow-hidden tw-rounded-[10px] tw-bg-surface"
+    >
       <Disclosure
         label="Component & delivery"
         :summary="`${section.component} · ${labelOfDelivery(section.delivery)}`"
@@ -151,6 +155,8 @@
           }}
         </p>
       </Disclosure>
+
+      <PreviousEnrollment :offerings="previousOfferings" />
     </div>
   </div>
 </template>
@@ -162,6 +168,8 @@ import FactValue from "@/components/planning/FactValue.vue";
 import FieldDivider from "@/components/planning/FieldDivider.vue";
 import FieldLabel from "@/components/planning/FieldLabel.vue";
 import PersonRecord from "./PersonRecord.vue";
+import PreviousEnrollment from "./PreviousEnrollment.vue";
+import type { PreviousOffering } from "../helpers/enrollmentHistory";
 import { labelOfComponent } from "@/utils/meetingTypeColors";
 import { labelOfDelivery } from "../constants/delivery";
 import { daysMetSpelled } from "../helpers/scheduleDays";
@@ -173,7 +181,12 @@ import {
 } from "../helpers/timeScale";
 import type { PlannedSection, SisSectionMeeting } from "../types";
 
-const props = defineProps<{ section: PlannedSection }>();
+const props = defineProps<{
+  section: PlannedSection;
+  previousOfferings: PreviousOffering[];
+}>();
+
+const emit = defineEmits<{ openPerson: [emplid: number] }>();
 
 /** "9:45 – 11:00 AM": the half is written once, on the end that carries it. */
 const timeOf = (pattern: SisSectionMeeting) =>

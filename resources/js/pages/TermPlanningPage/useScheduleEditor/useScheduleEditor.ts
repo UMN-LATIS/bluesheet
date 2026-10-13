@@ -32,6 +32,7 @@ import {
   selectSectionCosts,
   selectShownSections,
   selectSelectedLeaveId,
+  selectSelectedEmplid,
   selectSelectedMeetingId,
   selectSelectedSectionId,
   selectWeekView,
@@ -102,6 +103,7 @@ export function useScheduleEditor(
     /* The readings of `selection` each canvas marks itself by. */
     selectedSectionId: computed(() => selectSelectedSectionId(state.value)),
     selectedLeaveId: computed(() => selectSelectedLeaveId(state.value)),
+    selectedEmplid: computed(() => selectSelectedEmplid(state.value)),
     selectedMeetingId: computed(() => selectSelectedMeetingId(state.value)),
     openHour: computed(() => selectOpenHour(state.value)),
     hourReturnedTo: computed(() => selectHourReturnedTo(state.value)),

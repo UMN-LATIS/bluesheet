@@ -29,6 +29,7 @@ import { computed } from "vue";
 import type { EnrollmentHistorySection } from "@/types";
 import {
   type EnrollmentPoint,
+  fillColorOf,
   shortTermLabel,
 } from "../../helpers/enrollmentHistory";
 
@@ -38,26 +39,8 @@ const hasHistory = computed(() =>
   props.history.some(({ offering }) => offering !== null),
 );
 
-const RED_HUE = 25;
-const GREEN_HUE = 145;
-const RED_UP_TO_FILL = 0.4;
-const GREEN_FROM_FILL = 0.95;
-
-const clampToUnit = (fraction: number) => Math.min(1, Math.max(0, fraction));
-
 function backgroundOf(offering: EnrollmentHistorySection | null): string {
-  if (!offering) return "transparent";
-
-  const fill =
-    offering.enrollmentCap > 0
-      ? clampToUnit(offering.enrollmentTotal / offering.enrollmentCap)
-      : 1;
-  const redToGreenFraction = clampToUnit(
-    (fill - RED_UP_TO_FILL) / (GREEN_FROM_FILL - RED_UP_TO_FILL),
-  );
-  const hue = RED_HUE + redToGreenFraction * (GREEN_HUE - RED_HUE);
-
-  return `oklch(0.85 0.11 ${hue.toFixed(0)})`;
+  return offering ? fillColorOf(offering) : "transparent";
 }
 
 function titleOf(termLabel: string, offering: EnrollmentHistorySection | null) {

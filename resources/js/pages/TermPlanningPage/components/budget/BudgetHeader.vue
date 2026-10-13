@@ -16,20 +16,27 @@
       <b
         class="tw-text-right tw-font-semibold tw-tabular-nums tw-text-on-surface"
       >
-        {{ formatWholeDollars(totals.instructorCost) }}
+        {{ formatWholeDollars(totals.instructorCost)
+        }}<OfTermTotal v-if="isFiltered" :dollars="termTotals.instructorCost" />
       </b>
       <span>TA support</span>
       <b
         class="tw-text-right tw-font-semibold tw-tabular-nums tw-text-on-surface"
       >
-        {{ formatWholeDollars(totals.taCost) }}
+        {{ formatWholeDollars(totals.taCost)
+        }}<OfTermTotal v-if="isFiltered" :dollars="termTotals.taCost" />
       </b>
     </div>
 
     <div class="tw-flex tw-flex-none tw-flex-col tw-items-end">
       <CapsLabel>{{ heading }}</CapsLabel>
       <span class="tw-text-2xl tw-font-bold tw-tabular-nums tw-tracking-tight">
-        {{ formatWholeDollars(totals.total) }}
+        {{ formatWholeDollars(totals.total)
+        }}<OfTermTotal
+          v-if="isFiltered"
+          class="tw-text-[13px]"
+          :dollars="termTotals.total"
+        />
       </span>
     </div>
   </div>
@@ -38,11 +45,13 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import CapsLabel from "./CapsLabel.vue";
+import OfTermTotal from "./OfTermTotal.vue";
 import { formatWholeDollars } from "../../helpers/money";
 import type { CostTotals } from "../../helpers/termEstimate";
 
 const props = defineProps<{
   totals: CostTotals;
+  termTotals: CostTotals;
   shownCount: number;
   totalCount: number;
   termName: string;
@@ -56,8 +65,10 @@ const missingRateMessage = computed(() => {
   return `${count} ${subject} no rate and ${verb} left out of the total`;
 });
 
+const isFiltered = computed(() => props.shownCount !== props.totalCount);
+
 const heading = computed(() =>
-  props.shownCount === props.totalCount
+  !isFiltered.value
     ? `Estimated term cost · ${props.termName}`
     : `Estimated cost · ${props.shownCount} of ${props.totalCount} sections shown`,
 );
