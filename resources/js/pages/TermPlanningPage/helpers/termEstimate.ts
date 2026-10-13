@@ -13,6 +13,8 @@ import {
 import { blockOwners } from "./sectionPlacement";
 import { assistantsOf, instructorsOfRecord, TA_ROLE } from "./sectionPeople";
 
+const LECTURE = "LEC";
+
 export interface CostLine {
   role: "instructor" | "ta" | "unstaffedSection";
   /** Null on the unstaffed line, which names no one. */
@@ -75,7 +77,7 @@ export function estimateTermCost(
   );
   const courseCodesWithLiveLecture = new Set(
     liveSections
-      .filter(({ component }) => component === "LEC")
+      .filter(({ component }) => component === LECTURE)
       .map(({ courseCode }) => courseCode),
   );
   const context: CostContext = {
@@ -141,8 +143,7 @@ function costLinesOf(
   }
 
   const paidOnLecture: PricedLine | null =
-    PAID_ON_LECTURE_COMPONENTS.includes(section.component) &&
-    context.hasLiveLecture(section)
+    section.component !== LECTURE && context.hasLiveLecture(section)
       ? {
           amount: 0,
           basis: { kind: "paidOnLecture", component: section.component },
@@ -292,8 +293,6 @@ function freeComponentLines(
   }));
 }
 
-const PAID_ON_LECTURE_COMPONENTS = ["LAB", "DIS"];
-
 const taCourseKey = (emplid: number, courseCode: string) =>
   `${emplid}|${courseCode}`;
 
@@ -317,7 +316,7 @@ function lecturesThenSectionNumber(
   a: PlannedSection,
   b: PlannedSection,
 ): number {
-  const isLecture = (section: PlannedSection) => section.component === "LEC";
+  const isLecture = (section: PlannedSection) => section.component === LECTURE;
   if (isLecture(a) !== isLecture(b)) return isLecture(a) ? -1 : 1;
 
   return a.section.localeCompare(b.section);

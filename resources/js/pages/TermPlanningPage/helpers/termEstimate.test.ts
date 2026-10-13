@@ -322,6 +322,19 @@ describe("estimateTermCost with labs and discussions in a lecture course", () =>
     expect(costs.get(2)?.total).toBe(0);
   });
 
+  it("costs any other non-lecture component of a lecture course at nothing", () => {
+    const costs = estimate([
+      section(1, { section: "001", component: "LEC", instructors: [pi(1)] }),
+      section(2, { section: "002", component: "SEM", instructors: [pi(2)] }),
+    ]);
+
+    expect(costs.get(2)?.lines[0].basis).toEqual({
+      kind: "paidOnLecture",
+      component: "SEM",
+    });
+    expect(costs.get(2)?.total).toBe(0);
+  });
+
   it("charges each section's PI in a course with only labs", () => {
     const costs = estimate([
       section(1, { section: "001", component: "LAB", instructors: [pi(1)] }),

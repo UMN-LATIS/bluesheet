@@ -43,8 +43,8 @@ describe("describeCostBasis", () => {
   });
 
   it("falls back to the raw code for an unlabeled free component", () => {
-    expect(describe_({ kind: "freeComponent", component: "LAB" })).toBe(
-      "LAB · no added cost",
+    expect(describe_({ kind: "freeComponent", component: "SEM" })).toBe(
+      "SEM · no added cost",
     );
   });
 

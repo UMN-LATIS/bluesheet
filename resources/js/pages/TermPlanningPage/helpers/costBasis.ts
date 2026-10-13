@@ -43,9 +43,6 @@ export const INSTRUCTOR_TYPE_LABELS: Record<InstructorType, string> = {
 const COMPONENT_LABELS: Record<string, string> = {
   IND: "Independent study",
   FWK: "Fieldwork",
-};
-
-const PAID_ON_LECTURE_LABELS: Record<string, string> = {
   LAB: "Lab",
   DIS: "Discussion",
 };
@@ -74,7 +71,7 @@ export function describeCostBasis(
       return `${COMPONENT_LABELS[basis.component] ?? basis.component} · no added cost`;
 
     case "paidOnLecture":
-      return `${PAID_ON_LECTURE_LABELS[basis.component] ?? basis.component} in a course with a lecture · paid on the lecture`;
+      return `${COMPONENT_LABELS[basis.component] ?? basis.component} in a course with a lecture · paid on the lecture`;
 
     case "jobCodeRate": {
       const rate = `${basis.jobCode} ${basis.title} · ${fiscalYearLabel(basis.rateFiscalYear)} rate`;
