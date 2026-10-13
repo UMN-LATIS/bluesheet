@@ -5,6 +5,8 @@ describe("refusalOfDollars", () => {
   it("accepts what the server accepts", () => {
     expect(refusalOfDollars(0)).toBeNull();
     expect(refusalOfDollars(12000.5)).toBeNull();
+    expect(refusalOfDollars(0.29)).toBeNull();
+    expect(refusalOfDollars(19.99)).toBeNull();
   });
 
   it("refuses negative amounts, fractions of a cent, and non-numbers", () => {

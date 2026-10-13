@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   lineOverridesByKeyOf,
-  rateEditKeyOf,
+  rateOverrideKeyOf,
   rateOverridesOf,
   taRateKeyOf,
-  type RateRef,
+  type RateIdentity,
 } from "./costOverrides";
 
-const lecturer: RateRef = { kind: "jobCode", jobCode: "9753" };
-const abdTa: RateRef = {
+const lecturer: RateIdentity = { kind: "jobCode", jobCode: "9753" };
+const abdTa: RateIdentity = {
   kind: "taAppointment",
   appointmentPercent: 25,
   studentStatus: "abd",
@@ -37,7 +37,7 @@ describe("rateOverridesOf", () => {
 
   it("puts a pending amount over the saved one", () => {
     const overrides = rateOverridesOf(saved, {
-      [rateEditKeyOf(lecturer)]: { rate: lecturer, amount: 12000 },
+      [rateOverrideKeyOf(lecturer)]: { rate: lecturer, amount: 12000 },
     });
 
     expect(overrides.costPerCourseByJobCode.get("9753")).toBe(12000);
@@ -45,14 +45,14 @@ describe("rateOverridesOf", () => {
 
   it("drops the saved override when the pending amount is null", () => {
     const overrides = rateOverridesOf(saved, {
-      [rateEditKeyOf(abdTa)]: { rate: abdTa, amount: null },
+      [rateOverrideKeyOf(abdTa)]: { rate: abdTa, amount: null },
     });
 
     expect(overrides.costPerTermByTaRateKey.size).toBe(0);
   });
 
   it("keys a job code and a TA rate apart", () => {
-    expect(rateEditKeyOf(lecturer)).not.toBe(rateEditKeyOf(abdTa));
+    expect(rateOverrideKeyOf(lecturer)).not.toBe(rateOverrideKeyOf(abdTa));
   });
 });
 

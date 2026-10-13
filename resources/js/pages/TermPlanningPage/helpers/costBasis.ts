@@ -69,12 +69,14 @@ export function describeCostBasis(
 ): string {
   switch (basis.kind) {
     case "lineOverride": {
-      const replaced =
+      const replacedAmountLabel =
         basis.replacedAmount === null
           ? "no rate"
           : formatWholeDollars(basis.replacedAmount);
-      const changed = `Changed for this section, was ${replaced}`;
-      return basis.reason ? `${changed} · ${basis.reason}` : changed;
+      const overrideSummary = `Changed for this section, was ${replacedAmountLabel}`;
+      return basis.reason
+        ? `${overrideSummary} · ${basis.reason}`
+        : overrideSummary;
     }
 
     case "freeComponent":
@@ -84,14 +86,14 @@ export function describeCostBasis(
       return `${COMPONENT_LABELS[basis.component] ?? basis.component} in a course with a lecture · paid on ${labelOfSection(basis.lectureSectionId)}`;
 
     case "jobCodeRate": {
-      const jobCode = basis.title
+      const jobCodeLabel = basis.title
         ? `${basis.jobCode} ${basis.title}`
         : basis.jobCode;
-      const rate = `${jobCode} · ${rateYearLabel(basis.rateFiscalYear)}`;
+      const rateLabel = `${jobCodeLabel} · ${rateYearLabel(basis.rateFiscalYear)}`;
 
       return basis.jobCodeCount > 1
-        ? `${rate} · highest of ${basis.jobCodeCount} job codes`
-        : rate;
+        ? `${rateLabel} · highest of ${basis.jobCodeCount} job codes`
+        : rateLabel;
     }
 
     case "unratedJobCode":

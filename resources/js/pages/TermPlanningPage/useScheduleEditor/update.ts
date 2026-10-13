@@ -31,7 +31,7 @@ import {
   encodeDayIndex,
   VIEW_KEYS,
 } from "../helpers/viewQuery";
-import { lineOverrideKeyOf, rateEditKeyOf } from "../helpers/costOverrides";
+import { lineOverrideKeyOf, rateOverrideKeyOf } from "../helpers/costOverrides";
 import { ASYNC_DAY_INDEX } from "../helpers/scheduleDays";
 import {
   clockFromMinutes,
@@ -188,9 +188,10 @@ const READING_EVENTS: EditorEvent["type"][] = [
   "importUndone",
   "viewSelected",
   "budgetTabSelected",
-  // Removing these blocks cost edits on a read-only
-  // term (test: "records a rate override on a
-  // published term").
+  // Removing the four override events below blocks
+  // overrides on a published term (tests: "records a
+  // rate override on a published term", "records a
+  // line override on a published term").
   "rateOverrideEdited",
   "rateOverrideEditsPersisted",
   "lineOverrideEdited",
@@ -570,7 +571,7 @@ function reduce(
         ...state,
         rateOverrideEdits: {
           ...state.rateOverrideEdits,
-          [rateEditKeyOf(event.edit.rate)]: event.edit,
+          [rateOverrideKeyOf(event.edit.rate)]: event.edit,
         },
       };
 

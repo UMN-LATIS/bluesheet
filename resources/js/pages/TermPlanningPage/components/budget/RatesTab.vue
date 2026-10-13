@@ -10,7 +10,7 @@
           changes apply to {{ termName }}
         </CapsLabel>
         <ResetAllButton
-          v-if="canEdit && jobCodeRows.some(isChanged)"
+          v-if="canEdit && jobCodeRows.some(isOverridden)"
           @click="resetAll(jobCodeRows)"
         />
       </div>
@@ -26,20 +26,16 @@
         </CapsLabel>
         <template v-for="row in jobCodeRows" :key="row.code">
           <BudgetCell :hasRightBorder="false" class="tw-font-semibold">
-            {{ row.code === UNSTAFFED_JOB_CODE ? "—" : row.code }}
+            {{ row.codeLabel }}
           </BudgetCell>
           <BudgetCell :hasRightBorder="false">
-            {{ row.code === UNSTAFFED_JOB_CODE ? "Unstaffed" : row.title }}
+            {{ row.title }}
           </BudgetCell>
           <BudgetCell
             :hasRightBorder="false"
             class="tw-text-on-surface-variant"
           >
-            {{
-              row.code === UNSTAFFED_JOB_CODE
-                ? "Unstaffed (placeholder)"
-                : row.instructorTypeLabel
-            }}
+            {{ row.instructorTypeLabel }}
           </BudgetCell>
           <BudgetCell
             :hasRightBorder="false"
@@ -51,17 +47,16 @@
             <DollarInput
               class="tw-w-full"
               :amount="row.amount"
-              :isChanged="row.isChangedForTerm"
+              :isOverridden="row.isOverriddenForTerm"
               :isDisabled="!canEdit"
               :label="`Rate for ${row.code} ${row.title}`"
-              placeholder="No rate"
               @change="(amount) => editRate(row, amount)"
             />
           </BudgetCell>
           <BudgetCell :hasRightBorder="false" class="tw-justify-center tw-px-0">
             <ResetButton
-              v-if="canEdit && row.isChangedForTerm"
-              :label="`Reset to ${resetTargetOf(row)}`"
+              v-if="canEdit && row.isOverriddenForTerm"
+              :label="`Reset to ${novaRateLabelOf(row)}`"
               @reset="editRate(row, null)"
             />
           </BudgetCell>
@@ -84,7 +79,7 @@
           </template>
         </CapsLabel>
         <ResetAllButton
-          v-if="canEdit && taCells.some(isChanged)"
+          v-if="canEdit && taCells.some(isOverridden)"
           @click="resetAll(taCells)"
         />
       </div>
@@ -120,10 +115,9 @@
                 <DollarInput
                   class="tw-w-full"
                   :amount="row.cells[status].amount"
-                  :isChanged="row.cells[status].isChangedForTerm"
+                  :isOverridden="row.cells[status].isOverriddenForTerm"
                   :isDisabled="!canEdit"
                   :label="`${row.appointmentPercent}% ${STATUS_LABELS[status]} TA rate`"
-                  placeholder="No rate"
                   @change="(amount) => editRate(row.cells[status], amount)"
                 />
               </BudgetCell>
@@ -132,8 +126,8 @@
                 class="tw-justify-center tw-px-0"
               >
                 <ResetButton
-                  v-if="canEdit && row.cells[status].isChangedForTerm"
-                  :label="`Reset to ${resetTargetOf(row.cells[status])}`"
+                  v-if="canEdit && row.cells[status].isOverriddenForTerm"
+                  :label="`Reset to ${novaRateLabelOf(row.cells[status])}`"
                   @reset="editRate(row.cells[status], null)"
                 />
               </BudgetCell>
@@ -164,10 +158,7 @@ import type {
   RateOverrideEdit,
   RateOverrides,
 } from "../../helpers/costOverrides";
-import {
-  TA_APPOINTMENT_PERCENT,
-  UNSTAFFED_JOB_CODE,
-} from "../../helpers/costRules";
+import { TA_APPOINTMENT_PERCENT } from "../../helpers/costRules";
 import { fiscalYearLabel } from "../../helpers/fiscalYear";
 import { formatWholeDollars } from "../../helpers/money";
 import {
@@ -220,9 +211,9 @@ const taCells = computed(() =>
   taRows.value.flatMap(({ cells }) => [cells.regular, cells.abd]),
 );
 
-const isChanged = ({ isChangedForTerm }: RateCell) => isChangedForTerm;
+const isOverridden = ({ isOverriddenForTerm }: RateCell) => isOverriddenForTerm;
 
-const resetTargetOf = ({ novaAmount }: RateCell) =>
+const novaRateLabelOf = ({ novaAmount }: RateCell) =>
   novaAmount === null ? "no rate" : formatWholeDollars(novaAmount);
 
 function editRate(cell: RateCell, amount: number | null) {
@@ -231,6 +222,6 @@ function editRate(cell: RateCell, amount: number | null) {
 }
 
 function resetAll(cells: RateCell[]) {
-  cells.filter(isChanged).forEach((cell) => editRate(cell, null));
+  cells.filter(isOverridden).forEach((cell) => editRate(cell, null));
 }
 </script>

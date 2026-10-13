@@ -10,7 +10,7 @@ import {
   taAppointmentRate,
 } from "./costAssumptions.fixture";
 import { lineOverridesByKeyOf } from "./costOverrides";
-import { peopleGroupsOf } from "./peopleRows";
+import { fundGroupsOf } from "./peopleRows";
 import { plannedSection } from "./plannedSection.fixture";
 import { estimateTermCost } from "./termEstimate";
 
@@ -44,7 +44,7 @@ const section = (id: number, extra: Partial<PlannedSection>) =>
   });
 
 const groupsOf = (sections: PlannedSection[]) =>
-  peopleGroupsOf(
+  fundGroupsOf(
     sections,
     estimateTermCost({
       sections,
@@ -71,7 +71,7 @@ const employee = (emplid: number, name: string): SisEmployee => ({
   category: null,
 });
 
-describe("peopleGroupsOf", () => {
+describe("fundGroupsOf", () => {
   it("groups people by the fund of their job code, leaving out empty groups", () => {
     const groups = groupsOf([
       section(1, { instructors: [pi(1)] }),
@@ -139,7 +139,7 @@ describe("peopleGroupsOf", () => {
   });
 
   it("lists a rostered person with a load and no sections as under load", () => {
-    const groups = peopleGroupsOf(
+    const groups = fundGroupsOf(
       [],
       new Map(),
       assumptions,

@@ -50,6 +50,17 @@ describe("jobCodeRateRowsOf", () => {
     ]);
   });
 
+  it("labels the TBA row as the unstaffed placeholder", () => {
+    const unstaffedRow = rowsOf().find(({ code }) => code === "TBA");
+
+    expect(unstaffedRow).toMatchObject({
+      codeLabel: "—",
+      title: "Unstaffed",
+      instructorTypeLabel: "Unstaffed (placeholder)",
+    });
+    expect(rowsOf()[0]).toMatchObject({ codeLabel: "9401" });
+  });
+
   it("shows Nova's rate and source when the term has no override", () => {
     const lecturer = rowsOf().find(({ code }) => code === "9753");
 
@@ -58,7 +69,7 @@ describe("jobCodeRateRowsOf", () => {
       fundLabel: "UI",
       amount: 10000,
       novaAmount: 10000,
-      isChangedForTerm: false,
+      isOverriddenForTerm: false,
       source: "FY27 sheet",
     });
   });
@@ -90,7 +101,7 @@ describe("jobCodeRateRowsOf", () => {
 
     expect(rows.find(({ code }) => code === "9753")).toMatchObject({
       amount: 11000,
-      isChangedForTerm: true,
+      isOverriddenForTerm: true,
       source: "Changed for Fall 2026 · was $10,000",
     });
     expect(rows.find(({ code }) => code === "9517")?.source).toBe(
@@ -109,7 +120,7 @@ describe("taRateRowsOf", () => {
     expect(rows[0]).toMatchObject({
       hoursPerTerm: 196,
       cells: {
-        regular: { amount: 13578, isChangedForTerm: false },
+        regular: { amount: 13578, isOverriddenForTerm: false },
         abd: { amount: 9311 },
       },
     });
@@ -124,7 +135,7 @@ describe("taRateRowsOf", () => {
     expect(taRateRowsOf(assumptions, overrides)[0].cells.abd).toMatchObject({
       amount: 9500,
       novaAmount: 9311,
-      isChangedForTerm: true,
+      isOverriddenForTerm: true,
     });
   });
 });

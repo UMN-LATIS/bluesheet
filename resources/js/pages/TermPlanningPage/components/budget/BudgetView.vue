@@ -13,7 +13,7 @@
         :shownCount="schedule.shownSections.length"
         :totalCount="schedule.localSections.length"
         :termName="termName"
-        :isSectionDataLocked="schedule.isReadOnly"
+        :isReadOnly="schedule.isReadOnly"
         :canEditCosts="schedule.canEditCosts"
       />
 
@@ -45,7 +45,7 @@
 
         <PeopleTab
           v-else-if="schedule.budgetTab === 'people'"
-          :groups="peopleGroups"
+          :fundGroups="fundGroups"
           :isFiltered="
             schedule.shownSections.length !== schedule.localSections.length
           "
@@ -86,7 +86,7 @@ import {
   enrollmentSeriesBySection,
   historyKeyOf,
 } from "../../helpers/enrollmentHistory";
-import { peopleGroupsOf } from "../../helpers/peopleRows";
+import { fundGroupsOf } from "../../helpers/peopleRows";
 import { instructorsOfRecord } from "../../helpers/sectionPeople";
 import { totalsOf, type SectionCost } from "../../helpers/termEstimate";
 import type { PlannedSection } from "../../types";
@@ -132,9 +132,9 @@ const instructorEmplids = computed(
     ),
 );
 
-const peopleGroups = computed(() =>
+const fundGroups = computed(() =>
   props.assumptions && props.schedule.sectionCosts
-    ? peopleGroupsOf(
+    ? fundGroupsOf(
         props.schedule.localSections,
         props.schedule.sectionCosts,
         props.assumptions,

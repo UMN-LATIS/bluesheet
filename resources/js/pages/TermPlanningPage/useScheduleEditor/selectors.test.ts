@@ -11,7 +11,7 @@ import {
   jobCodeRate,
   sisInstructor,
 } from "../helpers/costAssumptions.fixture";
-import { lineOverrideKeyOf, rateEditKeyOf } from "../helpers/costOverrides";
+import { lineOverrideKeyOf, rateOverrideKeyOf } from "../helpers/costOverrides";
 import { NEW_SECTION_ID } from "./types";
 import { selectLocalSection } from "./selectors";
 import { plannedSection } from "../helpers/plannedSection.fixture";
@@ -279,7 +279,7 @@ describe("the budget view's selectors", () => {
     const edited: EditorState = {
       ...atRest,
       rateOverrideEdits: {
-        [rateEditKeyOf(rate)]: { rate, amount: 7000 },
+        [rateOverrideKeyOf(rate)]: { rate, amount: 7000 },
       },
     };
 
@@ -333,7 +333,7 @@ describe("the budget view's selectors", () => {
     };
     const shown = selectRateOverrides(withServer, {
       ...atRest,
-      rateOverrideEdits: { [rateEditKeyOf(rate)]: { rate, amount: 150 } },
+      rateOverrideEdits: { [rateOverrideKeyOf(rate)]: { rate, amount: 150 } },
     });
 
     expect(shown?.costPerCourseByJobCode).toEqual(

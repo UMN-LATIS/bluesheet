@@ -17,14 +17,14 @@ use App\TermTaRateOverride;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
-// No TermLock check in any action. Planners override costs on
-// published terms, and the 'published terms' tests in
-// TermCostApiTest fail if a lock is added.
+// No TermLock check in any action. Planners override
+// costs on published terms, and the 'published terms'
+// tests in TermCostApiTest fail if a lock is added.
 class CostOverrideController extends Controller {
     private const MONEY_RULES = ['numeric', 'decimal:0,2', 'min:0', 'max:99999999.99'];
 
     public function updateJobCodeRate(Request $request, Group $group, string $jobCode) {
-        $academicOrg = $this->authorizedAcademicOrg($group);
+        $academicOrg = $this->authorizeAndFindAcademicOrg($group);
         $termCode = TermCode::fromRequest($request);
         abort_unless(
             $this->isKnownJobCode($jobCode, $academicOrg),
@@ -32,41 +32,43 @@ class CostOverrideController extends Controller {
             "No job code {$jobCode} is known to this department.",
         );
 
-        $costPerCourse = $request->validate([
+        $validated = $request->validate([
             'costPerCourse' => ['present', 'nullable', ...self::MONEY_RULES],
         ])['costPerCourse'];
+        $costPerCourse = $validated === null ? null : (float) $validated;
 
         $this->saveOrDelete(
             TermJobCodeRateOverride::class,
             ['academic_org' => $academicOrg, 'term_code' => $termCode, 'job_code' => $jobCode],
-            $costPerCourse === null ? null : ['cost_per_course' => (float) $costPerCourse],
+            $costPerCourse === null ? null : ['cost_per_course' => $costPerCourse],
         );
 
-        return ['jobCode' => $jobCode, 'costPerCourse' => $costPerCourse === null ? null : (float) $costPerCourse];
+        return ['jobCode' => $jobCode, 'costPerCourse' => $costPerCourse];
     }
 
     public function updateTaAppointmentRate(Request $request, Group $group, string $appointmentPercent, string $studentStatus) {
-        $academicOrg = $this->authorizedAcademicOrg($group);
+        $academicOrg = $this->authorizeAndFindAcademicOrg($group);
         $termCode = TermCode::fromRequest($request);
         $status = StudentStatus::tryFrom($studentStatus) ?? abort(404, "No student status is named {$studentStatus}.");
         $percent = (float) $appointmentPercent;
         abort_unless($percent > 0 && $percent <= 100, 404, 'An appointment percent is above 0 and at most 100.');
 
-        $costPerTerm = $request->validate([
+        $validated = $request->validate([
             'costPerTerm' => ['present', 'nullable', ...self::MONEY_RULES],
         ])['costPerTerm'];
+        $costPerTerm = $validated === null ? null : (float) $validated;
 
         $this->saveOrDelete(
             TermTaRateOverride::class,
             ['academic_org' => $academicOrg, 'term_code' => $termCode, 'appointment_percent' => $percent, 'student_status' => $status],
-            $costPerTerm === null ? null : ['cost_per_term' => (float) $costPerTerm],
+            $costPerTerm === null ? null : ['cost_per_term' => $costPerTerm],
         );
 
-        return ['appointmentPercent' => $percent, 'studentStatus' => $status->value, 'costPerTerm' => $costPerTerm === null ? null : (float) $costPerTerm];
+        return ['appointmentPercent' => $percent, 'studentStatus' => $status->value, 'costPerTerm' => $costPerTerm];
     }
 
     public function updateLine(Request $request, Group $group) {
-        $academicOrg = $this->authorizedAcademicOrg($group);
+        $academicOrg = $this->authorizeAndFindAcademicOrg($group);
         $termCode = TermCode::fromRequest($request);
 
         $validated = $request->validate([
@@ -106,7 +108,7 @@ class CostOverrideController extends Controller {
         ];
     }
 
-    private function authorizedAcademicOrg(Group $group): int {
+    private function authorizeAndFindAcademicOrg(Group $group): int {
         $this->authorize('editAnyCoursesForGroup', [LocalCourse::class, $group]);
         abort_if($group->sis_dept_id === null, 404, 'This group has no department to estimate costs for.');
 
@@ -127,9 +129,11 @@ class CostOverrideController extends Controller {
     }
 
     /**
+     * A null `$values` deletes the row.
+     *
      * @param class-string<Model> $overrideClass
      * @param array<string, mixed> $uniqueKey
-     * @param array<string, mixed>|null $values null deletes the row
+     * @param array<string, mixed>|null $values
      */
     private function saveOrDelete(string $overrideClass, array $uniqueKey, ?array $values): void {
         if ($values === null) {

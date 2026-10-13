@@ -7,7 +7,7 @@ import {
 import { costAssumptions } from "../helpers/costAssumptions.fixture";
 import {
   lineOverrideKeyOf,
-  rateEditKeyOf,
+  rateOverrideKeyOf,
   type LineOverrideEdit,
   type RateOverrideEdit,
 } from "../helpers/costOverrides";
@@ -1977,7 +1977,7 @@ describe("budget view", () => {
     amount,
     reason: null,
   });
-  const RATE_KEY = rateEditKeyOf(rateEdit(1).rate);
+  const RATE_KEY = rateOverrideKeyOf(rateEdit(1).rate);
   const LINE_KEY = lineOverrideKeyOf("ANTH-1001", "001", 2);
 
   it("ignores a rate override before the cost assumptions load", () => {

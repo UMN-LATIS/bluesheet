@@ -10,26 +10,28 @@
       filtered ones.
     </p>
     <p
-      v-if="groups.length === 0"
+      v-if="fundGroups.length === 0"
       class="tw-m-0 tw-text-sm tw-text-on-surface-variant"
     >
       No one is teaching a section this term yet.
     </p>
-    <section v-for="group in groups" :key="group.fund">
+    <section v-for="fundGroup in fundGroups" :key="fundGroup.fund">
       <div
         class="tw-flex tw-items-baseline tw-gap-2.5 tw-border-0 tw-border-b tw-border-solid tw-border-on-surface tw-pb-1.5"
       >
-        <h3 class="tw-m-0 tw-text-[13px] tw-font-bold">{{ group.label }}</h3>
+        <h3 class="tw-m-0 tw-text-[13px] tw-font-bold">
+          {{ fundGroup.label }}
+        </h3>
         <span class="tw-text-[11px] tw-text-on-surface-variant">
-          {{ group.note }}
+          {{ fundGroup.note }}
         </span>
         <span class="tw-ml-auto tw-text-xs tw-font-bold tw-tabular-nums">
-          {{ formatWholeDollars(group.total) }}
+          {{ formatWholeDollars(fundGroup.total) }}
         </span>
       </div>
       <div
         role="table"
-        :aria-label="group.label"
+        :aria-label="fundGroup.label"
         class="tw-grid tw-grid-cols-[minmax(0,1.3fr)_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,2fr)] tw-text-xs"
       >
         <div role="row" class="tw-contents">
@@ -44,7 +46,7 @@
           </CapsLabel>
         </div>
         <div
-          v-for="person in group.people"
+          v-for="person in fundGroup.people"
           :key="person.emplid"
           role="row"
           class="tw-contents"
@@ -92,18 +94,18 @@
             class="tw-flex-wrap tw-gap-1 tw-py-1"
           >
             <button
-              v-for="chip in person.paidSections"
-              :key="chip.sectionId"
+              v-for="paidSection in person.paidSections"
+              :key="paidSection.sectionId"
               type="button"
               class="tw-inline-flex tw-cursor-pointer tw-items-center tw-whitespace-nowrap tw-rounded-full tw-border tw-border-l-[3px] tw-border-solid tw-border-outline-variant tw-px-2 tw-py-px tw-text-[11px] tw-font-semibold tw-text-on-surface hover:tw-border-outline"
               :class="[
-                colorOfType(chip.component).rail,
-                colorOfType(chip.component).tint,
+                colorOfType(paidSection.component).rail,
+                colorOfType(paidSection.component).tint,
               ]"
-              :aria-label="`Open ${chip.label}`"
-              @click="emit('selectSection', chip.sectionId)"
+              :aria-label="`Open ${paidSection.label}`"
+              @click="emit('selectSection', paidSection.sectionId)"
             >
-              {{ chip.label }}
+              {{ paidSection.label }}
             </button>
             <span
               v-if="person.unpaidSectionCount > 0"
@@ -116,7 +118,7 @@
       </div>
     </section>
     <p
-      v-if="groups.length > 0"
+      v-if="fundGroups.length > 0"
       class="tw-m-0 tw-text-[11.5px] tw-text-on-surface-variant"
     >
       Load is sections paid this term of half the job code's annual load. TAs
@@ -133,9 +135,9 @@ import CapsLabel from "./CapsLabel.vue";
 import MissingRate from "./MissingRate.vue";
 import OverrideMarker from "./OverrideMarker.vue";
 import { formatWholeDollars } from "../../helpers/money";
-import type { PeopleGroup } from "../../helpers/peopleRows";
+import type { FundGroup } from "../../helpers/peopleRows";
 
-defineProps<{ groups: PeopleGroup[]; isFiltered: boolean }>();
+defineProps<{ fundGroups: FundGroup[]; isFiltered: boolean }>();
 
 const emit = defineEmits<{ selectSection: [sectionId: number] }>();
 

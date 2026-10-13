@@ -9,7 +9,8 @@ export function refusalOfDollars(dollars: number): string | null {
   if (dollars < 0 || dollars > MAX_DOLLARS)
     return "Enter $0 to $99,999,999.99.";
 
-  return Math.round(dollars * 100) === dollars * 100
-    ? null
-    : "Use whole cents.";
+  const isWholeCents = Number(dollars.toFixed(2)) === dollars;
+  if (!isWholeCents) return "Use whole cents.";
+
+  return null;
 }

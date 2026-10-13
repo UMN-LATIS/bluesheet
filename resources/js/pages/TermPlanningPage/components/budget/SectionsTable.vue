@@ -98,7 +98,6 @@
           <CostOverrideCell
             v-if="!row.isCancelled"
             :lines="row.instructorLines"
-            :isOverridden="row.hasInstructorOverride"
             :canEdit="canEditCosts"
             :courseLabel="row.courseLabel"
             costLabel="Instructor cost"
@@ -146,7 +145,6 @@
           <CostOverrideCell
             v-else-if="row.taLines.length > 0"
             :lines="row.taLines"
-            :isOverridden="row.hasTaOverride"
             :canEdit="canEditCosts"
             :courseLabel="row.courseLabel"
             costLabel="TA cost"

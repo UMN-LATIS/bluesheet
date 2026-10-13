@@ -168,9 +168,9 @@ export interface EditorState {
   /** Which canvas is showing. */
   view: ScheduleView;
   budgetTab: BudgetTab;
-  /** Not yet saved, by `rateEditKeyOf`. */
+  /** Edits not yet saved, keyed by `rateOverrideKeyOf`. */
   rateOverrideEdits: Record<string, RateOverrideEdit>;
-  /** Not yet saved, by `lineOverrideKeyOf`. */
+  /** Edits not yet saved, keyed by `lineOverrideKeyOf`. */
   lineOverrideEdits: Record<string, LineOverrideEdit>;
   /** Which tab the day list is on: a weekday, or the Async day past them. */
   dayIndex: number;

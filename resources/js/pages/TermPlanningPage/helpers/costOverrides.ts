@@ -1,6 +1,6 @@
 import type { CostAssumptions, StudentStatus } from "@/types";
 
-export type RateRef =
+export type RateIdentity =
   | { kind: "jobCode"; jobCode: string }
   | {
       kind: "taAppointment";
@@ -10,7 +10,7 @@ export type RateRef =
 
 /** A null amount restores Nova's rate. */
 export interface RateOverrideEdit {
-  rate: RateRef;
+  rate: RateIdentity;
   amount: number | null;
 }
 
@@ -38,7 +38,7 @@ export const taRateKeyOf = (
   studentStatus: StudentStatus,
 ) => `${appointmentPercent}|${studentStatus}`;
 
-export const rateEditKeyOf = (rate: RateRef) =>
+export const rateOverrideKeyOf = (rate: RateIdentity) =>
   rate.kind === "jobCode"
     ? `jobCode|${rate.jobCode}`
     : `ta|${taRateKeyOf(rate.appointmentPercent, rate.studentStatus)}`;
@@ -48,6 +48,15 @@ export const lineOverrideKeyOf = (
   section: string,
   emplid: number,
 ) => `${courseCode}|${section}|${emplid}`;
+
+function setOrDelete(
+  amounts: Map<string, number>,
+  key: string,
+  amount: number | null,
+): void {
+  if (amount === null) amounts.delete(key);
+  else amounts.set(key, amount);
+}
 
 export function rateOverridesOf(
   saved: CostAssumptions["rateOverrides"],
@@ -69,16 +78,12 @@ export function rateOverridesOf(
   );
 
   for (const { rate, amount } of Object.values(edits)) {
-    const [overrides, key] =
-      rate.kind === "jobCode"
-        ? [costPerCourseByJobCode, rate.jobCode]
-        : [
-            costPerTermByTaRateKey,
-            taRateKeyOf(rate.appointmentPercent, rate.studentStatus),
-          ];
-
-    if (amount === null) overrides.delete(key);
-    else overrides.set(key, amount);
+    if (rate.kind === "jobCode") {
+      setOrDelete(costPerCourseByJobCode, rate.jobCode, amount);
+    } else {
+      const key = taRateKeyOf(rate.appointmentPercent, rate.studentStatus);
+      setOrDelete(costPerTermByTaRateKey, key, amount);
+    }
   }
 
   return { costPerCourseByJobCode, costPerTermByTaRateKey };

@@ -23,7 +23,7 @@ export interface PersonPricing {
   studentStatus: StudentStatus;
 }
 
-export interface RateBook {
+export interface TermRates {
   ratesByJobCode: Map<string, JobCodeRate>;
   overrides: RateOverrides;
   season: Season;
@@ -72,39 +72,44 @@ function highestRateJobCode(
   return [...jobCodes].sort((a, b) => costOf(b) - costOf(a))[0] ?? null;
 }
 
-function courseRateOf(jobCode: string, book: RateBook): CourseRate | null {
-  const termCost = book.overrides.costPerCourseByJobCode.get(jobCode);
-  if (termCost !== undefined) return { amount: termCost, rateFiscalYear: null };
+function courseRateOf(
+  jobCode: string,
+  termRates: TermRates,
+): CourseRate | null {
+  const termAmount = termRates.overrides.costPerCourseByJobCode.get(jobCode);
+  if (termAmount !== undefined)
+    return { amount: termAmount, rateFiscalYear: null };
 
-  const rate = book.ratesByJobCode.get(jobCode);
+  const rate = termRates.ratesByJobCode.get(jobCode);
   if (rate?.costPerCourse == null) return null;
 
   return { amount: rate.costPerCourse, rateFiscalYear: rate.rateFiscalYear };
 }
 
-const unstaffedAmountOf = (book: RateBook) =>
-  courseRateOf(UNSTAFFED_JOB_CODE, book)?.amount ?? null;
+const unstaffedAmountOf = (termRates: TermRates) =>
+  courseRateOf(UNSTAFFED_JOB_CODE, termRates)?.amount ?? null;
 
-export function costOfUnstaffedSection(book: RateBook): PricedLine {
+export function costOfUnstaffedSection(termRates: TermRates): PricedLine {
   return {
-    amount: unstaffedAmountOf(book),
+    amount: unstaffedAmountOf(termRates),
     basis: { kind: "unstaffedSection" },
   };
 }
 
 export function costOfLeadInstructor(
   pricing: PersonPricing,
-  book: RateBook,
+  termRates: TermRates,
 ): PricedLine {
   const { jobCode } = pricing;
-  const rate = jobCode === null ? null : courseRateOf(jobCode, book);
+  const unratedLine = (): PricedLine => ({
+    amount: unstaffedAmountOf(termRates),
+    basis: { kind: "unratedJobCode", jobCode },
+  });
 
-  if (jobCode === null || rate === null) {
-    return {
-      amount: unstaffedAmountOf(book),
-      basis: { kind: "unratedJobCode", jobCode },
-    };
-  }
+  if (jobCode === null) return unratedLine();
+
+  const rate = courseRateOf(jobCode, termRates);
+  if (rate === null) return unratedLine();
 
   return {
     amount: rate.amount,
@@ -120,28 +125,28 @@ export function costOfLeadInstructor(
 
 export function costOfTaAppointment(
   pricing: PersonPricing,
-  book: RateBook,
+  termRates: TermRates,
 ): PricedLine {
   const { studentStatus } = pricing;
   const appointment = {
     appointmentPercent: TA_APPOINTMENT_PERCENT,
-    season: book.season,
+    season: termRates.season,
     studentStatus,
   };
 
-  const termCost = book.overrides.costPerTermByTaRateKey.get(
+  const termAmount = termRates.overrides.costPerTermByTaRateKey.get(
     taRateKeyOf(TA_APPOINTMENT_PERCENT, studentStatus),
   );
-  if (termCost !== undefined) {
+  if (termAmount !== undefined) {
     return {
-      amount: termCost,
+      amount: termAmount,
       basis: { kind: "taAppointment", ...appointment, rateFiscalYear: null },
     };
   }
 
-  const rate = book.taRates.find(
+  const rate = termRates.taRates.find(
     (candidate) =>
-      candidate.season === book.season &&
+      candidate.season === termRates.season &&
       candidate.studentStatus === studentStatus &&
       candidate.appointmentPercent === TA_APPOINTMENT_PERCENT,
   );
@@ -153,7 +158,7 @@ export function costOfTaAppointment(
     basis: {
       kind: "taAppointment",
       ...appointment,
-      rateFiscalYear: book.taRateFiscalYear,
+      rateFiscalYear: termRates.taRateFiscalYear,
     },
   };
 }

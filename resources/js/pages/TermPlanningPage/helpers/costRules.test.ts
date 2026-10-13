@@ -12,7 +12,7 @@ import {
   costOfUnstaffedSection,
   isFreeComponent,
   pricingOf,
-  type RateBook,
+  type TermRates,
 } from "./costRules";
 
 const ratesOf = (...rates: JobCodeRate[]) =>
@@ -23,7 +23,7 @@ const specialist = jobCodeRate("9754", 8000, { title: "Teaching Specialist" });
 const unstaffed = jobCodeRate("TBA", 10000, { instructorType: null });
 const ratesByJobCode = ratesOf(lecturer, specialist, unstaffed);
 
-const rateBook = (extra: Partial<RateBook> = {}): RateBook => ({
+const termRatesOf = (extra: Partial<TermRates> = {}): TermRates => ({
   ratesByJobCode,
   overrides: rateOverrides(),
   season: "fall",
@@ -35,7 +35,7 @@ const rateBook = (extra: Partial<RateBook> = {}): RateBook => ({
   ...extra,
 });
 
-const termRates = (costPerCourseByJobCode: [string, number][]) =>
+const jobCodeOverridesOf = (costPerCourseByJobCode: [string, number][]) =>
   rateOverrides({ costPerCourseByJobCode: new Map(costPerCourseByJobCode) });
 
 describe("pricingOf", () => {
@@ -71,7 +71,7 @@ describe("costOfLeadInstructor", () => {
   it("costs a lecturer at Nova's rate for the job code", () => {
     const pricing = pricingOf(["9753"], ratesByJobCode);
 
-    expect(costOfLeadInstructor(pricing, rateBook())).toEqual({
+    expect(costOfLeadInstructor(pricing, termRatesOf())).toEqual({
       amount: 10000,
       basis: {
         kind: "jobCodeRate",
@@ -85,9 +85,11 @@ describe("costOfLeadInstructor", () => {
 
   it("costs a lecturer at the term's rate when the planner changed it", () => {
     const pricing = pricingOf(["9753"], ratesByJobCode);
-    const book = rateBook({ overrides: termRates([["9753", 11000]]) });
+    const termRates = termRatesOf({
+      overrides: jobCodeOverridesOf([["9753", 11000]]),
+    });
 
-    expect(costOfLeadInstructor(pricing, book)).toMatchObject({
+    expect(costOfLeadInstructor(pricing, termRates)).toMatchObject({
       amount: 11000,
       basis: { kind: "jobCodeRate", rateFiscalYear: null },
     });
@@ -96,7 +98,7 @@ describe("costOfLeadInstructor", () => {
   it("costs a job code with no rate at the TBA rate", () => {
     const pricing = pricingOf(["9517"], ratesByJobCode);
 
-    expect(costOfLeadInstructor(pricing, rateBook())).toEqual({
+    expect(costOfLeadInstructor(pricing, termRatesOf())).toEqual({
       amount: 10000,
       basis: { kind: "unratedJobCode", jobCode: "9517" },
     });
@@ -104,9 +106,11 @@ describe("costOfLeadInstructor", () => {
 
   it("costs an unrated job code at the term's rate for it", () => {
     const pricing = pricingOf(["9517"], ratesByJobCode);
-    const book = rateBook({ overrides: termRates([["9517", 7000]]) });
+    const termRates = termRatesOf({
+      overrides: jobCodeOverridesOf([["9517", 7000]]),
+    });
 
-    expect(costOfLeadInstructor(pricing, book)).toMatchObject({
+    expect(costOfLeadInstructor(pricing, termRates)).toMatchObject({
       amount: 7000,
       basis: { kind: "jobCodeRate", jobCode: "9517", title: null },
     });
@@ -114,22 +118,24 @@ describe("costOfLeadInstructor", () => {
 
   it("costs a job code with no rate at the term's TBA rate", () => {
     const pricing = pricingOf(["9517"], ratesByJobCode);
-    const book = rateBook({ overrides: termRates([["TBA", 12000]]) });
+    const termRates = termRatesOf({
+      overrides: jobCodeOverridesOf([["TBA", 12000]]),
+    });
 
-    expect(costOfLeadInstructor(pricing, book).amount).toBe(12000);
+    expect(costOfLeadInstructor(pricing, termRates).amount).toBe(12000);
   });
 
   it("leaves the amount null when neither the job code nor TBA has a rate", () => {
     const pricing = pricingOf(["9517"], ratesOf(lecturer));
-    const book = rateBook({ ratesByJobCode: ratesOf(lecturer) });
+    const termRates = termRatesOf({ ratesByJobCode: ratesOf(lecturer) });
 
-    expect(costOfLeadInstructor(pricing, book).amount).toBeNull();
+    expect(costOfLeadInstructor(pricing, termRates).amount).toBeNull();
   });
 });
 
 describe("costOfUnstaffedSection", () => {
   it("costs the TBA rate", () => {
-    expect(costOfUnstaffedSection(rateBook())).toEqual({
+    expect(costOfUnstaffedSection(termRatesOf())).toEqual({
       amount: 10000,
       basis: { kind: "unstaffedSection" },
     });
@@ -140,7 +146,7 @@ describe("costOfTaAppointment", () => {
   const regularTa = pricingOf([], ratesByJobCode);
 
   it("costs a regular TA at the 25% rate for the season", () => {
-    expect(costOfTaAppointment(regularTa, rateBook())).toEqual({
+    expect(costOfTaAppointment(regularTa, termRatesOf())).toEqual({
       amount: 13578,
       basis: {
         kind: "taAppointment",
@@ -155,26 +161,26 @@ describe("costOfTaAppointment", () => {
   it("costs an ABD TA at the ABD rate", () => {
     const abdTa = { ...regularTa, studentStatus: "abd" as const };
 
-    expect(costOfTaAppointment(abdTa, rateBook()).amount).toBe(9311);
+    expect(costOfTaAppointment(abdTa, termRatesOf()).amount).toBe(9311);
   });
 
   it("costs a TA at the term's rate when the planner changed it", () => {
-    const book = rateBook({
+    const termRates = termRatesOf({
       overrides: rateOverrides({
         costPerTermByTaRateKey: new Map([[taRateKeyOf(25, "regular"), 14000]]),
       }),
     });
 
-    expect(costOfTaAppointment(regularTa, book)).toMatchObject({
+    expect(costOfTaAppointment(regularTa, termRates)).toMatchObject({
       amount: 14000,
       basis: { kind: "taAppointment", rateFiscalYear: null },
     });
   });
 
   it("leaves the amount null when no rate exists for the season", () => {
-    const book = rateBook({ season: "spring" });
+    const termRates = termRatesOf({ season: "spring" });
 
-    expect(costOfTaAppointment(regularTa, book)).toMatchObject({
+    expect(costOfTaAppointment(regularTa, termRates)).toMatchObject({
       amount: null,
       basis: { kind: "noTaRate", season: "spring" },
     });

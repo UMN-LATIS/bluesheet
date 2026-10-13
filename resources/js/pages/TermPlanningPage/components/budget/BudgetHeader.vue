@@ -3,7 +3,7 @@
     class="tw-flex tw-flex-none tw-flex-wrap tw-items-center tw-gap-x-[22px] tw-gap-y-2.5 tw-border-0 tw-border-b tw-border-solid tw-border-outline tw-bg-accent-container-low tw-px-4 tw-py-3"
   >
     <span
-      v-if="isSectionDataLocked && canEditCosts"
+      v-if="isReadOnly && canEditCosts"
       class="tw-text-xs tw-text-on-surface-variant"
     >
       Sections are locked. Rates and costs can still be changed.
@@ -12,10 +12,7 @@
       v-if="totals.missingRateCount > 0"
       class="tw-text-xs tw-font-semibold tw-text-brand"
     >
-      {{ totals.missingRateCount }}
-      {{ totals.missingRateCount === 1 ? "cost has" : "costs have" }} no rate
-      and {{ totals.missingRateCount === 1 ? "is" : "are" }} left out of the
-      total
+      {{ missingRateMessage }}
     </span>
 
     <div
@@ -55,9 +52,17 @@ const props = defineProps<{
   shownCount: number;
   totalCount: number;
   termName: string;
-  isSectionDataLocked: boolean;
+  isReadOnly: boolean;
   canEditCosts: boolean;
 }>();
+
+const missingRateMessage = computed(() => {
+  const count = props.totals.missingRateCount;
+  const [subject, verb] =
+    count === 1 ? ["cost has", "is"] : ["costs have", "are"];
+
+  return `${count} ${subject} no rate and ${verb} left out of the total`;
+});
 
 const heading = computed(() =>
   props.shownCount === props.totalCount

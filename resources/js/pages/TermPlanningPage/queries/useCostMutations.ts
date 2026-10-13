@@ -23,21 +23,25 @@ export function useCostMutations(
     });
 
   const saveRateOverride = useMutation({
-    mutationFn: ({ rate, amount }: RateOverrideEdit) =>
-      rate.kind === "jobCode"
-        ? saveJobCodeRateOverride(
-            groupId.value,
-            termCode.value ?? 0,
-            rate.jobCode,
-            amount,
-          )
-        : saveTaRateOverride(
-            groupId.value,
-            termCode.value ?? 0,
-            rate.appointmentPercent,
-            rate.studentStatus,
-            amount,
-          ),
+    mutationFn: ({ rate, amount }: RateOverrideEdit) => {
+      const term = termCode.value ?? 0;
+      if (rate.kind === "jobCode") {
+        return saveJobCodeRateOverride(
+          groupId.value,
+          term,
+          rate.jobCode,
+          amount,
+        );
+      }
+
+      return saveTaRateOverride(
+        groupId.value,
+        term,
+        rate.appointmentPercent,
+        rate.studentStatus,
+        amount,
+      );
+    },
     onSuccess: refetchAssumptions,
   });
 

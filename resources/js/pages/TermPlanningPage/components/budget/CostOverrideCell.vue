@@ -5,7 +5,7 @@
     type="button"
     aria-haspopup="dialog"
     :aria-expanded="isOpen"
-    :aria-label="`Change ${costLabel} for ${courseLabel}${isOverridden ? ', changed for this section' : ''}`"
+    :aria-label="buttonLabel"
     :title="basisLabel"
     class="tw-relative tw-flex tw-h-full tw-w-full tw-cursor-pointer tw-items-center tw-justify-end tw-whitespace-nowrap tw-border-none tw-bg-transparent tw-px-2 tw-text-xs tw-font-semibold tw-tabular-nums tw-text-on-surface hover:tw-underline"
     @click.stop="isOpen = !isOpen"
@@ -47,10 +47,9 @@
           <DollarInput
             class="tw-w-[110px]"
             :amount="line.amount"
-            :isChanged="line.isOverridden"
+            :isOverridden="line.isOverridden"
             :isDisabled="false"
             :label="`${costLabel} for ${line.name}`"
-            placeholder="No rate"
             @change="(amount) => editAmount(line, amount)"
           />
           <span class="tw-w-[26px]">
@@ -91,7 +90,7 @@ import {
   useFloating,
 } from "@floating-ui/vue";
 import { onClickOutside } from "@vueuse/core";
-import { nextTick, ref, watch } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import CapsLabel from "./CapsLabel.vue";
 import DollarInput from "./DollarInput.vue";
 import OverrideMarker from "./OverrideMarker.vue";
@@ -100,9 +99,8 @@ import type { OverridableLine } from "../../helpers/budgetRows";
 import type { LineOverrideEdit } from "../../helpers/costOverrides";
 import { formatWholeDollars } from "../../helpers/money";
 
-defineProps<{
+const props = defineProps<{
   lines: OverridableLine[];
-  isOverridden: boolean;
   canEdit: boolean;
   courseLabel: string;
   costLabel: string;
@@ -110,6 +108,16 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{ editLine: [edit: LineOverrideEdit] }>();
+
+const isOverridden = computed(() =>
+  props.lines.some((line) => line.isOverridden),
+);
+
+const buttonLabel = computed(() => {
+  const label = `Change ${props.costLabel} for ${props.courseLabel}`;
+
+  return isOverridden.value ? `${label}, changed for this section` : label;
+});
 
 const isOpen = ref(false);
 const anchor = ref<HTMLElement | null>(null);
@@ -159,7 +167,12 @@ function emitEdit(
 
 function editAmount(line: OverridableLine, amount: number | null) {
   const isDefault = amount === null || amount === line.defaultAmount;
-  emitEdit(line, isDefault ? null : amount, isDefault ? null : line.reason);
+  if (isDefault) {
+    emitEdit(line, null, null);
+    return;
+  }
+
+  emitEdit(line, amount, line.reason);
 }
 
 function editReason(line: OverridableLine, event: Event) {

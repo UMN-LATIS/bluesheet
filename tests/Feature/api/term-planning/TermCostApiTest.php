@@ -25,7 +25,6 @@ use Database\Seeders\TestDatabaseSeeder;
 use function Pest\Laravel\{actingAs, getJson, putJson};
 
 const TERM_FALL_2026 = 1269;
-const TERM_SPRING_2026 = 1263;
 const COST_API_DEPT = 22222;
 const COST_API_OTHER_DEPT = 33333;
 
@@ -53,16 +52,16 @@ function costAssumptionsUrl(Group $group, ?int $term = TERM_FALL_2026): string {
     return "/api/term-planning/groups/{$group->id}/cost-assumptions{$query}";
 }
 
-function jobCodeRateOverrideUrl(Group $group, string $jobCode, int $term = TERM_FALL_2026): string {
-    return "/api/term-planning/groups/{$group->id}/cost-rate-overrides/job-codes/{$jobCode}?term={$term}";
+function jobCodeRateOverrideUrl(Group $group, string $jobCode): string {
+    return "/api/term-planning/groups/{$group->id}/cost-rate-overrides/job-codes/{$jobCode}?term=" . TERM_FALL_2026;
 }
 
-function taRateOverrideUrl(Group $group, string $appointmentPercent, string $studentStatus = 'regular', int $term = TERM_FALL_2026): string {
-    return "/api/term-planning/groups/{$group->id}/cost-rate-overrides/ta-appointments/{$appointmentPercent}/{$studentStatus}?term={$term}";
+function taRateOverrideUrl(Group $group, string $appointmentPercent, string $studentStatus = 'regular'): string {
+    return "/api/term-planning/groups/{$group->id}/cost-rate-overrides/ta-appointments/{$appointmentPercent}/{$studentStatus}?term=" . TERM_FALL_2026;
 }
 
-function lineOverrideUrl(Group $group, int $term = TERM_FALL_2026): string {
-    return "/api/term-planning/groups/{$group->id}/cost-line-overrides?term={$term}";
+function lineOverrideUrl(Group $group): string {
+    return "/api/term-planning/groups/{$group->id}/cost-line-overrides?term=" . TERM_FALL_2026;
 }
 
 function lineOverrideBody(array $overrides = []): array {

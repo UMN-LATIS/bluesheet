@@ -43,18 +43,19 @@ const GREEN_HUE = 145;
 const RED_UP_TO_FILL = 0.4;
 const GREEN_FROM_FILL = 0.95;
 
+const clampToUnit = (fraction: number) => Math.min(1, Math.max(0, fraction));
+
 function backgroundOf(offering: EnrollmentHistorySection | null): string {
   if (!offering) return "transparent";
 
   const fill =
     offering.enrollmentCap > 0
-      ? Math.min(1, offering.enrollmentTotal / offering.enrollmentCap)
+      ? clampToUnit(offering.enrollmentTotal / offering.enrollmentCap)
       : 1;
-  const ramp = Math.max(
-    0,
-    Math.min(1, (fill - RED_UP_TO_FILL) / (GREEN_FROM_FILL - RED_UP_TO_FILL)),
+  const redToGreenFraction = clampToUnit(
+    (fill - RED_UP_TO_FILL) / (GREEN_FROM_FILL - RED_UP_TO_FILL),
   );
-  const hue = RED_HUE + ramp * (GREEN_HUE - RED_HUE);
+  const hue = RED_HUE + redToGreenFraction * (GREEN_HUE - RED_HUE);
 
   return `oklch(0.85 0.11 ${hue.toFixed(0)})`;
 }

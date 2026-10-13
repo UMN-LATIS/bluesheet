@@ -30,7 +30,11 @@ final class CostAssumptions {
         ];
     }
 
-    /** @return array<int, string> trimmed, distinct, sorted */
+    /**
+     * Trimmed, distinct, and sorted.
+     *
+     * @return array<int, string>
+     */
     public static function jobCodesHeldInDepartment(int $academicOrg): array {
         return self::distinctJobCodes(self::appointmentsOf($academicOrg));
     }
@@ -89,7 +93,8 @@ final class CostAssumptions {
     }
 
     private static function people(int $academicOrg): array {
-        return self::appointmentsByEmplid($academicOrg)
+        return self::appointmentsOf($academicOrg)
+            ->groupBy('emplid')
             ->map(fn(Collection $appointments, int $emplid) => [
                 'emplid' => $emplid,
                 'jobCodes' => self::distinctJobCodes($appointments),
@@ -143,11 +148,6 @@ final class CostAssumptions {
                 'reason' => $override->reason,
             ])
             ->all();
-    }
-
-    /** @return Collection<int, Collection<int, SisAppointment>> */
-    private static function appointmentsByEmplid(int $academicOrg): Collection {
-        return self::appointmentsOf($academicOrg)->groupBy('emplid');
     }
 
     /** @return Collection<int, SisAppointment> */

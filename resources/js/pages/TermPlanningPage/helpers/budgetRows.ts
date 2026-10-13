@@ -23,11 +23,17 @@ export interface OverridableLine {
   emplid: number;
   name: string;
   amount: number | null;
-  /** The cost without the override. Null when it has no rate. */
+  /**
+   * The cost without the override. Null when the line has
+   * no rate.
+   */
   defaultAmount: number | null;
   reason: string | null;
   isOverridden: boolean;
-  /** The lecture that pays this line. Null when it pays its own. */
+  /**
+   * The lecture this line is paid on. Null when the line is
+   * paid on its own section.
+   */
   paidOnLectureLabel: string | null;
 }
 
@@ -52,18 +58,17 @@ export interface BudgetRow {
    * was costed.
    */
   instructorBasisLabel: string;
-  /**
-   * Null when a line has no rate and no setting stands in
-   * for one.
-   */
+  /** Null when a line has no rate. */
   instructorCost: number | null;
   hasInstructorOverride: boolean;
   /**
-   * The lecture that pays this section's instructor cost.
-   * Null when this section pays its own.
+   * The lecture this section's instructor cost is paid on.
+   * Null when the section is paid on its own section.
    */
   paidOnLectureLabel: string | null;
-  /** Empty when nothing on the section can be overridden. */
+  /**
+   * Empty when nothing on the section can be overridden.
+   */
   instructorLines: OverridableLine[];
   assistantNames: string;
   /**
@@ -141,7 +146,7 @@ export function budgetRowOf(
         : instructorBasisLabel,
     instructorBasisLabel,
     instructorCost: sumOrNull(instructorLines),
-    hasInstructorOverride: instructorLines.some(isOverridden),
+    hasInstructorOverride: instructorLines.some(isOverriddenLine),
     paidOnLectureLabel: paidOnLectureLabelOf(instructorLines, labelOfSection),
     instructorLines: overridableLinesOf(
       section,
@@ -151,23 +156,21 @@ export function budgetRowOf(
     assistantNames,
     taBasisLabel: taBasisLabelOf(taLines, labelOfSection),
     taCostCell: taCostCellOf(taLines, labelOfSection),
-    hasTaOverride: taLines.some(isOverridden),
+    hasTaOverride: taLines.some(isOverriddenLine),
     taLines: overridableLinesOf(section, taLines, labelOfSection),
     notes: section.notes,
   };
 }
 
-const isOverridden = ({ basis }: CostLine) => basis.kind === "lineOverride";
+const isOverriddenLine = ({ basis }: CostLine) => basis.kind === "lineOverride";
 
 function paidOnLectureLabelOf(
   instructorLines: CostLine[],
   labelOfSection: (sectionId: number) => string,
 ): string | null {
   const [first] = instructorLines;
-  const isPaidOnLecture = instructorLines.every(
-    ({ basis }) => basis.kind === "paidOnLecture",
-  );
-  if (!first || !isPaidOnLecture || first.basis.kind !== "paidOnLecture") {
+  if (first?.basis.kind !== "paidOnLecture") return null;
+  if (!instructorLines.every(({ basis }) => basis.kind === "paidOnLecture")) {
     return null;
   }
 
@@ -240,8 +243,8 @@ function assistantNamesOf(
     const basis = taLines.find((line) => line.emplid === emplid)?.basis;
     if (basis?.kind !== "taAppointment") return "";
 
-    const abd = basis.studentStatus === "abd" ? " ABD" : "";
-    return ` ${basis.appointmentPercent}%${abd}`;
+    const abdSuffix = basis.studentStatus === "abd" ? " ABD" : "";
+    return ` ${basis.appointmentPercent}%${abdSuffix}`;
   };
 
   return section.instructors

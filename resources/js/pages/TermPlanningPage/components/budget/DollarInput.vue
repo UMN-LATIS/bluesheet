@@ -5,9 +5,9 @@
       :class="{
         'tw-border-transparent tw-bg-transparent': isDisabled,
         'tw-border-[#e0a800] tw-bg-accent-container-low':
-          !isDisabled && isChanged,
+          !isDisabled && isOverridden,
         'tw-border-outline-variant tw-bg-surface-bright':
-          !isDisabled && !isChanged,
+          !isDisabled && !isOverridden,
       }"
     >
       <span aria-hidden="true">$</span>
@@ -15,7 +15,7 @@
         type="text"
         inputmode="decimal"
         :value="shownAmount"
-        :placeholder="placeholder"
+        placeholder="No rate"
         :disabled="isDisabled"
         :aria-label="label"
         :aria-invalid="refusal !== null"
@@ -33,16 +33,12 @@
 import { computed, ref } from "vue";
 import { refusalOfDollars } from "../../helpers/dollarAmounts";
 
-const props = withDefaults(
-  defineProps<{
-    amount: number | null;
-    isChanged: boolean;
-    isDisabled: boolean;
-    label: string;
-    placeholder?: string;
-  }>(),
-  { placeholder: "" },
-);
+const props = defineProps<{
+  amount: number | null;
+  isOverridden: boolean;
+  isDisabled: boolean;
+  label: string;
+}>();
 
 const emit = defineEmits<{ change: [amount: number | null] }>();
 

@@ -5,22 +5,30 @@ import type {
   StudentStatus,
 } from "@/types";
 import { INSTRUCTOR_TYPE_LABELS } from "./costBasis";
-import { taRateKeyOf, type RateOverrides, type RateRef } from "./costOverrides";
+import {
+  taRateKeyOf,
+  type RateOverrides,
+  type RateIdentity,
+} from "./costOverrides";
 import { UNSTAFFED_JOB_CODE } from "./costRules";
 import { fiscalYearLabel } from "./fiscalYear";
 import { formatWholeDollars } from "./money";
 
 export interface RateCell {
-  rate: RateRef;
-  /** The term's rate, else Nova's. Null when neither exists. */
+  rate: RateIdentity;
+  /**
+   * The term's rate, else Nova's. Null when neither
+   * exists.
+   */
   amount: number | null;
   /** Null when Nova has no rate. */
   novaAmount: number | null;
-  isChangedForTerm: boolean;
+  isOverriddenForTerm: boolean;
 }
 
 export interface JobCodeRateRow extends RateCell {
   code: string;
+  codeLabel: string;
   title: string;
   instructorTypeLabel: string;
   fundLabel: string;
@@ -64,33 +72,44 @@ export function jobCodeRateRowsOf(
     .filter((code) => !isPricedPerAppointment(code))
     .sort();
   const positionTitleOf = (code: string) =>
-    instructors.find(({ positionTitles }) => positionTitles[code])
-      ?.positionTitles[code];
+    instructors.map(({ positionTitles }) => positionTitles[code]).find(Boolean);
 
   const rowOf = (code: string): JobCodeRateRow => {
     const rate = ratesByCode.get(code);
     const novaAmount = rate?.costPerCourse ?? null;
     const termAmount = overrides.costPerCourseByJobCode.get(code);
-    const isChangedForTerm = termAmount !== undefined;
+    const isOverriddenForTerm = termAmount !== undefined;
+    const isUnstaffed = code === UNSTAFFED_JOB_CODE;
 
     return {
       rate: { kind: "jobCode", jobCode: code },
       code,
-      title: rate?.title ?? positionTitleOf(code) ?? "Not in Nova",
-      instructorTypeLabel: rate?.instructorType
-        ? INSTRUCTOR_TYPE_LABELS[rate.instructorType]
-        : "—",
+      codeLabel: isUnstaffed ? "—" : code,
+      title: isUnstaffed
+        ? "Unstaffed"
+        : (rate?.title ?? positionTitleOf(code) ?? "Not in Nova"),
+      instructorTypeLabel: instructorTypeLabelOf(rate, isUnstaffed),
       fundLabel: rate?.instructorType ? FUND_LABELS[rate.instructorType] : "—",
       amount: termAmount ?? novaAmount,
       novaAmount,
-      isChangedForTerm,
-      source: isChangedForTerm
+      isOverriddenForTerm,
+      source: isOverriddenForTerm
         ? `Changed for ${termName} · ${wasLabelOf(novaAmount)}`
         : novaSourceOf(code, rate, assumptions.fiscalYear),
     };
   };
 
   return [...heldCodes, UNSTAFFED_JOB_CODE].map(rowOf);
+}
+
+function instructorTypeLabelOf(
+  rate: JobCodeRate | undefined,
+  isUnstaffed: boolean,
+): string {
+  if (isUnstaffed) return "Unstaffed (placeholder)";
+  if (rate?.instructorType) return INSTRUCTOR_TYPE_LABELS[rate.instructorType];
+
+  return "—";
 }
 
 export function taRateRowsOf(
@@ -108,12 +127,12 @@ export function taRateRowsOf(
     appointmentPercent: number,
     studentStatus: StudentStatus,
   ): RateCell => {
-    const novaAmount =
-      seasonRates.find(
-        (rate) =>
-          rate.appointmentPercent === appointmentPercent &&
-          rate.studentStatus === studentStatus,
-      )?.costPerTerm ?? null;
+    const novaRate = seasonRates.find(
+      (rate) =>
+        rate.appointmentPercent === appointmentPercent &&
+        rate.studentStatus === studentStatus,
+    );
+    const novaAmount = novaRate?.costPerTerm ?? null;
     const termAmount = overrides.costPerTermByTaRateKey.get(
       taRateKeyOf(appointmentPercent, studentStatus),
     );
@@ -122,7 +141,7 @@ export function taRateRowsOf(
       rate: { kind: "taAppointment", appointmentPercent, studentStatus },
       amount: termAmount ?? novaAmount,
       novaAmount,
-      isChangedForTerm: termAmount !== undefined,
+      isOverriddenForTerm: termAmount !== undefined,
     };
   };
 
@@ -138,7 +157,7 @@ export function taRateRowsOf(
   }));
 }
 
-export const wasLabelOf = (novaAmount: number | null) =>
+const wasLabelOf = (novaAmount: number | null) =>
   novaAmount === null
     ? "no rate in Nova"
     : `was ${formatWholeDollars(novaAmount)}`;
