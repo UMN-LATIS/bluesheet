@@ -16,7 +16,6 @@ class TermCostLineOverride extends Model implements AuditableContract {
         'class_section',
         'emplid',
         'amount',
-        'reason',
         'created_by',
         'updated_by',
     ];

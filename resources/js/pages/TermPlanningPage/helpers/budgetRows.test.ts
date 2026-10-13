@@ -8,14 +8,13 @@ import {
   taAppointmentRate,
 } from "./costAssumptions.fixture";
 import type { CostLineOverride } from "@/types";
-import { budgetRowOf, jobLabelsOf } from "./budgetRows";
-import { lineOverridesByKeyOf } from "./costOverrides";
+import { budgetRowOf } from "./budgetRows";
+import { lineOverrideAmountsByKeyOf } from "./costOverrides";
 import { plannedSection } from "./plannedSection.fixture";
 import { estimateTermCost, type SectionCost } from "./termEstimate";
 import type { PlannedSection } from "../types";
 
 const labelOfSection = (sectionId: number) => `Label ${sectionId}`;
-const jobLabelOfEmplid = (emplid: number) => `Job of ${emplid}`;
 
 const assumptions = costAssumptions({
   jobCodes: [
@@ -34,17 +33,11 @@ const rowsOf = (
     sections,
     assumptions,
     rateOverrides: rateOverrides(),
-    lineOverridesByKey: lineOverridesByKeyOf(lineOverrides, {}),
+    lineOverrideAmountsByKey: lineOverrideAmountsByKeyOf(lineOverrides, {}),
   });
 
   return sections.map((section) =>
-    budgetRowOf(
-      section,
-      costs.get(section.id),
-      [],
-      labelOfSection,
-      jobLabelsOf(assumptions, rateOverrides()),
-    ),
+    budgetRowOf(section, costs.get(section.id), [], labelOfSection),
   );
 };
 
@@ -89,29 +82,14 @@ describe("budgetRowOf", () => {
     expect(row.instructorName).toBe("Taught by TA");
   });
 
-  it("describes the basis of the first instructor line", () => {
-    const [row] = rowsOf([
-      plannedSection(1, monday9, { instructors: [sisInstructor(1, "PI")] }),
-    ]);
-
-    expect(row.instructorBasisLabel).toBe("A Title A · FY27 rate");
-    expect(row.instructorCost).toBe(4000);
-  });
-
-  it("shows each instructor's job code and title once under the names", () => {
+  it("sums the instructor lines", () => {
     const [row] = rowsOf([
       plannedSection(1, monday9, {
         instructors: [sisInstructor(1, "PI"), sisInstructor(2, "PI")],
       }),
     ]);
 
-    expect(row.instructorSubline).toBe("A · Title A");
-  });
-
-  it("explains the cost under TBA on an unstaffed section", () => {
-    const [row] = rowsOf([plannedSection(1, monday9)]);
-
-    expect(row.instructorSubline).toBe("No instructor yet · Unstaffed rate");
+    expect(row.instructorCost).toBe(8000);
   });
 
   it("flags an instructor whose cost is overridden", () => {
@@ -123,7 +101,6 @@ describe("budgetRowOf", () => {
           section: "001",
           emplid: 1,
           amount: 1234,
-          reason: "Buyout",
         },
       ],
     );
@@ -131,7 +108,6 @@ describe("budgetRowOf", () => {
     expect(row).toMatchObject({
       hasInstructorOverride: true,
       instructorCost: 1234,
-      instructorBasisLabel: "Changed for this section, was $4,000 · Buyout",
     });
     expect(row.instructorLines).toEqual([
       {
@@ -141,9 +117,7 @@ describe("budgetRowOf", () => {
         name: "Person 1",
         amount: 1234,
         defaultAmount: 4000,
-        reason: "Buyout",
         isOverridden: true,
-        paidOnLectureLabel: null,
       },
     ]);
   });
@@ -197,18 +171,12 @@ describe("budgetRowOf", () => {
           role: "instructor",
           emplid: 1,
           amount: null,
-          basis: { kind: "unratedJobCode", jobCode: "A" },
+          basis: { kind: "rate" },
         },
       ],
     };
 
-    const row = budgetRowOf(
-      section,
-      cost,
-      [],
-      labelOfSection,
-      jobLabelOfEmplid,
-    );
+    const row = budgetRowOf(section, cost, [], labelOfSection);
 
     expect(row.instructorCost).toBeNull();
   });
@@ -226,61 +194,30 @@ describe("budgetRowOf", () => {
           role: "ta",
           emplid: 10,
           amount: null,
-          basis: {
-            kind: "noTaRate",
-            appointmentPercent: 25,
-            season: "fall",
-            studentStatus: "regular",
-          },
+          basis: { kind: "rate" },
         },
       ],
     };
 
-    const row = budgetRowOf(
-      section,
-      cost,
-      [],
-      labelOfSection,
-      jobLabelOfEmplid,
-    );
+    const row = budgetRowOf(section, cost, [], labelOfSection);
 
     expect(row.taCostCell).toEqual({ kind: "missingRate" });
   });
 
-  it("lists a TA's last name with the percent on the section that is charged", () => {
+  it("lists a TA's last name on the section that is charged", () => {
     const ta = sisInstructor(10, "TA");
     const [lecture] = rowsOf([
       plannedSection(1, monday9, { component: "LEC", instructors: [ta] }),
     ]);
 
-    expect(lecture.assistantNames).toBe("Last10 25%");
+    expect(lecture.assistantNames).toBe("Last10");
     expect(lecture.taCostCell).toEqual({ kind: "amount", dollars: 9000 });
-  });
-
-  it("describes the basis of the TA appointment that is charged", () => {
-    const ta = sisInstructor(10, "TA");
-    const [lecture, discussion] = rowsOf([
-      plannedSection(1, monday9, {
-        component: "LEC",
-        section: "001",
-        instructors: [ta],
-      }),
-      plannedSection(2, monday9, {
-        component: "DIS",
-        section: "002",
-        instructors: [ta],
-      }),
-    ]);
-
-    expect(lecture.taBasisLabel).toBe("25% regular TA, fall · FY27 rate");
-    expect(discussion.taBasisLabel).toBe("");
   });
 
   it("has an empty TA cell on a section with no TA", () => {
     const [row] = rowsOf([plannedSection(1, monday9)]);
 
     expect(row.taCostCell).toEqual({ kind: "none" });
-    expect(row.taBasisLabel).toBe("");
   });
 
   it("shows a covered section's TA without a percent and where it is charged", () => {
@@ -332,33 +269,5 @@ describe("budgetRowOf TA cost cell", () => {
     ]);
 
     expect(row.taCostCell).toEqual({ kind: "none" });
-  });
-});
-
-describe("jobLabelsOf", () => {
-  const labelOf = (people: ReturnType<typeof costPerson>[]) =>
-    jobLabelsOf(
-      costAssumptions({ jobCodes: [jobCodeRate("A", 4000)], people }),
-      rateOverrides(),
-    );
-
-  it("uses the admin's title for a job code entered in Nova", () => {
-    const label = labelOf([costPerson(1, ["A"], { A: "Professor" })]);
-
-    expect(label(1)).toBe("A · Title A");
-  });
-
-  it("falls back to the title on the person's appointment", () => {
-    const label = labelOf([costPerson(1, ["9517"], { 9517: "Grad Instr" })]);
-
-    expect(label(1)).toBe("9517 · Grad Instr");
-  });
-
-  it("shows the job code alone when no title is known", () => {
-    expect(labelOf([costPerson(1, ["9702"])])(1)).toBe("9702");
-  });
-
-  it("says so when the person has no job code in the department", () => {
-    expect(labelOf([])(1)).toBe("No job code in this department");
   });
 });

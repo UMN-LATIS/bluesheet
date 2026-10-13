@@ -8,6 +8,7 @@ use App\SisAppointment;
 use App\TaAppointmentRate;
 use App\TermCostLineOverride;
 use App\TermJobCodeRateOverride;
+use App\TermPersonRateOverride;
 use App\TermTaRateOverride;
 use Illuminate\Support\Collection;
 
@@ -25,6 +26,7 @@ final class CostAssumptions {
             'rateOverrides' => [
                 'jobCodes' => self::jobCodeRateOverrides($academicOrg, $termCode),
                 'taAppointments' => self::taRateOverrides($academicOrg, $termCode),
+                'people' => self::personRateOverrides($academicOrg, $termCode),
             ],
             'lineOverrides' => self::lineOverrides($academicOrg, $termCode),
         ];
@@ -132,6 +134,19 @@ final class CostAssumptions {
             ->all();
     }
 
+    private static function personRateOverrides(int $academicOrg, int $termCode): array {
+        return TermPersonRateOverride::query()
+            ->where('academic_org', $academicOrg)
+            ->where('term_code', $termCode)
+            ->orderBy('emplid')
+            ->get()
+            ->map(fn(TermPersonRateOverride $override) => [
+                'emplid' => $override->emplid,
+                'amount' => $override->amount,
+            ])
+            ->all();
+    }
+
     private static function lineOverrides(int $academicOrg, int $termCode): array {
         return TermCostLineOverride::query()
             ->where('academic_org', $academicOrg)
@@ -145,7 +160,6 @@ final class CostAssumptions {
                 'section' => $override->class_section,
                 'emplid' => $override->emplid,
                 'amount' => $override->amount,
-                'reason' => $override->reason,
             ])
             ->all();
     }

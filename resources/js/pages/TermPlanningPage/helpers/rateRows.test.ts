@@ -7,7 +7,7 @@ import {
   taAppointmentRate,
 } from "./costAssumptions.fixture";
 import { taRateKeyOf } from "./costOverrides";
-import { jobCodeRateRowsOf, taRateRowsOf } from "./rateRows";
+import { rateRowsOf } from "./rateRows";
 
 const assumptions = costAssumptions({
   jobCodes: [
@@ -38,102 +38,67 @@ const assumptions = costAssumptions({
 });
 
 const rowsOf = (overrides = rateOverrides()) =>
-  jobCodeRateRowsOf(assumptions, overrides, new Set([1, 2, 3, 4]), "Fall 2026");
+  rateRowsOf(assumptions, overrides, new Set([1, 2, 3, 4]));
 
-describe("jobCodeRateRowsOf", () => {
-  it("lists this term's instructors' codes, TA codes too, then TBA", () => {
-    expect(rowsOf().map(({ code }) => code)).toEqual([
-      "9401",
-      "9511",
-      "9517",
-      "9753",
-      "TBA",
+const rowOfCode = (code: string, overrides = rateOverrides()) =>
+  rowsOf(overrides).find((row) => row.code === code);
+
+describe("rateRowsOf", () => {
+  it("lists this term's instructors' codes, then TBA, then the TA rates", () => {
+    expect(rowsOf().map(({ code, title }) => `${code} ${title}`)).toEqual([
+      "9401 Title 9401",
+      "9511 Title 9511",
+      "9517 Ph D Candidate Grad Instr",
+      "9753 Lecturer",
+      "TBA Unstaffed",
+      "TA 25% appointment",
+      "TA 25% appointment, ABD",
     ]);
   });
 
-  it("labels the TBA row as the unstaffed placeholder", () => {
-    const unstaffedRow = rowsOf().find(({ code }) => code === "TBA");
-
-    expect(unstaffedRow).toMatchObject({
-      codeLabel: "—",
-      title: "Unstaffed",
-      instructorTypeLabel: "Unstaffed (placeholder)",
-    });
-    expect(rowsOf()[0]).toMatchObject({ codeLabel: "9401" });
-  });
-
-  it("shows Nova's rate and source when the term has no override", () => {
-    const lecturer = rowsOf().find(({ code }) => code === "9753");
-
-    expect(lecturer).toMatchObject({
-      title: "Lecturer",
+  it("shows Nova's rate and fund when the term has no override", () => {
+    expect(rowOfCode("9753")).toMatchObject({
       fundLabel: "UI",
       amount: 10000,
       novaAmount: 10000,
       isOverriddenForTerm: false,
-      source: "FY27 sheet",
     });
   });
 
-  it("says when Nova's rate is from an earlier year", () => {
-    const professor = rowsOf().find(({ code }) => code === "9401");
-
-    expect(professor?.source).toBe("FY26 rate · FY27 not entered yet");
-  });
-
-  it("titles a code Nova does not list from the appointment", () => {
-    const candidate = rowsOf().find(({ code }) => code === "9517");
-
-    expect(candidate).toMatchObject({
-      title: "Ph D Candidate Grad Instr",
+  it("titles a code Nova does not list from the appointment, with no rate", () => {
+    expect(rowOfCode("9517")).toMatchObject({
+      fundLabel: "—",
       amount: null,
-      source: "No rate in Nova · costs the Unstaffed rate",
+      novaAmount: null,
     });
   });
 
-  it("shows the term's override and what it replaced", () => {
+  it("shows the term's override over Nova's rate", () => {
     const overrides = rateOverrides({
-      costPerCourseByJobCode: new Map([
-        ["9753", 11000],
-        ["9517", 7000],
-      ]),
+      costPerCourseByJobCode: new Map([["9753", 11000]]),
     });
-    const rows = rowsOf(overrides);
 
-    expect(rows.find(({ code }) => code === "9753")).toMatchObject({
+    expect(rowOfCode("9753", overrides)).toMatchObject({
       amount: 11000,
+      novaAmount: 10000,
       isOverriddenForTerm: true,
-      source: "Changed for Fall 2026 · was $10,000",
     });
-    expect(rows.find(({ code }) => code === "9517")?.source).toBe(
-      "Changed for Fall 2026 · no rate in Nova",
-    );
-  });
-});
-
-describe("taRateRowsOf", () => {
-  it("has one row per percent for the term's season, with regular and ABD cells", () => {
-    const rows = taRateRowsOf(assumptions, rateOverrides());
-
-    expect(rows.map(({ appointmentPercent }) => appointmentPercent)).toEqual([
-      25, 50,
-    ]);
-    expect(rows[0]).toMatchObject({
-      hoursPerTerm: 196,
-      cells: {
-        regular: { amount: 13578, isOverriddenForTerm: false },
-        abd: { amount: 9311 },
-      },
-    });
-    expect(rows[1].cells.abd.amount).toBeNull();
   });
 
-  it("shows the term's override in its cell", () => {
+  it("shows the season's 25% TA rates, regular and ABD", () => {
+    const [regular, abd] = rowsOf().filter(({ code }) => code === "TA");
+
+    expect(regular).toMatchObject({ amount: 13578, fundLabel: "TA/GI" });
+    expect(abd).toMatchObject({ amount: 9311 });
+  });
+
+  it("shows the term's override of a TA rate", () => {
     const overrides = rateOverrides({
       costPerTermByTaRateKey: new Map([[taRateKeyOf(25, "abd"), 9500]]),
     });
+    const abd = rowsOf(overrides).at(-1);
 
-    expect(taRateRowsOf(assumptions, overrides)[0].cells.abd).toMatchObject({
+    expect(abd).toMatchObject({
       amount: 9500,
       novaAmount: 9311,
       isOverriddenForTerm: true,

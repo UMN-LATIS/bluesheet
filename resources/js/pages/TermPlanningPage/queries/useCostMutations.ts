@@ -3,6 +3,7 @@ import type { Ref } from "vue";
 import {
   saveCostLineOverride,
   saveJobCodeRateOverride,
+  savePersonRateOverride,
   saveTaRateOverride,
 } from "@/api";
 import type {
@@ -25,22 +26,30 @@ export function useCostMutations(
   const saveRateOverride = useMutation({
     mutationFn: ({ rate, amount }: RateOverrideEdit) => {
       const term = termCode.value ?? 0;
-      if (rate.kind === "jobCode") {
-        return saveJobCodeRateOverride(
-          groupId.value,
-          term,
-          rate.jobCode,
-          amount,
-        );
+      switch (rate.kind) {
+        case "jobCode":
+          return saveJobCodeRateOverride(
+            groupId.value,
+            term,
+            rate.jobCode,
+            amount,
+          );
+        case "taAppointment":
+          return saveTaRateOverride(
+            groupId.value,
+            term,
+            rate.appointmentPercent,
+            rate.studentStatus,
+            amount,
+          );
+        case "person":
+          return savePersonRateOverride(
+            groupId.value,
+            term,
+            rate.emplid,
+            amount,
+          );
       }
-
-      return saveTaRateOverride(
-        groupId.value,
-        term,
-        rate.appointmentPercent,
-        rate.studentStatus,
-        amount,
-      );
     },
     onSuccess: refetchAssumptions,
   });

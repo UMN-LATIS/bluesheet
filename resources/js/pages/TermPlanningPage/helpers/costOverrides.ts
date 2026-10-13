@@ -6,9 +6,10 @@ export type RateIdentity =
       kind: "taAppointment";
       appointmentPercent: number;
       studentStatus: StudentStatus;
-    };
+    }
+  | { kind: "person"; emplid: number };
 
-/** A null amount restores Nova's rate. */
+/** A null amount restores the rate beneath it. */
 export interface RateOverrideEdit {
   rate: RateIdentity;
   amount: number | null;
@@ -20,17 +21,12 @@ export interface LineOverrideEdit {
   section: string;
   emplid: number;
   amount: number | null;
-  reason: string | null;
 }
 
 export interface RateOverrides {
   costPerCourseByJobCode: Map<string, number>;
   costPerTermByTaRateKey: Map<string, number>;
-}
-
-export interface LineOverride {
-  amount: number;
-  reason: string | null;
+  costPerSectionByEmplid: Map<number, number>;
 }
 
 export const taRateKeyOf = (
@@ -38,10 +34,16 @@ export const taRateKeyOf = (
   studentStatus: StudentStatus,
 ) => `${appointmentPercent}|${studentStatus}`;
 
-export const rateOverrideKeyOf = (rate: RateIdentity) =>
-  rate.kind === "jobCode"
-    ? `jobCode|${rate.jobCode}`
-    : `ta|${taRateKeyOf(rate.appointmentPercent, rate.studentStatus)}`;
+export function rateOverrideKeyOf(rate: RateIdentity): string {
+  switch (rate.kind) {
+    case "jobCode":
+      return `jobCode|${rate.jobCode}`;
+    case "taAppointment":
+      return `ta|${taRateKeyOf(rate.appointmentPercent, rate.studentStatus)}`;
+    case "person":
+      return `person|${rate.emplid}`;
+  }
+}
 
 export const lineOverrideKeyOf = (
   courseCode: string,
@@ -49,9 +51,9 @@ export const lineOverrideKeyOf = (
   emplid: number,
 ) => `${courseCode}|${section}|${emplid}`;
 
-function setOrDelete(
-  amounts: Map<string, number>,
-  key: string,
+function setOrDelete<Key>(
+  amounts: Map<Key, number>,
+  key: Key,
   amount: number | null,
 ): void {
   if (amount === null) amounts.delete(key);
@@ -76,36 +78,53 @@ export function rateOverridesOf(
       ],
     ),
   );
+  const costPerSectionByEmplid = new Map(
+    saved.people.map(({ emplid, amount }) => [emplid, amount]),
+  );
 
   for (const { rate, amount } of Object.values(edits)) {
-    if (rate.kind === "jobCode") {
-      setOrDelete(costPerCourseByJobCode, rate.jobCode, amount);
-    } else {
-      const key = taRateKeyOf(rate.appointmentPercent, rate.studentStatus);
-      setOrDelete(costPerTermByTaRateKey, key, amount);
+    switch (rate.kind) {
+      case "jobCode":
+        setOrDelete(costPerCourseByJobCode, rate.jobCode, amount);
+        break;
+      case "taAppointment":
+        setOrDelete(
+          costPerTermByTaRateKey,
+          taRateKeyOf(rate.appointmentPercent, rate.studentStatus),
+          amount,
+        );
+        break;
+      case "person":
+        setOrDelete(costPerSectionByEmplid, rate.emplid, amount);
+        break;
     }
   }
 
-  return { costPerCourseByJobCode, costPerTermByTaRateKey };
+  return {
+    costPerCourseByJobCode,
+    costPerTermByTaRateKey,
+    costPerSectionByEmplid,
+  };
 }
 
-export function lineOverridesByKeyOf(
+export function lineOverrideAmountsByKeyOf(
   saved: CostAssumptions["lineOverrides"],
   edits: Record<string, LineOverrideEdit>,
-): Map<string, LineOverride> {
-  const overrides = new Map(
-    saved.map(({ courseCode, section, emplid, amount, reason }) => [
+): Map<string, number> {
+  const amounts = new Map(
+    saved.map(({ courseCode, section, emplid, amount }) => [
       lineOverrideKeyOf(courseCode, section, emplid),
-      { amount, reason },
+      amount,
     ]),
   );
 
-  for (const edit of Object.values(edits)) {
-    const { courseCode, section, emplid, amount, reason } = edit;
-    const key = lineOverrideKeyOf(courseCode, section, emplid);
-    if (amount === null) overrides.delete(key);
-    else overrides.set(key, { amount, reason });
+  for (const { courseCode, section, emplid, amount } of Object.values(edits)) {
+    setOrDelete(
+      amounts,
+      lineOverrideKeyOf(courseCode, section, emplid),
+      amount,
+    );
   }
 
-  return overrides;
+  return amounts;
 }

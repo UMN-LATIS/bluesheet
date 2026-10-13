@@ -7,11 +7,11 @@ import {
 } from "./costAssumptions.fixture";
 import { taRateKeyOf } from "./costOverrides";
 import {
-  costOfLeadInstructor,
-  costOfTaAppointment,
-  costOfUnstaffedSection,
+  instructorRateOf,
   isFreeComponent,
   pricingOf,
+  taAppointmentRateOf,
+  unstaffedRateOf,
   type TermRates,
 } from "./costRules";
 
@@ -31,7 +31,6 @@ const termRatesOf = (extra: Partial<TermRates> = {}): TermRates => ({
     taAppointmentRate(13578),
     taAppointmentRate(9311, { studentStatus: "abd" }),
   ],
-  taRateFiscalYear: 2027,
   ...extra,
 });
 
@@ -46,7 +45,7 @@ describe("pricingOf", () => {
       rateOverrides(),
     );
 
-    expect(pricing).toMatchObject({ jobCode: "9753", jobCodeCount: 2 });
+    expect(pricing.jobCode).toBe("9753");
   });
 
   it("picks the higher rate after the term's override", () => {
@@ -87,20 +86,11 @@ describe("pricingOf", () => {
   });
 });
 
-describe("costOfLeadInstructor", () => {
+describe("instructorRateOf", () => {
   it("costs a lecturer at Nova's rate for the job code", () => {
     const pricing = pricingOf(["9753"], ratesByJobCode, rateOverrides());
 
-    expect(costOfLeadInstructor(pricing, termRatesOf())).toEqual({
-      amount: 10000,
-      basis: {
-        kind: "jobCodeRate",
-        jobCode: "9753",
-        title: "Lecturer",
-        rateFiscalYear: 2027,
-        jobCodeCount: 1,
-      },
-    });
+    expect(instructorRateOf(pricing, termRatesOf())).toBe(10000);
   });
 
   it("costs a lecturer at the term's rate when the planner changed it", () => {
@@ -109,19 +99,13 @@ describe("costOfLeadInstructor", () => {
       overrides: jobCodeOverridesOf([["9753", 11000]]),
     });
 
-    expect(costOfLeadInstructor(pricing, termRates)).toMatchObject({
-      amount: 11000,
-      basis: { kind: "jobCodeRate", rateFiscalYear: null },
-    });
+    expect(instructorRateOf(pricing, termRates)).toBe(11000);
   });
 
   it("costs a job code with no rate at the TBA rate", () => {
     const pricing = pricingOf(["9517"], ratesByJobCode, rateOverrides());
 
-    expect(costOfLeadInstructor(pricing, termRatesOf())).toEqual({
-      amount: 10000,
-      basis: { kind: "unratedJobCode", jobCode: "9517" },
-    });
+    expect(instructorRateOf(pricing, termRatesOf())).toBe(10000);
   });
 
   it("costs an unrated job code at the term's rate for it", () => {
@@ -130,10 +114,7 @@ describe("costOfLeadInstructor", () => {
       overrides: jobCodeOverridesOf([["9517", 7000]]),
     });
 
-    expect(costOfLeadInstructor(pricing, termRates)).toMatchObject({
-      amount: 7000,
-      basis: { kind: "jobCodeRate", jobCode: "9517", title: null },
-    });
+    expect(instructorRateOf(pricing, termRates)).toBe(7000);
   });
 
   it("costs a job code with no rate at the term's TBA rate", () => {
@@ -142,46 +123,34 @@ describe("costOfLeadInstructor", () => {
       overrides: jobCodeOverridesOf([["TBA", 12000]]),
     });
 
-    expect(costOfLeadInstructor(pricing, termRates).amount).toBe(12000);
+    expect(instructorRateOf(pricing, termRates)).toBe(12000);
   });
 
-  it("leaves the amount null when neither the job code nor TBA has a rate", () => {
+  it("is null when neither the job code nor TBA has a rate", () => {
     const pricing = pricingOf(["9517"], ratesOf(lecturer), rateOverrides());
     const termRates = termRatesOf({ ratesByJobCode: ratesOf(lecturer) });
 
-    expect(costOfLeadInstructor(pricing, termRates).amount).toBeNull();
+    expect(instructorRateOf(pricing, termRates)).toBeNull();
   });
 });
 
-describe("costOfUnstaffedSection", () => {
-  it("costs the TBA rate", () => {
-    expect(costOfUnstaffedSection(termRatesOf())).toEqual({
-      amount: 10000,
-      basis: { kind: "unstaffedSection" },
-    });
+describe("unstaffedRateOf", () => {
+  it("is the TBA rate", () => {
+    expect(unstaffedRateOf(termRatesOf())).toBe(10000);
   });
 });
 
-describe("costOfTaAppointment", () => {
+describe("taAppointmentRateOf", () => {
   const regularTa = pricingOf([], ratesByJobCode, rateOverrides());
 
   it("costs a regular TA at the 25% rate for the season", () => {
-    expect(costOfTaAppointment(regularTa, termRatesOf())).toEqual({
-      amount: 13578,
-      basis: {
-        kind: "taAppointment",
-        appointmentPercent: 25,
-        season: "fall",
-        studentStatus: "regular",
-        rateFiscalYear: 2027,
-      },
-    });
+    expect(taAppointmentRateOf(regularTa, termRatesOf())).toBe(13578);
   });
 
   it("costs an ABD TA at the ABD rate", () => {
     const abdTa = { ...regularTa, studentStatus: "abd" as const };
 
-    expect(costOfTaAppointment(abdTa, termRatesOf()).amount).toBe(9311);
+    expect(taAppointmentRateOf(abdTa, termRatesOf())).toBe(9311);
   });
 
   it("costs a TA at the term's rate when the planner changed it", () => {
@@ -191,19 +160,13 @@ describe("costOfTaAppointment", () => {
       }),
     });
 
-    expect(costOfTaAppointment(regularTa, termRates)).toMatchObject({
-      amount: 14000,
-      basis: { kind: "taAppointment", rateFiscalYear: null },
-    });
+    expect(taAppointmentRateOf(regularTa, termRates)).toBe(14000);
   });
 
-  it("leaves the amount null when no rate exists for the season", () => {
+  it("is null when no rate exists for the season", () => {
     const termRates = termRatesOf({ season: "spring" });
 
-    expect(costOfTaAppointment(regularTa, termRates)).toMatchObject({
-      amount: null,
-      basis: { kind: "noTaRate", season: "spring" },
-    });
+    expect(taAppointmentRateOf(regularTa, termRates)).toBeNull();
   });
 });
 

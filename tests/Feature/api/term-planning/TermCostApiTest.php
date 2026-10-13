@@ -18,6 +18,7 @@ use App\TaAppointmentRate;
 use App\LocalClassSection;
 use App\TermCostLineOverride;
 use App\TermJobCodeRateOverride;
+use App\TermPersonRateOverride;
 use App\TermTaRateOverride;
 use App\User;
 use Database\Seeders\TestDatabaseSeeder;
@@ -60,6 +61,10 @@ function taRateOverrideUrl(Group $group, string $appointmentPercent, string $stu
     return "/api/term-planning/groups/{$group->id}/cost-rate-overrides/ta-appointments/{$appointmentPercent}/{$studentStatus}?term=" . TERM_FALL_2026;
 }
 
+function personRateOverrideUrl(Group $group, string $emplid): string {
+    return "/api/term-planning/groups/{$group->id}/cost-rate-overrides/people/{$emplid}?term=" . TERM_FALL_2026;
+}
+
 function lineOverrideUrl(Group $group): string {
     return "/api/term-planning/groups/{$group->id}/cost-line-overrides?term=" . TERM_FALL_2026;
 }
@@ -70,7 +75,6 @@ function lineOverrideBody(array $overrides = []): array {
         'section' => '001',
         'emplid' => 100000001,
         'amount' => 4500.25,
-        'reason' => 'Buyout',
         ...$overrides,
     ];
 }
@@ -436,6 +440,75 @@ describe('rate overrides', function () {
     });
 });
 
+describe('person rates', function () {
+    beforeEach(function () {
+        actingAs($this->groupManager);
+    });
+
+    it('saves an amount and lists it for its own term only', function () {
+        $res = putJson(personRateOverrideUrl($this->group, '100000001'), ['amount' => 7000.5]);
+
+        expect($res->status())->toBe(200);
+        expect($res->json())->toBe(['emplid' => 100000001, 'amount' => 7000.5]);
+        expect(getJson(costAssumptionsUrl($this->group))->json('rateOverrides.people'))
+            ->toBe([['emplid' => 100000001, 'amount' => 7000.5]]);
+        expect(getJson(costAssumptionsUrl($this->group, 1273))->json('rateOverrides.people'))->toBe([]);
+    });
+
+    it('lists overrides ordered by emplid', function () {
+        putJson(personRateOverrideUrl($this->group, '100000003'), ['amount' => 3]);
+        putJson(personRateOverrideUrl($this->group, '100000001'), ['amount' => 1]);
+
+        $emplids = collect(getJson(costAssumptionsUrl($this->group))->json('rateOverrides.people'))->pluck('emplid');
+
+        expect($emplids->all())->toBe([100000001, 100000003]);
+    });
+
+    it('updates the same override instead of adding a row', function () {
+        putJson(personRateOverrideUrl($this->group, '100000001'), ['amount' => 1]);
+        putJson(personRateOverrideUrl($this->group, '100000001'), ['amount' => 2]);
+
+        expect(TermPersonRateOverride::count())->toBe(1);
+        expect(TermPersonRateOverride::first()->amount)->toBe(2.0);
+    });
+
+    it('deletes the override when the amount is null', function () {
+        putJson(personRateOverrideUrl($this->group, '100000001'), ['amount' => 100]);
+
+        $res = putJson(personRateOverrideUrl($this->group, '100000001'), ['amount' => null]);
+
+        expect($res->json())->toBe(['emplid' => 100000001, 'amount' => null]);
+        expect(TermPersonRateOverride::count())->toBe(0);
+    });
+
+    it('refuses a user who cannot edit the group', function () {
+        actingAs($this->coursesViewer);
+
+        expect(putJson(personRateOverrideUrl($this->group, '100000001'), ['amount' => 1])->status())->toBe(403);
+    });
+
+    it('returns 404 for an emplid that is not a positive whole number', function () {
+        expect(putJson(personRateOverrideUrl($this->group, 'abc'), ['amount' => 1])->status())->toBe(404);
+        expect(putJson(personRateOverrideUrl($this->group, '0'), ['amount' => 1])->status())->toBe(404);
+    });
+
+    it('rejects a negative amount and a body that omits it', function () {
+        expect(putJson(personRateOverrideUrl($this->group, '100000001'), ['amount' => -1])->status())->toBe(422);
+        expect(putJson(personRateOverrideUrl($this->group, '100000001'), [])->status())->toBe(422);
+    });
+
+    it('ignores an override saved by another department', function () {
+        TermPersonRateOverride::create([
+            'academic_org' => COST_API_OTHER_DEPT,
+            'term_code' => TERM_FALL_2026,
+            'emplid' => 100000001,
+            'amount' => 1,
+        ]);
+
+        expect(getJson(costAssumptionsUrl($this->group))->json('rateOverrides.people'))->toBe([]);
+    });
+});
+
 describe('line overrides', function () {
     beforeEach(function () {
         actingAs($this->groupManager);
@@ -491,7 +564,7 @@ describe('line overrides', function () {
 
         $res = putJson(lineOverrideUrl($this->group), lineOverrideBody(['amount' => null]));
 
-        expect($res->json())->toBe(lineOverrideBody(['amount' => null, 'reason' => null]));
+        expect($res->json())->toBe(lineOverrideBody(['amount' => null]));
         expect(TermCostLineOverride::count())->toBe(0);
     });
 
@@ -523,17 +596,16 @@ describe('line overrides', function () {
         expect(putJson(lineOverrideUrl($this->group), lineOverrideBody(['emplid' => 1234567890]))->status())->toBe(422);
     });
 
-    it('rejects a negative amount and an over-long reason', function () {
+    it('rejects a negative amount', function () {
         localSection();
 
         expect(putJson(lineOverrideUrl($this->group), lineOverrideBody(['amount' => -1]))->status())->toBe(422);
-        expect(putJson(lineOverrideUrl($this->group), lineOverrideBody(['reason' => str_repeat('a', 1001)]))->status())->toBe(422);
     });
 
     it('rejects a body that omits a field', function () {
         localSection();
         $body = lineOverrideBody();
-        unset($body['reason']);
+        unset($body['amount']);
 
         expect(putJson(lineOverrideUrl($this->group), $body)->status())->toBe(422);
     });

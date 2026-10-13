@@ -40,6 +40,7 @@ export const rateOverrides = (
 ): RateOverrides => ({
   costPerCourseByJobCode: new Map(),
   costPerTermByTaRateKey: new Map(),
+  costPerSectionByEmplid: new Map(),
   ...extra,
 });
 
@@ -58,7 +59,7 @@ export const costAssumptions = (
   jobCodes: [],
   taRates: { fiscalYear: 2027, rates: [] },
   people: [],
-  rateOverrides: { jobCodes: [], taAppointments: [] },
+  rateOverrides: { jobCodes: [], taAppointments: [], people: [] },
   lineOverrides: [],
   canEdit: true,
   ...extra,

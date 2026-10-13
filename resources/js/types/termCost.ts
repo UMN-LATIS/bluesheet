@@ -65,13 +65,22 @@ export interface TaRateOverride {
   costPerTerm: number;
 }
 
+/**
+ * A planner's cost for one person on each section they are
+ * paid for, in one department and one term. A TA is paid
+ * once per course.
+ */
+export interface PersonRateOverride {
+  emplid: number;
+  amount: number;
+}
+
 /** A planner's cost for one person on one section. */
 export interface CostLineOverride {
   courseCode: string;
   section: string;
   emplid: number;
   amount: number;
-  reason: string | null;
 }
 
 export interface CostAssumptions {
@@ -91,6 +100,7 @@ export interface CostAssumptions {
   rateOverrides: {
     jobCodes: JobCodeRateOverride[];
     taAppointments: TaRateOverride[];
+    people: PersonRateOverride[];
   };
   lineOverrides: CostLineOverride[];
   canEdit: boolean;

@@ -13,6 +13,7 @@ use App\LocalCourse;
 use App\SisClassSection;
 use App\TermCostLineOverride;
 use App\TermJobCodeRateOverride;
+use App\TermPersonRateOverride;
 use App\TermTaRateOverride;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -67,6 +68,25 @@ class CostOverrideController extends Controller {
         return ['appointmentPercent' => $percent, 'studentStatus' => $status->value, 'costPerTerm' => $costPerTerm];
     }
 
+    public function updatePersonRate(Request $request, Group $group, string $emplid) {
+        $academicOrg = $this->authorizeAndFindAcademicOrg($group);
+        $termCode = TermCode::fromRequest($request);
+        abort_unless(ctype_digit($emplid) && (int) $emplid > 0 && strlen($emplid) <= 9, 404, 'An emplid is a positive whole number of at most nine digits.');
+
+        $validated = $request->validate([
+            'amount' => ['present', 'nullable', ...self::MONEY_RULES],
+        ])['amount'];
+        $amount = $validated === null ? null : (float) $validated;
+
+        $this->saveOrDelete(
+            TermPersonRateOverride::class,
+            ['academic_org' => $academicOrg, 'term_code' => $termCode, 'emplid' => (int) $emplid],
+            $amount === null ? null : ['amount' => $amount],
+        );
+
+        return ['emplid' => (int) $emplid, 'amount' => $amount];
+    }
+
     public function updateLine(Request $request, Group $group) {
         $academicOrg = $this->authorizeAndFindAcademicOrg($group);
         $termCode = TermCode::fromRequest($request);
@@ -76,7 +96,6 @@ class CostOverrideController extends Controller {
             'section' => ['required', 'string', 'max:255'],
             'emplid' => ['required', 'integer', 'min:1', 'max:999999999'],
             'amount' => ['present', 'nullable', ...self::MONEY_RULES],
-            'reason' => ['present', 'nullable', 'string', 'max:1000'],
         ]);
         abort_unless(
             $this->isSectionOfDepartmentTerm($academicOrg, $termCode, $validated['courseCode'], $validated['section']),
@@ -85,7 +104,6 @@ class CostOverrideController extends Controller {
         );
 
         $amount = $validated['amount'] === null ? null : (float) $validated['amount'];
-        $reason = $amount === null ? null : $validated['reason'];
 
         $this->saveOrDelete(
             TermCostLineOverride::class,
@@ -96,7 +114,7 @@ class CostOverrideController extends Controller {
                 'class_section' => $validated['section'],
                 'emplid' => $validated['emplid'],
             ],
-            $amount === null ? null : ['amount' => $amount, 'reason' => $reason],
+            $amount === null ? null : ['amount' => $amount],
         );
 
         return [
@@ -104,7 +122,6 @@ class CostOverrideController extends Controller {
             'section' => $validated['section'],
             'emplid' => $validated['emplid'],
             'amount' => $amount,
-            'reason' => $reason,
         ];
     }
 

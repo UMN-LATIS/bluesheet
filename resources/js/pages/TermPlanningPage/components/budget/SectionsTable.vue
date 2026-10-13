@@ -81,12 +81,6 @@
             >
               {{ row.instructorName }}
             </span>
-            <CellSubline
-              v-if="row.instructorSubline"
-              :title="row.instructorSubline"
-            >
-              {{ row.instructorSubline }}
-            </CellSubline>
           </span>
         </BudgetCell>
 
@@ -101,7 +95,6 @@
             :canEdit="canEditCosts"
             :courseLabel="row.courseLabel"
             costLabel="Instructor cost"
-            :basisLabel="row.instructorBasisLabel"
             @editLine="(edit) => emit('editLine', edit)"
           >
             <span
@@ -134,7 +127,6 @@
             'tw-px-0 tw-font-semibold': row.taLines.length > 0,
             'tw-bg-accent-container-low': row.hasTaOverride,
           }"
-          :title="row.taBasisLabel"
         >
           <span
             v-if="row.taCostCell.kind === 'chargedOnOtherSection'"
@@ -148,7 +140,6 @@
             :canEdit="canEditCosts"
             :courseLabel="row.courseLabel"
             costLabel="TA cost"
-            :basisLabel="row.taBasisLabel"
             @editLine="(edit) => emit('editLine', edit)"
           >
             <MissingRate v-if="row.taCostCell.kind === 'missingRate'" />

@@ -6,7 +6,6 @@
     aria-haspopup="dialog"
     :aria-expanded="isOpen"
     :aria-label="buttonLabel"
-    :title="basisLabel"
     class="tw-relative tw-flex tw-h-full tw-w-full tw-cursor-pointer tw-items-center tw-justify-end tw-whitespace-nowrap tw-border-none tw-bg-transparent tw-px-2 tw-text-xs tw-font-semibold tw-tabular-nums tw-text-on-surface hover:tw-underline"
     @click.stop="isOpen = !isOpen"
   >
@@ -15,7 +14,6 @@
   </button>
   <span
     v-else
-    :title="basisLabel"
     class="tw-relative tw-flex tw-h-full tw-w-full tw-items-center tw-justify-end tw-whitespace-nowrap tw-px-2 tw-tabular-nums"
   >
     <slot />
@@ -38,42 +36,29 @@
       <div
         v-for="line in lines"
         :key="line.emplid"
-        class="tw-flex tw-flex-col tw-gap-1.5"
+        class="tw-flex tw-items-center tw-gap-2"
       >
-        <div class="tw-flex tw-items-center tw-gap-2">
-          <span class="tw-min-w-0 tw-flex-1 tw-truncate tw-font-semibold">
-            {{ line.name }}
-          </span>
-          <DollarInput
-            class="tw-w-[110px]"
-            :amount="line.amount"
-            :isOverridden="line.isOverridden"
-            :isDisabled="false"
-            :label="`${costLabel} for ${line.name}`"
-            @change="(amount) => editAmount(line, amount)"
+        <span class="tw-min-w-0 tw-flex-1 tw-truncate tw-font-semibold">
+          {{ line.name }}
+        </span>
+        <DollarInput
+          class="tw-w-[110px] tw-overflow-hidden tw-rounded-md tw-border tw-border-solid"
+          :class="
+            line.isOverridden
+              ? 'tw-border-[#e0a800] tw-bg-accent-container-low'
+              : 'tw-border-outline-variant'
+          "
+          :amount="line.amount"
+          :isDisabled="false"
+          :label="`${costLabel} for ${line.name}`"
+          @change="(amount) => editAmount(line, amount)"
+        />
+        <span class="tw-w-[26px]">
+          <ResetButton
+            v-if="line.isOverridden"
+            :label="`Reset to ${defaultLabelOf(line)}`"
+            @reset="emitEdit(line, null)"
           />
-          <span class="tw-w-[26px]">
-            <ResetButton
-              v-if="line.isOverridden"
-              :label="`Reset to ${defaultLabelOf(line)}`"
-              @reset="emitEdit(line, null, null)"
-            />
-          </span>
-        </div>
-        <label
-          v-if="line.isOverridden"
-          class="tw-m-0 tw-flex tw-flex-col tw-gap-0.5"
-        >
-          <CapsLabel>Reason</CapsLabel>
-          <input
-            :value="line.reason ?? ''"
-            placeholder="Why does this differ?"
-            class="tw-min-h-8 tw-rounded-lg tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-px-2.5 tw-text-xs tw-text-on-surface"
-            @input="editReason(line, $event)"
-          />
-        </label>
-        <span class="tw-text-[11px] tw-text-on-surface-variant">
-          {{ helpTextOf(line) }}
         </span>
       </div>
     </div>
@@ -97,14 +82,13 @@ import OverrideMarker from "./OverrideMarker.vue";
 import ResetButton from "./ResetButton.vue";
 import type { OverridableLine } from "../../helpers/budgetRows";
 import type { LineOverrideEdit } from "../../helpers/costOverrides";
-import { formatWholeDollars } from "../../helpers/money";
+import { formatDollars } from "../../helpers/money";
 
 const props = defineProps<{
   lines: OverridableLine[];
   canEdit: boolean;
   courseLabel: string;
   costLabel: string;
-  basisLabel: string;
 }>();
 
 const emit = defineEmits<{ editLine: [edit: LineOverrideEdit] }>();
@@ -144,39 +128,19 @@ function close() {
 }
 
 const defaultLabelOf = ({ defaultAmount }: OverridableLine) =>
-  defaultAmount === null ? "no rate" : formatWholeDollars(defaultAmount);
+  defaultAmount === null ? "no rate" : formatDollars(defaultAmount);
 
-const helpTextOf = (line: OverridableLine) =>
-  line.paidOnLectureLabel !== null && !line.isOverridden
-    ? `Paid on ${line.paidOnLectureLabel}. Enter an amount only if this section is paid separately.`
-    : `Default ${defaultLabelOf(line)}. Applies to this section only.`;
-
-function emitEdit(
-  line: OverridableLine,
-  amount: number | null,
-  reason: string | null,
-) {
+function emitEdit(line: OverridableLine, amount: number | null) {
   emit("editLine", {
     courseCode: line.courseCode,
     section: line.section,
     emplid: line.emplid,
     amount,
-    reason,
   });
 }
 
 function editAmount(line: OverridableLine, amount: number | null) {
   const isDefault = amount === null || amount === line.defaultAmount;
-  if (isDefault) {
-    emitEdit(line, null, null);
-    return;
-  }
-
-  emitEdit(line, amount, line.reason);
-}
-
-function editReason(line: OverridableLine, event: Event) {
-  const reason = (event.target as HTMLInputElement).value;
-  emitEdit(line, line.amount, reason.trim() === "" ? null : reason);
+  emitEdit(line, isDefault ? null : amount);
 }
 </script>

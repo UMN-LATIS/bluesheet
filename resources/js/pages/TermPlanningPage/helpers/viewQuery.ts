@@ -16,7 +16,7 @@ export const DEFAULT_VIEW: ScheduleView = "week";
 /** Every key this module owns; they are cleared and written together. */
 export const VIEW_KEYS = ["view", "day", "tab"];
 
-export const BUDGET_TABS = ["sections", "people", "rates"] as const;
+export const BUDGET_TABS = ["sections", "instructors", "tas", "rates"] as const;
 
 export type BudgetTab = (typeof BUDGET_TABS)[number];
 

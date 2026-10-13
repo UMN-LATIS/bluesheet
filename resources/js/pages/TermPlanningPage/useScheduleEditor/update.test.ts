@@ -1975,7 +1975,6 @@ describe("budget view", () => {
     section: "001",
     emplid: 2,
     amount,
-    reason: null,
   });
   const RATE_KEY = rateOverrideKeyOf(rateEdit(1).rate);
   const LINE_KEY = lineOverrideKeyOf("ANTH-1001", "001", 2);

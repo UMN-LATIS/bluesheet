@@ -9,7 +9,10 @@ import {
   sisInstructor,
   taAppointmentRate,
 } from "./costAssumptions.fixture";
-import { lineOverridesByKeyOf, type RateOverrides } from "./costOverrides";
+import {
+  lineOverrideAmountsByKeyOf,
+  type RateOverrides,
+} from "./costOverrides";
 import { estimateTermCost, totalsOf } from "./termEstimate";
 import { plannedSection } from "./plannedSection.fixture";
 
@@ -47,7 +50,10 @@ const estimate = (
     sections,
     assumptions: withAssumptions,
     rateOverrides: overrides.rates ?? rateOverrides(),
-    lineOverridesByKey: lineOverridesByKeyOf(overrides.lines ?? [], {}),
+    lineOverrideAmountsByKey: lineOverrideAmountsByKeyOf(
+      overrides.lines ?? [],
+      {},
+    ),
   });
 
 const lineOverride = (
@@ -59,7 +65,6 @@ const lineOverride = (
   section,
   emplid,
   amount,
-  reason: null,
 });
 
 describe("estimateTermCost", () => {
@@ -112,7 +117,7 @@ describe("estimateTermCost", () => {
         role: "unstaffedSection",
         emplid: null,
         amount: 5000,
-        basis: { kind: "unstaffedSection" },
+        basis: { kind: "rate" },
       },
     ]);
     expect(costs.get(1)?.instructorCost).toBe(5000);
@@ -140,7 +145,7 @@ describe("estimateTermCost", () => {
     ]);
 
     expect(costs.get(3)?.lines[0]).toMatchObject({ amount: 9000 });
-    expect(costs.get(3)?.lines[0].basis.kind).toBe("taAppointment");
+    expect(costs.get(3)?.lines[0].basis.kind).toBe("rate");
     expect(costs.get(1)?.lines[0]).toMatchObject({
       amount: 0,
       basis: { kind: "chargedOnOtherSection", sectionId: 3 },
@@ -211,7 +216,7 @@ describe("estimateTermCost", () => {
       role: "instructor",
       emplid: 1,
       amount: 0,
-      basis: { kind: "freeComponent", component: "IND" },
+      basis: { kind: "freeComponent" },
     });
   });
 
@@ -231,7 +236,7 @@ describe("estimateTermCost", () => {
         role: "unstaffedSection",
         emplid: null,
         amount: 0,
-        basis: { kind: "freeComponent", component: "IND" },
+        basis: { kind: "freeComponent" },
       },
     ]);
   });
@@ -261,7 +266,7 @@ describe("estimateTermCost", () => {
 
     const taLine = costs.get(1)?.lines[1];
     expect(taLine).toMatchObject({ role: "ta", amount: null });
-    expect(taLine?.basis.kind).toBe("noTaRate");
+    expect(taLine?.basis.kind).toBe("rate");
 
     expect(totalsOf([...costs.values()])).toMatchObject({
       total: 4000,
@@ -277,7 +282,7 @@ describe("estimateTermCost", () => {
 
     expect(costs.get(1)?.lines[0]).toMatchObject({
       amount: 5000,
-      basis: { kind: "unratedJobCode", jobCode: null },
+      basis: { kind: "rate" },
     });
   });
 
@@ -297,7 +302,7 @@ describe("estimateTermCost", () => {
 
     expect(costs.get(1)?.lines[0]).toMatchObject({
       amount: 0,
-      basis: { kind: "jobCodeRate", jobCode: "R" },
+      basis: { kind: "rate" },
     });
   });
 });
@@ -314,7 +319,7 @@ describe("estimateTermCost with overrides", () => {
 
     expect(costs.get(1)?.lines[0]).toMatchObject({
       amount: 4500,
-      basis: { kind: "jobCodeRate", jobCode: "A", rateFiscalYear: null },
+      basis: { kind: "rate" },
     });
   });
 
@@ -326,6 +331,60 @@ describe("estimateTermCost with overrides", () => {
     });
 
     expect(costs.get(1)?.instructorCost).toBe(6000);
+  });
+
+  it("prices a person's every paid section at their own rate over the term's", () => {
+    const costs = estimate(
+      [
+        section(1, { instructors: [pi(1)] }),
+        section(2, { courseCode: "ANTH-2001", instructors: [pi(1)] }),
+      ],
+      {
+        rates: rateOverrides({
+          costPerCourseByJobCode: new Map([["A", 4500]]),
+          costPerSectionByEmplid: new Map([[1, 7000]]),
+        }),
+      },
+    );
+
+    expect(totalsOf([...costs.values()]).instructorCost).toBe(14000);
+  });
+
+  it("prices a TA at their own rate over the TA appointment rate", () => {
+    const costs = estimate(
+      [section(1, { instructors: [sisInstructor(10, "TA")] })],
+      {
+        rates: rateOverrides({ costPerSectionByEmplid: new Map([[10, 4000]]) }),
+      },
+    );
+
+    expect(costs.get(1)?.taCost).toBe(4000);
+  });
+
+  it("prices a section at its line override over the person's rate", () => {
+    const costs = estimate([section(1, { instructors: [pi(1)] })], {
+      rates: rateOverrides({ costPerSectionByEmplid: new Map([[1, 7000]]) }),
+      lines: [lineOverride("001", 1, 3000)],
+    });
+
+    expect(costs.get(1)?.lines[0]).toMatchObject({
+      amount: 3000,
+      basis: { kind: "lineOverride", replacedAmount: 7000 },
+    });
+  });
+
+  it("leaves a lab paid on its lecture at nothing despite the person's rate", () => {
+    const costs = estimate(
+      [
+        section(1, { section: "001", component: "LEC", instructors: [pi(1)] }),
+        section(2, { section: "002", component: "LAB", instructors: [pi(1)] }),
+      ],
+      {
+        rates: rateOverrides({ costPerSectionByEmplid: new Map([[1, 7000]]) }),
+      },
+    );
+
+    expect(costs.get(2)?.lines[0].amount).toBe(0);
   });
 
   it("prices a PI at a line override over the term's rate", () => {
@@ -340,7 +399,7 @@ describe("estimateTermCost with overrides", () => {
       {
         emplid: 1,
         amount: 3000,
-        basis: { kind: "lineOverride", reason: null, replacedAmount: 4500 },
+        basis: { kind: "lineOverride", replacedAmount: 4500 },
       },
       { emplid: 2, amount: 6000 },
     ]);
@@ -420,7 +479,6 @@ describe("estimateTermCost with labs and discussions in a lecture course", () =>
           amount: 0,
           basis: {
             kind: "paidOnLecture",
-            component: "LAB",
             lectureSectionId: 1,
           },
         },
@@ -439,7 +497,7 @@ describe("estimateTermCost with labs and discussions in a lecture course", () =>
     expect(costs.get(2)?.lines[0]).toMatchObject({
       emplid: 2,
       amount: 0,
-      basis: { kind: "paidOnLecture", component: "DIS", lectureSectionId: 1 },
+      basis: { kind: "paidOnLecture", lectureSectionId: 1 },
     });
     expect(costs.get(2)?.total).toBe(0);
   });
@@ -452,7 +510,6 @@ describe("estimateTermCost with labs and discussions in a lecture course", () =>
 
     expect(costs.get(2)?.lines[0].basis).toEqual({
       kind: "paidOnLecture",
-      component: "SEM",
       lectureSectionId: 1,
     });
     expect(costs.get(2)?.total).toBe(0);
@@ -480,7 +537,7 @@ describe("estimateTermCost with labs and discussions in a lecture course", () =>
     ]);
 
     expect(costs.get(2)?.total).toBe(4000);
-    expect(costs.get(2)?.lines[0].basis.kind).toBe("jobCodeRate");
+    expect(costs.get(2)?.lines[0].basis.kind).toBe("rate");
   });
 
   it("costs an unstaffed lab in a lecture course at nothing", () => {
@@ -494,7 +551,7 @@ describe("estimateTermCost with labs and discussions in a lecture course", () =>
         role: "unstaffedSection",
         emplid: null,
         amount: 0,
-        basis: { kind: "paidOnLecture", component: "LAB", lectureSectionId: 1 },
+        basis: { kind: "paidOnLecture", lectureSectionId: 1 },
       },
     ]);
     expect(costs.get(2)?.total).toBe(0);

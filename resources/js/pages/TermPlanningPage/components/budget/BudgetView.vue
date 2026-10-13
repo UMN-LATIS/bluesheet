@@ -13,8 +13,6 @@
         :shownCount="schedule.shownSections.length"
         :totalCount="schedule.localSections.length"
         :termName="termName"
-        :isReadOnly="schedule.isReadOnly"
-        :canEditCosts="schedule.canEditCosts"
       />
 
       <div
@@ -43,13 +41,26 @@
           "
         />
 
-        <PeopleTab
-          v-else-if="schedule.budgetTab === 'people'"
-          :fundGroups="fundGroups"
-          :isFiltered="
-            schedule.shownSections.length !== schedule.localSections.length
-          "
+        <PeopleTable
+          v-else-if="schedule.budgetTab === 'instructors'"
+          :rows="peopleTables.instructors"
+          label="Instructors and estimated costs"
+          peopleNoun="instructors"
+          costHeading="Cost / section"
+          :canEdit="schedule.canEditCosts"
           @selectSection="selectSection"
+          @editRate="editPersonRate"
+        />
+
+        <PeopleTable
+          v-else-if="schedule.budgetTab === 'tas'"
+          :rows="peopleTables.tas"
+          label="TAs and estimated costs"
+          peopleNoun="TAs"
+          costHeading="Cost / course"
+          :canEdit="schedule.canEditCosts"
+          @selectSection="selectSection"
+          @editRate="editPersonRate"
         />
 
         <RatesTab
@@ -78,15 +89,15 @@ import { computed } from "vue";
 import type { CostAssumptions, EnrollmentHistory, SisEmployee } from "@/types";
 import BudgetHeader from "./BudgetHeader.vue";
 import BudgetTabBar from "./BudgetTabBar.vue";
-import PeopleTab from "./PeopleTab.vue";
+import PeopleTable from "./PeopleTable.vue";
 import RatesTab from "./RatesTab.vue";
 import SectionsTable from "./SectionsTable.vue";
-import { budgetRowOf, jobLabelsOf } from "../../helpers/budgetRows";
+import { budgetRowOf } from "../../helpers/budgetRows";
 import {
   enrollmentSeriesBySection,
   historyKeyOf,
 } from "../../helpers/enrollmentHistory";
-import { fundGroupsOf } from "../../helpers/peopleRows";
+import { peopleTablesOf } from "../../helpers/peopleRows";
 import { instructorsOfRecord } from "../../helpers/sectionPeople";
 import { totalsOf, type SectionCost } from "../../helpers/termEstimate";
 import type { PlannedSection } from "../../types";
@@ -119,12 +130,6 @@ const labelOfSection = (sectionId: number) => {
     : "another section";
 };
 
-const jobLabelOfEmplid = computed(() =>
-  props.assumptions && props.schedule.rateOverrides
-    ? jobLabelsOf(props.assumptions, props.schedule.rateOverrides)
-    : () => "",
-);
-
 const instructorEmplids = computed(
   () =>
     new Set(
@@ -134,20 +139,25 @@ const instructorEmplids = computed(
     ),
 );
 
-const fundGroups = computed(() =>
+const peopleTables = computed(() =>
   props.assumptions &&
   props.schedule.sectionCosts &&
   props.schedule.rateOverrides
-    ? fundGroupsOf(
+    ? peopleTablesOf(
         props.schedule.localSections,
         props.schedule.sectionCosts,
         props.assumptions,
         props.schedule.rateOverrides,
         props.roster,
-        jobLabelOfEmplid.value,
       )
-    : [],
+    : { instructors: [], tas: [] },
 );
+
+const editPersonRate = (emplid: number, amount: number | null) =>
+  props.schedule.dispatch({
+    type: "rateOverrideEdited",
+    edit: { rate: { kind: "person", emplid }, amount },
+  });
 
 const selectSection = (sectionId: number) =>
   props.schedule.dispatch({ type: "selectedSection", sectionId });
@@ -178,7 +188,6 @@ const rows = computed(() =>
       props.schedule.sectionCosts?.get(section.id),
       historyOf(section),
       labelOfSection,
-      jobLabelOfEmplid.value,
     ),
   ),
 );

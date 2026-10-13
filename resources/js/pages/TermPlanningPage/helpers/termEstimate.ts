@@ -1,19 +1,14 @@
 import type { CostAssumptions, JobCodeRate } from "@/types";
 import type { PlannedSection, SisInstructor } from "../types";
 import type { CostBasis } from "./costBasis";
+import { lineOverrideKeyOf, type RateOverrides } from "./costOverrides";
 import {
-  lineOverrideKeyOf,
-  type LineOverride,
-  type RateOverrides,
-} from "./costOverrides";
-import {
-  costOfLeadInstructor,
-  costOfTaAppointment,
-  costOfUnstaffedSection,
+  instructorRateOf,
   isFreeComponent,
   pricingOf,
+  taAppointmentRateOf,
+  unstaffedRateOf,
   type PersonPricing,
-  type PricedLine,
   type TermRates,
 } from "./costRules";
 import { blockOwners } from "./sectionPlacement";
@@ -41,7 +36,8 @@ interface EstimateInput {
   sections: PlannedSection[];
   assumptions: CostAssumptions;
   rateOverrides: RateOverrides;
-  lineOverridesByKey: Map<string, LineOverride>;
+  /** By `lineOverrideKeyOf`. */
+  lineOverrideAmountsByKey: Map<string, number>;
 }
 
 interface CostContext {
@@ -61,7 +57,8 @@ interface CostContext {
 export function estimateTermCost(
   input: EstimateInput,
 ): Map<number, SectionCost> {
-  const { sections, assumptions, rateOverrides, lineOverridesByKey } = input;
+  const { sections, assumptions, rateOverrides, lineOverrideAmountsByKey } =
+    input;
   const pricingOfEmplid = pricingByEmplidOf(assumptions, rateOverrides);
 
   const liveSections = sections.filter(({ isCancelled }) => !isCancelled);
@@ -88,13 +85,7 @@ export function estimateTermCost(
     chargedSectionIdByTaCourse: chargedSectionIdByTaCourseOf(
       sectionsThatCanChargeATa,
     ),
-    termRates: {
-      ratesByJobCode: ratesByJobCodeOf(assumptions),
-      overrides: rateOverrides,
-      season: assumptions.season,
-      taRates: assumptions.taRates.rates,
-      taRateFiscalYear: assumptions.taRates.fiscalYear,
-    },
+    termRates: termRatesOf(assumptions, rateOverrides),
   };
   const withLineOverride = (
     { courseCode, section }: PlannedSection,
@@ -102,11 +93,11 @@ export function estimateTermCost(
   ): CostLine => {
     if (line.emplid === null || !isOverridable(line)) return line;
 
-    const override = lineOverridesByKey.get(
+    const amount = lineOverrideAmountsByKey.get(
       lineOverrideKeyOf(courseCode, section, line.emplid),
     );
 
-    return override ? overriddenLine(line, override) : line;
+    return amount === undefined ? line : overriddenLine(line, amount);
   };
 
   return new Map(
@@ -138,6 +129,16 @@ export function pricingByEmplidOf(
     );
 }
 
+export const termRatesOf = (
+  assumptions: CostAssumptions,
+  rateOverrides: RateOverrides,
+): TermRates => ({
+  ratesByJobCode: ratesByJobCodeOf(assumptions),
+  overrides: rateOverrides,
+  season: assumptions.season,
+  taRates: assumptions.taRates.rates,
+});
+
 const ratesByJobCodeOf = (assumptions: CostAssumptions) =>
   new Map<string, JobCodeRate>(
     assumptions.jobCodes.map((rate) => [rate.code, rate]),
@@ -146,15 +147,11 @@ const ratesByJobCodeOf = (assumptions: CostAssumptions) =>
 const isOverridable = ({ basis }: CostLine) =>
   basis.kind !== "chargedOnOtherSection";
 
-function overriddenLine(line: CostLine, override: LineOverride): CostLine {
+function overriddenLine(line: CostLine, amount: number): CostLine {
   return {
     ...line,
-    amount: override.amount,
-    basis: {
-      kind: "lineOverride",
-      reason: override.reason,
-      replacedAmount: line.amount,
-    },
+    amount,
+    basis: { kind: "lineOverride", replacedAmount: line.amount },
   };
 }
 
@@ -176,7 +173,7 @@ function costLinesOf(
   }
 
   if (isFreeComponent(section.component)) {
-    return freeComponentLines(section.component, [...leads, ...tas]);
+    return freeComponentLines([...leads, ...tas]);
   }
 
   const lectureSectionId = context.lectureSectionIdOf(section);
@@ -189,8 +186,8 @@ function costLinesOf(
         role: "unstaffedSection",
         emplid: null,
         ...(isPaidOnLecture
-          ? paidOnLectureLine(section.component, lectureSectionId)
-          : costOfUnstaffedSection(termRates)),
+          ? paidOnLectureLine(lectureSectionId)
+          : ratedLine(unstaffedRateOf(termRates))),
       },
     ];
   }
@@ -200,8 +197,11 @@ function costLinesOf(
       role: "instructor",
       emplid: lead.emplid,
       ...(isPaidOnLecture
-        ? paidOnLectureLine(section.component, lectureSectionId)
-        : costOfLeadInstructor(pricingOfEmplid(lead.emplid), termRates)),
+        ? paidOnLectureLine(lectureSectionId)
+        : ratedLine(
+            personRateOf(lead.emplid, termRates) ??
+              instructorRateOf(pricingOfEmplid(lead.emplid), termRates),
+          )),
     }),
   );
   const taLines = tas.map((ta) => taLineOf(ta, section, context));
@@ -209,15 +209,20 @@ function costLinesOf(
   return [...leadLines, ...taLines];
 }
 
-function paidOnLectureLine(
-  component: string,
-  lectureSectionId: number,
-): PricedLine {
-  return {
-    amount: 0,
-    basis: { kind: "paidOnLecture", component, lectureSectionId },
-  };
-}
+type PricedLine = Pick<CostLine, "amount" | "basis">;
+
+const ratedLine = (amount: number | null): PricedLine => ({
+  amount,
+  basis: { kind: "rate" },
+});
+
+const paidOnLectureLine = (lectureSectionId: number): PricedLine => ({
+  amount: 0,
+  basis: { kind: "paidOnLecture", lectureSectionId },
+});
+
+const personRateOf = (emplid: number, termRates: TermRates) =>
+  termRates.overrides.costPerSectionByEmplid.get(emplid);
 
 function taLineOf(
   ta: SisInstructor,
@@ -242,7 +247,10 @@ function taLineOf(
   return {
     role: "ta",
     emplid: ta.emplid,
-    ...costOfTaAppointment(pricingOfEmplid(ta.emplid), termRates),
+    ...ratedLine(
+      personRateOf(ta.emplid, termRates) ??
+        taAppointmentRateOf(pricingOfEmplid(ta.emplid), termRates),
+    ),
   };
 }
 
@@ -299,11 +307,8 @@ function crosslistPartnerLines(
   }));
 }
 
-function freeComponentLines(
-  component: string,
-  people: SisInstructor[],
-): CostLine[] {
-  const basis: CostBasis = { kind: "freeComponent", component };
+function freeComponentLines(people: SisInstructor[]): CostLine[] {
+  const basis: CostBasis = { kind: "freeComponent" };
 
   if (people.length === 0) {
     return [{ role: "unstaffedSection", emplid: null, amount: 0, basis }];

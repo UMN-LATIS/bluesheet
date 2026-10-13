@@ -64,6 +64,20 @@ export async function saveTaRateOverride(
   );
 }
 
+/** A null amount restores the person's rate. */
+export async function savePersonRateOverride(
+  groupId: T.Group["id"],
+  termCode: number,
+  emplid: number,
+  amount: number | null,
+): Promise<void> {
+  await axios.put(
+    `/api/term-planning/groups/${groupId}/cost-rate-overrides/people/${emplid}`,
+    { amount },
+    { ...WRITE_CONFIG, params: { term: termCode } },
+  );
+}
+
 /** A null amount restores the rate. */
 export async function saveCostLineOverride(
   groupId: T.Group["id"],

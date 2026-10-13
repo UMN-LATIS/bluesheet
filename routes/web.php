@@ -135,6 +135,7 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
         Route::put('/groups/{group}/cost-rate-overrides/job-codes/{jobCode}', [TermPlanningCostOverrideController::class, 'updateJobCodeRate']);
         Route::put('/groups/{group}/cost-rate-overrides/ta-appointments/{appointmentPercent}/{studentStatus}', [TermPlanningCostOverrideController::class, 'updateTaAppointmentRate'])
             ->where('appointmentPercent', '[0-9]{1,3}(\.[0-9]{1,2})?');
+        Route::put('/groups/{group}/cost-rate-overrides/people/{emplid}', [TermPlanningCostOverrideController::class, 'updatePersonRate']);
         Route::put('/groups/{group}/cost-line-overrides', [TermPlanningCostOverrideController::class, 'updateLine']);
         Route::get('/groups/{group}/enrollment-history', [TermPlanningEnrollmentHistoryController::class, 'index']);
     });

@@ -9,8 +9,8 @@ import {
   sisInstructor,
   taAppointmentRate,
 } from "./costAssumptions.fixture";
-import { lineOverridesByKeyOf } from "./costOverrides";
-import { fundGroupsOf } from "./peopleRows";
+import { lineOverrideAmountsByKeyOf } from "./costOverrides";
+import { peopleTablesOf } from "./peopleRows";
 import { plannedSection } from "./plannedSection.fixture";
 import { estimateTermCost } from "./termEstimate";
 
@@ -29,7 +29,7 @@ const assumptions = costAssumptions({
   people: [
     costPerson(1, ["9401"]),
     costPerson(2, ["9753"]),
-    costPerson(3, []),
+    costPerson(3, ["9517"], { "9517": "Ph D Candidate Grad Instr" }),
     costPerson(10, ["9511"]),
   ],
   taRates: { fiscalYear: 2027, rates: [taAppointmentRate(9000)] },
@@ -43,24 +43,26 @@ const section = (id: number, extra: Partial<PlannedSection>) =>
     ...extra,
   });
 
-const groupsOf = (sections: PlannedSection[]) =>
-  fundGroupsOf(
+const tablesOf = (
+  sections: PlannedSection[],
+  overrides = rateOverrides(),
+  roster: SisEmployee[] = [],
+) =>
+  peopleTablesOf(
     sections,
     estimateTermCost({
       sections,
       assumptions,
-      rateOverrides: rateOverrides(),
-      lineOverridesByKey: lineOverridesByKeyOf([], {}),
+      rateOverrides: overrides,
+      lineOverrideAmountsByKey: lineOverrideAmountsByKeyOf([], {}),
     }),
     assumptions,
-    rateOverrides(),
+    overrides,
     roster,
-    (emplid) => `Job of ${emplid}`,
   );
 
-const roster: SisEmployee[] = [];
-
 const pi = (emplid: number) => sisInstructor(emplid, "PI");
+const ta = (emplid: number) => sisInstructor(emplid, "TA");
 
 const employee = (emplid: number, name: string): SisEmployee => ({
   emplid,
@@ -72,35 +74,73 @@ const employee = (emplid: number, name: string): SisEmployee => ({
   category: null,
 });
 
-describe("fundGroupsOf", () => {
-  it("groups people by the fund of their job code, leaving out empty groups", () => {
-    const groups = groupsOf([
+describe("peopleTablesOf", () => {
+  it("puts TAs in their own table and instructors in the other", () => {
+    const { instructors, tas } = tablesOf([
       section(1, { instructors: [pi(1)] }),
-      section(2, { instructors: [pi(2), sisInstructor(10, "TA")] }),
-      section(3, { instructors: [pi(3)] }),
+      section(2, { instructors: [pi(2), ta(10)] }),
     ]);
 
-    expect(
-      groups.map(({ fund, people }) => [fund, people.map((p) => p.emplid)]),
-    ).toEqual([
-      ["recurring", [1]],
-      ["ui", [2]],
-      ["taGi", [10]],
-      ["unlisted", [3]],
-    ]);
+    expect(instructors.map(({ emplid }) => emplid)).toEqual([1, 2]);
+    expect(tas.map(({ emplid }) => emplid)).toEqual([10]);
+  });
+
+  it("shows a person's job code, title, fund, and rate per section", () => {
+    const { instructors } = tablesOf([section(1, { instructors: [pi(2)] })]);
+
+    expect(instructors[0]).toMatchObject({
+      jobCode: "9753",
+      title: "Title 9753",
+      fundLabel: "UI",
+      rate: 10000,
+      rateWithoutOverride: 10000,
+      isRateOverridden: false,
+      total: 10000,
+    });
+  });
+
+  it("shows the planner's rate for a person, and the rate it replaced", () => {
+    const overrides = rateOverrides({
+      costPerSectionByEmplid: new Map([[2, 12000]]),
+    });
+    const { instructors } = tablesOf(
+      [
+        section(1, { instructors: [pi(2)] }),
+        section(2, { instructors: [pi(2)] }),
+      ],
+      overrides,
+    );
+
+    expect(instructors[0]).toMatchObject({
+      rate: 12000,
+      rateWithoutOverride: 10000,
+      isRateOverridden: true,
+      total: 24000,
+    });
+  });
+
+  it("titles a job code Nova does not list from the appointment", () => {
+    const { instructors } = tablesOf([section(1, { instructors: [pi(3)] })]);
+
+    expect(instructors[0]).toMatchObject({
+      jobCode: "9517",
+      title: "Ph D Candidate Grad Instr",
+      fundLabel: "—",
+      rate: 5000,
+    });
   });
 
   it("counts paid sections against half the annual load, rounded up", () => {
-    const [recurring] = groupsOf([section(1, { instructors: [pi(1)] })]);
+    const { instructors } = tablesOf([section(1, { instructors: [pi(1)] })]);
 
-    expect(recurring.people[0]).toMatchObject({
+    expect(instructors[0]).toMatchObject({
       loadLabel: "1 of 2",
       isUnderLoad: true,
     });
   });
 
-  it("does not count a lab paid on its lecture toward load", () => {
-    const [recurring] = groupsOf([
+  it("lists only paid sections, so a lab paid on its lecture is left out", () => {
+    const { instructors } = tablesOf([
       section(1, { component: "LEC", instructors: [pi(1)] }),
       section(2, {
         courseCode: "ANTH-1",
@@ -110,56 +150,58 @@ describe("fundGroupsOf", () => {
       }),
     ]);
 
-    expect(recurring.people[0].loadLabel).toBe("1 of 2");
-    expect(recurring.people[0]).toMatchObject({
-      paidSections: [{ sectionId: 1 }],
-      unpaidSectionCount: 1,
+    expect(instructors[0]).toMatchObject({
+      loadLabel: "1 of 2",
+      paidSections: [{ sectionId: 1, label: "1-001" }],
     });
   });
 
-  it("shows a TA's appointment and cost", () => {
-    const groups = groupsOf([
-      section(1, { instructors: [pi(2), sisInstructor(10, "TA")] }),
-    ]);
-    const ta = groups.find(({ fund }) => fund === "taGi")?.people[0];
+  it("shows a TA's appointment and their rate per course", () => {
+    const { tas } = tablesOf([section(1, { instructors: [pi(2), ta(10)] })]);
 
-    expect(ta).toMatchObject({
-      loadLabel: "25% appointment",
+    expect(tas[0]).toMatchObject({
+      fundLabel: "TA/GI",
+      rate: 9000,
+      loadLabel: "25%",
       isUnderLoad: false,
-      cost: 9000,
+      total: 9000,
     });
   });
 
   it("counts only sections led toward the load of someone who also TAs", () => {
-    const [ui] = groupsOf([
+    const { instructors } = tablesOf([
       section(1, { instructors: [pi(2)] }),
-      section(2, { instructors: [sisInstructor(2, "TA")] }),
+      section(2, { instructors: [ta(2)] }),
     ]);
 
-    expect(ui.people[0]).toMatchObject({ emplid: 2, loadLabel: "1 of 3" });
+    expect(instructors[0]).toMatchObject({ emplid: 2, loadLabel: "1 of 3" });
   });
 
-  it("totals each group", () => {
-    const groups = groupsOf([
-      section(1, { instructors: [pi(2)] }),
-      section(2, { instructors: [pi(2)] }),
+  it("ends the instructors with an Unstaffed row at the TBA rate", () => {
+    const { instructors } = tablesOf([
+      section(1, { instructors: [pi(1)] }),
+      section(2, {}),
+      section(3, {}),
     ]);
 
-    expect(groups[0]).toMatchObject({ fund: "ui", total: 20000 });
+    expect(instructors.at(-1)).toMatchObject({
+      emplid: null,
+      name: "Unstaffed",
+      jobCode: "TBA",
+      rate: 5000,
+      loadLabel: "2",
+      total: 10000,
+      paidSections: [{ sectionId: 2 }, { sectionId: 3 }],
+    });
   });
 
   it("lists a rostered person with a load and no sections as under load", () => {
-    const groups = fundGroupsOf(
-      [],
-      new Map(),
-      assumptions,
-      rateOverrides(),
-      [employee(1, "Priya Raman"), employee(3, "Staff Person")],
-      (emplid) => `Job of ${emplid}`,
-    );
+    const { instructors } = tablesOf([], rateOverrides(), [
+      employee(1, "Priya Raman"),
+      employee(3, "Staff Person"),
+    ]);
 
-    expect(groups).toHaveLength(1);
-    expect(groups[0].people).toMatchObject([
+    expect(instructors).toMatchObject([
       {
         emplid: 1,
         name: "Priya Raman",
@@ -171,7 +213,7 @@ describe("fundGroupsOf", () => {
 
   it("leaves cancelled sections out", () => {
     expect(
-      groupsOf([section(1, { isCancelled: true, instructors: [pi(1)] })]),
-    ).toEqual([]);
+      tablesOf([section(1, { isCancelled: true, instructors: [pi(1)] })]),
+    ).toEqual({ instructors: [], tas: [] });
   });
 });

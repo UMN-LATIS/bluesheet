@@ -301,7 +301,6 @@ describe("the budget view's selectors", () => {
           section: "001",
           emplid: 1,
           amount: 1234,
-          reason: "Buyout",
         },
       },
     };
@@ -328,6 +327,7 @@ describe("the budget view's selectors", () => {
             { jobCode: "G", costPerCourse: 200 },
           ],
           taAppointments: [],
+          people: [],
         },
       }),
     };

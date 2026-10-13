@@ -1,6 +1,6 @@
 import type { Meeting, PlannedSection, SisSection, TimeRange } from "../types";
 import {
-  lineOverridesByKeyOf,
+  lineOverrideAmountsByKeyOf,
   rateOverridesOf,
   type RateOverrides,
 } from "../helpers/costOverrides";
@@ -142,7 +142,7 @@ export function selectSectionCosts(
       assumptions.rateOverrides,
       state.rateOverrideEdits,
     ),
-    lineOverridesByKey: lineOverridesByKeyOf(
+    lineOverrideAmountsByKey: lineOverrideAmountsByKeyOf(
       assumptions.lineOverrides,
       state.lineOverrideEdits,
     ),

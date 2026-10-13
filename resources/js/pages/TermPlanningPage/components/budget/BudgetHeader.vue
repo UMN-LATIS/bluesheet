@@ -3,12 +3,6 @@
     class="tw-flex tw-flex-none tw-flex-wrap tw-items-center tw-gap-x-[22px] tw-gap-y-2.5 tw-border-0 tw-border-b tw-border-solid tw-border-outline tw-bg-accent-container-low tw-px-4 tw-py-3"
   >
     <span
-      v-if="isReadOnly && canEditCosts"
-      class="tw-text-xs tw-text-on-surface-variant"
-    >
-      Sections are locked. Rates and costs can still be changed.
-    </span>
-    <span
       v-if="totals.missingRateCount > 0"
       class="tw-text-xs tw-font-semibold tw-text-brand"
     >
@@ -52,8 +46,6 @@ const props = defineProps<{
   shownCount: number;
   totalCount: number;
   termName: string;
-  isReadOnly: boolean;
-  canEditCosts: boolean;
 }>();
 
 const missingRateMessage = computed(() => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  lineOverridesByKeyOf,
+  lineOverrideAmountsByKeyOf,
   rateOverrideKeyOf,
   rateOverridesOf,
   taRateKeyOf,
@@ -13,6 +13,7 @@ const abdTa: RateIdentity = {
   appointmentPercent: 25,
   studentStatus: "abd",
 };
+const person: RateIdentity = { kind: "person", emplid: 42 };
 
 describe("rateOverridesOf", () => {
   const saved = {
@@ -24,6 +25,7 @@ describe("rateOverridesOf", () => {
         costPerTerm: 9000,
       },
     ],
+    people: [{ emplid: 42, amount: 7000 }],
   };
 
   it("keeps the saved overrides when nothing is pending", () => {
@@ -33,6 +35,7 @@ describe("rateOverridesOf", () => {
     expect(overrides.costPerTermByTaRateKey.get(taRateKeyOf(25, "abd"))).toBe(
       9000,
     );
+    expect(overrides.costPerSectionByEmplid.get(42)).toBe(7000);
   });
 
   it("puts a pending amount over the saved one", () => {
@@ -51,28 +54,36 @@ describe("rateOverridesOf", () => {
     expect(overrides.costPerTermByTaRateKey.size).toBe(0);
   });
 
-  it("keys a job code and a TA rate apart", () => {
-    expect(rateOverrideKeyOf(lecturer)).not.toBe(rateOverrideKeyOf(abdTa));
+  it("puts a pending person's rate over the saved one", () => {
+    const overrides = rateOverridesOf(saved, {
+      [rateOverrideKeyOf(person)]: { rate: person, amount: 7500 },
+    });
+
+    expect(overrides.costPerSectionByEmplid.get(42)).toBe(7500);
+  });
+
+  it("keys a job code, a TA rate, and a person apart", () => {
+    const keys = [lecturer, abdTa, person].map(rateOverrideKeyOf);
+
+    expect(new Set(keys).size).toBe(3);
   });
 });
 
-describe("lineOverridesByKeyOf", () => {
+describe("lineOverrideAmountsByKeyOf", () => {
   const anth1001 = (section: string) => ({ courseCode: "ANTH-1001", section });
 
   it("puts pending edits over saved ones, and a null amount removes one", () => {
-    const overrides = lineOverridesByKeyOf(
+    const overrides = lineOverrideAmountsByKeyOf(
       [
-        { ...anth1001("001"), emplid: 7, amount: 100, reason: null },
-        { ...anth1001("002"), emplid: 7, amount: 200, reason: null },
+        { ...anth1001("001"), emplid: 7, amount: 100 },
+        { ...anth1001("002"), emplid: 7, amount: 200 },
       ],
       {
-        a: { ...anth1001("001"), emplid: 7, amount: 150, reason: "Grant" },
-        b: { ...anth1001("002"), emplid: 7, amount: null, reason: null },
+        a: { ...anth1001("001"), emplid: 7, amount: 150 },
+        b: { ...anth1001("002"), emplid: 7, amount: null },
       },
     );
 
-    expect([...overrides.entries()]).toEqual([
-      ["ANTH-1001|001|7", { amount: 150, reason: "Grant" }],
-    ]);
+    expect([...overrides.entries()]).toEqual([["ANTH-1001|001|7", 150]]);
   });
 });
