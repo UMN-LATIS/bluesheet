@@ -48,6 +48,15 @@ describe("describeCostBasis", () => {
     );
   });
 
+  it("names a section paid on its course's lecture", () => {
+    expect(describe_({ kind: "paidOnLecture", component: "LAB" })).toBe(
+      "Lab in a course with a lecture · paid on the lecture",
+    );
+    expect(describe_({ kind: "paidOnLecture", component: "DIS" })).toBe(
+      "Discussion in a course with a lecture · paid on the lecture",
+    );
+  });
+
   it("describes a job code rate with a two digit fiscal year", () => {
     expect(describe_(jobCodeRateBasis())).toBe(
       "9754 Teaching Specialist · FY27 rate",

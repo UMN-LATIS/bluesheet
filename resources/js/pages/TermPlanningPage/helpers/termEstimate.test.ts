@@ -283,6 +283,88 @@ describe("estimateTermCost", () => {
   });
 });
 
+describe("estimateTermCost with labs and discussions in a lecture course", () => {
+  const pi = (emplid: number) => sisInstructor(emplid, "PI");
+
+  it("charges a PI once, on the lecture, across a lecture and two labs", () => {
+    const costs = estimate([
+      section(1, { section: "001", component: "LEC", instructors: [pi(1)] }),
+      section(2, { section: "002", component: "LAB", instructors: [pi(1)] }),
+      section(3, { section: "003", component: "LAB", instructors: [pi(1)] }),
+    ]);
+
+    expect(costs.get(1)?.total).toBe(4000);
+    for (const id of [2, 3]) {
+      expect(costs.get(id)?.lines).toEqual([
+        {
+          role: "instructor",
+          emplid: 1,
+          amount: 0,
+          basis: { kind: "paidOnLecture", component: "LAB" },
+        },
+      ]);
+      expect(costs.get(id)?.total).toBe(0);
+    }
+    expect(totalsOf([...costs.values()]).total).toBe(4000);
+  });
+
+  it("costs a different PI on a discussion of a lecture course at nothing", () => {
+    const costs = estimate([
+      section(1, { section: "001", component: "LEC", instructors: [pi(1)] }),
+      section(2, { section: "002", component: "DIS", instructors: [pi(2)] }),
+    ]);
+
+    expect(costs.get(2)?.lines[0]).toMatchObject({
+      emplid: 2,
+      amount: 0,
+      basis: { kind: "paidOnLecture", component: "DIS" },
+    });
+    expect(costs.get(2)?.total).toBe(0);
+  });
+
+  it("charges each section's PI in a course with only labs", () => {
+    const costs = estimate([
+      section(1, { section: "001", component: "LAB", instructors: [pi(1)] }),
+      section(2, { section: "002", component: "LAB", instructors: [pi(1)] }),
+    ]);
+
+    expect(costs.get(1)?.total).toBe(4000);
+    expect(costs.get(2)?.total).toBe(4000);
+  });
+
+  it("charges lab PIs when the course's only lecture is cancelled", () => {
+    const costs = estimate([
+      section(1, {
+        section: "001",
+        component: "LEC",
+        isCancelled: true,
+        instructors: [pi(1)],
+      }),
+      section(2, { section: "002", component: "LAB", instructors: [pi(1)] }),
+    ]);
+
+    expect(costs.get(2)?.total).toBe(4000);
+    expect(costs.get(2)?.lines[0].basis.kind).toBe("jobCodeRate");
+  });
+
+  it("costs an unstaffed lab in a lecture course at nothing", () => {
+    const costs = estimate([
+      section(1, { section: "001", component: "LEC", instructors: [pi(1)] }),
+      section(2, { section: "002", component: "LAB" }),
+    ]);
+
+    expect(costs.get(2)?.lines).toEqual([
+      {
+        role: "unstaffedSection",
+        emplid: null,
+        amount: 0,
+        basis: { kind: "paidOnLecture", component: "LAB" },
+      },
+    ]);
+    expect(costs.get(2)?.total).toBe(0);
+  });
+});
+
 describe("totalsOf", () => {
   it("sums instructor, TA, and total cost over sections", () => {
     const costs = estimate([

@@ -8,6 +8,7 @@ import {
   isFreeComponent,
   pricingOf,
   type PersonPricing,
+  type PricedLine,
 } from "./costRules";
 import { blockOwners } from "./sectionPlacement";
 import { assistantsOf, instructorsOfRecord, TA_ROLE } from "./sectionPeople";
@@ -42,6 +43,7 @@ interface CostContext {
   /** The partner a crosslisted section is costed on, or null. */
   crosslistOwnerOf: (section: PlannedSection) => number | null;
   chargedSectionIdByTaCourse: Map<string, number>;
+  hasLiveLecture: (section: PlannedSection) => boolean;
   assumptions: CostAssumptions;
   settings: CostRuleSettings;
 }
@@ -71,9 +73,16 @@ export function estimateTermCost(
     (section) =>
       isCostedHere(section) && !isFreeComponent(section.component, settings),
   );
+  const courseCodesWithLiveLecture = new Set(
+    liveSections
+      .filter(({ component }) => component === "LEC")
+      .map(({ courseCode }) => courseCode),
+  );
   const context: CostContext = {
     pricingOfEmplid,
     crosslistOwnerOf,
+    hasLiveLecture: ({ courseCode }) =>
+      courseCodesWithLiveLecture.has(courseCode),
     chargedSectionIdByTaCourse: chargedSectionIdByTaCourseOf(
       sectionsThatCanChargeATa,
     ),
@@ -131,13 +140,24 @@ function costLinesOf(
     return freeComponentLines(section.component, [...leads, ...tas]);
   }
 
+  const paidOnLecture: PricedLine | null =
+    PAID_ON_LECTURE_COMPONENTS.includes(section.component) &&
+    context.hasLiveLecture(section)
+      ? {
+          amount: 0,
+          basis: { kind: "paidOnLecture", component: section.component },
+        }
+      : null;
+
   if (leads.length === 0 && tas.length === 0) {
     return [
       {
         role: "unstaffedSection",
         emplid: null,
-        amount: settings.unstaffedSectionCost,
-        basis: { kind: "unstaffedSection" },
+        ...(paidOnLecture ?? {
+          amount: settings.unstaffedSectionCost,
+          basis: { kind: "unstaffedSection" },
+        }),
       },
     ];
   }
@@ -146,7 +166,8 @@ function costLinesOf(
     (lead): CostLine => ({
       role: "instructor",
       emplid: lead.emplid,
-      ...costOfLeadInstructor(pricingOfEmplid(lead.emplid), settings),
+      ...(paidOnLecture ??
+        costOfLeadInstructor(pricingOfEmplid(lead.emplid), settings)),
     }),
   );
   const taLines = tas.map((ta) => taLineOf(ta, section, context));
@@ -270,6 +291,8 @@ function freeComponentLines(
     basis,
   }));
 }
+
+const PAID_ON_LECTURE_COMPONENTS = ["LAB", "DIS"];
 
 const taCourseKey = (emplid: number, courseCode: string) =>
   `${emplid}|${courseCode}`;

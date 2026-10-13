@@ -5,6 +5,7 @@ export type CostBasis =
   | { kind: "override"; reason: string | null }
   | { kind: "recurringBudget"; instructorType: InstructorType }
   | { kind: "freeComponent"; component: string }
+  | { kind: "paidOnLecture"; component: string }
   | {
       kind: "jobCodeRate";
       jobCode: string;
@@ -44,6 +45,11 @@ const COMPONENT_LABELS: Record<string, string> = {
   FWK: "Fieldwork",
 };
 
+const PAID_ON_LECTURE_LABELS: Record<string, string> = {
+  LAB: "Lab",
+  DIS: "Discussion",
+};
+
 const STUDENT_STATUS_LABELS: Record<StudentStatus, string> = {
   regular: "regular",
   abd: "ABD",
@@ -66,6 +72,9 @@ export function describeCostBasis(
 
     case "freeComponent":
       return `${COMPONENT_LABELS[basis.component] ?? basis.component} · no added cost`;
+
+    case "paidOnLecture":
+      return `${PAID_ON_LECTURE_LABELS[basis.component] ?? basis.component} in a course with a lecture · paid on the lecture`;
 
     case "jobCodeRate": {
       const rate = `${basis.jobCode} ${basis.title} · ${fiscalYearLabel(basis.rateFiscalYear)} rate`;

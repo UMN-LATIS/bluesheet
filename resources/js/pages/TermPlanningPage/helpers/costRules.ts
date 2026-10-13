@@ -34,7 +34,7 @@ export interface PersonPricing {
  * The amount is null when no rate exists and no setting
  * stands in for one.
  */
-interface PricedLine {
+export interface PricedLine {
   amount: number | null;
   basis: CostBasis;
 }
