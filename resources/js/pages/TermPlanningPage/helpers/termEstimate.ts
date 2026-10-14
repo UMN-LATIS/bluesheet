@@ -16,7 +16,7 @@ import {
 import {
   gradCostOf,
   gradTermOf,
-  DEFAULT_APPOINTMENT_PERCENT,
+  defaultAppointmentOf,
   type GradCost,
   type GradStudent,
   type GradTerm,
@@ -530,7 +530,7 @@ function chargedOncePerGradStudent(
         const setting = rateOverrides.gradPeopleByEmplid.get(line.emplid);
         const student: GradStudent = {
           appointmentPercent:
-            setting?.appointmentPercent ?? DEFAULT_APPOINTMENT_PERCENT,
+            setting?.appointmentPercent ?? defaultAppointmentOf(rateOverrides),
           isAbd: rate?.studentStatus === "abd",
           hasFeeOffset: setting?.hasFeeOffset ?? false,
           isInternational: setting?.isInternational ?? false,

@@ -1,4 +1,9 @@
-import type { CostAssumptions, GradPerson, GradRateInputs } from "@/types";
+import type {
+  CostAssumptions,
+  GradOverrideField,
+  GradPerson,
+  GradRateInputs,
+} from "@/types";
 
 export type RateField = "salary" | "fringeRate";
 
@@ -17,9 +22,12 @@ export interface JobCodeRateOverrideFields {
   fringeRate: number | null;
 }
 
-/** A null value restores the admin's value for the term. */
+/**
+ * A null value restores the admin's value for the term, or
+ * for the default appointment, the standard one.
+ */
 export interface GradInputEdit {
-  field: keyof GradRateInputs;
+  field: GradOverrideField;
   value: number | null;
 }
 
@@ -36,6 +44,8 @@ export interface RateOverrides {
   jobCodeRates: Map<string, JobCodeRateOverrideFields>;
   salaryByEmplid: Map<number, number>;
   gradInputs: Partial<GradRateInputs>;
+  /** The department's choice. Null when it made none; see `defaultAppointmentOf`. */
+  defaultAppointmentPercent: number | null;
   gradHoursByPercent: Map<number, number>;
   /** Only people with a setting: an absent person has the defaults. */
   gradPeopleByEmplid: Map<number, GradPerson>;
@@ -89,13 +99,13 @@ function withJobCodeField(
   }
 }
 
-function gradInputsOf(
-  saved: NonNullable<CostAssumptions["rateOverrides"]["grad"]> | null,
+function gradOverridesOf(
+  saved: CostAssumptions["rateOverrides"]["grad"],
   edits: GradInputEdit[],
-): Partial<GradRateInputs> {
-  const inputs = new Map<keyof GradRateInputs, number>();
+): Partial<Record<GradOverrideField, number>> {
+  const inputs = new Map<GradOverrideField, number>();
   const savedEntries = Object.entries(saved ?? {}) as [
-    keyof GradRateInputs,
+    GradOverrideField,
     number | null,
   ][];
 
@@ -158,10 +168,16 @@ export function rateOverridesOf(
     else gradPeopleByEmplid.set(person.emplid, person);
   }
 
+  const { defaultAppointmentPercent, ...gradInputs } = gradOverridesOf(
+    grad,
+    Object.values(edits.gradInputEdits),
+  );
+
   return {
     jobCodeRates,
     salaryByEmplid,
-    gradInputs: gradInputsOf(grad, Object.values(edits.gradInputEdits)),
+    gradInputs,
+    defaultAppointmentPercent: defaultAppointmentPercent ?? null,
     gradHoursByPercent,
     gradPeopleByEmplid,
   };

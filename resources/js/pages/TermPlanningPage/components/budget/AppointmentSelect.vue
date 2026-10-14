@@ -6,7 +6,7 @@
     <ResetButton
       v-if="canEdit && isOverridden"
       class="tw-ml-1"
-      :label="`Reset to ${DEFAULT_APPOINTMENT_PERCENT}%`"
+      :label="`Reset to ${defaultPercent}%`"
       @reset="emit('change', null)"
     />
     <select
@@ -17,9 +17,7 @@
       :class="
         canEdit ? 'tw-text-primary hover:tw-bg-surface' : 'tw-text-on-surface'
       "
-      @change="
-        emit('change', Number(($event.target as HTMLSelectElement).value))
-      "
+      @change="choose(Number(($event.target as HTMLSelectElement).value))"
     >
       <option v-for="percent in options" :key="percent" :value="percent">
         {{ percent }}%
@@ -33,18 +31,22 @@
 import { computed } from "vue";
 import OverrideMarker from "./OverrideMarker.vue";
 import ResetButton from "./ResetButton.vue";
-import { DEFAULT_APPOINTMENT_PERCENT } from "../../helpers/gradCost";
 
 const props = defineProps<{
   appointmentPercent: number;
   /** The term's levels. The current appointment is listed even when absent. */
   levels: number[];
+  /** What a reset restores. Choosing it records no appointment. */
+  defaultPercent: number;
   isOverridden: boolean;
   canEdit: boolean;
   label: string;
 }>();
 
 const emit = defineEmits<{ change: [appointmentPercent: number | null] }>();
+
+const choose = (percent: number) =>
+  emit("change", percent === props.defaultPercent ? null : percent);
 
 const options = computed(() =>
   [...new Set([...props.levels, props.appointmentPercent])].sort(

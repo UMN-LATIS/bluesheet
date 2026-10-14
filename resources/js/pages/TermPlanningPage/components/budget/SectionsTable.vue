@@ -190,7 +190,7 @@ const COLUMNS: BudgetColumn<BudgetRow>[] = [
   },
   { label: "Instructor", sortValueOf: ({ instructorName }) => instructorName },
   {
-    label: "Est. cost",
+    label: "Instr cost",
     isNumeric: true,
     sortValueOf: ({ instructorCost }) => instructorCost,
   },

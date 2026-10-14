@@ -81,7 +81,7 @@ export async function savePersonNote(
 export async function saveGradInputOverride(
   groupId: T.Group["id"],
   termCode: number,
-  field: keyof T.GradRateInputs,
+  field: T.GradOverrideField,
   value: number | null,
 ): Promise<void> {
   await axios.patch(

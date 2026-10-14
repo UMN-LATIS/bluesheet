@@ -14,7 +14,12 @@ import {
   unstaffedRateOf,
   type Rate,
 } from "./costRules";
-import { DEFAULT_APPOINTMENT_PERCENT } from "./gradCost";
+import {
+  gradReceiptOf,
+  salaryReceiptOf,
+  type ReceiptLine,
+} from "./costReceipt";
+import { defaultAppointmentOf } from "./gradCost";
 import { formatWholeDollars } from "./money";
 import { fundLabelOf } from "./rateRows";
 import {
@@ -46,7 +51,7 @@ export interface PersonRow {
   salaryWithoutOverride: number | null;
   /** Only a non-grad instructor's salary can be overridden. */
   isSalaryOverridden: boolean;
-  /** A grad student's pay comes from the Grad Rates tab. */
+  /** A grad student's pay comes from the grad inputs on the Rates tab. */
   isSalaryReadOnly: boolean;
   /** Null when there is nothing to add to the salary. */
   salaryHint: string | null;
@@ -68,17 +73,17 @@ export interface PersonRow {
   leaves: TermLeave[];
   /** Null unless the person's priced job code is a grad student's. */
   appointmentPercent: number | null;
-  /** True when the department chose the appointment instead of the 25% default. */
+  /** True when the person has their own appointment instead of the term's default. */
   isAppointmentOverridden: boolean;
   hasFeeOffset: boolean;
   isInternational: boolean;
   isAbd: boolean;
+  receipt: ReceiptLine[];
 }
 
 /**
  * The edit that changes one of a grad student's settings and
- * keeps the others. Choosing the default appointment records
- * no appointment. Null on the Unstaffed row.
+ * keeps the others. Null on the Unstaffed row.
  */
 export function gradPersonEditOf(
   row: PersonRow,
@@ -95,14 +100,7 @@ export function gradPersonEditOf(
     ...change,
   };
 
-  return {
-    emplid: row.emplid,
-    ...settings,
-    appointmentPercent:
-      settings.appointmentPercent === DEFAULT_APPOINTMENT_PERCENT
-        ? null
-        : settings.appointmentPercent,
-  };
+  return { emplid: row.emplid, ...settings };
 }
 
 export interface PeopleTables {
@@ -196,8 +194,18 @@ export function peopleTablesOf(
         : Math.ceil(rate.annualLoad / TERMS_PER_YEAR);
     const gradSetting = rateOverrides.gradPeopleByEmplid.get(emplid);
     const appointmentPercent = isGrad
-      ? (gradSetting?.appointmentPercent ?? DEFAULT_APPOINTMENT_PERCENT)
+      ? (gradSetting?.appointmentPercent ?? defaultAppointmentOf(rateOverrides))
       : null;
+
+    const price = isGrad
+      ? gradPriceOf(lines)
+      : unitPriceOf(
+          isTa
+            ? taRateOf(pricing, termRates)
+            : instructorRateOf(pricing, termRates),
+          isTa ? undefined : rateOverrides.salaryByEmplid.get(emplid),
+        );
+    const chargeSummary = chargeSummaryOf(charges);
 
     const row: PersonRow = {
       emplid,
@@ -211,20 +219,13 @@ export function peopleTablesOf(
         isTa && !rate?.instructorType
           ? "TA/GI"
           : fundLabelOf(rate?.instructorType ?? null),
-      ...(isGrad
-        ? gradPriceOf(lines)
-        : unitPriceOf(
-            isTa
-              ? taRateOf(pricing, termRates)
-              : instructorRateOf(pricing, termRates),
-            isTa ? undefined : rateOverrides.salaryByEmplid.get(emplid),
-          )),
+      ...price,
       loadLabel:
         appointmentPercent !== null && isTa
           ? `${appointmentPercent}%`
           : loadLabelOf(paidCount, expectedCount),
       isUnderLoad: isUnderLoadOf(isTa, leaves.length, paidCount, expectedCount),
-      ...chargeSummaryOf(charges),
+      ...chargeSummary,
       notes: notesByEmplid.get(emplid) ?? "",
       leaves,
       appointmentPercent,
@@ -232,6 +233,7 @@ export function peopleTablesOf(
       hasFeeOffset: isGrad && (gradSetting?.hasFeeOffset ?? false),
       isInternational: isGrad && (gradSetting?.isInternational ?? false),
       isAbd: rate?.studentStatus === "abd",
+      receipt: receiptOf(lines, price, paidCount, chargeSummary.total),
     };
 
     return { isTa, sortName: sortNameOf(person), row };
@@ -305,10 +307,12 @@ function unitPriceOf(rate: Rate | null, salaryOverride: number | undefined) {
   };
 }
 
+const gradAppointmentOf = (lines: CostLine[]) =>
+  lines.find(({ gradAppointment }) => gradAppointment !== undefined)
+    ?.gradAppointment;
+
 function gradPriceOf(lines: CostLine[]) {
-  const appointment = lines.find(
-    ({ gradAppointment }) => gradAppointment !== undefined,
-  )?.gradAppointment;
+  const appointment = gradAppointmentOf(lines);
 
   return {
     salary: appointment?.cost?.pay ?? null,
@@ -318,6 +322,25 @@ function gradPriceOf(lines: CostLine[]) {
     salaryHint: appointment === undefined ? null : gradHintOf(appointment),
     fringe: appointment?.cost?.fringe ?? null,
   };
+}
+
+function receiptOf(
+  lines: CostLine[],
+  price: { salary: number | null; fringe: number | null },
+  paidCount: number,
+  total: number,
+): ReceiptLine[] {
+  const appointment = gradAppointmentOf(lines);
+  if (appointment?.cost) {
+    return gradReceiptOf(appointment.student, appointment.cost);
+  }
+
+  return salaryReceiptOf({
+    salaryPerSection: price.salary,
+    fringePerSection: price.fringe,
+    sectionCount: paidCount,
+    total,
+  });
 }
 
 function gradHintOf({ student, cost }: GradAppointment): string | null {
@@ -337,6 +360,9 @@ function unstaffedRowsOf(charges: Charge[], rate: Rate | null): PersonRow[] {
   const paidCount = charges.filter(({ line }) => isPaid(line)).length;
   if (paidCount === 0) return [];
 
+  const price = unitPriceOf(rate, undefined);
+  const chargeSummary = chargeSummaryOf(charges);
+
   return [
     {
       emplid: null,
@@ -344,10 +370,10 @@ function unstaffedRowsOf(charges: Charge[], rate: Rate | null): PersonRow[] {
       jobCode: UNSTAFFED_JOB_CODE,
       title: "Unstaffed",
       fundLabel: "—",
-      ...unitPriceOf(rate, undefined),
+      ...price,
       loadLabel: String(paidCount),
       isUnderLoad: false,
-      ...chargeSummaryOf(charges),
+      ...chargeSummary,
       notes: "",
       leaves: [],
       appointmentPercent: null,
@@ -355,6 +381,7 @@ function unstaffedRowsOf(charges: Charge[], rate: Rate | null): PersonRow[] {
       hasFeeOffset: false,
       isInternational: false,
       isAbd: false,
+      receipt: receiptOf([], price, paidCount, chargeSummary.total),
     },
   ];
 }

@@ -52,6 +52,7 @@
           v-else-if="schedule.budgetTab === 'tas'"
           :rows="peopleTables.tas"
           :appointmentLevels="appointmentLevels"
+          :defaultAppointmentPercent="defaultAppointmentPercent"
           :canEdit="schedule.canEditCosts"
           @selectSection="selectSection"
           @selectPerson="selectPerson"
@@ -67,24 +68,15 @@
           :rateOverrides="schedule.rateOverrides"
           :canEdit="schedule.canEditCosts"
           :chargedEmplids="chargedEmplids"
+          :appointmentLevels="appointmentLevels"
           :termName="termName"
           @editRate="
             (edit) => schedule.dispatch({ type: 'rateOverrideEdited', edit })
           "
-        />
-
-        <GradRatesTab
-          v-else-if="
-            schedule.budgetTab === 'gradRates' && schedule.rateOverrides
-          "
-          :assumptions="assumptions"
-          :rateOverrides="schedule.rateOverrides"
-          :canEdit="schedule.canEditCosts"
-          :termName="termName"
-          @editInput="
+          @editGradInput="
             (edit) => schedule.dispatch({ type: 'gradInputEdited', edit })
           "
-          @editHours="
+          @editGradHours="
             (edit) => schedule.dispatch({ type: 'gradHoursEdited', edit })
           "
         />
@@ -108,7 +100,6 @@ import type {
 } from "@/types";
 import BudgetHeader from "./BudgetHeader.vue";
 import BudgetTabBar from "./BudgetTabBar.vue";
-import GradRatesTab from "./GradRatesTab.vue";
 import InstructorsTable from "./InstructorsTable.vue";
 import RatesTab from "./RatesTab.vue";
 import SectionsTable from "./SectionsTable.vue";
@@ -118,7 +109,12 @@ import {
   enrollmentSeriesBySection,
   historyKeyOf,
 } from "../../helpers/enrollmentHistory";
-import { peopleTablesOf } from "../../helpers/peopleRows";
+import {
+  defaultAppointmentOf,
+  STANDARD_APPOINTMENT_PERCENT,
+} from "../../helpers/gradCost";
+import { peopleTablesOf, type PersonRow } from "../../helpers/peopleRows";
+import { filterPeople } from "../../helpers/scheduleFilters";
 import { totalsOf, type SectionCost } from "../../helpers/termEstimate";
 import type { PlannedSection } from "../../types";
 import type { ScheduleEditor } from "../../useScheduleEditor";
@@ -160,7 +156,7 @@ const chargedEmplids = computed(
     ),
 );
 
-const peopleTables = computed(() =>
+const allPeopleTables = computed(() =>
   props.assumptions &&
   props.schedule.sectionCosts &&
   props.schedule.rateOverrides &&
@@ -177,11 +173,27 @@ const peopleTables = computed(() =>
     : { instructors: [], tas: [] },
 );
 
+const peopleTables = computed(() => {
+  const shownPeopleOf = (rows: PersonRow[]) =>
+    filterPeople(rows, props.schedule.localSections, props.schedule.filters);
+
+  return {
+    instructors: shownPeopleOf(allPeopleTables.value.instructors),
+    tas: shownPeopleOf(allPeopleTables.value.tas),
+  };
+});
+
 const editPersonSalary = (emplid: number, amount: number | null) =>
   props.schedule.dispatch({
     type: "rateOverrideEdited",
     edit: { rate: { kind: "person", emplid }, amount },
   });
+
+const defaultAppointmentPercent = computed(() =>
+  props.schedule.rateOverrides
+    ? defaultAppointmentOf(props.schedule.rateOverrides)
+    : STANDARD_APPOINTMENT_PERCENT,
+);
 
 const appointmentLevels = computed(() =>
   (props.assumptions?.gradRates.levels ?? [])

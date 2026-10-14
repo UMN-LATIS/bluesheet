@@ -144,6 +144,7 @@ describe("rateOverridesOf for grad settings", () => {
         feeOffset: null,
         internationalOffset: null,
         perCreditPayment: null,
+        defaultAppointmentPercent: 50,
       },
       gradHours: [{ appointmentPercent: 25, hours: 200 }],
     },
@@ -163,8 +164,26 @@ describe("rateOverridesOf for grad settings", () => {
     const overrides = rateOverridesOf(saved, noEdits);
 
     expect(overrides.gradInputs).toEqual({ hourlyRate: 31 });
+    expect(overrides.defaultAppointmentPercent).toBe(50);
     expect(overrides.gradHoursByPercent.get(25)).toBe(200);
     expect(overrides.gradPeopleByEmplid.get(7)?.appointmentPercent).toBe(50);
+  });
+
+  it("applies and clears a pending default appointment edit", () => {
+    const edited = (value: number | null) =>
+      rateOverridesOf(saved, {
+        ...noEdits,
+        gradInputEdits: {
+          [gradInputKeyOf("defaultAppointmentPercent")]: {
+            field: "defaultAppointmentPercent",
+            value,
+          },
+        },
+      });
+
+    expect(edited(37.5).defaultAppointmentPercent).toBe(37.5);
+    expect(edited(null).defaultAppointmentPercent).toBeNull();
+    expect(edited(null).gradInputs).toEqual({ hourlyRate: 31 });
   });
 
   it("applies and clears pending input and hours edits", () => {

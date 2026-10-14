@@ -58,7 +58,7 @@
           class="tw-text-on-surface-variant"
           :title="
             row.isSalaryReadOnly
-              ? 'GA health and tuition, from Grad Rates'
+              ? 'GA health and tuition, from the Rates tab'
               : undefined
           "
         >

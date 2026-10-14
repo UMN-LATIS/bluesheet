@@ -70,6 +70,10 @@ export interface GradRateInputs {
   perCreditPayment: number;
 }
 
+export type GradOverrideField =
+  | keyof GradRateInputs
+  | "defaultAppointmentPercent";
+
 export interface GradAppointmentLevel {
   /** 12.5 is a 12.5% appointment. */
   appointmentPercent: number;
@@ -79,7 +83,7 @@ export interface GradAppointmentLevel {
 /** One grad student's settings for one department and one term. */
 export interface GradPerson {
   emplid: number;
-  /** Null means the default, 25%. */
+  /** Null means the term's default appointment. */
   appointmentPercent: number | null;
   hasFeeOffset: boolean;
   isInternational: boolean;
@@ -104,7 +108,7 @@ export interface CostAssumptions {
     jobCodes: JobCodeRateOverride[];
     people: PersonRateOverride[];
     /** The department's values. Each field is null when not overridden. */
-    grad: { [Field in keyof GradRateInputs]: number | null } | null;
+    grad: { [Field in GradOverrideField]: number | null } | null;
     gradHours: GradAppointmentLevel[];
   };
   gradPeople: GradPerson[];

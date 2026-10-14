@@ -466,6 +466,18 @@ describe("estimateTermCost with overrides", () => {
     });
   });
 
+  it("costs a TA with no appointment of their own at the department's default", () => {
+    const costs = estimate(
+      [section(1, { instructors: [sisInstructor(10, "TA")] })],
+      { rates: rateOverrides({ defaultAppointmentPercent: 50 }) },
+    );
+
+    expect(costs.get(1)?.lines[0]).toMatchObject({
+      amount: 18_000,
+      gradAppointment: { student: { appointmentPercent: 50 } },
+    });
+  });
+
   it("has no cost for an appointment level the term has no hours for", () => {
     const costs = estimate(
       [section(1, { instructors: [sisInstructor(10, "TA")] })],

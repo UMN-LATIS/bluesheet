@@ -1,7 +1,14 @@
 import type { CostAssumptions, GradRateInputs } from "@/types";
 import type { RateOverrides } from "./costOverrides";
 
-export const DEFAULT_APPOINTMENT_PERCENT = 25;
+export const STANDARD_APPOINTMENT_PERCENT = 25;
+
+export const defaultAppointmentOf = (
+  overrides: Pick<RateOverrides, "defaultAppointmentPercent">,
+) => overrides.defaultAppointmentPercent ?? STANDARD_APPOINTMENT_PERCENT;
+
+export const FEE_OFFSET_ABD_REASON =
+  "ABD job codes are ineligible for the student fee offset";
 
 export interface GradTerm {
   inputs: GradRateInputs;
@@ -18,6 +25,9 @@ export interface GradStudent {
 }
 
 export interface GradCost {
+  inputs: GradRateInputs;
+  offsetShare: number;
+  tuitionPerHour: number;
   hours: number;
   /** Hourly rate times hours, before offsets. */
   base: number;
@@ -73,6 +83,9 @@ export function gradCostOf(
   const fringe = health + tuition;
 
   return {
+    inputs,
+    offsetShare: share,
+    tuitionPerHour,
     hours,
     base,
     feeOffset,

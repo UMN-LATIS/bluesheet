@@ -125,7 +125,10 @@ final class CostAssumptions {
             ->where('term_code', $termCode)
             ->first();
 
-        return $override === null ? null : GradRateInputs::fromRow($override);
+        return $override === null ? null : [
+            ...GradRateInputs::fromRow($override),
+            'defaultAppointmentPercent' => $override->default_appointment_percent,
+        ];
     }
 
     private static function gradHoursOverrides(int $academicOrg, int $termCode): array {

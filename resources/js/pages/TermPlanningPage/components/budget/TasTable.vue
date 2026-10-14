@@ -62,6 +62,7 @@
             class="tw-w-full"
             :appointmentPercent="row.appointmentPercent"
             :levels="appointmentLevels"
+            :defaultPercent="defaultAppointmentPercent"
             :isOverridden="row.isAppointmentOverridden"
             :canEdit="canEdit"
             :label="`Appointment for ${row.name}`"
@@ -71,15 +72,12 @@
           />
           <span v-else class="tw-w-full tw-px-2 tw-text-right">–</span>
         </BudgetCell>
-        <BudgetCell
-          role="cell"
-          class="tw-justify-center"
-          :title="row.isAbd ? FEE_OFFSET_ABD_REASON : undefined"
-        >
+        <BudgetCell role="cell" class="tw-justify-center">
           <GradCheckbox
             v-if="row.appointmentPercent !== null"
             :isChecked="row.hasFeeOffset && !row.isAbd"
             :canEdit="canEdit && !row.isAbd"
+            :disabledReason="row.isAbd ? FEE_OFFSET_ABD_REASON : undefined"
             :label="`Student fee offset for ${row.name}`"
             @change="(isChecked) => editGrad(row, { hasFeeOffset: isChecked })"
           />
@@ -129,6 +127,7 @@ import MissingRate from "./MissingRate.vue";
 import PersonNameCell from "./PersonNameCell.vue";
 import SectionLinks from "./SectionLinks.vue";
 import TotalCell from "./TotalCell.vue";
+import { FEE_OFFSET_ABD_REASON } from "../../helpers/gradCost";
 import { formatDollars, formatWholeDollars } from "../../helpers/money";
 import { gradPersonEditOf, type PersonRow } from "../../helpers/peopleRows";
 
@@ -136,6 +135,7 @@ const props = defineProps<{
   rows: PersonRow[];
   /** The term's appointment percents. */
   appointmentLevels: number[];
+  defaultAppointmentPercent: number;
   canEdit: boolean;
 }>();
 
@@ -145,9 +145,6 @@ const emit = defineEmits<{
   selectLeave: [leaveId: number];
   editGradPerson: [edit: GradPerson];
 }>();
-
-const FEE_OFFSET_ABD_REASON =
-  "ABD job codes are ineligible for the student fee offset";
 
 const COLUMNS: BudgetColumn<PersonRow>[] = [
   { label: "Name", sortValueOf: ({ name }) => name },

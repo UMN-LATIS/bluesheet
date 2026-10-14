@@ -522,15 +522,6 @@ describe("gradPersonEditOf", () => {
     });
   });
 
-  it("records no appointment for the default one", () => {
-    expect(gradPersonEditOf(rowOfTa(), { appointmentPercent: 25 })).toEqual({
-      emplid: 10,
-      appointmentPercent: null,
-      hasFeeOffset: false,
-      isInternational: false,
-    });
-  });
-
   it("is null for the Unstaffed row", () => {
     const { instructors } = tablesOf([section(1, {})]);
 

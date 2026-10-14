@@ -6,7 +6,12 @@ import type {
 } from "@/types";
 import type { RateOverrides } from "./costOverrides";
 import { costOfRate, isGradJobCodeRate, UNSTAFFED_JOB_CODE } from "./costRules";
-import { gradCostOf, gradTermOf, type GradStudent } from "./gradCost";
+import {
+  defaultAppointmentOf,
+  gradCostOf,
+  gradTermOf,
+  type GradCost,
+} from "./gradCost";
 
 export interface RateCell {
   /**
@@ -124,139 +129,121 @@ export function rateRowsOf(
     });
 }
 
-export interface GradInputRow {
+export interface GradInputTile {
   field: keyof GradRateInputs;
   label: string;
-  hint: string;
   kind: "dollars" | "percent";
   /** Its novaAmount is the admin's value. */
   cell: RateCell;
 }
 
-export interface GradAppointmentRow {
+export interface GradHoursTile {
   appointmentPercent: number;
   /** Its novaAmount is the admin's hours. */
   hours: RateCell;
-  /** Pay before offsets. All the costs are null when the term has no grad inputs. */
-  salary: number | null;
-  health: number | null;
-  regularTuition: number | null;
-  regularCost: number | null;
-  abdTuition: number | null;
-  abdCost: number | null;
 }
 
-export interface GradRatesView {
-  inputs: GradInputRow[];
-  appointments: GradAppointmentRow[];
+export interface GradRateRow {
+  code: string;
+  title: string;
+  fundLabel: string;
+  isAbd: boolean;
+  isGradInstructor: boolean;
+  /**
+   * At the term's default appointment, before offsets and
+   * per-credit pay. Null when an input or the hours are
+   * missing.
+   */
+  cost: GradCost | null;
 }
 
-const GRAD_INPUT_LABELS: {
-  field: keyof GradRateInputs;
-  label: string;
-  hint: string;
-  kind: "dollars" | "percent";
-}[] = [
-  {
-    field: "hourlyRate",
-    label: "Hourly rate",
-    hint: "All grad appointments",
-    kind: "dollars",
-  },
-  {
-    field: "healthRate",
-    label: "GA health",
-    hint: "Percent of pay",
-    kind: "percent",
-  },
+export interface GradRates {
+  inputs: GradInputTile[];
+  hours: GradHoursTile[];
+  defaultAppointmentPercent: number;
+  isDefaultAppointmentOverridden: boolean;
+  rows: GradRateRow[];
+}
+
+const GRAD_INPUT_LABELS: Omit<GradInputTile, "cell">[] = [
+  { field: "hourlyRate", label: "Hourly rate", kind: "dollars" },
+  { field: "healthRate", label: "GA health, of pay", kind: "percent" },
   {
     field: "tuitionPerHourRegular",
-    label: "Tuition per hour",
-    hint: "Regular",
+    label: "Tuition per hour, regular",
     kind: "dollars",
   },
   {
     field: "tuitionPerHourAbd",
-    label: "Tuition per hour",
-    hint: "ABD",
+    label: "Tuition per hour, ABD",
     kind: "dollars",
   },
-  {
-    field: "feeOffset",
-    label: "Student fee offset",
-    hint: "Full amount, regular only",
-    kind: "dollars",
-  },
+  { field: "feeOffset", label: "Student fee offset", kind: "dollars" },
   {
     field: "internationalOffset",
     label: "International GA offset",
-    hint: "Full amount",
     kind: "dollars",
   },
   {
     field: "perCreditPayment",
-    label: "Grad instructor payment",
-    hint: "Per credit taught",
+    label: "Grad instructor, per credit",
     kind: "dollars",
   },
 ];
 
-const NO_OFFSETS: Omit<GradStudent, "appointmentPercent" | "isAbd"> = {
-  hasFeeOffset: false,
-  isInternational: false,
-  creditsTaught: 0,
-};
-
-export function gradRatesViewOf(
+export function gradRatesOf(
   assumptions: CostAssumptions,
   overrides: RateOverrides,
-): GradRatesView {
+): GradRates {
   const term = gradTermOf(assumptions, overrides);
-  const gradInstructorCodes = assumptions.jobCodes
-    .filter(({ instructorType }) => instructorType === "graduate_instructor")
-    .map(({ code }) => code)
-    .sort();
+  const defaultAppointmentPercent = defaultAppointmentOf(overrides);
 
   const inputs = GRAD_INPUT_LABELS.map((input) => ({
     ...input,
-    hint:
-      input.field === "perCreditPayment" && gradInstructorCodes.length > 0
-        ? `${input.hint}, ${gradInstructorCodes.join(" and ")}`
-        : input.hint,
     cell: rateCellOf(
       overrides.gradInputs[input.field],
       assumptions.gradRates.defaults?.[input.field],
     ),
   }));
 
-  const appointments = [...assumptions.gradRates.levels]
+  const hours = [...assumptions.gradRates.levels]
     .sort((a, b) => a.appointmentPercent - b.appointmentPercent)
-    .map(({ appointmentPercent, hours: adminHours }) => {
-      const regular = gradCostOf(term, {
-        appointmentPercent,
-        isAbd: false,
-        ...NO_OFFSETS,
-      });
-      const abd = gradCostOf(term, {
-        appointmentPercent,
-        isAbd: true,
-        ...NO_OFFSETS,
-      });
+    .map(({ appointmentPercent, hours: adminHours }) => ({
+      appointmentPercent,
+      hours: rateCellOf(
+        overrides.gradHoursByPercent.get(appointmentPercent),
+        adminHours,
+      ),
+    }));
+
+  const rows = assumptions.jobCodes
+    .filter(isGradJobCodeRate)
+    .sort((a, b) => a.code.localeCompare(b.code))
+    .map(({ code, title, instructorType, studentStatus }) => {
+      const isAbd = studentStatus === "abd";
 
       return {
-        appointmentPercent,
-        hours: rateCellOf(
-          overrides.gradHoursByPercent.get(appointmentPercent),
-          adminHours,
-        ),
-        salary: regular?.pay ?? null,
-        health: regular?.health ?? null,
-        regularTuition: regular?.tuition ?? null,
-        regularCost: regular?.total ?? null,
-        abdTuition: abd?.tuition ?? null,
-        abdCost: abd?.total ?? null,
+        code,
+        title,
+        fundLabel: fundLabelOf(instructorType),
+        isAbd,
+        isGradInstructor: instructorType === "graduate_instructor",
+        cost: gradCostOf(term, {
+          appointmentPercent: defaultAppointmentPercent,
+          isAbd,
+          hasFeeOffset: false,
+          isInternational: false,
+          creditsTaught: 0,
+        }),
       };
     });
 
-  return { inputs, appointments };
+  return {
+    inputs,
+    hours,
+    defaultAppointmentPercent,
+    isDefaultAppointmentOverridden:
+      overrides.defaultAppointmentPercent !== null,
+    rows,
+  };
 }

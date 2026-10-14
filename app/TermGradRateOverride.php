@@ -19,6 +19,7 @@ class TermGradRateOverride extends Model implements AuditableContract {
         'fee_offset',
         'international_offset',
         'per_credit_payment',
+        'default_appointment_percent',
         'created_by',
         'updated_by',
     ];
@@ -33,5 +34,6 @@ class TermGradRateOverride extends Model implements AuditableContract {
         'fee_offset' => 'float',
         'international_offset' => 'float',
         'per_credit_payment' => 'float',
+        'default_appointment_percent' => 'float',
     ];
 }

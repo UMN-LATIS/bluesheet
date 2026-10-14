@@ -84,9 +84,11 @@ class CostOverrideController extends Controller {
         $termCode = TermCode::fromRequest($request);
         $this->abortIfTermIsReadOnly($academicOrg, $termCode);
 
-        if (!$request->hasAny(array_keys(GradRateInputs::COLUMN_BY_KEY))) {
+        if (!$request->hasAny([...array_keys(GradRateInputs::COLUMN_BY_KEY), 'defaultAppointmentPercent'])) {
             throw ValidationException::withMessages(['hourlyRate' => 'Send at least one grad rate.']);
         }
+
+        $levelPercents = $this->gradLevelPercents($termCode);
 
         $changes = $request->validate([
             'hourlyRate' => ['sometimes', 'nullable', ...self::MONEY_RULES],
@@ -96,11 +98,21 @@ class CostOverrideController extends Controller {
             'feeOffset' => ['sometimes', 'nullable', ...self::MONEY_RULES],
             'internationalOffset' => ['sometimes', 'nullable', ...self::MONEY_RULES],
             'perCreditPayment' => ['sometimes', 'nullable', ...self::MONEY_RULES],
+            'defaultAppointmentPercent' => [
+                'sometimes',
+                'nullable',
+                'numeric',
+                fn(string $attribute, mixed $percent, \Closure $fail) => in_array((float) $percent, $levelPercents, true)
+                    || $fail('The default appointment percent must be one of the term\'s appointment levels.'),
+            ],
         ]);
 
         $uniqueKey = ['academic_org' => $academicOrg, 'term_code' => $termCode];
         $saved = TermGradRateOverride::where($uniqueKey)->first();
-        $inputs = $saved === null ? array_fill_keys(array_keys(GradRateInputs::COLUMN_BY_KEY), null) : GradRateInputs::fromRow($saved);
+        $inputs = [
+            ...($saved === null ? array_fill_keys(array_keys(GradRateInputs::COLUMN_BY_KEY), null) : GradRateInputs::fromRow($saved)),
+            'defaultAppointmentPercent' => $saved?->default_appointment_percent,
+        ];
         foreach ($changes as $key => $value) {
             $inputs[$key] = $value === null ? null : (float) $value;
         }
@@ -109,6 +121,7 @@ class CostOverrideController extends Controller {
         foreach (GradRateInputs::COLUMN_BY_KEY as $key => $column) {
             $values[$column] = $inputs[$key];
         }
+        $values['default_appointment_percent'] = $inputs['defaultAppointmentPercent'];
         $isEveryInputNull = count(array_filter($inputs, fn($input) => $input !== null)) === 0;
 
         $this->saveOrDelete(TermGradRateOverride::class, $uniqueKey, $isEveryInputNull ? null : $values);

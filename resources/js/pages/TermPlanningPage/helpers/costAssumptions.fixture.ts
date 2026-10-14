@@ -31,6 +31,7 @@ export const rateOverrides = (
   jobCodeRates: new Map(),
   salaryByEmplid: new Map(),
   gradInputs: {},
+  defaultAppointmentPercent: null,
   gradHoursByPercent: new Map(),
   gradPeopleByEmplid: new Map(),
   ...extra,

@@ -560,6 +560,7 @@ describe('grad rates in the payload', function () {
             'feeOffset' => null,
             'internationalOffset' => null,
             'perCreditPayment' => null,
+            'defaultAppointmentPercent' => null,
         ]);
         expect($res->json('rateOverrides.gradHours'))->toEqual([['appointmentPercent' => 25.0, 'hours' => 200]]);
         expect($res->json('gradPeople'))->toEqual([
@@ -602,6 +603,44 @@ describe('grad rate overrides', function () {
         $res = patchJson(gradRateOverrideUrl($this->group), ['hourlyRate' => null]);
 
         expect(array_filter($res->json(), fn($input) => $input !== null))->toBe([]);
+        expect(TermGradRateOverride::count())->toBe(0);
+    });
+
+    it('saves a default appointment percent on its own and reports it in the payload', function () {
+        gradTermRateWithLevels();
+
+        $res = patchJson(gradRateOverrideUrl($this->group), ['defaultAppointmentPercent' => 50]);
+
+        expect($res->status())->toBe(200);
+        expect($res->json('defaultAppointmentPercent'))->toEqual(50.0);
+        expect($res->json('hourlyRate'))->toBeNull();
+        expect(getJson(costAssumptionsUrl($this->group))->json('rateOverrides.grad.defaultAppointmentPercent'))->toEqual(50.0);
+    });
+
+    it('keeps the default appointment percent when only a rate changes', function () {
+        gradTermRateWithLevels();
+        patchJson(gradRateOverrideUrl($this->group), ['defaultAppointmentPercent' => 25]);
+
+        $res = patchJson(gradRateOverrideUrl($this->group), ['hourlyRate' => 31]);
+
+        expect($res->json('defaultAppointmentPercent'))->toEqual(25.0);
+    });
+
+    it('rejects a default appointment percent that is not one of the term\'s levels', function () {
+        gradTermRateWithLevels();
+
+        expect(patchJson(gradRateOverrideUrl($this->group), ['defaultAppointmentPercent' => 30])->status())->toBe(422);
+        expect(patchJson(gradRateOverrideUrl($this->group), ['defaultAppointmentPercent' => 'abc'])->status())->toBe(422);
+        expect(TermGradRateOverride::count())->toBe(0);
+    });
+
+    it('deletes a row holding only a default appointment percent when it is set back to null', function () {
+        gradTermRateWithLevels();
+        patchJson(gradRateOverrideUrl($this->group), ['defaultAppointmentPercent' => 50]);
+
+        $res = patchJson(gradRateOverrideUrl($this->group), ['defaultAppointmentPercent' => null]);
+
+        expect($res->json('defaultAppointmentPercent'))->toBeNull();
         expect(TermGradRateOverride::count())->toBe(0);
     });
 
