@@ -3,12 +3,14 @@ import type { RateOverrides } from "./costOverrides";
 
 export const UNSTAFFED_JOB_CODE = "TBA";
 
-export const TA_APPOINTMENT_PERCENT = 25;
-
 const FREE_COMPONENTS = ["IND", "FWK"];
 
 export const isFreeComponent = (component: string) =>
   FREE_COMPONENTS.includes(component);
+
+export const isGradJobCodeRate = (rate: JobCodeRate | null): boolean =>
+  rate?.instructorType === "teaching_assistant" ||
+  rate?.instructorType === "graduate_instructor";
 
 export interface Rate {
   salary: number;

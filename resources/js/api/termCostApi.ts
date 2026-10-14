@@ -76,3 +76,45 @@ export async function savePersonNote(
     { ...WRITE_CONFIG, params: { term: termCode } },
   );
 }
+
+/** A null value restores the admin's value for the term. */
+export async function saveGradInputOverride(
+  groupId: T.Group["id"],
+  termCode: number,
+  field: keyof T.GradRateInputs,
+  value: number | null,
+): Promise<void> {
+  await axios.patch(
+    `/api/term-planning/groups/${groupId}/cost-rate-overrides/grad`,
+    { [field]: value },
+    { ...WRITE_CONFIG, params: { term: termCode } },
+  );
+}
+
+/** Null hours restores the admin's hours for the appointment. */
+export async function saveGradHoursOverride(
+  groupId: T.Group["id"],
+  termCode: number,
+  appointmentPercent: number,
+  hours: number | null,
+): Promise<void> {
+  await axios.put(
+    `/api/term-planning/groups/${groupId}/cost-rate-overrides/grad-hours/${appointmentPercent}`,
+    { hours },
+    { ...WRITE_CONFIG, params: { term: termCode } },
+  );
+}
+
+/** A null appointment, no fee offset, and not international delete the row. */
+export async function saveGradPerson(
+  groupId: T.Group["id"],
+  termCode: number,
+  person: T.GradPerson,
+): Promise<void> {
+  const { emplid, ...settings } = person;
+  await axios.put(
+    `/api/term-planning/groups/${groupId}/grad-people/${emplid}`,
+    settings,
+    { ...WRITE_CONFIG, params: { term: termCode } },
+  );
+}

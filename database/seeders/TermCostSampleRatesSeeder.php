@@ -2,9 +2,12 @@
 
 namespace Database\Seeders;
 
+use App\GradAppointmentLevel;
+use App\GradTermRate;
 use App\JobCode;
 use App\JobCodeTermRate;
 use App\Library\TermPlan\InstructorType;
+use App\Library\TermPlan\StudentStatus;
 use Illuminate\Database\Seeder;
 
 class TermCostSampleRatesSeeder extends Seeder {
@@ -20,13 +23,21 @@ class TermCostSampleRatesSeeder extends Seeder {
 
     private const INSTRUCTOR_FRINGE_RATE = 0.385;
 
-    private const GRAD_REGULAR_FRINGE_RATE = 1.1264;
+    private const GRAD_INPUTS = [
+        'hourly_rate' => 29.95,
+        'health_rate' => 0.289,
+        'tuition_per_hour_regular' => 25.08,
+        'tuition_per_hour_abd' => 3.98,
+        'fee_offset' => 235,
+        'international_offset' => 280,
+        'per_credit_payment' => 250,
+    ];
 
-    private const GRAD_ABD_FRINGE_RATE = 0.4219;
+    private const GRAD_APPOINTMENT_PERCENTS = [12.5, 25, 37.5, 50, 75];
 
-    private const GRAD_FALL_SALARY = 5870.20;
+    private const GRAD_FALL_HOURS = [98, 196, 294, 392, 588];
 
-    private const GRAD_SPRING_SALARY = 5810.30;
+    private const GRAD_SPRING_HOURS = [97, 194, 291, 388, 582];
 
     private const INSTRUCTOR_CODES = [
         ['code' => '9401', 'title' => 'Professor', 'instructor_type' => InstructorType::RecurringBudgetFaculty, 'annual_load' => 4, 'fringe_rate' => 0],
@@ -39,10 +50,10 @@ class TermCostSampleRatesSeeder extends Seeder {
     ];
 
     private const GRAD_CODES = [
-        ['code' => '9515', 'title' => 'Graduate Instructor', 'instructor_type' => InstructorType::GraduateInstructor, 'annual_load' => 2, 'fringe_rate' => self::GRAD_REGULAR_FRINGE_RATE],
-        ['code' => '9517', 'title' => 'Ph D Candidate Grad Instr', 'instructor_type' => InstructorType::GraduateInstructor, 'annual_load' => 2, 'fringe_rate' => self::GRAD_ABD_FRINGE_RATE],
-        ['code' => '9511', 'title' => 'Teaching Assistant', 'instructor_type' => InstructorType::TeachingAssistant, 'annual_load' => 2, 'fringe_rate' => self::GRAD_REGULAR_FRINGE_RATE],
-        ['code' => '9519', 'title' => 'PhD Candidate Teaching Asst', 'instructor_type' => InstructorType::TeachingAssistant, 'annual_load' => 2, 'fringe_rate' => self::GRAD_ABD_FRINGE_RATE],
+        ['code' => '9515', 'title' => 'Graduate Instructor', 'instructor_type' => InstructorType::GraduateInstructor, 'annual_load' => 2, 'student_status' => StudentStatus::Regular],
+        ['code' => '9517', 'title' => 'Ph D Candidate Grad Instr', 'instructor_type' => InstructorType::GraduateInstructor, 'annual_load' => 2, 'student_status' => StudentStatus::Abd],
+        ['code' => '9511', 'title' => 'Teaching Assistant', 'instructor_type' => InstructorType::TeachingAssistant, 'annual_load' => 2, 'student_status' => StudentStatus::Regular],
+        ['code' => '9519', 'title' => 'PhD Candidate Teaching Asst', 'instructor_type' => InstructorType::TeachingAssistant, 'annual_load' => 2, 'student_status' => StudentStatus::Abd],
     ];
 
     public function run(): void {
@@ -62,16 +73,29 @@ class TermCostSampleRatesSeeder extends Seeder {
         }
 
         foreach (self::GRAD_CODES as $row) {
-            $jobCode = $this->updateOrCreateJobCode($row);
+            $this->updateOrCreateJobCode($row);
+        }
 
-            foreach (self::TERM_CODES as $termCode) {
-                $this->updateOrCreateTermRate($jobCode, $termCode, $this->gradSalaryOf($termCode), $row['fringe_rate'], self::GRAD_SOURCE);
-            }
+        foreach (self::TERM_CODES as $termCode) {
+            $this->updateOrCreateGradTermRate($termCode);
         }
     }
 
-    private function gradSalaryOf(int $termCode): float {
-        return $termCode % 10 === self::FALL_SEASON_DIGIT ? self::GRAD_FALL_SALARY : self::GRAD_SPRING_SALARY;
+    private function updateOrCreateGradTermRate(int $termCode): void {
+        $gradTermRate = GradTermRate::updateOrCreate(
+            ['term_code' => $termCode],
+            [...self::GRAD_INPUTS, 'source' => self::GRAD_SOURCE],
+        );
+        $isFall = $termCode % 10 === self::FALL_SEASON_DIGIT;
+
+        $hoursByLevel = $isFall ? self::GRAD_FALL_HOURS : self::GRAD_SPRING_HOURS;
+
+        foreach (self::GRAD_APPOINTMENT_PERCENTS as $index => $appointmentPercent) {
+            GradAppointmentLevel::updateOrCreate(
+                ['grad_term_rate_id' => $gradTermRate->id, 'appointment_percent' => $appointmentPercent],
+                ['hours' => $hoursByLevel[$index]],
+            );
+        }
     }
 
     private function updateOrCreateJobCode(array $row): JobCode {
@@ -81,6 +105,7 @@ class TermCostSampleRatesSeeder extends Seeder {
                 'title' => $row['title'],
                 'instructor_type' => $row['instructor_type'],
                 'annual_load' => $row['annual_load'],
+                'student_status' => $row['student_status'] ?? null,
             ],
         );
     }

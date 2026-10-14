@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use App\Library\TermPlan\InstructorType;
+use App\Library\TermPlan\StudentStatus;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Laravel\Nova\Fields\HasMany;
@@ -56,6 +57,13 @@ class JobCode extends Resource {
                 ->nullable()
                 ->rules('nullable', 'integer', 'min:0', 'max:40')
                 ->help('Courses a person with this job code teaches in a year. The People tab expects half of it each term.'),
+
+            Select::make('Student Status', 'student_status')
+                ->options(StudentStatus::class)
+                ->displayUsingLabels()
+                ->nullable()
+                ->rules('nullable', Rule::enum(StudentStatus::class))
+                ->help('For grad job codes: ABD pays the lower tuition per hour. Blank means regular.'),
 
             HasMany::make('Term Rates', 'termRates', JobCodeTermRate::class),
         ];

@@ -2,10 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   costAssumptions,
   costPerson,
+  FALL_GRAD_INPUTS,
+  gradJobCodeRate,
+  gradRates,
   jobCodeRate,
   rateOverrides,
 } from "./costAssumptions.fixture";
-import { gradRateRowsOf, rateRowsOf } from "./rateRows";
+import { gradRatesViewOf, rateRowsOf } from "./rateRows";
 
 const assumptions = costAssumptions({
   jobCodes: [
@@ -14,10 +17,7 @@ const assumptions = costAssumptions({
       source: "FY27 sheet",
       fringeRate: 0.385,
     }),
-    jobCodeRate("9511", 5870.2, {
-      instructorType: "teaching_assistant",
-      fringeRate: 1.1264,
-    }),
+    gradJobCodeRate("9511", "teaching_assistant", "regular"),
     jobCodeRate("9401", 0, {
       instructorType: "recurring_budget_faculty",
       fringeRate: 0,
@@ -96,63 +96,76 @@ describe("rateRowsOf", () => {
   });
 });
 
-describe("gradRateRowsOf", () => {
+describe("gradRatesViewOf", () => {
   const gradAssumptions = costAssumptions({
     jobCodes: [
-      jobCodeRate("9753", 10000, { fringeRate: 0.385 }),
-      jobCodeRate("9519", 5870.2, {
-        instructorType: "teaching_assistant",
-        fringeRate: 0.4219,
-      }),
-      jobCodeRate("9515", 5870.2, {
-        instructorType: "graduate_instructor",
-        fringeRate: 1.1264,
-      }),
+      gradJobCodeRate("9519", "teaching_assistant", "abd"),
+      gradJobCodeRate("9515", "graduate_instructor", "regular"),
+      gradJobCodeRate("9517", "graduate_instructor", "abd"),
     ],
-    people: [costPerson(1, ["9753"])],
+    gradRates: gradRates(),
   });
-  const gradRows = (overrides = rateOverrides()) =>
-    gradRateRowsOf(gradAssumptions, overrides);
+  const view = (overrides = rateOverrides()) =>
+    gradRatesViewOf(gradAssumptions, overrides);
 
-  it("lists every grad code, held by anyone or not, and no other code", () => {
-    expect(gradRows().map(({ code }) => code)).toEqual(["9515", "9519"]);
-  });
-
-  it("counts a teaching assistant per course and a grad instructor per section", () => {
-    expect(gradRows().map(({ perLabel }) => perLabel)).toEqual([
-      "Section",
-      "Course",
-    ]);
-  });
-
-  it("prices a 25% appointment, then two and three times that", () => {
-    const [, teachingAssistant] = gradRows();
-
-    expect(teachingAssistant.cost).toBeCloseTo(8347, 0);
+  it("lists the seven inputs with the admin's values", () => {
     expect(
-      teachingAssistant.costByAppointmentPercent.map(({ percent, cost }) => [
-        percent,
-        Math.round((cost ?? 0) / (teachingAssistant.cost ?? 1)),
-      ]),
-    ).toEqual([
-      [25, 1],
-      [50, 2],
-      [75, 3],
-    ]);
+      view().inputs.map(({ field, cell }) => [field, cell.amount]),
+    ).toEqual(Object.entries(FALL_GRAD_INPUTS));
   });
 
-  it("has no cost at any appointment while a field is missing", () => {
-    const overrides = rateOverrides();
-    const noRate = costAssumptions({
-      jobCodes: [
-        jobCodeRate("9519", null, { instructorType: "teaching_assistant" }),
-      ],
+  it("names the grad instructor codes in the per-credit hint", () => {
+    const perCredit = view().inputs.find(
+      ({ field }) => field === "perCreditPayment",
+    );
+
+    expect(perCredit?.hint).toBe("Per credit taught, 9515 and 9517");
+  });
+
+  it("marks an overridden input and keeps the admin's value to reset to", () => {
+    const hourlyRate = view(rateOverrides({ gradInputs: { hourlyRate: 31 } }))
+      .inputs[0];
+
+    expect(hourlyRate.cell).toEqual({
+      amount: 31,
+      novaAmount: 29.95,
+      isOverridden: true,
     });
+  });
 
-    expect(
-      gradRateRowsOf(noRate, overrides)[0].costByAppointmentPercent.map(
-        ({ cost }) => cost,
-      ),
-    ).toEqual([null, null, null]);
+  it("prices each level for a regular and an ABD student", () => {
+    const [, twentyFive] = view().appointments;
+
+    expect(twentyFive).toMatchObject({ appointmentPercent: 25 });
+    expect(twentyFive.salary).toBeCloseTo(5870.2, 2);
+    expect(twentyFive.health).toBeCloseTo(1696.49, 2);
+    expect(twentyFive.regularTuition).toBeCloseTo(4915.68, 2);
+    expect(twentyFive.regularCost).toBeCloseTo(12482.37, 2);
+    expect(twentyFive.abdTuition).toBeCloseTo(780.08, 2);
+    expect(twentyFive.abdCost).toBeCloseTo(8346.77, 2);
+  });
+
+  it("uses the department's hours and marks them", () => {
+    const [, twentyFive] = view(
+      rateOverrides({ gradHoursByPercent: new Map([[25, 200]]) }),
+    ).appointments;
+
+    expect(twentyFive.hours).toEqual({
+      amount: 200,
+      novaAmount: 196,
+      isOverridden: true,
+    });
+    expect(twentyFive.salary).toBeCloseTo(5990, 2);
+  });
+
+  it("has hours but no costs while an input is missing", () => {
+    const missing = costAssumptions({
+      gradRates: gradRates({ defaults: null }),
+    });
+    const [first] = gradRatesViewOf(missing, rateOverrides()).appointments;
+
+    expect(first.hours.amount).toBe(98);
+    expect(first.regularCost).toBeNull();
+    expect(first.abdCost).toBeNull();
   });
 });

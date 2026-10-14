@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   costAssumptions,
   costPerson,
+  gradJobCodeRate,
   jobCodeRate,
   rateOverrides,
+  roundGradRates,
   sisInstructor,
 } from "./costAssumptions.fixture";
 import { budgetRowOf } from "./budgetRows";
@@ -14,9 +16,10 @@ import type { PlannedSection } from "../types";
 const labelOfSection = (sectionId: number) => `Label ${sectionId}`;
 
 const assumptions = costAssumptions({
+  gradRates: roundGradRates(),
   jobCodes: [
     jobCodeRate("A", 4000),
-    jobCodeRate("TA", 9000, { instructorType: "teaching_assistant" }),
+    gradJobCodeRate("TA", "teaching_assistant", "regular"),
     jobCodeRate("TBA", 5000, { instructorType: null }),
   ],
   people: [
@@ -196,11 +199,11 @@ describe("budgetRowOf", () => {
         section: "001",
         instructors: [ta],
       }),
-      plannedSection(2, monday9, {
-        component: "DIS",
-        section: "002",
-        instructors: [ta],
-      }),
+      plannedSection(
+        2,
+        [{ days: ["tue"], startTime: "09:00", endTime: "09:50" }],
+        { component: "DIS", section: "002", instructors: [ta] },
+      ),
     ]);
 
     expect(lecture.taCostCell).toEqual({ kind: "amount", dollars: 9000 });
@@ -209,7 +212,8 @@ describe("budgetRowOf", () => {
       taCostCell: {
         kind: "chargedOnOtherSection",
         sectionLabel: "Label 1",
-        reason: "Paid on Label 1. A TA is paid once per course.",
+        reason:
+          "Paid on Label 1. A grad student's appointment is paid once per term.",
       },
     });
   });

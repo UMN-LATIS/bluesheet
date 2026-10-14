@@ -9,7 +9,12 @@ import type {
   TimeRange,
 } from "../types";
 import type { CostAssumptions } from "@/types";
-import type { RateOverrideEdit } from "../helpers/costOverrides";
+import type {
+  GradHoursEdit,
+  GradInputEdit,
+  GradPersonEdit,
+  RateOverrideEdit,
+} from "../helpers/costOverrides";
 import type { PersonNoteEdit } from "../helpers/personNotes";
 import type { UrlQuery } from "@/utils/urlQuery";
 import type { BudgetTab, ScheduleView } from "../helpers/viewQuery";
@@ -169,6 +174,12 @@ export interface EditorState {
   budgetTab: BudgetTab;
   /** Edits not yet saved, keyed by `rateOverrideKeyOf`. */
   rateOverrideEdits: Record<string, RateOverrideEdit>;
+  /** Edits not yet saved, keyed by `gradInputKeyOf`. */
+  gradInputEdits: Record<string, GradInputEdit>;
+  /** Edits not yet saved, keyed by `gradHoursKeyOf`. */
+  gradHoursEdits: Record<string, GradHoursEdit>;
+  /** Edits not yet saved, keyed by `gradPersonKeyOf`. */
+  gradPersonEdits: Record<string, GradPersonEdit>;
   /** Edits not yet saved, keyed by `personNoteKeyOf`. */
   personNoteEdits: Record<string, PersonNoteEdit>;
   /** Which tab the day list is on: a weekday, or the Async day past them. */
@@ -231,6 +242,12 @@ export type EditorEvent =
    * key stays.
    */
   | { type: "rateOverrideEditsPersisted"; key: string; saved: RateOverrideEdit }
+  | { type: "gradInputEdited"; edit: GradInputEdit }
+  | { type: "gradInputEditsPersisted"; key: string; saved: GradInputEdit }
+  | { type: "gradHoursEdited"; edit: GradHoursEdit }
+  | { type: "gradHoursEditsPersisted"; key: string; saved: GradHoursEdit }
+  | { type: "gradPersonEdited"; edit: GradPersonEdit }
+  | { type: "gradPersonEditsPersisted"; key: string; saved: GradPersonEdit }
   | { type: "personNoteEdited"; edit: PersonNoteEdit }
   /**
    * The server has this value now. A newer edit to the same

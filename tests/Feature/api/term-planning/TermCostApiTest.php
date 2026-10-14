@@ -1,10 +1,13 @@
 <?php
 
 use App\Constants\Permissions;
+use App\GradAppointmentLevel;
+use App\GradTermRate;
 use App\Group;
 use App\JobCode;
 use App\JobCodeTermRate;
 use App\Library\TermPlan\InstructorType;
+use App\Library\TermPlan\StudentStatus;
 use App\Membership;
 use App\SisAppointment;
 use App\SisClassInstructor;
@@ -12,6 +15,9 @@ use App\SisClassMeeting;
 use App\SisClassSection;
 use App\SisDepartment;
 use App\SisEmployee;
+use App\TermGradHoursOverride;
+use App\TermGradPerson;
+use App\TermGradRateOverride;
 use App\TermJobCodeRateOverride;
 use App\TermPersonNote;
 use App\TermPersonRateOverride;
@@ -58,6 +64,31 @@ function personRateOverrideUrl(Group $group, string $emplid): string {
 
 function personNoteUrl(Group $group, string $emplid): string {
     return "/api/term-planning/groups/{$group->id}/person-notes/{$emplid}?term=" . TERM_FALL_2026;
+}
+
+function gradRateOverrideUrl(Group $group): string {
+    return "/api/term-planning/groups/{$group->id}/cost-rate-overrides/grad?term=" . TERM_FALL_2026;
+}
+
+function gradHoursUrl(Group $group, string $appointmentPercent): string {
+    return "/api/term-planning/groups/{$group->id}/cost-rate-overrides/grad-hours/{$appointmentPercent}?term=" . TERM_FALL_2026;
+}
+
+function gradPersonUrl(Group $group, string $emplid): string {
+    return "/api/term-planning/groups/{$group->id}/grad-people/{$emplid}?term=" . TERM_FALL_2026;
+}
+
+function gradTermRateWithLevels(int $termCode = TERM_FALL_2026, array $levels = [25 => 196, 50 => 392]): GradTermRate {
+    $gradTermRate = GradTermRate::factory()->create(['term_code' => $termCode]);
+    foreach ($levels as $appointmentPercent => $hours) {
+        GradAppointmentLevel::factory()->create([
+            'grad_term_rate_id' => $gradTermRate->id,
+            'appointment_percent' => $appointmentPercent,
+            'hours' => $hours,
+        ]);
+    }
+
+    return $gradTermRate;
 }
 
 function enrollmentHistoryUrl(Group $group, int $term = TERM_FALL_2026): string {
@@ -138,6 +169,9 @@ describe('override authorization', function () {
         expect(patchJson(jobCodeRateOverrideUrl($this->group, 'TBA'), ['salary' => 1])->status())->toBe(403);
         expect(putJson(personRateOverrideUrl($this->group, '100000001'), ['salary' => 1])->status())->toBe(403);
         expect(putJson(personNoteUrl($this->group, '100000001'), ['notes' => 'x'])->status())->toBe(403);
+        expect(patchJson(gradRateOverrideUrl($this->group), ['hourlyRate' => 1])->status())->toBe(403);
+        expect(putJson(gradHoursUrl($this->group, '25'), ['hours' => 1])->status())->toBe(403);
+        expect(putJson(gradPersonUrl($this->group, '100000001'), ['appointmentPercent' => null, 'hasFeeOffset' => true, 'isInternational' => false])->status())->toBe(403);
     });
 
     it('lets a courses editor save every override', function () {
@@ -146,6 +180,7 @@ describe('override authorization', function () {
         expect(patchJson(jobCodeRateOverrideUrl($this->group, 'TBA'), ['salary' => 1])->status())->toBe(200);
         expect(putJson(personRateOverrideUrl($this->group, '100000001'), ['salary' => 1])->status())->toBe(200);
         expect(putJson(personNoteUrl($this->group, '100000001'), ['notes' => 'x'])->status())->toBe(200);
+        expect(patchJson(gradRateOverrideUrl($this->group), ['hourlyRate' => 1])->status())->toBe(200);
     });
 });
 
@@ -464,6 +499,223 @@ describe('person notes', function () {
     });
 });
 
+describe('grad rates in the payload', function () {
+    beforeEach(function () {
+        actingAs($this->groupManager);
+    });
+
+    it('reports a job code student status', function () {
+        JobCode::factory()->create(['code' => '9519', 'student_status' => StudentStatus::Abd]);
+
+        $rows = collect(getJson(costAssumptionsUrl($this->group))->json('jobCodes'))->keyBy('code');
+
+        expect($rows['9519']['studentStatus'])->toBe('abd');
+        expect($rows['TBA']['studentStatus'])->toBeNull();
+    });
+
+    it('reports no defaults and no levels for a term without grad rates', function () {
+        $res = getJson(costAssumptionsUrl($this->group));
+
+        expect($res->json('gradRates'))->toBe(['defaults' => null, 'levels' => []]);
+        expect($res->json('rateOverrides.grad'))->toBeNull();
+        expect($res->json('rateOverrides.gradHours'))->toBe([]);
+        expect($res->json('gradPeople'))->toBe([]);
+    });
+
+    it('reports the inputs and levels of exactly the requested term, levels ordered by percent', function () {
+        gradTermRateWithLevels(TERM_FALL_2026, [50 => 392, '12.5' => 98]);
+        gradTermRateWithLevels(1273, [25 => 194]);
+
+        $gradRates = getJson(costAssumptionsUrl($this->group))->json('gradRates');
+
+        expect($gradRates['defaults'])->toEqual([
+            'hourlyRate' => 29.95,
+            'healthRate' => 0.289,
+            'tuitionPerHourRegular' => 25.08,
+            'tuitionPerHourAbd' => 3.98,
+            'feeOffset' => 235.0,
+            'internationalOffset' => 280.0,
+            'perCreditPayment' => 250.0,
+        ]);
+        expect($gradRates['levels'])->toEqual([
+            ['appointmentPercent' => 12.5, 'hours' => 98],
+            ['appointmentPercent' => 50.0, 'hours' => 392],
+        ]);
+    });
+
+    it('lists the department-term grad overrides, hours overrides, and grad people, and none from another department', function () {
+        gradTermRateWithLevels();
+        patchJson(gradRateOverrideUrl($this->group), ['hourlyRate' => 31]);
+        putJson(gradHoursUrl($this->group, '25'), ['hours' => 200]);
+        putJson(gradPersonUrl($this->group, '100000001'), ['appointmentPercent' => 50, 'hasFeeOffset' => true, 'isInternational' => false]);
+        TermGradPerson::create(['academic_org' => COST_API_OTHER_DEPT, 'term_code' => TERM_FALL_2026, 'emplid' => 100000002, 'has_fee_offset' => true]);
+
+        $res = getJson(costAssumptionsUrl($this->group));
+
+        expect($res->json('rateOverrides.grad'))->toEqual([
+            'hourlyRate' => 31.0,
+            'healthRate' => null,
+            'tuitionPerHourRegular' => null,
+            'tuitionPerHourAbd' => null,
+            'feeOffset' => null,
+            'internationalOffset' => null,
+            'perCreditPayment' => null,
+        ]);
+        expect($res->json('rateOverrides.gradHours'))->toEqual([['appointmentPercent' => 25.0, 'hours' => 200]]);
+        expect($res->json('gradPeople'))->toEqual([
+            ['emplid' => 100000001, 'appointmentPercent' => 50.0, 'hasFeeOffset' => true, 'isInternational' => false],
+        ]);
+        expect(getJson(costAssumptionsUrl($this->group, 1273))->json('rateOverrides.grad'))->toBeNull();
+    });
+});
+
+describe('grad rate overrides', function () {
+    beforeEach(function () {
+        actingAs($this->groupManager);
+    });
+
+    it('saves a subset of inputs and responds with every input', function () {
+        $res = patchJson(gradRateOverrideUrl($this->group), ['hourlyRate' => 31.5, 'healthRate' => 0.3]);
+
+        expect($res->status())->toBe(200);
+        expect($res->json('hourlyRate'))->toBe(31.5);
+        expect($res->json('healthRate'))->toBe(0.3);
+        expect($res->json('feeOffset'))->toBeNull();
+        expect(TermGradRateOverride::count())->toBe(1);
+    });
+
+    it('leaves an input alone when its key is absent and clears it when null', function () {
+        patchJson(gradRateOverrideUrl($this->group), ['hourlyRate' => 31, 'feeOffset' => 200]);
+
+        $kept = patchJson(gradRateOverrideUrl($this->group), ['hourlyRate' => 32]);
+        $cleared = patchJson(gradRateOverrideUrl($this->group), ['feeOffset' => null]);
+
+        expect($kept->json('feeOffset'))->toEqual(200.0);
+        expect($cleared->json('hourlyRate'))->toEqual(32.0);
+        expect($cleared->json('feeOffset'))->toBeNull();
+        expect(TermGradRateOverride::count())->toBe(1);
+    });
+
+    it('deletes the row when every input ends up null', function () {
+        patchJson(gradRateOverrideUrl($this->group), ['hourlyRate' => 31]);
+
+        $res = patchJson(gradRateOverrideUrl($this->group), ['hourlyRate' => null]);
+
+        expect(array_filter($res->json(), fn($input) => $input !== null))->toBe([]);
+        expect(TermGradRateOverride::count())->toBe(0);
+    });
+
+    it('records the acting user as creator and updater', function () {
+        patchJson(gradRateOverrideUrl($this->group), ['hourlyRate' => 31]);
+
+        expect(TermGradRateOverride::first()->created_by)->toBe($this->groupManager->id);
+        expect(TermGradRateOverride::first()->updated_by)->toBe($this->groupManager->id);
+    });
+
+    it('rejects a body with no known key, a negative amount, and a health rate over 5', function () {
+        expect(patchJson(gradRateOverrideUrl($this->group), [])->status())->toBe(422);
+        expect(patchJson(gradRateOverrideUrl($this->group), ['unknown' => 1])->status())->toBe(422);
+        expect(patchJson(gradRateOverrideUrl($this->group), ['hourlyRate' => -1])->status())->toBe(422);
+        expect(patchJson(gradRateOverrideUrl($this->group), ['feeOffset' => 1.234])->status())->toBe(422);
+        expect(patchJson(gradRateOverrideUrl($this->group), ['healthRate' => 5.1])->status())->toBe(422);
+        expect(TermGradRateOverride::count())->toBe(0);
+    });
+});
+
+describe('grad hours overrides', function () {
+    beforeEach(function () {
+        actingAs($this->groupManager);
+        gradTermRateWithLevels();
+    });
+
+    it('saves the hours for a level of the term and lists them', function () {
+        $res = putJson(gradHoursUrl($this->group, '25'), ['hours' => 200]);
+
+        expect($res->json())->toEqual(['appointmentPercent' => 25.0, 'hours' => 200]);
+        expect(TermGradHoursOverride::count())->toBe(1);
+    });
+
+    it('updates the same row and deletes it when hours is null', function () {
+        putJson(gradHoursUrl($this->group, '25'), ['hours' => 200]);
+        putJson(gradHoursUrl($this->group, '25'), ['hours' => 210]);
+        expect(TermGradHoursOverride::count())->toBe(1);
+        expect(TermGradHoursOverride::first()->hours)->toBe(210);
+
+        $res = putJson(gradHoursUrl($this->group, '25'), ['hours' => null]);
+
+        expect($res->json())->toEqual(['appointmentPercent' => 25.0, 'hours' => null]);
+        expect(TermGradHoursOverride::count())->toBe(0);
+    });
+
+    it('returns 404 for a percent that is not a level of the term', function () {
+        expect(putJson(gradHoursUrl($this->group, '30'), ['hours' => 200])->status())->toBe(404);
+        expect(putJson(gradHoursUrl($this->group, 'abc'), ['hours' => 200])->status())->toBe(404);
+    });
+
+    it('returns 404 when the term has no grad rates', function () {
+        GradTermRate::query()->delete();
+
+        expect(putJson(gradHoursUrl($this->group, '25'), ['hours' => 200])->status())->toBe(404);
+    });
+
+    it('rejects fractional, negative, or over-2080 hours and a body that omits them', function () {
+        expect(putJson(gradHoursUrl($this->group, '25'), ['hours' => 1.5])->status())->toBe(422);
+        expect(putJson(gradHoursUrl($this->group, '25'), ['hours' => -1])->status())->toBe(422);
+        expect(putJson(gradHoursUrl($this->group, '25'), ['hours' => 2081])->status())->toBe(422);
+        expect(putJson(gradHoursUrl($this->group, '25'), [])->status())->toBe(422);
+    });
+});
+
+describe('grad people', function () {
+    beforeEach(function () {
+        actingAs($this->groupManager);
+        gradTermRateWithLevels();
+    });
+
+    it('saves an appointment and the two offset flags', function () {
+        $body = ['appointmentPercent' => 50, 'hasFeeOffset' => true, 'isInternational' => true];
+
+        $res = putJson(gradPersonUrl($this->group, '100000001'), $body);
+
+        expect($res->json())->toEqual(['emplid' => 100000001, 'appointmentPercent' => 50.0, 'hasFeeOffset' => true, 'isInternational' => true]);
+        expect(TermGradPerson::count())->toBe(1);
+        expect(TermGradPerson::first()->created_by)->toBe($this->groupManager->id);
+    });
+
+    it('keeps a row for a null appointment when a flag is set, and updates it in place', function () {
+        putJson(gradPersonUrl($this->group, '100000001'), ['appointmentPercent' => null, 'hasFeeOffset' => true, 'isInternational' => false]);
+        putJson(gradPersonUrl($this->group, '100000001'), ['appointmentPercent' => null, 'hasFeeOffset' => false, 'isInternational' => true]);
+
+        expect(TermGradPerson::count())->toBe(1);
+        expect(TermGradPerson::first()->is_international)->toBeTrue();
+        expect(TermGradPerson::first()->has_fee_offset)->toBeFalse();
+    });
+
+    it('deletes the row when the appointment is null and both flags are false', function () {
+        putJson(gradPersonUrl($this->group, '100000001'), ['appointmentPercent' => 25, 'hasFeeOffset' => false, 'isInternational' => false]);
+
+        putJson(gradPersonUrl($this->group, '100000001'), ['appointmentPercent' => null, 'hasFeeOffset' => false, 'isInternational' => false]);
+
+        expect(TermGradPerson::count())->toBe(0);
+    });
+
+    it('rejects an appointment that is not a level of the term, missing fields, and non-boolean flags', function () {
+        $valid = ['appointmentPercent' => 25, 'hasFeeOffset' => false, 'isInternational' => false];
+
+        expect(putJson(gradPersonUrl($this->group, '100000001'), [...$valid, 'appointmentPercent' => 30])->status())->toBe(422);
+        expect(putJson(gradPersonUrl($this->group, '100000001'), [...$valid, 'appointmentPercent' => 'abc'])->status())->toBe(422);
+        expect(putJson(gradPersonUrl($this->group, '100000001'), ['appointmentPercent' => 25, 'hasFeeOffset' => false])->status())->toBe(422);
+        expect(putJson(gradPersonUrl($this->group, '100000001'), [...$valid, 'isInternational' => 'maybe'])->status())->toBe(422);
+        expect(TermGradPerson::count())->toBe(0);
+    });
+
+    it('returns 404 for an emplid that is not a positive whole number', function () {
+        $body = ['appointmentPercent' => null, 'hasFeeOffset' => true, 'isInternational' => false];
+
+        expect(putJson(gradPersonUrl($this->group, 'abc'), $body)->status())->toBe(404);
+    });
+});
+
 describe('published terms', function () {
     beforeEach(function () {
         SisClassSection::factory()->create(['academic_org' => COST_API_DEPT, 'term_code' => TERM_FALL_2026]);
@@ -480,6 +732,15 @@ describe('published terms', function () {
 
     it('refuses a person note', function () {
         expect(putJson(personNoteUrl($this->group, '100000001'), ['notes' => 'x'])->status())->toBe(403);
+    });
+
+    it('refuses grad rate, grad hours, and grad person edits', function () {
+        gradTermRateWithLevels();
+
+        expect(patchJson(gradRateOverrideUrl($this->group), ['hourlyRate' => 31])->status())->toBe(403);
+        expect(putJson(gradHoursUrl($this->group, '25'), ['hours' => 200])->status())->toBe(403);
+        expect(putJson(gradPersonUrl($this->group, '100000001'), ['appointmentPercent' => 25, 'hasFeeOffset' => false, 'isInternational' => false])->status())->toBe(403);
+        expect(TermGradRateOverride::count() + TermGradHoursOverride::count() + TermGradPerson::count())->toBe(0);
     });
 });
 

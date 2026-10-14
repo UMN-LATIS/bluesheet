@@ -6,7 +6,13 @@ import {
 } from "./selectors";
 import { costAssumptions } from "../helpers/costAssumptions.fixture";
 import {
+  gradHoursKeyOf,
+  gradInputKeyOf,
+  gradPersonKeyOf,
   rateOverrideKeyOf,
+  type GradHoursEdit,
+  type GradInputEdit,
+  type GradPersonEdit,
   type RateOverrideEdit,
 } from "../helpers/costOverrides";
 import { personNoteKeyOf, type PersonNoteEdit } from "../helpers/personNotes";
@@ -2237,10 +2243,138 @@ describe("budget view", () => {
     expect(state.sectionEdits).toEqual({});
   });
 
-  it("drops unsaved rate overrides and person notes on moving to another department or term", () => {
+  const gradInputEdit = (value: number | null): GradInputEdit => ({
+    field: "hourlyRate",
+    value,
+  });
+  const gradHoursEdit = (hours: number | null): GradHoursEdit => ({
+    appointmentPercent: 37.5,
+    hours,
+  });
+  const gradPersonEdit = (isInternational: boolean): GradPersonEdit => ({
+    emplid: 10,
+    appointmentPercent: null,
+    hasFeeOffset: false,
+    isInternational,
+  });
+
+  const gradEditKinds: {
+    name: string;
+    overlay: "gradInputEdits" | "gradHoursEdits" | "gradPersonEdits";
+    key: string;
+    edited: (version: number) => EditorEvent;
+    persisted: (version: number) => EditorEvent;
+    version: (version: number) => unknown;
+  }[] = [
+    {
+      name: "grad input",
+      overlay: "gradInputEdits",
+      key: gradInputKeyOf("hourlyRate"),
+      edited: (version) => ({
+        type: "gradInputEdited",
+        edit: gradInputEdit(version),
+      }),
+      persisted: (version) => ({
+        type: "gradInputEditsPersisted",
+        key: gradInputKeyOf("hourlyRate"),
+        saved: gradInputEdit(version),
+      }),
+      version: gradInputEdit,
+    },
+    {
+      name: "grad hours",
+      overlay: "gradHoursEdits",
+      key: gradHoursKeyOf(37.5),
+      edited: (version) => ({
+        type: "gradHoursEdited",
+        edit: gradHoursEdit(version),
+      }),
+      persisted: (version) => ({
+        type: "gradHoursEditsPersisted",
+        key: gradHoursKeyOf(37.5),
+        saved: gradHoursEdit(version),
+      }),
+      version: gradHoursEdit,
+    },
+    {
+      name: "grad person",
+      overlay: "gradPersonEdits",
+      key: gradPersonKeyOf(10),
+      edited: (version) => ({
+        type: "gradPersonEdited",
+        edit: gradPersonEdit(version === 1),
+      }),
+      persisted: (version) => ({
+        type: "gradPersonEditsPersisted",
+        key: gradPersonKeyOf(10),
+        saved: gradPersonEdit(version === 1),
+      }),
+      version: (version) => gradPersonEdit(version === 1),
+    },
+  ];
+
+  describe.each(gradEditKinds)("a $name edit", (kind) => {
+    it("is ignored before the cost assumptions load", () => {
+      expect(after([kind.edited(1)])[kind.overlay]).toEqual({});
+    });
+
+    it("is ignored from someone who cannot edit costs", () => {
+      const viewOnly = {
+        ...emptyContext,
+        costAssumptions: costAssumptions({ canEdit: false }),
+      };
+
+      expect(
+        after([kind.edited(1)], initialState(), viewOnly)[kind.overlay],
+      ).toEqual({});
+    });
+
+    it("is refused on a published term", () => {
+      const state = after([kind.edited(1)], initialState(), {
+        ...editable,
+        isReadOnly: true,
+      });
+
+      expect(state[kind.overlay]).toEqual({});
+    });
+
+    it("is recorded from someone who can edit costs", () => {
+      const state = after([kind.edited(1)], initialState(), editable);
+
+      expect(state[kind.overlay]).toEqual({ [kind.key]: kind.version(1) });
+    });
+
+    it("drops once saved, but a newer edit made while the save was in flight stays", () => {
+      const edited = after([kind.edited(1)], initialState(), editable);
+      const persisted = after([kind.persisted(1)], edited, editable);
+      const newer = after(
+        [kind.edited(0), kind.persisted(1)],
+        edited,
+        editable,
+      );
+
+      expect(persisted[kind.overlay]).toEqual({});
+      expect(newer[kind.overlay]).toEqual({ [kind.key]: kind.version(0) });
+    });
+
+    it("drops the saved edit even after the term locked mid-save", () => {
+      const edited = after([kind.edited(1)], initialState(), editable);
+      const persisted = after([kind.persisted(1)], edited, {
+        ...editable,
+        isReadOnly: true,
+      });
+
+      expect(persisted[kind.overlay]).toEqual({});
+    });
+  });
+
+  it("drops unsaved cost edits and person notes on moving to another department or term", () => {
     const edited = after(
       [
         { type: "rateOverrideEdited", edit: rateEdit(1) },
+        { type: "gradInputEdited", edit: gradInputEdit(1) },
+        { type: "gradHoursEdited", edit: gradHoursEdit(1) },
+        { type: "gradPersonEdited", edit: gradPersonEdit(true) },
         { type: "personNoteEdited", edit: noteEdit("a") },
       ],
       initialState(),
@@ -2249,6 +2383,9 @@ describe("budget view", () => {
     const moved = after([{ type: "contextChanged" }], edited, editable);
 
     expect(moved.rateOverrideEdits).toEqual({});
+    expect(moved.gradInputEdits).toEqual({});
+    expect(moved.gradHoursEdits).toEqual({});
+    expect(moved.gradPersonEdits).toEqual({});
     expect(moved.personNoteEdits).toEqual({});
   });
 

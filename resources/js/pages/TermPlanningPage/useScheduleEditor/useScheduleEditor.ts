@@ -91,6 +91,9 @@ export function useScheduleEditor(
         !context.value.isReadOnly,
     ),
     pendingRateOverrideEdits: computed(() => state.value.rateOverrideEdits),
+    pendingGradInputEdits: computed(() => state.value.gradInputEdits),
+    pendingGradHoursEdits: computed(() => state.value.gradHoursEdits),
+    pendingGradPersonEdits: computed(() => state.value.gradPersonEdits),
     /** Null until the cost assumptions have loaded. */
     personNotes: computed(() => selectPersonNotes(context.value, state.value)),
     pendingPersonNoteEdits: computed(() => state.value.personNoteEdits),

@@ -243,6 +243,8 @@
           :budget="selectedPerson.budget"
           :salaryLabel="selectedPerson.salaryLabel"
           :canEditSalary="selectedPerson.canEditSalary"
+          :canEdit="schedule.canEditCosts"
+          :appointmentLevels="appointmentLevels"
           :isReadOnly="schedule.isReadOnly"
           :termSections="selectedPerson.termSections"
           :taughtTerms="selectedPerson.taughtTerms"
@@ -252,6 +254,10 @@
               schedule.dispatch({ type: 'selectedSection', sectionId })
           "
           @editSalary="editSelectedPersonSalary"
+          @editNotes="editSelectedPersonNotes"
+          @editGradPerson="
+            (edit) => schedule.dispatch({ type: 'gradPersonEdited', edit })
+          "
         />
         <LeavePanel
           v-else-if="selectedLeave"
@@ -556,10 +562,13 @@ const { createSection, saveSection, deleteSection } = useTermPlanMutations(
   activeTermCode,
 );
 
-const { saveRateOverride, savePersonNoteEdit } = useCostMutations(
-  groupId,
-  activeTermCode,
-);
+const {
+  saveRateOverride,
+  saveGradInputEdit,
+  saveGradHoursEdit,
+  saveGradPersonEdit,
+  savePersonNoteEdit,
+} = useCostMutations(groupId, activeTermCode);
 
 const enrollmentHistoryQuery = useEnrollmentHistoryQuery(
   groupId,
@@ -687,6 +696,9 @@ const hasUnsavedWork = computed(
     schedule.newSectionHasCourse ||
     Object.keys(schedule.pendingEdits).length > 0 ||
     Object.keys(schedule.pendingRateOverrideEdits).length > 0 ||
+    Object.keys(schedule.pendingGradInputEdits).length > 0 ||
+    Object.keys(schedule.pendingGradHoursEdits).length > 0 ||
+    Object.keys(schedule.pendingGradPersonEdits).length > 0 ||
     Object.keys(schedule.pendingPersonNoteEdits).length > 0 ||
     localSections.value.some((section) => schedule.isDraftDirty(section)),
 );
@@ -741,6 +753,30 @@ useCostEditsAutosave({
   save: (_key, edit) => saveRateOverride.mutateAsync(edit),
   onSaved: (key, saved) =>
     schedule.dispatch({ type: "rateOverrideEditsPersisted", key, saved }),
+  onRefused: showRefusal,
+});
+
+useCostEditsAutosave({
+  pendingEdits: computed(() => schedule.pendingGradInputEdits),
+  save: (_key, edit) => saveGradInputEdit.mutateAsync(edit),
+  onSaved: (key, saved) =>
+    schedule.dispatch({ type: "gradInputEditsPersisted", key, saved }),
+  onRefused: showRefusal,
+});
+
+useCostEditsAutosave({
+  pendingEdits: computed(() => schedule.pendingGradHoursEdits),
+  save: (_key, edit) => saveGradHoursEdit.mutateAsync(edit),
+  onSaved: (key, saved) =>
+    schedule.dispatch({ type: "gradHoursEditsPersisted", key, saved }),
+  onRefused: showRefusal,
+});
+
+useCostEditsAutosave({
+  pendingEdits: computed(() => schedule.pendingGradPersonEdits),
+  save: (_key, edit) => saveGradPersonEdit.mutateAsync(edit),
+  onSaved: (key, saved) =>
+    schedule.dispatch({ type: "gradPersonEditsPersisted", key, saved }),
   onRefused: showRefusal,
 });
 
@@ -849,16 +885,20 @@ const selectedPersonBudget = computed(() => {
   if (instructor) {
     return {
       row: instructor,
-      salaryLabel: "Salary per section",
-      canEditSalary: schedule.canEditCosts,
+      salaryLabel: instructor.isSalaryReadOnly ? "Pay" : "Salary per section",
+      canEditSalary: schedule.canEditCosts && !instructor.isSalaryReadOnly,
     };
   }
 
   const ta = tas.find(isEmplid);
-  return ta
-    ? { row: ta, salaryLabel: "Salary per course", canEditSalary: false }
-    : null;
+  return ta ? { row: ta, salaryLabel: "Pay", canEditSalary: false } : null;
 });
+
+const appointmentLevels = computed(() =>
+  (costAssumptionsQuery.data.value?.gradRates.levels ?? [])
+    .map(({ appointmentPercent }) => appointmentPercent)
+    .sort((a, b) => a - b),
+);
 
 const selectedPerson = computed(() => {
   const emplid = schedule.selectedEmplid;
@@ -908,6 +948,13 @@ function editSelectedPersonSalary(amount: number | null) {
     type: "rateOverrideEdited",
     edit: { rate: { kind: "person", emplid }, amount },
   });
+}
+
+function editSelectedPersonNotes(notes: string) {
+  const emplid = schedule.selectedEmplid;
+  if (emplid === null) return;
+
+  schedule.dispatch({ type: "personNoteEdited", edit: { emplid, notes } });
 }
 
 const leaveTimelineQuery = useTermLeaveTimelineQuery(

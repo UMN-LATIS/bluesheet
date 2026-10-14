@@ -31,7 +31,12 @@ import {
   encodeDayIndex,
   VIEW_KEYS,
 } from "../helpers/viewQuery";
-import { rateOverrideKeyOf } from "../helpers/costOverrides";
+import {
+  gradHoursKeyOf,
+  gradInputKeyOf,
+  gradPersonKeyOf,
+  rateOverrideKeyOf,
+} from "../helpers/costOverrides";
 import { personNoteKeyOf } from "../helpers/personNotes";
 import { ASYNC_DAY_INDEX } from "../helpers/scheduleDays";
 import {
@@ -103,6 +108,9 @@ export const initialState = (dayIndex = 0): EditorState => ({
   view: DEFAULT_VIEW,
   budgetTab: DEFAULT_BUDGET_TAB,
   rateOverrideEdits: {},
+  gradInputEdits: {},
+  gradHoursEdits: {},
+  gradPersonEdits: {},
   personNoteEdits: {},
   dayIndex,
   lastImport: null,
@@ -193,6 +201,9 @@ const READING_EVENTS: EditorEvent["type"][] = [
   "budgetTabSelected",
   // a term that locked mid-save still has to drop what was saved
   "rateOverrideEditsPersisted",
+  "gradInputEditsPersisted",
+  "gradHoursEditsPersisted",
+  "gradPersonEditsPersisted",
   "personNoteEditsPersisted",
   "daySelected",
   "filterPanelOverridden",
@@ -590,6 +601,63 @@ function reduce(
           }
         : state;
 
+    case "gradInputEdited":
+      if (context.costAssumptions?.canEdit !== true) return state;
+
+      return {
+        ...state,
+        gradInputEdits: {
+          ...state.gradInputEdits,
+          [gradInputKeyOf(event.edit.field)]: event.edit,
+        },
+      };
+
+    case "gradInputEditsPersisted":
+      return isEqual(state.gradInputEdits[event.key], event.saved)
+        ? {
+            ...state,
+            gradInputEdits: omitStringKey(state.gradInputEdits, event.key),
+          }
+        : state;
+
+    case "gradHoursEdited":
+      if (context.costAssumptions?.canEdit !== true) return state;
+
+      return {
+        ...state,
+        gradHoursEdits: {
+          ...state.gradHoursEdits,
+          [gradHoursKeyOf(event.edit.appointmentPercent)]: event.edit,
+        },
+      };
+
+    case "gradHoursEditsPersisted":
+      return isEqual(state.gradHoursEdits[event.key], event.saved)
+        ? {
+            ...state,
+            gradHoursEdits: omitStringKey(state.gradHoursEdits, event.key),
+          }
+        : state;
+
+    case "gradPersonEdited":
+      if (context.costAssumptions?.canEdit !== true) return state;
+
+      return {
+        ...state,
+        gradPersonEdits: {
+          ...state.gradPersonEdits,
+          [gradPersonKeyOf(event.edit.emplid)]: event.edit,
+        },
+      };
+
+    case "gradPersonEditsPersisted":
+      return isEqual(state.gradPersonEdits[event.key], event.saved)
+        ? {
+            ...state,
+            gradPersonEdits: omitStringKey(state.gradPersonEdits, event.key),
+          }
+        : state;
+
     case "personNoteEdited":
       if (context.costAssumptions?.canEdit !== true) return state;
 
@@ -667,6 +735,9 @@ function reduce(
         sectionEdits: {},
         drafts: {},
         rateOverrideEdits: {},
+        gradInputEdits: {},
+        gradHoursEdits: {},
+        gradPersonEdits: {},
         personNoteEdits: {},
         selection: null,
         lastPlacedId: null,

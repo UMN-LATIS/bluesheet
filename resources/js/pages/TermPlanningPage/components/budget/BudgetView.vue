@@ -38,33 +38,27 @@
           "
         />
 
-        <PeopleTable
+        <InstructorsTable
           v-else-if="schedule.budgetTab === 'instructors'"
           :rows="peopleTables.instructors"
-          label="Instructors and estimated costs"
-          peopleNoun="instructors"
-          paidUnit="section"
           :canEdit="schedule.canEditCosts"
-          :isReadOnly="schedule.isReadOnly"
           @selectSection="selectSection"
           @selectPerson="selectPerson"
           @selectLeave="selectLeave"
           @editSalary="editPersonSalary"
-          @editNotes="editPersonNotes"
         />
 
-        <PeopleTable
+        <TasTable
           v-else-if="schedule.budgetTab === 'tas'"
           :rows="peopleTables.tas"
-          label="TAs and estimated costs"
-          peopleNoun="TAs"
-          paidUnit="course"
+          :appointmentLevels="appointmentLevels"
           :canEdit="schedule.canEditCosts"
-          :isReadOnly="schedule.isReadOnly"
           @selectSection="selectSection"
           @selectPerson="selectPerson"
           @selectLeave="selectLeave"
-          @editNotes="editPersonNotes"
+          @editGradPerson="
+            (edit) => schedule.dispatch({ type: 'gradPersonEdited', edit })
+          "
         />
 
         <RatesTab
@@ -87,8 +81,11 @@
           :rateOverrides="schedule.rateOverrides"
           :canEdit="schedule.canEditCosts"
           :termName="termName"
-          @editRate="
-            (edit) => schedule.dispatch({ type: 'rateOverrideEdited', edit })
+          @editInput="
+            (edit) => schedule.dispatch({ type: 'gradInputEdited', edit })
+          "
+          @editHours="
+            (edit) => schedule.dispatch({ type: 'gradHoursEdited', edit })
           "
         />
       </div>
@@ -112,9 +109,10 @@ import type {
 import BudgetHeader from "./BudgetHeader.vue";
 import BudgetTabBar from "./BudgetTabBar.vue";
 import GradRatesTab from "./GradRatesTab.vue";
-import PeopleTable from "./PeopleTable.vue";
+import InstructorsTable from "./InstructorsTable.vue";
 import RatesTab from "./RatesTab.vue";
 import SectionsTable from "./SectionsTable.vue";
+import TasTable from "./TasTable.vue";
 import { budgetRowOf } from "../../helpers/budgetRows";
 import {
   enrollmentSeriesBySection,
@@ -185,11 +183,11 @@ const editPersonSalary = (emplid: number, amount: number | null) =>
     edit: { rate: { kind: "person", emplid }, amount },
   });
 
-const editPersonNotes = (emplid: number, notes: string) =>
-  props.schedule.dispatch({
-    type: "personNoteEdited",
-    edit: { emplid, notes },
-  });
+const appointmentLevels = computed(() =>
+  (props.assumptions?.gradRates.levels ?? [])
+    .map(({ appointmentPercent }) => appointmentPercent)
+    .sort((a, b) => a - b),
+);
 
 const selectLeave = (leaveId: number) =>
   props.schedule.dispatch({ type: "selectedLeave", leaveId });

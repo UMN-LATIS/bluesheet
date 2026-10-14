@@ -69,9 +69,58 @@
           <div
             class="tw-flex tw-flex-col tw-text-xs tw-text-on-surface-variant"
           >
-            <span>Job code salary: {{ jobCodeSalaryLabel }}</span>
+            <span v-if="budget.appointmentPercent === null">
+              Job code salary: {{ jobCodeSalaryLabel }}
+            </span>
+            <span v-else-if="budget.salaryHint">{{ budget.salaryHint }}</span>
             <span>Fringe: {{ fringeLabel }}</span>
           </div>
+        </div>
+      </div>
+
+      <div
+        v-if="
+          budget && budget.emplid !== null && budget.appointmentPercent !== null
+        "
+        class="tw-flex-none"
+      >
+        <FieldLabel class="tw-mb-1.5">Grad appointment</FieldLabel>
+        <div
+          class="tw-flex tw-flex-col tw-gap-2.5 tw-rounded-[10px] tw-bg-surface tw-p-3 tw-text-[13px]"
+        >
+          <div class="tw-flex tw-items-center tw-justify-between tw-gap-3">
+            <span>Appointment</span>
+            <AppointmentSelect
+              class="tw-h-9 tw-w-24 tw-flex-none tw-overflow-hidden tw-rounded-[10px] tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright"
+              :appointmentPercent="budget.appointmentPercent"
+              :levels="appointmentLevels"
+              :isOverridden="budget.isAppointmentOverridden"
+              :canEdit="canEdit"
+              :label="`Appointment for ${name}`"
+              @change="(percent) => editGrad({ appointmentPercent: percent })"
+            />
+          </div>
+          <label
+            class="tw-flex tw-items-center tw-justify-between tw-gap-3"
+            :title="budget.isAbd ? FEE_OFFSET_ABD_REASON : undefined"
+          >
+            <span>Student fee offset</span>
+            <GradCheckbox
+              :isChecked="budget.hasFeeOffset && !budget.isAbd"
+              :canEdit="canEdit && !budget.isAbd"
+              :label="`Student fee offset for ${name}`"
+              @change="(isChecked) => editGrad({ hasFeeOffset: isChecked })"
+            />
+          </label>
+          <label class="tw-flex tw-items-center tw-justify-between tw-gap-3">
+            <span>International GA offset</span>
+            <GradCheckbox
+              :isChecked="budget.isInternational"
+              :canEdit="canEdit"
+              :label="`International GA offset for ${name}`"
+              @change="(isChecked) => editGrad({ isInternational: isChecked })"
+            />
+          </label>
         </div>
       </div>
 
@@ -136,6 +185,20 @@
         </div>
       </div>
 
+      <div v-if="budget && budget.emplid !== null" class="tw-flex-none">
+        <FieldLabel for="person-notes" class="tw-mb-1.5">Notes</FieldLabel>
+        <textarea
+          id="person-notes"
+          :value="budget.notes"
+          :disabled="!canEdit"
+          rows="3"
+          class="tw-box-border tw-w-full tw-resize-y tw-rounded-[10px] tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-p-2.5 tw-text-[13px] tw-text-on-surface disabled:tw-cursor-default"
+          @input="
+            emit('editNotes', ($event.target as HTMLTextAreaElement).value)
+          "
+        />
+      </div>
+
       <div class="tw-flex-none tw-rounded-[10px] tw-bg-surface">
         <Disclosure label="Teaching history" :summary="historySummary">
           <p
@@ -196,10 +259,13 @@ import FieldLabel from "@/components/planning/FieldLabel.vue";
 import Disclosure from "./Disclosure.vue";
 import EnrollmentTile from "./EnrollmentTile.vue";
 import SectionChip from "./SectionChip.vue";
+import AppointmentSelect from "./budget/AppointmentSelect.vue";
 import EditableCell from "./budget/EditableCell.vue";
+import GradCheckbox from "./budget/GradCheckbox.vue";
 import MissingRate from "./budget/MissingRate.vue";
+import type { GradPerson } from "@/types";
 import { formatDollars, formatWholeDollars } from "../helpers/money";
-import type { PersonRow } from "../helpers/peopleRows";
+import { gradPersonEditOf, type PersonRow } from "../helpers/peopleRows";
 import type { PersonTermSection, TaughtTerm } from "../helpers/personPanel";
 
 const props = defineProps<{
@@ -209,6 +275,10 @@ const props = defineProps<{
   budget: PersonRow | null;
   salaryLabel: string;
   canEditSalary: boolean;
+  /** Whether notes and a grad student's settings take edits. */
+  canEdit: boolean;
+  /** The term's appointment percents. */
+  appointmentLevels: number[];
   isReadOnly: boolean;
   termSections: PersonTermSection[];
   /** Null while loading. */
@@ -219,7 +289,19 @@ const emit = defineEmits<{
   close: [];
   selectSection: [sectionId: number];
   editSalary: [amount: number | null];
+  editNotes: [notes: string];
+  editGradPerson: [edit: GradPerson];
 }>();
+
+const FEE_OFFSET_ABD_REASON =
+  "ABD job codes are ineligible for the student fee offset";
+
+function editGrad(change: Partial<Omit<GradPerson, "emplid">>) {
+  if (props.budget === null) return;
+
+  const edit = gradPersonEditOf(props.budget, change);
+  if (edit !== null) emit("editGradPerson", edit);
+}
 
 const jobCodeSalaryLabel = computed(() => {
   const amount = props.budget?.salaryWithoutOverride ?? null;

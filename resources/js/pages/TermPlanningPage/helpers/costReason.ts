@@ -5,6 +5,7 @@ const CHARGED_ELSEWHERE_RULES: Record<ChargedElsewhereReason, string> = {
   sameMeetingTime:
     "It meets at the same time, and a person is paid once per meeting time.",
   taOncePerCourse: "A TA is paid once per course.",
+  gradAppointment: "A grad student's appointment is paid once per term.",
 };
 
 type ChargedElsewhere = Extract<CostBasis, { kind: "chargedOnOtherSection" }>;

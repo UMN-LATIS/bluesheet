@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
 import type { JobCodeRate } from "@/types";
-import { jobCodeRate, rateOverrides } from "./costAssumptions.fixture";
+import {
+  gradJobCodeRate,
+  jobCodeRate,
+  rateOverrides,
+} from "./costAssumptions.fixture";
 import {
   costOfRate,
   instructorRateOf,
   isFreeComponent,
+  isGradJobCodeRate,
   jobCodeRateOf,
   pricingOf,
   taRateOf,
@@ -197,5 +202,20 @@ describe("isFreeComponent", () => {
     expect(isFreeComponent("IND")).toBe(true);
     expect(isFreeComponent("FWK")).toBe(true);
     expect(isFreeComponent("LEC")).toBe(false);
+  });
+});
+
+describe("isGradJobCodeRate", () => {
+  it("is true for teaching assistant and grad instructor codes only", () => {
+    expect(
+      isGradJobCodeRate(gradJobCodeRate("9519", "teaching_assistant", "abd")),
+    ).toBe(true);
+    expect(
+      isGradJobCodeRate(
+        gradJobCodeRate("9515", "graduate_instructor", "regular"),
+      ),
+    ).toBe(true);
+    expect(isGradJobCodeRate(jobCodeRate("9753", 10000))).toBe(false);
+    expect(isGradJobCodeRate(null)).toBe(false);
   });
 });

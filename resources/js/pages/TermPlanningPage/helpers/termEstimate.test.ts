@@ -4,8 +4,13 @@ import type { PlannedSection, SisSectionMeeting } from "../types";
 import {
   costAssumptions,
   costPerson,
+  FALL_GRAD_INPUTS,
+  FALL_GRAD_LEVELS,
+  gradJobCodeRate,
+  gradRates,
   jobCodeRate,
   rateOverrides,
+  roundGradRates,
   sisInstructor,
 } from "./costAssumptions.fixture";
 import type { RateOverrides } from "./costOverrides";
@@ -24,11 +29,12 @@ const people: CostPerson[] = [
 ];
 
 const assumptions = costAssumptions({
+  gradRates: roundGradRates(),
   jobCodes: [
     jobCodeRate("A", 4000),
     jobCodeRate("B", 6000),
     jobCodeRate("R", 0, { instructorType: "recurring_budget_faculty" }),
-    jobCodeRate("TA", 9000, { instructorType: "teaching_assistant" }),
+    gradJobCodeRate("TA", "teaching_assistant", "regular"),
     jobCodeRate("TBA", 5000, { instructorType: null }),
   ],
   people,
@@ -165,11 +171,11 @@ describe("estimateTermCost", () => {
     expect(costs.get(1)?.lines[0].basis).toEqual({
       kind: "chargedOnOtherSection",
       sectionId: 2,
-      reason: "taOncePerCourse",
+      reason: "gradAppointment",
     });
   });
 
-  it("charges the same TA once per course", () => {
+  it("charges the same grad TA once for the term, across courses", () => {
     const ta = sisInstructor(10, "TA");
     const costs = estimate([
       section(1, { courseCode: "ANTH-1001", instructors: [ta] }),
@@ -177,7 +183,12 @@ describe("estimateTermCost", () => {
     ]);
 
     expect(costs.get(1)?.taCost).toBe(9000);
-    expect(costs.get(2)?.taCost).toBe(9000);
+    expect(costs.get(2)?.taCost).toBe(0);
+    expect(costs.get(2)?.lines[0].basis).toEqual({
+      kind: "chargedOnOtherSection",
+      sectionId: 1,
+      reason: "gradAppointment",
+    });
   });
 
   it("gives a cancelled section no lines and a total of zero", () => {
@@ -253,7 +264,7 @@ describe("estimateTermCost", () => {
     expect(costs.get(1)?.total).toBe(0);
   });
 
-  it("leaves the amount null and out of the totals when the TA rate is missing", () => {
+  it("leaves the amount null and out of the totals when the term has no grad inputs", () => {
     const costs = estimate(
       [
         section(1, {
@@ -261,14 +272,7 @@ describe("estimateTermCost", () => {
         }),
       ],
       {},
-      {
-        ...assumptions,
-        jobCodes: assumptions.jobCodes.map((rate) =>
-          rate.code === "TA"
-            ? { ...rate, salary: null, fringeRate: null }
-            : rate,
-        ),
-      },
+      { ...assumptions, gradRates: gradRates({ defaults: null }) },
     );
 
     const taLine = costs.get(1)?.lines[1];
@@ -402,19 +406,17 @@ describe("estimateTermCost with overrides", () => {
     expect(costs.get(2)?.lines[0].amount).toBe(0);
   });
 
-  it("costs a TA holding a grad job code at the seeded Fall 2026 rates", () => {
-    const gradRates = {
+  it("costs a TA holding a grad job code from the Grad Student Calculator", () => {
+    const fallAssumptions = {
       ...assumptions,
+      gradRates: gradRates({
+        defaults: FALL_GRAD_INPUTS,
+        levels: FALL_GRAD_LEVELS,
+      }),
       jobCodes: [
         ...assumptions.jobCodes,
-        jobCodeRate("9511", 5870.2, {
-          instructorType: "teaching_assistant",
-          fringeRate: 1.1264,
-        }),
-        jobCodeRate("9519", 5870.2, {
-          instructorType: "teaching_assistant",
-          fringeRate: 0.4219,
-        }),
+        gradJobCodeRate("9511", "teaching_assistant", "regular"),
+        gradJobCodeRate("9519", "teaching_assistant", "abd"),
       ],
       people: [...people, costPerson(12, ["9511"]), costPerson(13, ["9519"])],
     };
@@ -425,45 +427,156 @@ describe("estimateTermCost with overrides", () => {
         }),
       ],
       {},
-      gradRates,
+      fallAssumptions,
     );
-    const [regular, phdCandidate] = costs.get(1)?.lines ?? [];
+    const [regular, abd] = costs.get(1)?.lines ?? [];
 
-    expect(regular.amount).toBeCloseTo(12482, 0);
-    expect(phdCandidate.amount).toBeCloseTo(8347, 0);
-    expect(Math.round(regular.amount ?? 0)).toBe(12482);
-    expect(Math.round(phdCandidate.amount ?? 0)).toBe(8347);
+    expect(regular.amount).toBeCloseTo(12482.37, 2);
+    expect(regular.salary).toBeCloseTo(5870.2, 2);
+    expect(regular.fringe).toBeCloseTo(1696.49 + 4915.68, 2);
+    expect(abd.amount).toBeCloseTo(8346.77, 2);
   });
 
-  it.each([
-    { courseCount: 1, total: 9000 },
-    { courseCount: 2, total: 18000 },
-    { courseCount: 4, total: 36000 },
-  ])(
-    "charges a TA on $courseCount courses once per course",
-    ({ courseCount, total }) => {
-      const ta = sisInstructor(10, "TA");
-      const sectionsOfEachCourse = Array.from(
-        { length: courseCount },
-        (_, index) => [
-          section(index * 2 + 1, {
-            courseCode: `ANTH-${index}`,
-            section: "001",
-            instructors: [ta],
-          }),
-          section(index * 2 + 2, {
-            courseCode: `ANTH-${index}`,
-            section: "002",
-            instructors: [ta],
-          }),
-        ],
-      ).flat();
+  it("costs a TA at the appointment, offsets and hours the department chose", () => {
+    const costs = estimate(
+      [section(1, { instructors: [sisInstructor(10, "TA")] })],
+      {
+        rates: rateOverrides({
+          gradHoursByPercent: new Map([[25, 1000]]),
+          gradInputs: { feeOffset: 200 },
+          gradPeopleByEmplid: new Map([
+            [
+              10,
+              {
+                emplid: 10,
+                appointmentPercent: null,
+                hasFeeOffset: true,
+                isInternational: false,
+              },
+            ],
+          ]),
+        }),
+      },
+    );
 
-      const costs = estimate(sectionsOfEachCourse);
+    expect(costs.get(1)?.lines[0]).toMatchObject({
+      salary: 10_100,
+      amount: 10_100,
+      gradAppointment: { cost: { hours: 1000, feeOffset: 100 } },
+    });
+  });
 
-      expect(totalsOf([...costs.values()]).taCost).toBe(total);
-    },
-  );
+  it("has no cost for an appointment level the term has no hours for", () => {
+    const costs = estimate(
+      [section(1, { instructors: [sisInstructor(10, "TA")] })],
+      {
+        rates: rateOverrides({
+          gradPeopleByEmplid: new Map([
+            [
+              10,
+              {
+                emplid: 10,
+                appointmentPercent: 37.5,
+                hasFeeOffset: false,
+                isInternational: false,
+              },
+            ],
+          ]),
+        }),
+      },
+    );
+
+    expect(costs.get(1)?.lines[0]).toMatchObject({ role: "ta", amount: null });
+  });
+
+  it("pays a grad instructor per credit across their paid sections, and charges once", () => {
+    const gradInstructorAssumptions = {
+      ...assumptions,
+      jobCodes: [
+        ...assumptions.jobCodes,
+        gradJobCodeRate("9517", "graduate_instructor", "abd"),
+      ],
+      people: [...people, costPerson(14, ["9517"])],
+    };
+    const instructor = sisInstructor(14, "PI");
+    const costs = estimate(
+      [
+        section(1, {
+          courseCode: "ANTH-1001",
+          credits: 3,
+          instructors: [instructor],
+        }),
+        section(2, {
+          courseCode: "ANTH-2001",
+          credits: null,
+          instructors: [instructor],
+        }),
+        section(3, {
+          courseCode: "ANTH-3001",
+          credits: 4,
+          instructors: [instructor],
+        }),
+      ],
+      {},
+      gradInstructorAssumptions,
+    );
+
+    expect(costs.get(1)?.lines[0]).toMatchObject({
+      role: "instructor",
+      salary: 9000 + 7 * 100,
+      gradAppointment: { student: { creditsTaught: 7, isAbd: true } },
+    });
+    expect(costs.get(1)?.instructorCost).toBe(9700);
+    expect(costs.get(2)?.total).toBe(0);
+    expect(costs.get(3)?.total).toBe(0);
+  });
+
+  it("does not count a lab paid on its lecture toward a grad instructor's credits", () => {
+    const gradInstructorAssumptions = {
+      ...assumptions,
+      jobCodes: [
+        ...assumptions.jobCodes,
+        gradJobCodeRate("9517", "graduate_instructor", "abd"),
+      ],
+      people: [...people, costPerson(14, ["9517"])],
+    };
+    const instructor = sisInstructor(14, "PI");
+    const costs = estimate(
+      [
+        section(1, {
+          section: "001",
+          component: "LEC",
+          credits: 3,
+          instructors: [instructor],
+        }),
+        section(2, {
+          section: "002",
+          component: "LAB",
+          credits: 1,
+          instructors: [instructor],
+        }),
+      ],
+      {},
+      gradInstructorAssumptions,
+    );
+
+    expect(costs.get(1)?.lines[0].gradAppointment?.student.creditsTaught).toBe(
+      3,
+    );
+    expect(costs.get(2)?.lines[0].basis.kind).toBe("paidOnLecture");
+  });
+
+  it("charges a grad student once even when they teach and assist", () => {
+    const ta = sisInstructor(10, "TA");
+    const costs = estimate([
+      section(1, { section: "001", component: "DIS", instructors: [ta] }),
+      section(2, { section: "002", component: "LEC", instructors: [ta] }),
+    ]);
+
+    expect(totalsOf([...costs.values()]).taCost).toBe(9000);
+    expect(costs.get(2)?.lines[0].gradAppointment).toBeDefined();
+    expect(costs.get(1)?.lines[0].gradAppointment).toBeUndefined();
+  });
 });
 
 describe("estimateTermCost with labs and discussions in a lecture course", () => {
@@ -633,7 +746,7 @@ describe("estimateTermCost with crosslisted sections", () => {
     expect(costs.get(5)?.total).toBe(0);
   });
 
-  it("charges a TA on both partners only once", () => {
+  it("charges a grad TA on both partners only once", () => {
     const costs = estimate([
       section(1, {
         courseCode: "ANTH-4001",

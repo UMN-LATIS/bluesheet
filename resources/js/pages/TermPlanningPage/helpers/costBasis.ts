@@ -11,4 +11,5 @@ export type CostBasis =
 export type ChargedElsewhereReason =
   | "crosslisted"
   | "sameMeetingTime"
-  | "taOncePerCourse";
+  | "taOncePerCourse"
+  | "gradAppointment";

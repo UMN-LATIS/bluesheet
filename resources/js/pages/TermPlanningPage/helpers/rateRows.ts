@@ -1,6 +1,12 @@
-import type { CostAssumptions, InstructorType, JobCodeRate } from "@/types";
+import type {
+  CostAssumptions,
+  GradRateInputs,
+  InstructorType,
+  JobCodeRate,
+} from "@/types";
 import type { RateOverrides } from "./costOverrides";
-import { costOfRate, UNSTAFFED_JOB_CODE } from "./costRules";
+import { costOfRate, isGradJobCodeRate, UNSTAFFED_JOB_CODE } from "./costRules";
+import { gradCostOf, gradTermOf, type GradStudent } from "./gradCost";
 
 export interface RateCell {
   /**
@@ -17,7 +23,7 @@ export interface RateRow {
   code: string;
   title: string;
   fundLabel: string;
-  perLabel: "Section" | "Course";
+  perLabel: "Section";
   salary: RateCell;
   fringeRate: RateCell;
   /** Salary × (1 + fringe). Null when either is missing. */
@@ -55,13 +61,6 @@ function rateCellOf(
   };
 }
 
-const isGradType = (instructorType: InstructorType | null) =>
-  instructorType === "teaching_assistant" ||
-  instructorType === "graduate_instructor";
-
-const isGradRate = (rate: JobCodeRate | undefined) =>
-  isGradType(rate?.instructorType ?? null);
-
 function rateRowOf(
   code: string,
   title: string,
@@ -78,7 +77,7 @@ function rateRowOf(
     code,
     title,
     fundLabel: fundLabelOf(instructorType),
-    perLabel: instructorType === "teaching_assistant" ? "Course" : "Section",
+    perLabel: "Section",
     salary,
     fringeRate,
     cost: hasBoth
@@ -113,7 +112,7 @@ export function rateRowsOf(
     charged.map(({ positionTitles }) => positionTitles[code]).find(Boolean);
 
   return [...heldCodes, UNSTAFFED_JOB_CODE]
-    .filter((code) => !isGradRate(ratesByCode.get(code)))
+    .filter((code) => !isGradJobCodeRate(ratesByCode.get(code) ?? null))
     .map((code) => {
       const rate = ratesByCode.get(code);
       const title =
@@ -125,33 +124,139 @@ export function rateRowsOf(
     });
 }
 
-export const GRAD_APPOINTMENT_PERCENTS = [25, 50, 75];
-
-export interface GradRateRow extends RateRow {
-  /** The cost of the appointment, which `cost` prices at 25%. */
-  costByAppointmentPercent: { percent: number; cost: number | null }[];
+export interface GradInputRow {
+  field: keyof GradRateInputs;
+  label: string;
+  hint: string;
+  kind: "dollars" | "percent";
+  /** Its novaAmount is the admin's value. */
+  cell: RateCell;
 }
 
-/** Every grad code, whether or not anyone holds it this term. */
-export function gradRateRowsOf(
+export interface GradAppointmentRow {
+  appointmentPercent: number;
+  /** Its novaAmount is the admin's hours. */
+  hours: RateCell;
+  /** Pay before offsets. All the costs are null when the term has no grad inputs. */
+  salary: number | null;
+  health: number | null;
+  regularTuition: number | null;
+  regularCost: number | null;
+  abdTuition: number | null;
+  abdCost: number | null;
+}
+
+export interface GradRatesView {
+  inputs: GradInputRow[];
+  appointments: GradAppointmentRow[];
+}
+
+const GRAD_INPUT_LABELS: {
+  field: keyof GradRateInputs;
+  label: string;
+  hint: string;
+  kind: "dollars" | "percent";
+}[] = [
+  {
+    field: "hourlyRate",
+    label: "Hourly rate",
+    hint: "All grad appointments",
+    kind: "dollars",
+  },
+  {
+    field: "healthRate",
+    label: "GA health",
+    hint: "Percent of pay",
+    kind: "percent",
+  },
+  {
+    field: "tuitionPerHourRegular",
+    label: "Tuition per hour",
+    hint: "Regular",
+    kind: "dollars",
+  },
+  {
+    field: "tuitionPerHourAbd",
+    label: "Tuition per hour",
+    hint: "ABD",
+    kind: "dollars",
+  },
+  {
+    field: "feeOffset",
+    label: "Student fee offset",
+    hint: "Full amount, regular only",
+    kind: "dollars",
+  },
+  {
+    field: "internationalOffset",
+    label: "International GA offset",
+    hint: "Full amount",
+    kind: "dollars",
+  },
+  {
+    field: "perCreditPayment",
+    label: "Grad instructor payment",
+    hint: "Per credit taught",
+    kind: "dollars",
+  },
+];
+
+const NO_OFFSETS: Omit<GradStudent, "appointmentPercent" | "isAbd"> = {
+  hasFeeOffset: false,
+  isInternational: false,
+  creditsTaught: 0,
+};
+
+export function gradRatesViewOf(
   assumptions: CostAssumptions,
   overrides: RateOverrides,
-): GradRateRow[] {
-  return assumptions.jobCodes
-    .filter(isGradRate)
-    .sort((a, b) => a.code.localeCompare(b.code))
-    .map((rate) => {
-      const row = rateRowOf(rate.code, rate.title, rate, overrides);
+): GradRatesView {
+  const term = gradTermOf(assumptions, overrides);
+  const gradInstructorCodes = assumptions.jobCodes
+    .filter(({ instructorType }) => instructorType === "graduate_instructor")
+    .map(({ code }) => code)
+    .sort();
+
+  const inputs = GRAD_INPUT_LABELS.map((input) => ({
+    ...input,
+    hint:
+      input.field === "perCreditPayment" && gradInstructorCodes.length > 0
+        ? `${input.hint}, ${gradInstructorCodes.join(" and ")}`
+        : input.hint,
+    cell: rateCellOf(
+      overrides.gradInputs[input.field],
+      assumptions.gradRates.defaults?.[input.field],
+    ),
+  }));
+
+  const appointments = [...assumptions.gradRates.levels]
+    .sort((a, b) => a.appointmentPercent - b.appointmentPercent)
+    .map(({ appointmentPercent, hours: adminHours }) => {
+      const regular = gradCostOf(term, {
+        appointmentPercent,
+        isAbd: false,
+        ...NO_OFFSETS,
+      });
+      const abd = gradCostOf(term, {
+        appointmentPercent,
+        isAbd: true,
+        ...NO_OFFSETS,
+      });
 
       return {
-        ...row,
-        costByAppointmentPercent: GRAD_APPOINTMENT_PERCENTS.map((percent) => ({
-          percent,
-          cost:
-            row.cost === null
-              ? null
-              : row.cost * (percent / GRAD_APPOINTMENT_PERCENTS[0]),
-        })),
+        appointmentPercent,
+        hours: rateCellOf(
+          overrides.gradHoursByPercent.get(appointmentPercent),
+          adminHours,
+        ),
+        salary: regular?.pay ?? null,
+        health: regular?.health ?? null,
+        regularTuition: regular?.tuition ?? null,
+        regularCost: regular?.total ?? null,
+        abdTuition: abd?.tuition ?? null,
+        abdCost: abd?.total ?? null,
       };
     });
+
+  return { inputs, appointments };
 }

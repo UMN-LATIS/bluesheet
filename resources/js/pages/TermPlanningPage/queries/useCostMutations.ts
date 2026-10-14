@@ -1,11 +1,19 @@
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import type { Ref } from "vue";
 import {
+  saveGradHoursOverride,
+  saveGradInputOverride,
+  saveGradPerson,
   saveJobCodeRateOverride,
   savePersonNote,
   savePersonRateOverride,
 } from "@/api";
-import type { RateOverrideEdit } from "../helpers/costOverrides";
+import type {
+  GradHoursEdit,
+  GradInputEdit,
+  GradPersonEdit,
+  RateOverrideEdit,
+} from "../helpers/costOverrides";
 import type { PersonNoteEdit } from "../helpers/personNotes";
 
 export function useCostMutations(
@@ -40,11 +48,40 @@ export function useCostMutations(
     onSuccess: refetchAssumptions,
   });
 
+  const saveGradInputEdit = useMutation({
+    mutationFn: ({ field, value }: GradInputEdit) =>
+      saveGradInputOverride(groupId.value, termCode.value ?? 0, field, value),
+    onSuccess: refetchAssumptions,
+  });
+
+  const saveGradHoursEdit = useMutation({
+    mutationFn: ({ appointmentPercent, hours }: GradHoursEdit) =>
+      saveGradHoursOverride(
+        groupId.value,
+        termCode.value ?? 0,
+        appointmentPercent,
+        hours,
+      ),
+    onSuccess: refetchAssumptions,
+  });
+
+  const saveGradPersonEdit = useMutation({
+    mutationFn: (edit: GradPersonEdit) =>
+      saveGradPerson(groupId.value, termCode.value ?? 0, edit),
+    onSuccess: refetchAssumptions,
+  });
+
   const savePersonNoteEdit = useMutation({
     mutationFn: ({ emplid, notes }: PersonNoteEdit) =>
       savePersonNote(groupId.value, termCode.value ?? 0, emplid, notes),
     onSuccess: refetchAssumptions,
   });
 
-  return { saveRateOverride, savePersonNoteEdit };
+  return {
+    saveRateOverride,
+    saveGradInputEdit,
+    saveGradHoursEdit,
+    saveGradPersonEdit,
+    savePersonNoteEdit,
+  };
 }

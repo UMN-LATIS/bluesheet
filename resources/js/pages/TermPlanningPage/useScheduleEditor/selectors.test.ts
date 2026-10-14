@@ -317,6 +317,8 @@ describe("the budget view's selectors", () => {
             { jobCode: "G", salary: 200, fringeRate: null },
           ],
           people: [],
+          grad: null,
+          gradHours: [],
         },
       }),
     };
@@ -331,6 +333,43 @@ describe("the budget view's selectors", () => {
         ["G", { salary: 200, fringeRate: null }],
       ]),
     );
+  });
+
+  it("selectRateOverrides merges pending grad edits over the saved grad settings", () => {
+    const withServer: ScheduleContext = {
+      ...budgetContext,
+      costAssumptions: costAssumptions({
+        gradPeople: [
+          {
+            emplid: 10,
+            appointmentPercent: 50,
+            hasFeeOffset: false,
+            isInternational: false,
+          },
+        ],
+      }),
+    };
+    const shown = selectRateOverrides(withServer, {
+      ...atRest,
+      gradInputEdits: {
+        hourlyRate: { field: "hourlyRate", value: 31 },
+      },
+      gradHoursEdits: {
+        "25": { appointmentPercent: 25, hours: 200 },
+      },
+      gradPersonEdits: {
+        "10": {
+          emplid: 10,
+          appointmentPercent: 50,
+          hasFeeOffset: true,
+          isInternational: false,
+        },
+      },
+    });
+
+    expect(shown?.gradInputs).toEqual({ hourlyRate: 31 });
+    expect(shown?.gradHoursByPercent.get(25)).toBe(200);
+    expect(shown?.gradPeopleByEmplid.get(10)?.hasFeeOffset).toBe(true);
   });
 
   it("selectPersonNotes is null before the cost assumptions load", () => {

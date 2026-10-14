@@ -10,6 +10,8 @@ export type InstructorType =
 
 export type Season = "fall" | "spring" | "summer";
 
+export type StudentStatus = "regular" | "abd";
+
 export interface JobCodeRate {
   code: string;
   title: string;
@@ -18,14 +20,16 @@ export interface JobCodeRate {
   /** Courses per year. Null when not entered. */
   annualLoad: number | null;
   /**
-   * Dollars per paid section, or per course for a
-   * teaching_assistant job code. Null when Nova has no
-   * rate for the term.
+   * Dollars per paid section. Null when Nova has no rate
+   * for the term, and always null for a grad job code,
+   * which is costed from `CostAssumptions.gradRates`.
    */
   salary: number | null;
   /** A fraction: 0.385 is 38.5%. Null when Nova has no rate for the term. */
   fringeRate: number | null;
   source: string | null;
+  /** Null on a job code that is not a grad student's. */
+  studentStatus: StudentStatus | null;
 }
 
 export interface CostPerson {
@@ -54,6 +58,33 @@ export interface PersonRateOverride {
   salary: number;
 }
 
+export interface GradRateInputs {
+  hourlyRate: number;
+  /** A fraction of pay: 0.289 is 28.9%. */
+  healthRate: number;
+  tuitionPerHourRegular: number;
+  tuitionPerHourAbd: number;
+  /** The full amount, before the appointment's share. */
+  feeOffset: number;
+  internationalOffset: number;
+  perCreditPayment: number;
+}
+
+export interface GradAppointmentLevel {
+  /** 12.5 is a 12.5% appointment. */
+  appointmentPercent: number;
+  hours: number;
+}
+
+/** One grad student's settings for one department and one term. */
+export interface GradPerson {
+  emplid: number;
+  /** Null means the default, 25%. */
+  appointmentPercent: number | null;
+  hasFeeOffset: boolean;
+  isInternational: boolean;
+}
+
 export interface PersonNote {
   emplid: number;
   notes: string;
@@ -64,10 +95,19 @@ export interface CostAssumptions {
   season: Season;
   jobCodes: JobCodeRate[];
   people: CostPerson[];
+  gradRates: {
+    /** The admin's values for the term. Null when none are entered. */
+    defaults: GradRateInputs | null;
+    levels: GradAppointmentLevel[];
+  };
   rateOverrides: {
     jobCodes: JobCodeRateOverride[];
     people: PersonRateOverride[];
+    /** The department's values. Each field is null when not overridden. */
+    grad: { [Field in keyof GradRateInputs]: number | null } | null;
+    gradHours: GradAppointmentLevel[];
   };
+  gradPeople: GradPerson[];
   personNotes: PersonNote[];
   canEdit: boolean;
 }

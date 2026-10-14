@@ -2,13 +2,18 @@
 
 namespace App\Http\Controllers\TermPlanning;
 
+use App\GradTermRate;
 use App\Group;
 use App\Http\Controllers\Controller;
 use App\JobCode;
 use App\Library\TermPlan\CostAssumptions;
+use App\Library\TermPlan\GradRateInputs;
 use App\Library\TermPlan\TermCode;
 use App\Library\TermPlan\TermLock;
 use App\LocalCourse;
+use App\TermGradHoursOverride;
+use App\TermGradPerson;
+use App\TermGradRateOverride;
 use App\TermJobCodeRateOverride;
 use App\TermPersonNote;
 use App\TermPersonRateOverride;
@@ -74,6 +79,109 @@ class CostOverrideController extends Controller {
         return ['emplid' => $emplid, 'salary' => $salary];
     }
 
+    public function updateGradRates(Request $request, Group $group) {
+        $academicOrg = $this->authorizeAndFindAcademicOrg($group);
+        $termCode = TermCode::fromRequest($request);
+        $this->abortIfTermIsReadOnly($academicOrg, $termCode);
+
+        if (!$request->hasAny(array_keys(GradRateInputs::COLUMN_BY_KEY))) {
+            throw ValidationException::withMessages(['hourlyRate' => 'Send at least one grad rate.']);
+        }
+
+        $changes = $request->validate([
+            'hourlyRate' => ['sometimes', 'nullable', ...self::MONEY_RULES],
+            'healthRate' => ['sometimes', 'nullable', 'numeric', 'decimal:0,4', 'min:0', 'max:5'],
+            'tuitionPerHourRegular' => ['sometimes', 'nullable', ...self::MONEY_RULES],
+            'tuitionPerHourAbd' => ['sometimes', 'nullable', ...self::MONEY_RULES],
+            'feeOffset' => ['sometimes', 'nullable', ...self::MONEY_RULES],
+            'internationalOffset' => ['sometimes', 'nullable', ...self::MONEY_RULES],
+            'perCreditPayment' => ['sometimes', 'nullable', ...self::MONEY_RULES],
+        ]);
+
+        $uniqueKey = ['academic_org' => $academicOrg, 'term_code' => $termCode];
+        $saved = TermGradRateOverride::where($uniqueKey)->first();
+        $inputs = $saved === null ? array_fill_keys(array_keys(GradRateInputs::COLUMN_BY_KEY), null) : GradRateInputs::fromRow($saved);
+        foreach ($changes as $key => $value) {
+            $inputs[$key] = $value === null ? null : (float) $value;
+        }
+
+        $values = [];
+        foreach (GradRateInputs::COLUMN_BY_KEY as $key => $column) {
+            $values[$column] = $inputs[$key];
+        }
+        $isEveryInputNull = count(array_filter($inputs, fn($input) => $input !== null)) === 0;
+
+        $this->saveOrDelete(TermGradRateOverride::class, $uniqueKey, $isEveryInputNull ? null : $values);
+
+        return $inputs;
+    }
+
+    public function updateGradHours(Request $request, Group $group, string $appointmentPercent) {
+        $academicOrg = $this->authorizeAndFindAcademicOrg($group);
+        $termCode = TermCode::fromRequest($request);
+        $this->abortIfTermIsReadOnly($academicOrg, $termCode);
+        abort_unless(
+            is_numeric($appointmentPercent) && in_array((float) $appointmentPercent, $this->gradLevelPercents($termCode), true),
+            404,
+            "No appointment level {$appointmentPercent} is set for this term.",
+        );
+        $appointmentPercent = (float) $appointmentPercent;
+
+        $hours = $request->validate([
+            'hours' => ['present', 'nullable', 'integer', 'min:0', 'max:2080'],
+        ])['hours'];
+        $hours = $hours === null ? null : (int) $hours;
+
+        $this->saveOrDelete(
+            TermGradHoursOverride::class,
+            ['academic_org' => $academicOrg, 'term_code' => $termCode, 'appointment_percent' => $appointmentPercent],
+            $hours === null ? null : ['hours' => $hours],
+        );
+
+        return ['appointmentPercent' => $appointmentPercent, 'hours' => $hours];
+    }
+
+    public function updateGradPerson(Request $request, Group $group, string $emplid) {
+        $academicOrg = $this->authorizeAndFindAcademicOrg($group);
+        $termCode = TermCode::fromRequest($request);
+        $this->abortIfTermIsReadOnly($academicOrg, $termCode);
+        $emplid = $this->emplidOrNotFound($emplid);
+        $levelPercents = $this->gradLevelPercents($termCode);
+
+        $validated = $request->validate([
+            'appointmentPercent' => [
+                'present',
+                'nullable',
+                'numeric',
+                fn(string $attribute, mixed $percent, \Closure $fail) => in_array((float) $percent, $levelPercents, true)
+                    || $fail('The appointment percent must be one of the term\'s appointment levels.'),
+            ],
+            'hasFeeOffset' => ['present', 'boolean'],
+            'isInternational' => ['present', 'boolean'],
+        ]);
+        $appointmentPercent = $validated['appointmentPercent'] === null ? null : (float) $validated['appointmentPercent'];
+        $hasFeeOffset = (bool) $validated['hasFeeOffset'];
+        $isInternational = (bool) $validated['isInternational'];
+        $isDefault = $appointmentPercent === null && !$hasFeeOffset && !$isInternational;
+
+        $this->saveOrDelete(
+            TermGradPerson::class,
+            ['academic_org' => $academicOrg, 'term_code' => $termCode, 'emplid' => $emplid],
+            $isDefault ? null : [
+                'appointment_percent' => $appointmentPercent,
+                'has_fee_offset' => $hasFeeOffset,
+                'is_international' => $isInternational,
+            ],
+        );
+
+        return [
+            'emplid' => $emplid,
+            'appointmentPercent' => $appointmentPercent,
+            'hasFeeOffset' => $hasFeeOffset,
+            'isInternational' => $isInternational,
+        ];
+    }
+
     public function updatePersonNote(Request $request, Group $group, string $emplid) {
         $academicOrg = $this->authorizeAndFindAcademicOrg($group);
         $termCode = TermCode::fromRequest($request);
@@ -100,6 +208,13 @@ class CostOverrideController extends Controller {
             403,
             'The SIS has published this term, so it can no longer be planned here.'
         );
+    }
+
+    /** @return array<int, float> empty when the term has no grad rates */
+    private function gradLevelPercents(int $termCode): array {
+        $gradRate = GradTermRate::with('levels')->where('term_code', $termCode)->first();
+
+        return $gradRate === null ? [] : $gradRate->levels->pluck('appointment_percent')->all();
     }
 
     private function emplidOrNotFound(string $emplid): int {

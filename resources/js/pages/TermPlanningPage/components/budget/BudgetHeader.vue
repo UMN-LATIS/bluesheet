@@ -69,7 +69,7 @@ const isFiltered = computed(() => props.shownCount !== props.totalCount);
 
 const heading = computed(() =>
   !isFiltered.value
-    ? `Estimated term cost · ${props.termName}`
+    ? `Estimated term cost with fringe · ${props.termName}`
     : `Estimated cost · ${props.shownCount} of ${props.totalCount} sections shown`,
 );
 </script>

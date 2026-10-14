@@ -5,6 +5,7 @@ import type { RateOverrides } from "./costOverrides";
 import {
   instructorRateOf,
   isFreeComponent,
+  isGradJobCodeRate,
   pricingOf,
   taRateOf,
   unstaffedRateOf,
@@ -12,6 +13,14 @@ import {
   type Rate,
   type TermRates,
 } from "./costRules";
+import {
+  gradCostOf,
+  gradTermOf,
+  DEFAULT_APPOINTMENT_PERCENT,
+  type GradCost,
+  type GradStudent,
+  type GradTerm,
+} from "./gradCost";
 import { blockOwners } from "./sectionPlacement";
 import { assistantsOf, instructorsOfRecord, TA_ROLE } from "./sectionPeople";
 
@@ -28,6 +37,18 @@ export interface CostLine {
   /** Salary plus fringe. Null when no rate exists. */
   amount: number | null;
   basis: CostBasis;
+  /**
+   * Only on the one line that carries a grad student's
+   * term cost. Its salary is the pay, and its fringe is
+   * health plus tuition.
+   */
+  gradAppointment?: GradAppointment;
+}
+
+export interface GradAppointment {
+  student: GradStudent;
+  /** Null when the term has no grad inputs or hours. */
+  cost: GradCost | null;
 }
 
 export interface SectionCost {
@@ -51,6 +72,7 @@ interface CostContext {
   /** Null when the course has no live lecture. */
   lectureSectionIdOf: (section: PlannedSection) => number | null;
   termRates: TermRates;
+  isGradStudent: (emplid: number) => boolean;
 }
 
 /**
@@ -62,6 +84,7 @@ export function estimateTermCost(
 ): Map<number, SectionCost> {
   const { sections, assumptions, rateOverrides } = input;
   const pricingOfEmplid = pricingByEmplidOf(assumptions, rateOverrides);
+  const gradTerm = gradTermOf(assumptions, rateOverrides);
 
   const liveSections = sections.filter(({ isCancelled }) => !isCancelled);
   const crosslistOwnerByListing = blockOwners(liveSections);
@@ -88,6 +111,7 @@ export function estimateTermCost(
       sectionsThatCanChargeATa,
     ),
     termRates: termRatesOf(assumptions, rateOverrides),
+    isGradStudent: (emplid) => isGradJobCodeRate(pricingOfEmplid(emplid).rate),
   };
   const linesBySectionId = paidOncePerMeetingTime(
     liveSections,
@@ -95,11 +119,21 @@ export function estimateTermCost(
       sections.map((section) => [section.id, costLinesOf(section, context)]),
     ),
   );
+  const linesWithGradAppointments = chargedOncePerGradStudent(
+    liveSections,
+    linesBySectionId,
+    {
+      gradTerm,
+      pricingOfEmplid,
+      isGradStudent: context.isGradStudent,
+      rateOverrides,
+    },
+  );
 
   return new Map(
     sections.map((section) => [
       section.id,
-      sectionCostOf(linesBySectionId.get(section.id) ?? []),
+      sectionCostOf(linesWithGradAppointments.get(section.id) ?? []),
     ]),
   );
 }
@@ -140,7 +174,7 @@ function costLinesOf(
 ): CostLine[] {
   if (section.isCancelled) return [];
 
-  const { pricingOfEmplid, termRates } = context;
+  const { termRates } = context;
   const leads = instructorsOfRecord(section.instructors);
   const tas = assistantsOf(section.instructors).filter(
     ({ role }) => role === TA_ROLE,
@@ -175,12 +209,7 @@ function costLinesOf(
     (lead): CostLine => ({
       role: "instructor",
       emplid: lead.emplid,
-      ...(isPaidOnLecture
-        ? paidOnLectureLine(lectureSectionId)
-        : ratedLine(
-            instructorRateOf(pricingOfEmplid(lead.emplid), termRates),
-            termRates.overrides.salaryByEmplid.get(lead.emplid),
-          )),
+      ...leadPricedLineOf(lead, lectureSectionId, isPaidOnLecture, context),
     }),
   );
   const taLines = tas.map((ta) => taLineOf(ta, section, context));
@@ -191,6 +220,11 @@ function costLinesOf(
 type PricedLine = Pick<CostLine, "salary" | "fringe" | "amount" | "basis">;
 
 const NOTHING_OWED = { salary: 0, fringe: 0, amount: 0 };
+
+const gradAppointmentPlaceholder: PricedLine = {
+  ...NOTHING_OWED,
+  basis: { kind: "rate" },
+};
 
 function ratedLine(rate: Rate | null, salaryOverride?: number): PricedLine {
   const salary = salaryOverride ?? rate?.salary;
@@ -208,6 +242,23 @@ function ratedLine(rate: Rate | null, salaryOverride?: number): PricedLine {
   return { salary, fringe, amount: salary + fringe, basis: { kind: "rate" } };
 }
 
+function leadPricedLineOf(
+  lead: SisInstructor,
+  lectureSectionId: number | null,
+  isPaidOnLecture: boolean,
+  context: CostContext,
+): PricedLine {
+  if (isPaidOnLecture && lectureSectionId !== null) {
+    return paidOnLectureLine(lectureSectionId);
+  }
+  if (context.isGradStudent(lead.emplid)) return gradAppointmentPlaceholder;
+
+  return ratedLine(
+    instructorRateOf(context.pricingOfEmplid(lead.emplid), context.termRates),
+    context.termRates.overrides.salaryByEmplid.get(lead.emplid),
+  );
+}
+
 const paidOnLectureLine = (lectureSectionId: number): PricedLine => ({
   ...NOTHING_OWED,
   basis: { kind: "paidOnLecture", lectureSectionId },
@@ -219,6 +270,10 @@ function taLineOf(
   context: CostContext,
 ): CostLine {
   const { pricingOfEmplid, chargedSectionIdByTaCourse, termRates } = context;
+  if (context.isGradStudent(ta.emplid)) {
+    return { role: "ta", emplid: ta.emplid, ...gradAppointmentPlaceholder };
+  }
+
   const chargedSectionId =
     chargedSectionIdByTaCourse.get(
       taCourseKey(ta.emplid, section.courseCode),
@@ -412,6 +467,90 @@ function paidOncePerMeetingTime(
   }
 
   return result;
+}
+
+interface GradCharging {
+  gradTerm: GradTerm | null;
+  pricingOfEmplid: (emplid: number) => PersonPricing;
+  isGradStudent: (emplid: number) => boolean;
+  rateOverrides: RateOverrides;
+}
+
+function chargedOncePerGradStudent(
+  sections: PlannedSection[],
+  linesBySectionId: Map<number, CostLine[]>,
+  { gradTerm, pricingOfEmplid, isGradStudent, rateOverrides }: GradCharging,
+): Map<number, CostLine[]> {
+  const isGradAppointmentLine = (
+    line: CostLine,
+  ): line is CostLine & { emplid: number } =>
+    line.emplid !== null &&
+    line.basis.kind === "rate" &&
+    isGradStudent(line.emplid);
+  const chargedSectionIdByEmplid = new Map<number, number>();
+  const creditsByEmplid = new Map<number, number>();
+
+  for (const section of [...sections].sort(lecturesThenCourseAndSection)) {
+    for (const line of linesBySectionId.get(section.id) ?? []) {
+      if (!isGradAppointmentLine(line)) continue;
+
+      const { emplid } = line;
+      if (!chargedSectionIdByEmplid.has(emplid)) {
+        chargedSectionIdByEmplid.set(emplid, section.id);
+      }
+      if (line.role === "instructor") {
+        creditsByEmplid.set(
+          emplid,
+          (creditsByEmplid.get(emplid) ?? 0) + (section.credits ?? 0),
+        );
+      }
+    }
+  }
+
+  return new Map(
+    [...linesBySectionId].map(([sectionId, lines]) => [
+      sectionId,
+      lines.map((line): CostLine => {
+        if (!isGradAppointmentLine(line)) return line;
+
+        const chargedSectionId = chargedSectionIdByEmplid.get(line.emplid);
+        if (chargedSectionId !== sectionId) {
+          return {
+            ...line,
+            ...NOTHING_OWED,
+            basis: {
+              kind: "chargedOnOtherSection",
+              sectionId: chargedSectionId ?? sectionId,
+              reason: "gradAppointment",
+            },
+          };
+        }
+
+        const rate = pricingOfEmplid(line.emplid).rate;
+        const setting = rateOverrides.gradPeopleByEmplid.get(line.emplid);
+        const student: GradStudent = {
+          appointmentPercent:
+            setting?.appointmentPercent ?? DEFAULT_APPOINTMENT_PERCENT,
+          isAbd: rate?.studentStatus === "abd",
+          hasFeeOffset: setting?.hasFeeOffset ?? false,
+          isInternational: setting?.isInternational ?? false,
+          creditsTaught:
+            rate?.instructorType === "graduate_instructor"
+              ? (creditsByEmplid.get(line.emplid) ?? 0)
+              : 0,
+        };
+        const cost = gradCostOf(gradTerm, student);
+
+        return {
+          ...line,
+          salary: cost?.pay ?? null,
+          fringe: cost?.fringe ?? null,
+          amount: cost?.total ?? null,
+          gradAppointment: { student, cost },
+        };
+      }),
+    ]),
+  );
 }
 
 const sum = (amounts: number[]) =>

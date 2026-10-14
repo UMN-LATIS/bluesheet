@@ -2,9 +2,14 @@
 
 namespace App\Library\TermPlan;
 
+use App\GradAppointmentLevel;
+use App\GradTermRate;
 use App\JobCode;
 use App\JobCodeTermRate;
 use App\SisAppointment;
+use App\TermGradHoursOverride;
+use App\TermGradPerson;
+use App\TermGradRateOverride;
 use App\TermJobCodeRateOverride;
 use App\TermPersonNote;
 use App\TermPersonRateOverride;
@@ -20,7 +25,11 @@ final class CostAssumptions {
             'rateOverrides' => [
                 'jobCodes' => self::jobCodeRateOverrides($academicOrg, $termCode),
                 'people' => self::personRateOverrides($academicOrg, $termCode),
+                'grad' => self::gradRateOverrides($academicOrg, $termCode),
+                'gradHours' => self::gradHoursOverrides($academicOrg, $termCode),
             ],
+            'gradRates' => self::gradRates($termCode),
+            'gradPeople' => self::gradPeople($academicOrg, $termCode),
             'personNotes' => self::personNotes($academicOrg, $termCode),
         ];
     }
@@ -48,6 +57,7 @@ final class CostAssumptions {
                     'title' => $jobCode->title,
                     'instructorType' => $jobCode->instructor_type?->value,
                     'annualLoad' => $jobCode->annual_load,
+                    'studentStatus' => $jobCode->student_status?->value,
                     'salary' => $termRate === null ? null : (float) $termRate->salary,
                     'fringeRate' => $termRate === null ? null : (float) $termRate->fringe_rate,
                     'source' => $termRate?->source,
@@ -91,6 +101,57 @@ final class CostAssumptions {
             ->map(fn(TermPersonRateOverride $override) => [
                 'emplid' => $override->emplid,
                 'salary' => $override->salary,
+            ])
+            ->all();
+    }
+
+    private static function gradRates(int $termCode): array {
+        $gradRate = GradTermRate::query()->with('levels')->where('term_code', $termCode)->first();
+
+        return [
+            'defaults' => $gradRate === null ? null : GradRateInputs::fromRow($gradRate),
+            'levels' => $gradRate === null ? [] : $gradRate->levels
+                ->map(fn(GradAppointmentLevel $level) => [
+                    'appointmentPercent' => $level->appointment_percent,
+                    'hours' => $level->hours,
+                ])
+                ->all(),
+        ];
+    }
+
+    private static function gradRateOverrides(int $academicOrg, int $termCode): ?array {
+        $override = TermGradRateOverride::query()
+            ->where('academic_org', $academicOrg)
+            ->where('term_code', $termCode)
+            ->first();
+
+        return $override === null ? null : GradRateInputs::fromRow($override);
+    }
+
+    private static function gradHoursOverrides(int $academicOrg, int $termCode): array {
+        return TermGradHoursOverride::query()
+            ->where('academic_org', $academicOrg)
+            ->where('term_code', $termCode)
+            ->orderBy('appointment_percent')
+            ->get()
+            ->map(fn(TermGradHoursOverride $override) => [
+                'appointmentPercent' => $override->appointment_percent,
+                'hours' => $override->hours,
+            ])
+            ->all();
+    }
+
+    private static function gradPeople(int $academicOrg, int $termCode): array {
+        return TermGradPerson::query()
+            ->where('academic_org', $academicOrg)
+            ->where('term_code', $termCode)
+            ->orderBy('emplid')
+            ->get()
+            ->map(fn(TermGradPerson $person) => [
+                'emplid' => $person->emplid,
+                'appointmentPercent' => $person->appointment_percent,
+                'hasFeeOffset' => $person->has_fee_offset,
+                'isInternational' => $person->is_international,
             ])
             ->all();
     }

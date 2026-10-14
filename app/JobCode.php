@@ -3,6 +3,7 @@
 namespace App;
 
 use App\Library\TermPlan\InstructorType;
+use App\Library\TermPlan\StudentStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -20,11 +21,13 @@ class JobCode extends Model implements AuditableContract {
         'title',
         'instructor_type',
         'annual_load',
+        'student_status',
     ];
 
     protected $casts = [
         'instructor_type' => InstructorType::class,
         'annual_load' => 'integer',
+        'student_status' => StudentStatus::class,
     ];
 
     public function termRates(): HasMany {

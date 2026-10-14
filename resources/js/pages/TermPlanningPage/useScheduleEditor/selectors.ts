@@ -138,10 +138,7 @@ export function selectSectionCosts(
   return estimateTermCost({
     sections: selectLocalSections(context, state),
     assumptions,
-    rateOverrides: rateOverridesOf(
-      assumptions.rateOverrides,
-      state.rateOverrideEdits,
-    ),
+    rateOverrides: rateOverridesOf(assumptions, state),
   });
 }
 
@@ -153,7 +150,7 @@ export function selectRateOverrides(
   const assumptions = context.costAssumptions;
   if (!assumptions) return null;
 
-  return rateOverridesOf(assumptions.rateOverrides, state.rateOverrideEdits);
+  return rateOverridesOf(assumptions, state);
 }
 
 /** By emplid. Null until the cost assumptions have loaded. */

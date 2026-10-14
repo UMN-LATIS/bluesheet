@@ -39,6 +39,8 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
             \App\Nova\GroupArtifact::class,
             \App\Nova\JobCode::class,
             \App\Nova\JobCodeTermRate::class,
+            \App\Nova\GradTermRate::class,
+            \App\Nova\GradAppointmentLevel::class,
         ]);
     }
 

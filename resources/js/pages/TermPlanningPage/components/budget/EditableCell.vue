@@ -16,7 +16,7 @@
         type="text"
         inputmode="decimal"
         :value="shownText"
-        placeholder="No rate"
+        :placeholder="placeholder"
         :disabled="!canEdit"
         :aria-label="label"
         :aria-invalid="refusal !== null"
@@ -45,17 +45,22 @@ import { computed, ref, watch } from "vue";
 import OverrideMarker from "./OverrideMarker.vue";
 import ResetButton from "./ResetButton.vue";
 import { refusalOfDollars } from "../../helpers/dollarAmounts";
+import { refusalOfHours } from "../../helpers/hourAmounts";
 import { formatDollars } from "../../helpers/money";
 import { formatPercent, parseFringeRate } from "../../helpers/percentAmounts";
 
-const props = defineProps<{
-  amount: number | null;
-  amountWithoutOverride: number | null;
-  isOverridden: boolean;
-  canEdit: boolean;
-  kind: "dollars" | "percent";
-  label: string;
-}>();
+const props = withDefaults(
+  defineProps<{
+    amount: number | null;
+    amountWithoutOverride: number | null;
+    isOverridden: boolean;
+    canEdit: boolean;
+    kind: "dollars" | "percent" | "hours";
+    label: string;
+    placeholder?: string;
+  }>(),
+  { placeholder: "No rate" },
+);
 
 const emit = defineEmits<{ change: [amount: number | null] }>();
 
@@ -66,8 +71,16 @@ watch(
   () => (refusal.value = null),
 );
 
-const formatAmount = (amount: number) =>
-  props.kind === "dollars" ? formatDollars(amount) : formatPercent(amount);
+function formatAmount(amount: number): string {
+  switch (props.kind) {
+    case "dollars":
+      return formatDollars(amount);
+    case "percent":
+      return formatPercent(amount);
+    case "hours":
+      return String(amount);
+  }
+}
 
 const shownText = computed(() =>
   props.amount === null ? "" : formatAmount(props.amount),
@@ -87,11 +100,10 @@ function parsedAmountOf(
     return "fringeRate" in parsed ? { amount: parsed.fringeRate } : parsed;
   }
 
-  const dollars = Number(text.replace(/[$,\s]/g, ""));
-  const dollarsRefusal = refusalOfDollars(dollars);
-  return dollarsRefusal === null
-    ? { amount: dollars }
-    : { refusal: dollarsRefusal };
+  const amount = Number(text.replace(/[$,\s]/g, ""));
+  const amountRefusal =
+    props.kind === "hours" ? refusalOfHours(amount) : refusalOfDollars(amount);
+  return amountRefusal === null ? { amount } : { refusal: amountRefusal };
 }
 
 function onChange(event: Event) {
