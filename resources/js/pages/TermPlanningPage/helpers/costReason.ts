@@ -25,7 +25,7 @@ export function unpaidReasonOf(
     case "freeComponent":
       return "Not paid. Independent study and field work have no per-section cost.";
     case "paidOnLecture":
-      return `Paid on the lecture, ${labelOfSection(basis.lectureSectionId)}. A course with a lecture pays its instructor there, not on each lab or discussion.`;
+      return `Paid on the lecture, ${labelOfSection(basis.lectureSectionId)}. Someone on a course's lecture is paid there, not again on its labs or discussions.`;
     case "chargedOnOtherSection":
       return chargedElsewhereReasonOf(basis, labelOfSection);
   }

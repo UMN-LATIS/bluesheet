@@ -154,7 +154,8 @@ function taCostCellOf(
   labelOfSection: (sectionId: number) => string,
 ): TaCostCell {
   const chargedHereLines = taLines.filter(
-    ({ basis }) => basis.kind !== "chargedOnOtherSection",
+    ({ basis }) =>
+      basis.kind !== "chargedOnOtherSection" && basis.kind !== "paidOnLecture",
   );
 
   if (chargedHereLines.length > 0) {
@@ -165,12 +166,19 @@ function taCostCellOf(
   }
 
   const otherSectionBasis = taLines[0]?.basis;
-  if (otherSectionBasis?.kind === "chargedOnOtherSection") {
-    return {
-      kind: "chargedOnOtherSection",
-      sectionLabel: labelOfSection(otherSectionBasis.sectionId),
-      reason: chargedElsewhereReasonOf(otherSectionBasis, labelOfSection),
-    };
+  switch (otherSectionBasis?.kind) {
+    case "chargedOnOtherSection":
+      return {
+        kind: "chargedOnOtherSection",
+        sectionLabel: labelOfSection(otherSectionBasis.sectionId),
+        reason: chargedElsewhereReasonOf(otherSectionBasis, labelOfSection),
+      };
+    case "paidOnLecture":
+      return {
+        kind: "chargedOnOtherSection",
+        sectionLabel: labelOfSection(otherSectionBasis.lectureSectionId),
+        reason: unpaidReasonOf(otherSectionBasis, labelOfSection) ?? "",
+      };
   }
 
   return { kind: "none" };

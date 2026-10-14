@@ -69,8 +69,15 @@ interface CostContext {
   /** The partner a crosslisted section is costed on, or null. */
   crosslistOwnerOf: (section: PlannedSection) => number | null;
   chargedSectionIdByTaCourse: Map<string, number>;
-  /** Null when the course has no live lecture. */
-  lectureSectionIdOf: (section: PlannedSection) => number | null;
+  /**
+   * The lecture of the section's course that the person is
+   * on, so they are paid there instead. Null on a lecture,
+   * or when they are on none of the course's lectures.
+   */
+  lectureSectionIdOf: (
+    emplid: number,
+    section: PlannedSection,
+  ) => number | null;
   termRates: TermRates;
   isGradStudent: (emplid: number) => boolean;
 }
@@ -100,13 +107,17 @@ export function estimateTermCost(
   const sectionsThatCanChargeATa = liveSections.filter(
     (section) => isCostedHere(section) && !isFreeComponent(section.component),
   );
-  const lectureSectionIdByCourseCode =
-    firstLectureSectionIdByCourseCodeOf(liveSections);
+  const lectureSectionIdByPersonCourse =
+    lectureSectionIdByPersonCourseOf(liveSections);
   const context: CostContext = {
     pricingOfEmplid,
     crosslistOwnerOf,
-    lectureSectionIdOf: ({ courseCode }) =>
-      lectureSectionIdByCourseCode.get(courseCode) ?? null,
+    lectureSectionIdOf: (emplid, { component, courseCode }) =>
+      component === LECTURE
+        ? null
+        : (lectureSectionIdByPersonCourse.get(
+            personCourseKey(emplid, courseCode),
+          ) ?? null),
     chargedSectionIdByTaCourse: chargedSectionIdByTaCourseOf(
       sectionsThatCanChargeATa,
     ),
@@ -189,18 +200,12 @@ function costLinesOf(
     return freeComponentLines([...leads, ...tas]);
   }
 
-  const lectureSectionId = context.lectureSectionIdOf(section);
-  const isPaidOnLecture =
-    section.component !== LECTURE && lectureSectionId !== null;
-
   if (leads.length === 0 && tas.length === 0) {
     return [
       {
         role: "unstaffedSection",
         emplid: null,
-        ...(isPaidOnLecture
-          ? paidOnLectureLine(lectureSectionId)
-          : ratedLine(unstaffedRateOf(termRates))),
+        ...ratedLine(unstaffedRateOf(termRates)),
       },
     ];
   }
@@ -209,7 +214,7 @@ function costLinesOf(
     (lead): CostLine => ({
       role: "instructor",
       emplid: lead.emplid,
-      ...leadPricedLineOf(lead, lectureSectionId, isPaidOnLecture, context),
+      ...leadPricedLineOf(lead, section, context),
     }),
   );
   const taLines = tas.map((ta) => taLineOf(ta, section, context));
@@ -244,13 +249,11 @@ function ratedLine(rate: Rate | null, salaryOverride?: number): PricedLine {
 
 function leadPricedLineOf(
   lead: SisInstructor,
-  lectureSectionId: number | null,
-  isPaidOnLecture: boolean,
+  section: PlannedSection,
   context: CostContext,
 ): PricedLine {
-  if (isPaidOnLecture && lectureSectionId !== null) {
-    return paidOnLectureLine(lectureSectionId);
-  }
+  const lectureSectionId = context.lectureSectionIdOf(lead.emplid, section);
+  if (lectureSectionId !== null) return paidOnLectureLine(lectureSectionId);
   if (context.isGradStudent(lead.emplid)) return gradAppointmentPlaceholder;
 
   return ratedLine(
@@ -270,13 +273,21 @@ function taLineOf(
   context: CostContext,
 ): CostLine {
   const { pricingOfEmplid, chargedSectionIdByTaCourse, termRates } = context;
+  const lectureSectionId = context.lectureSectionIdOf(ta.emplid, section);
+  if (lectureSectionId !== null) {
+    return {
+      role: "ta",
+      emplid: ta.emplid,
+      ...paidOnLectureLine(lectureSectionId),
+    };
+  }
   if (context.isGradStudent(ta.emplid)) {
     return { role: "ta", emplid: ta.emplid, ...gradAppointmentPlaceholder };
   }
 
   const chargedSectionId =
     chargedSectionIdByTaCourse.get(
-      taCourseKey(ta.emplid, section.courseCode),
+      personCourseKey(ta.emplid, section.courseCode),
     ) ?? section.id;
 
   if (chargedSectionId !== section.id) {
@@ -368,25 +379,35 @@ function freeComponentLines(people: SisInstructor[]): CostLine[] {
   }));
 }
 
-function firstLectureSectionIdByCourseCodeOf(
+const personCourseKey = (emplid: number, courseCode: string) =>
+  `${emplid}|${courseCode}`;
+
+/** By `personCourseKey`: the first lecture each paid person is on. */
+function lectureSectionIdByPersonCourseOf(
   sections: PlannedSection[],
 ): Map<string, number> {
   const lectures = sections
     .filter(({ component }) => component === LECTURE)
     .sort((a, b) => a.section.localeCompare(b.section));
-  const firstSectionIdByCourseCode = new Map<string, number>();
+  const lectureSectionIdByPersonCourse = new Map<string, number>();
 
-  for (const { courseCode, id } of lectures) {
-    if (!firstSectionIdByCourseCode.has(courseCode)) {
-      firstSectionIdByCourseCode.set(courseCode, id);
+  for (const lecture of lectures) {
+    const paidPeople = [
+      ...instructorsOfRecord(lecture.instructors),
+      ...assistantsOf(lecture.instructors).filter(
+        ({ role }) => role === TA_ROLE,
+      ),
+    ];
+    for (const { emplid } of paidPeople) {
+      const key = personCourseKey(emplid, lecture.courseCode);
+      if (!lectureSectionIdByPersonCourse.has(key)) {
+        lectureSectionIdByPersonCourse.set(key, lecture.id);
+      }
     }
   }
 
-  return firstSectionIdByCourseCode;
+  return lectureSectionIdByPersonCourse;
 }
-
-const taCourseKey = (emplid: number, courseCode: string) =>
-  `${emplid}|${courseCode}`;
 
 function chargedSectionIdByTaCourseOf(
   sections: PlannedSection[],
@@ -396,7 +417,7 @@ function chargedSectionIdByTaCourseOf(
 
   for (const section of byPreference) {
     for (const { emplid, role } of section.instructors) {
-      const key = taCourseKey(emplid, section.courseCode);
+      const key = personCourseKey(emplid, section.courseCode);
       if (role === TA_ROLE && !charged.has(key)) charged.set(key, section.id);
     }
   }

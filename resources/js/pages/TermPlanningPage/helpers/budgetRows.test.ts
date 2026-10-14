@@ -213,7 +213,7 @@ describe("budgetRowOf", () => {
         kind: "chargedOnOtherSection",
         sectionLabel: "Label 1",
         reason:
-          "Paid on Label 1. A grad student's appointment is paid once per term.",
+          "Paid on the lecture, Label 1. Someone on a course's lecture is paid there, not again on its labs or discussions.",
       },
     });
   });
