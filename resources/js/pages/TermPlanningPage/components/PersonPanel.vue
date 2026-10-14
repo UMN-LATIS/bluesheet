@@ -86,26 +86,12 @@
         "
         class="tw-flex-none"
       >
-        <FieldLabel class="tw-mb-1.5">Grad appointment</FieldLabel>
+        <FieldLabel class="tw-mb-1.5">
+          Grad appointment · {{ budget.appointmentPercent }}%
+        </FieldLabel>
         <div
           class="tw-flex tw-flex-col tw-gap-2.5 tw-rounded-[10px] tw-bg-surface tw-p-3 tw-text-[13px]"
         >
-          <div class="tw-flex tw-items-center tw-justify-between tw-gap-3">
-            <span>Appointment</span>
-            <AppointmentSelect
-              class="tw-h-9 tw-w-24 tw-flex-none tw-overflow-hidden tw-rounded-[10px] tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright"
-              :appointmentPercent="budget.appointmentPercent"
-              :levels="appointmentLevels"
-              :defaultPercent="
-                budget.appointmentPercentFromSections ??
-                budget.appointmentPercent
-              "
-              :isOverridden="budget.isAppointmentOverridden"
-              :canEdit="canEdit"
-              :label="`Appointment for ${name}`"
-              @change="(percent) => editGrad({ appointmentPercent: percent })"
-            />
-          </div>
           <label class="tw-flex tw-items-center tw-justify-between tw-gap-3">
             <span class="tw-flex tw-flex-col">
               Student fee offset
@@ -268,7 +254,6 @@ import FieldLabel from "@/components/planning/FieldLabel.vue";
 import Disclosure from "./Disclosure.vue";
 import EnrollmentTile from "./EnrollmentTile.vue";
 import SectionChip from "./SectionChip.vue";
-import AppointmentSelect from "./budget/AppointmentSelect.vue";
 import CostReceipt from "./budget/CostReceipt.vue";
 import EditableCell from "./budget/EditableCell.vue";
 import GradCheckbox from "./budget/GradCheckbox.vue";
@@ -288,8 +273,6 @@ const props = defineProps<{
   canEditSalary: boolean;
   /** Whether notes and a grad student's settings take edits. */
   canEdit: boolean;
-  /** The term's appointment percents. */
-  appointmentLevels: number[];
   isReadOnly: boolean;
   termSections: PersonTermSection[];
   /** Null while loading. */

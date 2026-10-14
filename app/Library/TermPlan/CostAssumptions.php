@@ -152,7 +152,6 @@ final class CostAssumptions {
             ->get()
             ->map(fn(TermGradPerson $person) => [
                 'emplid' => $person->emplid,
-                'appointmentPercent' => $person->appointment_percent,
                 'hasFeeOffset' => $person->has_fee_offset,
                 'isInternational' => $person->is_international,
             ])

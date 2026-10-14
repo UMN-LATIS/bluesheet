@@ -3,25 +3,51 @@ import type { RateOverrides } from "./costOverrides";
 
 export const STANDARD_APPOINTMENT_PERCENT = 25;
 
-/** The appointment one section adds. */
+/** The appointment teaching a section other than a lab or discussion adds. */
 export const defaultAppointmentOf = (
   overrides: Pick<RateOverrides, "defaultAppointmentPercent">,
 ) => overrides.defaultAppointmentPercent ?? STANDARD_APPOINTMENT_PERCENT;
 
-export const MAX_APPOINTMENT_FROM_SECTIONS_PERCENT = 50;
+export const TA_OR_LAB_APPOINTMENT_PERCENT = 12.5;
 
-/**
- * Each paid section adds `perSectionPercent`, up to 50%, or
- * up to `perSectionPercent` when that is higher.
- */
-export const appointmentForSectionsOf = (
-  sectionCount: number,
+const LAB_AND_DISCUSSION_COMPONENTS = ["LAB", "DIS"];
+
+export const appointmentPercentOfSection = (
+  component: string,
+  isTa: boolean,
   perSectionPercent: number,
 ) =>
-  Math.min(
-    perSectionPercent * Math.max(sectionCount, 1),
-    Math.max(perSectionPercent, MAX_APPOINTMENT_FROM_SECTIONS_PERCENT),
+  isTa || LAB_AND_DISCUSSION_COMPONENTS.includes(component)
+    ? TA_OR_LAB_APPOINTMENT_PERCENT
+    : perSectionPercent;
+
+/**
+ * A level's own hours, else in proportion to the nearest
+ * level's. Undefined when the term has no levels.
+ */
+export function hoursOfAppointment(
+  hoursByAppointmentPercent: Map<number, number>,
+  appointmentPercent: number,
+): number | undefined {
+  const levelHours = hoursByAppointmentPercent.get(appointmentPercent);
+  if (levelHours !== undefined) return levelHours;
+
+  const nearest = [...hoursByAppointmentPercent].reduce<
+    [number, number] | undefined
+  >(
+    (best, level) =>
+      best === undefined ||
+      Math.abs(level[0] - appointmentPercent) <
+        Math.abs(best[0] - appointmentPercent)
+        ? level
+        : best,
+    undefined,
   );
+  if (nearest === undefined) return undefined;
+
+  const [nearestPercent, nearestHours] = nearest;
+  return (nearestHours * appointmentPercent) / nearestPercent;
+}
 
 export const FEE_OFFSET_ABD_REASON =
   "ABD job codes are ineligible for the student fee offset";
@@ -71,15 +97,20 @@ export function offsetShareOf(appointmentPercent: number): number {
 }
 
 /**
- * Null when the term has no grad inputs or no hours for the
- * appointment.
+ * Null when the term has no grad inputs or no appointment
+ * levels.
  */
 export function gradCostOf(
   term: GradTerm | null,
   student: GradStudent,
 ): GradCost | null {
-  const hours = term?.hoursByAppointmentPercent.get(student.appointmentPercent);
-  if (term === null || hours === undefined) return null;
+  if (term === null) return null;
+
+  const hours = hoursOfAppointment(
+    term.hoursByAppointmentPercent,
+    student.appointmentPercent,
+  );
+  if (hours === undefined) return null;
 
   const { inputs } = term;
   const share = offsetShareOf(student.appointmentPercent);

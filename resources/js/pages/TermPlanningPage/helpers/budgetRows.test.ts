@@ -76,6 +76,19 @@ describe("budgetRowOf", () => {
     });
   });
 
+  it("separates co-instructors' Last, First names with semicolons", () => {
+    const [row] = rowsOf([
+      plannedSection(1, monday9, {
+        instructors: [
+          { ...sisInstructor(1, "PI"), name: "Ana García", lastName: "García" },
+          { ...sisInstructor(2, "PI"), name: "Bo Li", lastName: "Li" },
+        ],
+      }),
+    ]);
+
+    expect(row.instructorName).toBe("García, Ana; Li, Bo");
+  });
+
   it("names a TA-only section as taught by a TA", () => {
     const [row] = rowsOf([
       plannedSection(1, monday9, { instructors: [sisInstructor(10, "TA")] }),
@@ -182,7 +195,7 @@ describe("budgetRowOf", () => {
     ]);
 
     expect(lecture.assistantNames).toBe("Last10");
-    expect(lecture.taCostCell).toEqual({ kind: "amount", dollars: 9000 });
+    expect(lecture.taCostCell).toEqual({ kind: "amount", dollars: 4500 });
   });
 
   it("has an empty TA cell on a section with no TA", () => {
@@ -206,7 +219,7 @@ describe("budgetRowOf", () => {
       ),
     ]);
 
-    expect(lecture.taCostCell).toEqual({ kind: "amount", dollars: 9000 });
+    expect(lecture.taCostCell).toEqual({ kind: "amount", dollars: 4500 });
     expect(discussion).toMatchObject({
       assistantNames: "Last10",
       taCostCell: {
@@ -233,7 +246,7 @@ describe("budgetRowOf TA cost cell", () => {
 
     const [, row] = rowsOf([lecture, discussion]);
 
-    expect(row.taCostCell).toEqual({ kind: "amount", dollars: 9000 });
+    expect(row.taCostCell).toEqual({ kind: "amount", dollars: 4500 });
   });
 
   it("shows nothing for a cancelled section that lists a TA", () => {

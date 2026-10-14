@@ -10,7 +10,7 @@ import {
   roundGradRates,
   sisInstructor,
 } from "./costAssumptions.fixture";
-import { gradPersonEditOf, peopleTablesOf } from "./peopleRows";
+import { gradPersonEditOf, peopleRowsOf, type PersonRow } from "./peopleRows";
 import { plannedSection } from "./plannedSection.fixture";
 import { estimateTermCost } from "./termEstimate";
 
@@ -52,14 +52,14 @@ const section = (id: number, extra: Partial<PlannedSection>) =>
     ...extra,
   });
 
-const tablesOf = (
+const rowsOf = (
   sections: PlannedSection[],
   overrides = rateOverrides(),
   roster: SisEmployee[] = [],
   leavesByEmplid = new Map<number, TermLeave[]>(),
   notesByEmplid = new Map<number, string>(),
 ) =>
-  peopleTablesOf(
+  peopleRowsOf(
     sections,
     estimateTermCost({
       sections,
@@ -72,6 +72,13 @@ const tablesOf = (
     leavesByEmplid,
     notesByEmplid,
   );
+
+const rowFor = (rows: PersonRow[], emplid: number) => {
+  const row = rows.find((candidate) => candidate.emplid === emplid);
+  if (row === undefined) throw new Error(`no row for ${emplid}`);
+
+  return row;
+};
 
 const pi = (emplid: number) => sisInstructor(emplid, "PI");
 const ta = (emplid: number) => sisInstructor(emplid, "TA");
@@ -86,21 +93,33 @@ const employee = (emplid: number, name: string): SisEmployee => ({
   category: null,
 });
 
-describe("peopleTablesOf", () => {
-  it("puts TAs in their own table and instructors in the other", () => {
-    const { instructors, tas } = tablesOf([
+describe("peopleRowsOf", () => {
+  it("lists instructors and TAs in one list, sorted by last name", () => {
+    const rows = rowsOf([
       section(1, { instructors: [pi(1)] }),
       section(2, { instructors: [pi(2), ta(10)] }),
     ]);
 
-    expect(instructors.map(({ emplid }) => emplid)).toEqual([1, 2]);
-    expect(tas.map(({ emplid }) => emplid)).toEqual([10]);
+    expect(rows.map(({ emplid, isGrad }) => [emplid, isGrad])).toEqual([
+      [1, false],
+      [10, true],
+      [2, false],
+    ]);
+  });
+
+  it("puts the Unstaffed row after everyone, whatever the names", () => {
+    const rows = rowsOf([
+      section(1, {}),
+      section(2, { instructors: [pi(2), ta(10)] }),
+    ]);
+
+    expect(rows.map(({ emplid }) => emplid)).toEqual([10, 2, null]);
   });
 
   it("shows a person's job code, title, fund, and salary per section", () => {
-    const { instructors } = tablesOf([section(1, { instructors: [pi(2)] })]);
+    const [row] = rowsOf([section(1, { instructors: [pi(2)] })]);
 
-    expect(instructors[0]).toMatchObject({
+    expect(row).toMatchObject({
       jobCode: "9753",
       title: "Title 9753",
       fundLabel: "UI",
@@ -112,15 +131,17 @@ describe("peopleTablesOf", () => {
     });
   });
 
-  it("adds fringe on top of the salary, per section and in the total", () => {
-    const { instructors } = tablesOf([
+  it("adds fringe on top of the salary, per section, per term, and in the total", () => {
+    const [row] = rowsOf([
       section(1, { instructors: [pi(4)] }),
       section(2, { instructors: [pi(4)] }),
     ]);
 
-    expect(instructors[0]).toMatchObject({
+    expect(row).toMatchObject({
       salary: 6000,
       fringe: 3000,
+      termSalary: 12000,
+      termFringe: 6000,
       total: 18000,
     });
   });
@@ -129,12 +150,9 @@ describe("peopleTablesOf", () => {
     const overrides = rateOverrides({
       salaryByEmplid: new Map([[4, 8000]]),
     });
-    const { instructors } = tablesOf(
-      [section(1, { instructors: [pi(4)] })],
-      overrides,
-    );
+    const [row] = rowsOf([section(1, { instructors: [pi(4)] })], overrides);
 
-    expect(instructors[0]).toMatchObject({
+    expect(row).toMatchObject({
       salary: 8000,
       salaryWithoutOverride: 6000,
       isSalaryOverridden: true,
@@ -147,7 +165,7 @@ describe("peopleTablesOf", () => {
     const overrides = rateOverrides({
       salaryByEmplid: new Map([[2, 12000]]),
     });
-    const { instructors } = tablesOf(
+    const [row] = rowsOf(
       [
         section(1, { instructors: [pi(2)] }),
         section(2, { instructors: [pi(2)] }),
@@ -155,7 +173,7 @@ describe("peopleTablesOf", () => {
       overrides,
     );
 
-    expect(instructors[0]).toMatchObject({
+    expect(row).toMatchObject({
       salary: 12000,
       salaryWithoutOverride: 10000,
       isSalaryOverridden: true,
@@ -164,9 +182,9 @@ describe("peopleTablesOf", () => {
   });
 
   it("titles a job code Nova does not list from the appointment", () => {
-    const { instructors } = tablesOf([section(1, { instructors: [pi(3)] })]);
+    const [row] = rowsOf([section(1, { instructors: [pi(3)] })]);
 
-    expect(instructors[0]).toMatchObject({
+    expect(row).toMatchObject({
       jobCode: "9999",
       title: "Ph D Candidate Grad Instr",
       fundLabel: "—",
@@ -175,16 +193,16 @@ describe("peopleTablesOf", () => {
   });
 
   it("counts paid sections against half the annual load, rounded up", () => {
-    const { instructors } = tablesOf([section(1, { instructors: [pi(1)] })]);
+    const [row] = rowsOf([section(1, { instructors: [pi(1)] })]);
 
-    expect(instructors[0]).toMatchObject({
-      loadLabel: "1 of 2",
+    expect(row).toMatchObject({
+      loadLabel: "1",
       isUnderLoad: true,
     });
   });
 
   it("lists only paid sections, so a lab paid on its lecture is left out", () => {
-    const { instructors } = tablesOf([
+    const [row] = rowsOf([
       section(1, { component: "LEC", instructors: [pi(1)] }),
       section(2, {
         courseCode: "ANTH-1",
@@ -194,26 +212,24 @@ describe("peopleTablesOf", () => {
       }),
     ]);
 
-    expect(instructors[0]).toMatchObject({
-      loadLabel: "1 of 2",
+    expect(row).toMatchObject({
+      loadLabel: "1",
       sections: [{ sectionId: 1, label: "1-001" }],
     });
   });
 
-  it("shows a grad TA's pay as a read-only salary, on the default 25% appointment", () => {
-    const { tas } = tablesOf([section(1, { instructors: [pi(2), ta(10)] })]);
+  it("shows a grad TA's pay as a read-only salary, on a 12.5% appointment for one section", () => {
+    const rows = rowsOf([section(1, { instructors: [pi(2), ta(10)] })]);
 
-    expect(tas[0]).toMatchObject({
+    expect(rowFor(rows, 10)).toMatchObject({
       fundLabel: "TA/GI",
-      salary: 9000,
+      salary: 4500,
       fringe: 0,
-      total: 9000,
+      total: 4500,
       isSalaryReadOnly: true,
       isSalaryOverridden: false,
       salaryHint: null,
-      loadLabel: "25%",
-      appointmentPercent: 25,
-      isAppointmentOverridden: false,
+      loadLabel: "12.5%",
       hasFeeOffset: false,
       isInternational: false,
       isAbd: false,
@@ -221,22 +237,25 @@ describe("peopleTablesOf", () => {
     });
   });
 
-  it("lists every section a grad TA works, and caps the appointment they imply at 50%", () => {
-    const { tas } = tablesOf([
+  it("lists every section a grad TA works, and sums the appointments they imply", () => {
+    const rows = rowsOf([
       section(1, { courseCode: "ANTH-1", instructors: [ta(10)] }),
       section(2, { courseCode: "ANTH-1", instructors: [ta(10)] }),
       section(3, { courseCode: "ANTH-9", instructors: [ta(10)] }),
+      section(4, { courseCode: "ANTH-8", instructors: [ta(10)] }),
+      section(5, { courseCode: "ANTH-7", instructors: [ta(10)] }),
     ]);
+    const row = rowFor(rows, 10);
 
-    expect(tas[0].sections.map(({ sectionId }) => sectionId)).toEqual([
-      1, 2, 3,
+    expect(row.sections.map(({ sectionId }) => sectionId)).toEqual([
+      1, 2, 3, 4, 5,
     ]);
-    expect(tas[0].total).toBe(18_000);
-    expect(tas[0].loadLabel).toBe("50%");
-    expect(tas[0].appointmentPercentFromSections).toBe(50);
+    expect(row.loadLabel).toBe("62.5%");
+    expect(row.appointmentPercent).toBe(62.5);
+    expect(row.total).toBe(22_500);
   });
 
-  it("shows the person's appointment, flags, ABD status and the offset in the pay hint", () => {
+  it("shows the flags, ABD status and the offset in the pay hint", () => {
     const overrides = rateOverrides({
       gradInputs: { feeOffset: 200, internationalOffset: 400 },
       gradPeopleByEmplid: new Map([
@@ -244,42 +263,33 @@ describe("peopleTablesOf", () => {
           10,
           {
             emplid: 10,
-            appointmentPercent: 50,
             hasFeeOffset: true,
             isInternational: true,
           },
         ],
       ]),
     });
-    const { tas } = tablesOf(
-      [section(1, { instructors: [ta(10)] })],
-      overrides,
-      [],
-    );
+    const rows = rowsOf([section(1, { instructors: [ta(10)] })], overrides);
 
-    expect(tas[0]).toMatchObject({
-      appointmentPercent: 50,
-      isAppointmentOverridden: true,
+    expect(rowFor(rows, 10)).toMatchObject({
       hasFeeOffset: true,
       isInternational: true,
-      salary: 18_600,
-      salaryHint: "incl. $600 offset",
-      loadLabel: "50%",
+      salary: 4650,
+      salaryHint: "incl. $150 offset",
+      loadLabel: "12.5%",
     });
   });
 
   it("marks an ABD TA", () => {
-    const { tas } = tablesOf([section(1, { instructors: [ta(11)] })]);
+    const rows = rowsOf([section(1, { instructors: [ta(11)] })]);
 
-    expect(tas[0]).toMatchObject({ jobCode: "9519", isAbd: true });
+    expect(rows[0]).toMatchObject({ jobCode: "9519", isAbd: true });
   });
 
   it("gives a grad instructor a read-only salary with the appointment and credits as the hint", () => {
-    const { instructors } = tablesOf([
-      section(1, { credits: 3, instructors: [pi(5)] }),
-    ]);
+    const [row] = rowsOf([section(1, { credits: 3, instructors: [pi(5)] })]);
 
-    expect(instructors[0]).toMatchObject({
+    expect(row).toMatchObject({
       emplid: 5,
       salary: 9300,
       isSalaryReadOnly: true,
@@ -291,18 +301,15 @@ describe("peopleTablesOf", () => {
 
   it("does not apply an instructor salary override to a TA", () => {
     const overrides = rateOverrides({ salaryByEmplid: new Map([[10, 99]]) });
-    const { tas } = tablesOf(
-      [section(1, { instructors: [ta(10)] })],
-      overrides,
-    );
+    const rows = rowsOf([section(1, { instructors: [ta(10)] })], overrides);
 
-    expect(tas[0]).toMatchObject({ salary: 9000, isSalaryOverridden: false });
+    expect(rows[0]).toMatchObject({ salary: 4500, isSalaryOverridden: false });
   });
 
   it("leaves the grad fields empty for a non-grad instructor", () => {
-    const { instructors } = tablesOf([section(1, { instructors: [pi(2)] })]);
+    const [row] = rowsOf([section(1, { instructors: [pi(2)] })]);
 
-    expect(instructors[0]).toMatchObject({
+    expect(row).toMatchObject({
       appointmentPercent: null,
       isSalaryReadOnly: false,
       salaryHint: null,
@@ -311,7 +318,7 @@ describe("peopleTablesOf", () => {
   });
 
   it("carries a person's note, and an empty note for everyone else", () => {
-    const { instructors } = tablesOf(
+    const rows = rowsOf(
       [
         section(1, { instructors: [pi(2)] }),
         section(2, { instructors: [pi(1)] }),
@@ -322,29 +329,26 @@ describe("peopleTablesOf", () => {
       new Map([[2, "Prefers mornings"]]),
     );
 
-    expect(instructors.map(({ notes }) => notes)).toEqual([
-      "",
-      "Prefers mornings",
-    ]);
+    expect(rows.map(({ notes }) => notes)).toEqual(["", "Prefers mornings"]);
   });
 
   it("counts only sections led toward the load of someone who also TAs", () => {
-    const { instructors } = tablesOf([
+    const [row] = rowsOf([
       section(1, { instructors: [pi(2)] }),
       section(2, { instructors: [ta(2)] }),
     ]);
 
-    expect(instructors[0]).toMatchObject({ emplid: 2, loadLabel: "1 of 3" });
+    expect(row).toMatchObject({ emplid: 2, loadLabel: "1" });
   });
 
-  it("ends the instructors with an Unstaffed row at the TBA rate", () => {
-    const { instructors } = tablesOf([
+  it("ends the list with an Unstaffed row at the TBA rate", () => {
+    const rows = rowsOf([
       section(1, { instructors: [pi(1)] }),
       section(2, {}),
       section(3, {}),
     ]);
 
-    expect(instructors.at(-1)).toMatchObject({
+    expect(rows.at(-1)).toMatchObject({
       emplid: null,
       name: "Unstaffed",
       jobCode: "TBA",
@@ -355,32 +359,68 @@ describe("peopleTablesOf", () => {
     });
   });
 
+  it("shows a non-grad's load as a count of paid sections and a grad's as the summed percent", () => {
+    const rows = rowsOf([
+      section(1, { instructors: [pi(1), ta(10)] }),
+      section(2, { instructors: [pi(1), ta(10)] }),
+    ]);
+
+    expect(rowFor(rows, 1).loadLabel).toBe("2");
+    expect(rowFor(rows, 10).loadLabel).toBe("25%");
+  });
+
+  it("sums a non-grad's salary and fringe over their paid sections", () => {
+    const rows = rowsOf([
+      section(1, { instructors: [pi(4)] }),
+      section(2, { instructors: [pi(4)] }),
+      section(3, { instructors: [pi(2)] }),
+    ]);
+
+    expect(rowFor(rows, 4)).toMatchObject({
+      termSalary: 12000,
+      termFringe: 6000,
+    });
+    expect(rowFor(rows, 2)).toMatchObject({ termSalary: 10000, termFringe: 0 });
+  });
+
+  it("sums a grad's term salary and fringe from their lines", () => {
+    const rows = rowsOf([
+      section(1, { instructors: [ta(10)] }),
+      section(2, { instructors: [ta(10)] }),
+    ]);
+
+    expect(rowFor(rows, 10)).toMatchObject({
+      termSalary: 9000,
+      termFringe: 0,
+    });
+  });
+
   it("lists a rostered person with a load and no sections as under load", () => {
-    const { instructors } = tablesOf([], rateOverrides(), [
+    const rows = rowsOf([], rateOverrides(), [
       employee(1, "Priya Raman"),
       employee(3, "Staff Person"),
     ]);
 
-    expect(instructors).toMatchObject([
+    expect(rows).toMatchObject([
       {
         emplid: 1,
         name: "Priya Raman",
-        loadLabel: "0 of 2",
+        loadLabel: "0",
         isUnderLoad: true,
       },
     ]);
   });
 
   it("lists a rostered grad student with no assignments as an under-used TA", () => {
-    const { instructors, tas } = tablesOf([], rateOverrides(), [
-      employee(11, "Sam Grad"),
-    ]);
+    const rows = rowsOf([], rateOverrides(), [employee(11, "Sam Grad")]);
 
-    expect(instructors).toEqual([]);
-    expect(tas).toMatchObject([
+    expect(rows).toMatchObject([
       {
         emplid: 11,
-        loadLabel: "25%",
+        isGrad: true,
+        loadLabel: "0%",
+        appointmentPercent: 0,
+        isAssigned: false,
         total: 0,
         salary: null,
         isUnderLoad: true,
@@ -389,10 +429,11 @@ describe("peopleTablesOf", () => {
   });
 
   it("does not mark a TA with a course as under-used", () => {
-    const { tas } = tablesOf([section(1, { instructors: [pi(1), ta(10)] })]);
+    const rows = rowsOf([section(1, { instructors: [pi(1), ta(10)] })]);
 
-    expect(tas[0]).toMatchObject({
-      loadLabel: "25%",
+    expect(rowFor(rows, 10)).toMatchObject({
+      loadLabel: "12.5%",
+      isAssigned: true,
       isUnderLoad: false,
     });
   });
@@ -409,23 +450,23 @@ describe("peopleTablesOf", () => {
     });
 
     it("shows Lastname, Firstname and sorts by last name", () => {
-      const { instructors } = tablesOf([], rateOverrides(), [
+      const rows = rowsOf([], rateOverrides(), [
         named(1, "Zoe", "Adams"),
         named(2, "Aaron", "Zimmer"),
       ]);
 
-      expect(instructors.map(({ name }) => name)).toEqual([
+      expect(rows.map(({ name }) => name)).toEqual([
         "Adams, Zoe",
         "Zimmer, Aaron",
       ]);
     });
 
     it("keeps the single name when the first name is missing", () => {
-      const { instructors } = tablesOf([], rateOverrides(), [
+      const [row] = rowsOf([], rateOverrides(), [
         { ...employee(1, "Adams Staff"), lastName: "Adams" },
       ]);
 
-      expect(instructors[0].name).toBe("Adams Staff");
+      expect(row.name).toBe("Adams Staff");
     });
   });
 
@@ -443,18 +484,13 @@ describe("peopleTablesOf", () => {
     });
 
     it("lists a person on leave who teaches nothing, not as under load", () => {
-      const { instructors } = tablesOf(
-        [],
-        rateOverrides(),
-        [],
-        new Map([[1, [leave(1)]]]),
-      );
+      const rows = rowsOf([], rateOverrides(), [], new Map([[1, [leave(1)]]]));
 
-      expect(instructors).toMatchObject([
+      expect(rows).toMatchObject([
         {
           emplid: 1,
           name: "On Leave 1",
-          loadLabel: "0 of 2",
+          loadLabel: "0",
           isUnderLoad: false,
           total: 0,
           leaves: [{ id: 91 }],
@@ -463,28 +499,28 @@ describe("peopleTablesOf", () => {
     });
 
     it("attaches the leave to a person who also teaches", () => {
-      const { instructors } = tablesOf(
+      const [row] = rowsOf(
         [section(1, { instructors: [pi(2)] })],
         rateOverrides(),
         [],
         new Map([[2, [leave(2)]]]),
       );
 
-      expect(instructors[0]).toMatchObject({ emplid: 2, total: 10000 });
-      expect(instructors[0].leaves).toHaveLength(1);
+      expect(row).toMatchObject({ emplid: 2, total: 10000 });
+      expect(row.leaves).toHaveLength(1);
     });
   });
 
   it("leaves cancelled sections out", () => {
     expect(
-      tablesOf([section(1, { isCancelled: true, instructors: [pi(1)] })]),
-    ).toEqual({ instructors: [], tas: [] });
+      rowsOf([section(1, { isCancelled: true, instructors: [pi(1)] })]),
+    ).toEqual([]);
   });
 });
 
 describe("gradPersonEditOf", () => {
   const rowOfTa = (overrides = rateOverrides()) =>
-    peopleTablesOf(
+    peopleRowsOf(
       [section(1, { instructors: [ta(10)] })],
       estimateTermCost({
         sections: [section(1, { instructors: [ta(10)] })],
@@ -496,9 +532,9 @@ describe("gradPersonEditOf", () => {
       [],
       new Map(),
       new Map(),
-    ).tas[0];
+    )[0];
 
-  it("keeps the person's other settings when one changes", () => {
+  it("keeps the person's other settings when one changes, and sends no appointment percent", () => {
     const row = rowOfTa(
       rateOverrides({
         gradPeopleByEmplid: new Map([
@@ -506,7 +542,6 @@ describe("gradPersonEditOf", () => {
             10,
             {
               emplid: 10,
-              appointmentPercent: 50,
               hasFeeOffset: false,
               isInternational: true,
             },
@@ -517,17 +552,14 @@ describe("gradPersonEditOf", () => {
 
     expect(gradPersonEditOf(row, { hasFeeOffset: true })).toEqual({
       emplid: 10,
-      appointmentPercent: 50,
       hasFeeOffset: true,
       isInternational: true,
     });
   });
 
   it("is null for the Unstaffed row", () => {
-    const { instructors } = tablesOf([section(1, {})]);
+    const [row] = rowsOf([section(1, {})]);
 
-    expect(
-      gradPersonEditOf(instructors[0], { isInternational: true }),
-    ).toBeNull();
+    expect(gradPersonEditOf(row, { isInternational: true })).toBeNull();
   });
 });

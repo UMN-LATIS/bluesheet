@@ -103,7 +103,7 @@ export const gradRates = (
   ...extra,
 });
 
-/** A 25% appointment costs $9,000, a 50% one $18,000, and each credit taught adds $100. */
+/** A 12.5% appointment costs $4,500, a 25% one $9,000, a 50% one $18,000, and each credit taught adds $100. */
 export const roundGradRates = (): CostAssumptions["gradRates"] => ({
   defaults: {
     hourlyRate: 10,
@@ -115,6 +115,7 @@ export const roundGradRates = (): CostAssumptions["gradRates"] => ({
     perCreditPayment: 100,
   },
   levels: [
+    { appointmentPercent: 12.5, hours: 450 },
     { appointmentPercent: 25, hours: 900 },
     { appointmentPercent: 50, hours: 1800 },
   ],

@@ -250,7 +250,14 @@
             role="Instructor of record"
             @remove="removeInstructor(instructor.emplid)"
             @open="openPerson(instructor.emplid)"
-          />
+          >
+            <AppointmentPercentField
+              :appointment="appointmentOf(instructor)"
+              :canEdit="!isReadOnly"
+              :label="`Appointment for ${instructor.name ?? 'instructor'} on this section`"
+              @change="(percent) => setAppointmentPercent(instructor, percent)"
+            />
+          </PersonField>
           <p
             v-if="instructorsOnRecord.length === 0"
             class="tw-m-0 tw-text-[13px] tw-text-on-surface-variant"
@@ -294,7 +301,14 @@
             :role="instructor.role"
             @remove="removeInstructor(instructor.emplid)"
             @open="openPerson(instructor.emplid)"
-          />
+          >
+            <AppointmentPercentField
+              :appointment="appointmentOf(instructor)"
+              :canEdit="!isReadOnly"
+              :label="`Appointment for ${instructor.name ?? 'assistant'} on this section`"
+              @change="(percent) => setAppointmentPercent(instructor, percent)"
+            />
+          </PersonField>
           <p
             v-if="assistants.length === 0"
             class="tw-m-0 tw-text-[13px] tw-text-on-surface-variant"
@@ -610,6 +624,7 @@ import FieldDivider from "@/components/planning/FieldDivider.vue";
 import FieldHeader from "./FieldHeader.vue";
 import FieldLabel from "@/components/planning/FieldLabel.vue";
 import PersonField from "./PersonField.vue";
+import AppointmentPercentField from "./budget/AppointmentPercentField.vue";
 import PersonLeaveChip from "./PersonLeaveChip.vue";
 import PreviousEnrollment from "./PreviousEnrollment.vue";
 import SectionCostDisclosure from "./SectionCostDisclosure.vue";
@@ -639,6 +654,7 @@ import type {
   Delivery,
   PlannableCourse,
   PlannedSection,
+  SisInstructor,
   SisDay,
   SisSectionMeeting,
 } from "../types";
@@ -921,6 +937,43 @@ const costDetails = computed(() => {
       )
     : null;
 });
+
+const sectionAppointmentByPerson = computed(() => {
+  const lines =
+    props.schedule.view === "budget"
+      ? (props.schedule.sectionCosts?.get(props.section.id)?.lines ?? [])
+      : [];
+
+  return new Map(
+    lines.flatMap(({ emplid, role, sectionAppointment }) =>
+      emplid !== null && sectionAppointment
+        ? [[personRoleKey(emplid, role === "ta"), sectionAppointment]]
+        : [],
+    ),
+  );
+});
+
+const personRoleKey = (emplid: number, isTa: boolean) => `${emplid}|${isTa}`;
+
+const isTaAssignment = ({ role }: SisInstructor) => role === TA_ROLE;
+
+const appointmentOf = (instructor: SisInstructor) =>
+  sectionAppointmentByPerson.value.get(
+    personRoleKey(instructor.emplid, isTaAssignment(instructor)),
+  );
+
+const setAppointmentPercent = (
+  instructor: SisInstructor,
+  appointmentPercent: number | null,
+) =>
+  edit({
+    instructors: draft.value.instructors.map((assignment) =>
+      assignment.emplid === instructor.emplid &&
+      assignment.role === instructor.role
+        ? { ...assignment, appointmentPercent }
+        : assignment,
+    ),
+  });
 
 const hasNote = computed(() => draft.value.notes.trim() !== "");
 

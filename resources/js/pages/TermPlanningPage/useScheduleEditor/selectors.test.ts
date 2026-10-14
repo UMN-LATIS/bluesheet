@@ -342,7 +342,6 @@ describe("the budget view's selectors", () => {
         gradPeople: [
           {
             emplid: 10,
-            appointmentPercent: 50,
             hasFeeOffset: false,
             isInternational: false,
           },
@@ -360,7 +359,6 @@ describe("the budget view's selectors", () => {
       gradPersonEdits: {
         "10": {
           emplid: 10,
-          appointmentPercent: 50,
           hasFeeOffset: true,
           isInternational: false,
         },

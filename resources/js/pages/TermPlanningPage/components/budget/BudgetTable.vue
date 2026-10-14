@@ -48,7 +48,30 @@
         </div>
       </BudgetTableRow>
 
-      <slot :rows="shownRows" />
+      <slot :rows="mainRows" />
+
+      <template v-if="collapsedGroup && groupRows.length > 0">
+        <BudgetTableRow
+          class="tw-border-0 tw-border-b tw-border-solid tw-border-surface-container tw-bg-surface"
+        >
+          <div role="cell" class="tw-col-span-full">
+            <button
+              type="button"
+              :aria-expanded="isGroupOpen"
+              class="tw-flex tw-min-h-9 tw-cursor-pointer tw-items-center tw-gap-1.5 tw-border-none tw-bg-transparent tw-px-2 tw-text-xs tw-font-semibold tw-text-on-surface-variant hover:tw-text-on-surface"
+              @click="isGroupOpen = !isGroupOpen"
+            >
+              <ChevronDownIcon
+                aria-hidden="true"
+                class="tw-flex-none"
+                :class="{ '-tw-rotate-90': !isGroupOpen }"
+              />
+              {{ collapsedGroup.label }} ({{ groupRows.length }})
+            </button>
+          </div>
+        </BudgetTableRow>
+        <slot v-if="isGroupOpen" :rows="groupRows" />
+      </template>
 
       <BudgetTableRow
         v-if="$slots.totals"
@@ -84,6 +107,8 @@ const props = defineProps<{
   label: string;
   columns: BudgetColumn<Row>[];
   rows: Row[];
+  /** Rows listed after the others, behind a toggle that starts closed. */
+  collapsedGroup?: { label: string; isInGroup: (row: Row) => boolean };
 }>();
 
 defineSlots<{
@@ -101,6 +126,20 @@ const shownRows = computed(() => {
     ? sortedRows(props.rows, sortValueOf, sort.value.direction)
     : props.rows;
 });
+
+const isGroupOpen = ref(false);
+
+const groupRows = computed(() =>
+  props.collapsedGroup
+    ? shownRows.value.filter(props.collapsedGroup.isInGroup)
+    : [],
+);
+
+const mainRows = computed(() =>
+  props.collapsedGroup
+    ? shownRows.value.filter((row) => !props.collapsedGroup?.isInGroup(row))
+    : shownRows.value,
+);
 </script>
 
 <style scoped>

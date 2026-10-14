@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_VIEW,
+  decodeBudgetTab,
   decodeDayIndex,
   decodeView,
   encodeDayIndex,
@@ -19,6 +20,22 @@ describe("decodeView", () => {
 
   it("opens on the week", () => {
     expect(DEFAULT_VIEW).toBe("week");
+  });
+});
+
+describe("decodeBudgetTab", () => {
+  it("reads a tab the Budget view has", () => {
+    expect(decodeBudgetTab({ tab: "rates" })).toBe("rates");
+  });
+
+  it("opens the People tab for the old Instructors and TAs links", () => {
+    expect(decodeBudgetTab({ tab: "instructors" })).toBe("people");
+    expect(decodeBudgetTab({ tab: "tas" })).toBe("people");
+  });
+
+  it("is null for a missing or unknown tab", () => {
+    expect(decodeBudgetTab({})).toBeNull();
+    expect(decodeBudgetTab({ tab: "constructor" })).toBeNull();
   });
 });
 

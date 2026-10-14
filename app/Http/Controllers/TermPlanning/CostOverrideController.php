@@ -159,29 +159,19 @@ class CostOverrideController extends Controller {
         $termCode = TermCode::fromRequest($request);
         $this->abortIfTermIsReadOnly($academicOrg, $termCode);
         $emplid = $this->emplidOrNotFound($emplid);
-        $levelPercents = $this->gradLevelPercents($termCode);
 
         $validated = $request->validate([
-            'appointmentPercent' => [
-                'present',
-                'nullable',
-                'numeric',
-                fn(string $attribute, mixed $percent, \Closure $fail) => in_array((float) $percent, $levelPercents, true)
-                    || $fail('The appointment percent must be one of the term\'s appointment levels.'),
-            ],
             'hasFeeOffset' => ['present', 'boolean'],
             'isInternational' => ['present', 'boolean'],
         ]);
-        $appointmentPercent = $validated['appointmentPercent'] === null ? null : (float) $validated['appointmentPercent'];
         $hasFeeOffset = (bool) $validated['hasFeeOffset'];
         $isInternational = (bool) $validated['isInternational'];
-        $isDefault = $appointmentPercent === null && !$hasFeeOffset && !$isInternational;
+        $isDefault = !$hasFeeOffset && !$isInternational;
 
         $this->saveOrDelete(
             TermGradPerson::class,
             ['academic_org' => $academicOrg, 'term_code' => $termCode, 'emplid' => $emplid],
             $isDefault ? null : [
-                'appointment_percent' => $appointmentPercent,
                 'has_fee_offset' => $hasFeeOffset,
                 'is_international' => $isInternational,
             ],
@@ -189,7 +179,6 @@ class CostOverrideController extends Controller {
 
         return [
             'emplid' => $emplid,
-            'appointmentPercent' => $appointmentPercent,
             'hasFeeOffset' => $hasFeeOffset,
             'isInternational' => $isInternational,
         ];

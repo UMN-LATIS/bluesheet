@@ -45,7 +45,10 @@ import { computed, ref, watch } from "vue";
 import OverrideMarker from "./OverrideMarker.vue";
 import ResetButton from "./ResetButton.vue";
 import { refusalOfDollars } from "../../helpers/dollarAmounts";
-import { refusalOfHours } from "../../helpers/hourAmounts";
+import {
+  refusalOfAppointmentPercent,
+  refusalOfHours,
+} from "../../helpers/hourAmounts";
 import { formatDollars } from "../../helpers/money";
 import { formatPercent, parseFringeRate } from "../../helpers/percentAmounts";
 
@@ -55,7 +58,7 @@ const props = withDefaults(
     amountWithoutOverride: number | null;
     isOverridden: boolean;
     canEdit: boolean;
-    kind: "dollars" | "percent" | "hours";
+    kind: "dollars" | "percent" | "hours" | "appointment";
     label: string;
     placeholder?: string;
   }>(),
@@ -79,6 +82,8 @@ function formatAmount(amount: number): string {
       return formatPercent(amount);
     case "hours":
       return String(amount);
+    case "appointment":
+      return `${amount}%`;
   }
 }
 
@@ -100,10 +105,20 @@ function parsedAmountOf(
     return "fringeRate" in parsed ? { amount: parsed.fringeRate } : parsed;
   }
 
-  const amount = Number(text.replace(/[$,\s]/g, ""));
-  const amountRefusal =
-    props.kind === "hours" ? refusalOfHours(amount) : refusalOfDollars(amount);
+  const amount = Number(text.replace(/[$,%\s]/g, ""));
+  const amountRefusal = refusalOf(amount);
   return amountRefusal === null ? { amount } : { refusal: amountRefusal };
+}
+
+function refusalOf(amount: number): string | null {
+  switch (props.kind) {
+    case "hours":
+      return refusalOfHours(amount);
+    case "appointment":
+      return refusalOfAppointmentPercent(amount);
+    default:
+      return refusalOfDollars(amount);
+  }
 }
 
 function onChange(event: Event) {

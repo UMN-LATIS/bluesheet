@@ -2253,7 +2253,6 @@ describe("budget view", () => {
   });
   const gradPersonEdit = (isInternational: boolean): GradPersonEdit => ({
     emplid: 10,
-    appointmentPercent: null,
     hasFeeOffset: false,
     isInternational,
   });

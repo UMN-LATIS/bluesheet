@@ -139,23 +139,28 @@ describe("gradRatesOf", () => {
     });
   });
 
-  it("costs each grad code, in code order, at the standard 25% appointment", () => {
+  it("costs each grad code, in code order, at 12.5% for a TA and the standard 25% for a grad instructor", () => {
     const { rows, defaultAppointmentPercent } = ratesOf();
-    const totalOf = (code: string) =>
-      rows.find((row) => row.code === code)?.cost?.total;
+    const rowOf = (code: string) => rows.find((row) => row.code === code);
 
     expect(defaultAppointmentPercent).toBe(25);
     expect(rows.map(({ code }) => code)).toEqual(["9511", "9515", "9519"]);
-    expect(totalOf("9511")).toBeCloseTo(12482.37, 2);
-    expect(totalOf("9519")).toBeCloseTo(8346.77, 2);
+    expect(rows.map(({ appointmentPercent }) => appointmentPercent)).toEqual([
+      12.5, 25, 12.5,
+    ]);
+    expect(rowOf("9511")?.cost?.total).toBeCloseTo(6241.18, 2);
+    expect(rowOf("9515")?.cost?.total).toBeCloseTo(12482.37, 2);
+    expect(rowOf("9519")?.cost?.total).toBeCloseTo(4173.38, 2);
   });
 
-  it("costs each grad code at the department's default appointment", () => {
+  it("costs a grad instructor code at the department's default appointment and leaves a TA code at 12.5%", () => {
     const rates = ratesOf(rateOverrides({ defaultAppointmentPercent: 50 }));
-    const regular = rates.rows.find(({ code }) => code === "9511");
+    const hoursOf = (code: string) =>
+      rates.rows.find((row) => row.code === code)?.cost?.hours;
 
     expect(rates.isDefaultAppointmentOverridden).toBe(true);
-    expect(regular?.cost?.hours).toBe(392);
+    expect(hoursOf("9515")).toBe(392);
+    expect(hoursOf("9511")).toBe(98);
   });
 
   it("has no costs while an input is missing", () => {

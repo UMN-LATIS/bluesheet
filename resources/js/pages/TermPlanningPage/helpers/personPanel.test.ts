@@ -83,7 +83,7 @@ describe("personTermSectionsOf", () => {
               basis: {
                 kind: "chargedOnOtherSection",
                 sectionId: 1,
-                reason: "gradAppointment",
+                reason: "sameMeetingTime",
               },
             },
           ],
@@ -97,7 +97,7 @@ describe("personTermSectionsOf", () => {
       ),
     ).toEqual([
       null,
-      "Paid on ANTH 1001-001. A grad student's appointment is paid once per term.",
+      "Paid on ANTH 1001-001. It meets at the same time, and a person is paid once per meeting time.",
     ]);
   });
 });

@@ -16,9 +16,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class LocalClassInstructor extends Model {
     use HasFactory;
 
-    protected $fillable = ['local_class_section_id', 'emplid', 'role'];
+    protected $fillable = ['local_class_section_id', 'emplid', 'role', 'appointment_percent'];
 
-    protected $casts = ['emplid' => 'integer'];
+    protected $casts = ['emplid' => 'integer', 'appointment_percent' => 'float'];
 
     public function section(): BelongsTo {
         return $this->belongsTo(LocalClassSection::class, 'local_class_section_id');

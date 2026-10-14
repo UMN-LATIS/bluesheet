@@ -20,7 +20,11 @@ export interface SectionPayload {
   notes: string;
   isCancelled: boolean;
   meetings: { days: string[]; startTime: string; endTime: string }[];
-  instructors: { emplid: number; role: string }[];
+  instructors: {
+    emplid: number;
+    role: string;
+    appointmentPercent: number | null;
+  }[];
 }
 
 export function toSectionPayload(section: PlannedSection): SectionPayload {
@@ -44,9 +48,12 @@ export function toSectionPayload(section: PlannedSection): SectionPayload {
     })),
     // the roster's names come back from the server on the next read; sending
     // them would invite the two copies to disagree
-    instructors: section.instructors.map(({ emplid, role }) => ({
-      emplid,
-      role,
-    })),
+    instructors: section.instructors.map(
+      ({ emplid, role, appointmentPercent }) => ({
+        emplid,
+        role,
+        appointmentPercent: appointmentPercent ?? null,
+      }),
+    ),
   };
 }

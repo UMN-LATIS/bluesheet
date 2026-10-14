@@ -7,8 +7,9 @@ import {
   rateOverrides,
 } from "./costAssumptions.fixture";
 import {
-  appointmentForSectionsOf,
+  appointmentPercentOfSection,
   gradCostOf,
+  hoursOfAppointment,
   gradTermOf,
   offsetShareOf,
   type GradStudent,
@@ -97,11 +98,20 @@ describe("gradCostOf", () => {
     expect(cost?.health).toBeCloseTo(0.289 * 6620.2, 2);
   });
 
-  it("is null without a term or without hours for the appointment", () => {
+  it("is null without a term, and without any appointment levels", () => {
     expect(gradCostOf(null, student())).toBeNull();
     expect(
-      gradCostOf(fallTerm, student({ appointmentPercent: 30 })),
+      gradCostOf(
+        { inputs: FALL_GRAD_INPUTS, hoursByAppointmentPercent: new Map() },
+        student(),
+      ),
     ).toBeNull();
+  });
+
+  it("costs an appointment between levels from the nearest level's hours", () => {
+    expect(
+      gradCostOf(fallTerm, student({ appointmentPercent: 30 }))?.hours,
+    ).toBeCloseTo((196 * 30) / 25, 6);
   });
 });
 
@@ -158,15 +168,45 @@ describe("gradTermOf", () => {
   });
 });
 
-describe("appointmentForSectionsOf", () => {
-  it("adds the per-section appointment for each section, up to 50%", () => {
+describe("appointmentPercentOfSection", () => {
+  it("is 12.5% for a TA on any component", () => {
     expect(
-      [0, 1, 2, 3].map((count) => appointmentForSectionsOf(count, 25)),
-    ).toEqual([25, 25, 50, 50]);
-    expect(appointmentForSectionsOf(3, 12.5)).toBe(37.5);
+      ["LAB", "DIS", "LEC", "SEM"].map((component) =>
+        appointmentPercentOfSection(component, true, 25),
+      ),
+    ).toEqual([12.5, 12.5, 12.5, 12.5]);
   });
 
-  it("allows a per-section appointment above 50% for one section", () => {
-    expect(appointmentForSectionsOf(2, 75)).toBe(75);
+  it("is 12.5% for an instructor of a lab or discussion and the per-section appointment otherwise", () => {
+    expect(
+      ["LAB", "DIS", "LEC", "SEM"].map((component) =>
+        appointmentPercentOfSection(component, false, 25),
+      ),
+    ).toEqual([12.5, 12.5, 25, 25]);
+  });
+});
+
+describe("hoursOfAppointment", () => {
+  const levels = new Map([
+    [12.5, 450],
+    [25, 900],
+    [50, 1800],
+  ]);
+
+  it("is a level's own hours at that exact percent", () => {
+    expect(hoursOfAppointment(levels, 25)).toBe(900);
+  });
+
+  it("is in proportion to the nearest level between levels", () => {
+    expect(hoursOfAppointment(levels, 40)).toBe(1440);
+    expect(hoursOfAppointment(levels, 20)).toBe(720);
+  });
+
+  it("is in proportion to the nearest level beyond the highest", () => {
+    expect(hoursOfAppointment(levels, 75)).toBe(2700);
+  });
+
+  it("is undefined without levels", () => {
+    expect(hoursOfAppointment(new Map(), 25)).toBeUndefined();
   });
 });

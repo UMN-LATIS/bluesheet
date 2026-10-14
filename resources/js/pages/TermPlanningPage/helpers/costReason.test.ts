@@ -23,21 +23,6 @@ describe("unpaidReasonOf", () => {
     );
   });
 
-  it("says a grad student's appointment is paid once per term", () => {
-    expect(
-      unpaidReasonOf(
-        {
-          kind: "chargedOnOtherSection",
-          sectionId: 3,
-          reason: "gradAppointment",
-        },
-        labelOfSection,
-      ),
-    ).toBe(
-      "Paid on Label 3. A grad student's appointment is paid once per term.",
-    );
-  });
-
   it("names the lecture that pays a lab", () => {
     expect(
       unpaidReasonOf(

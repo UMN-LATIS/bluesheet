@@ -1,9 +1,10 @@
 <template>
   <BudgetTable
-    label="TAs and estimated costs"
+    label="People and estimated costs"
     :columns="COLUMNS"
     :rows="rows"
-    class="tw-min-w-[1056px] tw-grid-cols-[minmax(130px,1.1fr)_72px_minmax(170px,1.4fr)_104px_92px_100px_84px_72px_60px_minmax(140px,1.2fr)]"
+    :collapsedGroup="UNASSIGNED_GROUP"
+    class="tw-min-w-[1100px] tw-grid-cols-[minmax(140px,1.2fr)_72px_minmax(150px,1.3fr)_104px_96px_100px_72px_72px_60px_minmax(140px,1.2fr)]"
   >
     <template #default="{ rows: shownRows }">
       <BudgetTableRow
@@ -26,57 +27,34 @@
           role="cell"
           class="tw-flex-col tw-items-end tw-justify-center tw-tabular-nums"
         >
-          <span class="tw-font-semibold">
-            <template v-if="row.salary !== null">
-              {{ formatDollars(row.salary) }}
-            </template>
-            <template v-else>–</template>
-          </span>
-          <span
-            v-if="row.salaryHint"
-            class="tw-whitespace-nowrap tw-text-[10.5px] tw-text-on-surface-variant"
-          >
-            {{ row.salaryHint }}
-          </span>
+          <span>{{ formatWholeDollars(row.termSalary) }}</span>
+          <CellSubline v-if="row.salaryHint">{{ row.salaryHint }}</CellSubline>
         </BudgetCell>
         <BudgetCell
           role="cell"
           align="end"
           class="tw-text-on-surface-variant"
-          :title="
-            row.isAbd ? 'GA health and ABD tuition' : 'GA health and tuition'
-          "
+          :title="fringeTitleOf(row)"
         >
-          <template v-if="row.fringe !== null">
-            {{ formatDollars(row.fringe) }}
-          </template>
-          <template v-else>–</template>
+          {{ formatWholeDollars(row.termFringe) }}
         </BudgetCell>
         <BudgetCell role="cell" align="end" class="tw-font-bold">
           <MissingRate v-if="row.hasMissingRate" class="tw-mr-1" />
           {{ formatWholeDollars(row.total) }}
         </BudgetCell>
-        <BudgetCell role="cell" class="tw-p-0">
-          <AppointmentSelect
-            v-if="row.appointmentPercent !== null"
-            class="tw-w-full"
-            :appointmentPercent="row.appointmentPercent"
-            :levels="appointmentLevels"
-            :defaultPercent="
-              row.appointmentPercentFromSections ?? row.appointmentPercent
-            "
-            :isOverridden="row.isAppointmentOverridden"
-            :canEdit="canEdit"
-            :label="`Appointment for ${row.name}`"
-            @change="
-              (percent) => editGrad(row, { appointmentPercent: percent })
-            "
-          />
-          <span v-else class="tw-w-full tw-px-2 tw-text-right">–</span>
+        <BudgetCell
+          role="cell"
+          align="end"
+          class="tw-font-semibold"
+          :class="
+            row.isUnderLoad ? 'tw-text-brand' : 'tw-text-on-surface-variant'
+          "
+        >
+          {{ row.loadLabel }}
         </BudgetCell>
         <BudgetCell role="cell" class="tw-justify-center">
           <GradCheckbox
-            v-if="row.appointmentPercent !== null"
+            v-if="row.isGrad"
             :isChecked="row.hasFeeOffset && !row.isAbd"
             :canEdit="canEdit && !row.isAbd"
             :disabledReason="row.isAbd ? FEE_OFFSET_ABD_REASON : undefined"
@@ -86,7 +64,7 @@
         </BudgetCell>
         <BudgetCell role="cell" class="tw-justify-center">
           <GradCheckbox
-            v-if="row.appointmentPercent !== null"
+            v-if="row.isGrad"
             :isChecked="row.isInternational"
             :canEdit="canEdit"
             :label="`International GA offset for ${row.name}`"
@@ -106,13 +84,13 @@
 
     <template #totals>
       <div role="cell" class="tw-col-span-3 tw-whitespace-nowrap tw-p-2">
-        Total · {{ rows.length }} TAs
+        Total · {{ personCount }} people, {{ unstaffedSectionCount }}
+        unstaffed sections
       </div>
       <TotalCell role="cell">{{ formatWholeDollars(salaryTotal) }}</TotalCell>
       <TotalCell role="cell">{{ formatWholeDollars(fringeTotal) }}</TotalCell>
       <TotalCell role="cell">{{ formatWholeDollars(total) }}</TotalCell>
-      <TotalCell role="cell">{{ loadTotal }}%</TotalCell>
-      <div role="cell" class="tw-col-span-3" />
+      <div role="cell" class="tw-col-span-4" />
     </template>
   </BudgetTable>
 </template>
@@ -120,23 +98,21 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import type { GradPerson } from "@/types";
-import AppointmentSelect from "./AppointmentSelect.vue";
 import BudgetCell from "./BudgetCell.vue";
 import BudgetTable, { type BudgetColumn } from "./BudgetTable.vue";
 import BudgetTableRow from "./BudgetTableRow.vue";
+import CellSubline from "./CellSubline.vue";
 import GradCheckbox from "./GradCheckbox.vue";
 import MissingRate from "./MissingRate.vue";
 import PersonNameCell from "./PersonNameCell.vue";
 import SectionLinks from "./SectionLinks.vue";
 import TotalCell from "./TotalCell.vue";
 import { FEE_OFFSET_ABD_REASON } from "../../helpers/gradCost";
-import { formatDollars, formatWholeDollars } from "../../helpers/money";
+import { formatWholeDollars } from "../../helpers/money";
 import { gradPersonEditOf, type PersonRow } from "../../helpers/peopleRows";
 
 const props = defineProps<{
   rows: PersonRow[];
-  /** The term's appointment percents. */
-  appointmentLevels: number[];
   canEdit: boolean;
 }>();
 
@@ -151,28 +127,55 @@ const COLUMNS: BudgetColumn<PersonRow>[] = [
   { label: "Name", sortValueOf: ({ name }) => name },
   { label: "Job code", sortValueOf: ({ jobCode }) => jobCode },
   { label: "Title", sortValueOf: ({ title }) => title || null },
-  { label: "Salary", isNumeric: true, sortValueOf: ({ salary }) => salary },
-  { label: "Fringe", isNumeric: true, sortValueOf: ({ fringe }) => fringe },
+  {
+    label: "Salary",
+    isNumeric: true,
+    sortValueOf: ({ termSalary }) => termSalary,
+  },
+  {
+    label: "Fringe",
+    isNumeric: true,
+    sortValueOf: ({ termFringe }) => termFringe,
+  },
   { label: "Total", isNumeric: true, sortValueOf: ({ total }) => total },
   {
     label: "Load",
     isNumeric: true,
-    sortValueOf: ({ appointmentPercent }) => appointmentPercent,
+    sortValueOf: ({ appointmentPercent, sections }) =>
+      appointmentPercent ?? sections.length,
   },
   { label: "Fee off.", sortValueOf: ({ hasFeeOffset }) => hasFeeOffset },
   { label: "Intl.", sortValueOf: ({ isInternational }) => isInternational },
   { label: "Sections" },
 ];
 
+const UNASSIGNED_GROUP = {
+  label: "Not assigned this term",
+  isInGroup: (row: PersonRow) => !row.isAssigned,
+};
+
+const fringeTitleOf = (row: PersonRow) => {
+  if (!row.isGrad) return undefined;
+
+  return row.isAbd ? "GA health and ABD tuition" : "GA health and tuition";
+};
+
+const personCount = computed(
+  () =>
+    props.rows.filter(({ emplid, isAssigned }) => emplid !== null && isAssigned)
+      .length,
+);
+
+const unstaffedSectionCount = computed(
+  () => props.rows.find(({ emplid }) => emplid === null)?.sections.length ?? 0,
+);
+
 const sumOf = (amountOf: (row: PersonRow) => number) =>
   props.rows.reduce((sum, row) => sum + amountOf(row), 0);
 
-const salaryTotal = computed(() => sumOf(({ salary }) => salary ?? 0));
-const fringeTotal = computed(() => sumOf(({ fringe }) => fringe ?? 0));
+const salaryTotal = computed(() => sumOf(({ termSalary }) => termSalary));
+const fringeTotal = computed(() => sumOf(({ termFringe }) => termFringe));
 const total = computed(() => sumOf(({ total }) => total));
-const loadTotal = computed(() =>
-  sumOf(({ appointmentPercent }) => appointmentPercent ?? 0),
-);
 
 function editGrad(row: PersonRow, change: Partial<Omit<GradPerson, "emplid">>) {
   const edit = gradPersonEditOf(row, change);

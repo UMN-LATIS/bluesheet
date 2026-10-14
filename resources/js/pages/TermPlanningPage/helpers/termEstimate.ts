@@ -6,6 +6,7 @@ import {
   instructorRateOf,
   isFreeComponent,
   isGradJobCodeRate,
+  LECTURE,
   pricingOf,
   taRateOf,
   unstaffedRateOf,
@@ -16,7 +17,7 @@ import {
 import {
   gradCostOf,
   gradTermOf,
-  appointmentForSectionsOf,
+  appointmentPercentOfSection,
   defaultAppointmentOf,
   type GradCost,
   type GradStudent,
@@ -24,8 +25,6 @@ import {
 } from "./gradCost";
 import { blockOwners } from "./sectionPlacement";
 import { assistantsOf, instructorsOfRecord, TA_ROLE } from "./sectionPeople";
-
-const LECTURE = "LEC";
 
 export interface CostLine {
   role: "instructor" | "ta" | "unstaffedSection";
@@ -39,19 +38,29 @@ export interface CostLine {
   amount: number | null;
   basis: CostBasis;
   /**
-   * Only on the one line that carries a grad student's
-   * term cost. Its salary is the pay, and its fringe is
-   * health plus tuition.
+   * On each line that carries a share of a grad student's
+   * appointment, in proportion to this section's part of
+   * it: that share of the pay, as salary, and of health plus
+   * tuition, as fringe.
    */
   gradAppointment?: GradAppointment;
+  /** This section's part of a grad student's appointment. */
+  sectionAppointment?: SectionAppointment;
 }
 
 export interface GradAppointment {
+  /** Its appointment is the sum of the person's sections' parts. */
   student: GradStudent;
-  /** What the person's paid sections imply, before their own setting. */
-  appointmentPercentFromSections: number;
-  /** Null when the term has no grad inputs or hours. */
+  /** For the whole appointment. Null when the term has no grad inputs or levels. */
   cost: GradCost | null;
+}
+
+export interface SectionAppointment {
+  percent: number;
+  /** The default for the person's role on this section. */
+  percentWithoutOverride: number;
+  /** True when the section names a percent for this person. */
+  isOverridden: boolean;
 }
 
 export interface SectionCost {
@@ -124,7 +133,7 @@ export function estimateTermCost(
       sections.map((section) => [section.id, costLinesOf(section, context)]),
     ),
   );
-  const linesWithGradAppointments = chargedOncePerGradStudent(
+  const linesWithGradAppointments = gradAppointmentsSplitAcrossSections(
     liveSections,
     linesBySectionId,
     {
@@ -457,7 +466,7 @@ interface GradCharging {
   rateOverrides: RateOverrides;
 }
 
-function chargedOncePerGradStudent(
+function gradAppointmentsSplitAcrossSections(
   sections: PlannedSection[],
   linesBySectionId: Map<number, CostLine[]>,
   { gradTerm, pricingOfEmplid, isGradStudent, rateOverrides }: GradCharging,
@@ -468,23 +477,37 @@ function chargedOncePerGradStudent(
     line.emplid !== null &&
     line.basis.kind === "rate" &&
     isGradStudent(line.emplid);
-  const chargedSectionIdByEmplid = new Map<number, number>();
-  const sectionIdsByEmplid = new Map<number, Set<number>>();
+  const sectionAppointmentsByEmplid = new Map<
+    number,
+    Map<number, SectionAppointment>
+  >();
   const creditsByEmplid = new Map<number, number>();
 
-  for (const section of [...sections].sort(lecturesThenCourseAndSection)) {
+  for (const section of sections) {
     for (const line of linesBySectionId.get(section.id) ?? []) {
       if (!isGradAppointmentLine(line)) continue;
 
       const { emplid } = line;
-      if (!chargedSectionIdByEmplid.has(emplid)) {
-        chargedSectionIdByEmplid.set(emplid, section.id);
-      }
-      sectionIdsByEmplid.set(
-        emplid,
-        (sectionIdsByEmplid.get(emplid) ?? new Set()).add(section.id),
+      const isTa = line.role === "ta";
+      const assignment = section.instructors.find(
+        (instructor) =>
+          instructor.emplid === emplid &&
+          (instructor.role === TA_ROLE) === isTa,
       );
-      if (line.role === "instructor") {
+      const percentWithoutOverride = appointmentPercentOfSection(
+        section.component,
+        isTa,
+        defaultAppointmentOf(rateOverrides),
+      );
+      sectionAppointmentsByEmplid.set(
+        emplid,
+        (sectionAppointmentsByEmplid.get(emplid) ?? new Map()).set(section.id, {
+          percent: assignment?.appointmentPercent ?? percentWithoutOverride,
+          percentWithoutOverride,
+          isOverridden: assignment?.appointmentPercent != null,
+        }),
+      );
+      if (!isTa) {
         creditsByEmplid.set(
           emplid,
           (creditsByEmplid.get(emplid) ?? 0) + (section.credits ?? 0),
@@ -493,50 +516,51 @@ function chargedOncePerGradStudent(
     }
   }
 
+  const percentsOf = (emplid: number) =>
+    [...(sectionAppointmentsByEmplid.get(emplid)?.values() ?? [])].map(
+      ({ percent }) => percent,
+    );
+
+  const appointmentOf = (emplid: number): GradAppointment => {
+    const rate = pricingOfEmplid(emplid).rate;
+    const setting = rateOverrides.gradPeopleByEmplid.get(emplid);
+    const student: GradStudent = {
+      appointmentPercent: sum(percentsOf(emplid)),
+      isAbd: rate?.studentStatus === "abd",
+      hasFeeOffset: setting?.hasFeeOffset ?? false,
+      isInternational: setting?.isInternational ?? false,
+      creditsTaught:
+        rate?.instructorType === "graduate_instructor"
+          ? (creditsByEmplid.get(emplid) ?? 0)
+          : 0,
+    };
+
+    return { student, cost: gradCostOf(gradTerm, student) };
+  };
+
   return new Map(
     [...linesBySectionId].map(([sectionId, lines]) => [
       sectionId,
       lines.map((line): CostLine => {
         if (!isGradAppointmentLine(line)) return line;
 
-        const chargedSectionId = chargedSectionIdByEmplid.get(line.emplid);
-        if (chargedSectionId !== sectionId) {
-          return {
-            ...line,
-            ...NOTHING_OWED,
-            basis: {
-              kind: "chargedOnOtherSection",
-              sectionId: chargedSectionId ?? sectionId,
-              reason: "gradAppointment",
-            },
-          };
-        }
-
-        const rate = pricingOfEmplid(line.emplid).rate;
-        const setting = rateOverrides.gradPeopleByEmplid.get(line.emplid);
-        const appointmentPercentFromSections = appointmentForSectionsOf(
-          sectionIdsByEmplid.get(line.emplid)?.size ?? 1,
-          defaultAppointmentOf(rateOverrides),
-        );
-        const student: GradStudent = {
-          appointmentPercent:
-            setting?.appointmentPercent ?? appointmentPercentFromSections,
-          isAbd: rate?.studentStatus === "abd",
-          hasFeeOffset: setting?.hasFeeOffset ?? false,
-          isInternational: setting?.isInternational ?? false,
-          creditsTaught:
-            rate?.instructorType === "graduate_instructor"
-              ? (creditsByEmplid.get(line.emplid) ?? 0)
-              : 0,
-        };
-        const cost = gradCostOf(gradTerm, student);
+        const appointment = appointmentOf(line.emplid);
+        const sectionAppointment = sectionAppointmentsByEmplid
+          .get(line.emplid)
+          ?.get(sectionId);
+        const { cost, student } = appointment;
+        const share =
+          student.appointmentPercent === 0 || sectionAppointment === undefined
+            ? 0
+            : sectionAppointment.percent / student.appointmentPercent;
 
         return {
           ...line,
-          salary: cost?.pay ?? null,
-          fringe: cost?.fringe ?? null,
-          amount: cost?.total ?? null,
-          gradAppointment: { student, appointmentPercentFromSections, cost },
+          salary: cost ? cost.pay * share : null,
+          fringe: cost ? cost.fringe * share : null,
+          amount: cost ? cost.total * share : null,
+          gradAppointment: appointment,
+          sectionAppointment,
         };
       }),
     ]),

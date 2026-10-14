@@ -19,7 +19,6 @@ import {
   salaryReceiptOf,
   type ReceiptLine,
 } from "./costReceipt";
-import { defaultAppointmentOf } from "./gradCost";
 import { formatWholeDollars } from "./money";
 import { fundLabelOf } from "./rateRows";
 import {
@@ -57,26 +56,26 @@ export interface PersonRow {
   salaryHint: string | null;
   /** Per paid section or course. Null when no rate exists. */
   fringe: number | null;
+  /** This term's salary, over every paid section. Lines with no rate add nothing. */
+  termSalary: number;
+  /** This term's fringe, over every paid section. Lines with no rate add nothing. */
+  termFringe: number;
+  /** Paid sections, or a grad student's appointment percent. */
   loadLabel: string;
   isUnderLoad: boolean;
   /** Lines with no rate add nothing. */
   total: number;
   hasMissingRate: boolean;
-  /**
-   * The sections the person is paid on. A grad student's
-   * other sections are included: the appointment is paid
-   * once but they still work them.
-   */
+  /** The sections the person is paid on. */
   sections: SectionLink[];
+  /** False when the person is on no section this term. */
+  isAssigned: boolean;
   notes: string;
   /** Leaves that overlap the term. */
   leaves: TermLeave[];
-  /** Null unless the person's priced job code is a grad student's. */
+  isGrad: boolean;
+  /** The sum of their sections' parts. Null unless a grad student. */
   appointmentPercent: number | null;
-  /** What their paid sections imply; a reset restores it. Null unless a grad student. */
-  appointmentPercentFromSections: number | null;
-  /** True when the person has their own appointment instead of the one their sections imply. */
-  isAppointmentOverridden: boolean;
   hasFeeOffset: boolean;
   isInternational: boolean;
   isAbd: boolean;
@@ -94,20 +93,12 @@ export function gradPersonEditOf(
   if (row.emplid === null) return null;
 
   const settings = {
-    appointmentPercent: row.isAppointmentOverridden
-      ? row.appointmentPercent
-      : null,
     hasFeeOffset: row.hasFeeOffset,
     isInternational: row.isInternational,
     ...change,
   };
 
   return { emplid: row.emplid, ...settings };
-}
-
-export interface PeopleTables {
-  instructors: PersonRow[];
-  tas: PersonRow[];
 }
 
 const TERMS_PER_YEAR = 2;
@@ -119,9 +110,7 @@ const UNPAID_BASIS_KINDS = [
 ];
 
 const isPaid = ({ basis }: CostLine) =>
-  !UNPAID_BASIS_KINDS.includes(basis.kind) ||
-  (basis.kind === "chargedOnOtherSection" &&
-    basis.reason === "gradAppointment");
+  !UNPAID_BASIS_KINDS.includes(basis.kind);
 
 interface Charge {
   section: PlannedSection;
@@ -135,7 +124,7 @@ const shortLabelOf = ({ catalogNumber, section }: PlannedSection) =>
  * Everyone charged this term, plus anyone on leave and
  * anyone on the roster whose job code expects a load.
  */
-export function peopleTablesOf(
+export function peopleRowsOf(
   sections: PlannedSection[],
   costsBySectionId: Map<number, SectionCost>,
   assumptions: CostAssumptions,
@@ -143,7 +132,7 @@ export function peopleTablesOf(
   roster: SisEmployee[],
   leavesByEmplid: Map<number, TermLeave[]>,
   notesByEmplid: Map<number, string>,
-): PeopleTables {
+): PersonRow[] {
   const pricingOfEmplid = pricingByEmplidOf(assumptions, rateOverrides);
   const termRates = termRatesOf(assumptions, rateOverrides);
   const positionTitlesByEmplid = new Map(
@@ -171,7 +160,7 @@ export function peopleTablesOf(
   const rowOf = (
     emplid: number,
     charges: Charge[],
-  ): { isTa: boolean; sortName: string; row: PersonRow } => {
+  ): { sortName: string; row: PersonRow } => {
     const lines = charges.map(({ line }) => line);
     const pricing = pricingOfEmplid(emplid);
     const { jobCode, rate } = pricing;
@@ -195,13 +184,8 @@ export function peopleTablesOf(
         ? null
         : Math.ceil(rate.annualLoad / TERMS_PER_YEAR);
     const gradSetting = rateOverrides.gradPeopleByEmplid.get(emplid);
-    const gradAppointment = gradAppointmentOf(lines);
-    const appointmentPercentFromSections = isGrad
-      ? (gradAppointment?.appointmentPercentFromSections ??
-        defaultAppointmentOf(rateOverrides))
-      : null;
     const appointmentPercent = isGrad
-      ? (gradSetting?.appointmentPercent ?? appointmentPercentFromSections)
+      ? (gradAppointmentOf(lines)?.student.appointmentPercent ?? 0)
       : null;
 
     const price = isGrad
@@ -227,24 +211,26 @@ export function peopleTablesOf(
           ? "TA/GI"
           : fundLabelOf(rate?.instructorType ?? null),
       ...price,
+      termSalary: sumOf(lines.map(({ salary }) => salary)),
+      termFringe: sumOf(lines.map(({ fringe }) => fringe)),
       loadLabel:
-        appointmentPercent !== null && isTa
-          ? `${appointmentPercent}%`
-          : loadLabelOf(paidCount, expectedCount),
+        appointmentPercent === null
+          ? String(paidCount)
+          : `${appointmentPercent}%`,
       isUnderLoad: isUnderLoadOf(isTa, leaves.length, paidCount, expectedCount),
       ...chargeSummary,
+      isAssigned: charges.length > 0,
       notes: notesByEmplid.get(emplid) ?? "",
       leaves,
+      isGrad,
       appointmentPercent,
-      appointmentPercentFromSections,
-      isAppointmentOverridden: gradSetting?.appointmentPercent != null,
       hasFeeOffset: isGrad && (gradSetting?.hasFeeOffset ?? false),
       isInternational: isGrad && (gradSetting?.isInternational ?? false),
       isAbd: rate?.studentStatus === "abd",
       receipt: receiptOf(lines, price, paidCount, chargeSummary.total),
     };
 
-    return { isTa, sortName: sortNameOf(person), row };
+    return { sortName: sortNameOf(person), row };
   };
 
   const hasExpectedLoad = ({ emplid }: SisEmployee) =>
@@ -259,17 +245,15 @@ export function peopleTablesOf(
       .filter((emplid) => !chargesByEmplid.has(emplid))
       .map((emplid) => rowOf(emplid, [])),
   ].sort((a, b) => a.sortName.localeCompare(b.sortName));
-  const rowsWhere = (isTaWanted: boolean) =>
-    rows.filter(({ isTa }) => isTa === isTaWanted).map(({ row }) => row);
 
-  return {
-    instructors: [
-      ...rowsWhere(false),
-      ...unstaffedRowsOf(unstaffedCharges, unstaffedRateOf(termRates)),
-    ],
-    tas: rowsWhere(true),
-  };
+  return [
+    ...rows.map(({ row }) => row),
+    ...unstaffedRowsOf(unstaffedCharges, unstaffedRateOf(termRates)),
+  ];
 }
+
+const sumOf = (amounts: (number | null)[]) =>
+  amounts.reduce<number>((total, amount) => total + (amount ?? 0), 0);
 
 interface NamedPerson {
   name: string | null;
@@ -379,14 +363,16 @@ function unstaffedRowsOf(charges: Charge[], rate: Rate | null): PersonRow[] {
       title: "Unstaffed",
       fundLabel: "—",
       ...price,
+      termSalary: sumOf(charges.map(({ line }) => line.salary)),
+      termFringe: sumOf(charges.map(({ line }) => line.fringe)),
       loadLabel: String(paidCount),
       isUnderLoad: false,
       ...chargeSummary,
+      isAssigned: true,
       notes: "",
       leaves: [],
+      isGrad: false,
       appointmentPercent: null,
-      appointmentPercentFromSections: null,
-      isAppointmentOverridden: false,
       hasFeeOffset: false,
       isInternational: false,
       isAbd: false,
@@ -413,10 +399,4 @@ function chargeSummaryOf(charges: Charge[]) {
       }))
       .sort((a, b) => a.label.localeCompare(b.label)),
   };
-}
-
-function loadLabelOf(paidCount: number, expectedCount: number | null): string {
-  if (expectedCount === null) return String(paidCount);
-
-  return `${paidCount} of ${expectedCount}`;
 }

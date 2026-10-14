@@ -139,7 +139,7 @@ function instructorNameOf(
     .map(({ name, lastName }) =>
       name === null ? (lastName ?? "Unknown") : lastNameFirst(name, lastName),
     )
-    .join(", ");
+    .join("; ");
 }
 
 function assistantNamesOf(section: PlannedSection): string {

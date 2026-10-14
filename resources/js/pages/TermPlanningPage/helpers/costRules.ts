@@ -3,6 +3,8 @@ import type { RateOverrides } from "./costOverrides";
 
 export const UNSTAFFED_JOB_CODE = "TBA";
 
+export const LECTURE = "LEC";
+
 const FREE_COMPONENTS = ["IND", "FWK"];
 
 export const isFreeComponent = (component: string) =>

@@ -38,20 +38,9 @@
           "
         />
 
-        <InstructorsTable
-          v-else-if="schedule.budgetTab === 'instructors'"
-          :rows="peopleTables.instructors"
-          :canEdit="schedule.canEditCosts"
-          @selectSection="selectSection"
-          @selectPerson="selectPerson"
-          @selectLeave="selectLeave"
-          @editSalary="editPersonSalary"
-        />
-
-        <TasTable
-          v-else-if="schedule.budgetTab === 'tas'"
-          :rows="peopleTables.tas"
-          :appointmentLevels="appointmentLevels"
+        <PeopleTable
+          v-else-if="schedule.budgetTab === 'people'"
+          :rows="shownPeople"
           :canEdit="schedule.canEditCosts"
           @selectSection="selectSection"
           @selectPerson="selectPerson"
@@ -79,6 +68,8 @@
             (edit) => schedule.dispatch({ type: 'gradHoursEdited', edit })
           "
         />
+
+        <AssumptionsTab v-else-if="schedule.budgetTab === 'assumptions'" />
       </div>
     </template>
 
@@ -97,18 +88,18 @@ import type {
   SisEmployee,
   TermLeave,
 } from "@/types";
+import AssumptionsTab from "./AssumptionsTab.vue";
 import BudgetHeader from "./BudgetHeader.vue";
 import BudgetTabBar from "./BudgetTabBar.vue";
-import InstructorsTable from "./InstructorsTable.vue";
+import PeopleTable from "./PeopleTable.vue";
 import RatesTab from "./RatesTab.vue";
 import SectionsTable from "./SectionsTable.vue";
-import TasTable from "./TasTable.vue";
 import { budgetRowOf } from "../../helpers/budgetRows";
 import {
   enrollmentSeriesBySection,
   historyKeyOf,
 } from "../../helpers/enrollmentHistory";
-import { peopleTablesOf, type PersonRow } from "../../helpers/peopleRows";
+import { peopleRowsOf } from "../../helpers/peopleRows";
 import { filterPeople } from "../../helpers/scheduleFilters";
 import { totalsOf, type SectionCost } from "../../helpers/termEstimate";
 import type { PlannedSection } from "../../types";
@@ -151,12 +142,12 @@ const chargedEmplids = computed(
     ),
 );
 
-const allPeopleTables = computed(() =>
+const people = computed(() =>
   props.assumptions &&
   props.schedule.sectionCosts &&
   props.schedule.rateOverrides &&
   props.schedule.personNotes
-    ? peopleTablesOf(
+    ? peopleRowsOf(
         props.schedule.localSections,
         props.schedule.sectionCosts,
         props.assumptions,
@@ -165,24 +156,16 @@ const allPeopleTables = computed(() =>
         props.leavesByEmplid,
         props.schedule.personNotes,
       )
-    : { instructors: [], tas: [] },
+    : [],
 );
 
-const peopleTables = computed(() => {
-  const shownPeopleOf = (rows: PersonRow[]) =>
-    filterPeople(rows, props.schedule.localSections, props.schedule.filters);
-
-  return {
-    instructors: shownPeopleOf(allPeopleTables.value.instructors),
-    tas: shownPeopleOf(allPeopleTables.value.tas),
-  };
-});
-
-const editPersonSalary = (emplid: number, amount: number | null) =>
-  props.schedule.dispatch({
-    type: "rateOverrideEdited",
-    edit: { rate: { kind: "person", emplid }, amount },
-  });
+const shownPeople = computed(() =>
+  filterPeople(
+    people.value,
+    props.schedule.localSections,
+    props.schedule.filters,
+  ),
+);
 
 const appointmentLevels = computed(() =>
   (props.assumptions?.gradRates.levels ?? [])

@@ -171,7 +171,7 @@ describe('override authorization', function () {
         expect(putJson(personNoteUrl($this->group, '100000001'), ['notes' => 'x'])->status())->toBe(403);
         expect(patchJson(gradRateOverrideUrl($this->group), ['hourlyRate' => 1])->status())->toBe(403);
         expect(putJson(gradHoursUrl($this->group, '25'), ['hours' => 1])->status())->toBe(403);
-        expect(putJson(gradPersonUrl($this->group, '100000001'), ['appointmentPercent' => null, 'hasFeeOffset' => true, 'isInternational' => false])->status())->toBe(403);
+        expect(putJson(gradPersonUrl($this->group, '100000001'), ['hasFeeOffset' => true, 'isInternational' => false])->status())->toBe(403);
     });
 
     it('lets a courses editor save every override', function () {
@@ -547,7 +547,7 @@ describe('grad rates in the payload', function () {
         gradTermRateWithLevels();
         patchJson(gradRateOverrideUrl($this->group), ['hourlyRate' => 31]);
         putJson(gradHoursUrl($this->group, '25'), ['hours' => 200]);
-        putJson(gradPersonUrl($this->group, '100000001'), ['appointmentPercent' => 50, 'hasFeeOffset' => true, 'isInternational' => false]);
+        putJson(gradPersonUrl($this->group, '100000001'), ['hasFeeOffset' => true, 'isInternational' => false]);
         TermGradPerson::create(['academic_org' => COST_API_OTHER_DEPT, 'term_code' => TERM_FALL_2026, 'emplid' => 100000002, 'has_fee_offset' => true]);
 
         $res = getJson(costAssumptionsUrl($this->group));
@@ -564,7 +564,7 @@ describe('grad rates in the payload', function () {
         ]);
         expect($res->json('rateOverrides.gradHours'))->toEqual([['appointmentPercent' => 25.0, 'hours' => 200]]);
         expect($res->json('gradPeople'))->toEqual([
-            ['emplid' => 100000001, 'appointmentPercent' => 50.0, 'hasFeeOffset' => true, 'isInternational' => false],
+            ['emplid' => 100000001, 'hasFeeOffset' => true, 'isInternational' => false],
         ]);
         expect(getJson(costAssumptionsUrl($this->group, 1273))->json('rateOverrides.grad'))->toBeNull();
     });
@@ -711,45 +711,43 @@ describe('grad people', function () {
         gradTermRateWithLevels();
     });
 
-    it('saves an appointment and the two offset flags', function () {
-        $body = ['appointmentPercent' => 50, 'hasFeeOffset' => true, 'isInternational' => true];
+    it('saves the two offset flags', function () {
+        $body = ['hasFeeOffset' => true, 'isInternational' => true];
 
         $res = putJson(gradPersonUrl($this->group, '100000001'), $body);
 
-        expect($res->json())->toEqual(['emplid' => 100000001, 'appointmentPercent' => 50.0, 'hasFeeOffset' => true, 'isInternational' => true]);
+        expect($res->json())->toEqual(['emplid' => 100000001, 'hasFeeOffset' => true, 'isInternational' => true]);
         expect(TermGradPerson::count())->toBe(1);
         expect(TermGradPerson::first()->created_by)->toBe($this->groupManager->id);
     });
 
-    it('keeps a row for a null appointment when a flag is set, and updates it in place', function () {
-        putJson(gradPersonUrl($this->group, '100000001'), ['appointmentPercent' => null, 'hasFeeOffset' => true, 'isInternational' => false]);
-        putJson(gradPersonUrl($this->group, '100000001'), ['appointmentPercent' => null, 'hasFeeOffset' => false, 'isInternational' => true]);
+    it('updates the row in place when a flag changes', function () {
+        putJson(gradPersonUrl($this->group, '100000001'), ['hasFeeOffset' => true, 'isInternational' => false]);
+        putJson(gradPersonUrl($this->group, '100000001'), ['hasFeeOffset' => false, 'isInternational' => true]);
 
         expect(TermGradPerson::count())->toBe(1);
         expect(TermGradPerson::first()->is_international)->toBeTrue();
         expect(TermGradPerson::first()->has_fee_offset)->toBeFalse();
     });
 
-    it('deletes the row when the appointment is null and both flags are false', function () {
-        putJson(gradPersonUrl($this->group, '100000001'), ['appointmentPercent' => 25, 'hasFeeOffset' => false, 'isInternational' => false]);
+    it('deletes the row when both flags are false', function () {
+        putJson(gradPersonUrl($this->group, '100000001'), ['hasFeeOffset' => true, 'isInternational' => false]);
 
-        putJson(gradPersonUrl($this->group, '100000001'), ['appointmentPercent' => null, 'hasFeeOffset' => false, 'isInternational' => false]);
+        putJson(gradPersonUrl($this->group, '100000001'), ['hasFeeOffset' => false, 'isInternational' => false]);
 
         expect(TermGradPerson::count())->toBe(0);
     });
 
-    it('rejects an appointment that is not a level of the term, missing fields, and non-boolean flags', function () {
-        $valid = ['appointmentPercent' => 25, 'hasFeeOffset' => false, 'isInternational' => false];
+    it('rejects missing fields and non-boolean flags', function () {
+        $valid = ['hasFeeOffset' => false, 'isInternational' => false];
 
-        expect(putJson(gradPersonUrl($this->group, '100000001'), [...$valid, 'appointmentPercent' => 30])->status())->toBe(422);
-        expect(putJson(gradPersonUrl($this->group, '100000001'), [...$valid, 'appointmentPercent' => 'abc'])->status())->toBe(422);
-        expect(putJson(gradPersonUrl($this->group, '100000001'), ['appointmentPercent' => 25, 'hasFeeOffset' => false])->status())->toBe(422);
+        expect(putJson(gradPersonUrl($this->group, '100000001'), ['hasFeeOffset' => false])->status())->toBe(422);
         expect(putJson(gradPersonUrl($this->group, '100000001'), [...$valid, 'isInternational' => 'maybe'])->status())->toBe(422);
         expect(TermGradPerson::count())->toBe(0);
     });
 
     it('returns 404 for an emplid that is not a positive whole number', function () {
-        $body = ['appointmentPercent' => null, 'hasFeeOffset' => true, 'isInternational' => false];
+        $body = ['hasFeeOffset' => true, 'isInternational' => false];
 
         expect(putJson(gradPersonUrl($this->group, 'abc'), $body)->status())->toBe(404);
     });
@@ -778,7 +776,7 @@ describe('published terms', function () {
 
         expect(patchJson(gradRateOverrideUrl($this->group), ['hourlyRate' => 31])->status())->toBe(403);
         expect(putJson(gradHoursUrl($this->group, '25'), ['hours' => 200])->status())->toBe(403);
-        expect(putJson(gradPersonUrl($this->group, '100000001'), ['appointmentPercent' => 25, 'hasFeeOffset' => false, 'isInternational' => false])->status())->toBe(403);
+        expect(putJson(gradPersonUrl($this->group, '100000001'), ['hasFeeOffset' => false, 'isInternational' => false])->status())->toBe(403);
         expect(TermGradRateOverride::count() + TermGradHoursOverride::count() + TermGradPerson::count())->toBe(0);
     });
 });

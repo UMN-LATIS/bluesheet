@@ -8,7 +8,4 @@ export type CostBasis =
       reason: ChargedElsewhereReason;
     };
 
-export type ChargedElsewhereReason =
-  | "crosslisted"
-  | "sameMeetingTime"
-  | "gradAppointment";
+export type ChargedElsewhereReason = "crosslisted" | "sameMeetingTime";

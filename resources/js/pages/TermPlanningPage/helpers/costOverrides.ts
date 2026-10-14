@@ -66,11 +66,9 @@ export const gradHoursKeyOf = (appointmentPercent: number) =>
 export const gradPersonKeyOf = (emplid: number) => String(emplid);
 
 export const isDefaultGradPerson = ({
-  appointmentPercent,
   hasFeeOffset,
   isInternational,
-}: GradPerson) =>
-  appointmentPercent === null && !hasFeeOffset && !isInternational;
+}: GradPerson) => !hasFeeOffset && !isInternational;
 
 export function rateOverrideKeyOf(rate: RateIdentity): string {
   switch (rate.kind) {

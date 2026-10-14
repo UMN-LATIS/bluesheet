@@ -19,6 +19,7 @@
       />
       <p class="tw-m-0 tw-text-[11px] tw-text-on-surface-variant">{{ role }}</p>
     </div>
+    <slot />
     <button
       type="button"
       class="tw--me-1.5 tw-flex tw-h-11 tw-w-11 tw-flex-none tw-cursor-pointer tw-items-center tw-justify-center tw-rounded-full tw-border-none tw-bg-transparent tw-text-on-surface-variant hover:tw-bg-surface-container-high hover:tw-text-on-surface"

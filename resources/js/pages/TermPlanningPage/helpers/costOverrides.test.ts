@@ -152,7 +152,6 @@ describe("rateOverridesOf for grad settings", () => {
       gradPeople: [
         {
           emplid: 7,
-          appointmentPercent: 50,
           hasFeeOffset: true,
           isInternational: false,
         },
@@ -166,7 +165,7 @@ describe("rateOverridesOf for grad settings", () => {
     expect(overrides.gradInputs).toEqual({ hourlyRate: 31 });
     expect(overrides.defaultAppointmentPercent).toBe(50);
     expect(overrides.gradHoursByPercent.get(25)).toBe(200);
-    expect(overrides.gradPeopleByEmplid.get(7)?.appointmentPercent).toBe(50);
+    expect(overrides.gradPeopleByEmplid.get(7)?.hasFeeOffset).toBe(true);
   });
 
   it("applies and clears a pending default appointment edit", () => {
@@ -210,13 +209,11 @@ describe("rateOverridesOf for grad settings", () => {
       gradPersonEdits: {
         [gradPersonKeyOf(7)]: {
           emplid: 7,
-          appointmentPercent: null,
           hasFeeOffset: false,
           isInternational: true,
         },
         [gradPersonKeyOf(8)]: {
           emplid: 8,
-          appointmentPercent: null,
           hasFeeOffset: false,
           isInternational: false,
         },
@@ -231,7 +228,6 @@ describe("rateOverridesOf for grad settings", () => {
       gradPersonEdits: {
         [gradPersonKeyOf(7)]: {
           emplid: 7,
-          appointmentPercent: null,
           hasFeeOffset: false,
           isInternational: false,
         },

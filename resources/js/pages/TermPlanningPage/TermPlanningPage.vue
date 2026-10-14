@@ -244,7 +244,6 @@
           :salaryLabel="selectedPerson.salaryLabel"
           :canEditSalary="selectedPerson.canEditSalary"
           :canEdit="schedule.canEditCosts"
-          :appointmentLevels="appointmentLevels"
           :isReadOnly="schedule.isReadOnly"
           :termSections="selectedPerson.termSections"
           :taughtTerms="selectedPerson.taughtTerms"
@@ -307,7 +306,7 @@ import FullScreenLayout from "@/layouts/FullScreenLayout.vue";
 import Notification from "@/components/Notification.vue";
 import LeavePanel from "@/components/planning/LeavePanel.vue";
 import PersonPanel from "./components/PersonPanel.vue";
-import { peopleTablesOf } from "./helpers/peopleRows";
+import { peopleRowsOf } from "./helpers/peopleRows";
 import { personTermSectionsOf, taughtTermsOf } from "./helpers/personPanel";
 import { useTeachingHistoryQuery } from "./queries/useTeachingHistoryQuery";
 import LeavePanelLoading from "@/components/planning/LeavePanelLoading.vue";
@@ -870,7 +869,7 @@ const selectedPersonBudget = computed(() => {
     personNotes;
   if (selectedEmplid === null || !isCostable) return null;
 
-  const { instructors, tas } = peopleTablesOf(
+  const row = peopleRowsOf(
     localSections.value,
     sectionCosts,
     assumptions,
@@ -878,27 +877,15 @@ const selectedPersonBudget = computed(() => {
     roster.value,
     termLeavesByEmplid.value,
     personNotes,
-  );
-  const isEmplid = ({ emplid }: { emplid: number | null }) =>
-    emplid === selectedEmplid;
-  const instructor = instructors.find(isEmplid);
-  if (instructor) {
-    return {
-      row: instructor,
-      salaryLabel: instructor.isSalaryReadOnly ? "Pay" : "Salary per section",
-      canEditSalary: schedule.canEditCosts && !instructor.isSalaryReadOnly,
-    };
-  }
+  ).find(({ emplid }) => emplid === selectedEmplid);
+  if (!row) return null;
 
-  const ta = tas.find(isEmplid);
-  return ta ? { row: ta, salaryLabel: "Pay", canEditSalary: false } : null;
+  return {
+    row,
+    salaryLabel: row.isSalaryReadOnly ? "Pay" : "Salary per section",
+    canEditSalary: schedule.canEditCosts && !row.isSalaryReadOnly,
+  };
 });
-
-const appointmentLevels = computed(() =>
-  (costAssumptionsQuery.data.value?.gradRates.levels ?? [])
-    .map(({ appointmentPercent }) => appointmentPercent)
-    .sort((a, b) => a - b),
-);
 
 const selectedPerson = computed(() => {
   const emplid = schedule.selectedEmplid;

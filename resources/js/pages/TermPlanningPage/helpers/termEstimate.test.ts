@@ -134,8 +134,8 @@ describe("estimateTermCost", () => {
     expect(costs.get(1)?.lines.map(({ role }) => role)).toEqual(["ta"]);
     expect(costs.get(1)).toMatchObject({
       instructorCost: 0,
-      taCost: 9000,
-      total: 9000,
+      taCost: 4500,
+      total: 4500,
     });
   });
 
@@ -147,7 +147,7 @@ describe("estimateTermCost", () => {
       section(3, { section: "010", component: "LEC", instructors: [ta] }),
     ]);
 
-    expect(costs.get(3)?.lines[0]).toMatchObject({ amount: 9000 });
+    expect(costs.get(3)?.lines[0]).toMatchObject({ amount: 4500 });
     expect(costs.get(3)?.lines[0].basis.kind).toBe("rate");
     expect(costs.get(1)?.lines[0]).toMatchObject({
       amount: 0,
@@ -157,38 +157,24 @@ describe("estimateTermCost", () => {
       amount: 0,
       basis: { kind: "paidOnLecture", lectureSectionId: 3 },
     });
-    expect(totalsOf([...costs.values()]).taCost).toBe(9000);
+    expect(totalsOf([...costs.values()]).taCost).toBe(4500);
   });
 
-  it("charges a TA on the lowest section number when the course has no lecture", () => {
-    const ta = sisInstructor(10, "TA");
-    const costs = estimate([
-      section(1, { section: "003", component: "DIS", instructors: [ta] }),
-      section(2, { section: "001", component: "DIS", instructors: [ta] }),
-    ]);
-
-    expect(costs.get(2)?.lines[0].amount).toBe(18_000);
-    expect(costs.get(1)?.lines[0].basis).toEqual({
-      kind: "chargedOnOtherSection",
-      sectionId: 2,
-      reason: "gradAppointment",
-    });
-  });
-
-  it("charges the same grad TA once for the term, across courses", () => {
+  it("splits a grad TA's appointment across their lectures, across courses", () => {
     const ta = sisInstructor(10, "TA");
     const costs = estimate([
       section(1, { courseCode: "ANTH-1001", instructors: [ta] }),
       section(2, { courseCode: "ANTH-2001", instructors: [ta] }),
     ]);
 
-    expect(costs.get(1)?.taCost).toBe(18_000);
-    expect(costs.get(2)?.taCost).toBe(0);
-    expect(costs.get(2)?.lines[0].basis).toEqual({
-      kind: "chargedOnOtherSection",
-      sectionId: 1,
-      reason: "gradAppointment",
-    });
+    for (const id of [1, 2]) {
+      expect(costs.get(id)?.lines[0]).toMatchObject({
+        amount: 4500,
+        basis: { kind: "rate" },
+        gradAppointment: { cost: { total: 9000 } },
+      });
+    }
+    expect(totalsOf([...costs.values()]).taCost).toBe(9000);
   });
 
   it("gives a cancelled section no lines and a total of zero", () => {
@@ -212,7 +198,7 @@ describe("estimateTermCost", () => {
     ]);
 
     expect(costs.get(1)?.total).toBe(0);
-    expect(costs.get(2)?.taCost).toBe(9000);
+    expect(costs.get(2)?.taCost).toBe(4500);
   });
 
   it("costs an IND section with a PI nothing", () => {
@@ -259,7 +245,7 @@ describe("estimateTermCost", () => {
       section(2, { section: "002", component: "LEC", instructors: [ta] }),
     ]);
 
-    expect(costs.get(2)?.taCost).toBe(9000);
+    expect(costs.get(2)?.taCost).toBe(4500);
     expect(costs.get(1)?.lines[0].basis.kind).toBe("freeComponent");
     expect(costs.get(1)?.total).toBe(0);
   });
@@ -389,7 +375,7 @@ describe("estimateTermCost with overrides", () => {
       },
     );
 
-    expect(costs.get(1)?.taCost).toBe(9000);
+    expect(costs.get(1)?.taCost).toBe(4500);
   });
 
   it("leaves a lab paid on its lecture at nothing despite the person's rate", () => {
@@ -431,10 +417,10 @@ describe("estimateTermCost with overrides", () => {
     );
     const [regular, abd] = costs.get(1)?.lines ?? [];
 
-    expect(regular.amount).toBeCloseTo(12482.37, 2);
-    expect(regular.salary).toBeCloseTo(5870.2, 2);
-    expect(regular.fringe).toBeCloseTo(1696.49 + 4915.68, 2);
-    expect(abd.amount).toBeCloseTo(8346.77, 2);
+    expect(regular.amount).toBeCloseTo(6241.18, 2);
+    expect(regular.salary).toBeCloseTo(2935.1, 2);
+    expect(regular.fringe).toBeCloseTo(848.24 + 2457.84, 2);
+    expect(abd.amount).toBeCloseTo(4173.38, 2);
   });
 
   it("costs a TA at the appointment, offsets and hours the department chose", () => {
@@ -442,14 +428,13 @@ describe("estimateTermCost with overrides", () => {
       [section(1, { instructors: [sisInstructor(10, "TA")] })],
       {
         rates: rateOverrides({
-          gradHoursByPercent: new Map([[25, 1000]]),
+          gradHoursByPercent: new Map([[12.5, 1000]]),
           gradInputs: { feeOffset: 200 },
           gradPeopleByEmplid: new Map([
             [
               10,
               {
                 emplid: 10,
-                appointmentPercent: null,
                 hasFeeOffset: true,
                 isInternational: false,
               },
@@ -460,15 +445,15 @@ describe("estimateTermCost with overrides", () => {
     );
 
     expect(costs.get(1)?.lines[0]).toMatchObject({
-      salary: 10_100,
-      amount: 10_100,
-      gradAppointment: { cost: { hours: 1000, feeOffset: 100 } },
+      salary: 10_050,
+      amount: 10_050,
+      gradAppointment: { cost: { hours: 1000, feeOffset: 50 } },
     });
   });
 
-  it("costs a TA with no appointment of their own at the department's default", () => {
+  it("costs a grad instructor with no appointment of their own at the department's default", () => {
     const costs = estimate(
-      [section(1, { instructors: [sisInstructor(10, "TA")] })],
+      [section(1, { instructors: [sisInstructor(10, "PI")] })],
       { rates: rateOverrides({ defaultAppointmentPercent: 50 }) },
     );
 
@@ -478,30 +463,21 @@ describe("estimateTermCost with overrides", () => {
     });
   });
 
-  it("has no cost for an appointment level the term has no hours for", () => {
-    const costs = estimate(
-      [section(1, { instructors: [sisInstructor(10, "TA")] })],
-      {
-        rates: rateOverrides({
-          gradPeopleByEmplid: new Map([
-            [
-              10,
-              {
-                emplid: 10,
-                appointmentPercent: 37.5,
-                hasFeeOffset: false,
-                isInternational: false,
-              },
-            ],
-          ]),
-        }),
-      },
-    );
+  it("costs an appointment between levels in proportion to the nearest level's hours", () => {
+    const costs = estimate([
+      section(1, {
+        instructors: [{ ...sisInstructor(10, "TA"), appointmentPercent: 37.5 }],
+      }),
+    ]);
 
-    expect(costs.get(1)?.lines[0]).toMatchObject({ role: "ta", amount: null });
+    expect(costs.get(1)?.lines[0]).toMatchObject({
+      role: "ta",
+      amount: 13_500,
+      gradAppointment: { cost: { hours: 1350 } },
+    });
   });
 
-  it("pays a grad instructor per credit across their paid sections, and charges once", () => {
+  it("pays a grad instructor per credit across their paid sections, on the sum of their appointments, and charges once", () => {
     const gradInstructorAssumptions = {
       ...assumptions,
       jobCodes: [
@@ -535,12 +511,14 @@ describe("estimateTermCost with overrides", () => {
 
     expect(costs.get(1)?.lines[0]).toMatchObject({
       role: "instructor",
-      salary: 18_000 + 7 * 100,
-      gradAppointment: { student: { creditsTaught: 7, isAbd: true } },
+      gradAppointment: {
+        student: { creditsTaught: 7, isAbd: true },
+        cost: { pay: 27_000 + 7 * 100 },
+      },
     });
-    expect(costs.get(1)?.instructorCost).toBe(18_700);
-    expect(costs.get(2)?.total).toBe(0);
-    expect(costs.get(3)?.total).toBe(0);
+    for (const id of [1, 2, 3]) {
+      expect(costs.get(id)?.instructorCost).toBeCloseTo(27_700 / 3, 6);
+    }
   });
 
   it("does not count a lab paid on its lecture toward a grad instructor's credits", () => {
@@ -585,7 +563,7 @@ describe("estimateTermCost with overrides", () => {
       section(2, { section: "002", component: "LEC", instructors: [ta] }),
     ]);
 
-    expect(totalsOf([...costs.values()]).taCost).toBe(9000);
+    expect(totalsOf([...costs.values()]).taCost).toBe(4500);
     expect(costs.get(2)?.lines[0].gradAppointment).toBeDefined();
     expect(costs.get(1)?.lines[0].gradAppointment).toBeUndefined();
   });
@@ -652,26 +630,48 @@ describe("estimateTermCost with labs and discussions in a lecture course", () =>
     expect(totalsOf([...costs.values()]).total).toBe(4000 + 6000);
   });
 
-  it("charges a grad student who leads two discussions a 50% appointment", () => {
+  it("charges a grad student 12.5% for each discussion they lead", () => {
     const costs = estimate([
       section(1, { section: "001", component: "LEC", instructors: [pi(1)] }),
       section(2, { section: "002", component: "DIS", instructors: [pi(10)] }),
       section(3, { section: "003", component: "DIS", instructors: [pi(10)] }),
     ]);
 
-    expect(costs.get(2)?.lines[0]).toMatchObject({
-      emplid: 10,
-      amount: 18_000,
-      gradAppointment: {
-        student: { appointmentPercent: 50 },
-        appointmentPercentFromSections: 50,
-      },
+    for (const id of [2, 3]) {
+      expect(costs.get(id)?.lines[0]).toMatchObject({
+        emplid: 10,
+        amount: 4500,
+        sectionAppointment: {
+          percent: 12.5,
+          percentWithoutOverride: 12.5,
+          isOverridden: false,
+        },
+        gradAppointment: { student: { appointmentPercent: 25 } },
+      });
+    }
+  });
+
+  it("splits the cost across a grad student's sections in proportion to each section's percent", () => {
+    const otherCourse = (id: number, component: string) =>
+      section(id, {
+        courseCode: "ANTH-2001",
+        section: String(id).padStart(3, "0"),
+        component,
+        instructors: [pi(10)],
+      });
+    const costs = estimate([
+      section(1, { section: "001", component: "LEC", instructors: [pi(10)] }),
+      otherCourse(2, "LAB"),
+      otherCourse(3, "LAB"),
+    ]);
+
+    expect(costs.get(1)?.lines[0].gradAppointment).toMatchObject({
+      student: { appointmentPercent: 50 },
+      cost: { total: 18_000 },
     });
-    expect(costs.get(3)?.lines[0].basis).toEqual({
-      kind: "chargedOnOtherSection",
-      sectionId: 2,
-      reason: "gradAppointment",
-    });
+    expect(costs.get(1)?.total).toBe(9000);
+    expect(costs.get(2)?.total).toBe(4500);
+    expect(costs.get(3)?.total).toBe(4500);
   });
 
   it("charges each section's PI in a course with only labs", () => {
@@ -711,37 +711,77 @@ describe("estimateTermCost with labs and discussions in a lecture course", () =>
       section(3, { section: "003", component: "DIS", instructors: [pi(10)] }),
     ]);
 
-    expect(costs.get(1)?.taCost).toBe(9000);
-    expect(totalsOf([...costs.values()]).total).toBe(4000 + 9000);
+    expect(costs.get(1)?.taCost).toBe(4500);
+    expect(totalsOf([...costs.values()]).total).toBe(4000 + 4500);
   });
 
-  it("keeps a grad student's own appointment over the one their sections imply", () => {
-    const costs = estimate(
-      [
-        section(1, { section: "001", component: "DIS", instructors: [pi(10)] }),
-        section(2, { section: "002", component: "DIS", instructors: [pi(10)] }),
-      ],
-      {
-        rates: rateOverrides({
-          gradPeopleByEmplid: new Map([
-            [
-              10,
-              {
-                emplid: 10,
-                appointmentPercent: 25,
-                hasFeeOffset: false,
-                isInternational: false,
-              },
-            ],
-          ]),
-        }),
+  it("uses an assignment's own appointment percent over the role's default", () => {
+    const costs = estimate([
+      section(1, {
+        instructors: [{ ...pi(10), appointmentPercent: 50 }],
+      }),
+    ]);
+
+    expect(costs.get(1)?.lines[0]).toMatchObject({
+      amount: 18_000,
+      sectionAppointment: {
+        percent: 50,
+        percentWithoutOverride: 25,
+        isOverridden: true,
       },
-    );
+      gradAppointment: { student: { appointmentPercent: 50 } },
+    });
+  });
+
+  it("uses the role's default for an assignment with a null appointment percent", () => {
+    const costs = estimate([
+      section(1, {
+        instructors: [{ ...pi(10), appointmentPercent: null }],
+      }),
+    ]);
 
     expect(costs.get(1)?.lines[0]).toMatchObject({
       amount: 9000,
-      gradAppointment: { appointmentPercentFromSections: 50 },
+      sectionAppointment: {
+        percent: 25,
+        percentWithoutOverride: 25,
+        isOverridden: false,
+      },
     });
+  });
+
+  it("adds a grad student's appointments across sections with no cap", () => {
+    const lecture = (id: number, courseCode: string) =>
+      section(id, { courseCode, instructors: [pi(10)] });
+    const costs = estimate([
+      lecture(1, "ANTH-1001"),
+      lecture(2, "ANTH-2001"),
+      lecture(3, "ANTH-3001"),
+    ]);
+
+    expect(costs.get(1)?.lines[0].gradAppointment).toMatchObject({
+      student: { appointmentPercent: 75 },
+      cost: { hours: 2700, total: 27_000 },
+    });
+    for (const id of [1, 2, 3]) {
+      expect(costs.get(id)?.total).toBe(9000);
+    }
+  });
+
+  it("splits a grad student's cost by each section's own percent", () => {
+    const costs = estimate([
+      section(1, {
+        courseCode: "ANTH-1001",
+        instructors: [{ ...pi(10), appointmentPercent: 37.5 }],
+      }),
+      section(2, {
+        courseCode: "ANTH-2001",
+        instructors: [{ ...pi(10), appointmentPercent: 12.5 }],
+      }),
+    ]);
+
+    expect(costs.get(1)?.total).toBe(13_500);
+    expect(costs.get(2)?.total).toBe(4500);
   });
 
   it("charges an unstaffed lab in a lecture course at the TBA rate", () => {
@@ -772,8 +812,8 @@ describe("totalsOf", () => {
 
     expect(totalsOf([...costs.values()])).toMatchObject({
       instructorCost: 10000,
-      taCost: 9000,
-      total: 19000,
+      taCost: 4500,
+      total: 14500,
       missingRateCount: 0,
     });
   });
@@ -837,7 +877,7 @@ describe("estimateTermCost with crosslisted sections", () => {
       }),
     ]);
 
-    expect(totalsOf([...costs.values()]).taCost).toBe(9000);
+    expect(totalsOf([...costs.values()]).taCost).toBe(4500);
   });
 
   it("charges a section whose partner is not in this term's list", () => {
@@ -916,7 +956,7 @@ describe("estimateTermCost with sections at the same meeting time", () => {
       honorsTwin({ meetings: monWed10, instructors: [ta] }),
     ]);
 
-    expect(costs.get(1)?.taCost).toBe(9000);
+    expect(costs.get(1)?.taCost).toBe(4500);
     expect(costs.get(2)?.lines[0].basis).toEqual({
       kind: "chargedOnOtherSection",
       sectionId: 1,

@@ -5,8 +5,14 @@ import type {
   JobCodeRate,
 } from "@/types";
 import type { RateOverrides } from "./costOverrides";
-import { costOfRate, isGradJobCodeRate, UNSTAFFED_JOB_CODE } from "./costRules";
 import {
+  costOfRate,
+  isGradJobCodeRate,
+  LECTURE,
+  UNSTAFFED_JOB_CODE,
+} from "./costRules";
+import {
+  appointmentPercentOfSection,
   defaultAppointmentOf,
   gradCostOf,
   gradTermOf,
@@ -149,10 +155,11 @@ export interface GradRateRow {
   fundLabel: string;
   isAbd: boolean;
   isGradInstructor: boolean;
+  /** One section's appointment: TA codes assist, grad instructor codes teach. */
+  appointmentPercent: number;
   /**
-   * At the term's default appointment, before offsets and
-   * per-credit pay. Null when an input or the hours are
-   * missing.
+   * At `appointmentPercent`, before offsets and per-credit
+   * pay. Null when an input or the hours are missing.
    */
   cost: GradCost | null;
 }
@@ -221,6 +228,11 @@ export function gradRatesOf(
     .sort((a, b) => a.code.localeCompare(b.code))
     .map(({ code, title, instructorType, studentStatus }) => {
       const isAbd = studentStatus === "abd";
+      const appointmentPercent = appointmentPercentOfSection(
+        LECTURE,
+        instructorType === "teaching_assistant",
+        defaultAppointmentPercent,
+      );
 
       return {
         code,
@@ -228,8 +240,9 @@ export function gradRatesOf(
         fundLabel: fundLabelOf(instructorType),
         isAbd,
         isGradInstructor: instructorType === "graduate_instructor",
+        appointmentPercent,
         cost: gradCostOf(term, {
-          appointmentPercent: defaultAppointmentPercent,
+          appointmentPercent,
           isAbd,
           hasFeeOffset: false,
           isInternational: false,
