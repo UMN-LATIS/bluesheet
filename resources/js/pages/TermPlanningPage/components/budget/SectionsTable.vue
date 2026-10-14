@@ -2,11 +2,12 @@
   <BudgetTable
     label="Sections and estimated costs"
     :columns="COLUMNS"
+    :rows="rows"
     class="tw-min-w-[1194px] tw-grid-cols-[minmax(170px,1.2fr)_136px_240px_72px_48px_minmax(140px,1fr)_86px_112px_80px_minmax(110px,0.9fr)]"
   >
-    <template #default>
+    <template #default="{ rows: shownRows }">
       <BudgetTableRow
-        v-for="row in rows"
+        v-for="row in shownRows"
         :key="row.sectionId"
         class="tw-cursor-pointer hover:tw-bg-surface"
         :class="{
@@ -154,6 +155,7 @@ import EnrollmentTiles from "./EnrollmentTiles.vue";
 import MissingRate from "./MissingRate.vue";
 import TotalCell from "./TotalCell.vue";
 import type { BudgetRow } from "../../helpers/budgetRows";
+import { latestFillOf } from "../../helpers/enrollmentHistory";
 import { formatWholeDollars } from "../../helpers/money";
 import type { CostTotals } from "../../helpers/termEstimate";
 
@@ -169,16 +171,39 @@ const emit = defineEmits<{
   editNotes: [sectionId: number, notes: string];
 }>();
 
-const COLUMNS: BudgetColumn[] = [
-  { label: "Section" },
+const COLUMNS: BudgetColumn<BudgetRow>[] = [
+  { label: "Section", sortValueOf: ({ courseLabel }) => courseLabel },
   { label: "Day / time" },
-  { label: "Prev. enrollment" },
-  { label: "Enrolled", isNumeric: true },
-  { label: "Cap", isNumeric: true },
-  { label: "Instructor" },
-  { label: "Est. cost", isNumeric: true },
-  { label: "TA support" },
-  { label: "TA cost", isNumeric: true },
+  {
+    label: "Prev. enrollment",
+    sortValueOf: ({ history }) => latestFillOf(history),
+  },
+  {
+    label: "Enrolled",
+    isNumeric: true,
+    sortValueOf: ({ enrollmentTotal }) => enrollmentTotal,
+  },
+  {
+    label: "Cap",
+    isNumeric: true,
+    sortValueOf: ({ enrollmentCap }) => enrollmentCap,
+  },
+  { label: "Instructor", sortValueOf: ({ instructorName }) => instructorName },
+  {
+    label: "Est. cost",
+    isNumeric: true,
+    sortValueOf: ({ instructorCost }) => instructorCost,
+  },
+  {
+    label: "TA support",
+    sortValueOf: ({ assistantNames }) => assistantNames || null,
+  },
+  {
+    label: "TA cost",
+    isNumeric: true,
+    sortValueOf: ({ taCostCell }) =>
+      taCostCell.kind === "amount" ? taCostCell.dollars : null,
+  },
   { label: "Comments" },
 ];
 

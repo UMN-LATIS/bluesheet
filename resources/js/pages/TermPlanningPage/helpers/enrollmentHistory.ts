@@ -85,6 +85,18 @@ export function enrollmentFillStepOf({
   return Math.round(fraction * LAST_FILL_STEP);
 }
 
+/** Enrolled ÷ cap in the latest term the section ran. Null when it never ran. */
+export function latestFillOf(history: EnrollmentPoint[]): number | null {
+  const latest = history.findLast(
+    ({ offering }) => offering !== null,
+  )?.offering;
+  if (!latest) return null;
+
+  return latest.enrollmentCap > 0
+    ? latest.enrollmentTotal / latest.enrollmentCap
+    : 1;
+}
+
 export interface PreviousOffering {
   termCode: number;
   termName: string;

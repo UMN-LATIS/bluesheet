@@ -1,3 +1,4 @@
+import { lastNameFirst } from "@/utils/lastNameFirst";
 import type { PlannedSection } from "../types";
 import { unpaidReasonOf } from "./costReason";
 import { formatWholeDollars } from "./money";
@@ -44,7 +45,9 @@ function sectionCostRowsOf(
       name:
         emplid === null
           ? "TBA"
-          : (person?.name ?? person?.lastName ?? "Unknown"),
+          : person?.name
+            ? lastNameFirst(person.name, person.lastName)
+            : (person?.lastName ?? "Unknown"),
       isTa: role === "ta",
       amount,
       unpaidReason: unpaidReasonOf(basis, labelOfSection),

@@ -54,10 +54,11 @@
         class="tw-min-w-[660px] tw-grid-cols-[72px_80px_96px_88px_96px_100px_88px_100px]"
         label="Grad appointment cost by appointment percent"
         :columns="COLUMNS"
+        :rows="view.appointments"
       >
-        <template #default>
+        <template #default="{ rows: appointments }">
           <BudgetTableRow
-            v-for="appointment in view.appointments"
+            v-for="appointment in appointments"
             :key="appointment.appointmentPercent"
             class="tw-min-h-9 tw-bg-surface-bright"
           >

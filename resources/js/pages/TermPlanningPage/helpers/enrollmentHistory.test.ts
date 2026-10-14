@@ -4,6 +4,7 @@ import {
   enrollmentSeriesBySection,
   enrollmentFillStepOf,
   historyKeyOf,
+  latestFillOf,
   previousOfferingsOf,
   termNameOf,
 } from "./enrollmentHistory";
@@ -174,5 +175,21 @@ describe("enrollmentFillStepOf", () => {
     expect(enrollmentFillStepOf({ enrollmentTotal: 3, enrollmentCap: 0 })).toBe(
       5,
     );
+  });
+});
+
+describe("latestFillOf", () => {
+  it("is the fill of the latest term the section ran", () => {
+    expect(
+      latestFillOf([
+        { termCode: 1249, offering: offering("ANTH-1001", "001", 1249, 30) },
+        { termCode: 1253, offering: offering("ANTH-1001", "001", 1253, 15) },
+        { termCode: 1259, offering: null },
+      ]),
+    ).toBe(0.5);
+  });
+
+  it("is null when the section never ran", () => {
+    expect(latestFillOf([{ termCode: 1259, offering: null }])).toBeNull();
   });
 });

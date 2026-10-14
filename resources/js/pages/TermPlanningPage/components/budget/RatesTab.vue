@@ -5,10 +5,11 @@
       class="tw-min-w-[720px] tw-max-w-[860px] tw-grid-cols-[72px_minmax(0,1fr)_84px_84px_120px_96px_120px]"
       label="Rates"
       :columns="COLUMNS"
+      :rows="rows"
     >
-      <template #default>
+      <template #default="{ rows: shownRows }">
         <BudgetTableRow
-          v-for="row in rows"
+          v-for="row in shownRows"
           :key="row.code"
           class="tw-min-h-9 tw-bg-surface-bright"
         >
@@ -98,14 +99,22 @@ const props = defineProps<{
 
 const emit = defineEmits<{ editRate: [edit: RateOverrideEdit] }>();
 
-const COLUMNS: BudgetColumn[] = [
-  { label: "Code" },
-  { label: "Title" },
-  { label: "Fund" },
+const COLUMNS: BudgetColumn<RateRow>[] = [
+  { label: "Code", sortValueOf: ({ code }) => code },
+  { label: "Title", sortValueOf: ({ title }) => title || null },
+  { label: "Fund", sortValueOf: ({ fundLabel }) => fundLabel },
   { label: "Per" },
-  { label: "Salary", isNumeric: true },
-  { label: "Fringe", isNumeric: true },
-  { label: "Cost per unit", isNumeric: true },
+  {
+    label: "Salary",
+    isNumeric: true,
+    sortValueOf: ({ salary }) => salary.amount,
+  },
+  {
+    label: "Fringe",
+    isNumeric: true,
+    sortValueOf: ({ fringeRate }) => fringeRate.amount,
+  },
+  { label: "Cost per unit", isNumeric: true, sortValueOf: ({ cost }) => cost },
 ];
 
 const rows = computed(() =>

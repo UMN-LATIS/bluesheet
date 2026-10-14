@@ -407,15 +407,15 @@ describe("peopleTablesOf", () => {
       lastName,
     });
 
-    it("shows Firstname Lastname and sorts by last name", () => {
+    it("shows Lastname, Firstname and sorts by last name", () => {
       const { instructors } = tablesOf([], rateOverrides(), [
         named(1, "Zoe", "Adams"),
         named(2, "Aaron", "Zimmer"),
       ]);
 
       expect(instructors.map(({ name }) => name)).toEqual([
-        "Zoe Adams",
-        "Aaron Zimmer",
+        "Adams, Zoe",
+        "Zimmer, Aaron",
       ]);
     });
 

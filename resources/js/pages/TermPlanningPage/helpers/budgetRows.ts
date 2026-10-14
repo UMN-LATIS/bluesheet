@@ -3,6 +3,7 @@ import type {
   SisInstructor,
   SisSectionMeeting,
 } from "../types";
+import { lastNameFirst } from "@/utils/lastNameFirst";
 import { chargedElsewhereReasonOf, unpaidReasonOf } from "./costReason";
 import type { EnrollmentPoint } from "./enrollmentHistory";
 import { daysMetLabel } from "./scheduleDays";
@@ -135,7 +136,9 @@ function instructorNameOf(
   if (leads.length === 0) return hasAssistants ? "Taught by TA" : "—";
 
   return leads
-    .map(({ name, lastName }) => name ?? lastName ?? "Unknown")
+    .map(({ name, lastName }) =>
+      name === null ? (lastName ?? "Unknown") : lastNameFirst(name, lastName),
+    )
     .join(", ");
 }
 

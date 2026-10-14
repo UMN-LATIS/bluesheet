@@ -267,10 +267,10 @@ interface NamedPerson {
   lastName: string | null;
 }
 
-/** "Firstname Lastname", or the single name the SIS sent when either part is missing. */
+/** "Lastname, Firstname", or the single name the SIS sent when either part is missing. */
 function nameOf(person: NamedPerson | undefined): string {
   if (person?.lastName && person.firstName) {
-    return `${person.firstName} ${person.lastName}`;
+    return `${person.lastName}, ${person.firstName}`;
   }
 
   return person?.name ?? person?.lastName ?? "Unknown";

@@ -2,11 +2,12 @@
   <BudgetTable
     label="TAs and estimated costs"
     :columns="COLUMNS"
-    class="tw-min-w-[1120px] tw-grid-cols-[minmax(130px,1.1fr)_72px_minmax(170px,1.4fr)_64px_104px_92px_100px_84px_72px_60px_minmax(140px,1.2fr)]"
+    :rows="rows"
+    class="tw-min-w-[1056px] tw-grid-cols-[minmax(130px,1.1fr)_72px_minmax(170px,1.4fr)_104px_92px_100px_84px_72px_60px_minmax(140px,1.2fr)]"
   >
-    <template #default>
+    <template #default="{ rows: shownRows }">
       <BudgetTableRow
-        v-for="row in rows"
+        v-for="row in shownRows"
         :key="row.emplid ?? 'unstaffed'"
         class="tw-min-h-10 tw-bg-surface-bright"
       >
@@ -20,9 +21,6 @@
         </BudgetCell>
         <BudgetCell role="cell">
           <span class="tw-truncate" :title="row.title">{{ row.title }}</span>
-        </BudgetCell>
-        <BudgetCell role="cell" class="tw-text-on-surface-variant">
-          {{ row.fundLabel }}
         </BudgetCell>
         <BudgetCell
           role="cell"
@@ -107,7 +105,7 @@
     </template>
 
     <template #totals>
-      <div role="cell" class="tw-col-span-4 tw-whitespace-nowrap tw-p-2">
+      <div role="cell" class="tw-col-span-3 tw-whitespace-nowrap tw-p-2">
         Total · {{ rows.length }} TAs
       </div>
       <TotalCell role="cell">{{ formatWholeDollars(salaryTotal) }}</TotalCell>
@@ -151,17 +149,20 @@ const emit = defineEmits<{
 const FEE_OFFSET_ABD_REASON =
   "ABD job codes are ineligible for the student fee offset";
 
-const COLUMNS: BudgetColumn[] = [
-  { label: "Name" },
-  { label: "Job code" },
-  { label: "Title" },
-  { label: "Fund" },
-  { label: "Salary", isNumeric: true },
-  { label: "Fringe", isNumeric: true },
-  { label: "Total", isNumeric: true },
-  { label: "Load", isNumeric: true },
-  { label: "Fee off." },
-  { label: "Intl." },
+const COLUMNS: BudgetColumn<PersonRow>[] = [
+  { label: "Name", sortValueOf: ({ name }) => name },
+  { label: "Job code", sortValueOf: ({ jobCode }) => jobCode },
+  { label: "Title", sortValueOf: ({ title }) => title || null },
+  { label: "Salary", isNumeric: true, sortValueOf: ({ salary }) => salary },
+  { label: "Fringe", isNumeric: true, sortValueOf: ({ fringe }) => fringe },
+  { label: "Total", isNumeric: true, sortValueOf: ({ total }) => total },
+  {
+    label: "Load",
+    isNumeric: true,
+    sortValueOf: ({ appointmentPercent }) => appointmentPercent,
+  },
+  { label: "Fee off.", sortValueOf: ({ hasFeeOffset }) => hasFeeOffset },
+  { label: "Intl.", sortValueOf: ({ isInternational }) => isInternational },
   { label: "Sections" },
 ];
 

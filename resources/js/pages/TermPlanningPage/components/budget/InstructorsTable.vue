@@ -2,11 +2,12 @@
   <BudgetTable
     label="Instructors and estimated costs"
     :columns="COLUMNS"
-    class="tw-min-w-[1080px] tw-grid-cols-[minmax(140px,1.2fr)_72px_minmax(150px,1.3fr)_80px_116px_96px_104px_72px_minmax(160px,1.4fr)]"
+    :rows="rows"
+    class="tw-min-w-[1000px] tw-grid-cols-[minmax(140px,1.2fr)_72px_minmax(150px,1.3fr)_116px_96px_104px_72px_minmax(160px,1.4fr)]"
   >
-    <template #default>
+    <template #default="{ rows: shownRows }">
       <BudgetTableRow
-        v-for="row in rows"
+        v-for="row in shownRows"
         :key="row.emplid ?? 'unstaffed'"
         class="tw-min-h-10 tw-bg-surface-bright"
       >
@@ -20,9 +21,6 @@
         </BudgetCell>
         <BudgetCell role="cell">
           <span class="tw-truncate" :title="row.title">{{ row.title }}</span>
-        </BudgetCell>
-        <BudgetCell role="cell" class="tw-text-on-surface-variant">
-          {{ row.fundLabel }}
         </BudgetCell>
         <BudgetCell
           v-if="row.isSalaryReadOnly"
@@ -90,7 +88,7 @@
     </template>
 
     <template #totals>
-      <div role="cell" class="tw-col-span-6 tw-whitespace-nowrap tw-p-2">
+      <div role="cell" class="tw-col-span-5 tw-whitespace-nowrap tw-p-2">
         Total · {{ personCount }} instructors, {{ unstaffedSectionCount }}
         unstaffed sections
       </div>
@@ -126,15 +124,18 @@ const emit = defineEmits<{
   editSalary: [emplid: number, amount: number | null];
 }>();
 
-const COLUMNS: BudgetColumn[] = [
-  { label: "Name" },
-  { label: "Job code" },
-  { label: "Title" },
-  { label: "Fund" },
-  { label: "Salary per", isNumeric: true },
-  { label: "Fringe per", isNumeric: true },
-  { label: "Total", isNumeric: true },
-  { label: "Load", isNumeric: true },
+const COLUMNS: BudgetColumn<PersonRow>[] = [
+  { label: "Name", sortValueOf: ({ name }) => name },
+  { label: "Job code", sortValueOf: ({ jobCode }) => jobCode },
+  { label: "Title", sortValueOf: ({ title }) => title || null },
+  { label: "Salary per", isNumeric: true, sortValueOf: ({ salary }) => salary },
+  { label: "Fringe per", isNumeric: true, sortValueOf: ({ fringe }) => fringe },
+  { label: "Total", isNumeric: true, sortValueOf: ({ total }) => total },
+  {
+    label: "Load",
+    isNumeric: true,
+    sortValueOf: ({ sections }) => sections.length,
+  },
   { label: "Sections" },
 ];
 
