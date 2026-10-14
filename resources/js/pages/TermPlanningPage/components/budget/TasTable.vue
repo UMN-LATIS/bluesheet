@@ -62,7 +62,9 @@
             class="tw-w-full"
             :appointmentPercent="row.appointmentPercent"
             :levels="appointmentLevels"
-            :defaultPercent="defaultAppointmentPercent"
+            :defaultPercent="
+              row.appointmentPercentFromSections ?? row.appointmentPercent
+            "
             :isOverridden="row.isAppointmentOverridden"
             :canEdit="canEdit"
             :label="`Appointment for ${row.name}`"
@@ -135,7 +137,6 @@ const props = defineProps<{
   rows: PersonRow[];
   /** The term's appointment percents. */
   appointmentLevels: number[];
-  defaultAppointmentPercent: number;
   canEdit: boolean;
 }>();
 

@@ -96,7 +96,10 @@
               class="tw-h-9 tw-w-24 tw-flex-none tw-overflow-hidden tw-rounded-[10px] tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright"
               :appointmentPercent="budget.appointmentPercent"
               :levels="appointmentLevels"
-              :defaultPercent="defaultAppointmentPercent"
+              :defaultPercent="
+                budget.appointmentPercentFromSections ??
+                budget.appointmentPercent
+              "
               :isOverridden="budget.isAppointmentOverridden"
               :canEdit="canEdit"
               :label="`Appointment for ${name}`"
@@ -287,7 +290,6 @@ const props = defineProps<{
   canEdit: boolean;
   /** The term's appointment percents. */
   appointmentLevels: number[];
-  defaultAppointmentPercent: number;
   isReadOnly: boolean;
   termSections: PersonTermSection[];
   /** Null while loading. */

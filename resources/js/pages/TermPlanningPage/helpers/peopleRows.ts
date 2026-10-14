@@ -73,7 +73,9 @@ export interface PersonRow {
   leaves: TermLeave[];
   /** Null unless the person's priced job code is a grad student's. */
   appointmentPercent: number | null;
-  /** True when the person has their own appointment instead of the term's default. */
+  /** What their paid sections imply; a reset restores it. Null unless a grad student. */
+  appointmentPercentFromSections: number | null;
+  /** True when the person has their own appointment instead of the one their sections imply. */
   isAppointmentOverridden: boolean;
   hasFeeOffset: boolean;
   isInternational: boolean;
@@ -193,8 +195,13 @@ export function peopleTablesOf(
         ? null
         : Math.ceil(rate.annualLoad / TERMS_PER_YEAR);
     const gradSetting = rateOverrides.gradPeopleByEmplid.get(emplid);
+    const gradAppointment = gradAppointmentOf(lines);
+    const appointmentPercentFromSections = isGrad
+      ? (gradAppointment?.appointmentPercentFromSections ??
+        defaultAppointmentOf(rateOverrides))
+      : null;
     const appointmentPercent = isGrad
-      ? (gradSetting?.appointmentPercent ?? defaultAppointmentOf(rateOverrides))
+      ? (gradSetting?.appointmentPercent ?? appointmentPercentFromSections)
       : null;
 
     const price = isGrad
@@ -229,6 +236,7 @@ export function peopleTablesOf(
       notes: notesByEmplid.get(emplid) ?? "",
       leaves,
       appointmentPercent,
+      appointmentPercentFromSections,
       isAppointmentOverridden: gradSetting?.appointmentPercent != null,
       hasFeeOffset: isGrad && (gradSetting?.hasFeeOffset ?? false),
       isInternational: isGrad && (gradSetting?.isInternational ?? false),
@@ -377,6 +385,7 @@ function unstaffedRowsOf(charges: Charge[], rate: Rate | null): PersonRow[] {
       notes: "",
       leaves: [],
       appointmentPercent: null,
+      appointmentPercentFromSections: null,
       isAppointmentOverridden: false,
       hasFeeOffset: false,
       isInternational: false,

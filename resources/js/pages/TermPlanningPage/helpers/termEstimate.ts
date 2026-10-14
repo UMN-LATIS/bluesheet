@@ -16,6 +16,7 @@ import {
 import {
   gradCostOf,
   gradTermOf,
+  appointmentForSectionsOf,
   defaultAppointmentOf,
   type GradCost,
   type GradStudent,
@@ -47,6 +48,8 @@ export interface CostLine {
 
 export interface GradAppointment {
   student: GradStudent;
+  /** What the person's paid sections imply, before their own setting. */
+  appointmentPercentFromSections: number;
   /** Null when the term has no grad inputs or hours. */
   cost: GradCost | null;
 }
@@ -68,7 +71,6 @@ interface CostContext {
   pricingOfEmplid: (emplid: number) => PersonPricing;
   /** The partner a crosslisted section is costed on, or null. */
   crosslistOwnerOf: (section: PlannedSection) => number | null;
-  chargedSectionIdByTaCourse: Map<string, number>;
   /**
    * The lecture of the section's course that the person is
    * on, so they are paid there instead. Null on a lecture,
@@ -101,12 +103,7 @@ export function estimateTermCost(
 
     return crosslistOwnerByListing.get(listing) ?? null;
   };
-  const isCostedHere = (section: PlannedSection) =>
-    (crosslistOwnerOf(section) ?? section.id) === section.id;
 
-  const sectionsThatCanChargeATa = liveSections.filter(
-    (section) => isCostedHere(section) && !isFreeComponent(section.component),
-  );
   const lectureSectionIdByPersonCourse =
     lectureSectionIdByPersonCourseOf(liveSections);
   const context: CostContext = {
@@ -118,9 +115,6 @@ export function estimateTermCost(
         : (lectureSectionIdByPersonCourse.get(
             personCourseKey(emplid, courseCode),
           ) ?? null),
-    chargedSectionIdByTaCourse: chargedSectionIdByTaCourseOf(
-      sectionsThatCanChargeATa,
-    ),
     termRates: termRatesOf(assumptions, rateOverrides),
     isGradStudent: (emplid) => isGradJobCodeRate(pricingOfEmplid(emplid).rate),
   };
@@ -272,7 +266,7 @@ function taLineOf(
   section: PlannedSection,
   context: CostContext,
 ): CostLine {
-  const { pricingOfEmplid, chargedSectionIdByTaCourse, termRates } = context;
+  const { pricingOfEmplid, termRates } = context;
   const lectureSectionId = context.lectureSectionIdOf(ta.emplid, section);
   if (lectureSectionId !== null) {
     return {
@@ -283,24 +277,6 @@ function taLineOf(
   }
   if (context.isGradStudent(ta.emplid)) {
     return { role: "ta", emplid: ta.emplid, ...gradAppointmentPlaceholder };
-  }
-
-  const chargedSectionId =
-    chargedSectionIdByTaCourse.get(
-      personCourseKey(ta.emplid, section.courseCode),
-    ) ?? section.id;
-
-  if (chargedSectionId !== section.id) {
-    return {
-      role: "ta",
-      emplid: ta.emplid,
-      ...NOTHING_OWED,
-      basis: {
-        kind: "chargedOnOtherSection",
-        sectionId: chargedSectionId,
-        reason: "taOncePerCourse",
-      },
-    };
   }
 
   return {
@@ -409,22 +385,6 @@ function lectureSectionIdByPersonCourseOf(
   return lectureSectionIdByPersonCourse;
 }
 
-function chargedSectionIdByTaCourseOf(
-  sections: PlannedSection[],
-): Map<string, number> {
-  const byPreference = [...sections].sort(lecturesThenCourseAndSection);
-  const charged = new Map<string, number>();
-
-  for (const section of byPreference) {
-    for (const { emplid, role } of section.instructors) {
-      const key = personCourseKey(emplid, section.courseCode);
-      if (role === TA_ROLE && !charged.has(key)) charged.set(key, section.id);
-    }
-  }
-
-  return charged;
-}
-
 function lecturesThenCourseAndSection(
   a: PlannedSection,
   b: PlannedSection,
@@ -509,6 +469,7 @@ function chargedOncePerGradStudent(
     line.basis.kind === "rate" &&
     isGradStudent(line.emplid);
   const chargedSectionIdByEmplid = new Map<number, number>();
+  const sectionIdsByEmplid = new Map<number, Set<number>>();
   const creditsByEmplid = new Map<number, number>();
 
   for (const section of [...sections].sort(lecturesThenCourseAndSection)) {
@@ -519,6 +480,10 @@ function chargedOncePerGradStudent(
       if (!chargedSectionIdByEmplid.has(emplid)) {
         chargedSectionIdByEmplid.set(emplid, section.id);
       }
+      sectionIdsByEmplid.set(
+        emplid,
+        (sectionIdsByEmplid.get(emplid) ?? new Set()).add(section.id),
+      );
       if (line.role === "instructor") {
         creditsByEmplid.set(
           emplid,
@@ -549,9 +514,13 @@ function chargedOncePerGradStudent(
 
         const rate = pricingOfEmplid(line.emplid).rate;
         const setting = rateOverrides.gradPeopleByEmplid.get(line.emplid);
+        const appointmentPercentFromSections = appointmentForSectionsOf(
+          sectionIdsByEmplid.get(line.emplid)?.size ?? 1,
+          defaultAppointmentOf(rateOverrides),
+        );
         const student: GradStudent = {
           appointmentPercent:
-            setting?.appointmentPercent ?? defaultAppointmentOf(rateOverrides),
+            setting?.appointmentPercent ?? appointmentPercentFromSections,
           isAbd: rate?.studentStatus === "abd",
           hasFeeOffset: setting?.hasFeeOffset ?? false,
           isInternational: setting?.isInternational ?? false,
@@ -567,7 +536,7 @@ function chargedOncePerGradStudent(
           salary: cost?.pay ?? null,
           fringe: cost?.fringe ?? null,
           amount: cost?.total ?? null,
-          gradAppointment: { student, cost },
+          gradAppointment: { student, appointmentPercentFromSections, cost },
         };
       }),
     ]),

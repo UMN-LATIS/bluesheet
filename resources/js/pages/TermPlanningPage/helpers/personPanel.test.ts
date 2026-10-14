@@ -83,7 +83,7 @@ describe("personTermSectionsOf", () => {
               basis: {
                 kind: "chargedOnOtherSection",
                 sectionId: 1,
-                reason: "taOncePerCourse",
+                reason: "gradAppointment",
               },
             },
           ],
@@ -95,7 +95,10 @@ describe("personTermSectionsOf", () => {
       personTermSectionsOf(7, sections, costs).map(
         ({ unpaidReason }) => unpaidReason,
       ),
-    ).toEqual([null, "Paid on ANTH 1001-001. A TA is paid once per course."]);
+    ).toEqual([
+      null,
+      "Paid on ANTH 1001-001. A grad student's appointment is paid once per term.",
+    ]);
   });
 });
 

@@ -7,6 +7,7 @@ import {
   rateOverrides,
 } from "./costAssumptions.fixture";
 import {
+  appointmentForSectionsOf,
   gradCostOf,
   gradTermOf,
   offsetShareOf,
@@ -154,5 +155,18 @@ describe("gradTermOf", () => {
       gradTermOf(missing, rateOverrides({ gradInputs: FALL_GRAD_INPUTS }))
         ?.inputs,
     ).toEqual(FALL_GRAD_INPUTS);
+  });
+});
+
+describe("appointmentForSectionsOf", () => {
+  it("adds the per-section appointment for each section, up to 50%", () => {
+    expect(
+      [0, 1, 2, 3].map((count) => appointmentForSectionsOf(count, 25)),
+    ).toEqual([25, 25, 50, 50]);
+    expect(appointmentForSectionsOf(3, 12.5)).toBe(37.5);
+  });
+
+  it("allows a per-section appointment above 50% for one section", () => {
+    expect(appointmentForSectionsOf(2, 75)).toBe(75);
   });
 });

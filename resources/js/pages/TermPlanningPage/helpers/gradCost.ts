@@ -3,9 +3,25 @@ import type { RateOverrides } from "./costOverrides";
 
 export const STANDARD_APPOINTMENT_PERCENT = 25;
 
+/** The appointment one section adds. */
 export const defaultAppointmentOf = (
   overrides: Pick<RateOverrides, "defaultAppointmentPercent">,
 ) => overrides.defaultAppointmentPercent ?? STANDARD_APPOINTMENT_PERCENT;
+
+export const MAX_APPOINTMENT_FROM_SECTIONS_PERCENT = 50;
+
+/**
+ * Each paid section adds `perSectionPercent`, up to 50%, or
+ * up to `perSectionPercent` when that is higher.
+ */
+export const appointmentForSectionsOf = (
+  sectionCount: number,
+  perSectionPercent: number,
+) =>
+  Math.min(
+    perSectionPercent * Math.max(sectionCount, 1),
+    Math.max(perSectionPercent, MAX_APPOINTMENT_FROM_SECTIONS_PERCENT),
+  );
 
 export const FEE_OFFSET_ABD_REASON =
   "ABD job codes are ineligible for the student fee offset";

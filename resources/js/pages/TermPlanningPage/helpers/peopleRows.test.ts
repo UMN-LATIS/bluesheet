@@ -221,7 +221,7 @@ describe("peopleTablesOf", () => {
     });
   });
 
-  it("lists every section a grad TA works, though the appointment is paid once", () => {
+  it("lists every section a grad TA works, and caps the appointment they imply at 50%", () => {
     const { tas } = tablesOf([
       section(1, { courseCode: "ANTH-1", instructors: [ta(10)] }),
       section(2, { courseCode: "ANTH-1", instructors: [ta(10)] }),
@@ -231,8 +231,9 @@ describe("peopleTablesOf", () => {
     expect(tas[0].sections.map(({ sectionId }) => sectionId)).toEqual([
       1, 2, 3,
     ]);
-    expect(tas[0].total).toBe(9000);
-    expect(tas[0].loadLabel).toBe("25%");
+    expect(tas[0].total).toBe(18_000);
+    expect(tas[0].loadLabel).toBe("50%");
+    expect(tas[0].appointmentPercentFromSections).toBe(50);
   });
 
   it("shows the person's appointment, flags, ABD status and the offset in the pay hint", () => {

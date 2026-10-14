@@ -4,7 +4,6 @@ const CHARGED_ELSEWHERE_RULES: Record<ChargedElsewhereReason, string> = {
   crosslisted: "Crosslisted sections are paid once.",
   sameMeetingTime:
     "It meets at the same time, and a person is paid once per meeting time.",
-  taOncePerCourse: "A TA is paid once per course.",
   gradAppointment: "A grad student's appointment is paid once per term.",
 };
 

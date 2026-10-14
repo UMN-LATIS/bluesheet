@@ -52,7 +52,6 @@
           v-else-if="schedule.budgetTab === 'tas'"
           :rows="peopleTables.tas"
           :appointmentLevels="appointmentLevels"
-          :defaultAppointmentPercent="defaultAppointmentPercent"
           :canEdit="schedule.canEditCosts"
           @selectSection="selectSection"
           @selectPerson="selectPerson"
@@ -109,10 +108,6 @@ import {
   enrollmentSeriesBySection,
   historyKeyOf,
 } from "../../helpers/enrollmentHistory";
-import {
-  defaultAppointmentOf,
-  STANDARD_APPOINTMENT_PERCENT,
-} from "../../helpers/gradCost";
 import { peopleTablesOf, type PersonRow } from "../../helpers/peopleRows";
 import { filterPeople } from "../../helpers/scheduleFilters";
 import { totalsOf, type SectionCost } from "../../helpers/termEstimate";
@@ -188,12 +183,6 @@ const editPersonSalary = (emplid: number, amount: number | null) =>
     type: "rateOverrideEdited",
     edit: { rate: { kind: "person", emplid }, amount },
   });
-
-const defaultAppointmentPercent = computed(() =>
-  props.schedule.rateOverrides
-    ? defaultAppointmentOf(props.schedule.rateOverrides)
-    : STANDARD_APPOINTMENT_PERCENT,
-);
 
 const appointmentLevels = computed(() =>
   (props.assumptions?.gradRates.levels ?? [])

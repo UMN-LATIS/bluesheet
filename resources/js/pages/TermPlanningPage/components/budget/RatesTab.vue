@@ -100,14 +100,14 @@
               "
             />
           </InputTile>
-          <InputTile label="Default appointment">
+          <InputTile label="Appointment per section">
             <AppointmentSelect
               :appointmentPercent="grad.defaultAppointmentPercent"
               :levels="appointmentLevels"
               :defaultPercent="STANDARD_APPOINTMENT_PERCENT"
               :isOverridden="grad.isDefaultAppointmentOverridden"
               :canEdit="canEdit"
-              label="Default appointment"
+              label="Appointment per section"
               @change="
                 (value) =>
                   emit('editGradInput', {
@@ -184,7 +184,7 @@
             </BudgetCell>
             <BudgetCell role="cell" class="tw-text-on-surface-variant">
               <span class="tw-min-w-0">
-                <span class="tw-block">Term</span>
+                <span class="tw-block">Section</span>
                 <CellSubline>
                   {{ grad.defaultAppointmentPercent }}%<template
                     v-if="row.cost"
@@ -227,8 +227,10 @@
         </template>
       </BudgetTable>
       <p class="tw-m-0 tw-mt-2 tw-text-[11px] tw-text-on-surface-variant">
-        Offsets are paid per person: a quarter under a 25% appointment, half
-        under 50%, and in full from 50%. ABD codes get no fee offset.
+        Each section a grad student is paid on adds this appointment, up to 50%,
+        unless their own appointment is set. Offsets are paid per person: a
+        quarter under a 25% appointment, half under 50%, and in full from 50%.
+        ABD codes get no fee offset.
       </p>
     </section>
   </div>

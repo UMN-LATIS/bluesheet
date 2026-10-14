@@ -83,7 +83,7 @@ export interface GradAppointmentLevel {
 /** One grad student's settings for one department and one term. */
 export interface GradPerson {
   emplid: number;
-  /** Null means the term's default appointment. */
+  /** Null means the appointment their paid sections imply. */
   appointmentPercent: number | null;
   hasFeeOffset: boolean;
   isInternational: boolean;

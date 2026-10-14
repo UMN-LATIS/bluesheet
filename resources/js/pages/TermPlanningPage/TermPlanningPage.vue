@@ -245,7 +245,6 @@
           :canEditSalary="selectedPerson.canEditSalary"
           :canEdit="schedule.canEditCosts"
           :appointmentLevels="appointmentLevels"
-          :defaultAppointmentPercent="defaultAppointmentPercent"
           :isReadOnly="schedule.isReadOnly"
           :termSections="selectedPerson.termSections"
           :taughtTerms="selectedPerson.taughtTerms"
@@ -333,10 +332,6 @@ import SheetMount from "./components/SheetMount.vue";
 import TermLeaveStrip from "./components/TermLeaveStrip.vue";
 import { bandsForDay } from "./helpers/dayBands";
 import { buildFilterOptions } from "./helpers/filterOptions";
-import {
-  defaultAppointmentOf,
-  STANDARD_APPOINTMENT_PERCENT,
-} from "./helpers/gradCost";
 import { leavesByEmplid } from "./helpers/leavesByEmplid";
 import { reachableFacetValues } from "./helpers/scheduleFilters";
 import { appliedScheduleFilters } from "./helpers/appliedScheduleFilters";
@@ -898,12 +893,6 @@ const selectedPersonBudget = computed(() => {
   const ta = tas.find(isEmplid);
   return ta ? { row: ta, salaryLabel: "Pay", canEditSalary: false } : null;
 });
-
-const defaultAppointmentPercent = computed(() =>
-  schedule.rateOverrides
-    ? defaultAppointmentOf(schedule.rateOverrides)
-    : STANDARD_APPOINTMENT_PERCENT,
-);
 
 const appointmentLevels = computed(() =>
   (costAssumptionsQuery.data.value?.gradRates.levels ?? [])
