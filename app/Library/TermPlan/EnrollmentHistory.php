@@ -7,7 +7,7 @@ use App\SisClassSection;
 use Illuminate\Support\Collection;
 
 final class EnrollmentHistory {
-    private const TERM_COUNT = 8;
+    private const TERM_COUNT = 10;
 
     private const LEAD_ROLE = 'PI';
 

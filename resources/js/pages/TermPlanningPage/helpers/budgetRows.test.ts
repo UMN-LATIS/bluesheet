@@ -5,11 +5,8 @@ import {
   jobCodeRate,
   rateOverrides,
   sisInstructor,
-  taAppointmentRate,
 } from "./costAssumptions.fixture";
-import type { CostLineOverride } from "@/types";
 import { budgetRowOf } from "./budgetRows";
-import { lineOverrideAmountsByKeyOf } from "./costOverrides";
 import { plannedSection } from "./plannedSection.fixture";
 import { estimateTermCost, type SectionCost } from "./termEstimate";
 import type { PlannedSection } from "../types";
@@ -19,21 +16,23 @@ const labelOfSection = (sectionId: number) => `Label ${sectionId}`;
 const assumptions = costAssumptions({
   jobCodes: [
     jobCodeRate("A", 4000),
+    jobCodeRate("TA", 9000, { instructorType: "teaching_assistant" }),
     jobCodeRate("TBA", 5000, { instructorType: null }),
   ],
-  taRates: { fiscalYear: 2027, rates: [taAppointmentRate(9000)] },
-  people: [costPerson(1, ["A"]), costPerson(2, ["A"])],
+  people: [
+    costPerson(1, ["A"]),
+    costPerson(2, ["A"]),
+    costPerson(10, ["TA"]),
+    costPerson(20, ["TA"]),
+    costPerson(21, ["TA"]),
+  ],
 });
 
-const rowsOf = (
-  sections: PlannedSection[],
-  lineOverrides: CostLineOverride[] = [],
-) => {
+const rowsOf = (sections: PlannedSection[]) => {
   const costs = estimateTermCost({
     sections,
     assumptions,
     rateOverrides: rateOverrides(),
-    lineOverrideAmountsByKey: lineOverrideAmountsByKeyOf(lineOverrides, {}),
   });
 
   return sections.map((section) =>
@@ -92,59 +91,6 @@ describe("budgetRowOf", () => {
     expect(row.instructorCost).toBe(8000);
   });
 
-  it("flags an instructor whose cost is overridden", () => {
-    const [row] = rowsOf(
-      [plannedSection(1, monday9, { instructors: [sisInstructor(1, "PI")] })],
-      [
-        {
-          courseCode: "ANTH-1001",
-          section: "001",
-          emplid: 1,
-          amount: 1234,
-        },
-      ],
-    );
-
-    expect(row).toMatchObject({
-      hasInstructorOverride: true,
-      instructorCost: 1234,
-    });
-    expect(row.instructorLines).toEqual([
-      {
-        courseCode: "ANTH-1001",
-        section: "001",
-        emplid: 1,
-        name: "Person 1",
-        amount: 1234,
-        defaultAmount: 4000,
-        isOverridden: true,
-      },
-    ]);
-  });
-
-  it("lists no overridable instructor line on an unstaffed section", () => {
-    const [row] = rowsOf([plannedSection(1, monday9)]);
-
-    expect(row.instructorLines).toEqual([]);
-  });
-
-  it("lists a TA charged on the section as overridable, not one charged elsewhere", () => {
-    const ta = sisInstructor(2, "TA");
-    const [lecture, discussion] = rowsOf([
-      plannedSection(1, monday9, { component: "LEC", instructors: [ta] }),
-      plannedSection(2, monday9, {
-        section: "002",
-        component: "DIS",
-        instructors: [ta],
-      }),
-    ]);
-
-    expect(lecture.taLines).toMatchObject([
-      { emplid: 2, amount: 9000, isOverridden: false },
-    ]);
-    expect(discussion.taLines).toEqual([]);
-  });
-
   it("points a lab's instructor cost at the lecture that pays it", () => {
     const pi = sisInstructor(1, "PI");
     const [lecture, lab] = rowsOf([
@@ -188,6 +134,8 @@ describe("budgetRowOf", () => {
         {
           role: "instructor",
           emplid: 1,
+          salary: null,
+          fringe: null,
           amount: null,
           basis: { kind: "rate" },
         },
@@ -211,6 +159,8 @@ describe("budgetRowOf", () => {
         {
           role: "ta",
           emplid: 10,
+          salary: null,
+          fringe: null,
           amount: null,
           basis: { kind: "rate" },
         },

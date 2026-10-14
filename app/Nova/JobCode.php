@@ -3,7 +3,6 @@
 namespace App\Nova;
 
 use App\Library\TermPlan\InstructorType;
-use App\Library\TermPlan\StudentStatus;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Laravel\Nova\Fields\HasMany;
@@ -23,7 +22,7 @@ class JobCode extends Resource {
     public static $group = 'Term costs';
 
     public function authorizedToDelete(Request $request): bool {
-        return !$this->resource->rates()->exists();
+        return !$this->resource->termRates()->exists();
     }
 
     public function subtitle(): string {
@@ -58,14 +57,7 @@ class JobCode extends Resource {
                 ->rules('nullable', 'integer', 'min:0', 'max:40')
                 ->help('Courses a person with this job code teaches in a year. The People tab expects half of it each term.'),
 
-            Select::make('TA Student Status', 'student_status')
-                ->options(StudentStatus::class)
-                ->displayUsingLabels()
-                ->nullable()
-                ->rules('nullable', Rule::enum(StudentStatus::class))
-                ->help('For TA job codes: which TA appointment rate applies. Blank means regular.'),
-
-            HasMany::make('Rates', 'rates', JobCodeRate::class),
+            HasMany::make('Term Rates', 'termRates', JobCodeTermRate::class),
         ];
     }
 }

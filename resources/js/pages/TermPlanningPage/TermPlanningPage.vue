@@ -229,7 +229,6 @@
           :termName="term?.name"
           :isReadOnly="isReadOnly"
           :enrollmentHistory="enrollmentHistoryQuery.data.value ?? null"
-          :termCode="activeTermCode"
           @back="goBackToHour"
           @close="closeSheet"
           @create="saveNewSection"
@@ -242,8 +241,9 @@
           :name="selectedPerson.name"
           :title="selectedPerson.title"
           :budget="selectedPerson.budget"
-          :costLabel="selectedPerson.costLabel"
-          :canEditCosts="schedule.canEditCosts"
+          :salaryLabel="selectedPerson.salaryLabel"
+          :canEditSalary="selectedPerson.canEditSalary"
+          :isReadOnly="schedule.isReadOnly"
           :termSections="selectedPerson.termSections"
           :taughtTerms="selectedPerson.taughtTerms"
           @close="schedule.dispatch({ type: 'deselected' })"
@@ -251,7 +251,7 @@
             (sectionId) =>
               schedule.dispatch({ type: 'selectedSection', sectionId })
           "
-          @editRate="editSelectedPersonRate"
+          @editSalary="editSelectedPersonSalary"
         />
         <LeavePanel
           v-else-if="selectedLeave"
@@ -556,7 +556,7 @@ const { createSection, saveSection, deleteSection } = useTermPlanMutations(
   activeTermCode,
 );
 
-const { saveRateOverride, saveLineOverride } = useCostMutations(
+const { saveRateOverride, savePersonNoteEdit } = useCostMutations(
   groupId,
   activeTermCode,
 );
@@ -687,7 +687,7 @@ const hasUnsavedWork = computed(
     schedule.newSectionHasCourse ||
     Object.keys(schedule.pendingEdits).length > 0 ||
     Object.keys(schedule.pendingRateOverrideEdits).length > 0 ||
-    Object.keys(schedule.pendingLineOverrideEdits).length > 0 ||
+    Object.keys(schedule.pendingPersonNoteEdits).length > 0 ||
     localSections.value.some((section) => schedule.isDraftDirty(section)),
 );
 
@@ -745,10 +745,10 @@ useCostEditsAutosave({
 });
 
 useCostEditsAutosave({
-  pendingEdits: computed(() => schedule.pendingLineOverrideEdits),
-  save: (_key, edit) => saveLineOverride.mutateAsync(edit),
+  pendingEdits: computed(() => schedule.pendingPersonNoteEdits),
+  save: (_key, edit) => savePersonNoteEdit.mutateAsync(edit),
   onSaved: (key, saved) =>
-    schedule.dispatch({ type: "lineOverrideEditsPersisted", key, saved }),
+    schedule.dispatch({ type: "personNoteEditsPersisted", key, saved }),
   onRefused: showRefusal,
 });
 
@@ -825,12 +825,13 @@ const teachingHistoryQuery = useTeachingHistoryQuery(
 
 const selectedPersonBudget = computed(() => {
   const assumptions = costAssumptionsQuery.data.value;
-  const { selectedEmplid, sectionCosts, rateOverrides } = schedule;
+  const { selectedEmplid, sectionCosts, rateOverrides, personNotes } = schedule;
   const isCostable =
     activeView.value === "budget" &&
     assumptions &&
     sectionCosts &&
-    rateOverrides;
+    rateOverrides &&
+    personNotes;
   if (selectedEmplid === null || !isCostable) return null;
 
   const { instructors, tas } = peopleTablesOf(
@@ -840,14 +841,23 @@ const selectedPersonBudget = computed(() => {
     rateOverrides,
     roster.value,
     termLeavesByEmplid.value,
+    personNotes,
   );
   const isEmplid = ({ emplid }: { emplid: number | null }) =>
     emplid === selectedEmplid;
   const instructor = instructors.find(isEmplid);
-  if (instructor) return { row: instructor, costLabel: "Cost per section" };
+  if (instructor) {
+    return {
+      row: instructor,
+      salaryLabel: "Salary per section",
+      canEditSalary: schedule.canEditCosts,
+    };
+  }
 
   const ta = tas.find(isEmplid);
-  return ta ? { row: ta, costLabel: "Cost per course" } : null;
+  return ta
+    ? { row: ta, salaryLabel: "Salary per course", canEditSalary: false }
+    : null;
 });
 
 const selectedPerson = computed(() => {
@@ -879,7 +889,8 @@ const selectedPerson = computed(() => {
       historyPerson?.title ||
       null,
     budget: budget?.row ?? null,
-    costLabel: budget?.costLabel ?? "Cost per section",
+    salaryLabel: budget?.salaryLabel ?? "Salary per section",
+    canEditSalary: budget?.canEditSalary ?? false,
     termSections: personTermSectionsOf(
       emplid,
       localSections.value,
@@ -889,7 +900,7 @@ const selectedPerson = computed(() => {
   };
 });
 
-function editSelectedPersonRate(amount: number | null) {
+function editSelectedPersonSalary(amount: number | null) {
   const emplid = schedule.selectedEmplid;
   if (emplid === null) return;
 

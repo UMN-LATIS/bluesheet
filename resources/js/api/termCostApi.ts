@@ -35,58 +35,44 @@ export async function fetchEnrollmentHistory(
   return res.data;
 }
 
-/** A null cost restores Nova's rate for the term. */
+/** A null value restores Nova's value for the term. */
 export async function saveJobCodeRateOverride(
   groupId: T.Group["id"],
   termCode: number,
   jobCode: string,
-  costPerCourse: number | null,
+  change: { salary: number | null } | { fringeRate: number | null },
 ): Promise<void> {
-  await axios.put(
+  await axios.patch(
     `/api/term-planning/groups/${groupId}/cost-rate-overrides/job-codes/${encodeURIComponent(jobCode)}`,
-    { costPerCourse },
+    change,
     { ...WRITE_CONFIG, params: { term: termCode } },
   );
 }
 
-/** A null cost restores Nova's rate for the term. */
-export async function saveTaRateOverride(
-  groupId: T.Group["id"],
-  termCode: number,
-  appointmentPercent: number,
-  studentStatus: T.StudentStatus,
-  costPerTerm: number | null,
-): Promise<void> {
-  await axios.put(
-    `/api/term-planning/groups/${groupId}/cost-rate-overrides/ta-appointments/${appointmentPercent}/${studentStatus}`,
-    { costPerTerm },
-    { ...WRITE_CONFIG, params: { term: termCode } },
-  );
-}
-
-/** A null amount restores the person's rate. */
+/** A null salary restores the job code's rate. */
 export async function savePersonRateOverride(
   groupId: T.Group["id"],
   termCode: number,
   emplid: number,
-  amount: number | null,
+  salary: number | null,
 ): Promise<void> {
   await axios.put(
     `/api/term-planning/groups/${groupId}/cost-rate-overrides/people/${emplid}`,
-    { amount },
+    { salary },
     { ...WRITE_CONFIG, params: { term: termCode } },
   );
 }
 
-/** A null amount restores the rate. */
-export async function saveCostLineOverride(
+/** Null or blank notes delete the note. */
+export async function savePersonNote(
   groupId: T.Group["id"],
   termCode: number,
-  override: Omit<T.CostLineOverride, "amount"> & { amount: number | null },
+  emplid: number,
+  notes: string | null,
 ): Promise<void> {
   await axios.put(
-    `/api/term-planning/groups/${groupId}/cost-line-overrides`,
-    override,
+    `/api/term-planning/groups/${groupId}/person-notes/${emplid}`,
+    { notes },
     { ...WRITE_CONFIG, params: { term: termCode } },
   );
 }

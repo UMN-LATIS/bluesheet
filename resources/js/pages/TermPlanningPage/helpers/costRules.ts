@@ -1,10 +1,5 @@
-import type {
-  JobCodeRate,
-  Season,
-  StudentStatus,
-  TaAppointmentRate,
-} from "@/types";
-import { taRateKeyOf, type RateOverrides } from "./costOverrides";
+import type { JobCodeRate } from "@/types";
+import type { RateOverrides } from "./costOverrides";
 
 export const UNSTAFFED_JOB_CODE = "TBA";
 
@@ -15,17 +10,37 @@ const FREE_COMPONENTS = ["IND", "FWK"];
 export const isFreeComponent = (component: string) =>
   FREE_COMPONENTS.includes(component);
 
+export interface Rate {
+  salary: number;
+  /** A fraction: 0.385 is 38.5%. */
+  fringeRate: number;
+}
+
+export const costOfRate = ({ salary, fringeRate }: Rate) =>
+  salary * (1 + fringeRate);
+
 export interface PersonPricing {
   jobCode: string | null;
   rate: JobCodeRate | null;
-  studentStatus: StudentStatus;
 }
 
 export interface TermRates {
   ratesByJobCode: Map<string, JobCodeRate>;
   overrides: RateOverrides;
-  season: Season;
-  taRates: TaAppointmentRate[];
+}
+
+function rateOfJobCode(
+  jobCode: string,
+  ratesByJobCode: Map<string, JobCodeRate>,
+  overrides: RateOverrides,
+): Rate | null {
+  const nova = ratesByJobCode.get(jobCode);
+  const override = overrides.jobCodeRates.get(jobCode);
+  const salary = override?.salary ?? nova?.salary ?? null;
+  const fringeRate = override?.fringeRate ?? nova?.fringeRate ?? null;
+  if (salary === null || fringeRate === null) return null;
+
+  return { salary, fringeRate };
 }
 
 export function pricingOf(
@@ -34,14 +49,10 @@ export function pricingOf(
   overrides: RateOverrides,
 ): PersonPricing {
   const jobCode = highestRateJobCode(jobCodesHeld, ratesByJobCode, overrides);
-  const isAbd = jobCodesHeld.some(
-    (code) => ratesByJobCode.get(code)?.studentStatus === "abd",
-  );
 
   return {
     jobCode,
     rate: jobCode === null ? null : (ratesByJobCode.get(jobCode) ?? null),
-    studentStatus: isAbd ? "abd" : "regular",
   };
 }
 
@@ -52,25 +63,22 @@ function highestRateJobCode(
   ratesByJobCode: Map<string, JobCodeRate>,
   overrides: RateOverrides,
 ): string | null {
-  const costOf = (jobCode: string) =>
-    overrides.costPerCourseByJobCode.get(jobCode) ??
-    ratesByJobCode.get(jobCode)?.costPerCourse ??
-    UNRATED_SORTS_LAST;
+  const costOf = (jobCode: string) => {
+    const rate = rateOfJobCode(jobCode, ratesByJobCode, overrides);
+    return rate === null ? UNRATED_SORTS_LAST : costOfRate(rate);
+  };
 
   return [...jobCodes].sort((a, b) => costOf(b) - costOf(a))[0] ?? null;
 }
 
-/** Null when neither the term nor Nova has a rate. */
-export function jobCodeRateOf(
+/**
+ * The term's override over Nova's rate, field by field.
+ * Null when either field is still missing.
+ */
+export const jobCodeRateOf = (
   jobCode: string,
-  termRates: TermRates,
-): number | null {
-  return (
-    termRates.overrides.costPerCourseByJobCode.get(jobCode) ??
-    termRates.ratesByJobCode.get(jobCode)?.costPerCourse ??
-    null
-  );
-}
+  { ratesByJobCode, overrides }: TermRates,
+): Rate | null => rateOfJobCode(jobCode, ratesByJobCode, overrides);
 
 export const unstaffedRateOf = (termRates: TermRates) =>
   jobCodeRateOf(UNSTAFFED_JOB_CODE, termRates);
@@ -79,30 +87,19 @@ export const unstaffedRateOf = (termRates: TermRates) =>
 export function instructorRateOf(
   pricing: PersonPricing,
   termRates: TermRates,
-): number | null {
+): Rate | null {
   const jobCodeRate =
     pricing.jobCode === null ? null : jobCodeRateOf(pricing.jobCode, termRates);
 
   return jobCodeRate ?? unstaffedRateOf(termRates);
 }
 
-/** Null when neither the term nor Nova has a rate. */
-export function taAppointmentRateOf(
+/** Null when the job code has no rate. A TA never falls back to TBA. */
+export function taRateOf(
   pricing: PersonPricing,
   termRates: TermRates,
-): number | null {
-  const { studentStatus } = pricing;
-  const termAmount = termRates.overrides.costPerTermByTaRateKey.get(
-    taRateKeyOf(TA_APPOINTMENT_PERCENT, studentStatus),
-  );
-  if (termAmount !== undefined) return termAmount;
+): Rate | null {
+  if (pricing.jobCode === null) return null;
 
-  const novaRate = termRates.taRates.find(
-    (rate) =>
-      rate.season === termRates.season &&
-      rate.studentStatus === studentStatus &&
-      rate.appointmentPercent === TA_APPOINTMENT_PERCENT,
-  );
-
-  return novaRate?.costPerTerm ?? null;
+  return jobCodeRateOf(pricing.jobCode, termRates);
 }

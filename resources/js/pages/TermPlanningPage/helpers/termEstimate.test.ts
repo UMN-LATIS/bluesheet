@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { CostLineOverride, CostPerson } from "@/types";
+import type { CostPerson } from "@/types";
 import type { PlannedSection, SisSectionMeeting } from "../types";
 import {
   costAssumptions,
@@ -7,12 +7,8 @@ import {
   jobCodeRate,
   rateOverrides,
   sisInstructor,
-  taAppointmentRate,
 } from "./costAssumptions.fixture";
-import {
-  lineOverrideAmountsByKeyOf,
-  type RateOverrides,
-} from "./costOverrides";
+import type { RateOverrides } from "./costOverrides";
 import { estimateTermCost, totalsOf } from "./termEstimate";
 import { plannedSection } from "./plannedSection.fixture";
 
@@ -23,8 +19,8 @@ const people: CostPerson[] = [
   costPerson(1, ["A"]),
   costPerson(2, ["B"]),
   costPerson(3, ["R"]),
-  costPerson(10, []),
-  costPerson(11, []),
+  costPerson(10, ["TA"]),
+  costPerson(11, ["TA"]),
 ];
 
 const assumptions = costAssumptions({
@@ -32,42 +28,41 @@ const assumptions = costAssumptions({
     jobCodeRate("A", 4000),
     jobCodeRate("B", 6000),
     jobCodeRate("R", 0, { instructorType: "recurring_budget_faculty" }),
+    jobCodeRate("TA", 9000, { instructorType: "teaching_assistant" }),
     jobCodeRate("TBA", 5000, { instructorType: null }),
   ],
-  taRates: { fiscalYear: 2027, rates: [taAppointmentRate(9000)] },
   people,
 });
 
 const estimate = (
   sections: PlannedSection[],
-  overrides: {
-    rates?: RateOverrides;
-    lines?: CostLineOverride[];
-  } = {},
+  overrides: { rates?: RateOverrides } = {},
   withAssumptions = assumptions,
 ) =>
   estimateTermCost({
     sections,
     assumptions: withAssumptions,
     rateOverrides: overrides.rates ?? rateOverrides(),
-    lineOverrideAmountsByKey: lineOverrideAmountsByKeyOf(
-      overrides.lines ?? [],
-      {},
-    ),
   });
 
-const lineOverride = (
-  section: string,
-  emplid: number,
-  amount: number,
-): CostLineOverride => ({
-  courseCode: "ANTH-1001",
-  section,
-  emplid,
-  amount,
-});
-
 describe("estimateTermCost", () => {
+  it("splits a PI's cost into salary and fringe", () => {
+    const costs = estimate(
+      [section(1, { instructors: [sisInstructor(1, "PI")] })],
+      {
+        rates: rateOverrides({
+          jobCodeRates: new Map([["A", { salary: null, fringeRate: 0.25 }]]),
+        }),
+      },
+    );
+
+    expect(costs.get(1)?.lines[0]).toMatchObject({
+      salary: 4000,
+      fringe: 1000,
+      amount: 5000,
+    });
+  });
+
   it("costs a section with a PI at the PI's job code rate", () => {
     const costs = estimate([
       section(1, { instructors: [sisInstructor(1, "PI")] }),
@@ -116,6 +111,8 @@ describe("estimateTermCost", () => {
       {
         role: "unstaffedSection",
         emplid: null,
+        salary: 5000,
+        fringe: 0,
         amount: 5000,
         basis: { kind: "rate" },
       },
@@ -236,6 +233,8 @@ describe("estimateTermCost", () => {
       {
         role: "unstaffedSection",
         emplid: null,
+        salary: 0,
+        fringe: 0,
         amount: 0,
         basis: { kind: "freeComponent" },
       },
@@ -262,7 +261,14 @@ describe("estimateTermCost", () => {
         }),
       ],
       {},
-      { ...assumptions, taRates: { fiscalYear: null, rates: [] } },
+      {
+        ...assumptions,
+        jobCodes: assumptions.jobCodes.map((rate) =>
+          rate.code === "TA"
+            ? { ...rate, salary: null, fringeRate: null }
+            : rate,
+        ),
+      },
     );
 
     const taLine = costs.get(1)?.lines[1];
@@ -287,15 +293,6 @@ describe("estimateTermCost", () => {
     });
   });
 
-  it("prices a TA with a line override at the override", () => {
-    const costs = estimate(
-      [section(1, { instructors: [sisInstructor(10, "TA")] })],
-      { lines: [lineOverride("001", 10, 1000)] },
-    );
-
-    expect(costs.get(1)?.taCost).toBe(1000);
-  });
-
   it("costs a recurring budget PI at their job code's $0 rate", () => {
     const costs = estimate([
       section(1, { instructors: [sisInstructor(3, "PI")] }),
@@ -314,7 +311,7 @@ describe("estimateTermCost with overrides", () => {
   it("prices a PI at the term's rate over Nova's", () => {
     const costs = estimate([section(1, { instructors: [pi(1)] })], {
       rates: rateOverrides({
-        costPerCourseByJobCode: new Map([["A", 4500]]),
+        jobCodeRates: new Map([["A", { salary: 4500, fringeRate: null }]]),
       }),
     });
 
@@ -327,14 +324,14 @@ describe("estimateTermCost with overrides", () => {
   it("costs an unstaffed section at the term's TBA rate", () => {
     const costs = estimate([section(1)], {
       rates: rateOverrides({
-        costPerCourseByJobCode: new Map([["TBA", 6000]]),
+        jobCodeRates: new Map([["TBA", { salary: 6000, fringeRate: null }]]),
       }),
     });
 
     expect(costs.get(1)?.instructorCost).toBe(6000);
   });
 
-  it("prices a person's every paid section at their own rate over the term's", () => {
+  it("prices a person's every paid section at their own salary over the job code's", () => {
     const costs = estimate(
       [
         section(1, { instructors: [pi(1)] }),
@@ -342,8 +339,8 @@ describe("estimateTermCost with overrides", () => {
       ],
       {
         rates: rateOverrides({
-          costPerCourseByJobCode: new Map([["A", 4500]]),
-          costPerSectionByEmplid: new Map([[1, 7000]]),
+          jobCodeRates: new Map([["A", { salary: 4500, fringeRate: null }]]),
+          salaryByEmplid: new Map([[1, 7000]]),
         }),
       },
     );
@@ -351,27 +348,44 @@ describe("estimateTermCost with overrides", () => {
     expect(totalsOf([...costs.values()]).instructorCost).toBe(14000);
   });
 
-  it("prices a TA at their own rate over the TA appointment rate", () => {
-    const costs = estimate(
-      [section(1, { instructors: [sisInstructor(10, "TA")] })],
-      {
-        rates: rateOverrides({ costPerSectionByEmplid: new Map([[10, 4000]]) }),
-      },
-    );
-
-    expect(costs.get(1)?.taCost).toBe(4000);
-  });
-
-  it("prices a section at its line override over the person's rate", () => {
+  it("adds the job code's fringe on top of a person's salary override", () => {
     const costs = estimate([section(1, { instructors: [pi(1)] })], {
-      rates: rateOverrides({ costPerSectionByEmplid: new Map([[1, 7000]]) }),
-      lines: [lineOverride("001", 1, 3000)],
+      rates: rateOverrides({
+        jobCodeRates: new Map([["A", { salary: null, fringeRate: 0.5 }]]),
+        salaryByEmplid: new Map([[1, 7000]]),
+      }),
     });
 
     expect(costs.get(1)?.lines[0]).toMatchObject({
-      amount: 3000,
-      basis: { kind: "lineOverride", replacedAmount: 7000 },
+      salary: 7000,
+      fringe: 3500,
+      amount: 10500,
     });
+  });
+
+  it("charges a person's salary override with no fringe when they have no rate", () => {
+    const costs = estimate([section(1, { instructors: [pi(99)] })], {
+      rates: rateOverrides({
+        jobCodeRates: new Map([["TBA", { salary: null, fringeRate: 0.5 }]]),
+        salaryByEmplid: new Map([[99, 7000]]),
+      }),
+    });
+
+    expect(costs.get(1)?.lines[0]).toMatchObject({
+      salary: 7000,
+      fringe: 3500,
+    });
+  });
+
+  it("ignores a person's salary override on a TA", () => {
+    const costs = estimate(
+      [section(1, { instructors: [sisInstructor(10, "TA")] })],
+      {
+        rates: rateOverrides({ salaryByEmplid: new Map([[10, 4000]]) }),
+      },
+    );
+
+    expect(costs.get(1)?.taCost).toBe(9000);
   });
 
   it("leaves a lab paid on its lecture at nothing despite the person's rate", () => {
@@ -381,84 +395,75 @@ describe("estimateTermCost with overrides", () => {
         section(2, { section: "002", component: "LAB", instructors: [pi(1)] }),
       ],
       {
-        rates: rateOverrides({ costPerSectionByEmplid: new Map([[1, 7000]]) }),
+        rates: rateOverrides({ salaryByEmplid: new Map([[1, 7000]]) }),
       },
     );
 
     expect(costs.get(2)?.lines[0].amount).toBe(0);
   });
 
-  it("prices a PI at a line override over the term's rate", () => {
-    const costs = estimate([section(1, { instructors: [pi(1), pi(2)] })], {
-      rates: rateOverrides({
-        costPerCourseByJobCode: new Map([["A", 4500]]),
-      }),
-      lines: [lineOverride("001", 1, 3000)],
-    });
-
-    expect(costs.get(1)?.lines).toMatchObject([
-      {
-        emplid: 1,
-        amount: 3000,
-        basis: { kind: "lineOverride", replacedAmount: 4500 },
-      },
-      { emplid: 2, amount: 6000 },
-    ]);
-  });
-
-  it("applies a line override only to its own section", () => {
+  it("costs a TA holding a grad job code at the seeded Fall 2026 rates", () => {
+    const gradRates = {
+      ...assumptions,
+      jobCodes: [
+        ...assumptions.jobCodes,
+        jobCodeRate("9511", 5870.2, {
+          instructorType: "teaching_assistant",
+          fringeRate: 1.1264,
+        }),
+        jobCodeRate("9519", 5870.2, {
+          instructorType: "teaching_assistant",
+          fringeRate: 0.4219,
+        }),
+      ],
+      people: [...people, costPerson(12, ["9511"]), costPerson(13, ["9519"])],
+    };
     const costs = estimate(
       [
-        section(1, { instructors: [pi(1)] }),
-        section(2, { courseCode: "ANTH-2001", instructors: [pi(1)] }),
+        section(1, {
+          instructors: [sisInstructor(12, "TA"), sisInstructor(13, "TA")],
+        }),
       ],
-      { lines: [lineOverride("001", 1, 3000)] },
-    );
-
-    expect(costs.get(1)?.total).toBe(3000);
-    expect(costs.get(2)?.total).toBe(4000);
-  });
-
-  it("ignores a line override on a TA charged on another section", () => {
-    const ta = sisInstructor(10, "TA");
-    const costs = estimate(
-      [
-        section(1, { section: "001", component: "LEC", instructors: [ta] }),
-        section(2, { section: "002", component: "DIS", instructors: [ta] }),
-      ],
-      { lines: [lineOverride("002", 10, 1)] },
-    );
-
-    expect(costs.get(2)?.lines[0].basis.kind).toBe("chargedOnOtherSection");
-    expect(costs.get(2)?.total).toBe(0);
-  });
-
-  it("costs a TA holding an ABD job code at the ABD rate", () => {
-    const costs = estimate(
-      [section(1, { instructors: [sisInstructor(12, "TA")] })],
       {},
-      {
-        ...assumptions,
-        jobCodes: [
-          ...assumptions.jobCodes,
-          jobCodeRate("9519", null, {
-            instructorType: "teaching_assistant",
-            studentStatus: "abd",
+      gradRates,
+    );
+    const [regular, phdCandidate] = costs.get(1)?.lines ?? [];
+
+    expect(regular.amount).toBeCloseTo(12482, 0);
+    expect(phdCandidate.amount).toBeCloseTo(8347, 0);
+    expect(Math.round(regular.amount ?? 0)).toBe(12482);
+    expect(Math.round(phdCandidate.amount ?? 0)).toBe(8347);
+  });
+
+  it.each([
+    { courseCount: 1, total: 9000 },
+    { courseCount: 2, total: 18000 },
+    { courseCount: 4, total: 36000 },
+  ])(
+    "charges a TA on $courseCount courses once per course",
+    ({ courseCount, total }) => {
+      const ta = sisInstructor(10, "TA");
+      const sectionsOfEachCourse = Array.from(
+        { length: courseCount },
+        (_, index) => [
+          section(index * 2 + 1, {
+            courseCode: `ANTH-${index}`,
+            section: "001",
+            instructors: [ta],
+          }),
+          section(index * 2 + 2, {
+            courseCode: `ANTH-${index}`,
+            section: "002",
+            instructors: [ta],
           }),
         ],
-        people: [...people, costPerson(12, ["9519"])],
-        taRates: {
-          fiscalYear: 2027,
-          rates: [
-            taAppointmentRate(9000),
-            taAppointmentRate(6000, { studentStatus: "abd" }),
-          ],
-        },
-      },
-    );
+      ).flat();
 
-    expect(costs.get(1)?.taCost).toBe(6000);
-  });
+      const costs = estimate(sectionsOfEachCourse);
+
+      expect(totalsOf([...costs.values()]).taCost).toBe(total);
+    },
+  );
 });
 
 describe("estimateTermCost with labs and discussions in a lecture course", () => {
@@ -477,6 +482,8 @@ describe("estimateTermCost with labs and discussions in a lecture course", () =>
         {
           role: "instructor",
           emplid: 1,
+          salary: 0,
+          fringe: 0,
           amount: 0,
           basis: {
             kind: "paidOnLecture",
@@ -551,6 +558,8 @@ describe("estimateTermCost with labs and discussions in a lecture course", () =>
       {
         role: "unstaffedSection",
         emplid: null,
+        salary: 0,
+        fringe: 0,
         amount: 0,
         basis: { kind: "paidOnLecture", lectureSectionId: 1 },
       },
@@ -672,6 +681,8 @@ describe("estimateTermCost with sections at the same meeting time", () => {
       {
         role: "instructor",
         emplid: 1,
+        salary: 0,
+        fringe: 0,
         amount: 0,
         basis: {
           kind: "chargedOnOtherSection",

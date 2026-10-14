@@ -52,42 +52,25 @@
       class="scrollbar-always-visible tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-gap-4 tw-overflow-y-auto tw-p-[18px]"
     >
       <div v-if="budget && budget.emplid !== null" class="tw-flex-none">
-        <div class="tw-mb-1.5 tw-flex tw-items-center tw-gap-2">
-          <FieldLabel class="tw-mb-0">{{ costLabel }} this term</FieldLabel>
-          <span
-            v-if="budget.isRateOverridden"
-            class="tw-inline-flex tw-h-5 tw-items-center tw-rounded-full tw-bg-accent tw-px-2 tw-text-[10px] tw-font-bold tw-uppercase tw-tracking-[0.07em] tw-text-on-accent"
-          >
-            Override
-          </span>
-        </div>
+        <FieldLabel class="tw-mb-1.5">{{ salaryLabel }} this term</FieldLabel>
         <div
           class="tw-flex tw-items-center tw-gap-3 tw-rounded-[10px] tw-bg-surface tw-p-3"
         >
-          <DollarInput
-            class="tw-h-11 tw-w-36 tw-flex-none tw-overflow-hidden tw-rounded-[10px] tw-border tw-border-solid tw-bg-surface-bright"
-            :class="
-              budget.isRateOverridden
-                ? 'tw-border-[#e0a800]'
-                : 'tw-border-outline-variant'
-            "
-            :amount="budget.rate"
-            :isDisabled="!canEditCosts"
-            :label="`${costLabel} for ${name}`"
-            @change="editRate"
+          <EditableCell
+            class="tw-h-11 tw-w-40 tw-flex-none tw-overflow-hidden tw-rounded-[10px] tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright"
+            kind="dollars"
+            :amount="budget.salary"
+            :amountWithoutOverride="budget.salaryWithoutOverride"
+            :isOverridden="budget.isSalaryOverridden"
+            :canEdit="canEditSalary"
+            :label="`${salaryLabel} for ${name}`"
+            @change="(amount) => emit('editSalary', amount)"
           />
-          <div class="tw-flex tw-flex-col tw-text-xs">
-            <span class="tw-text-on-surface-variant">
-              Standard rate: {{ standardRateLabel }}
-            </span>
-            <button
-              v-if="canEditCosts && budget.isRateOverridden"
-              type="button"
-              class="tw-cursor-pointer tw-self-start tw-border-none tw-bg-transparent tw-p-0 tw-text-xs tw-font-semibold tw-text-primary hover:tw-underline"
-              @click="emit('editRate', null)"
-            >
-              Reset to rate
-            </button>
+          <div
+            class="tw-flex tw-flex-col tw-text-xs tw-text-on-surface-variant"
+          >
+            <span>Job code salary: {{ jobCodeSalaryLabel }}</span>
+            <span>Fringe: {{ fringeLabel }}</span>
           </div>
         </div>
       </div>
@@ -109,47 +92,47 @@
           No sections
         </p>
         <div class="tw-flex tw-flex-col tw-gap-2">
-          <button
+          <div
             v-for="termSection in termSections"
             :key="termSection.sectionId"
-            type="button"
-            class="tw-flex tw-cursor-pointer tw-items-center tw-gap-2.5 tw-rounded-[10px] tw-border-none tw-bg-surface tw-p-2.5 tw-text-left tw-text-on-surface hover:tw-bg-surface-container"
-            @click="emit('selectSection', termSection.sectionId)"
+            class="tw-flex tw-flex-col tw-gap-1 tw-rounded-[10px] tw-bg-surface tw-p-2.5"
           >
+            <div class="tw-flex tw-items-center tw-gap-2.5">
+              <SectionChip
+                class="tw-flex-none"
+                :label="termSection.label"
+                :component="termSection.component"
+                :isReadOnly="isReadOnly"
+                @click="emit('selectSection', termSection.sectionId)"
+              />
+              <span
+                class="tw-min-w-0 tw-flex-1 tw-truncate tw-text-[13px] tw-font-semibold"
+              >
+                {{ termSection.title }}
+              </span>
+              <span
+                v-if="termSection.amount !== undefined"
+                class="tw-flex-none tw-text-[13px] tw-font-semibold tw-tabular-nums"
+              >
+                <MissingRate v-if="termSection.amount === null" />
+                <template v-else>
+                  {{ formatWholeDollars(termSection.amount) }}
+                </template>
+              </span>
+            </div>
             <span
-              class="tw-w-[3px] tw-flex-none tw-self-stretch tw-rounded-sm"
-              :class="colorOfType(termSection.component).dot"
-              aria-hidden="true"
-            />
-            <span class="tw-min-w-0 tw-flex-1">
-              <span
-                class="tw-block tw-truncate tw-text-[13px] tw-font-semibold"
-              >
-                {{ termSection.label }} · {{ termSection.title }}
-              </span>
-              <span
-                class="tw-block tw-truncate tw-text-[11px] tw-text-on-surface-variant"
-              >
-                {{ termSection.meetingSummary
-                }}{{ termSection.isTa ? " · TA" : "" }}
-              </span>
-              <span
-                v-if="termSection.unpaidReason"
-                class="tw-mt-1 tw-block tw-text-[11px] tw-text-on-surface-variant"
-              >
-                {{ termSection.unpaidReason }}
-              </span>
-            </span>
-            <span
-              v-if="termSection.amount !== undefined"
-              class="tw-flex-none tw-text-[13px] tw-font-semibold tw-tabular-nums"
+              class="tw-block tw-truncate tw-text-[11px] tw-text-on-surface-variant"
             >
-              <MissingRate v-if="termSection.amount === null" />
-              <template v-else>
-                {{ formatWholeDollars(termSection.amount) }}
-              </template>
+              {{ termSection.meetingSummary
+              }}{{ termSection.isTa ? " · TA" : "" }}
             </span>
-          </button>
+            <span
+              v-if="termSection.unpaidReason"
+              class="tw-block tw-text-[11px] tw-text-on-surface-variant"
+            >
+              {{ termSection.unpaidReason }}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -165,7 +148,7 @@
             v-else-if="taughtTerms.length === 0"
             class="tw-m-0 tw-text-xs tw-text-on-surface-variant"
           >
-            No sections in the last four years
+            No sections in the last five years
           </p>
           <div
             v-else
@@ -179,16 +162,25 @@
                 <span class="tw-text-on-surface-variant">
                   {{ index === 0 ? term.termName : "" }}
                 </span>
-                <span class="tw-truncate" :title="taught.title">
-                  {{ taught.label }}{{ taught.isTa ? " (TA)" : "" }} ·
-                  {{ taught.title }}
+                <span class="tw-flex tw-min-w-0 tw-items-center tw-gap-2">
+                  <SectionChip
+                    class="tw-flex-none"
+                    disabled
+                    :isReadOnly="isReadOnly"
+                    :label="taught.label"
+                    :component="taught.component"
+                  />
+                  <span class="tw-truncate" :title="taught.title">
+                    {{ taught.isTa ? "(TA) " : "" }}{{ taught.title }}
+                  </span>
                 </span>
-                <span
-                  class="tw-justify-self-end tw-rounded-sm tw-px-1.5 tw-py-0.5 tw-text-center tw-font-bold tw-tabular-nums tw-text-[#262626]"
-                  :style="{ background: taught.fillColor }"
+                <EnrollmentTile
+                  class="tw-justify-self-end tw-rounded-sm tw-px-1.5 tw-py-0.5 tw-text-center tw-font-bold tw-tabular-nums"
+                  :enrollment="taught.enrollment"
+                  :isReadOnly="isReadOnly"
                 >
                   {{ taught.enrolledOfCap ?? "—" }}
-                </span>
+                </EnrollmentTile>
               </template>
             </template>
           </div>
@@ -201,9 +193,10 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import FieldLabel from "@/components/planning/FieldLabel.vue";
-import { colorOfType } from "@/utils/meetingTypeColors";
 import Disclosure from "./Disclosure.vue";
-import DollarInput from "./budget/DollarInput.vue";
+import EnrollmentTile from "./EnrollmentTile.vue";
+import SectionChip from "./SectionChip.vue";
+import EditableCell from "./budget/EditableCell.vue";
 import MissingRate from "./budget/MissingRate.vue";
 import { formatDollars, formatWholeDollars } from "../helpers/money";
 import type { PersonRow } from "../helpers/peopleRows";
@@ -214,8 +207,9 @@ const props = defineProps<{
   title: string | null;
   /** Null outside the Budget view. */
   budget: PersonRow | null;
-  costLabel: string;
-  canEditCosts: boolean;
+  salaryLabel: string;
+  canEditSalary: boolean;
+  isReadOnly: boolean;
   termSections: PersonTermSection[];
   /** Null while loading. */
   taughtTerms: TaughtTerm[] | null;
@@ -224,11 +218,16 @@ const props = defineProps<{
 const emit = defineEmits<{
   close: [];
   selectSection: [sectionId: number];
-  editRate: [amount: number | null];
+  editSalary: [amount: number | null];
 }>();
 
-const standardRateLabel = computed(() => {
-  const amount = props.budget?.rateWithoutOverride ?? null;
+const jobCodeSalaryLabel = computed(() => {
+  const amount = props.budget?.salaryWithoutOverride ?? null;
+  return amount === null ? "none" : formatDollars(amount);
+});
+
+const fringeLabel = computed(() => {
+  const amount = props.budget?.fringe ?? null;
   return amount === null ? "none" : formatDollars(amount);
 });
 
@@ -241,10 +240,4 @@ const historySummary = computed(() => {
   const count = latest.sections.length;
   return `${latest.termName} · ${count} ${count === 1 ? "section" : "sections"}`;
 });
-
-function editRate(amount: number | null) {
-  const isStandard =
-    amount === null || amount === props.budget?.rateWithoutOverride;
-  emit("editRate", isStandard ? null : amount);
-}
 </script>

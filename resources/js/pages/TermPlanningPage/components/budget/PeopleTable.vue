@@ -1,73 +1,70 @@
 <template>
-  <div class="scrollbar-always-visible tw-min-h-0 tw-flex-1 tw-overflow-auto">
-    <div role="table" :aria-label="label" class="tw-min-w-[1000px] tw-text-xs">
-      <div
-        role="row"
-        class="tw-sticky tw-top-0 tw-z-[2] tw-grid tw-border-0 tw-border-b tw-border-solid tw-border-outline tw-bg-surface-bright"
-        :style="{ gridTemplateColumns: GRID_TEMPLATE_COLUMNS }"
-      >
-        <CapsLabel
-          v-for="column in headings"
-          :key="column.label"
-          role="columnheader"
-          class="tw-overflow-hidden tw-whitespace-nowrap tw-border-0 tw-border-r tw-border-solid tw-border-surface-container tw-px-2 tw-py-[7px]"
-          :class="{ 'tw-text-right': column.isNumeric }"
-        >
-          {{ column.label }}
-        </CapsLabel>
-      </div>
-
-      <div
+  <BudgetTable
+    :label="label"
+    :columns="columns"
+    class="tw-min-w-[1088px] tw-grid-cols-[minmax(220px,1.1fr)_64px_120px_104px_100px_120px_minmax(200px,1.6fr)_minmax(160px,1.2fr)]"
+  >
+    <template #default>
+      <BudgetTableRow
         v-for="row in rows"
         :key="row.emplid ?? 'unstaffed'"
-        role="row"
-        class="tw-grid tw-min-h-9 tw-bg-surface-bright"
-        :style="{ gridTemplateColumns: GRID_TEMPLATE_COLUMNS }"
+        class="tw-min-h-9 tw-bg-surface-bright"
       >
         <BudgetCell
           role="cell"
-          class="tw-flex-col tw-items-start tw-justify-center tw-gap-0.5 tw-py-1 tw-font-semibold"
-          :class="{ 'tw-text-brand': row.emplid === null }"
+          class="tw-flex-col tw-items-stretch tw-justify-center tw-gap-0.5 tw-py-1"
         >
           <button
             v-if="row.emplid !== null"
             type="button"
-            class="tw-cursor-pointer tw-truncate tw-border-none tw-bg-transparent tw-p-0 tw-text-left tw-text-xs tw-font-semibold tw-text-on-surface hover:tw-underline"
+            class="tw-block tw-min-w-0 tw-cursor-pointer tw-truncate tw-border-none tw-bg-transparent tw-p-0 tw-text-left tw-text-xs tw-font-semibold tw-text-on-surface hover:tw-underline"
             :title="row.name"
             @click="emit('selectPerson', row.emplid)"
           >
             {{ row.name }}
           </button>
-          <span v-else class="tw-truncate">{{ row.name }}</span>
+          <span
+            v-else
+            class="tw-block tw-min-w-0 tw-truncate tw-font-semibold tw-text-brand"
+            :title="row.name"
+          >
+            {{ row.name }}
+          </span>
+          <CellSubline :title="appointmentOf(row)">
+            {{ appointmentOf(row) }}
+          </CellSubline>
           <LeaveBadge
             v-for="leave in row.leaves"
             :key="leave.id"
+            class="tw-self-start"
             :leave="leave"
             @click="emit('selectLeave', leave.id)"
           />
         </BudgetCell>
-        <BudgetCell role="cell" class="tw-tabular-nums">
-          {{ row.jobCode }}
-        </BudgetCell>
-        <BudgetCell role="cell">
-          <span class="tw-truncate" :title="row.title">{{ row.title }}</span>
-        </BudgetCell>
         <BudgetCell role="cell" class="tw-text-on-surface-variant">
           {{ row.fundLabel }}
         </BudgetCell>
-        <RateInputCell
-          v-if="row.emplid !== null"
-          role="cell"
-          :amount="row.rate"
-          :amountWithoutOverride="row.rateWithoutOverride"
-          :isOverridden="row.isRateOverridden"
-          :canEdit="canEdit"
-          :label="`${costHeading} for ${row.name}`"
-          @change="(amount) => editRate(row, amount)"
-        />
-        <BudgetCell v-else role="cell" align="end" class="tw-font-semibold">
-          <MissingRate v-if="row.rate === null" />
-          <template v-else>{{ formatDollars(row.rate) }}</template>
+        <BudgetCell role="cell" class="tw-p-0">
+          <EditableCell
+            class="tw-w-full"
+            kind="dollars"
+            :amount="row.salary"
+            :amountWithoutOverride="row.salaryWithoutOverride"
+            :isOverridden="row.isSalaryOverridden"
+            :canEdit="canEditSalary && row.emplid !== null"
+            :label="`${salaryHeading} for ${row.name}`"
+            @change="(amount) => editSalary(row, amount)"
+          />
+        </BudgetCell>
+        <BudgetCell role="cell" align="end">
+          <template v-if="row.fringe !== null">
+            {{ formatDollars(row.fringe) }}
+          </template>
+          <template v-else>–</template>
+        </BudgetCell>
+        <BudgetCell role="cell" align="end" class="tw-font-semibold">
+          <MissingRate v-if="row.hasMissingRate" class="tw-mr-1" />
+          {{ formatWholeDollars(row.total) }}
         </BudgetCell>
         <BudgetCell
           role="cell"
@@ -76,58 +73,52 @@
         >
           {{ row.loadLabel }}
         </BudgetCell>
-        <BudgetCell
-          role="cell"
-          align="end"
-          class="tw-relative tw-font-semibold"
-          :class="{ 'tw-bg-accent-container-low': row.hasLineOverride }"
-        >
-          <MissingRate v-if="row.hasMissingRate" class="tw-mr-1" />
-          {{ formatWholeDollars(row.total) }}
-          <OverrideMarker v-if="row.hasLineOverride" />
-        </BudgetCell>
-        <BudgetCell
-          role="cell"
-          :hasRightBorder="false"
-          class="tw-flex-wrap tw-gap-x-2.5 tw-gap-y-0.5 tw-py-1"
-        >
-          <button
+        <BudgetCell role="cell" class="tw-flex-wrap tw-gap-1 tw-py-1">
+          <SectionChip
             v-for="paidSection in row.paidSections"
             :key="paidSection.sectionId"
-            type="button"
-            class="tw-cursor-pointer tw-whitespace-nowrap tw-border-none tw-bg-transparent tw-p-0 tw-text-xs tw-text-primary hover:tw-underline"
+            :label="paidSection.label"
+            :component="paidSection.component"
+            :isReadOnly="isReadOnly"
             :aria-label="`Open ${paidSection.label}`"
             @click="emit('selectSection', paidSection.sectionId)"
-          >
-            {{ paidSection.label }}
-          </button>
+          />
         </BudgetCell>
-      </div>
+        <BudgetCell role="cell" :hasRightBorder="false" class="tw-p-0">
+          <input
+            v-if="row.emplid !== null"
+            :value="row.notes"
+            :disabled="!canEdit"
+            :aria-label="`Notes on ${row.name}`"
+            class="tw-h-full tw-min-h-9 tw-w-full tw-border-none tw-bg-transparent tw-px-2 tw-text-[11.5px] tw-text-on-surface tw-outline-none focus:tw-bg-surface-bright disabled:tw-cursor-default"
+            @input="onNotesInput(row, $event)"
+          />
+        </BudgetCell>
+      </BudgetTableRow>
+    </template>
 
-      <div
-        role="row"
-        class="tw-sticky tw-bottom-0 tw-grid tw-border-0 tw-border-t tw-border-solid tw-border-outline tw-bg-surface tw-font-bold"
-        :style="{ gridTemplateColumns: GRID_TEMPLATE_COLUMNS }"
-      >
-        <div role="cell" class="tw-col-span-6 tw-p-2">
-          Total · {{ personCount }} {{ peopleNoun }}
-        </div>
-        <TotalCell role="cell">{{ formatWholeDollars(total) }}</TotalCell>
-        <div role="cell" />
+    <template #totals>
+      <div role="cell" class="tw-whitespace-nowrap tw-p-2">
+        Total · {{ personCount }} {{ peopleNoun }}
       </div>
-    </div>
-  </div>
+      <div role="cell" class="tw-col-span-3" />
+      <TotalCell role="cell">{{ formatWholeDollars(total) }}</TotalCell>
+      <div role="cell" class="tw-col-span-3" />
+    </template>
+  </BudgetTable>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
 import BudgetCell from "./BudgetCell.vue";
-import CapsLabel from "./CapsLabel.vue";
+import BudgetTableRow from "./BudgetTableRow.vue";
+import CellSubline from "./CellSubline.vue";
+import BudgetTable, { type BudgetColumn } from "./BudgetTable.vue";
+import EditableCell from "./EditableCell.vue";
 import LeaveBadge from "./LeaveBadge.vue";
 import MissingRate from "./MissingRate.vue";
-import OverrideMarker from "./OverrideMarker.vue";
-import RateInputCell from "./RateInputCell.vue";
 import TotalCell from "./TotalCell.vue";
+import SectionChip from "../SectionChip.vue";
 import { formatDollars, formatWholeDollars } from "../../helpers/money";
 import type { PersonRow } from "../../helpers/peopleRows";
 
@@ -135,30 +126,38 @@ const props = defineProps<{
   rows: PersonRow[];
   label: string;
   peopleNoun: string;
-  costHeading: string;
+  paidUnit: "section" | "course";
   canEdit: boolean;
+  isReadOnly: boolean;
 }>();
 
 const emit = defineEmits<{
   selectSection: [sectionId: number];
   selectPerson: [emplid: number];
   selectLeave: [leaveId: number];
-  editRate: [emplid: number, amount: number | null];
+  editSalary: [emplid: number, amount: number | null];
+  editNotes: [emplid: number, notes: string];
 }>();
 
-const GRID_TEMPLATE_COLUMNS =
-  "minmax(180px,1.2fr) 76px minmax(150px,1.3fr) 84px 120px 76px 108px minmax(180px,1.6fr)";
+const salaryHeading = computed(() => `Salary / ${props.paidUnit}`);
 
-const headings = computed(() => [
-  { label: "Name", isNumeric: false },
-  { label: "Job code", isNumeric: false },
-  { label: "Title", isNumeric: false },
-  { label: "Fund", isNumeric: false },
-  { label: props.costHeading, isNumeric: true },
+const canEditSalary = computed(
+  () => props.canEdit && props.paidUnit === "section",
+);
+
+const columns = computed((): BudgetColumn[] => [
+  { label: "Name" },
+  { label: "Fund" },
+  { label: salaryHeading.value, isNumeric: true },
+  { label: `Fringe / ${props.paidUnit}`, isNumeric: true },
+  { label: "Total", isNumeric: true },
   { label: "Load", isNumeric: true },
-  { label: "Total cost", isNumeric: true },
-  { label: "Sections", isNumeric: false },
+  { label: "Sections" },
+  { label: "Notes" },
 ]);
+
+const appointmentOf = ({ jobCode, title }: PersonRow) =>
+  title === "" ? jobCode : `${jobCode} · ${title}`;
 
 const personCount = computed(
   () => props.rows.filter(({ emplid }) => emplid !== null).length,
@@ -168,10 +167,13 @@ const total = computed(() =>
   props.rows.reduce((sum, { total }) => sum + total, 0),
 );
 
-function editRate(row: PersonRow, amount: number | null) {
+function editSalary(row: PersonRow, amount: number | null) {
+  if (row.emplid !== null) emit("editSalary", row.emplid, amount);
+}
+
+function onNotesInput(row: PersonRow, event: Event) {
   if (row.emplid === null) return;
 
-  const isDefault = amount === null || amount === row.rateWithoutOverride;
-  emit("editRate", row.emplid, isDefault ? null : amount);
+  emit("editNotes", row.emplid, (event.target as HTMLInputElement).value);
 }
 </script>

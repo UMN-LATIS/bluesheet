@@ -2,7 +2,7 @@ import type { TeachingHistory } from "@/types";
 import type { PlannedSection } from "../types";
 import { meetingSummaryOf, sectionLabelerOf } from "./budgetRows";
 import { unpaidReasonOf } from "./costReason";
-import { fillColorOf, termNameOf } from "./enrollmentHistory";
+import { termNameOf, type Enrollment } from "./enrollmentHistory";
 import { TA_ROLE } from "./sectionPeople";
 import type { SectionCost } from "./termEstimate";
 
@@ -25,10 +25,12 @@ export interface TaughtSection {
   key: string;
   label: string;
   title: string;
+  component: string;
   isTa: boolean;
   /** Null when the SIS has no enrollment for it. */
   enrolledOfCap: string | null;
-  fillColor: string;
+  /** Null when the SIS has no enrollment for it. */
+  enrollment: Enrollment | null;
 }
 
 export interface TaughtTerm {
@@ -37,7 +39,7 @@ export interface TaughtTerm {
   sections: TaughtSection[];
 }
 
-const HISTORY_YEARS = 4;
+const HISTORY_YEARS = 5;
 
 /** The fall and spring terms the history covers. */
 export const historyRangeOf = (termCode: number) => ({
@@ -112,6 +114,7 @@ export function taughtTermsOf(
           key: section.key,
           label: `${section.subject} ${section.catalogNumber}-${section.section}`,
           title: section.title,
+          component: section.component,
           isTa: section.instructors.some(
             (instructor) =>
               instructor.emplid === emplid && instructor.role === TA_ROLE,
@@ -120,13 +123,13 @@ export function taughtTermsOf(
             section.enrollmentTotal === null
               ? null
               : `${section.enrollmentTotal}/${section.enrollmentCap}`,
-          fillColor:
+          enrollment:
             section.enrollmentTotal === null
-              ? "transparent"
-              : fillColorOf({
+              ? null
+              : {
                   enrollmentTotal: section.enrollmentTotal,
                   enrollmentCap: section.enrollmentCap,
-                }),
+                },
         }))
         .sort((a, b) => a.label.localeCompare(b.label)),
     }));

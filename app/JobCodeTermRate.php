@@ -8,20 +8,22 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use OwenIt\Auditing\Auditable as AuditableTrait;
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
-class JobCodeRate extends Model implements AuditableContract {
+class JobCodeTermRate extends Model implements AuditableContract {
     use AuditableTrait;
     use HasFactory;
 
     protected $fillable = [
         'job_code_id',
-        'fiscal_year',
-        'cost_per_course',
+        'term_code',
+        'salary',
+        'fringe_rate',
         'source',
     ];
 
     protected $casts = [
-        'fiscal_year' => 'integer',
-        'cost_per_course' => 'decimal:2',
+        'term_code' => 'integer',
+        'salary' => 'decimal:2',
+        'fringe_rate' => 'decimal:4',
     ];
 
     public function jobCode(): BelongsTo {

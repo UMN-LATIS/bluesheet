@@ -13,7 +13,7 @@ class TermPersonRateOverride extends Model implements AuditableContract {
         'academic_org',
         'term_code',
         'emplid',
-        'amount',
+        'salary',
         'created_by',
         'updated_by',
     ];
@@ -22,6 +22,6 @@ class TermPersonRateOverride extends Model implements AuditableContract {
         'academic_org' => 'integer',
         'term_code' => 'integer',
         'emplid' => 'integer',
-        'amount' => 'float',
+        'salary' => 'float',
     ];
 }

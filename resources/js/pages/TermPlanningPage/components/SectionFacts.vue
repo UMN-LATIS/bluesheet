@@ -161,7 +161,7 @@
         </p>
       </Disclosure>
 
-      <PreviousEnrollment :offerings="previousOfferings" />
+      <PreviousEnrollment :offerings="previousOfferings" isReadOnly />
     </div>
   </div>
 </template>

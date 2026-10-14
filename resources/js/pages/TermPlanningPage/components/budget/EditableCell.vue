@@ -1,0 +1,115 @@
+<template>
+  <span
+    class="tw-relative tw-flex tw-h-full tw-min-w-0 tw-items-center"
+    :class="{ 'tw-bg-accent-container-low': isOverridden }"
+  >
+    <ResetButton
+      v-if="canEdit && isOverridden"
+      class="tw-ml-1"
+      :label="`Reset to ${resetValueLabel}`"
+      @reset="emit('change', null)"
+    />
+    <span
+      class="tw-flex tw-h-full tw-min-w-0 tw-flex-1 tw-flex-col tw-justify-center"
+    >
+      <input
+        type="text"
+        inputmode="decimal"
+        :value="shownText"
+        placeholder="No rate"
+        :disabled="!canEdit"
+        :aria-label="label"
+        :aria-invalid="refusal !== null"
+        class="tw-h-full tw-min-h-8 tw-w-full tw-min-w-0 tw-border-none tw-bg-transparent tw-px-2 tw-text-right tw-text-xs tw-font-semibold tw-tabular-nums tw-outline-none placeholder:tw-font-normal focus:tw-bg-surface-bright focus:tw-ring-2 focus:tw-ring-inset focus:tw-ring-primary disabled:tw-cursor-default"
+        :class="
+          canEdit
+            ? 'tw-text-primary placeholder:tw-text-primary hover:tw-bg-surface'
+            : 'tw-text-on-surface placeholder:tw-text-on-surface-variant'
+        "
+        @change="onChange"
+      />
+      <span
+        v-if="refusal"
+        role="alert"
+        class="tw-px-2 tw-pb-1 tw-text-[11px] tw-text-brand"
+      >
+        {{ refusal }}
+      </span>
+    </span>
+    <OverrideMarker v-if="isOverridden" />
+  </span>
+</template>
+
+<script setup lang="ts">
+import { computed, ref, watch } from "vue";
+import OverrideMarker from "./OverrideMarker.vue";
+import ResetButton from "./ResetButton.vue";
+import { refusalOfDollars } from "../../helpers/dollarAmounts";
+import { formatDollars } from "../../helpers/money";
+import { formatPercent, parseFringeRate } from "../../helpers/percentAmounts";
+
+const props = defineProps<{
+  amount: number | null;
+  amountWithoutOverride: number | null;
+  isOverridden: boolean;
+  canEdit: boolean;
+  kind: "dollars" | "percent";
+  label: string;
+}>();
+
+const emit = defineEmits<{ change: [amount: number | null] }>();
+
+const refusal = ref<string | null>(null);
+
+watch(
+  () => props.amount,
+  () => (refusal.value = null),
+);
+
+const formatAmount = (amount: number) =>
+  props.kind === "dollars" ? formatDollars(amount) : formatPercent(amount);
+
+const shownText = computed(() =>
+  props.amount === null ? "" : formatAmount(props.amount),
+);
+
+const resetValueLabel = computed(() =>
+  props.amountWithoutOverride === null
+    ? "no rate"
+    : formatAmount(props.amountWithoutOverride),
+);
+
+function parsedAmountOf(
+  text: string,
+): { amount: number } | { refusal: string } {
+  if (props.kind === "percent") {
+    const parsed = parseFringeRate(text);
+    return "fringeRate" in parsed ? { amount: parsed.fringeRate } : parsed;
+  }
+
+  const dollars = Number(text.replace(/[$,\s]/g, ""));
+  const dollarsRefusal = refusalOfDollars(dollars);
+  return dollarsRefusal === null
+    ? { amount: dollars }
+    : { refusal: dollarsRefusal };
+}
+
+function onChange(event: Event) {
+  const text = (event.target as HTMLInputElement).value;
+  if (text.trim() === "") {
+    refusal.value = null;
+    emit("change", null);
+    return;
+  }
+
+  const parsed = parsedAmountOf(text);
+  if ("refusal" in parsed) {
+    refusal.value = parsed.refusal;
+    return;
+  }
+
+  refusal.value = null;
+  const isWithoutOverride = parsed.amount === props.amountWithoutOverride;
+  emit("change", isWithoutOverride ? null : parsed.amount);
+}
+</script>

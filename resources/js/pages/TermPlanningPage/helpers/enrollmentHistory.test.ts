@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { EnrollmentHistory, EnrollmentHistorySection } from "@/types";
 import {
   enrollmentSeriesBySection,
+  enrollmentFillStepOf,
   historyKeyOf,
   previousOfferingsOf,
   termNameOf,
@@ -113,26 +114,65 @@ describe("previousOfferingsOf", () => {
     ],
   };
 
-  it("lists the section's offerings in the same season, newest first", () => {
-    const offerings = previousOfferingsOf(history, "ANTH-3201", "001", 1269);
+  it("lists every history term, newest first, as the tiles do", () => {
+    const offerings = previousOfferingsOf(history, "ANTH-3201", "001");
 
     expect(offerings.map(({ termName }) => termName)).toEqual([
       "Fall 2025",
+      "Summer 2025",
+      "Spring 2025",
       "Fall 2024",
     ]);
   });
 
+  it("shows a term the section did not run as not offered", () => {
+    const [, summer2025] = previousOfferingsOf(history, "ANTH-3201", "001");
+
+    expect(summer2025).toMatchObject({
+      isOffered: false,
+      enrolledOfCap: "—",
+      enrollment: null,
+    });
+  });
+
   it("shows the instructor, meeting time, and enrolled of cap", () => {
-    const [, fall2024] = previousOfferingsOf(history, "ANTH-3201", "001", 1269);
+    const fall2024 = previousOfferingsOf(history, "ANTH-3201", "001").at(-1);
 
     expect(fall2024).toMatchObject({
+      isOffered: true,
       instructorLastName: "Okafor",
       meetingSummary: "W 4 – 4:50p",
       enrolledOfCap: "36/30",
+      enrollment: { enrollmentTotal: 36, enrollmentCap: 30 },
     });
   });
 
   it("is empty for a section never offered before", () => {
-    expect(previousOfferingsOf(history, "ANTH-3201", "003", 1269)).toEqual([]);
+    expect(previousOfferingsOf(history, "ANTH-3201", "003")).toEqual([]);
+  });
+});
+
+describe("enrollmentFillStepOf", () => {
+  const stepAt = (enrollmentTotal: number) =>
+    enrollmentFillStepOf({ enrollmentTotal, enrollmentCap: 100 });
+
+  it("is 0 up to 40% full", () => {
+    expect(stepAt(0)).toBe(0);
+    expect(stepAt(40)).toBe(0);
+  });
+
+  it("is 5 from 95% full, and above", () => {
+    expect(stepAt(95)).toBe(5);
+    expect(stepAt(120)).toBe(5);
+  });
+
+  it("rises evenly between", () => {
+    expect([51, 62, 73, 84].map(stepAt)).toEqual([1, 2, 3, 4]);
+  });
+
+  it("treats a section with no cap as full", () => {
+    expect(enrollmentFillStepOf({ enrollmentTotal: 3, enrollmentCap: 0 })).toBe(
+      5,
+    );
   });
 });

@@ -6,16 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 use OwenIt\Auditing\Auditable as AuditableTrait;
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
-class TermCostLineOverride extends Model implements AuditableContract {
+class TermPersonNote extends Model implements AuditableContract {
     use AuditableTrait;
 
     protected $fillable = [
         'academic_org',
         'term_code',
-        'course_code',
-        'class_section',
         'emplid',
-        'amount',
+        'notes',
         'created_by',
         'updated_by',
     ];
@@ -24,6 +22,5 @@ class TermCostLineOverride extends Model implements AuditableContract {
         'academic_org' => 'integer',
         'term_code' => 'integer',
         'emplid' => 'integer',
-        'amount' => 'float',
     ];
 }

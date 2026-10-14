@@ -3,32 +3,25 @@
 namespace App\Library\TermPlan;
 
 use App\JobCode;
-use App\JobCodeRate;
+use App\JobCodeTermRate;
 use App\SisAppointment;
-use App\TaAppointmentRate;
-use App\TermCostLineOverride;
 use App\TermJobCodeRateOverride;
+use App\TermPersonNote;
 use App\TermPersonRateOverride;
-use App\TermTaRateOverride;
 use Illuminate\Support\Collection;
 
 final class CostAssumptions {
     public static function forTerm(int $academicOrg, int $termCode): array {
-        $fiscalYear = FiscalYear::ofTerm($termCode);
-
         return [
             'termCode' => $termCode,
-            'fiscalYear' => $fiscalYear,
             'season' => Season::ofTerm($termCode)->value,
-            'jobCodes' => self::jobCodes($fiscalYear),
-            'taRates' => self::taRatesOfLatestYearEntered($fiscalYear),
+            'jobCodes' => self::jobCodes($termCode),
             'people' => self::people($academicOrg),
             'rateOverrides' => [
                 'jobCodes' => self::jobCodeRateOverrides($academicOrg, $termCode),
-                'taAppointments' => self::taRateOverrides($academicOrg, $termCode),
                 'people' => self::personRateOverrides($academicOrg, $termCode),
             ],
-            'lineOverrides' => self::lineOverrides($academicOrg, $termCode),
+            'personNotes' => self::personNotes($academicOrg, $termCode),
         ];
     }
 
@@ -41,57 +34,26 @@ final class CostAssumptions {
         return self::distinctJobCodes(self::appointmentsOf($academicOrg));
     }
 
-    private static function jobCodes(int $fiscalYear): array {
+    private static function jobCodes(int $termCode): array {
         return JobCode::query()
-            ->with(['rates' => fn($rates) => $rates
-                ->where('fiscal_year', '<=', $fiscalYear)
-                ->orderByDesc('fiscal_year')])
+            ->with(['termRates' => fn($rates) => $rates->where('term_code', $termCode)])
             ->orderBy('code')
             ->get()
             ->map(function (JobCode $jobCode) {
-                /** @var JobCodeRate|null $latestRate */
-                $latestRate = $jobCode->rates->first();
+                /** @var JobCodeTermRate|null $termRate */
+                $termRate = $jobCode->termRates->first();
 
                 return [
                     'code' => $jobCode->code,
                     'title' => $jobCode->title,
                     'instructorType' => $jobCode->instructor_type?->value,
                     'annualLoad' => $jobCode->annual_load,
-                    'studentStatus' => $jobCode->student_status?->value,
-                    'costPerCourse' => $latestRate === null ? null : (float) $latestRate->cost_per_course,
-                    'rateFiscalYear' => $latestRate?->fiscal_year,
-                    'source' => $latestRate?->source,
+                    'salary' => $termRate === null ? null : (float) $termRate->salary,
+                    'fringeRate' => $termRate === null ? null : (float) $termRate->fringe_rate,
+                    'source' => $termRate?->source,
                 ];
             })
             ->all();
-    }
-
-    private static function taRatesOfLatestYearEntered(int $fiscalYear): array {
-        $latestYear = TaAppointmentRate::query()
-            ->where('fiscal_year', '<=', $fiscalYear)
-            ->max('fiscal_year');
-
-        if ($latestYear === null) {
-            return ['fiscalYear' => null, 'rates' => []];
-        }
-
-        $rates = TaAppointmentRate::query()
-            ->where('fiscal_year', $latestYear)
-            ->orderBy('season')
-            ->orderBy('student_status')
-            ->orderBy('appointment_percent')
-            ->get();
-
-        return [
-            'fiscalYear' => $latestYear,
-            'rates' => $rates->map(fn(TaAppointmentRate $rate) => [
-                'season' => $rate->season->value,
-                'studentStatus' => $rate->student_status->value,
-                'appointmentPercent' => $rate->appointment_percent,
-                'costPerTerm' => (float) $rate->cost_per_term,
-                'source' => $rate->source,
-            ])->all(),
-        ];
     }
 
     private static function people(int $academicOrg): array {
@@ -114,22 +76,8 @@ final class CostAssumptions {
             ->get()
             ->map(fn(TermJobCodeRateOverride $override) => [
                 'jobCode' => $override->job_code,
-                'costPerCourse' => $override->cost_per_course,
-            ])
-            ->all();
-    }
-
-    private static function taRateOverrides(int $academicOrg, int $termCode): array {
-        return TermTaRateOverride::query()
-            ->where('academic_org', $academicOrg)
-            ->where('term_code', $termCode)
-            ->orderBy('appointment_percent')
-            ->orderBy('student_status')
-            ->get()
-            ->map(fn(TermTaRateOverride $override) => [
-                'appointmentPercent' => $override->appointment_percent,
-                'studentStatus' => $override->student_status->value,
-                'costPerTerm' => $override->cost_per_term,
+                'salary' => $override->salary,
+                'fringeRate' => $override->fringe_rate,
             ])
             ->all();
     }
@@ -142,24 +90,20 @@ final class CostAssumptions {
             ->get()
             ->map(fn(TermPersonRateOverride $override) => [
                 'emplid' => $override->emplid,
-                'amount' => $override->amount,
+                'salary' => $override->salary,
             ])
             ->all();
     }
 
-    private static function lineOverrides(int $academicOrg, int $termCode): array {
-        return TermCostLineOverride::query()
+    private static function personNotes(int $academicOrg, int $termCode): array {
+        return TermPersonNote::query()
             ->where('academic_org', $academicOrg)
             ->where('term_code', $termCode)
-            ->orderBy('course_code')
-            ->orderBy('class_section')
             ->orderBy('emplid')
             ->get()
-            ->map(fn(TermCostLineOverride $override) => [
-                'courseCode' => $override->course_code,
-                'section' => $override->class_section,
-                'emplid' => $override->emplid,
-                'amount' => $override->amount,
+            ->map(fn(TermPersonNote $note) => [
+                'emplid' => $note->emplid,
+                'notes' => $note->notes,
             ])
             ->all();
     }

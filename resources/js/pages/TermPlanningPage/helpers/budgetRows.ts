@@ -21,26 +21,13 @@ export interface PaidElsewhere {
   reason: string;
 }
 
-export interface OverridableLine {
-  courseCode: string;
-  section: string;
-  emplid: number;
-  name: string;
-  amount: number | null;
-  /**
-   * The cost without the override. Null when the line has
-   * no rate.
-   */
-  defaultAmount: number | null;
-  isOverridden: boolean;
-}
-
 export interface BudgetRow {
   sectionId: number;
   courseLabel: string;
   component: string;
   title: string;
   meetingSummary: string;
+  enrollmentTotal: number;
   enrollmentCap: number;
   history: EnrollmentPoint[];
   isCancelled: boolean;
@@ -48,21 +35,13 @@ export interface BudgetRow {
   instructorName: string;
   /** Null when a line has no rate. */
   instructorCost: number | null;
-  hasInstructorOverride: boolean;
   /**
    * The section this section's instructor cost is paid on.
    * Null when it is paid here, or on more than one section.
    */
   paidElsewhere: PaidElsewhere | null;
-  /**
-   * Empty when nothing on the section can be overridden.
-   */
-  instructorLines: OverridableLine[];
   assistantNames: string;
   taCostCell: TaCostCell;
-  hasTaOverride: boolean;
-  /** Empty when no TA is charged on this section. */
-  taLines: OverridableLine[];
   notes: string;
 }
 
@@ -97,27 +76,19 @@ export function budgetRowOf(
     component: section.component,
     title: section.title,
     meetingSummary: meetingSummaryOf(section.meetings),
+    enrollmentTotal: section.enrollmentTotal,
     enrollmentCap: section.enrollmentCap,
     history,
     isCancelled: section.isCancelled,
     isUnstaffed,
     instructorName: instructorNameOf(leads, isUnstaffed, taLines.length > 0),
     instructorCost: sumOrNull(instructorLines),
-    hasInstructorOverride: instructorLines.some(isOverriddenLine),
     paidElsewhere: paidElsewhereOf(instructorLines, labelOfSection),
-    instructorLines: overridableLinesOf(
-      section,
-      instructorLines.filter(({ role }) => role === "instructor"),
-    ),
     assistantNames,
     taCostCell: taCostCellOf(taLines, labelOfSection),
-    hasTaOverride: taLines.some(isOverriddenLine),
-    taLines: overridableLinesOf(section, taLines),
     notes: section.notes,
   };
 }
-
-const isOverriddenLine = ({ basis }: CostLine) => basis.kind === "lineOverride";
 
 function paidSectionIdOf({ basis }: CostLine): number | null {
   if (basis.kind === "paidOnLecture") return basis.lectureSectionId;
@@ -139,32 +110,6 @@ function paidElsewhereOf(
   }
 
   return { sectionLabel: labelOfSection(onlyPaidSectionId), reason };
-}
-
-function overridableLinesOf(
-  section: PlannedSection,
-  lines: CostLine[],
-): OverridableLine[] {
-  return lines.flatMap(({ emplid, amount, basis }) => {
-    if (emplid === null || basis.kind === "chargedOnOtherSection") return [];
-
-    const person = section.instructors.find(
-      (instructor) => instructor.emplid === emplid,
-    );
-    const isOverridden = basis.kind === "lineOverride";
-
-    return [
-      {
-        courseCode: section.courseCode,
-        section: section.section,
-        emplid,
-        name: person?.name ?? person?.lastName ?? "Unknown",
-        amount,
-        defaultAmount: isOverridden ? basis.replacedAmount : amount,
-        isOverridden,
-      },
-    ];
-  });
 }
 
 /** "MW 11:15a – 12:30p", from the first meeting's time. */

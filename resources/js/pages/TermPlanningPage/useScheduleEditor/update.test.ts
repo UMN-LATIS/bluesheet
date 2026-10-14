@@ -6,11 +6,10 @@ import {
 } from "./selectors";
 import { costAssumptions } from "../helpers/costAssumptions.fixture";
 import {
-  lineOverrideKeyOf,
   rateOverrideKeyOf,
-  type LineOverrideEdit,
   type RateOverrideEdit,
 } from "../helpers/costOverrides";
+import { personNoteKeyOf, type PersonNoteEdit } from "../helpers/personNotes";
 import { plannedSection } from "../helpers/plannedSection.fixture";
 import { NEW_SECTION_ID } from "./types";
 import type {
@@ -1982,17 +1981,15 @@ describe("budget view", () => {
   });
 
   const rateEdit = (amount: number | null): RateOverrideEdit => ({
-    rate: { kind: "jobCode", jobCode: "U" },
+    rate: { kind: "jobCode", jobCode: "U", field: "salary" },
     amount,
   });
-  const lineEdit = (amount: number | null): LineOverrideEdit => ({
-    courseCode: "ANTH-1001",
-    section: "001",
+  const noteEdit = (notes: string | null): PersonNoteEdit => ({
     emplid: 2,
-    amount,
+    notes,
   });
   const RATE_KEY = rateOverrideKeyOf(rateEdit(1).rate);
-  const LINE_KEY = lineOverrideKeyOf("ANTH-1001", "001", 2);
+  const NOTE_KEY = personNoteKeyOf(2);
 
   it("ignores a rate override before the cost assumptions load", () => {
     const state = after([{ type: "rateOverrideEdited", edit: rateEdit(1) }]);
@@ -2024,14 +2021,14 @@ describe("budget view", () => {
     expect(state.rateOverrideEdits).toEqual({ [RATE_KEY]: rateEdit(1) });
   });
 
-  it("records a rate override on a published term", () => {
+  it("refuses a rate override on a published term", () => {
     const state = after(
       [{ type: "rateOverrideEdited", edit: rateEdit(1) }],
       initialState(),
       { ...editable, isReadOnly: true },
     );
 
-    expect(state.rateOverrideEdits).toEqual({ [RATE_KEY]: rateEdit(1) });
+    expect(state.rateOverrideEdits).toEqual({});
   });
 
   it("drops a saved rate override but keeps one typed while the save was in flight", () => {
@@ -2092,79 +2089,80 @@ describe("budget view", () => {
     expect(persisted.rateOverrideEdits).toEqual({});
   });
 
-  it("keys TA appointment rate overrides apart from job code overrides", () => {
-    const taEdit: RateOverrideEdit = {
-      rate: {
-        kind: "taAppointment",
-        appointmentPercent: 25,
-        studentStatus: "regular",
-      },
+  it("keys a job code's salary apart from its fringe and from a person's salary", () => {
+    const fringeEdit: RateOverrideEdit = {
+      rate: { kind: "jobCode", jobCode: "U", field: "fringeRate" },
+      amount: 0.4,
+    };
+    const personEdit: RateOverrideEdit = {
+      rate: { kind: "person", emplid: 2 },
       amount: 3,
     };
     const state = after(
       [
         { type: "rateOverrideEdited", edit: rateEdit(1) },
-        { type: "rateOverrideEdited", edit: taEdit },
+        { type: "rateOverrideEdited", edit: fringeEdit },
+        { type: "rateOverrideEdited", edit: personEdit },
       ],
       initialState(),
       editable,
     );
 
-    expect(Object.keys(state.rateOverrideEdits)).toHaveLength(2);
+    expect(Object.keys(state.rateOverrideEdits)).toHaveLength(3);
   });
 
-  it("ignores a line override before the cost assumptions load", () => {
-    const state = after([{ type: "lineOverrideEdited", edit: lineEdit(1) }]);
+  it("ignores a person note before the cost assumptions load", () => {
+    const state = after([{ type: "personNoteEdited", edit: noteEdit("a") }]);
 
-    expect(state.lineOverrideEdits).toEqual({});
+    expect(state.personNoteEdits).toEqual({});
   });
 
-  it("ignores a line override from someone who cannot edit costs", () => {
+  it("ignores a person note from someone who cannot edit costs", () => {
     const viewOnly = {
       ...emptyContext,
       costAssumptions: costAssumptions({ canEdit: false }),
     };
     const state = after(
-      [{ type: "lineOverrideEdited", edit: lineEdit(1) }],
+      [{ type: "personNoteEdited", edit: noteEdit("a") }],
       initialState(),
       viewOnly,
     );
 
-    expect(state.lineOverrideEdits).toEqual({});
+    expect(state.personNoteEdits).toEqual({});
   });
 
-  it("records a line override from someone who can edit costs", () => {
+  it("records a person note from someone who can edit costs", () => {
     const state = after(
-      [{ type: "lineOverrideEdited", edit: lineEdit(1) }],
+      [{ type: "personNoteEdited", edit: noteEdit("a") }],
       initialState(),
       editable,
     );
 
-    expect(state.lineOverrideEdits).toEqual({ [LINE_KEY]: lineEdit(1) });
+    expect(state.personNoteEdits).toEqual({ [NOTE_KEY]: noteEdit("a") });
   });
 
-  it("records a line override on a published term", () => {
+  it("refuses a person note on a published term", () => {
     const state = after(
-      [{ type: "lineOverrideEdited", edit: lineEdit(1) }],
+      [{ type: "personNoteEdited", edit: noteEdit("a") }],
       initialState(),
       { ...editable, isReadOnly: true },
     );
 
-    expect(state.lineOverrideEdits).toEqual({ [LINE_KEY]: lineEdit(1) });
+    expect(state.personNoteEdits).toEqual({});
   });
 
-  it("drops a saved line override but keeps one typed while the save was in flight", () => {
+  it("drops a saved person note but keeps one typed while the save was in flight", () => {
     const edited = after(
-      [{ type: "lineOverrideEdited", edit: lineEdit(1) }],
+      [{ type: "personNoteEdited", edit: noteEdit("a") }],
       initialState(),
       editable,
     );
     const persisted = after(
       [
         {
-          type: "lineOverrideEditsPersisted",
-          key: LINE_KEY,
-          saved: lineEdit(1),
+          type: "personNoteEditsPersisted",
+          key: NOTE_KEY,
+          saved: noteEdit("a"),
         },
       ],
       edited,
@@ -2172,43 +2170,43 @@ describe("budget view", () => {
     );
     const newer = after(
       [
-        { type: "lineOverrideEdited", edit: lineEdit(2) },
+        { type: "personNoteEdited", edit: noteEdit("b") },
         {
-          type: "lineOverrideEditsPersisted",
-          key: LINE_KEY,
-          saved: lineEdit(1),
+          type: "personNoteEditsPersisted",
+          key: NOTE_KEY,
+          saved: noteEdit("a"),
         },
       ],
       edited,
       editable,
     );
 
-    expect(persisted.lineOverrideEdits).toEqual({});
-    expect(newer.lineOverrideEdits).toEqual({ [LINE_KEY]: lineEdit(2) });
+    expect(persisted.personNoteEdits).toEqual({});
+    expect(newer.personNoteEdits).toEqual({ [NOTE_KEY]: noteEdit("b") });
   });
 
-  it("records a restored line as a null amount until its save is back", () => {
+  it("records a cleared note as null notes until its save is back", () => {
     const restored = after(
-      [{ type: "lineOverrideEdited", edit: lineEdit(null) }],
+      [{ type: "personNoteEdited", edit: noteEdit(null) }],
       initialState(),
       editable,
     );
     const persisted = after(
       [
         {
-          type: "lineOverrideEditsPersisted",
-          key: LINE_KEY,
-          saved: lineEdit(null),
+          type: "personNoteEditsPersisted",
+          key: NOTE_KEY,
+          saved: noteEdit(null),
         },
       ],
       restored,
       editable,
     );
 
-    expect(restored.lineOverrideEdits).toEqual({
-      [LINE_KEY]: lineEdit(null),
+    expect(restored.personNoteEdits).toEqual({
+      [NOTE_KEY]: noteEdit(null),
     });
-    expect(persisted.lineOverrideEdits).toEqual({});
+    expect(persisted.personNoteEdits).toEqual({});
   });
 
   it("writes typed comments into the section's edits, beside its other edits", () => {
@@ -2239,11 +2237,11 @@ describe("budget view", () => {
     expect(state.sectionEdits).toEqual({});
   });
 
-  it("drops unsaved rate and line overrides on moving to another department or term", () => {
+  it("drops unsaved rate overrides and person notes on moving to another department or term", () => {
     const edited = after(
       [
         { type: "rateOverrideEdited", edit: rateEdit(1) },
-        { type: "lineOverrideEdited", edit: lineEdit(1) },
+        { type: "personNoteEdited", edit: noteEdit("a") },
       ],
       initialState(),
       editable,
@@ -2251,7 +2249,7 @@ describe("budget view", () => {
     const moved = after([{ type: "contextChanged" }], edited, editable);
 
     expect(moved.rateOverrideEdits).toEqual({});
-    expect(moved.lineOverrideEdits).toEqual({});
+    expect(moved.personNoteEdits).toEqual({});
   });
 
   it("copies typed comments into an open sheet's draft, so Save keeps them", () => {

@@ -13,7 +13,8 @@ class TermJobCodeRateOverride extends Model implements AuditableContract {
         'academic_org',
         'term_code',
         'job_code',
-        'cost_per_course',
+        'salary',
+        'fringe_rate',
         'created_by',
         'updated_by',
     ];
@@ -21,6 +22,7 @@ class TermJobCodeRateOverride extends Model implements AuditableContract {
     protected $casts = [
         'academic_org' => 'integer',
         'term_code' => 'integer',
-        'cost_per_course' => 'float',
+        'salary' => 'float',
+        'fringe_rate' => 'float',
     ];
 }

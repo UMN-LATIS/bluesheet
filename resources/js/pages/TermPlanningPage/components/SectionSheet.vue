@@ -417,7 +417,10 @@
           />
         </Disclosure>
 
-        <PreviousEnrollment :offerings="previousOfferings" />
+        <PreviousEnrollment
+          :offerings="previousOfferings"
+          :isReadOnly="isReadOnly"
+        />
       </div>
     </div>
 
@@ -667,7 +670,6 @@ const props = defineProps<{
   isReadOnly?: boolean;
   /** Null until loaded, or when the term is not known. */
   enrollmentHistory: EnrollmentHistory | null;
-  termCode: number | null;
 }>();
 
 const emit = defineEmits<{
@@ -896,12 +898,11 @@ const openPerson = (emplid: number) =>
   props.schedule.dispatch({ type: "selectedPerson", emplid });
 
 const previousOfferings = computed(() =>
-  props.enrollmentHistory && props.termCode !== null
+  props.enrollmentHistory
     ? previousOfferingsOf(
         props.enrollmentHistory,
         props.section.courseCode,
         props.section.section,
-        props.termCode,
       )
     : [],
 );

@@ -56,67 +56,88 @@ export function termNameOf(termCode: number): string {
   return `${SEASON_NAMES[termCode % 10] ?? "Term"} ${year}`;
 }
 
-const RED_HUE = 25;
-const GREEN_HUE = 145;
-const RED_UP_TO_FILL = 0.4;
-const GREEN_FROM_FILL = 0.95;
+const LAST_FILL_STEP = 5;
+const LOWEST_STEP_UP_TO_FILL = 0.4;
+const HIGHEST_STEP_FROM_FILL = 0.95;
 
 const clampToUnit = (fraction: number) => Math.min(1, Math.max(0, fraction));
 
-/** Red when under 40% full, green from 95%. */
-export function fillColorOf({
-  enrollmentTotal,
-  enrollmentCap,
-}: {
+export interface Enrollment {
   enrollmentTotal: number;
   enrollmentCap: number;
-}): string {
+}
+
+/**
+ * 0 up to 40% full, `LAST_FILL_STEP` from 95% full, evenly
+ * between. A section with no cap counts as full.
+ */
+export function enrollmentFillStepOf({
+  enrollmentTotal,
+  enrollmentCap,
+}: Enrollment): number {
   const fill =
     enrollmentCap > 0 ? clampToUnit(enrollmentTotal / enrollmentCap) : 1;
-  const redToGreenFraction = clampToUnit(
-    (fill - RED_UP_TO_FILL) / (GREEN_FROM_FILL - RED_UP_TO_FILL),
+  const fraction = clampToUnit(
+    (fill - LOWEST_STEP_UP_TO_FILL) /
+      (HIGHEST_STEP_FROM_FILL - LOWEST_STEP_UP_TO_FILL),
   );
-  const hue = RED_HUE + redToGreenFraction * (GREEN_HUE - RED_HUE);
 
-  return `oklch(0.85 0.11 ${hue.toFixed(0)})`;
+  return Math.round(fraction * LAST_FILL_STEP);
 }
 
 export interface PreviousOffering {
   termCode: number;
   termName: string;
+  /** False in a term the section did not run. */
+  isOffered: boolean;
   instructorLastName: string;
   meetingSummary: string;
   enrolledOfCap: string;
-  fillColor: string;
+  /** Null in a term the section did not run. */
+  enrollment: Enrollment | null;
+}
+
+function previousOfferingOf({
+  termCode,
+  offering,
+}: EnrollmentPoint): PreviousOffering {
+  const termName = termNameOf(termCode);
+  if (!offering) {
+    return {
+      termCode,
+      termName,
+      isOffered: false,
+      instructorLastName: "—",
+      meetingSummary: "",
+      enrolledOfCap: "—",
+      enrollment: null,
+    };
+  }
+
+  return {
+    termCode,
+    termName,
+    isOffered: true,
+    instructorLastName: offering.leadInstructorLastName ?? "—",
+    meetingSummary: meetingSummaryOf(offering.meetings),
+    enrolledOfCap: `${offering.enrollmentTotal}/${offering.enrollmentCap}`,
+    enrollment: offering,
+  };
 }
 
 /**
- * The section's offerings in earlier terms of the same
- * season, newest first.
+ * One row per term in `history.termCodes`, newest first,
+ * the same terms as the budget's enrollment tiles. Empty
+ * when the section never ran in any of them.
  */
 export function previousOfferingsOf(
   history: EnrollmentHistory,
   courseCode: string,
   section: string,
-  termCode: number,
 ): PreviousOffering[] {
-  const isSameSeason = (offering: EnrollmentHistorySection) =>
-    offering.termCode % 10 === termCode % 10;
+  const series = enrollmentSeriesBySection(history).get(
+    historyKeyOf(courseCode, section),
+  );
 
-  return history.sections
-    .filter(
-      (offering) =>
-        offering.courseCode === courseCode &&
-        offering.section === section &&
-        isSameSeason(offering),
-    )
-    .sort((a, b) => b.termCode - a.termCode)
-    .map((offering) => ({
-      termCode: offering.termCode,
-      termName: termNameOf(offering.termCode),
-      instructorLastName: offering.leadInstructorLastName ?? "—",
-      meetingSummary: meetingSummaryOf(offering.meetings),
-      enrolledOfCap: `${offering.enrollmentTotal}/${offering.enrollmentCap}`,
-      fillColor: fillColorOf(offering),
-    }));
+  return [...(series ?? [])].reverse().map(previousOfferingOf);
 }

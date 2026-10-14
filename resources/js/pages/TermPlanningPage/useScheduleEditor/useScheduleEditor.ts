@@ -15,6 +15,7 @@ import { dayIndexOfWeekday } from "../helpers/scheduleDays";
 import { sectionProblems } from "./validation";
 import {
   selectActiveFilterCount,
+  selectPersonNotes,
   selectRateOverrides,
   selectDraftSection,
   selectHasEdits,
@@ -85,10 +86,14 @@ export function useScheduleEditor(
       selectRateOverrides(context.value, state.value),
     ),
     canEditCosts: computed(
-      () => context.value.costAssumptions?.canEdit === true,
+      () =>
+        context.value.costAssumptions?.canEdit === true &&
+        !context.value.isReadOnly,
     ),
     pendingRateOverrideEdits: computed(() => state.value.rateOverrideEdits),
-    pendingLineOverrideEdits: computed(() => state.value.lineOverrideEdits),
+    /** Null until the cost assumptions have loaded. */
+    personNotes: computed(() => selectPersonNotes(context.value, state.value)),
+    pendingPersonNoteEdits: computed(() => state.value.personNoteEdits),
     dayIndex: computed(() => state.value.dayIndex),
     /** Whether this term takes edits at all; see `ScheduleContext`. */
     isReadOnly: computed(() => context.value.isReadOnly),

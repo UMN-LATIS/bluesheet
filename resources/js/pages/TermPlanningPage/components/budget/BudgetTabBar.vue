@@ -22,7 +22,13 @@
       {{ option.label }}
     </button>
     <span
-      class="tw-relative tw-ml-auto tw-flex tw-items-center tw-gap-1.5 tw-pl-3 tw-text-[11px] tw-text-on-surface-variant"
+      class="tw-ml-auto tw-flex tw-items-center tw-gap-1.5 tw-pl-3 tw-text-[11px] tw-text-on-surface-variant"
+    >
+      <span class="tw-font-semibold tw-tabular-nums tw-text-primary">$0</span>
+      Editable
+    </span>
+    <span
+      class="tw-relative tw-flex tw-items-center tw-gap-1.5 tw-pl-3 tw-text-[11px] tw-text-on-surface-variant"
     >
       <span class="tw-relative tw-h-2 tw-w-2" aria-hidden="true">
         <OverrideMarker />
@@ -45,5 +51,6 @@ const TABS: { value: BudgetTab; label: string }[] = [
   { value: "instructors", label: "Instructors" },
   { value: "tas", label: "TAs" },
   { value: "rates", label: "Rates" },
+  { value: "gradRates", label: "Grad Rates" },
 ];
 </script>

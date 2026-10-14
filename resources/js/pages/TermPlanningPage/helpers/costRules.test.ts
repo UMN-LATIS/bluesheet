@@ -1,16 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { JobCodeRate } from "@/types";
+import { jobCodeRate, rateOverrides } from "./costAssumptions.fixture";
 import {
-  jobCodeRate,
-  rateOverrides,
-  taAppointmentRate,
-} from "./costAssumptions.fixture";
-import { taRateKeyOf } from "./costOverrides";
-import {
+  costOfRate,
   instructorRateOf,
   isFreeComponent,
+  jobCodeRateOf,
   pricingOf,
-  taAppointmentRateOf,
+  taRateOf,
   unstaffedRateOf,
   type TermRates,
 } from "./costRules";
@@ -18,27 +15,36 @@ import {
 const ratesOf = (...rates: JobCodeRate[]) =>
   new Map(rates.map((rate) => [rate.code, rate]));
 
-const lecturer = jobCodeRate("9753", 10000, { title: "Lecturer" });
+const lecturer = jobCodeRate("9753", 10000, {
+  title: "Lecturer",
+  fringeRate: 0.385,
+});
 const specialist = jobCodeRate("9754", 8000, { title: "Teaching Specialist" });
 const unstaffed = jobCodeRate("TBA", 10000, { instructorType: null });
-const ratesByJobCode = ratesOf(lecturer, specialist, unstaffed);
+const ta = jobCodeRate("9511", 5000, {
+  instructorType: "teaching_assistant",
+  fringeRate: 1,
+});
+const ratesByJobCode = ratesOf(lecturer, specialist, unstaffed, ta);
 
 const termRatesOf = (extra: Partial<TermRates> = {}): TermRates => ({
   ratesByJobCode,
   overrides: rateOverrides(),
-  season: "fall",
-  taRates: [
-    taAppointmentRate(13578),
-    taAppointmentRate(9311, { studentStatus: "abd" }),
-  ],
   ...extra,
 });
 
-const jobCodeOverridesOf = (costPerCourseByJobCode: [string, number][]) =>
-  rateOverrides({ costPerCourseByJobCode: new Map(costPerCourseByJobCode) });
+const overridesOf = (
+  entries: [string, { salary: number | null; fringeRate: number | null }][],
+) => rateOverrides({ jobCodeRates: new Map(entries) });
+
+describe("costOfRate", () => {
+  it("is salary × (1 + fringe)", () => {
+    expect(costOfRate({ salary: 10000, fringeRate: 0.385 })).toBeCloseTo(13850);
+  });
+});
 
 describe("pricingOf", () => {
-  it("prices a person with two job codes at the higher rate", () => {
+  it("prices a person with two job codes at the higher cost", () => {
     const pricing = pricingOf(
       ["9754", "9753"],
       ratesByJobCode,
@@ -48,10 +54,19 @@ describe("pricingOf", () => {
     expect(pricing.jobCode).toBe("9753");
   });
 
-  it("picks the higher rate after the term's override", () => {
-    const overrides = rateOverrides({
-      costPerCourseByJobCode: new Map([["9754", 15000]]),
-    });
+  it("compares cost including fringe", () => {
+    const rates = ratesOf(
+      jobCodeRate("A", 10000, { fringeRate: 0 }),
+      jobCodeRate("B", 8000, { fringeRate: 0.5 }),
+    );
+
+    expect(pricingOf(["A", "B"], rates, rateOverrides()).jobCode).toBe("B");
+  });
+
+  it("picks the higher cost after the term's override", () => {
+    const overrides = overridesOf([
+      ["9754", { salary: 15000, fringeRate: null }],
+    ]);
 
     expect(pricingOf(["9753", "9754"], ratesByJobCode, overrides).jobCode).toBe(
       "9754",
@@ -70,60 +85,74 @@ describe("pricingOf", () => {
       rate: null,
     });
   });
+});
 
-  it("is ABD when any job code held is marked ABD", () => {
-    const rates = ratesOf(
-      jobCodeRate("9511", null),
-      jobCodeRate("9519", null, { studentStatus: "abd" }),
-    );
+describe("jobCodeRateOf", () => {
+  it("is Nova's salary and fringe when the term has no override", () => {
+    expect(jobCodeRateOf("9753", termRatesOf())).toEqual({
+      salary: 10000,
+      fringeRate: 0.385,
+    });
+  });
 
-    expect(pricingOf(["9511"], rates, rateOverrides()).studentStatus).toBe(
-      "regular",
-    );
-    expect(
-      pricingOf(["9511", "9519"], rates, rateOverrides()).studentStatus,
-    ).toBe("abd");
+  it("merges an override of one field over Nova's other field", () => {
+    const termRates = termRatesOf({
+      overrides: overridesOf([["9753", { salary: 11000, fringeRate: null }]]),
+    });
+
+    expect(jobCodeRateOf("9753", termRates)).toEqual({
+      salary: 11000,
+      fringeRate: 0.385,
+    });
+  });
+
+  it("completes a code Nova has no rate for from the two overrides", () => {
+    const termRates = termRatesOf({
+      overrides: overridesOf([["9517", { salary: 7000, fringeRate: 0.4 }]]),
+    });
+
+    expect(jobCodeRateOf("9517", termRates)).toEqual({
+      salary: 7000,
+      fringeRate: 0.4,
+    });
+  });
+
+  it("is null while either field is still missing", () => {
+    const termRates = termRatesOf({
+      overrides: overridesOf([["9517", { salary: 7000, fringeRate: null }]]),
+    });
+
+    expect(jobCodeRateOf("9517", termRates)).toBeNull();
+    expect(jobCodeRateOf("9999", termRatesOf())).toBeNull();
   });
 });
 
 describe("instructorRateOf", () => {
-  it("costs a lecturer at Nova's rate for the job code", () => {
+  it("costs a lecturer at the rate for the job code", () => {
     const pricing = pricingOf(["9753"], ratesByJobCode, rateOverrides());
 
-    expect(instructorRateOf(pricing, termRatesOf())).toBe(10000);
-  });
-
-  it("costs a lecturer at the term's rate when the planner changed it", () => {
-    const pricing = pricingOf(["9753"], ratesByJobCode, rateOverrides());
-    const termRates = termRatesOf({
-      overrides: jobCodeOverridesOf([["9753", 11000]]),
+    expect(instructorRateOf(pricing, termRatesOf())).toEqual({
+      salary: 10000,
+      fringeRate: 0.385,
     });
-
-    expect(instructorRateOf(pricing, termRates)).toBe(11000);
   });
 
   it("costs a job code with no rate at the TBA rate", () => {
     const pricing = pricingOf(["9517"], ratesByJobCode, rateOverrides());
 
-    expect(instructorRateOf(pricing, termRatesOf())).toBe(10000);
-  });
-
-  it("costs an unrated job code at the term's rate for it", () => {
-    const pricing = pricingOf(["9517"], ratesByJobCode, rateOverrides());
-    const termRates = termRatesOf({
-      overrides: jobCodeOverridesOf([["9517", 7000]]),
+    expect(instructorRateOf(pricing, termRatesOf())).toEqual({
+      salary: 10000,
+      fringeRate: 0,
     });
-
-    expect(instructorRateOf(pricing, termRates)).toBe(7000);
   });
 
   it("costs a job code with no rate at the term's TBA rate", () => {
     const pricing = pricingOf(["9517"], ratesByJobCode, rateOverrides());
     const termRates = termRatesOf({
-      overrides: jobCodeOverridesOf([["TBA", 12000]]),
+      overrides: overridesOf([["TBA", { salary: 12000, fringeRate: null }]]),
     });
 
-    expect(instructorRateOf(pricing, termRates)).toBe(12000);
+    expect(instructorRateOf(pricing, termRates)?.salary).toBe(12000);
   });
 
   it("is null when neither the job code nor TBA has a rate", () => {
@@ -136,37 +165,30 @@ describe("instructorRateOf", () => {
 
 describe("unstaffedRateOf", () => {
   it("is the TBA rate", () => {
-    expect(unstaffedRateOf(termRatesOf())).toBe(10000);
+    expect(unstaffedRateOf(termRatesOf())?.salary).toBe(10000);
   });
 });
 
-describe("taAppointmentRateOf", () => {
-  const regularTa = pricingOf([], ratesByJobCode, rateOverrides());
+describe("taRateOf", () => {
+  it("is the rate for the TA's job code", () => {
+    const pricing = pricingOf(["9511"], ratesByJobCode, rateOverrides());
 
-  it("costs a regular TA at the 25% rate for the season", () => {
-    expect(taAppointmentRateOf(regularTa, termRatesOf())).toBe(13578);
-  });
-
-  it("costs an ABD TA at the ABD rate", () => {
-    const abdTa = { ...regularTa, studentStatus: "abd" as const };
-
-    expect(taAppointmentRateOf(abdTa, termRatesOf())).toBe(9311);
-  });
-
-  it("costs a TA at the term's rate when the planner changed it", () => {
-    const termRates = termRatesOf({
-      overrides: rateOverrides({
-        costPerTermByTaRateKey: new Map([[taRateKeyOf(25, "regular"), 14000]]),
-      }),
+    expect(taRateOf(pricing, termRatesOf())).toEqual({
+      salary: 5000,
+      fringeRate: 1,
     });
-
-    expect(taAppointmentRateOf(regularTa, termRates)).toBe(14000);
   });
 
-  it("is null when no rate exists for the season", () => {
-    const termRates = termRatesOf({ season: "spring" });
+  it("does not fall back to TBA", () => {
+    const pricing = pricingOf(["9517"], ratesByJobCode, rateOverrides());
 
-    expect(taAppointmentRateOf(regularTa, termRates)).toBeNull();
+    expect(taRateOf(pricing, termRatesOf())).toBeNull();
+  });
+
+  it("is null for a person with no job code", () => {
+    const pricing = pricingOf([], ratesByJobCode, rateOverrides());
+
+    expect(taRateOf(pricing, termRatesOf())).toBeNull();
   });
 });
 

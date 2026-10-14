@@ -1,15 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import type { Ref } from "vue";
 import {
-  saveCostLineOverride,
   saveJobCodeRateOverride,
+  savePersonNote,
   savePersonRateOverride,
-  saveTaRateOverride,
 } from "@/api";
-import type {
-  LineOverrideEdit,
-  RateOverrideEdit,
-} from "../helpers/costOverrides";
+import type { RateOverrideEdit } from "../helpers/costOverrides";
+import type { PersonNoteEdit } from "../helpers/personNotes";
 
 export function useCostMutations(
   groupId: Readonly<Ref<number>>,
@@ -28,20 +25,9 @@ export function useCostMutations(
       const term = termCode.value ?? 0;
       switch (rate.kind) {
         case "jobCode":
-          return saveJobCodeRateOverride(
-            groupId.value,
-            term,
-            rate.jobCode,
-            amount,
-          );
-        case "taAppointment":
-          return saveTaRateOverride(
-            groupId.value,
-            term,
-            rate.appointmentPercent,
-            rate.studentStatus,
-            amount,
-          );
+          return saveJobCodeRateOverride(groupId.value, term, rate.jobCode, {
+            [rate.field]: amount,
+          } as { salary: number | null } | { fringeRate: number | null });
         case "person":
           return savePersonRateOverride(
             groupId.value,
@@ -54,11 +40,11 @@ export function useCostMutations(
     onSuccess: refetchAssumptions,
   });
 
-  const saveLineOverride = useMutation({
-    mutationFn: (edit: LineOverrideEdit) =>
-      saveCostLineOverride(groupId.value, termCode.value ?? 0, edit),
+  const savePersonNoteEdit = useMutation({
+    mutationFn: ({ emplid, notes }: PersonNoteEdit) =>
+      savePersonNote(groupId.value, termCode.value ?? 0, emplid, notes),
     onSuccess: refetchAssumptions,
   });
 
-  return { saveRateOverride, saveLineOverride };
+  return { saveRateOverride, savePersonNoteEdit };
 }

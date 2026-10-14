@@ -1,14 +1,15 @@
 import type { CostAssumptions, JobCodeRate } from "@/types";
 import type { PlannedSection, SisInstructor } from "../types";
 import type { CostBasis } from "./costBasis";
-import { lineOverrideKeyOf, type RateOverrides } from "./costOverrides";
+import type { RateOverrides } from "./costOverrides";
 import {
   instructorRateOf,
   isFreeComponent,
   pricingOf,
-  taAppointmentRateOf,
+  taRateOf,
   unstaffedRateOf,
   type PersonPricing,
+  type Rate,
   type TermRates,
 } from "./costRules";
 import { blockOwners } from "./sectionPlacement";
@@ -21,6 +22,10 @@ export interface CostLine {
   /** Null on the unstaffed line, which names no one. */
   emplid: number | null;
   /** Null when no rate exists. */
+  salary: number | null;
+  /** Null when no rate exists. */
+  fringe: number | null;
+  /** Salary plus fringe. Null when no rate exists. */
   amount: number | null;
   basis: CostBasis;
 }
@@ -36,8 +41,6 @@ interface EstimateInput {
   sections: PlannedSection[];
   assumptions: CostAssumptions;
   rateOverrides: RateOverrides;
-  /** By `lineOverrideKeyOf`. */
-  lineOverrideAmountsByKey: Map<string, number>;
 }
 
 interface CostContext {
@@ -57,8 +60,7 @@ interface CostContext {
 export function estimateTermCost(
   input: EstimateInput,
 ): Map<number, SectionCost> {
-  const { sections, assumptions, rateOverrides, lineOverrideAmountsByKey } =
-    input;
+  const { sections, assumptions, rateOverrides } = input;
   const pricingOfEmplid = pricingByEmplidOf(assumptions, rateOverrides);
 
   const liveSections = sections.filter(({ isCancelled }) => !isCancelled);
@@ -87,19 +89,6 @@ export function estimateTermCost(
     ),
     termRates: termRatesOf(assumptions, rateOverrides),
   };
-  const withLineOverride = (
-    { courseCode, section }: PlannedSection,
-    line: CostLine,
-  ): CostLine => {
-    if (line.emplid === null || !isOverridable(line)) return line;
-
-    const amount = lineOverrideAmountsByKey.get(
-      lineOverrideKeyOf(courseCode, section, line.emplid),
-    );
-
-    return amount === undefined ? line : overriddenLine(line, amount);
-  };
-
   const linesBySectionId = paidOncePerMeetingTime(
     liveSections,
     new Map(
@@ -110,11 +99,7 @@ export function estimateTermCost(
   return new Map(
     sections.map((section) => [
       section.id,
-      sectionCostOf(
-        (linesBySectionId.get(section.id) ?? []).map((line) =>
-          withLineOverride(section, line),
-        ),
-      ),
+      sectionCostOf(linesBySectionId.get(section.id) ?? []),
     ]),
   );
 }
@@ -142,25 +127,12 @@ export const termRatesOf = (
 ): TermRates => ({
   ratesByJobCode: ratesByJobCodeOf(assumptions),
   overrides: rateOverrides,
-  season: assumptions.season,
-  taRates: assumptions.taRates.rates,
 });
 
 const ratesByJobCodeOf = (assumptions: CostAssumptions) =>
   new Map<string, JobCodeRate>(
     assumptions.jobCodes.map((rate) => [rate.code, rate]),
   );
-
-const isOverridable = ({ basis }: CostLine) =>
-  basis.kind !== "chargedOnOtherSection";
-
-function overriddenLine(line: CostLine, amount: number): CostLine {
-  return {
-    ...line,
-    amount,
-    basis: { kind: "lineOverride", replacedAmount: line.amount },
-  };
-}
 
 function costLinesOf(
   section: PlannedSection,
@@ -206,8 +178,8 @@ function costLinesOf(
       ...(isPaidOnLecture
         ? paidOnLectureLine(lectureSectionId)
         : ratedLine(
-            personRateOf(lead.emplid, termRates) ??
-              instructorRateOf(pricingOfEmplid(lead.emplid), termRates),
+            instructorRateOf(pricingOfEmplid(lead.emplid), termRates),
+            termRates.overrides.salaryByEmplid.get(lead.emplid),
           )),
     }),
   );
@@ -216,20 +188,30 @@ function costLinesOf(
   return [...leadLines, ...taLines];
 }
 
-type PricedLine = Pick<CostLine, "amount" | "basis">;
+type PricedLine = Pick<CostLine, "salary" | "fringe" | "amount" | "basis">;
 
-const ratedLine = (amount: number | null): PricedLine => ({
-  amount,
-  basis: { kind: "rate" },
-});
+const NOTHING_OWED = { salary: 0, fringe: 0, amount: 0 };
+
+function ratedLine(rate: Rate | null, salaryOverride?: number): PricedLine {
+  const salary = salaryOverride ?? rate?.salary;
+  if (salary === undefined) {
+    return {
+      salary: null,
+      fringe: null,
+      amount: null,
+      basis: { kind: "rate" },
+    };
+  }
+
+  const fringe = salary * (rate?.fringeRate ?? 0);
+
+  return { salary, fringe, amount: salary + fringe, basis: { kind: "rate" } };
+}
 
 const paidOnLectureLine = (lectureSectionId: number): PricedLine => ({
-  amount: 0,
+  ...NOTHING_OWED,
   basis: { kind: "paidOnLecture", lectureSectionId },
 });
-
-const personRateOf = (emplid: number, termRates: TermRates) =>
-  termRates.overrides.costPerSectionByEmplid.get(emplid);
 
 function taLineOf(
   ta: SisInstructor,
@@ -246,7 +228,7 @@ function taLineOf(
     return {
       role: "ta",
       emplid: ta.emplid,
-      amount: 0,
+      ...NOTHING_OWED,
       basis: {
         kind: "chargedOnOtherSection",
         sectionId: chargedSectionId,
@@ -258,10 +240,7 @@ function taLineOf(
   return {
     role: "ta",
     emplid: ta.emplid,
-    ...ratedLine(
-      personRateOf(ta.emplid, termRates) ??
-        taAppointmentRateOf(pricingOfEmplid(ta.emplid), termRates),
-    ),
+    ...ratedLine(taRateOf(pricingOfEmplid(ta.emplid), termRates)),
   };
 }
 
@@ -308,13 +287,13 @@ function crosslistPartnerLines(
   };
 
   if (people.length === 0) {
-    return [{ role: "unstaffedSection", emplid: null, amount: 0, basis }];
+    return [{ role: "unstaffedSection", emplid: null, ...NOTHING_OWED, basis }];
   }
 
   return people.map((person) => ({
     role: person.role === TA_ROLE ? "ta" : "instructor",
     emplid: person.emplid,
-    amount: 0,
+    ...NOTHING_OWED,
     basis,
   }));
 }
@@ -323,13 +302,13 @@ function freeComponentLines(people: SisInstructor[]): CostLine[] {
   const basis: CostBasis = { kind: "freeComponent" };
 
   if (people.length === 0) {
-    return [{ role: "unstaffedSection", emplid: null, amount: 0, basis }];
+    return [{ role: "unstaffedSection", emplid: null, ...NOTHING_OWED, basis }];
   }
 
   return people.map((person) => ({
     role: person.role === TA_ROLE ? "ta" : "instructor",
     emplid: person.emplid,
-    amount: 0,
+    ...NOTHING_OWED,
     basis,
   }));
 }
@@ -421,7 +400,7 @@ function paidOncePerMeetingTime(
 
         return {
           ...line,
-          amount: 0,
+          ...NOTHING_OWED,
           basis: {
             kind: "chargedOnOtherSection",
             sectionId: paidSectionId,

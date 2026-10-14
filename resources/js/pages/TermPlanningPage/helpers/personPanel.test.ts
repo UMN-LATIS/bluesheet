@@ -52,6 +52,8 @@ describe("personTermSectionsOf", () => {
             {
               role: "instructor",
               emplid: 7,
+              salary: 4000,
+              fringe: 0,
               amount: 4000,
               basis: { kind: "rate" },
             },
@@ -75,6 +77,8 @@ describe("personTermSectionsOf", () => {
             {
               role: "ta",
               emplid: 7,
+              salary: 0,
+              fringe: 0,
               amount: 0,
               basis: {
                 kind: "chargedOnOtherSection",

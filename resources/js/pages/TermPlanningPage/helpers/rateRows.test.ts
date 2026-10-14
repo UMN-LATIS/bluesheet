@@ -4,18 +4,23 @@ import {
   costPerson,
   jobCodeRate,
   rateOverrides,
-  taAppointmentRate,
 } from "./costAssumptions.fixture";
-import { taRateKeyOf } from "./costOverrides";
-import { rateRowsOf } from "./rateRows";
+import { gradRateRowsOf, rateRowsOf } from "./rateRows";
 
 const assumptions = costAssumptions({
   jobCodes: [
-    jobCodeRate("9753", 10000, { title: "Lecturer", source: "FY27 sheet" }),
-    jobCodeRate("9511", null, { instructorType: "teaching_assistant" }),
+    jobCodeRate("9753", 10000, {
+      title: "Lecturer",
+      source: "FY27 sheet",
+      fringeRate: 0.385,
+    }),
+    jobCodeRate("9511", 5870.2, {
+      instructorType: "teaching_assistant",
+      fringeRate: 1.1264,
+    }),
     jobCodeRate("9401", 0, {
       instructorType: "recurring_budget_faculty",
-      rateFiscalYear: 2026,
+      fringeRate: 0,
     }),
     jobCodeRate("TBA", 10000, { title: "Unstaffed", instructorType: null }),
   ],
@@ -26,15 +31,6 @@ const assumptions = costAssumptions({
     costPerson(4, ["9401"]),
     costPerson(5, ["9999"]),
   ],
-  taRates: {
-    fiscalYear: 2027,
-    rates: [
-      taAppointmentRate(26189, { appointmentPercent: 50 }),
-      taAppointmentRate(13578),
-      taAppointmentRate(9311, { studentStatus: "abd" }),
-      taAppointmentRate(13451, { season: "spring" }),
-    ],
-  },
 });
 
 const rowsOf = (overrides = rateOverrides()) =>
@@ -44,64 +40,119 @@ const rowOfCode = (code: string, overrides = rateOverrides()) =>
   rowsOf(overrides).find((row) => row.code === code);
 
 describe("rateRowsOf", () => {
-  it("lists this term's instructors' codes, then TBA, then the TA rates", () => {
+  it("lists the non-grad codes held by anyone charged this term, then TBA", () => {
     expect(rowsOf().map(({ code, title }) => `${code} ${title}`)).toEqual([
       "9401 Title 9401",
-      "9511 Title 9511",
       "9517 Ph D Candidate Grad Instr",
       "9753 Lecturer",
       "TBA Unstaffed",
-      "TA 25% appointment",
-      "TA 25% appointment, ABD",
     ]);
   });
 
-  it("shows Nova's rate and fund when the term has no override", () => {
-    expect(rowOfCode("9753")).toMatchObject({
+  it("shows the default salary, fringe, cost and fund when the term has no override", () => {
+    const row = rowOfCode("9753");
+
+    expect(row).toMatchObject({
       fundLabel: "UI",
-      amount: 10000,
-      novaAmount: 10000,
-      isOverriddenForTerm: false,
+      perLabel: "Section",
+      salary: { amount: 10000, novaAmount: 10000, isOverridden: false },
+      fringeRate: { amount: 0.385, novaAmount: 0.385, isOverridden: false },
     });
+    expect(row?.cost).toBeCloseTo(13850);
   });
 
-  it("titles a code Nova does not list from the appointment, with no rate", () => {
+  it("marks a recurring budget code", () => {
+    expect(rowOfCode("9401")?.isRecurring).toBe(true);
+    expect(rowOfCode("9753")?.isRecurring).toBe(false);
+  });
+
+  it("titles a code the default rates do not list from the appointment, with no cost", () => {
     expect(rowOfCode("9517")).toMatchObject({
       fundLabel: "—",
-      amount: null,
-      novaAmount: null,
+      salary: { amount: null, novaAmount: null },
+      cost: null,
     });
   });
 
-  it("shows the term's override over Nova's rate", () => {
+  it("shows an override of one field over the default and leaves the other", () => {
     const overrides = rateOverrides({
-      costPerCourseByJobCode: new Map([["9753", 11000]]),
+      jobCodeRates: new Map([["9753", { salary: 11000, fringeRate: null }]]),
     });
+    const row = rowOfCode("9753", overrides);
 
-    expect(rowOfCode("9753", overrides)).toMatchObject({
-      amount: 11000,
-      novaAmount: 10000,
-      isOverriddenForTerm: true,
+    expect(row).toMatchObject({
+      salary: { amount: 11000, novaAmount: 10000, isOverridden: true },
+      fringeRate: { amount: 0.385, isOverridden: false },
     });
+    expect(row?.cost).toBeCloseTo(15235);
   });
 
-  it("shows the season's 25% TA rates, regular and ABD", () => {
-    const [regular, abd] = rowsOf().filter(({ code }) => code === "TA");
-
-    expect(regular).toMatchObject({ amount: 13578, fundLabel: "TA/GI" });
-    expect(abd).toMatchObject({ amount: 9311 });
-  });
-
-  it("shows the term's override of a TA rate", () => {
+  it("costs a code with no default rate once the term supplies both fields", () => {
     const overrides = rateOverrides({
-      costPerTermByTaRateKey: new Map([[taRateKeyOf(25, "abd"), 9500]]),
+      jobCodeRates: new Map([["9517", { salary: 6000, fringeRate: 0.5 }]]),
     });
-    const abd = rowsOf(overrides).at(-1);
 
-    expect(abd).toMatchObject({
-      amount: 9500,
-      novaAmount: 9311,
-      isOverriddenForTerm: true,
+    expect(rowOfCode("9517", overrides)?.cost).toBeCloseTo(9000);
+  });
+});
+
+describe("gradRateRowsOf", () => {
+  const gradAssumptions = costAssumptions({
+    jobCodes: [
+      jobCodeRate("9753", 10000, { fringeRate: 0.385 }),
+      jobCodeRate("9519", 5870.2, {
+        instructorType: "teaching_assistant",
+        fringeRate: 0.4219,
+      }),
+      jobCodeRate("9515", 5870.2, {
+        instructorType: "graduate_instructor",
+        fringeRate: 1.1264,
+      }),
+    ],
+    people: [costPerson(1, ["9753"])],
+  });
+  const gradRows = (overrides = rateOverrides()) =>
+    gradRateRowsOf(gradAssumptions, overrides);
+
+  it("lists every grad code, held by anyone or not, and no other code", () => {
+    expect(gradRows().map(({ code }) => code)).toEqual(["9515", "9519"]);
+  });
+
+  it("counts a teaching assistant per course and a grad instructor per section", () => {
+    expect(gradRows().map(({ perLabel }) => perLabel)).toEqual([
+      "Section",
+      "Course",
+    ]);
+  });
+
+  it("prices a 25% appointment, then two and three times that", () => {
+    const [, teachingAssistant] = gradRows();
+
+    expect(teachingAssistant.cost).toBeCloseTo(8347, 0);
+    expect(
+      teachingAssistant.costByAppointmentPercent.map(({ percent, cost }) => [
+        percent,
+        Math.round((cost ?? 0) / (teachingAssistant.cost ?? 1)),
+      ]),
+    ).toEqual([
+      [25, 1],
+      [50, 2],
+      [75, 3],
+    ]);
+  });
+
+  it("has no cost at any appointment while a field is missing", () => {
+    const overrides = rateOverrides();
+    const noRate = costAssumptions({
+      jobCodes: [
+        jobCodeRate("9519", null, { instructorType: "teaching_assistant" }),
+      ],
     });
+
+    expect(
+      gradRateRowsOf(noRate, overrides)[0].costByAppointmentPercent.map(
+        ({ cost }) => cost,
+      ),
+    ).toEqual([null, null, null]);
   });
 });

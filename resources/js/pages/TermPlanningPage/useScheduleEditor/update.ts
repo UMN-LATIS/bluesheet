@@ -31,7 +31,8 @@ import {
   encodeDayIndex,
   VIEW_KEYS,
 } from "../helpers/viewQuery";
-import { lineOverrideKeyOf, rateOverrideKeyOf } from "../helpers/costOverrides";
+import { rateOverrideKeyOf } from "../helpers/costOverrides";
+import { personNoteKeyOf } from "../helpers/personNotes";
 import { ASYNC_DAY_INDEX } from "../helpers/scheduleDays";
 import {
   clockFromMinutes,
@@ -102,7 +103,7 @@ export const initialState = (dayIndex = 0): EditorState => ({
   view: DEFAULT_VIEW,
   budgetTab: DEFAULT_BUDGET_TAB,
   rateOverrideEdits: {},
-  lineOverrideEdits: {},
+  personNoteEdits: {},
   dayIndex,
   lastImport: null,
   writeError: null,
@@ -190,14 +191,9 @@ const READING_EVENTS: EditorEvent["type"][] = [
   "importUndone",
   "viewSelected",
   "budgetTabSelected",
-  // Removing the four override events below blocks
-  // overrides on a published term (tests: "records a
-  // rate override on a published term", "records a
-  // line override on a published term").
-  "rateOverrideEdited",
+  // a term that locked mid-save still has to drop what was saved
   "rateOverrideEditsPersisted",
-  "lineOverrideEdited",
-  "lineOverrideEditsPersisted",
+  "personNoteEditsPersisted",
   "daySelected",
   "filterPanelOverridden",
   // a term that locked mid-save still has to show and drop what came back
@@ -594,27 +590,22 @@ function reduce(
           }
         : state;
 
-    case "lineOverrideEdited": {
+    case "personNoteEdited":
       if (context.costAssumptions?.canEdit !== true) return state;
 
-      const { courseCode, section, emplid } = event.edit;
       return {
         ...state,
-        lineOverrideEdits: {
-          ...state.lineOverrideEdits,
-          [lineOverrideKeyOf(courseCode, section, emplid)]: event.edit,
+        personNoteEdits: {
+          ...state.personNoteEdits,
+          [personNoteKeyOf(event.edit.emplid)]: event.edit,
         },
       };
-    }
 
-    case "lineOverrideEditsPersisted":
-      return isEqual(state.lineOverrideEdits[event.key], event.saved)
+    case "personNoteEditsPersisted":
+      return isEqual(state.personNoteEdits[event.key], event.saved)
         ? {
             ...state,
-            lineOverrideEdits: omitStringKey(
-              state.lineOverrideEdits,
-              event.key,
-            ),
+            personNoteEdits: omitStringKey(state.personNoteEdits, event.key),
           }
         : state;
 
@@ -676,7 +667,7 @@ function reduce(
         sectionEdits: {},
         drafts: {},
         rateOverrideEdits: {},
-        lineOverrideEdits: {},
+        personNoteEdits: {},
         selection: null,
         lastPlacedId: null,
         interaction: { status: "idle" },

@@ -9,10 +9,8 @@ import type {
   TimeRange,
 } from "../types";
 import type { CostAssumptions } from "@/types";
-import type {
-  LineOverrideEdit,
-  RateOverrideEdit,
-} from "../helpers/costOverrides";
+import type { RateOverrideEdit } from "../helpers/costOverrides";
+import type { PersonNoteEdit } from "../helpers/personNotes";
 import type { UrlQuery } from "@/utils/urlQuery";
 import type { BudgetTab, ScheduleView } from "../helpers/viewQuery";
 
@@ -171,8 +169,8 @@ export interface EditorState {
   budgetTab: BudgetTab;
   /** Edits not yet saved, keyed by `rateOverrideKeyOf`. */
   rateOverrideEdits: Record<string, RateOverrideEdit>;
-  /** Edits not yet saved, keyed by `lineOverrideKeyOf`. */
-  lineOverrideEdits: Record<string, LineOverrideEdit>;
+  /** Edits not yet saved, keyed by `personNoteKeyOf`. */
+  personNoteEdits: Record<string, PersonNoteEdit>;
   /** Which tab the day list is on: a weekday, or the Async day past them. */
   dayIndex: number;
   /** The import the banner stands for, or null when no banner is showing. */
@@ -233,12 +231,12 @@ export type EditorEvent =
    * key stays.
    */
   | { type: "rateOverrideEditsPersisted"; key: string; saved: RateOverrideEdit }
-  | { type: "lineOverrideEdited"; edit: LineOverrideEdit }
+  | { type: "personNoteEdited"; edit: PersonNoteEdit }
   /**
    * The server has this value now. A newer edit to the same
    * key stays.
    */
-  | { type: "lineOverrideEditsPersisted"; key: string; saved: LineOverrideEdit }
+  | { type: "personNoteEditsPersisted"; key: string; saved: PersonNoteEdit }
   | { type: "sectionNotesEdited"; sectionId: number; notes: string }
   | { type: "daySelected"; dayIndex: number }
   /** The heatmap's Async cell: one step to the day list, on the Async tab. */

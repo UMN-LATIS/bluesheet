@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  selectPersonNotes,
   selectRateOverrides,
   selectSectionCosts,
   selectShownSections,
@@ -11,7 +12,7 @@ import {
   jobCodeRate,
   sisInstructor,
 } from "../helpers/costAssumptions.fixture";
-import { lineOverrideKeyOf, rateOverrideKeyOf } from "../helpers/costOverrides";
+import { rateOverrideKeyOf } from "../helpers/costOverrides";
 import { NEW_SECTION_ID } from "./types";
 import { selectLocalSection } from "./selectors";
 import { plannedSection } from "../helpers/plannedSection.fixture";
@@ -275,7 +276,11 @@ describe("the budget view's selectors", () => {
   });
 
   it("selectSectionCosts reflects a pending rate override", () => {
-    const rate = { kind: "jobCode", jobCode: "TBA" } as const;
+    const rate = {
+      kind: "jobCode",
+      jobCode: "TBA",
+      field: "salary",
+    } as const;
     const edited: EditorState = {
       ...atRest,
       rateOverrideEdits: {
@@ -291,25 +296,6 @@ describe("the budget view's selectors", () => {
     ).toBe(7000);
   });
 
-  it("selectSectionCosts reflects a pending line override", () => {
-    const key = lineOverrideKeyOf("ANTH-1001", "001", 1);
-    const edited: EditorState = {
-      ...atRest,
-      lineOverrideEdits: {
-        [key]: {
-          courseCode: "ANTH-1001",
-          section: "001",
-          emplid: 1,
-          amount: 1234,
-        },
-      },
-    };
-
-    expect(
-      selectSectionCosts(budgetContext, edited)?.get(1)?.lines[0].amount,
-    ).toBe(1234);
-  });
-
   it("selectRateOverrides is null before the cost assumptions load", () => {
     expect(
       selectRateOverrides({ ...budgetContext, costAssumptions: null }, atRest),
@@ -317,16 +303,19 @@ describe("the budget view's selectors", () => {
   });
 
   it("selectRateOverrides merges pending edits over the server's overrides", () => {
-    const rate = { kind: "jobCode", jobCode: "U" } as const;
+    const rate = {
+      kind: "jobCode",
+      jobCode: "U",
+      field: "salary",
+    } as const;
     const withServer: ScheduleContext = {
       ...budgetContext,
       costAssumptions: costAssumptions({
         rateOverrides: {
           jobCodes: [
-            { jobCode: "U", costPerCourse: 100 },
-            { jobCode: "G", costPerCourse: 200 },
+            { jobCode: "U", salary: 100, fringeRate: 0.1 },
+            { jobCode: "G", salary: 200, fringeRate: null },
           ],
-          taAppointments: [],
           people: [],
         },
       }),
@@ -336,11 +325,38 @@ describe("the budget view's selectors", () => {
       rateOverrideEdits: { [rateOverrideKeyOf(rate)]: { rate, amount: 150 } },
     });
 
-    expect(shown?.costPerCourseByJobCode).toEqual(
+    expect(shown?.jobCodeRates).toEqual(
       new Map([
-        ["U", 150],
-        ["G", 200],
+        ["U", { salary: 150, fringeRate: 0.1 }],
+        ["G", { salary: 200, fringeRate: null }],
       ]),
     );
+  });
+
+  it("selectPersonNotes is null before the cost assumptions load", () => {
+    expect(
+      selectPersonNotes({ ...budgetContext, costAssumptions: null }, atRest),
+    ).toBeNull();
+  });
+
+  it("selectPersonNotes merges pending edits over the saved notes", () => {
+    const withServer: ScheduleContext = {
+      ...budgetContext,
+      costAssumptions: costAssumptions({
+        personNotes: [
+          { emplid: 1, notes: "Saved" },
+          { emplid: 2, notes: "Gone soon" },
+        ],
+      }),
+    };
+    const shown = selectPersonNotes(withServer, {
+      ...atRest,
+      personNoteEdits: {
+        "1": { emplid: 1, notes: "Typed" },
+        "2": { emplid: 2, notes: null },
+      },
+    });
+
+    expect(shown).toEqual(new Map([[1, "Typed"]]));
   });
 });

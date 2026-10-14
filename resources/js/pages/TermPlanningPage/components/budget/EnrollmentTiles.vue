@@ -5,19 +5,20 @@
     :aria-label="summary"
     class="tw-flex tw-items-center tw-gap-0.5"
   >
-    <span
+    <EnrollmentTile
       v-for="tile in tiles"
       :key="tile.termCode"
       :title="tile.title"
-      class="tw-box-border tw-flex tw-h-[22px] tw-w-5 tw-flex-none tw-items-center tw-justify-center tw-rounded-sm tw-text-[9.5px] tw-font-semibold tw-leading-none tw-tracking-tight tw-tabular-nums tw-text-[#262626]"
+      class="tw-box-border tw-flex tw-h-[22px] tw-w-5 tw-flex-none tw-items-center tw-justify-center tw-rounded-sm tw-text-[9.5px] tw-font-semibold tw-leading-none tw-tracking-tight tw-tabular-nums"
       :class="{
         'tw-border tw-border-dashed tw-border-outline-variant':
-          tile.enrollment === null,
+          tile.offering === null,
       }"
-      :style="{ background: tile.background }"
+      :enrollment="tile.offering"
+      :isReadOnly="isReadOnly"
     >
-      {{ tile.enrollment ?? "" }}
-    </span>
+      {{ tile.offering?.enrollmentTotal ?? "" }}
+    </EnrollmentTile>
   </span>
   <span v-else class="tw-self-center tw-text-[11px] tw-text-on-surface-variant">
     New
@@ -27,21 +28,20 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import type { EnrollmentHistorySection } from "@/types";
+import EnrollmentTile from "../EnrollmentTile.vue";
 import {
   type EnrollmentPoint,
-  fillColorOf,
   shortTermLabel,
 } from "../../helpers/enrollmentHistory";
 
-const props = defineProps<{ history: EnrollmentPoint[] }>();
+const props = defineProps<{
+  history: EnrollmentPoint[];
+  isReadOnly: boolean;
+}>();
 
 const hasHistory = computed(() =>
   props.history.some(({ offering }) => offering !== null),
 );
-
-function backgroundOf(offering: EnrollmentHistorySection | null): string {
-  return offering ? fillColorOf(offering) : "transparent";
-}
 
 function titleOf(termLabel: string, offering: EnrollmentHistorySection | null) {
   if (!offering) return `${termLabel}: not offered`;
@@ -62,8 +62,7 @@ const summary = computed(() =>
 const tiles = computed(() =>
   props.history.map(({ termCode, offering }) => ({
     termCode,
-    enrollment: offering?.enrollmentTotal ?? null,
-    background: backgroundOf(offering),
+    offering,
     title: titleOf(shortTermLabel(termCode), offering),
   })),
 );

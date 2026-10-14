@@ -4,9 +4,10 @@ import type { RateOverrides } from "./costOverrides";
 import {
   instructorRateOf,
   TA_APPOINTMENT_PERCENT,
-  taAppointmentRateOf,
+  taRateOf,
   UNSTAFFED_JOB_CODE,
   unstaffedRateOf,
+  type Rate,
 } from "./costRules";
 import { fundLabelOf } from "./rateRows";
 import {
@@ -19,6 +20,7 @@ import {
 export interface PaidSection {
   sectionId: number;
   label: string;
+  component: string;
 }
 
 export interface PersonRow {
@@ -28,18 +30,24 @@ export interface PersonRow {
   jobCode: string;
   title: string;
   fundLabel: string;
-  /** Per paid section. Null when no rate exists. */
-  rate: number | null;
+  /**
+   * Per paid section, or per course for a TA. Null when no
+   * rate exists.
+   */
+  salary: number | null;
   /** Null when no rate exists. */
-  rateWithoutOverride: number | null;
-  isRateOverridden: boolean;
+  salaryWithoutOverride: number | null;
+  /** Only an instructor's salary can be overridden. */
+  isSalaryOverridden: boolean;
+  /** Per paid section or course. Null when no rate exists. */
+  fringe: number | null;
   loadLabel: string;
   isUnderLoad: boolean;
   /** Lines with no rate add nothing. */
   total: number;
   hasMissingRate: boolean;
-  hasLineOverride: boolean;
   paidSections: PaidSection[];
+  notes: string;
   /** Leaves that overlap the term. */
   leaves: TermLeave[];
 }
@@ -79,6 +87,7 @@ export function peopleTablesOf(
   rateOverrides: RateOverrides,
   roster: SisEmployee[],
   leavesByEmplid: Map<number, TermLeave[]>,
+  notesByEmplid: Map<number, string>,
 ): PeopleTables {
   const pricingOfEmplid = pricingByEmplidOf(assumptions, rateOverrides);
   const termRates = termRatesOf(assumptions, rateOverrides);
@@ -107,11 +116,14 @@ export function peopleTablesOf(
   const rowOf = (
     emplid: number,
     charges: Charge[],
-  ): { isTa: boolean; row: PersonRow } => {
+  ): { isTa: boolean; sortName: string; row: PersonRow } => {
     const lines = charges.map(({ line }) => line);
     const pricing = pricingOfEmplid(emplid);
     const { jobCode, rate } = pricing;
-    const isTa = lines.length > 0 && lines.every(({ role }) => role === "ta");
+    const isTa =
+      lines.length > 0
+        ? lines.every(({ role }) => role === "ta")
+        : rate?.instructorType === "teaching_assistant";
     const leaves = leavesByEmplid.get(emplid) ?? [];
     const person =
       rosterByEmplid.get(emplid) ??
@@ -119,10 +131,12 @@ export function peopleTablesOf(
         .flatMap(({ section }) => section.instructors)
         .find((instructor) => instructor.emplid === emplid) ??
       leaves[0];
-    const rateWithoutOverride = isTa
-      ? taAppointmentRateOf(pricing, termRates)
+    const unitRate = isTa
+      ? taRateOf(pricing, termRates)
       : instructorRateOf(pricing, termRates);
-    const personRate = rateOverrides.costPerSectionByEmplid.get(emplid);
+    const salaryOverride = isTa
+      ? undefined
+      : rateOverrides.salaryByEmplid.get(emplid);
     const paidCount = lines.filter(
       (line) => line.role === (isTa ? "ta" : "instructor") && isPaid(line),
     ).length;
@@ -133,7 +147,7 @@ export function peopleTablesOf(
 
     const row: PersonRow = {
       emplid,
-      name: person?.name ?? person?.lastName ?? "Unknown",
+      name: nameOf(person),
       jobCode: jobCode ?? "—",
       title:
         rate?.title ??
@@ -143,22 +157,17 @@ export function peopleTablesOf(
         isTa && !rate?.instructorType
           ? "TA/GI"
           : fundLabelOf(rate?.instructorType ?? null),
-      rate: personRate ?? rateWithoutOverride,
-      rateWithoutOverride,
-      isRateOverridden: personRate !== undefined,
+      ...unitPriceOf(unitRate, salaryOverride),
       loadLabel: isTa
-        ? `${paidCount * TA_APPOINTMENT_PERCENT}%`
+        ? taLoadLabelOf(paidCount)
         : loadLabelOf(paidCount, expectedCount),
-      isUnderLoad:
-        !isTa &&
-        leaves.length === 0 &&
-        expectedCount !== null &&
-        paidCount < expectedCount,
+      isUnderLoad: isUnderLoadOf(isTa, leaves.length, paidCount, expectedCount),
       ...chargeSummaryOf(charges),
+      notes: notesByEmplid.get(emplid) ?? "",
       leaves,
     };
 
-    return { isTa, row };
+    return { isTa, sortName: sortNameOf(person), row };
   };
 
   const hasExpectedLoad = ({ emplid }: SisEmployee) =>
@@ -172,7 +181,7 @@ export function peopleTablesOf(
     ...[...idleEmplids]
       .filter((emplid) => !chargesByEmplid.has(emplid))
       .map((emplid) => rowOf(emplid, [])),
-  ].sort((a, b) => a.row.name.localeCompare(b.row.name));
+  ].sort((a, b) => a.sortName.localeCompare(b.sortName));
   const rowsWhere = (isTaWanted: boolean) =>
     rows.filter(({ isTa }) => isTa === isTaWanted).map(({ row }) => row);
 
@@ -185,7 +194,55 @@ export function peopleTablesOf(
   };
 }
 
-function unstaffedRowsOf(charges: Charge[], rate: number | null): PersonRow[] {
+interface NamedPerson {
+  name: string | null;
+  firstName?: string | null;
+  lastName: string | null;
+}
+
+/** "Lastname, Firstname", or the single name the SIS sent when either part is missing. */
+function nameOf(person: NamedPerson | undefined): string {
+  if (person?.lastName && person.firstName) {
+    return `${person.lastName}, ${person.firstName}`;
+  }
+
+  return person?.name ?? person?.lastName ?? "Unknown";
+}
+
+const sortNameOf = (person: NamedPerson | undefined): string =>
+  person?.lastName ?? person?.name ?? "Unknown";
+
+function isUnderLoadOf(
+  isTa: boolean,
+  leaveCount: number,
+  paidCount: number,
+  expectedCount: number | null,
+): boolean {
+  if (leaveCount > 0) return false;
+  if (isTa) return paidCount === 0;
+
+  return expectedCount !== null && paidCount < expectedCount;
+}
+
+function unitPriceOf(rate: Rate | null, salaryOverride: number | undefined) {
+  const salaryWithoutOverride = rate?.salary ?? null;
+  const salary = salaryOverride ?? salaryWithoutOverride;
+
+  return {
+    salary,
+    salaryWithoutOverride,
+    isSalaryOverridden: salaryOverride !== undefined,
+    fringe: salary === null ? null : salary * (rate?.fringeRate ?? 0),
+  };
+}
+
+function taLoadLabelOf(courseCount: number): string {
+  const noun = courseCount === 1 ? "course" : "courses";
+
+  return `${courseCount * TA_APPOINTMENT_PERCENT}% · ${courseCount} ${noun}`;
+}
+
+function unstaffedRowsOf(charges: Charge[], rate: Rate | null): PersonRow[] {
   const paidCount = charges.filter(({ line }) => isPaid(line)).length;
   if (paidCount === 0) return [];
 
@@ -196,12 +253,11 @@ function unstaffedRowsOf(charges: Charge[], rate: number | null): PersonRow[] {
       jobCode: UNSTAFFED_JOB_CODE,
       title: "Unstaffed",
       fundLabel: "—",
-      rate,
-      rateWithoutOverride: rate,
-      isRateOverridden: false,
+      ...unitPriceOf(rate, undefined),
       loadLabel: String(paidCount),
       isUnderLoad: false,
       ...chargeSummaryOf(charges),
+      notes: "",
       leaves: [],
     },
   ];
@@ -218,11 +274,11 @@ function chargeSummaryOf(charges: Charge[]) {
   return {
     total: lines.reduce((total, { amount }) => total + (amount ?? 0), 0),
     hasMissingRate: lines.some(({ amount }) => amount === null),
-    hasLineOverride: lines.some(({ basis }) => basis.kind === "lineOverride"),
     paidSections: paidSections
       .map((section) => ({
         sectionId: section.id,
         label: shortLabelOf(section),
+        component: section.component,
       }))
       .sort((a, b) => a.label.localeCompare(b.label)),
   };

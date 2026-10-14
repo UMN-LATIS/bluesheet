@@ -1,9 +1,6 @@
 import type { Meeting, PlannedSection, SisSection, TimeRange } from "../types";
-import {
-  lineOverrideAmountsByKeyOf,
-  rateOverridesOf,
-  type RateOverrides,
-} from "../helpers/costOverrides";
+import { rateOverridesOf, type RateOverrides } from "../helpers/costOverrides";
+import { personNotesOf } from "../helpers/personNotes";
 import { estimateTermCost, type SectionCost } from "../helpers/termEstimate";
 import { FILTER_FACETS } from "../types";
 import { isEqual } from "lodash-es";
@@ -145,10 +142,6 @@ export function selectSectionCosts(
       assumptions.rateOverrides,
       state.rateOverrideEdits,
     ),
-    lineOverrideAmountsByKey: lineOverrideAmountsByKeyOf(
-      assumptions.lineOverrides,
-      state.lineOverrideEdits,
-    ),
   });
 }
 
@@ -161,6 +154,17 @@ export function selectRateOverrides(
   if (!assumptions) return null;
 
   return rateOverridesOf(assumptions.rateOverrides, state.rateOverrideEdits);
+}
+
+/** By emplid. Null until the cost assumptions have loaded. */
+export function selectPersonNotes(
+  context: ScheduleContext,
+  state: EditorState,
+): Map<number, string> | null {
+  const assumptions = context.costAssumptions;
+  if (!assumptions) return null;
+
+  return personNotesOf(assumptions.personNotes, state.personNoteEdits);
 }
 
 /**

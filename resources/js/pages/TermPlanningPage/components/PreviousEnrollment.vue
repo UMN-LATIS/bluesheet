@@ -14,16 +14,29 @@
             <span class="tw-text-on-surface-variant">{{
               offering.termName
             }}</span>
-            <span class="tw-truncate">{{ offering.instructorLastName }}</span>
-            <span class="tw-whitespace-nowrap tw-text-on-surface-variant">
-              {{ offering.meetingSummary }}
-            </span>
             <span
-              class="tw-justify-self-end tw-rounded-sm tw-px-1.5 tw-py-0.5 tw-text-center tw-font-bold tw-tabular-nums tw-text-[#262626]"
-              :style="{ background: offering.fillColor }"
+              v-if="!offering.isOffered"
+              class="tw-col-span-2 tw-text-on-surface-variant"
+            >
+              Not offered
+            </span>
+            <template v-else>
+              <span class="tw-truncate">{{ offering.instructorLastName }}</span>
+              <span class="tw-whitespace-nowrap tw-text-on-surface-variant">
+                {{ offering.meetingSummary }}
+              </span>
+            </template>
+            <EnrollmentTile
+              class="tw-justify-self-end tw-rounded-sm tw-px-1.5 tw-py-0.5 tw-text-center tw-font-bold tw-tabular-nums"
+              :class="{
+                'tw-border tw-border-dashed tw-border-outline-variant':
+                  !offering.isOffered,
+              }"
+              :enrollment="offering.enrollment"
+              :isReadOnly="isReadOnly"
             >
               {{ offering.enrolledOfCap }}
-            </span>
+            </EnrollmentTile>
           </template>
         </div>
       </div>
@@ -35,12 +48,16 @@
 import { computed } from "vue";
 import FieldDivider from "@/components/planning/FieldDivider.vue";
 import Disclosure from "./Disclosure.vue";
+import EnrollmentTile from "./EnrollmentTile.vue";
 import type { PreviousOffering } from "../helpers/enrollmentHistory";
 
-const props = defineProps<{ offerings: PreviousOffering[] }>();
+const props = defineProps<{
+  offerings: PreviousOffering[];
+  isReadOnly: boolean;
+}>();
 
 const summary = computed(() => {
-  const [latest] = props.offerings;
+  const latest = props.offerings.find(({ isOffered }) => isOffered);
   return latest ? `${latest.termName} · ${latest.enrolledOfCap}` : "";
 });
 </script>

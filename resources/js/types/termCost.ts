@@ -10,8 +10,6 @@ export type InstructorType =
 
 export type Season = "fall" | "spring" | "summer";
 
-export type StudentStatus = "regular" | "abd";
-
 export interface JobCodeRate {
   code: string;
   title: string;
@@ -20,25 +18,13 @@ export interface JobCodeRate {
   /** Courses per year. Null when not entered. */
   annualLoad: number | null;
   /**
-   * The TA appointment rate a TA holding this code is
-   * costed at. Null means regular.
+   * Dollars per paid section, or per course for a
+   * teaching_assistant job code. Null when Nova has no
+   * rate for the term.
    */
-  studentStatus: StudentStatus | null;
-  /**
-   * Dollars per course. Null when no rate exists at or
-   * before the fiscal year.
-   */
-  costPerCourse: number | null;
-  rateFiscalYear: number | null;
-  source: string | null;
-}
-
-export interface TaAppointmentRate {
-  season: Season;
-  studentStatus: StudentStatus;
-  appointmentPercent: number;
-  /** Salary plus fringe, in dollars, for one term. */
-  costPerTerm: number;
+  salary: number | null;
+  /** A fraction: 0.385 is 38.5%. Null when Nova has no rate for the term. */
+  fringeRate: number | null;
   source: string | null;
 }
 
@@ -52,57 +38,37 @@ export interface CostPerson {
   positionTitles: Partial<Record<string, string>>;
 }
 
-/** A planner's rate for one department and one term. */
+/** A planner's rate for one department and one term. At least one field is set. */
 export interface JobCodeRateOverride {
   jobCode: string;
-  costPerCourse: number;
-}
-
-/** A planner's rate for one department and one term. */
-export interface TaRateOverride {
-  appointmentPercent: number;
-  studentStatus: StudentStatus;
-  costPerTerm: number;
+  salary: number | null;
+  fringeRate: number | null;
 }
 
 /**
- * A planner's cost for one person on each section they are
- * paid for, in one department and one term. A TA is paid
- * once per course.
+ * A planner's salary for one person per paid section, in
+ * one department and one term. Fringe is added on top.
  */
 export interface PersonRateOverride {
   emplid: number;
-  amount: number;
+  salary: number;
 }
 
-/** A planner's cost for one person on one section. */
-export interface CostLineOverride {
-  courseCode: string;
-  section: string;
+export interface PersonNote {
   emplid: number;
-  amount: number;
+  notes: string;
 }
 
 export interface CostAssumptions {
   termCode: number;
-  fiscalYear: number;
   season: Season;
   jobCodes: JobCodeRate[];
-  taRates: {
-    /**
-     * The latest fiscal year with any TA rate. Null when
-     * none is entered.
-     */
-    fiscalYear: number | null;
-    rates: TaAppointmentRate[];
-  };
   people: CostPerson[];
   rateOverrides: {
     jobCodes: JobCodeRateOverride[];
-    taAppointments: TaRateOverride[];
     people: PersonRateOverride[];
   };
-  lineOverrides: CostLineOverride[];
+  personNotes: PersonNote[];
   canEdit: boolean;
 }
 

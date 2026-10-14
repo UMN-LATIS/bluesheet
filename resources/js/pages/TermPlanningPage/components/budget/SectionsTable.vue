@@ -1,31 +1,14 @@
 <template>
-  <div class="scrollbar-always-visible tw-min-h-0 tw-flex-1 tw-overflow-auto">
-    <div
-      role="table"
-      aria-label="Sections and estimated costs"
-      class="tw-min-w-[1068px] tw-text-xs"
-    >
-      <div
-        role="row"
-        class="tw-sticky tw-top-0 tw-z-[2] tw-grid tw-border-0 tw-border-b tw-border-solid tw-border-outline tw-bg-surface-bright"
-        :style="{ gridTemplateColumns: GRID_TEMPLATE_COLUMNS }"
-      >
-        <CapsLabel
-          v-for="column in HEADINGS"
-          :key="column.label"
-          role="columnheader"
-          class="tw-overflow-hidden tw-whitespace-nowrap tw-border-0 tw-border-r tw-border-solid tw-border-surface-container tw-px-2 tw-py-[7px]"
-          :class="{ 'tw-text-right': column.isNumeric }"
-        >
-          {{ column.label }}
-        </CapsLabel>
-      </div>
-
-      <div
+  <BudgetTable
+    label="Sections and estimated costs"
+    :columns="COLUMNS"
+    class="tw-min-w-[1194px] tw-grid-cols-[minmax(170px,1.2fr)_136px_240px_72px_48px_minmax(140px,1fr)_86px_112px_80px_minmax(110px,0.9fr)]"
+  >
+    <template #default>
+      <BudgetTableRow
         v-for="row in rows"
         :key="row.sectionId"
-        role="row"
-        class="tw-grid tw-cursor-pointer hover:tw-bg-surface"
+        class="tw-cursor-pointer hover:tw-bg-surface"
         :class="{
           'tw-bg-primary-container tw-shadow-[inset_3px_0_0_var(--primary)]':
             rowStateOf(row) === 'selected',
@@ -34,7 +17,6 @@
           'tw-bg-accent-container-low': rowStateOf(row) === 'unstaffed',
           'tw-bg-surface-bright': rowStateOf(row) === 'default',
         }"
-        :style="{ gridTemplateColumns: GRID_TEMPLATE_COLUMNS }"
         @click="emit('select', row.sectionId)"
       >
         <BudgetCell role="cell" class="tw-gap-[7px] tw-py-[5px]">
@@ -67,8 +49,12 @@
         </BudgetCell>
 
         <BudgetCell role="cell" class="tw-py-1">
-          <EnrollmentTiles :history="row.history" />
+          <EnrollmentTiles :history="row.history" :isReadOnly="isReadOnly" />
         </BudgetCell>
+
+        <BudgetCell role="cell" align="end">{{
+          row.enrollmentTotal
+        }}</BudgetCell>
 
         <BudgetCell role="cell" align="end">{{ row.enrollmentCap }}</BudgetCell>
 
@@ -84,31 +70,18 @@
           </span>
         </BudgetCell>
 
-        <BudgetCell
-          role="cell"
-          class="tw-px-0 tw-font-semibold"
-          :class="{ 'tw-bg-accent-container-low': row.hasInstructorOverride }"
-        >
-          <CostOverrideCell
-            v-if="!row.isCancelled"
-            :lines="row.instructorLines"
-            :canEdit="canEditCosts"
-            :courseLabel="row.courseLabel"
-            costLabel="Instructor cost"
-            @editLine="(edit) => emit('editLine', edit)"
+        <BudgetCell role="cell" align="end" class="tw-font-semibold">
+          <span
+            v-if="row.paidElsewhere"
+            class="tw-cursor-help tw-text-[11px] tw-font-normal tw-text-on-surface-variant"
+            :title="row.paidElsewhere.reason"
           >
-            <span
-              v-if="row.paidElsewhere"
-              class="tw-cursor-help tw-text-[11px] tw-font-normal tw-text-on-surface-variant"
-              :title="row.paidElsewhere.reason"
-            >
-              ↳ in {{ row.paidElsewhere.sectionLabel }}
-            </span>
-            <MissingRate v-else-if="row.instructorCost === null" />
-            <template v-else>{{
-              formatWholeDollars(row.instructorCost)
-            }}</template>
-          </CostOverrideCell>
+            ↳ in {{ row.paidElsewhere.sectionLabel }}
+          </span>
+          <MissingRate v-else-if="row.instructorCost === null" />
+          <template v-else-if="!row.isCancelled">{{
+            formatWholeDollars(row.instructorCost)
+          }}</template>
         </BudgetCell>
 
         <BudgetCell
@@ -123,32 +96,19 @@
         <BudgetCell
           role="cell"
           align="end"
-          class="tw-whitespace-nowrap"
-          :class="{
-            'tw-px-0 tw-font-semibold': row.taLines.length > 0,
-            'tw-bg-accent-container-low': row.hasTaOverride,
-          }"
+          class="tw-whitespace-nowrap tw-font-semibold"
         >
           <span
             v-if="row.taCostCell.kind === 'chargedOnOtherSection'"
-            class="tw-cursor-help tw-text-[11px] tw-text-on-surface-variant"
+            class="tw-cursor-help tw-text-[11px] tw-font-normal tw-text-on-surface-variant"
             :title="row.taCostCell.reason"
           >
             ↳ in {{ row.taCostCell.sectionLabel }}
           </span>
-          <CostOverrideCell
-            v-else-if="row.taLines.length > 0"
-            :lines="row.taLines"
-            :canEdit="canEditCosts"
-            :courseLabel="row.courseLabel"
-            costLabel="TA cost"
-            @editLine="(edit) => emit('editLine', edit)"
-          >
-            <MissingRate v-if="row.taCostCell.kind === 'missingRate'" />
-            <template v-else-if="row.taCostCell.kind === 'amount'">{{
-              formatWholeDollars(row.taCostCell.dollars)
-            }}</template>
-          </CostOverrideCell>
+          <MissingRate v-else-if="row.taCostCell.kind === 'missingRate'" />
+          <template v-else-if="row.taCostCell.kind === 'amount'">{{
+            formatWholeDollars(row.taCostCell.dollars)
+          }}</template>
         </BudgetCell>
 
         <BudgetCell
@@ -165,40 +125,35 @@
             @input="onNotesInput(row.sectionId, $event)"
           />
         </BudgetCell>
-      </div>
+      </BudgetTableRow>
+    </template>
 
-      <div
-        role="row"
-        class="tw-sticky tw-bottom-0 tw-grid tw-border-0 tw-border-t tw-border-solid tw-border-outline tw-bg-surface tw-font-bold"
-        :style="{ gridTemplateColumns: GRID_TEMPLATE_COLUMNS }"
-      >
-        <div role="cell" class="tw-col-span-5 tw-p-2">
-          Total · {{ rows.length }} sections
-        </div>
-        <TotalCell role="cell">{{
-          formatWholeDollars(totals.instructorCost)
-        }}</TotalCell>
-        <div role="cell" />
-        <TotalCell role="cell">{{
-          formatWholeDollars(totals.taCost)
-        }}</TotalCell>
-        <div role="cell" />
+    <template #totals>
+      <div role="cell" class="tw-whitespace-nowrap tw-p-2">
+        Total · {{ rows.length }} sections
       </div>
-    </div>
-  </div>
+      <div role="cell" class="tw-col-span-5" />
+      <TotalCell role="cell">{{
+        formatWholeDollars(totals.instructorCost)
+      }}</TotalCell>
+      <div role="cell" />
+      <TotalCell role="cell">{{ formatWholeDollars(totals.taCost) }}</TotalCell>
+      <div role="cell" />
+    </template>
+  </BudgetTable>
 </template>
 
 <script setup lang="ts">
 import { colorOfType } from "@/utils/meetingTypeColors";
 import BudgetCell from "./BudgetCell.vue";
+import BudgetTableRow from "./BudgetTableRow.vue";
+import BudgetTable, { type BudgetColumn } from "./BudgetTable.vue";
 import CapsLabel from "./CapsLabel.vue";
 import CellSubline from "./CellSubline.vue";
-import CostOverrideCell from "./CostOverrideCell.vue";
 import EnrollmentTiles from "./EnrollmentTiles.vue";
 import MissingRate from "./MissingRate.vue";
 import TotalCell from "./TotalCell.vue";
 import type { BudgetRow } from "../../helpers/budgetRows";
-import type { LineOverrideEdit } from "../../helpers/costOverrides";
 import { formatWholeDollars } from "../../helpers/money";
 import type { CostTotals } from "../../helpers/termEstimate";
 
@@ -207,28 +162,24 @@ const props = defineProps<{
   totals: CostTotals;
   selectedSectionId: number | null;
   isReadOnly: boolean;
-  canEditCosts: boolean;
 }>();
 
 const emit = defineEmits<{
   select: [sectionId: number];
   editNotes: [sectionId: number, notes: string];
-  editLine: [edit: LineOverrideEdit];
 }>();
 
-const GRID_TEMPLATE_COLUMNS =
-  "minmax(170px,1.2fr) 136px 196px 48px minmax(140px,1fr) 86px 112px 80px minmax(110px,0.9fr)";
-
-const HEADINGS = [
-  { label: "Section", isNumeric: false },
-  { label: "Day / time", isNumeric: false },
-  { label: "Prev. enrollment", isNumeric: false },
+const COLUMNS: BudgetColumn[] = [
+  { label: "Section" },
+  { label: "Day / time" },
+  { label: "Prev. enrollment" },
+  { label: "Enrolled", isNumeric: true },
   { label: "Cap", isNumeric: true },
-  { label: "Instructor", isNumeric: false },
+  { label: "Instructor" },
   { label: "Est. cost", isNumeric: true },
-  { label: "TA support", isNumeric: false },
+  { label: "TA support" },
   { label: "TA cost", isNumeric: true },
-  { label: "Comments", isNumeric: false },
+  { label: "Comments" },
 ];
 
 type RowState = "selected" | "cancelled" | "unstaffed" | "default";

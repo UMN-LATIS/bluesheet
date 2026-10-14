@@ -27,11 +27,7 @@
           :totals="shownTotals"
           :selectedSectionId="schedule.selectedSectionId"
           :isReadOnly="schedule.isReadOnly"
-          :canEditCosts="schedule.canEditCosts"
           @select="selectSection"
-          @editLine="
-            (edit) => schedule.dispatch({ type: 'lineOverrideEdited', edit })
-          "
           @editNotes="
             (sectionId, notes) =>
               schedule.dispatch({
@@ -47,12 +43,14 @@
           :rows="peopleTables.instructors"
           label="Instructors and estimated costs"
           peopleNoun="instructors"
-          costHeading="Cost / section"
+          paidUnit="section"
           :canEdit="schedule.canEditCosts"
+          :isReadOnly="schedule.isReadOnly"
           @selectSection="selectSection"
           @selectPerson="selectPerson"
           @selectLeave="selectLeave"
-          @editRate="editPersonRate"
+          @editSalary="editPersonSalary"
+          @editNotes="editPersonNotes"
         />
 
         <PeopleTable
@@ -60,20 +58,34 @@
           :rows="peopleTables.tas"
           label="TAs and estimated costs"
           peopleNoun="TAs"
-          costHeading="Cost / course"
+          paidUnit="course"
           :canEdit="schedule.canEditCosts"
+          :isReadOnly="schedule.isReadOnly"
           @selectSection="selectSection"
           @selectPerson="selectPerson"
           @selectLeave="selectLeave"
-          @editRate="editPersonRate"
+          @editNotes="editPersonNotes"
         />
 
         <RatesTab
-          v-else-if="schedule.rateOverrides"
+          v-else-if="schedule.budgetTab === 'rates' && schedule.rateOverrides"
           :assumptions="assumptions"
           :rateOverrides="schedule.rateOverrides"
           :canEdit="schedule.canEditCosts"
-          :instructorEmplids="instructorEmplids"
+          :chargedEmplids="chargedEmplids"
+          :termName="termName"
+          @editRate="
+            (edit) => schedule.dispatch({ type: 'rateOverrideEdited', edit })
+          "
+        />
+
+        <GradRatesTab
+          v-else-if="
+            schedule.budgetTab === 'gradRates' && schedule.rateOverrides
+          "
+          :assumptions="assumptions"
+          :rateOverrides="schedule.rateOverrides"
+          :canEdit="schedule.canEditCosts"
           :termName="termName"
           @editRate="
             (edit) => schedule.dispatch({ type: 'rateOverrideEdited', edit })
@@ -99,6 +111,7 @@ import type {
 } from "@/types";
 import BudgetHeader from "./BudgetHeader.vue";
 import BudgetTabBar from "./BudgetTabBar.vue";
+import GradRatesTab from "./GradRatesTab.vue";
 import PeopleTable from "./PeopleTable.vue";
 import RatesTab from "./RatesTab.vue";
 import SectionsTable from "./SectionsTable.vue";
@@ -108,7 +121,6 @@ import {
   historyKeyOf,
 } from "../../helpers/enrollmentHistory";
 import { peopleTablesOf } from "../../helpers/peopleRows";
-import { instructorsOfRecord } from "../../helpers/sectionPeople";
 import { totalsOf, type SectionCost } from "../../helpers/termEstimate";
 import type { PlannedSection } from "../../types";
 import type { ScheduleEditor } from "../../useScheduleEditor";
@@ -141,11 +153,11 @@ const labelOfSection = (sectionId: number) => {
     : "another section";
 };
 
-const instructorEmplids = computed(
+const chargedEmplids = computed(
   () =>
     new Set(
       props.schedule.localSections.flatMap(({ instructors }) =>
-        instructorsOfRecord(instructors).map(({ emplid }) => emplid),
+        instructors.map(({ emplid }) => emplid),
       ),
     ),
 );
@@ -153,7 +165,8 @@ const instructorEmplids = computed(
 const peopleTables = computed(() =>
   props.assumptions &&
   props.schedule.sectionCosts &&
-  props.schedule.rateOverrides
+  props.schedule.rateOverrides &&
+  props.schedule.personNotes
     ? peopleTablesOf(
         props.schedule.localSections,
         props.schedule.sectionCosts,
@@ -161,14 +174,21 @@ const peopleTables = computed(() =>
         props.schedule.rateOverrides,
         props.roster,
         props.leavesByEmplid,
+        props.schedule.personNotes,
       )
     : { instructors: [], tas: [] },
 );
 
-const editPersonRate = (emplid: number, amount: number | null) =>
+const editPersonSalary = (emplid: number, amount: number | null) =>
   props.schedule.dispatch({
     type: "rateOverrideEdited",
     edit: { rate: { kind: "person", emplid }, amount },
+  });
+
+const editPersonNotes = (emplid: number, notes: string) =>
+  props.schedule.dispatch({
+    type: "personNoteEdited",
+    edit: { emplid, notes },
   });
 
 const selectLeave = (leaveId: number) =>

@@ -1,24 +1,28 @@
-import type { CostAssumptions, InstructorType, StudentStatus } from "@/types";
-import {
-  taRateKeyOf,
-  type RateIdentity,
-  type RateOverrides,
-} from "./costOverrides";
-import { TA_APPOINTMENT_PERCENT, UNSTAFFED_JOB_CODE } from "./costRules";
+import type { CostAssumptions, InstructorType, JobCodeRate } from "@/types";
+import type { RateOverrides } from "./costOverrides";
+import { costOfRate, UNSTAFFED_JOB_CODE } from "./costRules";
 
-export interface RateRow {
-  rate: RateIdentity;
-  code: string;
-  title: string;
-  fundLabel: string;
+export interface RateCell {
   /**
-   * The term's rate, else Nova's. Null when neither
+   * The term's value, else Nova's. Null when neither
    * exists.
    */
   amount: number | null;
-  /** Null when Nova has no rate. */
+  /** Null when Nova has no value. */
   novaAmount: number | null;
-  isOverriddenForTerm: boolean;
+  isOverridden: boolean;
+}
+
+export interface RateRow {
+  code: string;
+  title: string;
+  fundLabel: string;
+  perLabel: "Section" | "Course";
+  salary: RateCell;
+  fringeRate: RateCell;
+  /** Salary × (1 + fringe). Null when either is missing. */
+  cost: number | null;
+  isRecurring: boolean;
 }
 
 const FUND_LABELS: Record<InstructorType, string> = {
@@ -33,89 +37,121 @@ const FUND_LABELS: Record<InstructorType, string> = {
 export const fundLabelOf = (instructorType: InstructorType | null) =>
   instructorType ? FUND_LABELS[instructorType] : "—";
 
+const isRecurringType = (instructorType: InstructorType | null) =>
+  instructorType === "recurring_budget_faculty" ||
+  instructorType === "recurring_budget_pa";
+
+function rateCellOf(
+  overrideAmount: number | null | undefined,
+  novaAmount: number | null | undefined,
+): RateCell {
+  const nova = novaAmount ?? null;
+  const override = overrideAmount ?? null;
+
+  return {
+    amount: override ?? nova,
+    novaAmount: nova,
+    isOverridden: override !== null,
+  };
+}
+
+const isGradType = (instructorType: InstructorType | null) =>
+  instructorType === "teaching_assistant" ||
+  instructorType === "graduate_instructor";
+
+const isGradRate = (rate: JobCodeRate | undefined) =>
+  isGradType(rate?.instructorType ?? null);
+
+function rateRowOf(
+  code: string,
+  title: string,
+  rate: JobCodeRate | undefined,
+  overrides: RateOverrides,
+): RateRow {
+  const override = overrides.jobCodeRates.get(code);
+  const salary = rateCellOf(override?.salary, rate?.salary);
+  const fringeRate = rateCellOf(override?.fringeRate, rate?.fringeRate);
+  const instructorType = rate?.instructorType ?? null;
+  const hasBoth = salary.amount !== null && fringeRate.amount !== null;
+
+  return {
+    code,
+    title,
+    fundLabel: fundLabelOf(instructorType),
+    perLabel: instructorType === "teaching_assistant" ? "Course" : "Section",
+    salary,
+    fringeRate,
+    cost: hasBoth
+      ? costOfRate({
+          salary: salary.amount ?? 0,
+          fringeRate: fringeRate.amount ?? 0,
+        })
+      : null,
+    isRecurring: isRecurringType(instructorType),
+  };
+}
+
+/**
+ * The non-grad codes held by anyone charged this term,
+ * then TBA.
+ */
 export function rateRowsOf(
   assumptions: CostAssumptions,
   overrides: RateOverrides,
-  instructorEmplids: Set<number>,
-): RateRow[] {
-  return [
-    ...jobCodeRowsOf(assumptions, overrides, instructorEmplids),
-    ...taRowsOf(assumptions, overrides),
-  ];
-}
-
-function jobCodeRowsOf(
-  assumptions: CostAssumptions,
-  overrides: RateOverrides,
-  instructorEmplids: Set<number>,
+  chargedEmplids: Set<number>,
 ): RateRow[] {
   const ratesByCode = new Map(
     assumptions.jobCodes.map((rate) => [rate.code, rate]),
   );
-  const instructors = assumptions.people.filter(({ emplid }) =>
-    instructorEmplids.has(emplid),
+  const charged = assumptions.people.filter(({ emplid }) =>
+    chargedEmplids.has(emplid),
   );
   const heldCodes = [
-    ...new Set(instructors.flatMap(({ jobCodes }) => jobCodes)),
+    ...new Set(charged.flatMap(({ jobCodes }) => jobCodes)),
   ].sort();
   const positionTitleOf = (code: string) =>
-    instructors.map(({ positionTitles }) => positionTitles[code]).find(Boolean);
+    charged.map(({ positionTitles }) => positionTitles[code]).find(Boolean);
 
-  return [...heldCodes, UNSTAFFED_JOB_CODE].map((code) => {
-    const rate = ratesByCode.get(code);
-    const novaAmount = rate?.costPerCourse ?? null;
-    const termAmount = overrides.costPerCourseByJobCode.get(code);
-
-    return {
-      rate: { kind: "jobCode", jobCode: code },
-      code,
-      title:
+  return [...heldCodes, UNSTAFFED_JOB_CODE]
+    .filter((code) => !isGradRate(ratesByCode.get(code)))
+    .map((code) => {
+      const rate = ratesByCode.get(code);
+      const title =
         code === UNSTAFFED_JOB_CODE
           ? "Unstaffed"
-          : (rate?.title ?? positionTitleOf(code) ?? "Not in Nova"),
-      fundLabel: fundLabelOf(rate?.instructorType ?? null),
-      amount: termAmount ?? novaAmount,
-      novaAmount,
-      isOverriddenForTerm: termAmount !== undefined,
-    };
-  });
+          : (rate?.title ?? positionTitleOf(code) ?? "Unknown");
+
+      return rateRowOf(code, title, rate, overrides);
+    });
 }
 
-const TA_TITLES: Record<StudentStatus, string> = {
-  regular: `${TA_APPOINTMENT_PERCENT}% appointment`,
-  abd: `${TA_APPOINTMENT_PERCENT}% appointment, ABD`,
-};
+export const GRAD_APPOINTMENT_PERCENTS = [25, 50, 75];
 
-function taRowsOf(
+export interface GradRateRow extends RateRow {
+  /** The cost of the appointment, which `cost` prices at 25%. */
+  costByAppointmentPercent: { percent: number; cost: number | null }[];
+}
+
+/** Every grad code, whether or not anyone holds it this term. */
+export function gradRateRowsOf(
   assumptions: CostAssumptions,
   overrides: RateOverrides,
-): RateRow[] {
-  const statuses: StudentStatus[] = ["regular", "abd"];
+): GradRateRow[] {
+  return assumptions.jobCodes
+    .filter(isGradRate)
+    .sort((a, b) => a.code.localeCompare(b.code))
+    .map((rate) => {
+      const row = rateRowOf(rate.code, rate.title, rate, overrides);
 
-  return statuses.map((studentStatus) => {
-    const novaRate = assumptions.taRates.rates.find(
-      (rate) =>
-        rate.season === assumptions.season &&
-        rate.studentStatus === studentStatus &&
-        rate.appointmentPercent === TA_APPOINTMENT_PERCENT,
-    );
-    const novaAmount = novaRate?.costPerTerm ?? null;
-    const termAmount = overrides.costPerTermByTaRateKey.get(
-      taRateKeyOf(TA_APPOINTMENT_PERCENT, studentStatus),
-    );
-
-    return {
-      rate: {
-        kind: "taAppointment",
-        appointmentPercent: TA_APPOINTMENT_PERCENT,
-        studentStatus,
-      },
-      code: "TA",
-      title: TA_TITLES[studentStatus],
-      fundLabel: "TA/GI",
-      amount: termAmount ?? novaAmount,
-      novaAmount,
-      isOverriddenForTerm: termAmount !== undefined,
-    };
-  });
+      return {
+        ...row,
+        costByAppointmentPercent: GRAD_APPOINTMENT_PERCENTS.map((percent) => ({
+          percent,
+          cost:
+            row.cost === null
+              ? null
+              : row.cost * (percent / GRAD_APPOINTMENT_PERCENTS[0]),
+        })),
+      };
+    });
 }

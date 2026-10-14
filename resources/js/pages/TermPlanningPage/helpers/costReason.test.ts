@@ -6,12 +6,6 @@ const labelOfSection = (sectionId: number) => `Label ${sectionId}`;
 describe("unpaidReasonOf", () => {
   it("gives no reason for a line paid on its own section", () => {
     expect(unpaidReasonOf({ kind: "rate" }, labelOfSection)).toBeNull();
-    expect(
-      unpaidReasonOf(
-        { kind: "lineOverride", replacedAmount: 4000 },
-        labelOfSection,
-      ),
-    ).toBeNull();
   });
 
   it("names the section that pays and the rule that sent it there", () => {

@@ -132,11 +132,9 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
         Route::put('/groups/{group}/sections/{section}', [TermPlanningGroupSectionController::class, 'update']);
         Route::delete('/groups/{group}/sections/{section}', [TermPlanningGroupSectionController::class, 'destroy']);
         Route::get('/groups/{group}/cost-assumptions', [TermPlanningCostAssumptionController::class, 'index']);
-        Route::put('/groups/{group}/cost-rate-overrides/job-codes/{jobCode}', [TermPlanningCostOverrideController::class, 'updateJobCodeRate']);
-        Route::put('/groups/{group}/cost-rate-overrides/ta-appointments/{appointmentPercent}/{studentStatus}', [TermPlanningCostOverrideController::class, 'updateTaAppointmentRate'])
-            ->where('appointmentPercent', '[0-9]{1,3}(\.[0-9]{1,2})?');
+        Route::patch('/groups/{group}/cost-rate-overrides/job-codes/{jobCode}', [TermPlanningCostOverrideController::class, 'updateJobCodeRate']);
         Route::put('/groups/{group}/cost-rate-overrides/people/{emplid}', [TermPlanningCostOverrideController::class, 'updatePersonRate']);
-        Route::put('/groups/{group}/cost-line-overrides', [TermPlanningCostOverrideController::class, 'updateLine']);
+        Route::put('/groups/{group}/person-notes/{emplid}', [TermPlanningCostOverrideController::class, 'updatePersonNote']);
         Route::get('/groups/{group}/enrollment-history', [TermPlanningEnrollmentHistoryController::class, 'index']);
     });
 
