@@ -380,7 +380,7 @@ class GroupController extends Controller
     }
 
     public function getByDeptId($deptId) {
-        $group = Group::where("dept_id", $deptId)->first();
+        $group = Group::where("dept_id", $deptId)->where("active_group", 1)->first();
         if (!$group) {
             return response()->json(["message" => "Group not found"], 404);
         }
