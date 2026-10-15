@@ -6,7 +6,6 @@ use App\GradTermRate;
 use App\Group;
 use App\JobCode;
 use App\JobCodeTermRate;
-use App\Library\TermPlan\InstructorType;
 use App\Library\TermPlan\StudentStatus;
 use App\Membership;
 use App\SisAppointment;
@@ -64,6 +63,7 @@ function gradPersonUrl(Group $group, string $emplid): string {
 }
 
 function gradTermRateWithLevels(int $termCode = TERM_FALL_2026, array $levels = [25 => 196, 50 => 392]): GradTermRate {
+    GradTermRate::where('term_code', $termCode)->delete();
     $gradTermRate = GradTermRate::factory()->create(['term_code' => $termCode]);
     foreach ($levels as $appointmentPercent => $hours) {
         GradAppointmentLevel::factory()->create([
@@ -169,21 +169,15 @@ describe('job code rates', function () {
         actingAs($this->groupManager);
     });
 
-    it('describes a job code with its type and annual load, and lists the migrated TBA row', function () {
-        JobCode::factory()->create([
-            'code' => '9519',
-            'instructor_type' => InstructorType::TeachingAssistant,
-            'annual_load' => 2,
-        ]);
-
+    it('describes a job code with its type, and lists the migrated TBA row', function () {
         $rows = collect(getJson(costAssumptionsUrl($this->group))->json('jobCodes'))->keyBy('code');
 
-        expect($rows['9519'])->toMatchArray(['instructorType' => 'teaching_assistant', 'annualLoad' => 2]);
-        expect($rows['TBA'])->toMatchArray(['instructorType' => null, 'annualLoad' => null]);
+        expect($rows['9519'])->toMatchArray(['instructorType' => 'teaching_assistant']);
+        expect($rows['TBA'])->toMatchArray(['instructorType' => null]);
     });
 
     it('reports the salary, fringe rate, and source of the rate for exactly the requested term', function () {
-        $jobCode = JobCode::factory()->create();
+        $jobCode = JobCode::factory()->create(['code' => 'X101']);
         JobCodeTermRate::factory()->create(['job_code_id' => $jobCode->id, 'term_code' => 1259, 'salary' => 9000]);
         JobCodeTermRate::factory()->create([
             'job_code_id' => $jobCode->id,
@@ -194,7 +188,7 @@ describe('job code rates', function () {
         ]);
         JobCodeTermRate::factory()->create(['job_code_id' => $jobCode->id, 'term_code' => 1273, 'salary' => 11000]);
 
-        $row = getJson(costAssumptionsUrl($this->group))->json('jobCodes.0');
+        $row = collect(getJson(costAssumptionsUrl($this->group))->json('jobCodes'))->firstWhere('code', 'X101');
 
         expect($row['code'])->toBe($jobCode->code);
         expect($row['salary'])->toBe(5870.2);
@@ -203,10 +197,10 @@ describe('job code rates', function () {
     });
 
     it('reports a null salary and fringe rate for a term with no rate, without falling back to an earlier term', function () {
-        $jobCode = JobCode::factory()->create();
+        $jobCode = JobCode::factory()->create(['code' => 'X101']);
         JobCodeTermRate::factory()->create(['job_code_id' => $jobCode->id, 'term_code' => 1259]);
 
-        $row = getJson(costAssumptionsUrl($this->group))->json('jobCodes.0');
+        $row = collect(getJson(costAssumptionsUrl($this->group))->json('jobCodes'))->firstWhere('code', 'X101');
 
         expect($row['salary'])->toBeNull();
         expect($row['fringeRate'])->toBeNull();
@@ -329,7 +323,6 @@ describe('person inputs', function () {
             'yearStarted' => 2019,
             'courseReleases' => 2,
             'releaseSource' => 'Chair',
-            'expectedSections' => 3,
         ]);
         $saved = [
             'emplid' => 100000001,
@@ -337,7 +330,6 @@ describe('person inputs', function () {
             'yearStarted' => 2019,
             'courseReleases' => 2,
             'releaseSource' => 'Chair',
-            'expectedSections' => 3,
         ];
 
         expect($res->status())->toBe(200);
@@ -366,7 +358,6 @@ describe('person inputs', function () {
             'yearStarted' => 2019,
             'courseReleases' => 1,
             'releaseSource' => null,
-            'expectedSections' => null,
         ]);
         expect(TermPersonInput::count())->toBe(1);
     });
@@ -406,7 +397,6 @@ describe('person inputs', function () {
             'yearStarted' => null,
             'courseReleases' => null,
             'releaseSource' => null,
-            'expectedSections' => null,
         ]);
         expect(TermPersonInput::count())->toBe(0);
     });
@@ -421,8 +411,6 @@ describe('person inputs', function () {
         expect(patchJson(personInputsUrl($this->group, '100000001'), ['releaseSource' => str_repeat('a', 256)])->status())->toBe(422);
         expect(patchJson(personInputsUrl($this->group, '100000001'), ['yearStarted' => 1949])->status())->toBe(422);
         expect(patchJson(personInputsUrl($this->group, '100000001'), ['courseReleases' => 21])->status())->toBe(422);
-        expect(patchJson(personInputsUrl($this->group, '100000001'), ['expectedSections' => -1])->status())->toBe(422);
-        expect(patchJson(personInputsUrl($this->group, '100000001'), ['expectedSections' => 1.5])->status())->toBe(422);
         expect(TermPersonInput::count())->toBe(0);
     });
 
@@ -462,15 +450,17 @@ describe('grad rates in the payload', function () {
     });
 
     it('reports a job code student status', function () {
-        JobCode::factory()->create(['code' => '9519', 'student_status' => StudentStatus::Abd]);
+        JobCode::where('code', '9511')->update(['student_status' => StudentStatus::Abd]);
 
         $rows = collect(getJson(costAssumptionsUrl($this->group))->json('jobCodes'))->keyBy('code');
 
-        expect($rows['9519']['studentStatus'])->toBe('abd');
+        expect($rows['9511']['studentStatus'])->toBe('abd');
         expect($rows['TBA']['studentStatus'])->toBeNull();
     });
 
     it('reports no defaults and no levels for a term without grad rates', function () {
+        GradTermRate::where('term_code', TERM_FALL_2026)->delete();
+
         $res = getJson(costAssumptionsUrl($this->group));
 
         expect($res->json('gradRates'))->toBe(['defaultAppointmentPercent' => null, 'defaults' => null, 'levels' => []]);

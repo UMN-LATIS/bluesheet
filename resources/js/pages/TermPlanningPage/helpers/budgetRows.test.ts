@@ -31,6 +31,9 @@ const assumptions = costAssumptions({
   ],
 });
 
+const jobLabelOf = (emplid: number) =>
+  emplid === 1 ? "9403 · Assistant Professor" : null;
+
 const rowsOf = (sections: PlannedSection[]) => {
   const costs = estimateTermCost({
     sections,
@@ -39,7 +42,7 @@ const rowsOf = (sections: PlannedSection[]) => {
   });
 
   return sections.map((section) =>
-    budgetRowOf(section, costs.get(section.id), [], labelOfSection),
+    budgetRowOf(section, costs.get(section.id), [], labelOfSection, jobLabelOf),
   );
 };
 
@@ -72,11 +75,13 @@ describe("budgetRowOf", () => {
     expect(row).toMatchObject({
       isUnstaffed: true,
       instructorName: "TBA",
+      otherInstructorNames: [],
+      instructorJobLabel: null,
       instructorCost: 5000,
     });
   });
 
-  it("separates co-instructors' Last, First names with semicolons", () => {
+  it("names the first instructor of record and counts the others", () => {
     const [row] = rowsOf([
       plannedSection(1, monday9, {
         instructors: [
@@ -86,7 +91,11 @@ describe("budgetRowOf", () => {
       }),
     ]);
 
-    expect(row.instructorName).toBe("García, Ana; Li, Bo");
+    expect(row).toMatchObject({
+      instructorName: "García, Ana",
+      otherInstructorNames: ["Li, Bo"],
+      instructorJobLabel: "9403 · Assistant Professor",
+    });
   });
 
   it("names a TA-only section as taught by a TA", () => {
@@ -158,7 +167,7 @@ describe("budgetRowOf", () => {
       ],
     };
 
-    const row = budgetRowOf(section, cost, [], labelOfSection);
+    const row = budgetRowOf(section, cost, [], labelOfSection, jobLabelOf);
 
     expect(row.instructorCost).toBeNull();
   });
@@ -183,7 +192,7 @@ describe("budgetRowOf", () => {
       ],
     };
 
-    const row = budgetRowOf(section, cost, [], labelOfSection);
+    const row = budgetRowOf(section, cost, [], labelOfSection, jobLabelOf);
 
     expect(row.taCostCell).toEqual({ kind: "missingRate" });
   });

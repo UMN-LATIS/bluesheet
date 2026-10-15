@@ -14,43 +14,22 @@ describe("tenureTrackRowsOf", () => {
     expect(rows.map(({ emplid }) => emplid)).toEqual([1]);
   });
 
-  it("counts releases toward the expected load", () => {
-    const { rows } = tenureTrackRowsOf([
-      personRow({
-        emplid: 1,
-        paidSectionCount: 1,
-        courseReleases: 1,
-        expectedSectionCount: 2,
-      }),
-      personRow({ emplid: 2, paidSectionCount: 1, expectedSectionCount: 3 }),
-      personRow({ emplid: 3, paidSectionCount: 3, expectedSectionCount: 2 }),
-      personRow({ emplid: 4, paidSectionCount: 3, expectedSectionCount: null }),
-    ]);
-
-    expect(rows.map(({ isLoadMismatched }) => isLoadMismatched)).toEqual([
-      false,
-      true,
-      true,
-      false,
-    ]);
-  });
-
-  it("totals people, releases, expected, and listed sections", () => {
+  it("totals people, releases, load, and cost", () => {
     const { totals } = tenureTrackRowsOf([
       personRow({
         emplid: 1,
         paidSectionCount: 1,
         courseReleases: 1,
-        expectedSectionCount: 2,
+        total: 0,
       }),
       personRow({
         emplid: 2,
         isAssigned: false,
         paidSectionCount: 0,
-        expectedSectionCount: 2,
+        total: 250,
       }),
     ]);
 
-    expect(totals).toEqual({ count: 2, releases: 1, expected: 4, listed: 1 });
+    expect(totals).toEqual({ count: 2, releases: 1, load: 1, cost: 250 });
   });
 });

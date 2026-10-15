@@ -3,7 +3,7 @@
     :value="value ?? ''"
     :disabled="!canEdit"
     :aria-label="label"
-    :placeholder="placeholder"
+    placeholder="—"
     class="tw-h-full tw-min-h-10 tw-w-full tw-border-none tw-bg-transparent tw-px-2 tw-text-[11.5px] tw-text-on-surface tw-outline-none placeholder:tw-text-on-surface-variant focus:tw-bg-surface-bright disabled:tw-cursor-default"
     @change="onChange"
   />
@@ -14,7 +14,6 @@ defineProps<{
   value: string | null;
   canEdit: boolean;
   label: string;
-  placeholder?: string;
 }>();
 
 const emit = defineEmits<{ change: [value: string | null] }>();

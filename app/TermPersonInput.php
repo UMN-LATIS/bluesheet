@@ -17,7 +17,6 @@ class TermPersonInput extends Model implements AuditableContract {
         'year_started',
         'course_releases',
         'release_source',
-        'expected_sections',
         'created_by',
         'updated_by',
     ];
@@ -28,6 +27,5 @@ class TermPersonInput extends Model implements AuditableContract {
         'emplid' => 'integer',
         'year_started' => 'integer',
         'course_releases' => 'integer',
-        'expected_sections' => 'integer',
     ];
 }

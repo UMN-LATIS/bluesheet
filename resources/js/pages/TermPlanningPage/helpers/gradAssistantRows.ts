@@ -6,7 +6,7 @@ const FIRST_OWED_YEAR = 1;
 const LAST_OWED_YEAR = 5;
 
 export interface GradAssistantRow extends PersonRow {
-  appointmentLabel: "TA" | "Grad instructor";
+  roleLabel: "TA" | "Grad instructor";
   /** The academic year's end minus the year started. Null when no start year is entered. */
   fundingYear: number | null;
   /** The department owes funding in years 1 to 5. Null when the funding year is unknown. */
@@ -54,7 +54,7 @@ export function gradAssistantRowsOf(
 
     return {
       ...person,
-      appointmentLabel:
+      roleLabel:
         person.instructorType === "teaching_assistant"
           ? "TA"
           : "Grad instructor",

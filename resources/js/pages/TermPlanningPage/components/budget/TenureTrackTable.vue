@@ -4,7 +4,7 @@
     :columns="COLUMNS"
     :rows="rows"
     :collapsedGroup="UNASSIGNED_GROUP"
-    class="tw-min-w-[1000px] tw-grid-cols-[minmax(170px,1.2fr)_minmax(150px,1fr)_72px_minmax(150px,1fr)_80px_80px_minmax(140px,1fr)]"
+    class="tw-min-w-[1000px] tw-grid-cols-[minmax(170px,1.2fr)_80px_minmax(150px,1fr)_72px_minmax(150px,1fr)_96px_minmax(140px,1fr)]"
   >
     <template #default="{ rows: shownRows }">
       <BudgetTableRow
@@ -17,8 +17,11 @@
           @selectPerson="(emplid) => emit('selectPerson', emplid)"
           @selectLeave="(leaveId) => emit('selectLeave', leaveId)"
         >
-          <CellSubline>{{ row.jobCode }} · {{ row.title }}</CellSubline>
+          <CellSubline>{{ row.jobLabel }}</CellSubline>
         </PersonNameCell>
+        <BudgetCell role="cell" align="end" class="tw-font-semibold">
+          {{ row.paidSectionCount }}
+        </BudgetCell>
         <BudgetCell role="cell" class="tw-py-1">
           <SectionLinks
             :sections="row.sections"
@@ -41,26 +44,12 @@
             :value="row.releaseSource"
             :canEdit="canEdit"
             :label="`Release or buyout source for ${row.name}`"
-            placeholder="Admin, grant, new hire…"
             @change="(value) => editText(row, 'releaseSource', value)"
           />
         </BudgetCell>
-        <BudgetCell role="cell" class="tw-p-0">
-          <CountInputCell
-            class="tw-w-full"
-            :count="row.expectedSectionCount"
-            :countWithoutOverride="row.expectedSectionCountWithoutOverride"
-            :canEdit="canEdit"
-            :label="`Sections expected this term for ${row.name}`"
-            :min="0"
-            :max="20"
-            @change="(count) => editCount(row, 'expectedSections', count)"
-          />
+        <BudgetCell role="cell" align="end" class="tw-font-bold">
+          {{ formatWholeDollars(row.total) }}
         </BudgetCell>
-        <ListedCell
-          :listed="row.paidSectionCount"
-          :isLoadMismatched="row.isLoadMismatched"
-        />
         <BudgetCell role="cell" :hasRightBorder="false" class="tw-p-0">
           <TextInputCell
             :value="row.notes"
@@ -73,13 +62,14 @@
     </template>
 
     <template #totals>
-      <div role="cell" class="tw-col-span-2 tw-whitespace-nowrap tw-p-2">
+      <div role="cell" class="tw-whitespace-nowrap tw-p-2">
         Total · {{ totals.count }} tenure-track faculty
       </div>
+      <TotalCell role="cell">{{ totals.load }}</TotalCell>
+      <div role="cell" />
       <TotalCell role="cell">{{ totals.releases }}</TotalCell>
       <div role="cell" />
-      <TotalCell role="cell">{{ totals.expected }}</TotalCell>
-      <TotalCell role="cell">{{ totals.listed }}</TotalCell>
+      <TotalCell role="cell">{{ formatWholeDollars(totals.cost) }}</TotalCell>
       <div role="cell" />
     </template>
   </BudgetTable>
@@ -90,12 +80,12 @@ import BudgetCell from "./BudgetCell.vue";
 import BudgetTable, { type BudgetColumn } from "./BudgetTable.vue";
 import BudgetTableRow from "./BudgetTableRow.vue";
 import CountInputCell from "./CountInputCell.vue";
-import ListedCell from "./ListedCell.vue";
 import CellSubline from "./CellSubline.vue";
 import PersonNameCell from "./PersonNameCell.vue";
 import SectionLinks from "./SectionLinks.vue";
 import TextInputCell from "./TextInputCell.vue";
 import TotalCell from "./TotalCell.vue";
+import { formatWholeDollars } from "../../helpers/money";
 import type { PersonInputEdit } from "../../helpers/personInputs";
 import type {
   TenureTrackRow,
@@ -117,6 +107,11 @@ const emit = defineEmits<{
 
 const COLUMNS: BudgetColumn<TenureTrackRow>[] = [
   { label: "Faculty", sortValueOf: ({ name }) => name },
+  {
+    label: "Load",
+    isNumeric: true,
+    sortValueOf: ({ paidSectionCount }) => paidSectionCount,
+  },
   { label: "Sections" },
   {
     label: "Releases",
@@ -125,14 +120,9 @@ const COLUMNS: BudgetColumn<TenureTrackRow>[] = [
   },
   { label: "Release / buyout source" },
   {
-    label: "Expected",
+    label: "Term cost",
     isNumeric: true,
-    sortValueOf: ({ expectedSectionCount }) => expectedSectionCount,
-  },
-  {
-    label: "Listed",
-    isNumeric: true,
-    sortValueOf: ({ paidSectionCount }) => paidSectionCount,
+    sortValueOf: ({ total }) => total,
   },
   { label: "Notes" },
 ];
@@ -144,7 +134,7 @@ const UNASSIGNED_GROUP = {
 
 const editCount = (
   { emplid }: TenureTrackRow,
-  field: "courseReleases" | "expectedSections",
+  field: "courseReleases",
   value: number | null,
 ) => emit("editPersonInput", { emplid, field, value });
 

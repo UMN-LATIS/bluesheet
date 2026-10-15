@@ -41,7 +41,6 @@ final class CostAssumptions {
                     'code' => $jobCode->code,
                     'title' => $jobCode->title,
                     'instructorType' => $jobCode->instructor_type?->value,
-                    'annualLoad' => $jobCode->annual_load,
                     'studentStatus' => $jobCode->student_status?->value,
                     'salary' => $termRate === null ? null : (float) $termRate->salary,
                     'fringeRate' => $termRate === null ? null : (float) $termRate->fringe_rate,
@@ -117,7 +116,6 @@ final class CostAssumptions {
                 'yearStarted' => $input->year_started,
                 'courseReleases' => $input->course_releases,
                 'releaseSource' => $input->release_source,
-                'expectedSections' => $input->expected_sections,
             ])
             ->all();
     }

@@ -33,7 +33,11 @@ export interface BudgetRow {
   history: EnrollmentPoint[];
   isCancelled: boolean;
   isUnstaffed: boolean;
+  /** The first instructor of record, or "TBA", "Taught by TA" or "—". */
   instructorName: string;
+  otherInstructorNames: string[];
+  /** "9403 · Assistant Professor". Null when the section names no instructor with a job code. */
+  instructorJobLabel: string | null;
   /** Null when a line has no rate. */
   instructorCost: number | null;
   /**
@@ -61,6 +65,7 @@ export function budgetRowOf(
   cost: SectionCost | undefined,
   history: EnrollmentPoint[],
   labelOfSection: (sectionId: number) => string,
+  jobLabelOf: (emplid: number) => string | null,
 ): BudgetRow {
   const lines = cost?.lines ?? [];
   const instructorLines = lines.filter(({ role }) => role !== "ta");
@@ -69,7 +74,12 @@ export function budgetRowOf(
   const isUnstaffed = instructorLines.some(
     ({ role }) => role === "unstaffedSection",
   );
-  const leads = instructorsOfRecord(section.instructors);
+  const leadNames = isUnstaffed
+    ? []
+    : instructorsOfRecord(section.instructors).map(nameOf);
+  const firstLead = isUnstaffed
+    ? undefined
+    : instructorsOfRecord(section.instructors)[0];
 
   return {
     sectionId: section.id,
@@ -82,7 +92,10 @@ export function budgetRowOf(
     history,
     isCancelled: section.isCancelled,
     isUnstaffed,
-    instructorName: instructorNameOf(leads, isUnstaffed, taLines.length > 0),
+    instructorName:
+      leadNames[0] ?? placeholderNameOf(isUnstaffed, taLines.length > 0),
+    otherInstructorNames: leadNames.slice(1),
+    instructorJobLabel: firstLead ? jobLabelOf(firstLead.emplid) : null,
     instructorCost: sumOrNull(instructorLines),
     paidElsewhere: paidElsewhereOf(instructorLines, labelOfSection),
     assistantNames,
@@ -126,21 +139,14 @@ export function meetingSummaryOf(meetings: SisSectionMeeting[]): string {
   return `${daysMetLabel(meetings)} ${time}`;
 }
 
-function instructorNameOf(
-  leads: SisInstructor[],
-  isUnstaffed: boolean,
-  hasAssistants: boolean,
-): string {
+function placeholderNameOf(isUnstaffed: boolean, hasAssistants: boolean) {
   if (isUnstaffed) return "TBA";
 
-  if (leads.length === 0) return hasAssistants ? "Taught by TA" : "—";
-
-  return leads
-    .map(({ name, lastName }) =>
-      name === null ? (lastName ?? "Unknown") : lastNameFirst(name, lastName),
-    )
-    .join("; ");
+  return hasAssistants ? "Taught by TA" : "—";
 }
+
+const nameOf = ({ name, lastName }: SisInstructor) =>
+  name === null ? (lastName ?? "Unknown") : lastNameFirst(name, lastName);
 
 function assistantNamesOf(section: PlannedSection): string {
   return section.instructors

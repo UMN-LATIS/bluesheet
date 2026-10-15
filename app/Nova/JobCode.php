@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\ID;
-use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -52,11 +51,6 @@ class JobCode extends Resource {
                 ->nullable()
                 ->rules('nullable', Rule::enum(InstructorType::class))
                 ->help('The default for everyone holding this job code. Blank for TBA.'),
-
-            Number::make('Annual Load', 'annual_load')
-                ->nullable()
-                ->rules('nullable', 'integer', 'min:0', 'max:40')
-                ->help('Courses a person with this job code teaches in a year. The People tab expects half of it each term.'),
 
             Select::make('Student Status', 'student_status')
                 ->options(StudentStatus::class)

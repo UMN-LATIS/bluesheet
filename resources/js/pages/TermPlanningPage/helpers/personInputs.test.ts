@@ -8,7 +8,6 @@ const saved = [
     yearStarted: 2019,
     courseReleases: 1,
     releaseSource: "Grant",
-    expectedSections: 2,
   },
 ];
 
@@ -19,7 +18,6 @@ describe("personInputsOf", () => {
       yearStarted: 2019,
       courseReleases: 1,
       releaseSource: "Grant",
-      expectedSections: 2,
     });
   });
 
@@ -58,9 +56,9 @@ describe("personInputsOf", () => {
 
   it("starts an empty record for a person with nothing saved", () => {
     const inputs = personInputsOf([], {
-      [personInputKeyOf(9, "expectedSections")]: {
+      [personInputKeyOf(9, "courseReleases")]: {
         emplid: 9,
-        field: "expectedSections",
+        field: "courseReleases",
         value: 3,
       },
     });
@@ -68,9 +66,8 @@ describe("personInputsOf", () => {
     expect(inputs.get(9)).toEqual({
       notes: null,
       yearStarted: null,
-      courseReleases: null,
+      courseReleases: 3,
       releaseSource: null,
-      expectedSections: 3,
     });
   });
 });

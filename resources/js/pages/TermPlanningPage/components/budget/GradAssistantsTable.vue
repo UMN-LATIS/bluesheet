@@ -3,7 +3,7 @@
     label="Grad assistants"
     :columns="COLUMNS"
     :rows="rows"
-    class="tw-min-w-[1260px] tw-grid-cols-[minmax(160px,1.2fr)_130px_64px_72px_64px_120px_minmax(120px,1fr)_64px_60px_48px_96px_minmax(140px,1fr)]"
+    class="tw-min-w-[1260px] tw-grid-cols-[minmax(160px,1.2fr)_130px_64px_72px_64px_120px_64px_minmax(120px,1fr)_60px_48px_96px_minmax(140px,1fr)]"
   >
     <template #default="{ rows: shownRows }">
       <BudgetTableRow
@@ -16,10 +16,10 @@
           @selectPerson="(emplid) => emit('selectPerson', emplid)"
           @selectLeave="(leaveId) => emit('selectLeave', leaveId)"
         >
-          <CellSubline>{{ row.jobCode }}</CellSubline>
+          <CellSubline>{{ row.jobLabel }}</CellSubline>
         </PersonNameCell>
 
-        <BudgetCell role="cell">{{ row.appointmentLabel }}</BudgetCell>
+        <BudgetCell role="cell">{{ row.roleLabel }}</BudgetCell>
 
         <BudgetCell role="cell" class="tw-justify-center">
           <CheckIcon v-if="row.isAbd" role="img" aria-label="ABD" />
@@ -55,15 +55,6 @@
           {{ row.supportLabel }}
         </BudgetCell>
 
-        <BudgetCell role="cell" class="tw-py-1">
-          <SectionLinks
-            v-if="row.sections.length > 0"
-            :sections="row.sections"
-            @select="(sectionId) => emit('selectSection', sectionId)"
-          />
-          <CellSubline v-else>None this term</CellSubline>
-        </BudgetCell>
-
         <BudgetCell
           role="cell"
           align="end"
@@ -71,6 +62,15 @@
           :class="{ 'tw-bg-brand-container tw-text-brand': row.isUnfunded }"
         >
           {{ row.appointmentPercent ?? 0 }}%
+        </BudgetCell>
+
+        <BudgetCell role="cell" class="tw-py-1">
+          <SectionLinks
+            v-if="row.sections.length > 0"
+            :sections="row.sections"
+            @select="(sectionId) => emit('selectSection', sectionId)"
+          />
+          <CellSubline v-else>None this term</CellSubline>
         </BudgetCell>
 
         <BudgetCell role="cell" class="tw-justify-center">
@@ -175,8 +175,8 @@ const emit = defineEmits<{
 const COLUMNS: BudgetColumn<GradAssistantRow>[] = [
   { label: "Name", sortValueOf: ({ name }) => name },
   {
-    label: "Appointment",
-    sortValueOf: ({ appointmentLabel }) => appointmentLabel,
+    label: "Role",
+    sortValueOf: ({ roleLabel }) => roleLabel,
   },
   { label: "ABD", sortValueOf: ({ isAbd }) => isAbd },
   {
@@ -190,12 +190,12 @@ const COLUMNS: BudgetColumn<GradAssistantRow>[] = [
     sortValueOf: ({ fundingYear }) => fundingYear,
   },
   { label: "Support", sortValueOf: ({ supportLabel }) => supportLabel },
-  { label: "Sections" },
   {
-    label: "Appt",
+    label: "Load",
     isNumeric: true,
     sortValueOf: ({ appointmentPercent }) => appointmentPercent,
   },
+  { label: "Sections" },
   { label: "Fee off.", sortValueOf: ({ hasFeeOffset }) => hasFeeOffset },
   { label: "Intl.", sortValueOf: ({ isInternational }) => isInternational },
   { label: "Term cost", isNumeric: true, sortValueOf: ({ total }) => total },

@@ -22,7 +22,6 @@ class CostOverrideController extends Controller {
         'yearStarted' => 'year_started',
         'courseReleases' => 'course_releases',
         'releaseSource' => 'release_source',
-        'expectedSections' => 'expected_sections',
     ];
 
     public function updatePersonRate(Request $request, Group $group, string $emplid) {
@@ -90,7 +89,6 @@ class CostOverrideController extends Controller {
             'releaseSource' => ['sometimes', 'nullable', 'string', 'max:255'],
             'yearStarted' => ['sometimes', 'nullable', 'integer', 'between:1950,2100'],
             'courseReleases' => ['sometimes', 'nullable', 'integer', 'between:0,20'],
-            'expectedSections' => ['sometimes', 'nullable', 'integer', 'between:0,20'],
         ]);
 
         $uniqueKey = ['academic_org' => $academicOrg, 'term_code' => $termCode, 'emplid' => $emplid];

@@ -60,14 +60,27 @@
         <BudgetCell role="cell" align="end">{{ row.enrollmentCap }}</BudgetCell>
 
         <BudgetCell role="cell" class="tw-py-[5px]">
-          <span class="tw-min-w-0">
-            <span
-              class="tw-block tw-truncate"
-              :class="{ 'tw-font-semibold tw-text-brand': row.isUnstaffed }"
-              :title="row.instructorName"
-            >
-              {{ row.instructorName }}
+          <span class="tw-flex tw-min-w-0 tw-flex-col">
+            <span class="tw-flex tw-min-w-0 tw-items-center tw-gap-1">
+              <span
+                class="tw-truncate"
+                :class="{ 'tw-font-semibold tw-text-brand': row.isUnstaffed }"
+                :title="row.instructorName"
+              >
+                {{ row.instructorName }}
+              </span>
+              <span
+                v-if="row.otherInstructorNames.length > 0"
+                class="tw-flex-none tw-cursor-help tw-rounded-full tw-bg-surface-container tw-px-1.5 tw-py-0.5 tw-text-[10px] tw-font-semibold tw-leading-none tw-text-on-surface-variant"
+                :title="row.otherInstructorNames.join('; ')"
+                :aria-label="`and ${row.otherInstructorNames.length} more: ${row.otherInstructorNames.join('; ')}`"
+              >
+                +{{ row.otherInstructorNames.length }}
+              </span>
             </span>
+            <CellSubline v-if="row.instructorJobLabel">
+              {{ row.instructorJobLabel }}
+            </CellSubline>
           </span>
         </BudgetCell>
 

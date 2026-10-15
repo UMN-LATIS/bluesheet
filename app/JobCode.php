@@ -20,13 +20,11 @@ class JobCode extends Model implements AuditableContract {
         'code',
         'title',
         'instructor_type',
-        'annual_load',
         'student_status',
     ];
 
     protected $casts = [
         'instructor_type' => InstructorType::class,
-        'annual_load' => 'integer',
         'student_status' => StudentStatus::class,
     ];
 

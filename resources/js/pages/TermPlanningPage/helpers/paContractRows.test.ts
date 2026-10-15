@@ -27,42 +27,12 @@ describe("paContractRowsOf", () => {
     ]);
   });
 
-  it("flags a listed count that differs from the expected count", () => {
-    const { rows } = paContractRowsOf([
-      personRow({
-        emplid: 1,
-        instructorType: "pa_instructor",
-        paidSectionCount: 1,
-        expectedSectionCount: 3,
-      }),
-      personRow({
-        emplid: 2,
-        instructorType: "pa_instructor",
-        paidSectionCount: 3,
-        expectedSectionCount: 2,
-      }),
-      personRow({
-        emplid: 3,
-        instructorType: "pa_instructor",
-        paidSectionCount: 2,
-        expectedSectionCount: 2,
-      }),
-    ]);
-
-    expect(rows.map(({ isLoadMismatched }) => isLoadMismatched)).toEqual([
-      true,
-      true,
-      false,
-    ]);
-  });
-
-  it("totals people, expected and listed sections, and cost", () => {
+  it("totals people, load, and cost", () => {
     const { totals } = paContractRowsOf([
       personRow({
         emplid: 1,
         instructorType: "pa_instructor",
         paidSectionCount: 1,
-        expectedSectionCount: 2,
         total: 5000,
       }),
       personRow({
@@ -73,6 +43,6 @@ describe("paContractRowsOf", () => {
       }),
     ]);
 
-    expect(totals).toEqual({ count: 2, expected: 2, listed: 3, cost: 12000 });
+    expect(totals).toEqual({ count: 2, load: 3, cost: 12000 });
   });
 });

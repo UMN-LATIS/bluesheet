@@ -137,6 +137,7 @@ import {
 import { gradAssistantRowsOf } from "../../helpers/gradAssistantRows";
 import { gradCalculatorOf } from "../../helpers/gradCalculatorRows";
 import { instructorCostGroupsOf } from "../../helpers/instructorCostRows";
+import { jobLabelerOf } from "../../helpers/jobLabel";
 import { paContractRowsOf } from "../../helpers/paContractRows";
 import { peopleRowsOf } from "../../helpers/peopleRows";
 import type { PersonInputEdit } from "../../helpers/personInputs";
@@ -244,6 +245,10 @@ const unavailableMessage = computed(() => {
   return "Cost estimates need a department, and this group has none.";
 });
 
+const jobLabelOfEmplid = computed(() =>
+  props.assumptions ? jobLabelerOf(props.assumptions) : () => null,
+);
+
 const historyOf = (section: PlannedSection) =>
   seriesByKey.value.get(historyKeyOf(section.courseCode, section.section)) ??
   [];
@@ -255,6 +260,7 @@ const rows = computed(() =>
       props.schedule.sectionCosts?.get(section.id),
       historyOf(section),
       labelOfSection,
+      jobLabelOfEmplid.value,
     ),
   ),
 );

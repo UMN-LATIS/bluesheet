@@ -348,7 +348,6 @@ describe("the budget view's selectors", () => {
             yearStarted: 2019,
             courseReleases: null,
             releaseSource: null,
-            expectedSections: null,
           },
         ],
       }),
@@ -357,15 +356,15 @@ describe("the budget view's selectors", () => {
       ...atRest,
       personInputEdits: {
         "1:notes": { emplid: 1, field: "notes", value: "Typed" },
-        "2:expectedSections": {
+        "2:courseReleases": {
           emplid: 2,
-          field: "expectedSections",
+          field: "courseReleases",
           value: 3,
         },
       },
     });
 
     expect(shown?.get(1)).toMatchObject({ notes: "Typed", yearStarted: 2019 });
-    expect(shown?.get(2)).toMatchObject({ notes: null, expectedSections: 3 });
+    expect(shown?.get(2)).toMatchObject({ notes: null, courseReleases: 3 });
   });
 });

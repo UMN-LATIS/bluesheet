@@ -1,23 +1,18 @@
 <template>
   <span
     class="tw-relative tw-flex tw-h-full tw-min-w-0 tw-flex-col tw-justify-center"
-    :class="{ 'tw-bg-accent-container-low': isOverridden }"
   >
     <input
       type="text"
       inputmode="numeric"
       :value="count ?? ''"
-      :placeholder="
-        countWithoutOverride === null ? '' : String(countWithoutOverride)
-      "
+      placeholder="—"
       :disabled="!canEdit"
       :aria-label="label"
       :aria-invalid="refusal !== null"
-      class="tw-h-full tw-min-h-8 tw-w-full tw-min-w-0 tw-border-none tw-bg-transparent tw-px-2 tw-text-right tw-text-xs tw-font-semibold tw-tabular-nums tw-outline-none placeholder:tw-font-normal focus:tw-bg-surface-bright focus:tw-ring-2 focus:tw-ring-inset focus:tw-ring-primary disabled:tw-cursor-default"
+      class="tw-h-full tw-min-h-8 tw-w-full tw-min-w-0 tw-border-none tw-bg-transparent tw-px-2 tw-text-right tw-text-xs tw-font-semibold tw-tabular-nums tw-outline-none placeholder:tw-font-normal placeholder:tw-text-on-surface-variant focus:tw-bg-surface-bright focus:tw-ring-2 focus:tw-ring-inset focus:tw-ring-primary disabled:tw-cursor-default"
       :class="
-        canEdit
-          ? 'tw-text-primary placeholder:tw-text-primary hover:tw-bg-surface'
-          : 'tw-text-on-surface placeholder:tw-text-on-surface-variant'
+        canEdit ? 'tw-text-primary hover:tw-bg-surface' : 'tw-text-on-surface'
       "
       @change="onChange"
     />
@@ -28,25 +23,19 @@
     >
       {{ refusal }}
     </span>
-    <OverrideMarker v-if="isOverridden" />
   </span>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
-import OverrideMarker from "./OverrideMarker.vue";
+import { ref, watch } from "vue";
 
-const props = withDefaults(
-  defineProps<{
-    count: number | null;
-    countWithoutOverride?: number | null;
-    canEdit: boolean;
-    label: string;
-    min: number;
-    max: number;
-  }>(),
-  { countWithoutOverride: null },
-);
+const props = defineProps<{
+  count: number | null;
+  canEdit: boolean;
+  label: string;
+  min: number;
+  max: number;
+}>();
 
 const emit = defineEmits<{ change: [count: number | null] }>();
 
@@ -55,10 +44,6 @@ const refusal = ref<string | null>(null);
 watch(
   () => props.count,
   () => (refusal.value = null),
-);
-
-const isOverridden = computed(
-  () => props.countWithoutOverride !== null && props.count !== null,
 );
 
 function onChange(event: Event) {
@@ -74,7 +59,6 @@ function onChange(event: Event) {
   }
 
   refusal.value = null;
-  const isWithoutOverride = text === "" || count === props.countWithoutOverride;
-  emit("change", isWithoutOverride ? null : count);
+  emit("change", text === "" ? null : count);
 }
 </script>

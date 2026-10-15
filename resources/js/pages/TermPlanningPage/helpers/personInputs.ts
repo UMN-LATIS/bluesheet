@@ -4,15 +4,14 @@ export type PersonInputField =
   | "notes"
   | "yearStarted"
   | "courseReleases"
-  | "releaseSource"
-  | "expectedSections";
+  | "releaseSource";
 
 /** A null or blank value clears the field. */
 export type PersonInputEdit =
   | { emplid: number; field: "notes" | "releaseSource"; value: string | null }
   | {
       emplid: number;
-      field: "yearStarted" | "courseReleases" | "expectedSections";
+      field: "yearStarted" | "courseReleases";
       value: number | null;
     };
 
@@ -21,7 +20,6 @@ export interface PersonInputs {
   yearStarted: number | null;
   courseReleases: number | null;
   releaseSource: string | null;
-  expectedSections: number | null;
 }
 
 export const personInputKeyOf = (emplid: number, field: PersonInputField) =>
@@ -32,7 +30,6 @@ const noInputs = (): PersonInputs => ({
   yearStarted: null,
   courseReleases: null,
   releaseSource: null,
-  expectedSections: null,
 });
 
 const nullIfBlank = (value: string | number | null) =>

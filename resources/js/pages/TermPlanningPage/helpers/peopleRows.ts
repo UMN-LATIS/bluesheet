@@ -22,6 +22,7 @@ import {
 } from "./costReceipt";
 import { formatWholeDollars } from "./money";
 import { fundLabelOf } from "./fundLabel";
+import { jobLabelOf } from "./jobLabel";
 import type { PersonInputs } from "./personInputs";
 import {
   pricingByEmplidOf,
@@ -42,6 +43,8 @@ export interface PersonRow {
   name: string;
   jobCode: string;
   title: string;
+  /** "9517 · Ph D Candidate Grad Instructor", or the job code alone when it has no title. */
+  jobLabel: string;
   /** Null when the person's job code is not in the catalog. */
   instructorType: InstructorType | null;
   fundLabel: string;
@@ -68,18 +71,9 @@ export interface PersonRow {
   loadLabel: string;
   /** Sections paid this term, in the role the person is costed in. */
   paidSectionCount: number;
-  /**
-   * The person's own expected count, else half their job
-   * code's annual load. Null when neither exists.
-   */
-  expectedSectionCount: number | null;
-  /** Half the job code's annual load. Null when it has none. */
-  expectedSectionCountWithoutOverride: number | null;
   courseReleases: number | null;
   releaseSource: string | null;
   yearStarted: number | null;
-  /** Paid sections plus releases fall short of the expected count. */
-  isUnderLoad: boolean;
   /** Lines with no rate add nothing. */
   total: number;
   hasMissingRate: boolean;
@@ -117,8 +111,6 @@ export function gradPersonEditOf(
 
   return { emplid: row.emplid, ...settings };
 }
-
-const TERMS_PER_YEAR = 2;
 
 const UNPAID_BASIS_KINDS = [
   "freeComponent",
@@ -197,12 +189,6 @@ export function peopleRowsOf(
       (line) => line.role === (isTa ? "ta" : "instructor") && isPaid(line),
     ).length;
     const inputs = inputsByEmplid.get(emplid);
-    const expectedCountWithoutOverride =
-      rate?.annualLoad == null
-        ? null
-        : Math.ceil(rate.annualLoad / TERMS_PER_YEAR);
-    const expectedCount =
-      inputs?.expectedSections ?? expectedCountWithoutOverride;
     const courseReleases = inputs?.courseReleases ?? null;
     const gradSetting = rateOverrides.gradPeopleByEmplid.get(emplid);
     const appointmentPercent = isGrad
@@ -218,15 +204,17 @@ export function peopleRowsOf(
           isTa ? undefined : rateOverrides.salaryByEmplid.get(emplid),
         );
     const chargeSummary = chargeSummaryOf(charges);
+    const title =
+      rate?.title ??
+      (jobCode && positionTitlesByEmplid.get(emplid)?.[jobCode]) ??
+      "";
 
     const row: PersonRow = {
       emplid,
       name: nameOf(person),
       jobCode: jobCode ?? "—",
-      title:
-        rate?.title ??
-        (jobCode && positionTitlesByEmplid.get(emplid)?.[jobCode]) ??
-        "",
+      title,
+      jobLabel: jobCode ? jobLabelOf(jobCode, title) : "—",
       instructorType: rate?.instructorType ?? null,
       fundLabel:
         isTa && !rate?.instructorType
@@ -240,17 +228,9 @@ export function peopleRowsOf(
           ? String(paidCount)
           : `${appointmentPercent}%`,
       paidSectionCount: paidCount,
-      expectedSectionCount: expectedCount,
-      expectedSectionCountWithoutOverride: expectedCountWithoutOverride,
       courseReleases,
       releaseSource: inputs?.releaseSource ?? null,
       yearStarted: inputs?.yearStarted ?? null,
-      isUnderLoad: isUnderLoadOf(
-        isTa,
-        leaves.length,
-        paidCount + (courseReleases ?? 0),
-        expectedCount,
-      ),
       ...chargeSummary,
       isAssigned: charges.length > 0,
       notes: inputs?.notes ?? "",
@@ -266,10 +246,10 @@ export function peopleRowsOf(
     return { sortName: sortNameOf(person), row };
   };
 
-  const hasExpectedLoad = ({ emplid }: SisEmployee) =>
-    (pricingOfEmplid(emplid).rate?.annualLoad ?? 0) > 0;
+  const hasInstructorType = ({ emplid }: SisEmployee) =>
+    pricingOfEmplid(emplid).rate?.instructorType != null;
   const idleEmplids = new Set([
-    ...roster.filter(hasExpectedLoad).map(({ emplid }) => emplid),
+    ...roster.filter(hasInstructorType).map(({ emplid }) => emplid),
     ...leavesByEmplid.keys(),
   ]);
   const rows = [
@@ -305,18 +285,6 @@ function nameOf(person: NamedPerson | undefined): string {
 
 const sortNameOf = (person: NamedPerson | undefined): string =>
   person?.lastName ?? person?.name ?? "Unknown";
-
-function isUnderLoadOf(
-  isTa: boolean,
-  leaveCount: number,
-  paidCount: number,
-  expectedCount: number | null,
-): boolean {
-  if (leaveCount > 0) return false;
-  if (isTa) return paidCount === 0;
-
-  return expectedCount !== null && paidCount < expectedCount;
-}
 
 function unitPriceOf(rate: Rate | null, salaryOverride: number | undefined) {
   const salaryWithoutOverride = rate?.salary ?? null;
@@ -394,6 +362,7 @@ function unstaffedRowsOf(charges: Charge[], rate: Rate | null): PersonRow[] {
       name: "Unstaffed",
       jobCode: UNSTAFFED_JOB_CODE,
       title: "Unstaffed",
+      jobLabel: jobLabelOf(UNSTAFFED_JOB_CODE, "Unstaffed"),
       instructorType: null,
       fundLabel: "UI",
       ...price,
@@ -401,12 +370,9 @@ function unstaffedRowsOf(charges: Charge[], rate: Rate | null): PersonRow[] {
       termFringe: sumOf(charges.map(({ line }) => line.fringe)),
       loadLabel: String(paidCount),
       paidSectionCount: paidCount,
-      expectedSectionCount: null,
-      expectedSectionCountWithoutOverride: null,
       courseReleases: null,
       releaseSource: null,
       yearStarted: null,
-      isUnderLoad: false,
       ...chargeSummary,
       isAssigned: true,
       notes: "",

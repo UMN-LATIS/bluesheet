@@ -12,6 +12,7 @@ const personRow = (extra: Partial<PersonRow> = {}): PersonRow => ({
   name: "Last, First",
   jobCode: "9511",
   title: "Teaching Assistant",
+  jobLabel: "9511 · Teaching Assistant",
   instructorType: "teaching_assistant",
   fundLabel: "TA/GI",
   salary: 0,
@@ -24,12 +25,9 @@ const personRow = (extra: Partial<PersonRow> = {}): PersonRow => ({
   termFringe: 0,
   loadLabel: "25%",
   paidSectionCount: 1,
-  expectedSectionCount: null,
-  expectedSectionCountWithoutOverride: null,
   courseReleases: null,
   releaseSource: null,
   yearStarted: 2026,
-  isUnderLoad: false,
   total: 1000,
   hasMissingRate: false,
   sections: [],
@@ -58,7 +56,7 @@ describe("gradAssistantRowsOf", () => {
     );
 
     expect(rows.map(({ emplid }) => emplid)).toEqual([1, 4]);
-    expect(rows.map(({ appointmentLabel }) => appointmentLabel)).toEqual([
+    expect(rows.map(({ roleLabel }) => roleLabel)).toEqual([
       "Grad instructor",
       "TA",
     ]);

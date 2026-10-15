@@ -18,7 +18,6 @@ export interface JobCodeRate {
   /** Null on the unstaffed (TBA) row. */
   instructorType: InstructorType | null;
   /** Courses per year. Null when not entered. */
-  annualLoad: number | null;
   /**
    * Dollars per paid section. Null when Nova has no rate
    * for the term, and always null for a grad job code,
@@ -82,7 +81,6 @@ export interface PersonInputRecord {
   yearStarted: number | null;
   courseReleases: number | null;
   releaseSource: string | null;
-  expectedSections: number | null;
 }
 
 export interface CostAssumptions {

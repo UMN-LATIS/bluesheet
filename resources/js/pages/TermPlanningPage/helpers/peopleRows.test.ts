@@ -21,18 +21,16 @@ const assumptions = costAssumptions({
   jobCodes: [
     jobCodeRate("9401", 0, {
       instructorType: "recurring_budget_faculty",
-      annualLoad: 4,
     }),
     jobCodeRate("9753", 10000, {
       instructorType: "pa_instructor",
-      annualLoad: 6,
     }),
     gradJobCodeRate("9511", "teaching_assistant", "regular"),
-    gradJobCodeRate("9519", "teaching_assistant", "abd", { annualLoad: 2 }),
+    gradJobCodeRate("9519", "teaching_assistant", "abd"),
     gradJobCodeRate("9517", "graduate_instructor", "abd", {
       title: "Ph D Candidate Grad Instr",
     }),
-    jobCodeRate("9760", 6000, { fringeRate: 0.5, annualLoad: 4 }),
+    jobCodeRate("9760", 6000, { fringeRate: 0.5 }),
     jobCodeRate("TBA", 5000, { instructorType: null }),
   ],
   people: [
@@ -195,15 +193,6 @@ describe("peopleRowsOf", () => {
     });
   });
 
-  it("counts paid sections against half the annual load, rounded up", () => {
-    const [row] = rowsOf([section(1, { instructors: [pi(1)] })]);
-
-    expect(row).toMatchObject({
-      loadLabel: "1",
-      isUnderLoad: true,
-    });
-  });
-
   it("lists only paid sections, so a lab paid on its lecture is left out", () => {
     const [row] = rowsOf([
       section(1, { component: "LEC", instructors: [pi(1)] }),
@@ -236,7 +225,6 @@ describe("peopleRowsOf", () => {
       hasFeeOffset: false,
       isInternational: false,
       isAbd: false,
-      isUnderLoad: false,
     });
   });
 
@@ -353,7 +341,6 @@ describe("peopleRowsOf", () => {
             yearStarted: null,
             courseReleases: null,
             releaseSource: null,
-            expectedSections: null,
           },
         ],
       ]),
@@ -425,7 +412,7 @@ describe("peopleRowsOf", () => {
     });
   });
 
-  it("lists a rostered person with a load and no sections as under load", () => {
+  it("lists a rostered person whose job code has an instructor type but no sections", () => {
     const rows = rowsOf([], rateOverrides(), [
       employee(1, "Priya Raman"),
       employee(3, "Staff Person"),
@@ -436,12 +423,11 @@ describe("peopleRowsOf", () => {
         emplid: 1,
         name: "Priya Raman",
         loadLabel: "0",
-        isUnderLoad: true,
       },
     ]);
   });
 
-  it("lists a rostered grad student with no assignments as an under-used TA", () => {
+  it("lists a rostered grad student with no assignments", () => {
     const rows = rowsOf([], rateOverrides(), [employee(11, "Sam Grad")]);
 
     expect(rows).toMatchObject([
@@ -453,19 +439,8 @@ describe("peopleRowsOf", () => {
         isAssigned: false,
         total: 0,
         salary: null,
-        isUnderLoad: true,
       },
     ]);
-  });
-
-  it("does not mark a TA with a course as under-used", () => {
-    const rows = rowsOf([section(1, { instructors: [pi(1), ta(10)] })]);
-
-    expect(rowFor(rows, 10)).toMatchObject({
-      loadLabel: "12.5%",
-      isAssigned: true,
-      isUnderLoad: false,
-    });
   });
 
   describe("names", () => {
@@ -513,7 +488,7 @@ describe("peopleRowsOf", () => {
       endDate: "2027-05-31",
     });
 
-    it("lists a person on leave who teaches nothing, not as under load", () => {
+    it("lists a person on leave who teaches nothing", () => {
       const rows = rowsOf([], rateOverrides(), [], new Map([[1, [leave(1)]]]));
 
       expect(rows).toMatchObject([
@@ -521,7 +496,6 @@ describe("peopleRowsOf", () => {
           emplid: 1,
           name: "On Leave 1",
           loadLabel: "0",
-          isUnderLoad: false,
           total: 0,
           leaves: [{ id: 91 }],
         },

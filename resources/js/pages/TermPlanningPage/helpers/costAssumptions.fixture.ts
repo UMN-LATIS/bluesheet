@@ -17,7 +17,6 @@ export const jobCodeRate = (
   code,
   title: `Title ${code}`,
   instructorType: "contract_visiting",
-  annualLoad: null,
   salary,
   fringeRate: salary === null ? null : 0,
   source: null,
