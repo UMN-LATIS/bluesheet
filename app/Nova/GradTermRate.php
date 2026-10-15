@@ -60,6 +60,12 @@ class GradTermRate extends Resource {
                 ->hideFromIndex()
                 ->help('Paid to a grad instructor for each credit taught.'),
 
+            Number::make('Default Appointment Percent', 'default_appointment_percent')
+                ->step(0.01)
+                ->rules('required', 'numeric', 'between:0,100')
+                ->hideFromIndex()
+                ->help('Appointment per section taught, before a section\'s own setting. 25 for 25%.'),
+
             Text::make('Source')
                 ->nullable()
                 ->rules('nullable', 'max:255'),

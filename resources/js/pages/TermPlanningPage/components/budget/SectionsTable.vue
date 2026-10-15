@@ -118,12 +118,11 @@
           class="tw-p-0"
           @click.stop
         >
-          <input
+          <TextInputCell
             :value="row.notes"
-            :disabled="isReadOnly"
-            :aria-label="`Comments on ${row.courseLabel}`"
-            class="tw-h-full tw-min-h-10 tw-w-full tw-border-none tw-bg-transparent tw-px-2 tw-text-[11.5px] tw-text-on-surface tw-outline-none focus:tw-bg-surface-bright disabled:tw-cursor-default"
-            @input="onNotesInput(row.sectionId, $event)"
+            :canEdit="!isReadOnly"
+            :label="`Comments on ${row.courseLabel}`"
+            @change="(notes) => emit('editNotes', row.sectionId, notes ?? '')"
           />
         </BudgetCell>
       </BudgetTableRow>
@@ -153,6 +152,7 @@ import CapsLabel from "./CapsLabel.vue";
 import CellSubline from "./CellSubline.vue";
 import EnrollmentTiles from "./EnrollmentTiles.vue";
 import MissingRate from "./MissingRate.vue";
+import TextInputCell from "./TextInputCell.vue";
 import TotalCell from "./TotalCell.vue";
 import type { BudgetRow } from "../../helpers/budgetRows";
 import { latestFillOf } from "../../helpers/enrollmentHistory";
@@ -214,9 +214,5 @@ function rowStateOf(row: BudgetRow): RowState {
   if (row.isCancelled) return "cancelled";
   if (row.isUnstaffed) return "unstaffed";
   return "default";
-}
-
-function onNotesInput(sectionId: number, event: Event) {
-  emit("editNotes", sectionId, (event.target as HTMLInputElement).value);
 }
 </script>

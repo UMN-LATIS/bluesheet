@@ -19,3 +19,7 @@ export const formatDollars = (dollars: number) =>
   Number.isInteger(dollars)
     ? formatWholeDollars(dollars)
     : DOLLARS_AND_CENTS.format(dollars);
+
+/** "$235.00", always with cents. */
+export const formatDollarsAndCents = (dollars: number) =>
+  DOLLARS_AND_CENTS.format(dollars);

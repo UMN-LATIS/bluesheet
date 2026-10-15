@@ -7,9 +7,11 @@ import {
   gradJobCodeRate,
   jobCodeRate,
   rateOverrides,
+  ROUND_GRAD_INPUTS,
   roundGradRates,
   sisInstructor,
 } from "./costAssumptions.fixture";
+import type { PersonInputs } from "./personInputs";
 import { gradPersonEditOf, peopleRowsOf, type PersonRow } from "./peopleRows";
 import { plannedSection } from "./plannedSection.fixture";
 import { estimateTermCost } from "./termEstimate";
@@ -57,20 +59,21 @@ const rowsOf = (
   overrides = rateOverrides(),
   roster: SisEmployee[] = [],
   leavesByEmplid = new Map<number, TermLeave[]>(),
-  notesByEmplid = new Map<number, string>(),
+  inputsByEmplid = new Map<number, PersonInputs>(),
+  withAssumptions = assumptions,
 ) =>
   peopleRowsOf(
     sections,
     estimateTermCost({
       sections,
-      assumptions,
+      assumptions: withAssumptions,
       rateOverrides: overrides,
     }),
-    assumptions,
+    withAssumptions,
     overrides,
     roster,
     leavesByEmplid,
-    notesByEmplid,
+    inputsByEmplid,
   );
 
 const rowFor = (rows: PersonRow[], emplid: number) => {
@@ -257,7 +260,6 @@ describe("peopleRowsOf", () => {
 
   it("shows the flags, ABD status and the offset in the pay hint", () => {
     const overrides = rateOverrides({
-      gradInputs: { feeOffset: 200, internationalOffset: 400 },
       gradPeopleByEmplid: new Map([
         [
           10,
@@ -269,7 +271,24 @@ describe("peopleRowsOf", () => {
         ],
       ]),
     });
-    const rows = rowsOf([section(1, { instructors: [ta(10)] })], overrides);
+    const rows = rowsOf(
+      [section(1, { instructors: [ta(10)] })],
+      overrides,
+      [],
+      new Map(),
+      new Map(),
+      costAssumptions({
+        ...assumptions,
+        gradRates: {
+          ...roundGradRates(),
+          defaults: {
+            ...ROUND_GRAD_INPUTS,
+            feeOffset: 200,
+            internationalOffset: 400,
+          },
+        },
+      }),
+    );
 
     expect(rowFor(rows, 10)).toMatchObject({
       hasFeeOffset: true,
@@ -326,7 +345,18 @@ describe("peopleRowsOf", () => {
       rateOverrides(),
       [],
       new Map(),
-      new Map([[2, "Prefers mornings"]]),
+      new Map([
+        [
+          2,
+          {
+            notes: "Prefers mornings",
+            yearStarted: null,
+            courseReleases: null,
+            releaseSource: null,
+            expectedSections: null,
+          },
+        ],
+      ]),
     );
 
     expect(rows.map(({ notes }) => notes)).toEqual(["", "Prefers mornings"]);

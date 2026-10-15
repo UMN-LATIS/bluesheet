@@ -1,6 +1,6 @@
 import type { Meeting, PlannedSection, SisSection, TimeRange } from "../types";
 import { rateOverridesOf, type RateOverrides } from "../helpers/costOverrides";
-import { personNotesOf } from "../helpers/personNotes";
+import { personInputsOf, type PersonInputs } from "../helpers/personInputs";
 import { estimateTermCost, type SectionCost } from "../helpers/termEstimate";
 import { FILTER_FACETS } from "../types";
 import { isEqual } from "lodash-es";
@@ -154,14 +154,14 @@ export function selectRateOverrides(
 }
 
 /** By emplid. Null until the cost assumptions have loaded. */
-export function selectPersonNotes(
+export function selectPersonInputs(
   context: ScheduleContext,
   state: EditorState,
-): Map<number, string> | null {
+): Map<number, PersonInputs> | null {
   const assumptions = context.costAssumptions;
   if (!assumptions) return null;
 
-  return personNotesOf(assumptions.personNotes, state.personNoteEdits);
+  return personInputsOf(assumptions.personInputs, state.personInputEdits);
 }
 
 /**

@@ -42,13 +42,6 @@ export interface CostPerson {
   positionTitles: Partial<Record<string, string>>;
 }
 
-/** A planner's rate for one department and one term. At least one field is set. */
-export interface JobCodeRateOverride {
-  jobCode: string;
-  salary: number | null;
-  fringeRate: number | null;
-}
-
 /**
  * A planner's salary for one person per paid section, in
  * one department and one term. Fringe is added on top.
@@ -70,10 +63,6 @@ export interface GradRateInputs {
   perCreditPayment: number;
 }
 
-export type GradOverrideField =
-  | keyof GradRateInputs
-  | "defaultAppointmentPercent";
-
 export interface GradAppointmentLevel {
   /** 12.5 is a 12.5% appointment. */
   appointmentPercent: number;
@@ -87,9 +76,13 @@ export interface GradPerson {
   isInternational: boolean;
 }
 
-export interface PersonNote {
+export interface PersonInputRecord {
   emplid: number;
-  notes: string;
+  notes: string | null;
+  yearStarted: number | null;
+  courseReleases: number | null;
+  releaseSource: string | null;
+  expectedSections: number | null;
 }
 
 export interface CostAssumptions {
@@ -101,16 +94,14 @@ export interface CostAssumptions {
     /** The admin's values for the term. Null when none are entered. */
     defaults: GradRateInputs | null;
     levels: GradAppointmentLevel[];
+    /** The admin's appointment per section. Null when none is entered. */
+    defaultAppointmentPercent: number | null;
   };
   rateOverrides: {
-    jobCodes: JobCodeRateOverride[];
     people: PersonRateOverride[];
-    /** The department's values. Each field is null when not overridden. */
-    grad: { [Field in GradOverrideField]: number | null } | null;
-    gradHours: GradAppointmentLevel[];
   };
   gradPeople: GradPerson[];
-  personNotes: PersonNote[];
+  personInputs: PersonInputRecord[];
   canEdit: boolean;
 }
 

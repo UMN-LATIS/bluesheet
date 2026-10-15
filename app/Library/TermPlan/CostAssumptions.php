@@ -7,11 +7,8 @@ use App\GradTermRate;
 use App\JobCode;
 use App\JobCodeTermRate;
 use App\SisAppointment;
-use App\TermGradHoursOverride;
 use App\TermGradPerson;
-use App\TermGradRateOverride;
-use App\TermJobCodeRateOverride;
-use App\TermPersonNote;
+use App\TermPersonInput;
 use App\TermPersonRateOverride;
 use Illuminate\Support\Collection;
 
@@ -23,24 +20,12 @@ final class CostAssumptions {
             'jobCodes' => self::jobCodes($termCode),
             'people' => self::people($academicOrg),
             'rateOverrides' => [
-                'jobCodes' => self::jobCodeRateOverrides($academicOrg, $termCode),
                 'people' => self::personRateOverrides($academicOrg, $termCode),
-                'grad' => self::gradRateOverrides($academicOrg, $termCode),
-                'gradHours' => self::gradHoursOverrides($academicOrg, $termCode),
             ],
             'gradRates' => self::gradRates($termCode),
             'gradPeople' => self::gradPeople($academicOrg, $termCode),
-            'personNotes' => self::personNotes($academicOrg, $termCode),
+            'personInputs' => self::personInputs($academicOrg, $termCode),
         ];
-    }
-
-    /**
-     * Trimmed, distinct, and sorted.
-     *
-     * @return array<int, string>
-     */
-    public static function jobCodesHeldInDepartment(int $academicOrg): array {
-        return self::distinctJobCodes(self::appointmentsOf($academicOrg));
     }
 
     private static function jobCodes(int $termCode): array {
@@ -78,20 +63,6 @@ final class CostAssumptions {
             ->all();
     }
 
-    private static function jobCodeRateOverrides(int $academicOrg, int $termCode): array {
-        return TermJobCodeRateOverride::query()
-            ->where('academic_org', $academicOrg)
-            ->where('term_code', $termCode)
-            ->orderBy('job_code')
-            ->get()
-            ->map(fn(TermJobCodeRateOverride $override) => [
-                'jobCode' => $override->job_code,
-                'salary' => $override->salary,
-                'fringeRate' => $override->fringe_rate,
-            ])
-            ->all();
-    }
-
     private static function personRateOverrides(int $academicOrg, int $termCode): array {
         return TermPersonRateOverride::query()
             ->where('academic_org', $academicOrg)
@@ -109,6 +80,7 @@ final class CostAssumptions {
         $gradRate = GradTermRate::query()->with('levels')->where('term_code', $termCode)->first();
 
         return [
+            'defaultAppointmentPercent' => $gradRate === null ? null : (float) $gradRate->default_appointment_percent,
             'defaults' => $gradRate === null ? null : GradRateInputs::fromRow($gradRate),
             'levels' => $gradRate === null ? [] : $gradRate->levels
                 ->map(fn(GradAppointmentLevel $level) => [
@@ -117,31 +89,6 @@ final class CostAssumptions {
                 ])
                 ->all(),
         ];
-    }
-
-    private static function gradRateOverrides(int $academicOrg, int $termCode): ?array {
-        $override = TermGradRateOverride::query()
-            ->where('academic_org', $academicOrg)
-            ->where('term_code', $termCode)
-            ->first();
-
-        return $override === null ? null : [
-            ...GradRateInputs::fromRow($override),
-            'defaultAppointmentPercent' => $override->default_appointment_percent,
-        ];
-    }
-
-    private static function gradHoursOverrides(int $academicOrg, int $termCode): array {
-        return TermGradHoursOverride::query()
-            ->where('academic_org', $academicOrg)
-            ->where('term_code', $termCode)
-            ->orderBy('appointment_percent')
-            ->get()
-            ->map(fn(TermGradHoursOverride $override) => [
-                'appointmentPercent' => $override->appointment_percent,
-                'hours' => $override->hours,
-            ])
-            ->all();
     }
 
     private static function gradPeople(int $academicOrg, int $termCode): array {
@@ -158,15 +105,19 @@ final class CostAssumptions {
             ->all();
     }
 
-    private static function personNotes(int $academicOrg, int $termCode): array {
-        return TermPersonNote::query()
+    private static function personInputs(int $academicOrg, int $termCode): array {
+        return TermPersonInput::query()
             ->where('academic_org', $academicOrg)
             ->where('term_code', $termCode)
             ->orderBy('emplid')
             ->get()
-            ->map(fn(TermPersonNote $note) => [
-                'emplid' => $note->emplid,
-                'notes' => $note->notes,
+            ->map(fn(TermPersonInput $input) => [
+                'emplid' => $input->emplid,
+                'notes' => $input->notes,
+                'yearStarted' => $input->year_started,
+                'courseReleases' => $input->course_releases,
+                'releaseSource' => $input->release_source,
+                'expectedSections' => $input->expected_sections,
             ])
             ->all();
     }

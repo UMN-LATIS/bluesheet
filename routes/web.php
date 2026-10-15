@@ -132,12 +132,9 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
         Route::put('/groups/{group}/sections/{section}', [TermPlanningGroupSectionController::class, 'update']);
         Route::delete('/groups/{group}/sections/{section}', [TermPlanningGroupSectionController::class, 'destroy']);
         Route::get('/groups/{group}/cost-assumptions', [TermPlanningCostAssumptionController::class, 'index']);
-        Route::patch('/groups/{group}/cost-rate-overrides/job-codes/{jobCode}', [TermPlanningCostOverrideController::class, 'updateJobCodeRate']);
         Route::put('/groups/{group}/cost-rate-overrides/people/{emplid}', [TermPlanningCostOverrideController::class, 'updatePersonRate']);
-        Route::patch('/groups/{group}/cost-rate-overrides/grad', [TermPlanningCostOverrideController::class, 'updateGradRates']);
-        Route::put('/groups/{group}/cost-rate-overrides/grad-hours/{appointmentPercent}', [TermPlanningCostOverrideController::class, 'updateGradHours']);
         Route::put('/groups/{group}/grad-people/{emplid}', [TermPlanningCostOverrideController::class, 'updateGradPerson']);
-        Route::put('/groups/{group}/person-notes/{emplid}', [TermPlanningCostOverrideController::class, 'updatePersonNote']);
+        Route::patch('/groups/{group}/person-inputs/{emplid}', [TermPlanningCostOverrideController::class, 'updatePersonInputs']);
         Route::get('/groups/{group}/enrollment-history', [TermPlanningEnrollmentHistoryController::class, 'index']);
     });
 

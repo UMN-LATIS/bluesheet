@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use OwenIt\Auditing\Auditable as AuditableTrait;
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
-class TermPersonNote extends Model implements AuditableContract {
+class TermPersonInput extends Model implements AuditableContract {
     use AuditableTrait;
 
     protected $fillable = [
@@ -14,6 +14,10 @@ class TermPersonNote extends Model implements AuditableContract {
         'term_code',
         'emplid',
         'notes',
+        'year_started',
+        'course_releases',
+        'release_source',
+        'expected_sections',
         'created_by',
         'updated_by',
     ];
@@ -22,5 +26,8 @@ class TermPersonNote extends Model implements AuditableContract {
         'academic_org' => 'integer',
         'term_code' => 'integer',
         'emplid' => 'integer',
+        'year_started' => 'integer',
+        'course_releases' => 'integer',
+        'expected_sections' => 'integer',
     ];
 }

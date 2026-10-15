@@ -21,6 +21,7 @@ class GradTermRate extends Model implements AuditableContract {
         'fee_offset',
         'international_offset',
         'per_credit_payment',
+        'default_appointment_percent',
         'source',
     ];
 
@@ -33,6 +34,7 @@ class GradTermRate extends Model implements AuditableContract {
         'fee_offset' => 'decimal:2',
         'international_offset' => 'decimal:2',
         'per_credit_payment' => 'decimal:2',
+        'default_appointment_percent' => 'decimal:2',
     ];
 
     public function levels(): HasMany {

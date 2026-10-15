@@ -10,12 +10,10 @@ import type {
 } from "../types";
 import type { CostAssumptions } from "@/types";
 import type {
-  GradHoursEdit,
-  GradInputEdit,
   GradPersonEdit,
-  RateOverrideEdit,
+  PersonSalaryEdit,
 } from "../helpers/costOverrides";
-import type { PersonNoteEdit } from "../helpers/personNotes";
+import type { PersonInputEdit } from "../helpers/personInputs";
 import type { UrlQuery } from "@/utils/urlQuery";
 import type { BudgetTab, ScheduleView } from "../helpers/viewQuery";
 
@@ -39,6 +37,12 @@ export interface ScheduleContext {
   isWide: boolean;
   /** Null until the cost assumptions have loaded. */
   costAssumptions: CostAssumptions | null;
+}
+
+export interface GradScenario {
+  hasFeeOffset: boolean;
+  isInternational: boolean;
+  creditsTaught: number;
 }
 
 /** Sparse: an absent field is unchanged. */
@@ -172,16 +176,14 @@ export interface EditorState {
   /** Which canvas is showing. */
   view: ScheduleView;
   budgetTab: BudgetTab;
-  /** Edits not yet saved, keyed by `rateOverrideKeyOf`. */
-  rateOverrideEdits: Record<string, RateOverrideEdit>;
-  /** Edits not yet saved, keyed by `gradInputKeyOf`. */
-  gradInputEdits: Record<string, GradInputEdit>;
-  /** Edits not yet saved, keyed by `gradHoursKeyOf`. */
-  gradHoursEdits: Record<string, GradHoursEdit>;
+  /** Edits not yet saved, keyed by `personSalaryKeyOf`. */
+  personSalaryEdits: Record<string, PersonSalaryEdit>;
   /** Edits not yet saved, keyed by `gradPersonKeyOf`. */
   gradPersonEdits: Record<string, GradPersonEdit>;
-  /** Edits not yet saved, keyed by `personNoteKeyOf`. */
-  personNoteEdits: Record<string, PersonNoteEdit>;
+  /** Edits not yet saved, keyed by `personInputKeyOf`. */
+  personInputEdits: Record<string, PersonInputEdit>;
+  /** The Grad calculator's what-if. Not saved and not in the URL. */
+  gradScenario: GradScenario;
   /** Which tab the day list is on: a weekday, or the Async day past them. */
   dayIndex: number;
   /** The import the banner stands for, or null when no banner is showing. */
@@ -236,24 +238,21 @@ export type EditorEvent =
   | { type: "importDismissed" }
   | { type: "viewSelected"; view: ScheduleView }
   | { type: "budgetTabSelected"; tab: BudgetTab }
-  | { type: "rateOverrideEdited"; edit: RateOverrideEdit }
+  | { type: "personSalaryEdited"; edit: PersonSalaryEdit }
   /**
    * The server has this value now. A newer edit to the same
    * key stays.
    */
-  | { type: "rateOverrideEditsPersisted"; key: string; saved: RateOverrideEdit }
-  | { type: "gradInputEdited"; edit: GradInputEdit }
-  | { type: "gradInputEditsPersisted"; key: string; saved: GradInputEdit }
-  | { type: "gradHoursEdited"; edit: GradHoursEdit }
-  | { type: "gradHoursEditsPersisted"; key: string; saved: GradHoursEdit }
+  | { type: "personSalaryEditsPersisted"; key: string; saved: PersonSalaryEdit }
   | { type: "gradPersonEdited"; edit: GradPersonEdit }
   | { type: "gradPersonEditsPersisted"; key: string; saved: GradPersonEdit }
-  | { type: "personNoteEdited"; edit: PersonNoteEdit }
+  | { type: "personInputEdited"; edit: PersonInputEdit }
   /**
    * The server has this value now. A newer edit to the same
    * key stays.
    */
-  | { type: "personNoteEditsPersisted"; key: string; saved: PersonNoteEdit }
+  | { type: "personInputEditsPersisted"; key: string; saved: PersonInputEdit }
+  | { type: "gradScenarioEdited"; change: Partial<GradScenario> }
   | { type: "sectionNotesEdited"; sectionId: number; notes: string }
   | { type: "daySelected"; dayIndex: number }
   /** The heatmap's Async cell: one step to the day list, on the Async tab. */

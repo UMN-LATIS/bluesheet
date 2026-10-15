@@ -1,12 +1,11 @@
 import type { CostAssumptions, GradRateInputs } from "@/types";
-import type { RateOverrides } from "./costOverrides";
 
 export const STANDARD_APPOINTMENT_PERCENT = 25;
 
 /** The appointment teaching a section other than a lab or discussion adds. */
 export const defaultAppointmentOf = (
-  overrides: Pick<RateOverrides, "defaultAppointmentPercent">,
-) => overrides.defaultAppointmentPercent ?? STANDARD_APPOINTMENT_PERCENT;
+  gradRates: Pick<CostAssumptions["gradRates"], "defaultAppointmentPercent">,
+) => gradRates.defaultAppointmentPercent ?? STANDARD_APPOINTMENT_PERCENT;
 
 export const TA_OR_LAB_APPOINTMENT_PERCENT = 12.5;
 
@@ -146,61 +145,14 @@ export function gradCostOf(
   };
 }
 
-const GRAD_INPUT_FIELDS: (keyof GradRateInputs)[] = [
-  "hourlyRate",
-  "healthRate",
-  "tuitionPerHourRegular",
-  "tuitionPerHourAbd",
-  "feeOffset",
-  "internationalOffset",
-  "perCreditPayment",
-];
-
-/** The department's value over the admin's, field by field. */
-export function gradInputOf(
-  field: keyof GradRateInputs,
-  assumptions: CostAssumptions,
-  overrides: RateOverrides,
-): number | null {
-  return (
-    overrides.gradInputs[field] ??
-    assumptions.gradRates.defaults?.[field] ??
-    null
-  );
-}
-
-export function gradHoursOf(
-  appointmentPercent: number,
-  assumptions: CostAssumptions,
-  overrides: RateOverrides,
-): number | null {
-  const adminHours = assumptions.gradRates.levels.find(
-    (level) => level.appointmentPercent === appointmentPercent,
-  )?.hours;
-
-  return (
-    overrides.gradHoursByPercent.get(appointmentPercent) ?? adminHours ?? null
-  );
-}
-
 /** Null when any input is missing. */
-export function gradTermOf(
-  assumptions: CostAssumptions,
-  overrides: RateOverrides,
-): GradTerm | null {
-  const inputs: Partial<GradRateInputs> = {};
-  for (const field of GRAD_INPUT_FIELDS) {
-    const value = gradInputOf(field, assumptions, overrides);
-    if (value === null) return null;
-    inputs[field] = value;
-  }
+export function gradTermOf(assumptions: CostAssumptions): GradTerm | null {
+  const { defaults, levels } = assumptions.gradRates;
+  if (defaults === null) return null;
 
-  const hoursByAppointmentPercent = new Map<number, number>();
-  for (const { appointmentPercent } of assumptions.gradRates.levels) {
-    const hours = gradHoursOf(appointmentPercent, assumptions, overrides);
-    if (hours !== null)
-      hoursByAppointmentPercent.set(appointmentPercent, hours);
-  }
+  const hoursByAppointmentPercent = new Map(
+    levels.map(({ appointmentPercent, hours }) => [appointmentPercent, hours]),
+  );
 
-  return { inputs: inputs as GradRateInputs, hoursByAppointmentPercent };
+  return { inputs: defaults, hoursByAppointmentPercent };
 }

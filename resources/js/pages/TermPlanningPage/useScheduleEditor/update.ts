@@ -31,13 +31,8 @@ import {
   encodeDayIndex,
   VIEW_KEYS,
 } from "../helpers/viewQuery";
-import {
-  gradHoursKeyOf,
-  gradInputKeyOf,
-  gradPersonKeyOf,
-  rateOverrideKeyOf,
-} from "../helpers/costOverrides";
-import { personNoteKeyOf } from "../helpers/personNotes";
+import { gradPersonKeyOf, personSalaryKeyOf } from "../helpers/costOverrides";
+import { personInputKeyOf } from "../helpers/personInputs";
 import { ASYNC_DAY_INDEX } from "../helpers/scheduleDays";
 import {
   clockFromMinutes,
@@ -107,11 +102,14 @@ export const initialState = (dayIndex = 0): EditorState => ({
   filters: defaultFilters(),
   view: DEFAULT_VIEW,
   budgetTab: DEFAULT_BUDGET_TAB,
-  rateOverrideEdits: {},
-  gradInputEdits: {},
-  gradHoursEdits: {},
+  personSalaryEdits: {},
   gradPersonEdits: {},
-  personNoteEdits: {},
+  personInputEdits: {},
+  gradScenario: {
+    hasFeeOffset: true,
+    isInternational: false,
+    creditsTaught: 0,
+  },
   dayIndex,
   lastImport: null,
   writeError: null,
@@ -200,11 +198,9 @@ const READING_EVENTS: EditorEvent["type"][] = [
   "viewSelected",
   "budgetTabSelected",
   // a term that locked mid-save still has to drop what was saved
-  "rateOverrideEditsPersisted",
-  "gradInputEditsPersisted",
-  "gradHoursEditsPersisted",
+  "personSalaryEditsPersisted",
   "gradPersonEditsPersisted",
-  "personNoteEditsPersisted",
+  "personInputEditsPersisted",
   "daySelected",
   "filterPanelOverridden",
   // a term that locked mid-save still has to show and drop what came back
@@ -579,63 +575,25 @@ function reduce(
     case "budgetTabSelected":
       return { ...state, budgetTab: event.tab };
 
-    case "rateOverrideEdited":
+    case "personSalaryEdited":
       if (context.costAssumptions?.canEdit !== true) return state;
 
       return {
         ...state,
-        rateOverrideEdits: {
-          ...state.rateOverrideEdits,
-          [rateOverrideKeyOf(event.edit.rate)]: event.edit,
+        personSalaryEdits: {
+          ...state.personSalaryEdits,
+          [personSalaryKeyOf(event.edit.emplid)]: event.edit,
         },
       };
 
-    case "rateOverrideEditsPersisted":
-      return isEqual(state.rateOverrideEdits[event.key], event.saved)
+    case "personSalaryEditsPersisted":
+      return isEqual(state.personSalaryEdits[event.key], event.saved)
         ? {
             ...state,
-            rateOverrideEdits: omitStringKey(
-              state.rateOverrideEdits,
+            personSalaryEdits: omitStringKey(
+              state.personSalaryEdits,
               event.key,
             ),
-          }
-        : state;
-
-    case "gradInputEdited":
-      if (context.costAssumptions?.canEdit !== true) return state;
-
-      return {
-        ...state,
-        gradInputEdits: {
-          ...state.gradInputEdits,
-          [gradInputKeyOf(event.edit.field)]: event.edit,
-        },
-      };
-
-    case "gradInputEditsPersisted":
-      return isEqual(state.gradInputEdits[event.key], event.saved)
-        ? {
-            ...state,
-            gradInputEdits: omitStringKey(state.gradInputEdits, event.key),
-          }
-        : state;
-
-    case "gradHoursEdited":
-      if (context.costAssumptions?.canEdit !== true) return state;
-
-      return {
-        ...state,
-        gradHoursEdits: {
-          ...state.gradHoursEdits,
-          [gradHoursKeyOf(event.edit.appointmentPercent)]: event.edit,
-        },
-      };
-
-    case "gradHoursEditsPersisted":
-      return isEqual(state.gradHoursEdits[event.key], event.saved)
-        ? {
-            ...state,
-            gradHoursEdits: omitStringKey(state.gradHoursEdits, event.key),
           }
         : state;
 
@@ -658,24 +616,30 @@ function reduce(
           }
         : state;
 
-    case "personNoteEdited":
+    case "personInputEdited":
       if (context.costAssumptions?.canEdit !== true) return state;
 
       return {
         ...state,
-        personNoteEdits: {
-          ...state.personNoteEdits,
-          [personNoteKeyOf(event.edit.emplid)]: event.edit,
+        personInputEdits: {
+          ...state.personInputEdits,
+          [personInputKeyOf(event.edit.emplid, event.edit.field)]: event.edit,
         },
       };
 
-    case "personNoteEditsPersisted":
-      return isEqual(state.personNoteEdits[event.key], event.saved)
+    case "personInputEditsPersisted":
+      return isEqual(state.personInputEdits[event.key], event.saved)
         ? {
             ...state,
-            personNoteEdits: omitStringKey(state.personNoteEdits, event.key),
+            personInputEdits: omitStringKey(state.personInputEdits, event.key),
           }
         : state;
+
+    case "gradScenarioEdited":
+      return {
+        ...state,
+        gradScenario: { ...state.gradScenario, ...event.change },
+      };
 
     // An open sheet's draft is spread over sectionEdits on
     // Save, so without the draft copy, Save would put the
@@ -734,11 +698,9 @@ function reduce(
         ...state,
         sectionEdits: {},
         drafts: {},
-        rateOverrideEdits: {},
-        gradInputEdits: {},
-        gradHoursEdits: {},
+        personSalaryEdits: {},
         gradPersonEdits: {},
-        personNoteEdits: {},
+        personInputEdits: {},
         selection: null,
         lastPlacedId: null,
         interaction: { status: "idle" },

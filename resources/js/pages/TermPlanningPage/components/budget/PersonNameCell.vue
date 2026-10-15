@@ -19,6 +19,7 @@
     >
       {{ row.name }}
     </span>
+    <slot />
     <LeaveBadge
       v-for="leave in row.leaves"
       :key="leave.id"

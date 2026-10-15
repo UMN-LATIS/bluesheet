@@ -38,38 +38,70 @@
           "
         />
 
-        <PeopleTable
-          v-else-if="schedule.budgetTab === 'people'"
-          :rows="shownPeople"
+        <GradAssistantsTable
+          v-else-if="schedule.budgetTab === 'grad'"
+          :rows="gradAssistantRows"
           :canEdit="schedule.canEditCosts"
-          @selectSection="selectSection"
           @selectPerson="selectPerson"
+          @selectSection="selectSection"
           @selectLeave="selectLeave"
+          @editPersonInput="editPersonInput"
           @editGradPerson="
             (edit) => schedule.dispatch({ type: 'gradPersonEdited', edit })
           "
         />
 
-        <RatesTab
-          v-else-if="schedule.budgetTab === 'rates' && schedule.rateOverrides"
-          :assumptions="assumptions"
-          :rateOverrides="schedule.rateOverrides"
+        <TenureTrackTable
+          v-else-if="schedule.budgetTab === 'tenure'"
+          v-bind="tenureTrack"
           :canEdit="schedule.canEditCosts"
-          :chargedEmplids="chargedEmplids"
-          :appointmentLevels="appointmentLevels"
-          :termName="termName"
-          @editRate="
-            (edit) => schedule.dispatch({ type: 'rateOverrideEdited', edit })
-          "
-          @editGradInput="
-            (edit) => schedule.dispatch({ type: 'gradInputEdited', edit })
-          "
-          @editGradHours="
-            (edit) => schedule.dispatch({ type: 'gradHoursEdited', edit })
+          @selectPerson="selectPerson"
+          @selectSection="selectSection"
+          @selectLeave="selectLeave"
+          @editPersonInput="editPersonInput"
+        />
+
+        <PaContractTable
+          v-else-if="schedule.budgetTab === 'pa'"
+          v-bind="paContract"
+          :canEdit="schedule.canEditCosts"
+          @selectPerson="selectPerson"
+          @selectSection="selectSection"
+          @selectLeave="selectLeave"
+          @editPersonInput="editPersonInput"
+        />
+
+        <InstructorCostsTable
+          v-else-if="schedule.budgetTab === 'costs'"
+          v-bind="instructorCosts"
+          :canEdit="schedule.canEditCosts"
+          @selectPerson="selectPerson"
+          @selectLeave="selectLeave"
+          @editPersonInput="editPersonInput"
+          @editPersonSalary="
+            (edit) => schedule.dispatch({ type: 'personSalaryEdited', edit })
           "
         />
 
-        <AssumptionsTab v-else-if="schedule.budgetTab === 'assumptions'" />
+        <template v-else-if="schedule.budgetTab === 'calculator'">
+          <GradCalculatorTab
+            v-if="gradCalculator"
+            :calculator="gradCalculator"
+            :scenario="schedule.gradScenario"
+            :termName="termName"
+            @editGradScenario="
+              (change) =>
+                schedule.dispatch({ type: 'gradScenarioEdited', change })
+            "
+          />
+          <p
+            v-else
+            class="tw-m-0 tw-flex-1 tw-p-6 tw-text-sm tw-text-on-surface-variant"
+          >
+            No grad rates are set for {{ termName }}.
+            <AdminRatesLink novaResourceUriKey="grad-term-rates" />
+          </p>
+        </template>
       </div>
     </template>
 
@@ -88,19 +120,28 @@ import type {
   SisEmployee,
   TermLeave,
 } from "@/types";
-import AssumptionsTab from "./AssumptionsTab.vue";
+import AdminRatesLink from "./AdminRatesLink.vue";
 import BudgetHeader from "./BudgetHeader.vue";
 import BudgetTabBar from "./BudgetTabBar.vue";
-import PeopleTable from "./PeopleTable.vue";
-import RatesTab from "./RatesTab.vue";
+import GradAssistantsTable from "./GradAssistantsTable.vue";
+import GradCalculatorTab from "./GradCalculatorTab.vue";
+import InstructorCostsTable from "./InstructorCostsTable.vue";
+import PaContractTable from "./PaContractTable.vue";
 import SectionsTable from "./SectionsTable.vue";
+import TenureTrackTable from "./TenureTrackTable.vue";
 import { budgetRowOf } from "../../helpers/budgetRows";
 import {
   enrollmentSeriesBySection,
   historyKeyOf,
 } from "../../helpers/enrollmentHistory";
+import { gradAssistantRowsOf } from "../../helpers/gradAssistantRows";
+import { gradCalculatorOf } from "../../helpers/gradCalculatorRows";
+import { instructorCostGroupsOf } from "../../helpers/instructorCostRows";
+import { paContractRowsOf } from "../../helpers/paContractRows";
 import { peopleRowsOf } from "../../helpers/peopleRows";
+import type { PersonInputEdit } from "../../helpers/personInputs";
 import { filterPeople } from "../../helpers/scheduleFilters";
+import { tenureTrackRowsOf } from "../../helpers/tenureTrackRows";
 import { totalsOf, type SectionCost } from "../../helpers/termEstimate";
 import type { PlannedSection } from "../../types";
 import type { ScheduleEditor } from "../../useScheduleEditor";
@@ -133,54 +174,56 @@ const labelOfSection = (sectionId: number) => {
     : "another section";
 };
 
-const chargedEmplids = computed(
-  () =>
-    new Set(
-      props.schedule.localSections.flatMap(({ instructors }) =>
-        instructors.map(({ emplid }) => emplid),
-      ),
-    ),
-);
-
-const people = computed(() =>
-  props.assumptions &&
-  props.schedule.sectionCosts &&
-  props.schedule.rateOverrides &&
-  props.schedule.personNotes
-    ? peopleRowsOf(
-        props.schedule.localSections,
-        props.schedule.sectionCosts,
-        props.assumptions,
-        props.schedule.rateOverrides,
-        props.roster,
-        props.leavesByEmplid,
-        props.schedule.personNotes,
-      )
-    : [],
-);
-
-const shownPeople = computed(() =>
-  filterPeople(
-    people.value,
-    props.schedule.localSections,
-    props.schedule.filters,
-  ),
-);
-
-const appointmentLevels = computed(() =>
-  (props.assumptions?.gradRates.levels ?? [])
-    .map(({ appointmentPercent }) => appointmentPercent)
-    .sort((a, b) => a - b),
-);
-
-const selectLeave = (leaveId: number) =>
-  props.schedule.dispatch({ type: "selectedLeave", leaveId });
+const selectSection = (sectionId: number) =>
+  props.schedule.dispatch({ type: "selectedSection", sectionId });
 
 const selectPerson = (emplid: number) =>
   props.schedule.dispatch({ type: "selectedPerson", emplid });
 
-const selectSection = (sectionId: number) =>
-  props.schedule.dispatch({ type: "selectedSection", sectionId });
+const selectLeave = (leaveId: number) =>
+  props.schedule.dispatch({ type: "selectedLeave", leaveId });
+
+const editPersonInput = (edit: PersonInputEdit) =>
+  props.schedule.dispatch({ type: "personInputEdited", edit });
+
+const people = computed(() => {
+  const { sectionCosts, rateOverrides, personInputs } = props.schedule;
+  if (!props.assumptions || !sectionCosts || !rateOverrides || !personInputs) {
+    return [];
+  }
+
+  return filterPeople(
+    peopleRowsOf(
+      props.schedule.localSections,
+      sectionCosts,
+      props.assumptions,
+      rateOverrides,
+      props.roster,
+      props.leavesByEmplid,
+      personInputs,
+    ),
+    props.schedule.localSections,
+    props.schedule.filters,
+  );
+});
+
+const gradAssistantRows = computed(() =>
+  props.assumptions
+    ? gradAssistantRowsOf(people.value, props.assumptions.termCode)
+    : [],
+);
+
+const tenureTrack = computed(() => tenureTrackRowsOf(people.value));
+
+const paContract = computed(() => paContractRowsOf(people.value));
+
+const instructorCosts = computed(() => instructorCostGroupsOf(people.value));
+
+const gradCalculator = computed(() =>
+  props.assumptions
+    ? gradCalculatorOf(props.assumptions, props.schedule.gradScenario)
+    : null,
+);
 
 const shownCosts = computed((): SectionCost[] =>
   props.schedule.shownSections.flatMap((section) => {

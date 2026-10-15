@@ -1,5 +1,4 @@
 import type { JobCodeRate } from "@/types";
-import type { RateOverrides } from "./costOverrides";
 
 export const UNSTAFFED_JOB_CODE = "TBA";
 
@@ -30,18 +29,15 @@ export interface PersonPricing {
 
 export interface TermRates {
   ratesByJobCode: Map<string, JobCodeRate>;
-  overrides: RateOverrides;
 }
 
 function rateOfJobCode(
   jobCode: string,
   ratesByJobCode: Map<string, JobCodeRate>,
-  overrides: RateOverrides,
 ): Rate | null {
-  const nova = ratesByJobCode.get(jobCode);
-  const override = overrides.jobCodeRates.get(jobCode);
-  const salary = override?.salary ?? nova?.salary ?? null;
-  const fringeRate = override?.fringeRate ?? nova?.fringeRate ?? null;
+  const adminRate = ratesByJobCode.get(jobCode);
+  const salary = adminRate?.salary ?? null;
+  const fringeRate = adminRate?.fringeRate ?? null;
   if (salary === null || fringeRate === null) return null;
 
   return { salary, fringeRate };
@@ -50,9 +46,8 @@ function rateOfJobCode(
 export function pricingOf(
   jobCodesHeld: string[],
   ratesByJobCode: Map<string, JobCodeRate>,
-  overrides: RateOverrides,
 ): PersonPricing {
-  const jobCode = highestRateJobCode(jobCodesHeld, ratesByJobCode, overrides);
+  const jobCode = highestRateJobCode(jobCodesHeld, ratesByJobCode);
 
   return {
     jobCode,
@@ -65,24 +60,20 @@ const UNRATED_SORTS_LAST = -1;
 function highestRateJobCode(
   jobCodes: string[],
   ratesByJobCode: Map<string, JobCodeRate>,
-  overrides: RateOverrides,
 ): string | null {
   const costOf = (jobCode: string) => {
-    const rate = rateOfJobCode(jobCode, ratesByJobCode, overrides);
+    const rate = rateOfJobCode(jobCode, ratesByJobCode);
     return rate === null ? UNRATED_SORTS_LAST : costOfRate(rate);
   };
 
   return [...jobCodes].sort((a, b) => costOf(b) - costOf(a))[0] ?? null;
 }
 
-/**
- * The term's override over Nova's rate, field by field.
- * Null when either field is still missing.
- */
+/** Null when the job code has no salary or no fringe rate. */
 export const jobCodeRateOf = (
   jobCode: string,
-  { ratesByJobCode, overrides }: TermRates,
-): Rate | null => rateOfJobCode(jobCode, ratesByJobCode, overrides);
+  { ratesByJobCode }: TermRates,
+): Rate | null => rateOfJobCode(jobCode, ratesByJobCode);
 
 export const unstaffedRateOf = (termRates: TermRates) =>
   jobCodeRateOf(UNSTAFFED_JOB_CODE, termRates);

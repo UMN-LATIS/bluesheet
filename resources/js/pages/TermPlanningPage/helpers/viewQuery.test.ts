@@ -25,12 +25,12 @@ describe("decodeView", () => {
 
 describe("decodeBudgetTab", () => {
   it("reads a tab the Budget view has", () => {
-    expect(decodeBudgetTab({ tab: "rates" })).toBe("rates");
+    expect(decodeBudgetTab({ tab: "calculator" })).toBe("calculator");
   });
 
-  it("opens the People tab for the old Instructors and TAs links", () => {
-    expect(decodeBudgetTab({ tab: "instructors" })).toBe("people");
-    expect(decodeBudgetTab({ tab: "tas" })).toBe("people");
+  it("is null for a tab the Budget view no longer has", () => {
+    expect(decodeBudgetTab({ tab: "people" })).toBeNull();
+    expect(decodeBudgetTab({ tab: "tas" })).toBeNull();
   });
 
   it("is null for a missing or unknown tab", () => {

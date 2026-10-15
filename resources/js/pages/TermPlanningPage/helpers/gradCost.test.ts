@@ -4,10 +4,10 @@ import {
   FALL_GRAD_INPUTS,
   FALL_GRAD_LEVELS,
   gradRates,
-  rateOverrides,
 } from "./costAssumptions.fixture";
 import {
   appointmentPercentOfSection,
+  defaultAppointmentOf,
   gradCostOf,
   hoursOfAppointment,
   gradTermOf,
@@ -126,45 +126,19 @@ describe("offsetShareOf", () => {
 describe("gradTermOf", () => {
   const assumptions = costAssumptions({ gradRates: gradRates() });
 
-  it("is the admin's values when nothing is overridden", () => {
-    const term = gradTermOf(assumptions, rateOverrides());
+  it("is the admin's values", () => {
+    const term = gradTermOf(assumptions);
 
     expect(term?.inputs).toEqual(FALL_GRAD_INPUTS);
     expect(term?.hoursByAppointmentPercent.get(25)).toBe(196);
   });
 
-  it("puts the department's values over the admin's, field by field", () => {
-    const term = gradTermOf(
-      assumptions,
-      rateOverrides({
-        gradInputs: { hourlyRate: 31 },
-        gradHoursByPercent: new Map([[25, 200]]),
-      }),
-    );
-
-    expect(term?.inputs.hourlyRate).toBe(31);
-    expect(term?.inputs.healthRate).toBe(0.289);
-    expect(term?.hoursByAppointmentPercent.get(25)).toBe(200);
-    expect(term?.hoursByAppointmentPercent.get(50)).toBe(392);
-  });
-
-  it("is null when an input is missing", () => {
+  it("is null when the admin has entered no inputs", () => {
     const missing = costAssumptions({
       gradRates: gradRates({ defaults: null }),
     });
 
-    expect(gradTermOf(missing, rateOverrides())).toBeNull();
-  });
-
-  it("is complete when the department fills every input the admin left out", () => {
-    const missing = costAssumptions({
-      gradRates: gradRates({ defaults: null }),
-    });
-
-    expect(
-      gradTermOf(missing, rateOverrides({ gradInputs: FALL_GRAD_INPUTS }))
-        ?.inputs,
-    ).toEqual(FALL_GRAD_INPUTS);
+    expect(gradTermOf(missing)).toBeNull();
   });
 });
 
@@ -208,5 +182,14 @@ describe("hoursOfAppointment", () => {
 
   it("is undefined without levels", () => {
     expect(hoursOfAppointment(new Map(), 25)).toBeUndefined();
+  });
+});
+
+describe("defaultAppointmentOf", () => {
+  it("is the admin's percent, else the standard 25%", () => {
+    expect(
+      defaultAppointmentOf(gradRates({ defaultAppointmentPercent: 50 })),
+    ).toBe(50);
+    expect(defaultAppointmentOf(gradRates())).toBe(25);
   });
 });

@@ -42,8 +42,10 @@ const emit = defineEmits<{ select: [tab: BudgetTab] }>();
 
 const TABS: { value: BudgetTab; label: string }[] = [
   { value: "sections", label: "Sections" },
-  { value: "people", label: "People" },
-  { value: "rates", label: "Rates" },
-  { value: "assumptions", label: "Assumptions and Rules" },
+  { value: "grad", label: "Grad assistants" },
+  { value: "tenure", label: "Tenure-track" },
+  { value: "pa", label: "P&A and contract" },
+  { value: "costs", label: "Instructor costs" },
+  { value: "calculator", label: "Grad calculator" },
 ];
 </script>

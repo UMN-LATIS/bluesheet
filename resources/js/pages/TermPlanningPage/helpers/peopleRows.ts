@@ -1,6 +1,7 @@
 import type {
   CostAssumptions,
   GradPerson,
+  InstructorType,
   SisEmployee,
   TermLeave,
 } from "@/types";
@@ -20,7 +21,8 @@ import {
   type ReceiptLine,
 } from "./costReceipt";
 import { formatWholeDollars } from "./money";
-import { fundLabelOf } from "./rateRows";
+import { fundLabelOf } from "./fundLabel";
+import type { PersonInputs } from "./personInputs";
 import {
   pricingByEmplidOf,
   termRatesOf,
@@ -40,6 +42,8 @@ export interface PersonRow {
   name: string;
   jobCode: string;
   title: string;
+  /** Null when the person's job code is not in the catalog. */
+  instructorType: InstructorType | null;
   fundLabel: string;
   /**
    * Per paid section, or per course for a TA. Null when no
@@ -50,7 +54,7 @@ export interface PersonRow {
   salaryWithoutOverride: number | null;
   /** Only a non-grad instructor's salary can be overridden. */
   isSalaryOverridden: boolean;
-  /** A grad student's pay comes from the grad inputs on the Rates tab. */
+  /** A grad student's pay comes from the admin's grad rates. */
   isSalaryReadOnly: boolean;
   /** Null when there is nothing to add to the salary. */
   salaryHint: string | null;
@@ -62,6 +66,19 @@ export interface PersonRow {
   termFringe: number;
   /** Paid sections, or a grad student's appointment percent. */
   loadLabel: string;
+  /** Sections paid this term, in the role the person is costed in. */
+  paidSectionCount: number;
+  /**
+   * The person's own expected count, else half their job
+   * code's annual load. Null when neither exists.
+   */
+  expectedSectionCount: number | null;
+  /** Half the job code's annual load. Null when it has none. */
+  expectedSectionCountWithoutOverride: number | null;
+  courseReleases: number | null;
+  releaseSource: string | null;
+  yearStarted: number | null;
+  /** Paid sections plus releases fall short of the expected count. */
   isUnderLoad: boolean;
   /** Lines with no rate add nothing. */
   total: number;
@@ -131,10 +148,10 @@ export function peopleRowsOf(
   rateOverrides: RateOverrides,
   roster: SisEmployee[],
   leavesByEmplid: Map<number, TermLeave[]>,
-  notesByEmplid: Map<number, string>,
+  inputsByEmplid: Map<number, PersonInputs>,
 ): PersonRow[] {
-  const pricingOfEmplid = pricingByEmplidOf(assumptions, rateOverrides);
-  const termRates = termRatesOf(assumptions, rateOverrides);
+  const pricingOfEmplid = pricingByEmplidOf(assumptions);
+  const termRates = termRatesOf(assumptions);
   const positionTitlesByEmplid = new Map(
     assumptions.people.map((person) => [person.emplid, person.positionTitles]),
   );
@@ -179,10 +196,14 @@ export function peopleRowsOf(
     const paidCount = lines.filter(
       (line) => line.role === (isTa ? "ta" : "instructor") && isPaid(line),
     ).length;
-    const expectedCount =
+    const inputs = inputsByEmplid.get(emplid);
+    const expectedCountWithoutOverride =
       rate?.annualLoad == null
         ? null
         : Math.ceil(rate.annualLoad / TERMS_PER_YEAR);
+    const expectedCount =
+      inputs?.expectedSections ?? expectedCountWithoutOverride;
+    const courseReleases = inputs?.courseReleases ?? null;
     const gradSetting = rateOverrides.gradPeopleByEmplid.get(emplid);
     const appointmentPercent = isGrad
       ? (gradAppointmentOf(lines)?.student.appointmentPercent ?? 0)
@@ -206,6 +227,7 @@ export function peopleRowsOf(
         rate?.title ??
         (jobCode && positionTitlesByEmplid.get(emplid)?.[jobCode]) ??
         "",
+      instructorType: rate?.instructorType ?? null,
       fundLabel:
         isTa && !rate?.instructorType
           ? "TA/GI"
@@ -217,10 +239,21 @@ export function peopleRowsOf(
         appointmentPercent === null
           ? String(paidCount)
           : `${appointmentPercent}%`,
-      isUnderLoad: isUnderLoadOf(isTa, leaves.length, paidCount, expectedCount),
+      paidSectionCount: paidCount,
+      expectedSectionCount: expectedCount,
+      expectedSectionCountWithoutOverride: expectedCountWithoutOverride,
+      courseReleases,
+      releaseSource: inputs?.releaseSource ?? null,
+      yearStarted: inputs?.yearStarted ?? null,
+      isUnderLoad: isUnderLoadOf(
+        isTa,
+        leaves.length,
+        paidCount + (courseReleases ?? 0),
+        expectedCount,
+      ),
       ...chargeSummary,
       isAssigned: charges.length > 0,
-      notes: notesByEmplid.get(emplid) ?? "",
+      notes: inputs?.notes ?? "",
       leaves,
       isGrad,
       appointmentPercent,
@@ -361,11 +394,18 @@ function unstaffedRowsOf(charges: Charge[], rate: Rate | null): PersonRow[] {
       name: "Unstaffed",
       jobCode: UNSTAFFED_JOB_CODE,
       title: "Unstaffed",
-      fundLabel: "—",
+      instructorType: null,
+      fundLabel: "UI",
       ...price,
       termSalary: sumOf(charges.map(({ line }) => line.salary)),
       termFringe: sumOf(charges.map(({ line }) => line.fringe)),
       loadLabel: String(paidCount),
+      paidSectionCount: paidCount,
+      expectedSectionCount: null,
+      expectedSectionCountWithoutOverride: null,
+      courseReleases: null,
+      releaseSource: null,
+      yearStarted: null,
       isUnderLoad: false,
       ...chargeSummary,
       isAssigned: true,

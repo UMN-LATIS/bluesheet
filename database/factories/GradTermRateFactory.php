@@ -21,6 +21,7 @@ class GradTermRateFactory extends Factory {
             'fee_offset' => 235,
             'international_offset' => 280,
             'per_credit_payment' => 250,
+            'default_appointment_percent' => 25,
         ];
     }
 }

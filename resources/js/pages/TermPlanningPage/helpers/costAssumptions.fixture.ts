@@ -28,11 +28,7 @@ export const jobCodeRate = (
 export const rateOverrides = (
   extra: Partial<RateOverrides> = {},
 ): RateOverrides => ({
-  jobCodeRates: new Map(),
   salaryByEmplid: new Map(),
-  gradInputs: {},
-  defaultAppointmentPercent: null,
-  gradHoursByPercent: new Map(),
   gradPeopleByEmplid: new Map(),
   ...extra,
 });
@@ -50,10 +46,10 @@ export const costAssumptions = (
   season: "fall",
   jobCodes: [],
   people: [],
-  gradRates: { defaults: null, levels: [] },
-  rateOverrides: { jobCodes: [], people: [], grad: null, gradHours: [] },
+  gradRates: { defaults: null, levels: [], defaultAppointmentPercent: null },
+  rateOverrides: { people: [] },
   gradPeople: [],
-  personNotes: [],
+  personInputs: [],
   canEdit: true,
   ...extra,
 });
@@ -100,23 +96,27 @@ export const gradRates = (
 ): CostAssumptions["gradRates"] => ({
   defaults: FALL_GRAD_INPUTS,
   levels: FALL_GRAD_LEVELS,
+  defaultAppointmentPercent: null,
   ...extra,
 });
 
 /** A 12.5% appointment costs $4,500, a 25% one $9,000, a 50% one $18,000, and each credit taught adds $100. */
+export const ROUND_GRAD_INPUTS: GradRateInputs = {
+  hourlyRate: 10,
+  healthRate: 0,
+  tuitionPerHourRegular: 0,
+  tuitionPerHourAbd: 0,
+  feeOffset: 0,
+  internationalOffset: 0,
+  perCreditPayment: 100,
+};
+
 export const roundGradRates = (): CostAssumptions["gradRates"] => ({
-  defaults: {
-    hourlyRate: 10,
-    healthRate: 0,
-    tuitionPerHourRegular: 0,
-    tuitionPerHourAbd: 0,
-    feeOffset: 0,
-    internationalOffset: 0,
-    perCreditPayment: 100,
-  },
+  defaults: ROUND_GRAD_INPUTS,
   levels: [
     { appointmentPercent: 12.5, hours: 450 },
     { appointmentPercent: 25, hours: 900 },
     { appointmentPercent: 50, hours: 1800 },
   ],
+  defaultAppointmentPercent: null,
 });

@@ -35,20 +35,6 @@ export async function fetchEnrollmentHistory(
   return res.data;
 }
 
-/** A null value restores Nova's value for the term. */
-export async function saveJobCodeRateOverride(
-  groupId: T.Group["id"],
-  termCode: number,
-  jobCode: string,
-  change: { salary: number | null } | { fringeRate: number | null },
-): Promise<void> {
-  await axios.patch(
-    `/api/term-planning/groups/${groupId}/cost-rate-overrides/job-codes/${encodeURIComponent(jobCode)}`,
-    change,
-    { ...WRITE_CONFIG, params: { term: termCode } },
-  );
-}
-
 /** A null salary restores the job code's rate. */
 export async function savePersonRateOverride(
   groupId: T.Group["id"],
@@ -63,46 +49,19 @@ export async function savePersonRateOverride(
   );
 }
 
-/** Null or blank notes delete the note. */
-export async function savePersonNote(
+/** A null value clears the field. */
+export async function savePersonInput(
   groupId: T.Group["id"],
   termCode: number,
   emplid: number,
-  notes: string | null,
-): Promise<void> {
-  await axios.put(
-    `/api/term-planning/groups/${groupId}/person-notes/${emplid}`,
-    { notes },
+  change: Partial<Omit<T.PersonInputRecord, "emplid">>,
+): Promise<T.PersonInputRecord> {
+  const res = await axios.patch<T.PersonInputRecord>(
+    `/api/term-planning/groups/${groupId}/person-inputs/${emplid}`,
+    change,
     { ...WRITE_CONFIG, params: { term: termCode } },
   );
-}
-
-/** A null value restores the admin's value for the term. */
-export async function saveGradInputOverride(
-  groupId: T.Group["id"],
-  termCode: number,
-  field: T.GradOverrideField,
-  value: number | null,
-): Promise<void> {
-  await axios.patch(
-    `/api/term-planning/groups/${groupId}/cost-rate-overrides/grad`,
-    { [field]: value },
-    { ...WRITE_CONFIG, params: { term: termCode } },
-  );
-}
-
-/** Null hours restores the admin's hours for the appointment. */
-export async function saveGradHoursOverride(
-  groupId: T.Group["id"],
-  termCode: number,
-  appointmentPercent: number,
-  hours: number | null,
-): Promise<void> {
-  await axios.put(
-    `/api/term-planning/groups/${groupId}/cost-rate-overrides/grad-hours/${appointmentPercent}`,
-    { hours },
-    { ...WRITE_CONFIG, params: { term: termCode } },
-  );
+  return res.data;
 }
 
 /** A null appointment, no fee offset, and not international delete the row. */

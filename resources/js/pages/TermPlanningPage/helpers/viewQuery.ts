@@ -18,27 +18,20 @@ export const VIEW_KEYS = ["view", "day", "tab"];
 
 export const BUDGET_TABS = [
   "sections",
-  "people",
-  "rates",
-  "assumptions",
+  "grad",
+  "tenure",
+  "pa",
+  "costs",
+  "calculator",
 ] as const;
 
 export type BudgetTab = (typeof BUDGET_TABS)[number];
 
 export const DEFAULT_BUDGET_TAB: BudgetTab = "sections";
 
-const RENAMED_BUDGET_TABS: Record<string, BudgetTab> = {
-  instructors: "people",
-  tas: "people",
-};
-
-/** Null when the URL names no tab. */
+/** Null when the URL names no tab, or a tab that no longer exists. */
 export function decodeBudgetTab(query: UrlQuery): BudgetTab | null {
-  const tab = typeof query.tab === "string" ? query.tab : undefined;
-  if (tab && Object.hasOwn(RENAMED_BUDGET_TABS, tab))
-    return RENAMED_BUDGET_TABS[tab];
-
-  return BUDGET_TABS.find((budgetTab) => budgetTab === tab) ?? null;
+  return BUDGET_TABS.find((budgetTab) => budgetTab === query.tab) ?? null;
 }
 
 /** An unknown view is not an error worth showing; the page opens as usual. */

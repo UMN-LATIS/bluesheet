@@ -1,20 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import type { Ref } from "vue";
-import {
-  saveGradHoursOverride,
-  saveGradInputOverride,
-  saveGradPerson,
-  saveJobCodeRateOverride,
-  savePersonNote,
-  savePersonRateOverride,
-} from "@/api";
+import { saveGradPerson, savePersonInput, savePersonRateOverride } from "@/api";
 import type {
-  GradHoursEdit,
-  GradInputEdit,
   GradPersonEdit,
-  RateOverrideEdit,
+  PersonSalaryEdit,
 } from "../helpers/costOverrides";
-import type { PersonNoteEdit } from "../helpers/personNotes";
+import type { PersonInputEdit } from "../helpers/personInputs";
 
 export function useCostMutations(
   groupId: Readonly<Ref<number>>,
@@ -28,39 +19,13 @@ export function useCostMutations(
       queryKey: ["termPlan", "costAssumptions"],
     });
 
-  const saveRateOverride = useMutation({
-    mutationFn: ({ rate, amount }: RateOverrideEdit) => {
-      const term = termCode.value ?? 0;
-      switch (rate.kind) {
-        case "jobCode":
-          return saveJobCodeRateOverride(groupId.value, term, rate.jobCode, {
-            [rate.field]: amount,
-          } as { salary: number | null } | { fringeRate: number | null });
-        case "person":
-          return savePersonRateOverride(
-            groupId.value,
-            term,
-            rate.emplid,
-            amount,
-          );
-      }
-    },
-    onSuccess: refetchAssumptions,
-  });
-
-  const saveGradInputEdit = useMutation({
-    mutationFn: ({ field, value }: GradInputEdit) =>
-      saveGradInputOverride(groupId.value, termCode.value ?? 0, field, value),
-    onSuccess: refetchAssumptions,
-  });
-
-  const saveGradHoursEdit = useMutation({
-    mutationFn: ({ appointmentPercent, hours }: GradHoursEdit) =>
-      saveGradHoursOverride(
+  const savePersonSalaryEdit = useMutation({
+    mutationFn: ({ emplid, amount }: PersonSalaryEdit) =>
+      savePersonRateOverride(
         groupId.value,
         termCode.value ?? 0,
-        appointmentPercent,
-        hours,
+        emplid,
+        amount,
       ),
     onSuccess: refetchAssumptions,
   });
@@ -71,17 +36,13 @@ export function useCostMutations(
     onSuccess: refetchAssumptions,
   });
 
-  const savePersonNoteEdit = useMutation({
-    mutationFn: ({ emplid, notes }: PersonNoteEdit) =>
-      savePersonNote(groupId.value, termCode.value ?? 0, emplid, notes),
+  const savePersonInputEdit = useMutation({
+    mutationFn: ({ emplid, field, value }: PersonInputEdit) =>
+      savePersonInput(groupId.value, termCode.value ?? 0, emplid, {
+        [field]: value,
+      }),
     onSuccess: refetchAssumptions,
   });
 
-  return {
-    saveRateOverride,
-    saveGradInputEdit,
-    saveGradHoursEdit,
-    saveGradPersonEdit,
-    savePersonNoteEdit,
-  };
+  return { savePersonSalaryEdit, saveGradPersonEdit, savePersonInputEdit };
 }

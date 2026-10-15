@@ -90,6 +90,7 @@ interface CostContext {
     section: PlannedSection,
   ) => number | null;
   termRates: TermRates;
+  rateOverrides: RateOverrides;
   isGradStudent: (emplid: number) => boolean;
 }
 
@@ -101,8 +102,8 @@ export function estimateTermCost(
   input: EstimateInput,
 ): Map<number, SectionCost> {
   const { sections, assumptions, rateOverrides } = input;
-  const pricingOfEmplid = pricingByEmplidOf(assumptions, rateOverrides);
-  const gradTerm = gradTermOf(assumptions, rateOverrides);
+  const pricingOfEmplid = pricingByEmplidOf(assumptions);
+  const gradTerm = gradTermOf(assumptions);
 
   const liveSections = sections.filter(({ isCancelled }) => !isCancelled);
   const crosslistOwnerByListing = blockOwners(liveSections);
@@ -124,7 +125,8 @@ export function estimateTermCost(
         : (lectureSectionIdByPersonCourse.get(
             personCourseKey(emplid, courseCode),
           ) ?? null),
-    termRates: termRatesOf(assumptions, rateOverrides),
+    termRates: termRatesOf(assumptions),
+    rateOverrides,
     isGradStudent: (emplid) => isGradJobCodeRate(pricingOfEmplid(emplid).rate),
   };
   const linesBySectionId = paidOncePerMeetingTime(
@@ -141,6 +143,7 @@ export function estimateTermCost(
       pricingOfEmplid,
       isGradStudent: context.isGradStudent,
       rateOverrides,
+      assumptions,
     },
   );
 
@@ -154,7 +157,6 @@ export function estimateTermCost(
 
 export function pricingByEmplidOf(
   assumptions: CostAssumptions,
-  rateOverrides: RateOverrides,
 ): (emplid: number) => PersonPricing {
   const ratesByJobCode = ratesByJobCodeOf(assumptions);
   const jobCodesByEmplid = new Map(
@@ -162,19 +164,11 @@ export function pricingByEmplidOf(
   );
 
   return (emplid) =>
-    pricingOf(
-      jobCodesByEmplid.get(emplid) ?? [],
-      ratesByJobCode,
-      rateOverrides,
-    );
+    pricingOf(jobCodesByEmplid.get(emplid) ?? [], ratesByJobCode);
 }
 
-export const termRatesOf = (
-  assumptions: CostAssumptions,
-  rateOverrides: RateOverrides,
-): TermRates => ({
+export const termRatesOf = (assumptions: CostAssumptions): TermRates => ({
   ratesByJobCode: ratesByJobCodeOf(assumptions),
-  overrides: rateOverrides,
 });
 
 const ratesByJobCodeOf = (assumptions: CostAssumptions) =>
@@ -261,7 +255,7 @@ function leadPricedLineOf(
 
   return ratedLine(
     instructorRateOf(context.pricingOfEmplid(lead.emplid), context.termRates),
-    context.termRates.overrides.salaryByEmplid.get(lead.emplid),
+    context.rateOverrides.salaryByEmplid.get(lead.emplid),
   );
 }
 
@@ -464,12 +458,19 @@ interface GradCharging {
   pricingOfEmplid: (emplid: number) => PersonPricing;
   isGradStudent: (emplid: number) => boolean;
   rateOverrides: RateOverrides;
+  assumptions: CostAssumptions;
 }
 
 function gradAppointmentsSplitAcrossSections(
   sections: PlannedSection[],
   linesBySectionId: Map<number, CostLine[]>,
-  { gradTerm, pricingOfEmplid, isGradStudent, rateOverrides }: GradCharging,
+  {
+    gradTerm,
+    pricingOfEmplid,
+    isGradStudent,
+    rateOverrides,
+    assumptions,
+  }: GradCharging,
 ): Map<number, CostLine[]> {
   const isGradAppointmentLine = (
     line: CostLine,
@@ -497,7 +498,7 @@ function gradAppointmentsSplitAcrossSections(
       const percentWithoutOverride = appointmentPercentOfSection(
         section.component,
         isTa,
-        defaultAppointmentOf(rateOverrides),
+        defaultAppointmentOf(assumptions.gradRates),
       );
       sectionAppointmentsByEmplid.set(
         emplid,

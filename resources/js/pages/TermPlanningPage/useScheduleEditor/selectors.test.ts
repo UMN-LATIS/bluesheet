@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  selectPersonNotes,
+  selectPersonInputs,
   selectRateOverrides,
   selectSectionCosts,
   selectShownSections,
@@ -12,7 +12,7 @@ import {
   jobCodeRate,
   sisInstructor,
 } from "../helpers/costAssumptions.fixture";
-import { rateOverrideKeyOf } from "../helpers/costOverrides";
+import { personSalaryKeyOf } from "../helpers/costOverrides";
 import { NEW_SECTION_ID } from "./types";
 import { selectLocalSection } from "./selectors";
 import { plannedSection } from "../helpers/plannedSection.fixture";
@@ -275,16 +275,11 @@ describe("the budget view's selectors", () => {
     ).toBeNull();
   });
 
-  it("selectSectionCosts reflects a pending rate override", () => {
-    const rate = {
-      kind: "jobCode",
-      jobCode: "TBA",
-      field: "salary",
-    } as const;
+  it("selectSectionCosts reflects a pending person salary", () => {
     const edited: EditorState = {
       ...atRest,
-      rateOverrideEdits: {
-        [rateOverrideKeyOf(rate)]: { rate, amount: 7000 },
+      personSalaryEdits: {
+        [personSalaryKeyOf(1)]: { emplid: 1, amount: 7000 },
       },
     };
 
@@ -302,98 +297,75 @@ describe("the budget view's selectors", () => {
     ).toBeNull();
   });
 
-  it("selectRateOverrides merges pending edits over the server's overrides", () => {
-    const rate = {
-      kind: "jobCode",
-      jobCode: "U",
-      field: "salary",
-    } as const;
+  it("selectRateOverrides merges pending edits over the saved overrides", () => {
     const withServer: ScheduleContext = {
       ...budgetContext,
       costAssumptions: costAssumptions({
         rateOverrides: {
-          jobCodes: [
-            { jobCode: "U", salary: 100, fringeRate: 0.1 },
-            { jobCode: "G", salary: 200, fringeRate: null },
+          people: [
+            { emplid: 1, salary: 100 },
+            { emplid: 2, salary: 200 },
           ],
-          people: [],
-          grad: null,
-          gradHours: [],
         },
+        gradPeople: [
+          { emplid: 10, hasFeeOffset: false, isInternational: false },
+        ],
       }),
     };
     const shown = selectRateOverrides(withServer, {
       ...atRest,
-      rateOverrideEdits: { [rateOverrideKeyOf(rate)]: { rate, amount: 150 } },
+      personSalaryEdits: {
+        [personSalaryKeyOf(1)]: { emplid: 1, amount: 150 },
+      },
+      gradPersonEdits: {
+        "10": { emplid: 10, hasFeeOffset: true, isInternational: false },
+      },
     });
 
-    expect(shown?.jobCodeRates).toEqual(
+    expect(shown?.salaryByEmplid).toEqual(
       new Map([
-        ["U", { salary: 150, fringeRate: 0.1 }],
-        ["G", { salary: 200, fringeRate: null }],
+        [1, 150],
+        [2, 200],
       ]),
     );
+    expect(shown?.gradPeopleByEmplid.get(10)?.hasFeeOffset).toBe(true);
   });
 
-  it("selectRateOverrides merges pending grad edits over the saved grad settings", () => {
+  it("selectPersonInputs is null before the cost assumptions load", () => {
+    expect(
+      selectPersonInputs({ ...budgetContext, costAssumptions: null }, atRest),
+    ).toBeNull();
+  });
+
+  it("selectPersonInputs merges pending edits over the saved inputs", () => {
     const withServer: ScheduleContext = {
       ...budgetContext,
       costAssumptions: costAssumptions({
-        gradPeople: [
+        personInputs: [
           {
-            emplid: 10,
-            hasFeeOffset: false,
-            isInternational: false,
+            emplid: 1,
+            notes: "Saved",
+            yearStarted: 2019,
+            courseReleases: null,
+            releaseSource: null,
+            expectedSections: null,
           },
         ],
       }),
     };
-    const shown = selectRateOverrides(withServer, {
+    const shown = selectPersonInputs(withServer, {
       ...atRest,
-      gradInputEdits: {
-        hourlyRate: { field: "hourlyRate", value: 31 },
-      },
-      gradHoursEdits: {
-        "25": { appointmentPercent: 25, hours: 200 },
-      },
-      gradPersonEdits: {
-        "10": {
-          emplid: 10,
-          hasFeeOffset: true,
-          isInternational: false,
+      personInputEdits: {
+        "1:notes": { emplid: 1, field: "notes", value: "Typed" },
+        "2:expectedSections": {
+          emplid: 2,
+          field: "expectedSections",
+          value: 3,
         },
       },
     });
 
-    expect(shown?.gradInputs).toEqual({ hourlyRate: 31 });
-    expect(shown?.gradHoursByPercent.get(25)).toBe(200);
-    expect(shown?.gradPeopleByEmplid.get(10)?.hasFeeOffset).toBe(true);
-  });
-
-  it("selectPersonNotes is null before the cost assumptions load", () => {
-    expect(
-      selectPersonNotes({ ...budgetContext, costAssumptions: null }, atRest),
-    ).toBeNull();
-  });
-
-  it("selectPersonNotes merges pending edits over the saved notes", () => {
-    const withServer: ScheduleContext = {
-      ...budgetContext,
-      costAssumptions: costAssumptions({
-        personNotes: [
-          { emplid: 1, notes: "Saved" },
-          { emplid: 2, notes: "Gone soon" },
-        ],
-      }),
-    };
-    const shown = selectPersonNotes(withServer, {
-      ...atRest,
-      personNoteEdits: {
-        "1": { emplid: 1, notes: "Typed" },
-        "2": { emplid: 2, notes: null },
-      },
-    });
-
-    expect(shown).toEqual(new Map([[1, "Typed"]]));
+    expect(shown?.get(1)).toMatchObject({ notes: "Typed", yearStarted: 2019 });
+    expect(shown?.get(2)).toMatchObject({ notes: null, expectedSections: 3 });
   });
 });
