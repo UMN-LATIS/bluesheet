@@ -378,6 +378,14 @@ class GroupController extends Controller
         return response()->json($role);
 
     }
+
+    public function getByDeptId($deptId) {
+        $group = Group::where("dept_id", $deptId)->first();
+        if (!$group) {
+            return response()->json(["message" => "Group not found"], 404);
+        }
+        return response()->json($group);
+    }
     // get available types for autocomplete.  Debating the samrter way to do this.
     public function types() {        
         $roles = DB::table('groups')->select("group_type_id")
