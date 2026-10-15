@@ -1,11 +1,11 @@
 import type { InstructorType } from "@/types";
-import { loadMismatchLabelOf } from "./loadMismatch";
+import { isLoadMismatched } from "./loadMismatch";
 import type { PersonRow } from "./peopleRows";
 import { hasEmplid, type PersonWithEmplid } from "./personWithEmplid";
 
 export interface PaContractRow extends PersonWithEmplid {
   typeLabel: string;
-  mismatchLabel: string | null;
+  isLoadMismatched: boolean;
 }
 
 export interface PaContractTotals {
@@ -39,7 +39,7 @@ function paContractRowOf(person: PersonWithEmplid): PaContractRow {
   return {
     ...person,
     typeLabel: typeLabelOf(person) ?? NO_JOB_CODE_LABEL,
-    mismatchLabel: loadMismatchLabelOf(
+    isLoadMismatched: isLoadMismatched(
       person.expectedSectionCount,
       person.paidSectionCount,
     ),

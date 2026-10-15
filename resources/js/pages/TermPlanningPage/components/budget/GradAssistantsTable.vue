@@ -21,8 +21,8 @@
 
         <BudgetCell role="cell">{{ row.appointmentLabel }}</BudgetCell>
 
-        <BudgetCell role="cell" class="tw-text-on-surface-variant">
-          {{ row.isAbd ? "ABD" : "Non-ABD" }}
+        <BudgetCell role="cell" class="tw-justify-center">
+          <CheckIcon v-if="row.isAbd" role="img" aria-label="ABD" />
         </BudgetCell>
 
         <BudgetCell role="cell" class="tw-p-0">
@@ -139,6 +139,7 @@ import { computed } from "vue";
 import BudgetCell from "./BudgetCell.vue";
 import BudgetTable, { type BudgetColumn } from "./BudgetTable.vue";
 import BudgetTableRow from "./BudgetTableRow.vue";
+import { CheckIcon } from "@/icons";
 import CellSubline from "./CellSubline.vue";
 import CountInputCell from "./CountInputCell.vue";
 import GradCheckbox from "./GradCheckbox.vue";

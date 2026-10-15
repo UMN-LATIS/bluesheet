@@ -49,10 +49,10 @@ describe("paContractRowsOf", () => {
       }),
     ]);
 
-    expect(rows.map(({ mismatchLabel }) => mismatchLabel)).toEqual([
-      "2 short",
-      "1 over",
-      null,
+    expect(rows.map(({ isLoadMismatched }) => isLoadMismatched)).toEqual([
+      true,
+      true,
+      false,
     ]);
   });
 

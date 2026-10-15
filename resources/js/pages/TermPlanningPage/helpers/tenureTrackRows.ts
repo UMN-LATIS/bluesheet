@@ -1,9 +1,9 @@
-import { loadMismatchLabelOf } from "./loadMismatch";
+import { isLoadMismatched } from "./loadMismatch";
 import type { PersonRow } from "./peopleRows";
 import { hasEmplid, type PersonWithEmplid } from "./personWithEmplid";
 
 export type TenureTrackRow = PersonWithEmplid & {
-  mismatchLabel: string | null;
+  isLoadMismatched: boolean;
 };
 
 export interface TenureTrackTotals {
@@ -24,7 +24,7 @@ function tenureTrackRowOf(person: PersonWithEmplid): TenureTrackRow {
 
   return {
     ...person,
-    mismatchLabel: loadMismatchLabelOf(person.expectedSectionCount, covered),
+    isLoadMismatched: isLoadMismatched(person.expectedSectionCount, covered),
   };
 }
 

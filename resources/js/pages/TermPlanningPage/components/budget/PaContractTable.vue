@@ -40,7 +40,7 @@
         </BudgetCell>
         <ListedCell
           :listed="row.paidSectionCount"
-          :mismatchLabel="row.mismatchLabel"
+          :isLoadMismatched="row.isLoadMismatched"
         />
         <BudgetCell role="cell" align="end" class="tw-font-bold">
           <MissingRate v-if="row.hasMissingRate" class="tw-mr-1" />

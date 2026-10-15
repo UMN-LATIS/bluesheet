@@ -27,11 +27,11 @@ describe("tenureTrackRowsOf", () => {
       personRow({ emplid: 4, paidSectionCount: 3, expectedSectionCount: null }),
     ]);
 
-    expect(rows.map(({ mismatchLabel }) => mismatchLabel)).toEqual([
-      null,
-      "2 short",
-      "1 over",
-      null,
+    expect(rows.map(({ isLoadMismatched }) => isLoadMismatched)).toEqual([
+      false,
+      true,
+      true,
+      false,
     ]);
   });
 

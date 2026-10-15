@@ -59,7 +59,7 @@
         </BudgetCell>
         <ListedCell
           :listed="row.paidSectionCount"
-          :mismatchLabel="row.mismatchLabel"
+          :isLoadMismatched="row.isLoadMismatched"
         />
         <BudgetCell role="cell" :hasRightBorder="false" class="tw-p-0">
           <TextInputCell
