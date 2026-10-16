@@ -45,9 +45,9 @@
     </template>
 
     <template #totals>
-      <div role="cell" class="tw-col-span-2 tw-whitespace-nowrap tw-p-2">
+      <SpanningLabelCell :columnCount="2" class="tw-col-span-2 tw-p-2">
         Total · {{ totals.count }} P&amp;A and contract faculty
-      </div>
+      </SpanningLabelCell>
       <TotalCell role="cell">{{ totals.load }}</TotalCell>
       <div role="cell" />
       <TotalCell role="cell">{{ formatWholeDollars(totals.cost) }}</TotalCell>
@@ -64,6 +64,7 @@ import MissingRate from "./MissingRate.vue";
 import CellSubline from "./CellSubline.vue";
 import PersonNameCell from "./PersonNameCell.vue";
 import SectionLinks from "./SectionLinks.vue";
+import SpanningLabelCell from "./SpanningLabelCell.vue";
 import TextInputCell from "./TextInputCell.vue";
 import TotalCell from "./TotalCell.vue";
 import { formatWholeDollars } from "../../helpers/money";

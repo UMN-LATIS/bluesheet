@@ -17,9 +17,12 @@
           <BudgetTableRow
             class="tw-border-0 tw-border-b tw-border-solid tw-border-surface-container tw-bg-surface"
           >
-            <div role="cell" class="tw-col-span-full tw-px-2 tw-py-1.5">
+            <SpanningLabelCell
+              :columnCount="COLUMNS.length"
+              class="tw-col-span-full tw-px-2 tw-py-1.5"
+            >
               <CapsLabel>{{ group.label }}</CapsLabel>
-            </div>
+            </SpanningLabelCell>
           </BudgetTableRow>
 
           <BudgetTableRow
@@ -90,9 +93,9 @@
       </template>
 
       <template #totals>
-        <div role="cell" class="tw-col-span-7 tw-whitespace-nowrap tw-p-2">
+        <SpanningLabelCell :columnCount="7" class="tw-col-span-7 tw-p-2">
           Total
-        </div>
+        </SpanningLabelCell>
         <TotalCell role="cell">{{ formatWholeDollars(totalCost) }}</TotalCell>
         <div role="cell" />
       </template>
@@ -110,6 +113,7 @@ import CellSubline from "./CellSubline.vue";
 import MissingRate from "./MissingRate.vue";
 import OverrideMarker from "./OverrideMarker.vue";
 import PersonNameCell from "./PersonNameCell.vue";
+import SpanningLabelCell from "./SpanningLabelCell.vue";
 import TextInputCell from "./TextInputCell.vue";
 import TotalCell from "./TotalCell.vue";
 import type {

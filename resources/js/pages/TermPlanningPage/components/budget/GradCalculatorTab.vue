@@ -96,12 +96,12 @@
         <template #default="{ rows: groups }">
           <template v-for="group in groups" :key="group.label">
             <BudgetTableRow class="tw-bg-surface">
-              <div
-                role="cell"
+              <SpanningLabelCell
+                :columnCount="COLUMNS.length"
                 class="tw-col-span-full tw-border-0 tw-border-b tw-border-solid tw-border-surface-container tw-px-2 tw-py-1.5"
               >
                 <CapsLabel>{{ group.label }}</CapsLabel>
-              </div>
+              </SpanningLabelCell>
             </BudgetTableRow>
             <BudgetTableRow
               v-for="row in group.rows"
@@ -197,6 +197,7 @@ import BudgetTableRow from "./BudgetTableRow.vue";
 import CapsLabel from "./CapsLabel.vue";
 import IntegerInputCell from "./IntegerInputCell.vue";
 import GradCheckbox from "./GradCheckbox.vue";
+import SpanningLabelCell from "./SpanningLabelCell.vue";
 import type {
   GradCalculator,
   GradCalculatorGroup,

@@ -123,11 +123,11 @@
     </template>
 
     <template #totals>
-      <div role="cell" class="tw-col-span-7 tw-whitespace-nowrap tw-p-2">
+      <SpanningLabelCell :columnCount="7" class="tw-col-span-7 tw-p-2">
         Total · {{ totals.studentCount }} grad students,
         {{ totals.owedSupportCount }} owed dept funding,
         {{ totals.fundedCount }} funded this term
-      </div>
+      </SpanningLabelCell>
       <div role="cell" class="tw-col-span-3" />
       <TotalCell role="cell">{{
         formatWholeDollars(totals.totalCost)
@@ -149,6 +149,7 @@ import GradCheckbox from "./GradCheckbox.vue";
 import MissingRate from "./MissingRate.vue";
 import PersonNameCell from "./PersonNameCell.vue";
 import SectionLinks from "./SectionLinks.vue";
+import SpanningLabelCell from "./SpanningLabelCell.vue";
 import TextInputCell from "./TextInputCell.vue";
 import TotalCell from "./TotalCell.vue";
 import type { GradPerson } from "@/types";

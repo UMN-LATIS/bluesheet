@@ -54,11 +54,14 @@
         <BudgetTableRow
           class="tw-border-0 tw-border-b tw-border-solid tw-border-surface-container tw-bg-surface"
         >
-          <div role="cell" class="tw-col-span-full">
+          <SpanningLabelCell
+            :columnCount="columns.length"
+            class="tw-col-span-full tw-px-2"
+          >
             <button
               type="button"
               :aria-expanded="isGroupOpen"
-              class="tw-flex tw-min-h-9 tw-cursor-pointer tw-items-center tw-gap-1.5 tw-border-none tw-bg-transparent tw-px-2 tw-text-xs tw-font-semibold tw-text-on-surface-variant hover:tw-text-on-surface"
+              class="tw-flex tw-min-h-9 tw-cursor-pointer tw-items-center tw-gap-1.5 tw-border-none tw-bg-transparent tw-px-0 tw-text-xs tw-font-semibold tw-text-on-surface-variant hover:tw-text-on-surface"
               @click="isGroupOpen = !isGroupOpen"
             >
               <ChevronDownIcon
@@ -68,7 +71,7 @@
               />
               {{ collapsedGroup.label }} ({{ groupRows.length }})
             </button>
-          </div>
+          </SpanningLabelCell>
         </BudgetTableRow>
         <slot v-if="isGroupOpen" :rows="groupRows" />
       </template>
@@ -88,6 +91,7 @@ import { computed, ref } from "vue";
 import { ChevronDownIcon } from "@/icons";
 import BudgetTableRow from "./BudgetTableRow.vue";
 import CapsLabel from "./CapsLabel.vue";
+import SpanningLabelCell from "./SpanningLabelCell.vue";
 import {
   nextSortOf,
   sortedRows,
@@ -146,7 +150,9 @@ const mainRows = computed(() =>
 </script>
 
 <style scoped>
-.budget-table :deep([role="row"] > :first-child) {
+/* Dropping :not([aria-colspan]) lets a spanning totals
+   cell slide over the row's total when scrolled right. */
+.budget-table :deep([role="row"] > :first-child:not([aria-colspan])) {
   position: sticky;
   left: 0;
   z-index: 1;
