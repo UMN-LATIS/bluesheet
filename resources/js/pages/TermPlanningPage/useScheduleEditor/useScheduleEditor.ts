@@ -15,7 +15,6 @@ import { dayIndexOfWeekday } from "../helpers/scheduleDays";
 import { sectionProblems } from "./validation";
 import {
   selectActiveFilterCount,
-  selectPersonInputs,
   selectRateOverrides,
   selectDraftSection,
   selectHasEdits,
@@ -30,6 +29,7 @@ import {
   selectNewSectionHasCourse,
   selectOpenHour,
   selectPlaced,
+  selectDraftSectionCost,
   selectSectionCosts,
   selectShownSections,
   selectSelectedLeaveId,
@@ -89,10 +89,6 @@ export function useScheduleEditor(
       () => context.value.costAssumptions?.canEdit === true,
     ),
     pendingGradPersonEdits: computed(() => state.value.gradPersonEdits),
-    /** Null until the cost assumptions have loaded. */
-    personInputs: computed(() =>
-      selectPersonInputs(context.value, state.value),
-    ),
     pendingPersonInputEdits: computed(() => state.value.personInputEdits),
     gradScenario: computed(() => state.value.gradScenario),
     dayIndex: computed(() => state.value.dayIndex),
@@ -121,6 +117,8 @@ export function useScheduleEditor(
     /* Reads that take an argument, so they are called rather than watched. */
     draftSection: (section: SisSection) =>
       selectDraftSection(section, state.value),
+    draftSectionCost: (section: SisSection) =>
+      selectDraftSectionCost(context.value, state.value, section),
     isDraftDirty: (section: SisSection) =>
       selectIsDraftDirty(section, state.value),
     hasEdits: (sectionId: number) => selectHasEdits(sectionId, state.value),

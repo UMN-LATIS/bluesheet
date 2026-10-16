@@ -144,18 +144,52 @@ export interface ReceiptFigure {
   valueWithoutOverride: number | null;
 }
 
+export interface TaWork {
+  salary: ReceiptFigure;
+  fringeRate: ReceiptFigure;
+  courseCount: number;
+}
+
+function taReceiptLinesOf({ salary, fringeRate, courseCount }: TaWork): {
+  salaryLine: ReceiptLine;
+  fringeLine: ReceiptLine;
+} {
+  const salaryAmount =
+    salary.value === null ? null : salary.value * courseCount;
+  const fringeAmount =
+    salaryAmount === null || fringeRate.value === null
+      ? null
+      : salaryAmount * fringeRate.value;
+  const coursesPart = `${courseCount} ${courseCount === 1 ? "course" : "courses"} × `;
+
+  return {
+    salaryLine: item(
+      "TA salary",
+      [coursesPart, formatReceiptValue("dollars", salary.value)],
+      salaryAmount,
+    ),
+    fringeLine: item(
+      "TA fringe",
+      [formatReceiptValue("percent", fringeRate.value), " of TA salary"],
+      fringeAmount,
+    ),
+  };
+}
+
 export function salaryReceiptOf({
   salary,
   fringeRate,
   sectionCount,
   total,
   isEditable,
+  taWork,
 }: {
   salary: ReceiptFigure;
   fringeRate: ReceiptFigure;
   sectionCount: number;
   total: number;
   isEditable: boolean;
+  taWork?: TaWork;
 }): ReceiptLine[] {
   const input = (
     field: ReceiptField,
@@ -180,6 +214,8 @@ export function salaryReceiptOf({
       ? null
       : salaryAmount * fringeRate.value;
 
+  const taLines = taWork ? taReceiptLinesOf(taWork) : undefined;
+
   return [
     item(
       "Salary",
@@ -188,6 +224,7 @@ export function salaryReceiptOf({
         : [sectionsPart, input("salary", salary, "dollars")],
       salaryAmount,
     ),
+    ...(taLines ? [taLines.salaryLine] : []),
     item(
       "Fringe",
       hasNothingToShow
@@ -195,6 +232,7 @@ export function salaryReceiptOf({
         : [input("fringeRate", fringeRate, "percent"), " of salary"],
       fringeAmount,
     ),
+    ...(taLines ? [taLines.fringeLine] : []),
     { label: "Total", parts: [], amount: total, kind: "total" },
   ];
 }

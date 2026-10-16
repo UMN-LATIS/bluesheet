@@ -829,14 +829,12 @@ const teachingHistoryQuery = useTeachingHistoryQuery(
 
 const selectedPersonBudget = computed(() => {
   const assumptions = costAssumptionsQuery.data.value;
-  const { selectedEmplid, sectionCosts, rateOverrides, personInputs } =
-    schedule;
+  const { selectedEmplid, sectionCosts, rateOverrides } = schedule;
   const isCostable =
     activeView.value === "budget" &&
     assumptions &&
     sectionCosts &&
-    rateOverrides &&
-    personInputs;
+    rateOverrides;
   if (selectedEmplid === null || !isCostable) return null;
 
   const row = peopleRowsOf(
@@ -846,7 +844,6 @@ const selectedPersonBudget = computed(() => {
     rateOverrides,
     roster.value,
     termLeavesByEmplid.value,
-    personInputs,
   ).find(({ emplid }) => emplid === selectedEmplid);
   if (!row) return null;
 

@@ -20,6 +20,7 @@ import {
   salaryReceiptOf,
   type ReceiptFigure,
   type ReceiptLine,
+  type TaWork,
 } from "./costReceipt";
 import { formatWholeDollars } from "./money";
 import { fundLabelOf } from "./fundLabel";
@@ -137,7 +138,6 @@ export function peopleRowsOf(
   rateOverrides: RateOverrides,
   roster: SisEmployee[],
   leavesByEmplid: Map<number, TermLeave[]>,
-  inputsByEmplid: Map<number, PersonInputs>,
 ): PersonRow[] {
   const pricingOfEmplid = pricingByEmplidOf(assumptions);
   const termRates = termRatesOf(assumptions);
@@ -185,7 +185,17 @@ export function peopleRowsOf(
     const paidCount = lines.filter(
       (line) => line.role === (isTa ? "ta" : "instructor") && isPaid(line),
     ).length;
-    const inputs = inputsByEmplid.get(emplid);
+    const paidTaCount = lines.filter(
+      (line) => line.role === "ta" && isPaid(line),
+    ).length;
+    const taWork: TaWork | undefined =
+      !isGrad && !isTa && paidTaCount > 0
+        ? {
+            ...unitFiguresOf(taRateOf(pricing, termRates), undefined),
+            courseCount: paidTaCount,
+          }
+        : undefined;
+    const inputs = rateOverrides.personInputsByEmplid.get(emplid);
     const courseReleases = inputs?.courseReleases ?? null;
     const gradSetting = rateOverrides.gradPeopleByEmplid.get(emplid);
     const appointmentPercent = isGrad
@@ -196,7 +206,7 @@ export function peopleRowsOf(
       isTa
         ? taRateOf(pricing, termRates)
         : instructorRateOf(pricing, termRates),
-      isTa ? undefined : rateOverrides.costInputsByEmplid.get(emplid),
+      isTa ? undefined : rateOverrides.personInputsByEmplid.get(emplid),
     );
     const price = isGrad ? gradPriceOf(lines) : unitPriceOf(unitFigures);
     const chargeSummary = chargeSummaryOf(charges);
@@ -242,6 +252,7 @@ export function peopleRowsOf(
         paidCount,
         total: chargeSummary.total,
         isEditable: isGrad || !isTa,
+        taWork,
       }),
     };
 
@@ -343,12 +354,14 @@ function receiptOf({
   paidCount,
   total,
   isEditable,
+  taWork,
 }: {
   lines: CostLine[];
   unitFigures: UnitFigures;
   paidCount: number;
   total: number;
   isEditable: boolean;
+  taWork?: TaWork;
 }): ReceiptLine[] {
   const appointment = gradAppointmentOf(lines);
   if (appointment?.cost) {
@@ -360,6 +373,7 @@ function receiptOf({
     sectionCount: paidCount,
     total,
     isEditable,
+    taWork,
   });
 }
 

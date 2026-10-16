@@ -316,7 +316,7 @@ describe("estimateTermCost with overrides", () => {
       ],
       {
         rates: rateOverrides({
-          costInputsByEmplid: costInputsFor(1, { salary: 7000 }),
+          personInputsByEmplid: costInputsFor(1, { salary: 7000 }),
         }),
       },
     );
@@ -329,7 +329,7 @@ describe("estimateTermCost with overrides", () => {
       [section(1, { instructors: [pi(1)] })],
       {
         rates: rateOverrides({
-          costInputsByEmplid: costInputsFor(1, { salary: 7000 }),
+          personInputsByEmplid: costInputsFor(1, { salary: 7000 }),
         }),
       },
       withJobCodeRates(jobCodeRate("A", 4000, { fringeRate: 0.5 })),
@@ -347,7 +347,7 @@ describe("estimateTermCost with overrides", () => {
       [section(1, { instructors: [pi(99)] })],
       {
         rates: rateOverrides({
-          costInputsByEmplid: costInputsFor(99, { salary: 7000 }),
+          personInputsByEmplid: costInputsFor(99, { salary: 7000 }),
         }),
       },
       withJobCodeRates(
@@ -366,7 +366,7 @@ describe("estimateTermCost with overrides", () => {
       [section(1, { instructors: [pi(1)] })],
       {
         rates: rateOverrides({
-          costInputsByEmplid: costInputsFor(1, { fringeRate: 0.1 }),
+          personInputsByEmplid: costInputsFor(1, { fringeRate: 0.1 }),
         }),
       },
       withJobCodeRates(jobCodeRate("A", 4000, { fringeRate: 0.5 })),
@@ -389,7 +389,7 @@ describe("estimateTermCost with overrides", () => {
     ];
     const costs = estimate(twoSections, {
       rates: rateOverrides({
-        costInputsByEmplid: costInputsFor(10, { hourlyRate: 20 }),
+        personInputsByEmplid: costInputsFor(10, { hourlyRate: 20 }),
       }),
     });
 
@@ -402,7 +402,7 @@ describe("estimateTermCost with overrides", () => {
       [section(1, { credits: 3, instructors: [pi(14)] })],
       {
         rates: rateOverrides({
-          costInputsByEmplid: costInputsFor(14, { creditsTaught: 1 }),
+          personInputsByEmplid: costInputsFor(14, { creditsTaught: 1 }),
         }),
       },
       costAssumptions({
@@ -425,7 +425,7 @@ describe("estimateTermCost with overrides", () => {
       [section(1, { instructors: [sisInstructor(10, "TA")] })],
       {
         rates: rateOverrides({
-          costInputsByEmplid: costInputsFor(10, { salary: 4000 }),
+          personInputsByEmplid: costInputsFor(10, { salary: 4000 }),
         }),
       },
     );
@@ -441,7 +441,7 @@ describe("estimateTermCost with overrides", () => {
       ],
       {
         rates: rateOverrides({
-          costInputsByEmplid: costInputsFor(1, { salary: 7000 }),
+          personInputsByEmplid: costInputsFor(1, { salary: 7000 }),
         }),
       },
     );

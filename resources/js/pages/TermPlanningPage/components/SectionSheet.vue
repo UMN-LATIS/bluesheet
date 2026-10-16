@@ -926,8 +926,8 @@ const previousOfferings = computed(() =>
 const costDetails = computed(() => {
   const cost =
     props.schedule.view === "budget"
-      ? props.schedule.sectionCosts?.get(props.section.id)
-      : undefined;
+      ? props.schedule.draftSectionCost(props.section)
+      : null;
 
   return cost
     ? sectionCostDetailsOf(
@@ -941,7 +941,7 @@ const costDetails = computed(() => {
 const sectionAppointmentByPerson = computed(() => {
   const lines =
     props.schedule.view === "budget"
-      ? (props.schedule.sectionCosts?.get(props.section.id)?.lines ?? [])
+      ? (props.schedule.draftSectionCost(props.section)?.lines ?? [])
       : [];
 
   return new Map(

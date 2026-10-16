@@ -2,9 +2,9 @@
 
 namespace App\Nova;
 
+use App\Nova\Fields\Dollars;
 use Illuminate\Validation\Rule;
 use Laravel\Nova\Fields\BelongsTo;
-use Laravel\Nova\Fields\Currency;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Text;
@@ -41,10 +41,8 @@ class JobCodeTermRate extends Resource {
                 ])
                 ->help('Fall 2026 is 1269 and Spring 2027 is 1273.'),
 
-            Currency::make('Salary', 'salary')
-                ->currency('USD')
+            Dollars::make('Salary', 'salary')
                 ->sortable()
-                ->rules('required', 'decimal:0,2', 'min:0', 'max:99999999.99')
                 ->help('Per paid section, or per course for a teaching assistant job code.'),
 
             Number::make('Fringe Rate', 'fringe_rate')

@@ -9,7 +9,7 @@ import type {
   TimeRange,
 } from "../types";
 import type { CostAssumptions } from "@/types";
-import type { GradPersonEdit } from "../helpers/costOverrides";
+import type { GradPerson } from "@/types";
 import type { PersonInputEdit } from "../helpers/personInputs";
 import type { UrlQuery } from "@/utils/urlQuery";
 import type { BudgetTab, ScheduleView } from "../helpers/viewQuery";
@@ -174,7 +174,7 @@ export interface EditorState {
   view: ScheduleView;
   budgetTab: BudgetTab;
   /** Edits not yet saved, keyed by `gradPersonKeyOf`. */
-  gradPersonEdits: Record<string, GradPersonEdit>;
+  gradPersonEdits: Record<string, GradPerson>;
   /** Edits not yet saved, keyed by `personInputKeyOf`. */
   personInputEdits: Record<string, PersonInputEdit>;
   /** The Grad calculator's what-if. Not saved and not in the URL. */
@@ -233,8 +233,8 @@ export type EditorEvent =
   | { type: "importDismissed" }
   | { type: "viewSelected"; view: ScheduleView }
   | { type: "budgetTabSelected"; tab: BudgetTab }
-  | { type: "gradPersonEdited"; edit: GradPersonEdit }
-  | { type: "gradPersonEditsPersisted"; key: string; saved: GradPersonEdit }
+  | { type: "gradPersonEdited"; edit: GradPerson }
+  | { type: "gradPersonEditsPersisted"; key: string; saved: GradPerson }
   | { type: "personInputEdited"; edit: PersonInputEdit }
   /**
    * The server has this value now. A newer edit to the same

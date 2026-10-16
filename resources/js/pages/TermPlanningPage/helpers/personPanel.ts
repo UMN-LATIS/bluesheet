@@ -41,7 +41,10 @@ export interface TaughtTerm {
 
 const HISTORY_YEARS = 5;
 
-/** The fall and spring terms the history covers. */
+/**
+ * Term-code bounds for the five years before `termCode`.
+ * Summer terms fall inside them.
+ */
 export const historyRangeOf = (termCode: number) => ({
   startTermCode: termCode - HISTORY_YEARS * 10,
   endTermCode: termCode - 1,

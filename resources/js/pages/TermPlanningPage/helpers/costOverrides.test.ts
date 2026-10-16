@@ -23,7 +23,7 @@ describe("rateOverridesOf", () => {
   it("keeps the saved overrides when nothing is pending", () => {
     const overrides = rateOverridesOf(saved, noEdits);
 
-    expect(overrides.costInputsByEmplid.get(42)?.salary).toBe(7000);
+    expect(overrides.personInputsByEmplid.get(42)?.salary).toBe(7000);
     expect(overrides.gradPeopleByEmplid.get(7)?.hasFeeOffset).toBe(true);
   });
 
@@ -37,9 +37,9 @@ describe("rateOverridesOf", () => {
       inputEdit({ emplid: 42, field: "salary", value: null }),
     );
 
-    expect(edited.costInputsByEmplid.get(42)?.salary).toBe(8000);
-    expect(edited.costInputsByEmplid.get(42)?.fringeRate).toBe(0.2);
-    expect(reset.costInputsByEmplid.get(42)?.salary).toBeNull();
+    expect(edited.personInputsByEmplid.get(42)?.salary).toBe(8000);
+    expect(edited.personInputsByEmplid.get(42)?.fringeRate).toBe(0.2);
+    expect(reset.personInputsByEmplid.get(42)?.salary).toBeNull();
   });
 
   it("replaces a person's grad settings, and drops a person back to the defaults", () => {

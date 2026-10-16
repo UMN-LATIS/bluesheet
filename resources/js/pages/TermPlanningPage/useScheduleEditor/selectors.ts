@@ -1,6 +1,5 @@
 import type { Meeting, PlannedSection, SisSection, TimeRange } from "../types";
 import { rateOverridesOf, type RateOverrides } from "../helpers/costOverrides";
-import { personInputsOf, type PersonInputs } from "../helpers/personInputs";
 import { estimateTermCost, type SectionCost } from "../helpers/termEstimate";
 import { FILTER_FACETS } from "../types";
 import { isEqual } from "lodash-es";
@@ -142,6 +141,33 @@ export function selectSectionCosts(
   });
 }
 
+/**
+ * The cost of one section as its open draft would make it, with every other
+ * section as `selectSectionCosts` has it. Null until the cost assumptions
+ * have loaded, and for a section the term does not have yet.
+ */
+export function selectDraftSectionCost(
+  context: ScheduleContext,
+  state: EditorState,
+  section: SisSection,
+): SectionCost | null {
+  const assumptions = context.costAssumptions;
+  if (!assumptions) return null;
+
+  const sections = context.sections.map((candidate) =>
+    candidate.id === section.id
+      ? selectDraftSection(candidate, state)
+      : selectLocalSection(candidate, state),
+  );
+  const costs = estimateTermCost({
+    sections,
+    assumptions,
+    rateOverrides: rateOverridesOf(assumptions, state),
+  });
+
+  return costs.get(section.id) ?? null;
+}
+
 /** Null until the cost assumptions have loaded. */
 export function selectRateOverrides(
   context: ScheduleContext,
@@ -151,17 +177,6 @@ export function selectRateOverrides(
   if (!assumptions) return null;
 
   return rateOverridesOf(assumptions, state);
-}
-
-/** By emplid. Null until the cost assumptions have loaded. */
-export function selectPersonInputs(
-  context: ScheduleContext,
-  state: EditorState,
-): Map<number, PersonInputs> | null {
-  const assumptions = context.costAssumptions;
-  if (!assumptions) return null;
-
-  return personInputsOf(assumptions.personInputs, state.personInputEdits);
 }
 
 /**

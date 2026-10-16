@@ -10,6 +10,7 @@ use App\TermGradPerson;
 use App\TermPersonInput;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class CostOverrideController extends Controller {
@@ -101,24 +102,39 @@ class CostOverrideController extends Controller {
         ]);
 
         $uniqueKey = ['academic_org' => $academicOrg, 'term_code' => $termCode, 'emplid' => $emplid];
-        $saved = TermPersonInput::where($uniqueKey)->first();
-
-        $inputs = [];
-        foreach (self::PERSON_INPUT_COLUMN_BY_KEY as $key => $column) {
-            $inputs[$key] = array_key_exists($key, $changes)
-                ? $this->blankToNull($key, $changes[$key])
-                : $saved?->{$column};
+        $changedColumns = [];
+        foreach ($changes as $key => $value) {
+            $changedColumns[self::PERSON_INPUT_COLUMN_BY_KEY[$key]] = $this->blankToNull($key, $value);
         }
 
-        $isEveryInputNull = count(array_filter($inputs, fn($input) => $input !== null)) === 0;
-        $values = [];
-        foreach (self::PERSON_INPUT_COLUMN_BY_KEY as $key => $column) {
-            $values[$column] = $inputs[$key];
+        $personInput = DB::transaction(fn() => $this->saveChangedPersonInputs($uniqueKey, $changedColumns));
+
+        return ['emplid' => $emplid, ...$this->personInputsOf($personInput)];
+    }
+
+    private function saveChangedPersonInputs(array $uniqueKey, array $changedColumns): ?TermPersonInput {
+        $personInput = TermPersonInput::where($uniqueKey)->lockForUpdate()->first()
+            ?? TermPersonInput::createOrFirst($uniqueKey, ['created_by' => auth()->id(), 'updated_by' => auth()->id()]);
+
+        $personInput->update([...$changedColumns, 'updated_by' => auth()->id()]);
+
+        $hasAnyInput = collect(self::PERSON_INPUT_COLUMN_BY_KEY)
+            ->contains(fn(string $column) => $personInput->{$column} !== null);
+        if ($hasAnyInput) {
+            return $personInput;
         }
 
-        $this->saveOrDelete(TermPersonInput::class, $uniqueKey, $isEveryInputNull ? null : $values);
+        $personInput->delete();
 
-        return ['emplid' => $emplid, ...$inputs];
+        return null;
+    }
+
+    /** Every key null when the person has no saved inputs. */
+    private function personInputsOf(?TermPersonInput $personInput): array {
+        return array_map(
+            fn(string $column) => $personInput?->{$column},
+            self::PERSON_INPUT_COLUMN_BY_KEY,
+        );
     }
 
     private function blankToNull(string $key, mixed $input): mixed {

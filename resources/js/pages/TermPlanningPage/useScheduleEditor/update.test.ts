@@ -5,7 +5,8 @@ import {
   selectIsNewSectionSelected,
 } from "./selectors";
 import { costAssumptions } from "../helpers/costAssumptions.fixture";
-import { gradPersonKeyOf, type GradPersonEdit } from "../helpers/costOverrides";
+import type { GradPerson } from "@/types";
+import { gradPersonKeyOf } from "../helpers/costOverrides";
 import {
   personInputKeyOf,
   type PersonInputEdit,
@@ -2020,7 +2021,7 @@ describe("budget view", () => {
     field: "notes",
     value,
   });
-  const gradPersonEdit = (isInternational: boolean): GradPersonEdit => ({
+  const gradPersonEdit = (isInternational: boolean): GradPerson => ({
     emplid: 10,
     hasFeeOffset: false,
     isInternational,

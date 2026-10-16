@@ -2,7 +2,7 @@
 
 namespace App\Nova;
 
-use Laravel\Nova\Fields\Currency;
+use App\Nova\Fields\Dollars;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Number;
@@ -74,9 +74,7 @@ class GradTermRate extends Resource {
         ];
     }
 
-    private function moneyField(string $name, string $column): Currency {
-        return Currency::make($name, $column)
-            ->currency('USD')
-            ->rules('required', 'decimal:0,2', 'min:0', 'max:99999999.99');
+    private function moneyField(string $name, string $column): Dollars {
+        return Dollars::make($name, $column);
     }
 }

@@ -65,8 +65,13 @@ function highestRateJobCode(
     const rate = rateOfJobCode(jobCode, ratesByJobCode);
     return rate === null ? UNRATED_SORTS_LAST : costOfRate(rate);
   };
+  const gradFirst = (jobCode: string) =>
+    isGradJobCodeRate(ratesByJobCode.get(jobCode) ?? null) ? 0 : 1;
+  const byCostThenGrad = (a: string, b: string) =>
+    costOf(b) - costOf(a) || gradFirst(a) - gradFirst(b);
 
-  return [...jobCodes].sort((a, b) => costOf(b) - costOf(a))[0] ?? null;
+  const [highest] = [...jobCodes].sort(byCostThenGrad);
+  return highest ?? null;
 }
 
 /** Null when the job code has no salary or no fringe rate. */

@@ -17,7 +17,6 @@ export interface JobCodeRate {
   title: string;
   /** Null on the unstaffed (TBA) row. */
   instructorType: InstructorType | null;
-  /** Courses per year. Null when not entered. */
   /**
    * Dollars per paid section. Null when Nova has no rate
    * for the term, and always null for a grad job code,

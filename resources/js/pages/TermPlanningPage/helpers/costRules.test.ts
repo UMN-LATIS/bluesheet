@@ -59,6 +59,15 @@ describe("pricingOf", () => {
     expect(pricingOf(["9517", "9754"], ratesByJobCode).jobCode).toBe("9754");
   });
 
+  it("prefers a grad job code when every job code is unrated", () => {
+    const rates = ratesOf(
+      jobCodeRate("2221", null),
+      gradJobCodeRate("9511", "teaching_assistant", "regular"),
+    );
+
+    expect(pricingOf(["2221", "9511"], rates).jobCode).toBe("9511");
+  });
+
   it("has no job code for a person with none in the department", () => {
     expect(pricingOf([], ratesByJobCode)).toMatchObject({
       jobCode: null,

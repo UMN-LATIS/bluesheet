@@ -164,6 +164,31 @@ describe("salaryReceiptOf", () => {
     ]);
   });
 
+  it("adds read-only TA salary and fringe lines between the instructor's", () => {
+    const lines = salaryReceiptOf({
+      salary: rate(10000),
+      fringeRate: rate(0.5),
+      sectionCount: 1,
+      total: 22500,
+      isEditable: true,
+      taWork: { salary: rate(6000), fringeRate: rate(0.5), courseCount: 1 },
+    });
+
+    expect(
+      lines.map(({ label, parts, amount }) => [
+        label,
+        sentenceOf(parts),
+        amount,
+      ]),
+    ).toEqual([
+      ["Salary", "1 section × [salary=$10,000]", 10000],
+      ["TA salary", "1 course × $6,000", 6000],
+      ["Fringe", "[fringeRate=50%] of salary", 5000],
+      ["TA fringe", "50% of TA salary", 3000],
+      ["Total", "", 22500],
+    ]);
+  });
+
   it("marks the salary and fringe rate overridden when they differ from the job code's", () => {
     const [salary, fringe] = salaryReceiptOf({
       salary: rate(8000, 6000),

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  selectPersonInputs,
+  selectDraftSectionCost,
   selectRateOverrides,
   selectSectionCosts,
   selectShownSections,
@@ -9,7 +9,9 @@ import {
 import {
   costAssumptions,
   costPerson,
+  gradJobCodeRate,
   jobCodeRate,
+  roundGradRates,
   personInputs,
   sisInstructor,
 } from "../helpers/costAssumptions.fixture";
@@ -320,37 +322,59 @@ describe("the budget view's selectors", () => {
       },
     });
 
-    expect(shown?.costInputsByEmplid.get(1)?.salary).toBe(150);
-    expect(shown?.costInputsByEmplid.get(2)?.salary).toBe(200);
+    expect(shown?.personInputsByEmplid.get(1)?.salary).toBe(150);
+    expect(shown?.personInputsByEmplid.get(2)?.salary).toBe(200);
     expect(shown?.gradPeopleByEmplid.get(10)?.hasFeeOffset).toBe(true);
   });
 
-  it("selectPersonInputs is null before the cost assumptions load", () => {
-    expect(
-      selectPersonInputs({ ...budgetContext, costAssumptions: null }, atRest),
-    ).toBeNull();
-  });
-
-  it("selectPersonInputs merges pending edits over the saved inputs", () => {
-    const withServer: ScheduleContext = {
+  describe("selectDraftSectionCost", () => {
+    const taContext: ScheduleContext = {
       ...budgetContext,
+      sections: [
+        plannedSection(1, [], {
+          instructors: [
+            { ...sisInstructor(10, "TA"), appointmentPercent: 12.5 },
+          ],
+        }),
+      ],
       costAssumptions: costAssumptions({
-        personInputs: [personInputs(1, { notes: "Saved", yearStarted: 2019 })],
+        gradRates: roundGradRates(),
+        people: [costPerson(10, ["9511"])],
+        jobCodes: [gradJobCodeRate("9511", "teaching_assistant", "regular")],
       }),
     };
-    const shown = selectPersonInputs(withServer, {
+    const [section] = taContext.sections;
+    const withDraftAppointment: EditorState = {
       ...atRest,
-      personInputEdits: {
-        "1:notes": { emplid: 1, field: "notes", value: "Typed" },
-        "2:courseReleases": {
-          emplid: 2,
-          field: "courseReleases",
-          value: 3,
+      drafts: {
+        1: {
+          instructors: [{ ...sisInstructor(10, "TA"), appointmentPercent: 25 }],
         },
       },
+    };
+
+    it("prices the open draft while selectSectionCosts keeps the saved appointment", () => {
+      expect(
+        selectDraftSectionCost(taContext, atRest, section)?.lines[0].amount,
+      ).toBe(4500);
+      expect(
+        selectDraftSectionCost(taContext, withDraftAppointment, section)
+          ?.lines[0].amount,
+      ).toBe(9000);
+      expect(
+        selectSectionCosts(taContext, withDraftAppointment)?.get(1)?.lines[0]
+          .amount,
+      ).toBe(4500);
     });
 
-    expect(shown?.get(1)).toMatchObject({ notes: "Typed", yearStarted: 2019 });
-    expect(shown?.get(2)).toMatchObject({ notes: null, courseReleases: 3 });
+    it("is null before the cost assumptions load", () => {
+      expect(
+        selectDraftSectionCost(
+          { ...taContext, costAssumptions: null },
+          atRest,
+          section,
+        ),
+      ).toBeNull();
+    });
   });
 });

@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
@@ -21,6 +22,8 @@ return new class extends Migration {
         Schema::table('term_person_inputs', function (Blueprint $table) {
             $table->dropColumn(['year_started', 'course_releases', 'release_source', 'expected_sections']);
         });
+
+        DB::table('term_person_inputs')->whereNull('notes')->delete();
 
         Schema::table('term_person_inputs', function (Blueprint $table) {
             $table->text('notes')->nullable(false)->change();

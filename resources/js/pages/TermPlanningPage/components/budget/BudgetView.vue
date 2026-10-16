@@ -185,8 +185,8 @@ const editPersonInput = (edit: PersonInputEdit) =>
   props.schedule.dispatch({ type: "personInputEdited", edit });
 
 const people = computed(() => {
-  const { sectionCosts, rateOverrides, personInputs } = props.schedule;
-  if (!props.assumptions || !sectionCosts || !rateOverrides || !personInputs) {
+  const { sectionCosts, rateOverrides } = props.schedule;
+  if (!props.assumptions || !sectionCosts || !rateOverrides) {
     return [];
   }
 
@@ -198,7 +198,6 @@ const people = computed(() => {
       rateOverrides,
       props.roster,
       props.leavesByEmplid,
-      personInputs,
     ),
     props.schedule.localSections,
     props.schedule.filters,

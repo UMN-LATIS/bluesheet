@@ -259,7 +259,7 @@ function leadPricedLineOf(
 
   return ratedLine(
     instructorRateOf(context.pricingOfEmplid(lead.emplid), context.termRates),
-    context.rateOverrides.costInputsByEmplid.get(lead.emplid),
+    context.rateOverrides.personInputsByEmplid.get(lead.emplid),
   );
 }
 
@@ -545,7 +545,7 @@ function gradAppointmentsSplitAcrossSections(
       cost: gradCostOf(
         gradTerm,
         student,
-        rateOverrides.costInputsByEmplid.get(emplid),
+        rateOverrides.personInputsByEmplid.get(emplid),
       ),
     };
   };

@@ -12,7 +12,6 @@ import {
   roundGradRates,
   sisInstructor,
 } from "./costAssumptions.fixture";
-import { noPersonInputs, type PersonInputs } from "./personInputs";
 import { gradPersonEditOf, peopleRowsOf, type PersonRow } from "./peopleRows";
 import { plannedSection } from "./plannedSection.fixture";
 import { estimateTermCost } from "./termEstimate";
@@ -58,7 +57,6 @@ const rowsOf = (
   overrides = rateOverrides(),
   roster: SisEmployee[] = [],
   leavesByEmplid = new Map<number, TermLeave[]>(),
-  inputsByEmplid = new Map<number, PersonInputs>(),
   withAssumptions = assumptions,
 ) =>
   peopleRowsOf(
@@ -72,7 +70,6 @@ const rowsOf = (
     overrides,
     roster,
     leavesByEmplid,
-    inputsByEmplid,
   );
 
 const rowFor = (rows: PersonRow[], emplid: number) => {
@@ -149,7 +146,7 @@ describe("peopleRowsOf", () => {
 
   it("shows the planner's salary for a person, with fringe on top", () => {
     const overrides = rateOverrides({
-      costInputsByEmplid: costInputsFor(4, { salary: 8000 }),
+      personInputsByEmplid: costInputsFor(4, { salary: 8000 }),
     });
     const [row] = rowsOf([section(1, { instructors: [pi(4)] })], overrides);
 
@@ -163,7 +160,7 @@ describe("peopleRowsOf", () => {
 
   it("shows the planner's salary for a person, per section", () => {
     const overrides = rateOverrides({
-      costInputsByEmplid: costInputsFor(2, { salary: 12000 }),
+      personInputsByEmplid: costInputsFor(2, { salary: 12000 }),
     });
     const [row] = rowsOf(
       [
@@ -261,7 +258,6 @@ describe("peopleRowsOf", () => {
       overrides,
       [],
       new Map(),
-      new Map(),
       costAssumptions({
         ...assumptions,
         gradRates: {
@@ -304,7 +300,7 @@ describe("peopleRowsOf", () => {
 
   it("does not apply an instructor salary override to a TA", () => {
     const overrides = rateOverrides({
-      costInputsByEmplid: costInputsFor(10, { salary: 99 }),
+      personInputsByEmplid: costInputsFor(10, { salary: 99 }),
     });
     const rows = rowsOf([section(1, { instructors: [ta(10)] })], overrides);
 
@@ -327,13 +323,44 @@ describe("peopleRowsOf", () => {
         section(1, { instructors: [pi(2)] }),
         section(2, { instructors: [pi(1)] }),
       ],
-      rateOverrides(),
-      [],
-      new Map(),
-      new Map([[2, { ...noPersonInputs(), notes: "Prefers mornings" }]]),
+      rateOverrides({
+        personInputsByEmplid: costInputsFor(2, { notes: "Prefers mornings" }),
+      }),
     );
 
     expect(rows.map(({ notes }) => notes)).toEqual(["", "Prefers mornings"]);
+  });
+
+  it("adds a read-only TA line to the receipt of a non-grad who is PI on one section and TA on another, so it sums to the total", () => {
+    const overrides = rateOverrides({
+      personInputsByEmplid: costInputsFor(4, { salary: 8000 }),
+    });
+    const [row] = rowsOf(
+      [
+        section(1, { instructors: [pi(4)] }),
+        section(2, { instructors: [ta(4)] }),
+        section(3, { instructors: [ta(4)] }),
+      ],
+      overrides,
+    );
+
+    expect(
+      row.receipt.map(({ label, amount, kind }) => [label, amount, kind]),
+    ).toEqual([
+      ["Salary", 8000, "item"],
+      ["TA salary", 12000, "item"],
+      ["Fringe", 4000, "item"],
+      ["TA fringe", 6000, "item"],
+      ["Total", 30000, "total"],
+    ]);
+    expect(row.total).toBe(30000);
+    const itemSum = row.receipt
+      .filter(({ kind }) => kind === "item")
+      .reduce((sum, { amount }) => sum + (amount ?? 0), 0);
+    expect(itemSum).toBe(row.total);
+    expect(row.receipt[1].parts.every((part) => typeof part === "string")).toBe(
+      true,
+    );
   });
 
   it("counts only sections led toward the load of someone who also TAs", () => {
@@ -521,7 +548,6 @@ describe("gradPersonEditOf", () => {
       assumptions,
       overrides,
       [],
-      new Map(),
       new Map(),
     )[0];
 

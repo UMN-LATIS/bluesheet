@@ -50,7 +50,7 @@ export async function savePersonInput(
   return res.data;
 }
 
-/** A null appointment, no fee offset, and not international delete the row. */
+/** No fee offset and not international deletes the row. */
 export async function saveGradPerson(
   groupId: T.Group["id"],
   termCode: number,

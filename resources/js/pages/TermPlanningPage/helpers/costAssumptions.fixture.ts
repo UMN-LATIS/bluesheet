@@ -29,7 +29,7 @@ export const jobCodeRate = (
 export const rateOverrides = (
   extra: Partial<RateOverrides> = {},
 ): RateOverrides => ({
-  costInputsByEmplid: new Map(),
+  personInputsByEmplid: new Map(),
   gradPeopleByEmplid: new Map(),
   ...extra,
 });

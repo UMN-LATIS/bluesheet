@@ -156,7 +156,6 @@ import {
 import { FEE_OFFSET_ABD_REASON } from "../../helpers/gradCost";
 import { formatWholeDollars } from "../../helpers/money";
 import { gradPersonEditOf } from "../../helpers/peopleRows";
-import type { GradPersonEdit } from "../../helpers/costOverrides";
 import type { PersonInputEdit } from "../../helpers/personInputs";
 
 const props = defineProps<{
@@ -169,7 +168,7 @@ const emit = defineEmits<{
   selectSection: [sectionId: number];
   selectLeave: [leaveId: number];
   editPersonInput: [edit: PersonInputEdit];
-  editGradPerson: [edit: GradPersonEdit];
+  editGradPerson: [edit: GradPerson];
 }>();
 
 const COLUMNS: BudgetColumn<GradAssistantRow>[] = [
