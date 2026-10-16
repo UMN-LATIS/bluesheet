@@ -26,7 +26,7 @@
         </BudgetCell>
 
         <BudgetCell role="cell" class="tw-p-0">
-          <CountInputCell
+          <IntegerInputCell
             :count="row.yearStarted"
             :canEdit="canEdit"
             :label="`Year started for ${row.name}`"
@@ -79,7 +79,9 @@
             :canEdit="canEdit && !row.isAbd"
             :disabledReason="row.isAbd ? FEE_OFFSET_ABD_REASON : undefined"
             :label="`Student fee offset for ${row.name}`"
-            @change="(isChecked) => editGrad(row, { hasFeeOffset: isChecked })"
+            @change="
+              (isChecked) => editGradSettings(row, { hasFeeOffset: isChecked })
+            "
           />
         </BudgetCell>
 
@@ -89,7 +91,8 @@
             :canEdit="canEdit"
             :label="`International GA offset for ${row.name}`"
             @change="
-              (isChecked) => editGrad(row, { isInternational: isChecked })
+              (isChecked) =>
+                editGradSettings(row, { isInternational: isChecked })
             "
           />
         </BudgetCell>
@@ -141,7 +144,7 @@ import BudgetTable, { type BudgetColumn } from "./BudgetTable.vue";
 import BudgetTableRow from "./BudgetTableRow.vue";
 import { CheckIcon } from "@/icons";
 import CellSubline from "./CellSubline.vue";
-import CountInputCell from "./CountInputCell.vue";
+import IntegerInputCell from "./IntegerInputCell.vue";
 import GradCheckbox from "./GradCheckbox.vue";
 import MissingRate from "./MissingRate.vue";
 import PersonNameCell from "./PersonNameCell.vue";
@@ -219,7 +222,7 @@ function editNotes(row: GradAssistantRow, notes: string | null) {
   emit("editPersonInput", { emplid: row.emplid, field: "notes", value: notes });
 }
 
-function editGrad(
+function editGradSettings(
   row: GradAssistantRow,
   change: Partial<Omit<GradPerson, "emplid">>,
 ) {

@@ -57,8 +57,8 @@ export function termNameOf(termCode: number): string {
 }
 
 const LAST_FILL_STEP = 5;
-const LOWEST_STEP_UP_TO_FILL = 0.4;
-const HIGHEST_STEP_FROM_FILL = 0.95;
+const FILL_AT_STEP_ZERO = 0.4;
+const FILL_AT_LAST_STEP = 0.95;
 
 const clampToUnit = (fraction: number) => Math.min(1, Math.max(0, fraction));
 
@@ -78,14 +78,16 @@ export function enrollmentFillStepOf({
   const fill =
     enrollmentCap > 0 ? clampToUnit(enrollmentTotal / enrollmentCap) : 1;
   const fraction = clampToUnit(
-    (fill - LOWEST_STEP_UP_TO_FILL) /
-      (HIGHEST_STEP_FROM_FILL - LOWEST_STEP_UP_TO_FILL),
+    (fill - FILL_AT_STEP_ZERO) / (FILL_AT_LAST_STEP - FILL_AT_STEP_ZERO),
   );
 
   return Math.round(fraction * LAST_FILL_STEP);
 }
 
-/** Enrolled ÷ cap in the latest term the section ran. Null when it never ran. */
+/**
+ * Enrolled ÷ cap in the latest term the section ran. Null
+ * when it never ran.
+ */
 export function latestFillOf(history: EnrollmentPoint[]): number | null {
   const latest = history.findLast(
     ({ offering }) => offering !== null,

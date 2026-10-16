@@ -25,3 +25,15 @@ export function parseFringeRate(text: string): ParsedFringeRate {
 
   return { fringeRate: Math.round(basisPoints) / BASIS_POINTS_PER_UNIT };
 }
+
+/**
+ * Null when the server would accept `percent` as a grad
+ * student's appointment on one section, else the reason it
+ * would refuse it.
+ */
+export function refusalOfAppointmentPercent(percent: number): string | null {
+  if (!Number.isFinite(percent)) return "Enter a number.";
+  if (percent < 0 || percent > 100) return "Enter 0 to 100%.";
+
+  return null;
+}

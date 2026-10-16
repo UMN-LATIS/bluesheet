@@ -33,9 +33,10 @@
     />
 
     <!--
-      The panes float as cards on the recessed page. `relative` is what the
-      two overlaid panels are positioned against, so they cover the canvas
-      and not the bar above it.
+      The panes float as cards on the recessed page.
+      `relative` is what the two overlaid panels are
+      positioned against, so they cover the canvas and not
+      the bar above it.
     -->
     <div
       class="tw-relative tw-flex tw-min-h-0 tw-flex-1 tw-gap-3 tw-px-3 tw-pb-3 roomy:tw-px-4 roomy:tw-pb-4"
@@ -147,8 +148,7 @@
           :hasAssumptionsError="costAssumptionsQuery.isError.value"
           :history="enrollmentHistoryQuery.data.value ?? null"
           :termName="term?.name ?? ''"
-          :roster="roster"
-          :leavesByEmplid="termLeavesByEmplid"
+          :peopleRows="peopleRows"
         />
 
         <div
@@ -240,7 +240,7 @@
           :key="selectedPerson.emplid"
           :name="selectedPerson.name"
           :title="selectedPerson.title"
-          :budget="selectedPerson.budget"
+          :personRow="selectedPerson.personRow"
           :canEdit="schedule.canEditCosts"
           :isReadOnly="schedule.isReadOnly"
           :termSections="selectedPerson.termSections"
@@ -368,9 +368,10 @@ const route = useRoute();
 const router = useRouter();
 
 /**
- * Reactive, not a plain `props.groupId`: switching department keeps this
- * component mounted, so a query keyed on the value it opened with would go on
- * showing the department the reader just left.
+ * Reactive, not a plain `props.groupId`: switching
+ * department keeps this component mounted, so a query keyed
+ * on the value it opened with would go on showing the
+ * department the reader just left.
  */
 const groupId = computed(() => props.groupId);
 const termCode = computed(() => props.termCode);
@@ -410,10 +411,12 @@ const TERM_CODE_YEAR_STEP = 10;
 const groupTermsQuery = useSisGroupTermsQuery(groupId);
 
 /**
- * The same term a year back, which the empty-term card offers. Read from the
- * department's own terms rather than the University's, because those are the
- * ones the import modal lists: a term from anywhere else would leave its
- * dropdown blank and its list saying there is nothing to import.
+ * The same term a year back, which the empty-term card
+ * offers. Read from the department's own terms rather than
+ * the University's, because those are the ones the import
+ * modal lists: a term from anywhere else would leave its
+ * dropdown blank and its list saying there is nothing to
+ * import.
  */
 const suggestedSourceTerm = computed(() => {
   if (activeTermCode.value === null) return null;
@@ -475,23 +478,33 @@ async function undoLastImport() {
   }
 }
 
-/** The week is the one view a phone cannot draw; the day list stands in. */
+/**
+ * The week is the one view a phone cannot draw; the day
+ * list stands in.
+ */
 const activeView = computed<ScheduleView>(() =>
   isSmall.value && schedule.view === "week" ? "day" : schedule.view,
 );
 
 /**
- * Every section as the user sees it, this browser's unsaved edits included,
- * and what the canvases draw once the filters have been applied. Both are
- * derived inside the editor, so nothing the editor owns travels back to it.
+ * Every section as the user sees it, this browser's unsaved
+ * edits included, and what the canvases draw once the
+ * filters have been applied. Both are derived inside the
+ * editor, so nothing the editor owns travels back to it.
  */
 const localSections = computed(() => schedule.localSections);
 const placed = computed(() => schedule.placed);
 
-/** Lists and counts cover the whole term, whatever is checked. */
+/**
+ * Lists and counts cover the whole term, whatever is
+ * checked.
+ */
 const filterOptions = computed(() => buildFilterOptions(localSections.value));
 
-/** What the filters panel still has reason to list; see `isInView` there. */
+/**
+ * What the filters panel still has reason to list; see
+ * `isInView` there.
+ */
 const reachableValues = computed(() =>
   reachableFacetValues(localSections.value, schedule.filters),
 );
@@ -505,7 +518,10 @@ const sectionOf = (meetingId: string) =>
 
 const componentOf = (meeting: Meeting) => sectionOf(meeting.id)?.component;
 
-/** One per day tab: the classes each weekday holds, then the unplaced ones. */
+/**
+ * One per day tab: the classes each weekday holds, then the
+ * unplaced ones.
+ */
 const dayCounts = computed(() => {
   const counts = WEEKDAY_NAMES.map(
     (_, dayIndex) =>
@@ -519,12 +535,14 @@ const dayCounts = computed(() => {
 });
 
 /**
- * The editor's one effect, run here because the page owns the router. Every
- * key the editor owns is cleared first, so a key the new query leaves out is
- * removed rather than left standing from whatever the URL said before.
+ * The editor's one effect, run here because the page owns
+ * the router. Every key the editor owns is cleared first,
+ * so a key the new query leaves out is removed rather than
+ * left standing from whatever the URL said before.
  *
- * `replace` rather than `push`: stepping back through every checkbox and every
- * tab would make the back button useless for leaving the page.
+ * `replace` rather than `push`: stepping back through every
+ * checkbox and every tab would make the back button useless
+ * for leaving the page.
  */
 const runEffect = (effect: Effect) => {
   switch (effect.type) {
@@ -535,8 +553,9 @@ const runEffect = (effect: Effect) => {
   }
 };
 
-// Held here rather than inside a view, so that the toolbar, the filters panel,
-// every view, and the detail sheet all read and change the same schedule.
+// Held here rather than inside a view, so that the toolbar,
+// the filters panel, every view, and the detail sheet all
+// read and change the same schedule.
 const schedule = useScheduleEditor(
   computed(() => ({
     sections: sections.value,
@@ -547,8 +566,9 @@ const schedule = useScheduleEditor(
   runEffect,
 );
 
-// Moved above `schedule`, this throws a ReferenceError:
-// its enabled flag reads `schedule.view`.
+// Declaring `costAssumptionsQuery` above `schedule` throws
+// a ReferenceError, because its enabled flag reads
+// `schedule.view`.
 const costAssumptionsQuery = useCostAssumptionsQuery(
   groupId,
   activeTermCode,
@@ -565,15 +585,11 @@ const { saveGradPersonEdit, savePersonInputEdit } = useCostMutations(
   activeTermCode,
 );
 
-const enrollmentHistoryQuery = useEnrollmentHistoryQuery(
-  groupId,
-  activeTermCode,
-);
-
 /**
- * The section being created, in the shape every view already reads. It has no
- * row on the server: its fields live in the editor's draft, which
- * `draftSection` lays over this stand-in.
+ * The section being created, in the shape every view
+ * already reads. It has no row on the server: its fields
+ * live in the editor's draft, which `draftSection` lays
+ * over this stand-in.
  */
 const newSection = computed<PlannedSection | null>(() => {
   if (!schedule.isCreatingSection || activeTermCode.value === null) return null;
@@ -612,9 +628,10 @@ const showRefusal = (refusal: unknown) =>
   });
 
 /**
- * Read synchronously by `saveNewSection` rather than watched, because two
- * clicks land before Vue has re-rendered the button as disabled, and the
- * second would POST the same section again.
+ * Read synchronously by `saveNewSection` rather than
+ * watched, because two clicks land before Vue has
+ * re-rendered the button as disabled, and the second would
+ * POST the same section again.
  */
 const isSavingNewSection = ref(false);
 
@@ -649,7 +666,10 @@ async function deleteSelectedSection() {
   }
 }
 
-/** Closing the sheet on a section nobody created is discarding it. */
+/**
+ * Closing the sheet on a section nobody created is
+ * discarding it.
+ */
 const closeSheet = () =>
   schedule.isNewSectionSelected
     ? schedule.dispatch({ type: "newSectionDiscarded" })
@@ -657,7 +677,10 @@ const closeSheet = () =>
 
 const coursesQuery = useTermPlanCoursesQuery(groupId);
 
-/** Course codes a scheduler named, which the SIS has never published. */
+/**
+ * Course codes a scheduler named, which the SIS has never
+ * published.
+ */
 const unofficialCourseCodes = computed(
   () =>
     new Set(
@@ -676,15 +699,18 @@ const isUnofficialBlock = (meeting: Meeting) => {
 };
 
 /**
- * A section drawn and given a course but never created, a sheet with typing
- * behind its Save button, or an edit the autosave has not had an answer for.
+ * A section drawn and given a course but never created, a
+ * sheet with typing behind its Save button, or an edit the
+ * autosave has not had an answer for.
  *
- * `pendingEdits` covers the 800ms pause plus the request: a grid drag is
- * saved without asking, but for that window it is only on screen. It empties
- * as each save is acknowledged.
+ * `pendingEdits` covers the 800ms pause plus the request: a
+ * grid drag is saved without asking, but for that window it
+ * is only on screen. It empties as each save is
+ * acknowledged.
  *
- * The drawn section is tested the way the sheet tests it, so one click on the
- * grid and then Back is not a question; see `selectAbandonsUnsavedWork`.
+ * The drawn section is tested the way the sheet tests it,
+ * so one click on the grid and then Back is not a question;
+ * see `selectAbandonsUnsavedWork`.
  */
 const hasUnsavedWork = computed(
   () =>
@@ -703,10 +729,12 @@ onBeforeRouteLeave(
 );
 
 /**
- * Switching department or term keeps this component, so `onBeforeRouteLeave`
- * never runs and the editor would carry the old department's overlays and its
- * drawn section into the new one. A query-only change is the page writing its
- * own filters back, which nothing here should interrupt.
+ * Switching department or term keeps this component, so
+ * `onBeforeRouteLeave` never runs and the editor would
+ * carry the old department's overlays and its drawn section
+ * into the new one. A query-only change is the page writing
+ * its own filters back, which nothing here should
+ * interrupt.
  */
 onBeforeRouteUpdate((to, from) => {
   const isSameTermPlan =
@@ -720,13 +748,15 @@ onBeforeRouteUpdate((to, from) => {
   return true;
 });
 
-// the browser shows its own wording; preventDefault is what asks for the prompt
+// the browser shows its own wording; preventDefault is what
+// asks for the prompt
 useEventListener(window, "beforeunload", (event: BeforeUnloadEvent) => {
   if (hasUnsavedWork.value) event.preventDefault();
 });
 
-// Sections are read from `localSections`, not from the payload, so a section
-// saves with the edits the reader can see on it rather than without them.
+// Sections are read from `localSections`, not from the
+// payload, so a section saves with the edits the reader can
+// see on it rather than without them.
 useTermPlanAutosave({
   sections: localSections,
   pendingEdits: computed(() => schedule.pendingEdits),
@@ -742,7 +772,7 @@ useTermPlanAutosave({
 
 useCostEditsAutosave({
   pendingEdits: computed(() => schedule.pendingGradPersonEdits),
-  save: (_key, edit) => saveGradPersonEdit.mutateAsync(edit),
+  save: (edit) => saveGradPersonEdit.mutateAsync(edit),
   onSaved: (key, saved) =>
     schedule.dispatch({ type: "gradPersonEditsPersisted", key, saved }),
   onRefused: showRefusal,
@@ -750,15 +780,17 @@ useCostEditsAutosave({
 
 useCostEditsAutosave({
   pendingEdits: computed(() => schedule.pendingPersonInputEdits),
-  save: (_key, edit) => savePersonInputEdit.mutateAsync(edit),
+  save: (edit) => savePersonInputEdit.mutateAsync(edit),
   onSaved: (key, saved) =>
     schedule.dispatch({ type: "personInputEditsPersisted", key, saved }),
   onRefused: showRefusal,
 });
 
-// The only way anything the URL carries is written: a pasted link on first
-// load, the back button, or `runEffect`'s own write arriving back. `update`
-// raises no effect for it, which is what stops the two answering each other.
+// The only way anything the URL carries is written: a
+// pasted link on first load, the back button, or
+// `runEffect`'s own write arriving back. `update` raises no
+// effect for it, which is what stops the two answering each
+// other.
 watch(
   () => route.query,
   (query) =>
@@ -766,7 +798,10 @@ watch(
   { immediate: true },
 );
 
-/** "Tue · 2 – 3p": how the sheet names the hour list it can go back to. */
+/**
+ * "Tue · 2 – 3p": how the sheet names the hour list it can
+ * go back to.
+ */
 const returnTo = computed(() => {
   const hour = schedule.hourReturnedTo;
   if (!hour) return null;
@@ -784,7 +819,10 @@ const goBackToHour = () => {
     });
 };
 
-/** The sections whose meetings overlap the selected hour, as the grid shows them. */
+/**
+ * The sections whose meetings overlap the selected hour, as
+ * the grid shows them.
+ */
 const hourEntries = computed<HourEntry[]>(() => {
   const hour = schedule.openHour;
   if (!hour) return [];
@@ -805,8 +843,9 @@ const hourEntries = computed<HourEntry[]>(() => {
 });
 
 /**
- * The section the sheet is open on. A meeting drawn locally (local-N) belongs
- * to no section, so selecting it stores an id but opens no sheet.
+ * The section the sheet is open on. A meeting drawn locally
+ * (local-N) belongs to no section, so selecting it stores
+ * an id but opens no sheet.
  */
 const selectedSection = computed(() => {
   if (schedule.isNewSectionSelected) return newSection.value;
@@ -821,34 +860,45 @@ const selectedSection = computed(() => {
   );
 });
 
+const enrollmentHistoryQuery = useEnrollmentHistoryQuery(
+  groupId,
+  activeTermCode,
+  computed(() => schedule.view === "budget" || selectedSection.value !== null),
+);
+
 const teachingHistoryQuery = useTeachingHistoryQuery(
   groupId,
   activeTermCode,
   computed(() => schedule.selectedEmplid !== null),
 );
 
-const selectedPersonBudget = computed(() => {
+const peopleRows = computed(() => {
   const assumptions = costAssumptionsQuery.data.value;
-  const { selectedEmplid, sectionCosts, rateOverrides } = schedule;
-  const isCostable =
-    activeView.value === "budget" &&
-    assumptions &&
-    sectionCosts &&
-    rateOverrides;
-  if (selectedEmplid === null || !isCostable) return null;
+  const { sectionCosts, costInputs } = schedule;
+  if (!assumptions || !sectionCosts || !costInputs) return [];
 
-  const row = peopleRowsOf(
+  return peopleRowsOf(
     localSections.value,
     sectionCosts,
     assumptions,
-    rateOverrides,
+    costInputs,
     roster.value,
     termLeavesByEmplid.value,
-  ).find(({ emplid }) => emplid === selectedEmplid);
-  if (!row) return null;
-
-  return row;
+  );
 });
+
+const selectedPersonRow = computed(() => {
+  const { selectedEmplid } = schedule;
+  if (selectedEmplid === null || activeView.value !== "budget") return null;
+
+  return (
+    peopleRows.value.find(({ emplid }) => emplid === selectedEmplid) ?? null
+  );
+});
+
+const firstNonEmptyText = (
+  candidates: (string | null | undefined)[],
+): string | null => candidates.find((text) => text) ?? null;
 
 const selectedPerson = computed(() => {
   const emplid = schedule.selectedEmplid;
@@ -864,7 +914,7 @@ const selectedPerson = computed(() => {
   const sectionInstructor = localSections.value
     .flatMap(({ instructors }) => instructors)
     .find((instructor) => instructor.emplid === emplid);
-  const budget = selectedPersonBudget.value;
+  const personRow = selectedPersonRow.value;
 
   return {
     emplid,
@@ -873,12 +923,12 @@ const selectedPerson = computed(() => {
       sectionInstructor?.name ??
       historyPerson?.name ??
       "Unknown",
-    title:
-      budget?.title ||
-      rosterEntry?.positionTitle ||
-      historyPerson?.title ||
-      null,
-    budget,
+    title: firstNonEmptyText([
+      personRow?.title,
+      rosterEntry?.positionTitle,
+      historyPerson?.title,
+    ]),
+    personRow,
     termSections: personTermSectionsOf(
       emplid,
       localSections.value,

@@ -5,7 +5,7 @@ import { QUIET_PERIOD_MS } from "./useTermPlanAutosave";
 /** Saves each cost edit once edits stop changing. */
 export function useCostEditsAutosave<Edit>(options: {
   pendingEdits: Readonly<Ref<Record<string, Edit>>>;
-  save: (key: string, edit: Edit) => Promise<unknown>;
+  save: (edit: Edit) => Promise<unknown>;
   onSaved: (key: string, saved: Edit) => void;
   /** Called once per failed save. Nothing retries. */
   onRefused: (refusal: unknown) => void;
@@ -21,7 +21,7 @@ export function useCostEditsAutosave<Edit>(options: {
       const edit = pendingEdits.value[key];
 
       try {
-        await save(key, edit);
+        await save(edit);
         onSaved(key, edit);
       } catch (refusal) {
         onRefused(refusal);
@@ -29,20 +29,20 @@ export function useCostEditsAutosave<Edit>(options: {
     };
 
     const previousSave = saveQueueByKey.get(key) ?? Promise.resolve();
-    const queued = previousSave.then(saveLatestEdit);
+    const queuedSave = previousSave.then(saveLatestEdit);
 
-    saveQueueByKey.set(key, queued);
-    queued.finally(() => {
-      if (saveQueueByKey.get(key) === queued) saveQueueByKey.delete(key);
+    saveQueueByKey.set(key, queuedSave);
+    queuedSave.finally(() => {
+      if (saveQueueByKey.get(key) === queuedSave) saveQueueByKey.delete(key);
     });
 
-    return queued;
+    return queuedSave;
   };
 
-  const saveEdited = () =>
+  const saveAllPendingEdits = () =>
     Promise.all(Object.keys(pendingEdits.value).map(saveEditAt));
 
-  const flushSoon = debounce(saveEdited, QUIET_PERIOD_MS);
+  const flushSoon = debounce(saveAllPendingEdits, QUIET_PERIOD_MS);
 
   watch(pendingEdits, (edits) => {
     if (Object.keys(edits).length > 0) flushSoon();

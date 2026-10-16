@@ -16,10 +16,10 @@ function heldRequest() {
 type Edit = number | null;
 
 function costEditsUnderAutosave(
-  save: (key: string, edit: Edit) => Promise<unknown> = () => Promise.resolve(),
+  save: (edit: Edit) => Promise<unknown> = () => Promise.resolve(),
 ) {
   const pendingEdits = ref<Record<string, Edit>>({});
-  const sent: [string, Edit][] = [];
+  const sent: Edit[] = [];
   const saved: [string, Edit][] = [];
   const refused: unknown[] = [];
 
@@ -27,9 +27,9 @@ function costEditsUnderAutosave(
   const autosave = scope.run(() =>
     useCostEditsAutosave<Edit>({
       pendingEdits,
-      save: (key, edit) => {
-        sent.push([key, edit]);
-        return save(key, edit);
+      save: (edit) => {
+        sent.push(edit);
+        return save(edit);
       },
       onSaved: (key, edit) => saved.push([key, edit]),
       onRefused: (refusal) => refused.push(refusal),
@@ -52,8 +52,11 @@ describe("useCostEditsAutosave", () => {
     await autosave.flushSoon.flush();
     await settle();
 
-    expect(sent).toEqual([["a", 1], ["b", 2]]);
-    expect(saved).toEqual([["a", 1], ["b", 2]]);
+    expect(sent).toEqual([1, 2]);
+    expect(saved).toEqual([
+      ["a", 1],
+      ["b", 2],
+    ]);
   });
 
   it("saves a null edit, since null clears the setting", async () => {
@@ -64,33 +67,36 @@ describe("useCostEditsAutosave", () => {
     await flush();
     await settle();
 
-    expect(sent).toEqual([["a", null]]);
+    expect(sent).toEqual([null]);
     expect(saved).toEqual([["a", null]]);
   });
 
   it("sends the newer value in a second save once the first is back", async () => {
     const held = heldRequest();
     const { pendingEdits, sent, saved, flush } = costEditsUnderAutosave(
-      (_key, edit) => (edit === 1 ? held.promise : Promise.resolve()),
+      (edit) => (edit === 1 ? held.promise : Promise.resolve()),
     );
 
     pendingEdits.value = { a: 1 };
     await settle();
     const first = flush();
     await settle();
-    expect(sent).toEqual([["a", 1]]);
+    expect(sent).toEqual([1]);
 
     pendingEdits.value = { a: 2 };
     await settle();
     const second = flush();
     await settle();
-    expect(sent).toEqual([["a", 1]]);
+    expect(sent).toEqual([1]);
 
     held.answer();
     await Promise.all([first, second]);
 
-    expect(sent).toEqual([["a", 1], ["a", 2]]);
-    expect(saved).toEqual([["a", 1], ["a", 2]]);
+    expect(sent).toEqual([1, 2]);
+    expect(saved).toEqual([
+      ["a", 1],
+      ["a", 2],
+    ]);
   });
 
   it("calls onRefused and not onSaved when a save is refused", async () => {
@@ -118,6 +124,6 @@ describe("useCostEditsAutosave", () => {
     scope.stop();
     await settle();
 
-    expect(sent).toEqual([["a", 1]]);
+    expect(sent).toEqual([1]);
   });
 });

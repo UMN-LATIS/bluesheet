@@ -2,12 +2,15 @@ import { useQuery } from "@tanstack/vue-query";
 import { computed, type Ref } from "vue";
 import { fetchCostAssumptions } from "@/api";
 
-const costAssumptionsQueryKey = (
+export const costAssumptionsQueryKey = (
   groupId: Readonly<Ref<number>>,
   termCode: Readonly<Ref<number | null>>,
 ) => ["termPlan", "costAssumptions", groupId, termCode] as const;
 
-/** Disabled while `termCode` is null or `isEnabled` is false. */
+/**
+ * Disabled while `termCode` is null or `isEnabled` is
+ * false.
+ */
 export function useCostAssumptionsQuery(
   groupId: Readonly<Ref<number>>,
   termCode: Readonly<Ref<number | null>>,

@@ -178,13 +178,13 @@ describe('job code rates', function () {
     });
 
     it('describes a job code with its type, and lists the migrated TBA row', function () {
-        $rows = collect(getJson(costAssumptionsUrl($this->group))->json('jobCodes'))->keyBy('code');
+        $rows = collect(getJson(costAssumptionsUrl($this->group))->json('jobCodeRates'))->keyBy('code');
 
         expect($rows['9519'])->toMatchArray(['instructorType' => 'teaching_assistant']);
         expect($rows['TBA'])->toMatchArray(['instructorType' => null]);
     });
 
-    it('reports the salary, fringe rate, and source of the rate for exactly the requested term', function () {
+    it('reports the salary and fringe rate of the rate for exactly the requested term', function () {
         $jobCode = JobCode::factory()->create(['code' => 'X101']);
         JobCodeTermRate::factory()->create(['job_code_id' => $jobCode->id, 'term_code' => 1259, 'salary' => 9000]);
         JobCodeTermRate::factory()->create([
@@ -192,27 +192,24 @@ describe('job code rates', function () {
             'term_code' => TERM_FALL_2026,
             'salary' => 5870.2,
             'fringe_rate' => 1.1264,
-            'source' => 'Sample data',
         ]);
         JobCodeTermRate::factory()->create(['job_code_id' => $jobCode->id, 'term_code' => 1273, 'salary' => 11000]);
 
-        $row = collect(getJson(costAssumptionsUrl($this->group))->json('jobCodes'))->firstWhere('code', 'X101');
+        $row = collect(getJson(costAssumptionsUrl($this->group))->json('jobCodeRates'))->firstWhere('code', 'X101');
 
         expect($row['code'])->toBe($jobCode->code);
         expect($row['salary'])->toBe(5870.2);
         expect($row['fringeRate'])->toBe(1.1264);
-        expect($row['source'])->toBe('Sample data');
     });
 
     it('reports a null salary and fringe rate for a term with no rate, without falling back to an earlier term', function () {
         $jobCode = JobCode::factory()->create(['code' => 'X101']);
         JobCodeTermRate::factory()->create(['job_code_id' => $jobCode->id, 'term_code' => 1259]);
 
-        $row = collect(getJson(costAssumptionsUrl($this->group))->json('jobCodes'))->firstWhere('code', 'X101');
+        $row = collect(getJson(costAssumptionsUrl($this->group))->json('jobCodeRates'))->firstWhere('code', 'X101');
 
         expect($row['salary'])->toBeNull();
         expect($row['fringeRate'])->toBeNull();
-        expect($row['source'])->toBeNull();
     });
 });
 
@@ -451,7 +448,7 @@ describe('grad rates in the payload', function () {
     it('reports a job code student status', function () {
         JobCode::where('code', '9511')->update(['student_status' => StudentStatus::Abd]);
 
-        $rows = collect(getJson(costAssumptionsUrl($this->group))->json('jobCodes'))->keyBy('code');
+        $rows = collect(getJson(costAssumptionsUrl($this->group))->json('jobCodeRates'))->keyBy('code');
 
         expect($rows['9511']['studentStatus'])->toBe('abd');
         expect($rows['TBA']['studentStatus'])->toBeNull();
@@ -629,7 +626,6 @@ describe('GET enrollment-history', function () {
             'termCode' => 1263,
             'enrollmentTotal' => 31,
             'enrollmentCap' => 40,
-            'waitlistTotal' => 3,
             'leadInstructorLastName' => 'García',
             'meetings' => [['days' => ['mon', 'wed', 'fri'], 'startTime' => '10:10', 'endTime' => '11:00']],
         ]);

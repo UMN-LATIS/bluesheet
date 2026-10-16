@@ -1,6 +1,7 @@
 import type { InstructorType } from "@/types";
 import type { PersonRow } from "./peopleRows";
 import { hasEmplid, type PersonWithEmplid } from "./personWithEmplid";
+import { sumOf } from "./sumOf";
 
 export interface PaContractRow extends PersonWithEmplid {
   typeLabel: string;
@@ -26,27 +27,20 @@ function typeLabelOf({ instructorType }: PersonRow): string | null {
   return TYPE_LABELS[instructorType] ?? null;
 }
 
-const isPaOrContract = (person: PersonRow) =>
-  !person.isGrad && typeLabelOf(person) !== null;
+function paContractRowsAmong(people: PersonWithEmplid[]): PaContractRow[] {
+  return people.flatMap((person) => {
+    const typeLabel = typeLabelOf(person);
+    if (person.isGrad || typeLabel === null) return [];
 
-const sumOf = (amounts: (number | null)[]) =>
-  amounts.reduce<number>((total, amount) => total + (amount ?? 0), 0);
-
-function paContractRowOf(person: PersonWithEmplid): PaContractRow {
-  return {
-    ...person,
-    typeLabel: typeLabelOf(person) ?? NO_JOB_CODE_LABEL,
-  };
+    return [{ ...person, typeLabel }];
+  });
 }
 
 export function paContractRowsOf(people: PersonRow[]): {
   rows: PaContractRow[];
   totals: PaContractTotals;
 } {
-  const rows = people
-    .filter(isPaOrContract)
-    .filter(hasEmplid)
-    .map(paContractRowOf);
+  const rows = paContractRowsAmong(people.filter(hasEmplid));
 
   return {
     rows,

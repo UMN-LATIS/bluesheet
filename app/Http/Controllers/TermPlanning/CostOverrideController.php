@@ -104,7 +104,7 @@ class CostOverrideController extends Controller {
         $uniqueKey = ['academic_org' => $academicOrg, 'term_code' => $termCode, 'emplid' => $emplid];
         $changedColumns = [];
         foreach ($changes as $key => $value) {
-            $changedColumns[self::PERSON_INPUT_COLUMN_BY_KEY[$key]] = $this->blankToNull($key, $value);
+            $changedColumns[self::PERSON_INPUT_COLUMN_BY_KEY[$key]] = $this->normalizedPersonInput($key, $value);
         }
 
         $personInput = DB::transaction(fn() => $this->saveChangedPersonInputs($uniqueKey, $changedColumns));
@@ -129,7 +129,10 @@ class CostOverrideController extends Controller {
         return null;
     }
 
-    /** Every key null when the person has no saved inputs. */
+    /**
+     * Every key null when the person has no saved
+     * inputs.
+     */
     private function personInputsOf(?TermPersonInput $personInput): array {
         return array_map(
             fn(string $column) => $personInput?->{$column},
@@ -137,7 +140,7 @@ class CostOverrideController extends Controller {
         );
     }
 
-    private function blankToNull(string $key, mixed $input): mixed {
+    private function normalizedPersonInput(string $key, mixed $input): mixed {
         if ($input === null) {
             return null;
         }

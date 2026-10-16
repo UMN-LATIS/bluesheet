@@ -6,7 +6,7 @@ import type {
   TermLeave,
 } from "@/types";
 import type { PlannedSection } from "../types";
-import type { RateOverrides } from "./costOverrides";
+import type { CostInputs } from "./costOverrides";
 import {
   instructorRateOf,
   isGradJobCodeRate,
@@ -22,13 +22,15 @@ import {
   type ReceiptLine,
   type TaWork,
 } from "./costReceipt";
+import { countLabel } from "./countLabel";
 import { formatWholeDollars } from "./money";
 import { fundLabelOf } from "./fundLabel";
-import { jobLabelOf } from "./jobLabel";
+import { jobLabelOf, titleOf } from "./jobLabel";
 import type { PersonInputs } from "./personInputs";
+import { sumOf } from "./sumOf";
 import {
-  pricingByEmplidOf,
-  termRatesOf,
+  pricerOf,
+  ratesByJobCodeOf,
   type CostLine,
   type GradAppointment,
   type SectionCost,
@@ -45,9 +47,14 @@ export interface PersonRow {
   name: string;
   jobCode: string;
   title: string;
-  /** "9517 · Ph D Candidate Grad Instructor", or the job code alone when it has no title. */
+  /**
+   * "9517 · Ph D Candidate Grad Instructor", or the job
+   * code alone when it has no title.
+   */
   jobLabel: string;
-  /** Null when the person's job code is not in the catalog. */
+  /**
+   * Null when the person's job code is not in the catalog.
+   */
   instructorType: InstructorType | null;
   fundLabel: string;
   /**
@@ -55,19 +62,34 @@ export interface PersonRow {
    * rate exists.
    */
   salary: number | null;
-  /** Only a non-grad instructor's salary can be overridden. */
+  /**
+   * Only a non-grad instructor's salary can be overridden.
+   */
   isSalaryOverridden: boolean;
   /** Null when there is nothing to add to the salary. */
   salaryHint: string | null;
-  /** Per paid section or course. Null when no rate exists. */
+  /**
+   * Per paid section or course. Null when no rate exists.
+   */
   fringe: number | null;
-  /** This term's salary, over every paid section. Lines with no rate add nothing. */
+  /**
+   * This term's salary, over every paid section. Lines with
+   * no rate add nothing.
+   */
   termSalary: number;
-  /** This term's fringe, over every paid section. Lines with no rate add nothing. */
+  /**
+   * This term's fringe, over every paid section. Lines with
+   * no rate add nothing.
+   */
   termFringe: number;
-  /** Paid sections, or a grad student's appointment percent. */
+  /**
+   * Paid sections, or a grad student's appointment percent.
+   */
   loadLabel: string;
-  /** Sections paid this term, in the role the person is costed in. */
+  /**
+   * Sections paid this term, in the role the person is
+   * costed in.
+   */
   paidSectionCount: number;
   courseReleases: number | null;
   releaseSource: string | null;
@@ -83,7 +105,10 @@ export interface PersonRow {
   /** Leaves that overlap the term. */
   leaves: TermLeave[];
   isGrad: boolean;
-  /** The sum of their sections' parts. Null unless a grad student. */
+  /**
+   * The sum of the appointment percents on their sections.
+   * Null unless a grad student.
+   */
   appointmentPercent: number | null;
   hasFeeOffset: boolean;
   isInternational: boolean;
@@ -92,8 +117,8 @@ export interface PersonRow {
 }
 
 /**
- * The edit that changes one of a grad student's settings and
- * keeps the others. Null on the Unstaffed row.
+ * The edit that changes one of a grad student's settings
+ * and keeps the others. Null on the Unstaffed row.
  */
 export function gradPersonEditOf(
   row: PersonRow,
@@ -135,12 +160,12 @@ export function peopleRowsOf(
   sections: PlannedSection[],
   costsBySectionId: Map<number, SectionCost>,
   assumptions: CostAssumptions,
-  rateOverrides: RateOverrides,
+  costInputs: CostInputs,
   roster: SisEmployee[],
   leavesByEmplid: Map<number, TermLeave[]>,
 ): PersonRow[] {
-  const pricingOfEmplid = pricingByEmplidOf(assumptions);
-  const termRates = termRatesOf(assumptions);
+  const pricingOfEmplid = pricerOf(assumptions);
+  const ratesByJobCode = ratesByJobCodeOf(assumptions);
   const positionTitlesByEmplid = new Map(
     assumptions.people.map((person) => [person.emplid, person.positionTitles]),
   );
@@ -176,14 +201,14 @@ export function peopleRowsOf(
         ? lines.every(({ role }) => role === "ta")
         : rate?.instructorType === "teaching_assistant";
     const leaves = leavesByEmplid.get(emplid) ?? [];
+    const assignedInstructor = charges
+      .flatMap(({ section }) => section.instructors)
+      .find((instructor) => instructor.emplid === emplid);
     const person =
-      rosterByEmplid.get(emplid) ??
-      charges
-        .flatMap(({ section }) => section.instructors)
-        .find((instructor) => instructor.emplid === emplid) ??
-      leaves[0];
+      rosterByEmplid.get(emplid) ?? assignedInstructor ?? leaves[0];
+    const paidRole = isTa ? "ta" : "instructor";
     const paidCount = lines.filter(
-      (line) => line.role === (isTa ? "ta" : "instructor") && isPaid(line),
+      (line) => line.role === paidRole && isPaid(line),
     ).length;
     const paidTaCount = lines.filter(
       (line) => line.role === "ta" && isPaid(line),
@@ -191,29 +216,25 @@ export function peopleRowsOf(
     const taWork: TaWork | undefined =
       !isGrad && !isTa && paidTaCount > 0
         ? {
-            ...unitFiguresOf(taRateOf(pricing, termRates), undefined),
+            ...unitFiguresOf(taRateOf(pricing, ratesByJobCode), undefined),
             courseCount: paidTaCount,
           }
         : undefined;
-    const inputs = rateOverrides.personInputsByEmplid.get(emplid);
+    const inputs = costInputs.personInputsByEmplid.get(emplid);
     const courseReleases = inputs?.courseReleases ?? null;
-    const gradSetting = rateOverrides.gradPeopleByEmplid.get(emplid);
+    const gradSetting = costInputs.gradPeopleByEmplid.get(emplid);
     const appointmentPercent = isGrad
       ? (gradAppointmentOf(lines)?.student.appointmentPercent ?? 0)
       : null;
 
-    const unitFigures = unitFiguresOf(
-      isTa
-        ? taRateOf(pricing, termRates)
-        : instructorRateOf(pricing, termRates),
-      isTa ? undefined : rateOverrides.personInputsByEmplid.get(emplid),
-    );
+    const rateForUnit = isTa
+      ? taRateOf(pricing, ratesByJobCode)
+      : instructorRateOf(pricing, ratesByJobCode);
+    const unitOverrides = isTa ? undefined : inputs;
+    const unitFigures = unitFiguresOf(rateForUnit, unitOverrides);
     const price = isGrad ? gradPriceOf(lines) : unitPriceOf(unitFigures);
     const chargeSummary = chargeSummaryOf(charges);
-    const title =
-      rate?.title ??
-      (jobCode && positionTitlesByEmplid.get(emplid)?.[jobCode]) ??
-      "";
+    const title = titleOf(rate, jobCode, positionTitlesByEmplid.get(emplid));
 
     const row: PersonRow = {
       emplid,
@@ -261,25 +282,22 @@ export function peopleRowsOf(
 
   const hasInstructorType = ({ emplid }: SisEmployee) =>
     pricingOfEmplid(emplid).rate?.instructorType != null;
-  const idleEmplids = new Set([
+  const rosterAndLeaveEmplids = new Set([
     ...roster.filter(hasInstructorType).map(({ emplid }) => emplid),
     ...leavesByEmplid.keys(),
   ]);
   const rows = [
     ...[...chargesByEmplid].map(([emplid, charges]) => rowOf(emplid, charges)),
-    ...[...idleEmplids]
+    ...[...rosterAndLeaveEmplids]
       .filter((emplid) => !chargesByEmplid.has(emplid))
       .map((emplid) => rowOf(emplid, [])),
   ].sort((a, b) => a.sortName.localeCompare(b.sortName));
 
   return [
     ...rows.map(({ row }) => row),
-    ...unstaffedRowsOf(unstaffedCharges, unstaffedRateOf(termRates)),
+    ...unstaffedRowsOf(unstaffedCharges, unstaffedRateOf(ratesByJobCode)),
   ];
 }
-
-const sumOf = (amounts: (number | null)[]) =>
-  amounts.reduce<number>((total, amount) => total + (amount ?? 0), 0);
 
 interface NamedPerson {
   name: string | null;
@@ -287,7 +305,10 @@ interface NamedPerson {
   lastName: string | null;
 }
 
-/** "Lastname, Firstname", or the single name the SIS sent when either part is missing. */
+/**
+ * "Lastname, Firstname", or the single name the SIS sent
+ * when either part is missing.
+ */
 function nameOf(person: NamedPerson | undefined): string {
   if (person?.lastName && person.firstName) {
     return `${person.lastName}, ${person.firstName}`;
@@ -382,7 +403,7 @@ function gradHintOf({ student, cost }: GradAppointment): string | null {
   if (credits > 0) {
     const standing = student.isAbd ? " ABD" : "";
 
-    return `${student.appointmentPercent}%${standing} · ${credits} ${credits === 1 ? "credit" : "credits"}`;
+    return `${student.appointmentPercent}%${standing} · ${countLabel(credits, "credit", "credits")}`;
   }
 
   const offsets = (cost?.feeOffset ?? 0) + (cost?.internationalOffset ?? 0);
@@ -444,7 +465,7 @@ function chargeSummaryOf(charges: Charge[]) {
   ];
 
   return {
-    total: lines.reduce((total, { amount }) => total + (amount ?? 0), 0),
+    total: sumOf(lines.map(({ amount }) => amount)),
     hasMissingRate: lines.some(({ amount }) => amount === null),
     sections: paidSections
       .map((section) => ({

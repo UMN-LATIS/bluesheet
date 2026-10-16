@@ -13,7 +13,11 @@
     <env name="DB_DATABASE" value="testing"/>
     <!-- Bandaid refuses to construct without a token, and every test fakes its HTTP calls. -->
     <env name="BANDAID_KEY" value="testing-key"/>
-    <!-- Without this, a password in .env makes test requests bind to campus LDAP and return HTTP 500 whenever it is unreachable. -->
+    <!--
+      Without this, a password in .env makes test requests
+      bind to campus LDAP and return HTTP 500 whenever it
+      is unreachable.
+    -->
     <env name="LDAP_PASSWORD" value=""/>
     <env name="BCRYPT_ROUNDS" value="4"/>
     <env name="CACHE_DRIVER" value="array"/>

@@ -111,12 +111,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import type {
-  CostAssumptions,
-  EnrollmentHistory,
-  SisEmployee,
-  TermLeave,
-} from "@/types";
+import type { CostAssumptions, EnrollmentHistory } from "@/types";
 import AdminRatesLink from "./AdminRatesLink.vue";
 import BudgetHeader from "./BudgetHeader.vue";
 import BudgetTabBar from "./BudgetTabBar.vue";
@@ -126,7 +121,7 @@ import InstructorCostsTable from "./InstructorCostsTable.vue";
 import PaContractTable from "./PaContractTable.vue";
 import SectionsTable from "./SectionsTable.vue";
 import TenureTrackTable from "./TenureTrackTable.vue";
-import { budgetRowOf } from "../../helpers/budgetRows";
+import { budgetRowOf, sectionLabelerOf } from "../../helpers/budgetRows";
 import {
   enrollmentSeriesBySection,
   historyKeyOf,
@@ -136,7 +131,7 @@ import { gradCalculatorOf } from "../../helpers/gradCalculatorRows";
 import { instructorCostGroupsOf } from "../../helpers/instructorCostRows";
 import { jobLabelerOf } from "../../helpers/jobLabel";
 import { paContractRowsOf } from "../../helpers/paContractRows";
-import { peopleRowsOf } from "../../helpers/peopleRows";
+import type { PersonRow } from "../../helpers/peopleRows";
 import type { PersonInputEdit } from "../../helpers/personInputs";
 import { filterPeople } from "../../helpers/scheduleFilters";
 import { tenureTrackRowsOf } from "../../helpers/tenureTrackRows";
@@ -149,28 +144,19 @@ const props = defineProps<{
   assumptions: CostAssumptions | null;
   isLoadingAssumptions: boolean;
   hasAssumptionsError: boolean;
-  /**
-   * Null until loaded. Sections then show no history rather
-   * than waiting.
-   */
+  /** Null until loaded. */
   history: EnrollmentHistory | null;
   termName: string;
-  roster: SisEmployee[];
-  leavesByEmplid: Map<number, TermLeave[]>;
+  peopleRows: PersonRow[];
 }>();
 
 const seriesByKey = computed(() =>
   props.history ? enrollmentSeriesBySection(props.history) : new Map(),
 );
 
-const labelOfSection = (sectionId: number) => {
-  const section = props.schedule.localSections.find(
-    ({ id }) => id === sectionId,
-  );
-  return section
-    ? `${section.catalogNumber}-${section.section}`
-    : "another section";
-};
+const labelOfSection = computed(() =>
+  sectionLabelerOf(props.schedule.localSections),
+);
 
 const selectSection = (sectionId: number) =>
   props.schedule.dispatch({ type: "selectedSection", sectionId });
@@ -185,20 +171,8 @@ const editPersonInput = (edit: PersonInputEdit) =>
   props.schedule.dispatch({ type: "personInputEdited", edit });
 
 const people = computed(() => {
-  const { sectionCosts, rateOverrides } = props.schedule;
-  if (!props.assumptions || !sectionCosts || !rateOverrides) {
-    return [];
-  }
-
   return filterPeople(
-    peopleRowsOf(
-      props.schedule.localSections,
-      sectionCosts,
-      props.assumptions,
-      rateOverrides,
-      props.roster,
-      props.leavesByEmplid,
-    ),
+    props.peopleRows,
     props.schedule.localSections,
     props.schedule.filters,
   );
@@ -255,7 +229,7 @@ const rows = computed(() =>
       section,
       props.schedule.sectionCosts?.get(section.id),
       historyOf(section),
-      labelOfSection,
+      labelOfSection.value,
       jobLabelOfEmplid.value,
     ),
   ),

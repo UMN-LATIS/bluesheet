@@ -36,7 +36,6 @@ final class EnrollmentHistory {
                 'termCode' => $section->term_code,
                 'enrollmentTotal' => $section->enrollment_total,
                 'enrollmentCap' => $section->enrollment_cap,
-                'waitlistTotal' => $section->waitlist_total,
                 'leadInstructorLastName' => self::leadInstructorLastName($section),
                 'meetings' => $section->meetings->map(MeetingShape::describe(...))->filter()->values()->all(),
             ])->all(),
@@ -66,6 +65,6 @@ final class EnrollmentHistory {
     }
 
     private static function isFallOrSpring(int $termCode): bool {
-        return in_array(Season::tryOfTerm($termCode), [Season::Fall, Season::Spring], true);
+        return in_array(Season::tryFromTermCode($termCode), [Season::Fall, Season::Spring], true);
     }
 }

@@ -27,7 +27,10 @@ const emptyContext: ScheduleContext = {
   costAssumptions: null,
 };
 
-/** The term as the server sent it; the editor places the blocks itself. */
+/**
+ * The term as the server sent it; the editor places the
+ * blocks itself.
+ */
 const contextOf = (
   ...sections: ReturnType<typeof plannedSection>[]
 ): ScheduleContext => ({
@@ -48,12 +51,16 @@ const after = (
   );
 
 /**
- * The meeting patterns of the section being created, which is where a block
- * drawn on empty space lives until Create gives it a row.
+ * The meeting patterns of the section being created, which
+ * is where a block drawn on empty space lives until Create
+ * gives it a row.
  */
 const drawn = (state: EditorState) => state.drafts[NEW_SECTION_ID]?.meetings;
 
-/** A committed meeting drawn out on `dayIndex` from `from` to `to`. */
+/**
+ * A committed meeting drawn out on `dayIndex` from `from`
+ * to `to`.
+ */
 const draw = (dayIndex: number, from: number, to: number): EditorEvent[] => [
   { type: "pressedEmptySpace", dayIndex, minute: from },
   { type: "pointerMoved", dayIndex, minute: to },
@@ -280,7 +287,10 @@ describe("naming the meeting a gesture placed", () => {
 });
 
 describe("dragging a section's block", () => {
-  /** One section, Mon and Wed at 9, so a drag has a pattern to break up. */
+  /**
+   * One section, Mon and Wed at 9, so a drag has a pattern
+   * to break up.
+   */
   const monAndWed = () =>
     plannedSection(1, [
       { days: ["mon", "wed"], startTime: "09:00", endTime: "09:50" },
@@ -320,7 +330,8 @@ describe("dragging a section's block", () => {
 
     const state = after(
       [
-        // A press with no drag: the commit re-states the current placement.
+        // A press with no drag: the commit re-states the
+        // current placement.
         { type: "pressedMeeting", meetingId: "s1:thu:1140", minute: 1180 },
         { type: "released" },
       ],
@@ -962,7 +973,8 @@ describe("days and times in the sheet", () => {
   it("saving collapses a day that ended up meeting twice at once", () => {
     const state = after(
       [
-        // "Add meeting time" lands on Monday, which the section already has.
+        // "Add meeting time" lands on Monday, which the
+        // section already has.
         { type: "meetingPatternAdded", sectionId: 1 },
         { type: "draftSaved", sectionId: 1 },
       ],
@@ -1138,7 +1150,10 @@ describe("sectionEditsPersisted", () => {
   const section = plannedSection(1, []);
   const context = contextOf(section);
 
-  /** A sheet edit, saved, which is how an edit reaches the overlay. */
+  /**
+   * A sheet edit, saved, which is how an edit reaches the
+   * overlay.
+   */
   const editAndSave = (notes: string): EditorEvent[] => [
     { type: "sectionFieldEdited", sectionId: 1, change: { notes } },
     { type: "draftSaved", sectionId: 1 },
@@ -1164,7 +1179,8 @@ describe("sectionEditsPersisted", () => {
   });
 
   it("keeps an edit made while the save was in flight", () => {
-    // "one" was the version sent; "two" was saved before the reply came back
+    // "one" was the version sent; "two" was saved before
+    // the reply came back
     const edited = after(
       [...editAndSave("one"), ...editAndSave("two")],
       initialState(),
@@ -1278,7 +1294,8 @@ describe("deleting a section", () => {
     { type: "selectedSection", sectionId: 1 },
   ]);
 
-  // an overlay left behind would be saved back, recreating the section
+  // an overlay left behind would be saved back, recreating
+  // the section
   it("takes the overlay and the draft with it", () => {
     const state = after([{ type: "sectionDeleted", sectionId: 1 }], edited);
 
@@ -1343,7 +1360,8 @@ describe("the import banner", () => {
     });
   });
 
-  // a course checked beforehand would hide most of what just arrived
+  // a course checked beforehand would hide most of what
+  // just arrived
   it("clears the filters so the arrivals are all on screen", () => {
     const narrowed = after(
       [{ type: "filterValuesAdded", facet: "course", values: ["ANTH-1001"] }],
@@ -1373,7 +1391,8 @@ describe("the import banner", () => {
       banner,
     );
 
-    // the filter would otherwise hold the canvas empty behind a badge
+    // the filter would otherwise hold the canvas empty
+    // behind a badge
     it("stops the section filter naming the sections it deleted", () => {
       const state = after([{ type: "importUndone" }], shown);
 
@@ -1393,7 +1412,8 @@ describe("the import banner", () => {
       ).toEqual(["3"]);
     });
 
-    // the delete has already happened, so there is nothing left to ask about
+    // the delete has already happened, so there is nothing
+    // left to ask about
     it("does not stop to ask about the open sheet's edits", () => {
       const context = contextOf(plannedSection(7, []));
       const typed = after(
@@ -1436,7 +1456,8 @@ describe("the import banner", () => {
     });
   });
 
-  // undo deletes the sections the import made, and would take the edit with them
+  // undo deletes the sections the import made, and would
+  // take the edit with them
   it.each<EditorEvent>([
     { type: "sectionCreated", sectionId: 9 },
     { type: "sectionDeleted", sectionId: 7 },
@@ -1445,8 +1466,9 @@ describe("the import banner", () => {
     expect(after([event], banner).lastImport).toBeNull();
   });
 
-  // the ids belong to the term that was left; undo would send them to the new
-  // one, match nothing, and clear the banner as if it had worked
+  // the ids belong to the term that was left; undo would
+  // send them to the new one, match nothing, and clear the
+  // banner as if it had worked
   it("goes when the page moves to another department or term", () => {
     expect(after([{ type: "contextChanged" }], banner).lastImport).toBeNull();
   });
@@ -1488,8 +1510,9 @@ describe("walking away from a section being created", () => {
     expect(drawn(state)).toBeUndefined();
   });
 
-  // the sheet renames its blocks as it edits them, which must not read as
-  // walking away from the section they belong to
+  // the sheet renames its blocks as it edits them, which
+  // must not read as walking away from the section they
+  // belong to
   it("editing its own days keeps it", () => {
     const state = after(
       [
@@ -1504,7 +1527,8 @@ describe("walking away from a section being created", () => {
     );
 
     expect(drawn(state)?.[0].days).toContain("thu");
-    // and the sheet stays open on it, though its blocks now have other ids
+    // and the sheet stays open on it, though its blocks now
+    // have other ids
     expect(selectIsNewSectionSelected(state)).toBe(true);
   });
 
@@ -1549,7 +1573,8 @@ describe("redrawing the times of a section being created", () => {
     ]);
   });
 
-  // redrawing used to replace the draft outright, losing the course
+  // redrawing used to replace the draft outright, losing
+  // the course
   it("keeps the course and everything else typed into the sheet", () => {
     const state = after(draw(3, 540, 590), inProgress);
 
@@ -1586,8 +1611,9 @@ describe("moving to another department or term", () => {
     expect(moved.selection).toBeNull();
   });
 
-  // the rectangle belongs to neither department, and Create would have posted
-  // it to whichever one the page landed on
+  // the rectangle belongs to neither department, and Create
+  // would have posted it to whichever one the page landed
+  // on
   it("drops a section drawn but never created", () => {
     const named = after(
       [
@@ -1703,7 +1729,8 @@ describe("asking before unsaved sheet edits are dropped", () => {
     expect(state.selection).toEqual(typed.selection);
   });
 
-  // retyping the value that was already there leaves nothing to discard
+  // retyping the value that was already there leaves
+  // nothing to discard
   it("does not ask when the form matches the section", () => {
     const section = plannedSection(1, []);
     const sameContext = contextOf(section);
@@ -1776,8 +1803,9 @@ describe("asking before unsaved sheet edits are dropped", () => {
     expect(state.selection).toEqual(typed.selection);
   });
 
-  // a held release used to leave the editor drawing, so a phantom block
-  // followed the pointer across the grid until the next press
+  // a held release used to leave the editor drawing, so a
+  // phantom block followed the pointer across the grid
+  // until the next press
   it("goes idle while it asks, and draws again once the answer is yes", () => {
     const held = after(
       [
@@ -1801,7 +1829,8 @@ describe("asking before unsaved sheet edits are dropped", () => {
     ]);
   });
 
-  // the back button had already rewritten it before the question went up
+  // the back button had already rewritten it before the
+  // question went up
   it("puts the address bar back when a held urlChanged is refused", () => {
     const wentBack = after([{ type: "urlChanged", query: {} }], typed, context);
     expect(wentBack.pendingDismissal?.event).toEqual({

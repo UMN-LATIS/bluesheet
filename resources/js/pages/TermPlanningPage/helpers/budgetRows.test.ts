@@ -4,7 +4,7 @@ import {
   costPerson,
   gradJobCodeRate,
   jobCodeRate,
-  rateOverrides,
+  costInputs,
   roundGradRates,
   sisInstructor,
 } from "./costAssumptions.fixture";
@@ -17,7 +17,7 @@ const labelOfSection = (sectionId: number) => `Label ${sectionId}`;
 
 const assumptions = costAssumptions({
   gradRates: roundGradRates(),
-  jobCodes: [
+  jobCodeRates: [
     jobCodeRate("A", 4000),
     gradJobCodeRate("TA", "teaching_assistant", "regular"),
     jobCodeRate("TBA", 5000, { instructorType: null }),
@@ -38,7 +38,7 @@ const rowsOf = (sections: PlannedSection[]) => {
   const costs = estimateTermCost({
     sections,
     assumptions,
-    rateOverrides: rateOverrides(),
+    costInputs: costInputs(),
   });
 
   return sections.map((section) =>

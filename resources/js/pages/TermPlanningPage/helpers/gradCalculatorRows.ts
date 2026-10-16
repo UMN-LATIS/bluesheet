@@ -22,7 +22,7 @@ export interface GradCalculatorRow {
   feeOffset: number | null;
   internationalOffset: number;
   instructorPay: number;
-  salary: number;
+  pay: number;
   health: number;
   tuition: number;
   fringe: number;
@@ -50,7 +50,7 @@ const rowOf = (
   feeOffset: isAbd ? null : cost.feeOffset,
   internationalOffset: cost.internationalOffset,
   instructorPay: cost.instructorPay,
-  salary: cost.pay,
+  pay: cost.pay,
   health: cost.health,
   tuition: cost.tuition,
   fringe: cost.fringe,

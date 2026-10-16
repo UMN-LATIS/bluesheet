@@ -1,5 +1,6 @@
 import type { PersonRow } from "./peopleRows";
 import { hasEmplid, type PersonWithEmplid } from "./personWithEmplid";
+import { sumOf } from "./sumOf";
 
 export type TenureTrackRow = PersonWithEmplid;
 
@@ -12,9 +13,6 @@ export interface TenureTrackTotals {
 
 const isTenureTrack = ({ instructorType }: PersonRow) =>
   instructorType === "recurring_budget_faculty";
-
-const sumOf = (amounts: (number | null)[]) =>
-  amounts.reduce<number>((total, amount) => total + (amount ?? 0), 0);
 
 export function tenureTrackRowsOf(people: PersonRow[]): {
   rows: TenureTrackRow[];

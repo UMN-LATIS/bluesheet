@@ -1,20 +1,27 @@
 <!--
-  The bar over the canvas: where a scheduler is (department, term), what they
-  are looking at (the view switch), and whether the term takes edits at all.
-  Everything here changes what the page is showing, and nothing here reads the
-  schedule, so it does not take the editor.
+  The bar over the canvas: where a scheduler is (department,
+  term), what they are looking at (the view switch), and
+  whether the term takes edits at all. Everything here
+  changes what the page is showing, and nothing here reads
+  the schedule, so it does not take the editor.
 -->
 <template>
   <div class="tw-flex tw-min-w-0 tw-items-baseline tw-gap-2">
-    <!-- On a phone the department and the view switch say where you
-         are, and the bar has no width for a title as well. -->
+    <!--
+      On a phone the department and the view switch say
+      where you are, and the bar has no width for a title as
+      well.
+    -->
     <span
       class="tw-hidden tw-truncate tw-text-[15px] tw-font-semibold tw-tracking-tight cramped:tw-block cramped:tw-text-base roomy:tw-text-[17px]"
     >
       Term Planning
     </span>
-    <!-- A scheduler covering several departments moves between them
-         here, rather than through the group page and back. -->
+    <!--
+      A scheduler covering several departments moves between
+      them here, rather than through the group page and
+      back.
+    -->
     <label class="tw-m-0 tw-min-w-0 tw-font-normal">
       <span class="tw-sr-only">Department</span>
       <select
@@ -34,9 +41,11 @@
   </div>
 
   <div class="tw-ml-auto tw-flex tw-flex-none tw-items-center tw-gap-2.5">
-    <!-- A week of lanes cannot be read on a phone, so that one option
-         drops out; the switch itself stays, since the day list and the
-         heatmap are both worth having there. -->
+    <!--
+      A week of lanes cannot be read on a phone, so that one
+      option drops out; the switch itself stays, since the
+      day list and the heatmap are both worth having there.
+    -->
     <div
       role="group"
       aria-label="View"
@@ -120,13 +129,18 @@ import { useScreenSize } from "@/utils/useScreenSize";
 const props = defineProps<{
   groupId: number;
   termCode: number | null;
-  /** The term on screen, which the switcher marks as chosen. */
+  /**
+   * The term on screen, which the switcher marks as chosen.
+   */
   term: SisTerm | null;
   termOptions: SisTerm[];
   view: ScheduleView;
   isReadOnly: boolean;
   plannedSectionCount: number;
-  /** Today, as "YYYY-MM-DD"; the term list marks the one we are inside. */
+  /**
+   * Today, as "YYYY-MM-DD"; the term list marks the one we
+   * are inside.
+   */
   today: string;
 }>();
 
@@ -154,15 +168,18 @@ const viewOptions = computed(() =>
 );
 
 /**
- * The query keys that name a row rather than a value: the `section` facet and
- * an open sheet's `sectionId` both hold section ids, and a section id belongs
- * to one term. Carried into another term it matches nothing, which empties the
- * schedule and, through `reachableFacetValues`, every other facet's list too.
+ * The query keys that name a row rather than a value: the
+ * `section` facet and an open sheet's `sectionId` both hold
+ * section ids, and a section id belongs to one term.
+ * Carried into another term it matches nothing, which
+ * empties the schedule and, through `reachableFacetValues`,
+ * every other facet's list too.
  */
 const TERM_BOUND_KEYS = ["section", "sectionId"];
 
-// The rest of the filters ride along in the query, so a view narrowed to one
-// person stays narrowed when the term changes.
+// The rest of the filters ride along in the query, so a
+// view narrowed to one person stays narrowed when the term
+// changes.
 const goToTerm = (termCode: string) =>
   router.push({
     name: "termPlanning",
@@ -170,9 +187,10 @@ const goToTerm = (termCode: string) =>
     query: omit(route.query, TERM_BOUND_KEYS),
   });
 
-// The filters and any open sheet name this department's own courses and
-// sections, so they are left behind. The view and the day are not: they are
-// how a scheduler reads any department.
+// The filters and any open sheet name this department's own
+// courses and sections, so they are left behind. The view
+// and the day are not: they are how a scheduler reads any
+// department.
 const goToGroup = (nextGroupId: string) =>
   router.push({
     name: "termPlanning",
@@ -185,8 +203,9 @@ const groupQuery = useGroupQuery(groupId);
 const groupsQuery = useSisGroupsQuery();
 
 /**
- * The department on screen leads the list even before it loads, so the
- * control never reads as empty and never as some other department.
+ * The department on screen leads the list even before it
+ * loads, so the control never reads as empty and never as
+ * some other department.
  */
 const departmentOptions = computed<SisGroup[]>(() => {
   const departments = groupsQuery.data.value ?? [];
@@ -206,8 +225,9 @@ const departmentOptions = computed<SisGroup[]>(() => {
 });
 
 /**
- * "PSY - Psychology", or the code alone where the bar is too tight to spell it
- * out. Whichever half the group has, when it has only one.
+ * "PSY - Psychology", or the code alone where the bar is
+ * too tight to spell it out. Whichever half the group has,
+ * when it has only one.
  */
 const labelOfDepartment = ({ name, abbreviation }: SisGroup) => {
   if (isSmall.value && abbreviation) return abbreviation;
@@ -215,14 +235,20 @@ const labelOfDepartment = ({ name, abbreviation }: SisGroup) => {
   return [abbreviation, name].filter(Boolean).join(" - ") || "Department";
 };
 
-/** The term today falls inside, which is the one worth marking in the list. */
+/**
+ * The term today falls inside, which is the one worth
+ * marking in the list.
+ */
 const isCurrent = (option: SisTerm) =>
   option.startDate !== null &&
   option.endDate !== null &&
   option.startDate <= props.today &&
   props.today <= option.endDate;
 
-/** The term we are in is marked, unless the mark costs the bar too much. */
+/**
+ * The term we are in is marked, unless the mark costs the
+ * bar too much.
+ */
 const labelOfTerm = (option: SisTerm) =>
   !isSmall.value && isCurrent(option)
     ? `${option.name} – Current`

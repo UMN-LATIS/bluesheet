@@ -6,11 +6,10 @@ import {
   instructorRateOf,
   isFreeComponent,
   isGradJobCodeRate,
-  jobCodeRateOf,
   pricingOf,
+  rateOfJobCode,
   taRateOf,
   unstaffedRateOf,
-  type TermRates,
 } from "./costRules";
 
 const ratesOf = (...rates: JobCodeRate[]) =>
@@ -27,11 +26,6 @@ const ta = jobCodeRate("9511", 5000, {
   fringeRate: 1,
 });
 const ratesByJobCode = ratesOf(lecturer, specialist, unstaffed, ta);
-
-const termRatesOf = (extra: Partial<TermRates> = {}): TermRates => ({
-  ratesByJobCode,
-  ...extra,
-});
 
 describe("costOfRate", () => {
   it("is salary × (1 + fringe)", () => {
@@ -76,21 +70,21 @@ describe("pricingOf", () => {
   });
 });
 
-describe("jobCodeRateOf", () => {
+describe("rateOfJobCode", () => {
   it("is the admin's salary and fringe", () => {
-    expect(jobCodeRateOf("9753", termRatesOf())).toEqual({
+    expect(rateOfJobCode("9753", ratesByJobCode)).toEqual({
       salary: 10000,
       fringeRate: 0.385,
     });
   });
 
   it("is null while either field is missing", () => {
-    const termRates = termRatesOf({
-      ratesByJobCode: ratesOf(jobCodeRate("9517", 7000, { fringeRate: null })),
-    });
+    const ratesWithoutFringe = ratesOf(
+      jobCodeRate("9517", 7000, { fringeRate: null }),
+    );
 
-    expect(jobCodeRateOf("9517", termRates)).toBeNull();
-    expect(jobCodeRateOf("9999", termRatesOf())).toBeNull();
+    expect(rateOfJobCode("9517", ratesWithoutFringe)).toBeNull();
+    expect(rateOfJobCode("9999", ratesByJobCode)).toBeNull();
   });
 });
 
@@ -98,7 +92,7 @@ describe("instructorRateOf", () => {
   it("costs a lecturer at the rate for the job code", () => {
     const pricing = pricingOf(["9753"], ratesByJobCode);
 
-    expect(instructorRateOf(pricing, termRatesOf())).toEqual({
+    expect(instructorRateOf(pricing, ratesByJobCode)).toEqual({
       salary: 10000,
       fringeRate: 0.385,
     });
@@ -107,7 +101,7 @@ describe("instructorRateOf", () => {
   it("costs a job code with no rate at the TBA rate", () => {
     const pricing = pricingOf(["9517"], ratesByJobCode);
 
-    expect(instructorRateOf(pricing, termRatesOf())).toEqual({
+    expect(instructorRateOf(pricing, ratesByJobCode)).toEqual({
       salary: 10000,
       fringeRate: 0,
     });
@@ -115,15 +109,14 @@ describe("instructorRateOf", () => {
 
   it("is null when neither the job code nor TBA has a rate", () => {
     const pricing = pricingOf(["9517"], ratesOf(lecturer));
-    const termRates = termRatesOf({ ratesByJobCode: ratesOf(lecturer) });
 
-    expect(instructorRateOf(pricing, termRates)).toBeNull();
+    expect(instructorRateOf(pricing, ratesOf(lecturer))).toBeNull();
   });
 });
 
 describe("unstaffedRateOf", () => {
   it("is the TBA rate", () => {
-    expect(unstaffedRateOf(termRatesOf())?.salary).toBe(10000);
+    expect(unstaffedRateOf(ratesByJobCode)?.salary).toBe(10000);
   });
 });
 
@@ -131,7 +124,7 @@ describe("taRateOf", () => {
   it("is the rate for the TA's job code", () => {
     const pricing = pricingOf(["9511"], ratesByJobCode);
 
-    expect(taRateOf(pricing, termRatesOf())).toEqual({
+    expect(taRateOf(pricing, ratesByJobCode)).toEqual({
       salary: 5000,
       fringeRate: 1,
     });
@@ -140,13 +133,13 @@ describe("taRateOf", () => {
   it("does not fall back to TBA", () => {
     const pricing = pricingOf(["9517"], ratesByJobCode);
 
-    expect(taRateOf(pricing, termRatesOf())).toBeNull();
+    expect(taRateOf(pricing, ratesByJobCode)).toBeNull();
   });
 
   it("is null for a person with no job code", () => {
     const pricing = pricingOf([], ratesByJobCode);
 
-    expect(taRateOf(pricing, termRatesOf())).toBeNull();
+    expect(taRateOf(pricing, ratesByJobCode)).toBeNull();
   });
 });
 

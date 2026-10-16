@@ -8,12 +8,12 @@ const CHARGED_ELSEWHERE_RULES: Record<ChargedElsewhereReason, string> = {
 
 type ChargedElsewhere = Extract<CostBasis, { kind: "chargedOnOtherSection" }>;
 
-export const chargedElsewhereReasonOf = (
+export const chargedElsewhereExplanationOf = (
   { sectionId, reason }: ChargedElsewhere,
   labelOfSection: (sectionId: number) => string,
 ) => `Paid on ${labelOfSection(sectionId)}. ${CHARGED_ELSEWHERE_RULES[reason]}`;
 
-export function unpaidReasonOf(
+export function notPaidHereReasonOf(
   basis: CostBasis,
   labelOfSection: (sectionId: number) => string,
 ): string | null {
@@ -25,6 +25,6 @@ export function unpaidReasonOf(
     case "paidOnLecture":
       return `Paid on the lecture, ${labelOfSection(basis.lectureSectionId)}. Someone on a course's lecture is paid there, not again on its labs or discussions.`;
     case "chargedOnOtherSection":
-      return chargedElsewhereReasonOf(basis, labelOfSection);
+      return chargedElsewhereExplanationOf(basis, labelOfSection);
   }
 }

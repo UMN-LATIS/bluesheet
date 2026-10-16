@@ -71,7 +71,7 @@
             <span
               class="tw-flex tw-w-14 tw-overflow-hidden tw-rounded-lg tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright"
             >
-              <CountInputCell
+              <IntegerInputCell
                 :count="scenario.creditsTaught"
                 :canEdit="true"
                 label="Credits taught"
@@ -148,7 +148,7 @@
                 align="end"
                 class="tw-bg-surface tw-font-semibold"
               >
-                {{ formatDollarsAndCents(row.salary) }}
+                {{ formatDollarsAndCents(row.pay) }}
               </BudgetCell>
               <BudgetCell role="cell" align="end">
                 {{ formatDollarsAndCents(row.health) }}
@@ -195,7 +195,7 @@ import BudgetCell from "./BudgetCell.vue";
 import BudgetTable, { type BudgetColumn } from "./BudgetTable.vue";
 import BudgetTableRow from "./BudgetTableRow.vue";
 import CapsLabel from "./CapsLabel.vue";
-import CountInputCell from "./CountInputCell.vue";
+import IntegerInputCell from "./IntegerInputCell.vue";
 import GradCheckbox from "./GradCheckbox.vue";
 import type {
   GradCalculator,

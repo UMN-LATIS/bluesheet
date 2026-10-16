@@ -16,7 +16,7 @@
         type="text"
         inputmode="decimal"
         :value="shownText"
-        :placeholder="placeholder"
+        placeholder="No rate"
         :disabled="!canEdit"
         :aria-label="label"
         :aria-invalid="refusal !== null"
@@ -46,32 +46,29 @@ import OverrideMarker from "./OverrideMarker.vue";
 import ResetButton from "./ResetButton.vue";
 import { refusalOfCredits } from "../../helpers/creditAmounts";
 import { refusalOfDollars } from "../../helpers/dollarAmounts";
-import {
-  refusalOfAppointmentPercent,
-  refusalOfHours,
-} from "../../helpers/hourAmounts";
+import { refusalOfHours } from "../../helpers/hourAmounts";
 import { formatDollars } from "../../helpers/money";
-import { formatPercent, parseFringeRate } from "../../helpers/percentAmounts";
+import {
+  formatPercent,
+  parseFringeRate,
+  refusalOfAppointmentPercent,
+} from "../../helpers/percentAmounts";
 
-const props = withDefaults(
-  defineProps<{
-    amount: number | null;
-    amountWithoutOverride: number | null;
-    isOverridden: boolean;
-    canEdit: boolean;
-    kind: "dollars" | "percent" | "hours" | "count" | "appointment";
-    label: string;
-    placeholder?: string;
-  }>(),
-  { placeholder: "No rate" },
-);
+const props = defineProps<{
+  value: number | null;
+  valueWithoutOverride: number | null;
+  isOverridden: boolean;
+  canEdit: boolean;
+  kind: "dollars" | "percent" | "hours" | "count" | "appointment";
+  label: string;
+}>();
 
-const emit = defineEmits<{ change: [amount: number | null] }>();
+const emit = defineEmits<{ change: [value: number | null] }>();
 
 const refusal = ref<string | null>(null);
 
 watch(
-  () => props.amount,
+  () => props.value,
   () => (refusal.value = null),
 );
 
@@ -90,13 +87,13 @@ function formatAmount(amount: number): string {
 }
 
 const shownText = computed(() =>
-  props.amount === null ? "" : formatAmount(props.amount),
+  props.value === null ? "" : formatAmount(props.value),
 );
 
 const resetValueLabel = computed(() =>
-  props.amountWithoutOverride === null
+  props.valueWithoutOverride === null
     ? "no rate"
-    : formatAmount(props.amountWithoutOverride),
+    : formatAmount(props.valueWithoutOverride),
 );
 
 function parsedAmountOf(
@@ -140,7 +137,7 @@ function onChange(event: Event) {
   }
 
   refusal.value = null;
-  const isWithoutOverride = parsed.amount === props.amountWithoutOverride;
+  const isWithoutOverride = parsed.amount === props.valueWithoutOverride;
   emit("change", isWithoutOverride ? null : parsed.amount);
 }
 </script>

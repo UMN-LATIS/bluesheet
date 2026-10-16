@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { unpaidReasonOf } from "./costReason";
+import { notPaidHereReasonOf } from "./costReason";
 
 const labelOfSection = (sectionId: number) => `Label ${sectionId}`;
 
-describe("unpaidReasonOf", () => {
+describe("notPaidHereReasonOf", () => {
   it("gives no reason for a line paid on its own section", () => {
-    expect(unpaidReasonOf({ kind: "rate" }, labelOfSection)).toBeNull();
+    expect(notPaidHereReasonOf({ kind: "rate" }, labelOfSection)).toBeNull();
   });
 
   it("names the section that pays and the rule that sent it there", () => {
     expect(
-      unpaidReasonOf(
+      notPaidHereReasonOf(
         {
           kind: "chargedOnOtherSection",
           sectionId: 3,
@@ -25,7 +25,7 @@ describe("unpaidReasonOf", () => {
 
   it("names the lecture that pays a lab", () => {
     expect(
-      unpaidReasonOf(
+      notPaidHereReasonOf(
         { kind: "paidOnLecture", lectureSectionId: 1 },
         labelOfSection,
       ),

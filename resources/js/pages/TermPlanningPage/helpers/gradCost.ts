@@ -3,7 +3,10 @@ import type { PersonInputs } from "./personInputs";
 
 export const STANDARD_APPOINTMENT_PERCENT = 25;
 
-/** The appointment teaching a section other than a lab or discussion adds. */
+/**
+ * The appointment added per section taught, except labs and
+ * discussions, which use `TA_OR_LAB_APPOINTMENT_PERCENT`.
+ */
 export const defaultAppointmentOf = (
   gradRates: Pick<CostAssumptions["gradRates"], "defaultAppointmentPercent">,
 ) => gradRates.defaultAppointmentPercent ?? STANDARD_APPOINTMENT_PERCENT;
@@ -21,9 +24,16 @@ export const appointmentPercentOfSection = (
     ? TA_OR_LAB_APPOINTMENT_PERCENT
     : perSectionPercent;
 
+const distanceFrom = (
+  appointmentPercent: number,
+  [levelPercent]: [number, number],
+): number => Math.abs(levelPercent - appointmentPercent);
+
 /**
- * A level's own hours, else in proportion to the nearest
- * level's. Undefined when the term has no levels.
+ * The hours of the level at `appointmentPercent`. With no
+ * such level, the hours of the nearest level times
+ * `appointmentPercent` divided by that level's percent.
+ * Undefined when the term has no levels.
  */
 export function hoursOfAppointment(
   hoursByAppointmentPercent: Map<number, number>,
@@ -32,17 +42,11 @@ export function hoursOfAppointment(
   const levelHours = hoursByAppointmentPercent.get(appointmentPercent);
   if (levelHours !== undefined) return levelHours;
 
-  const nearest = [...hoursByAppointmentPercent].reduce<
-    [number, number] | undefined
-  >(
-    (best, level) =>
-      best === undefined ||
-      Math.abs(level[0] - appointmentPercent) <
-        Math.abs(best[0] - appointmentPercent)
-        ? level
-        : best,
-    undefined,
+  const levelsByDistance = [...hoursByAppointmentPercent].sort(
+    (a, b) =>
+      distanceFrom(appointmentPercent, a) - distanceFrom(appointmentPercent, b),
   );
+  const nearest = levelsByDistance[0];
   if (nearest === undefined) return undefined;
 
   const [nearestPercent, nearestHours] = nearest;
@@ -85,7 +89,9 @@ export type GradFigureField = keyof GradOverrides;
 export type GradFigures = Record<GradFigureField, number>;
 
 export interface GradCost {
-  /** What the amounts are computed from, overrides applied. */
+  /**
+   * What the amounts are computed from, overrides applied.
+   */
   figures: GradFigures;
   figuresWithoutOverrides: GradFigures;
   offsetShare: number;
@@ -139,8 +145,9 @@ function figuresOf(
 
 /**
  * Null when the term has no grad inputs or no appointment
- * levels. An override of the fee or international offset is
- * the full offset, so the appointment's share still applies.
+ * levels. An override of the fee or international offset
+ * is the full offset, so the appointment's share still
+ * applies.
  */
 export function gradCostOf(
   term: GradTerm | null,

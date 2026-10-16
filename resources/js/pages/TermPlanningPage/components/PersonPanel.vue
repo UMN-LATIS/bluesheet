@@ -8,16 +8,16 @@
     >
       <div class="tw-flex tw-items-center tw-gap-2">
         <span
-          v-if="budget"
+          v-if="personRow"
           class="tw-inline-flex tw-h-5 tw-items-center tw-rounded-full tw-border tw-border-solid tw-border-outline-variant tw-px-2.5 tw-text-[10px] tw-font-bold tw-tabular-nums"
         >
-          {{ budget.jobCode }}
+          {{ personRow.jobCode }}
         </span>
         <span
-          v-if="budget && budget.fundLabel !== '—'"
+          v-if="personRow && personRow.fundLabel !== '—'"
           class="tw-text-[11px] tw-text-on-surface-variant"
         >
-          {{ budget.fundLabel }}
+          {{ personRow.fundLabel }}
         </span>
         <button
           type="button"
@@ -41,10 +41,10 @@
         {{ title }}
       </p>
       <p
-        v-if="budget"
+        v-if="personRow"
         class="tw-m-0 tw-mt-1.5 tw-text-[11px] tw-text-on-surface-variant"
       >
-        Load {{ budget.loadLabel }}
+        Load {{ personRow.loadLabel }}
       </p>
     </div>
 
@@ -53,12 +53,14 @@
     >
       <div
         v-if="
-          budget && budget.emplid !== null && budget.appointmentPercent !== null
+          personRow &&
+          personRow.emplid !== null &&
+          personRow.appointmentPercent !== null
         "
         class="tw-flex-none"
       >
         <FieldLabel class="tw-mb-1.5">
-          Grad appointment · {{ budget.appointmentPercent }}%
+          Grad appointment · {{ personRow.appointmentPercent }}%
         </FieldLabel>
         <div
           class="tw-flex tw-flex-col tw-gap-2.5 tw-rounded-[10px] tw-bg-surface tw-p-3 tw-text-[13px]"
@@ -67,36 +69,42 @@
             <span class="tw-flex tw-flex-col">
               Student fee offset
               <span
-                v-if="budget.isAbd"
+                v-if="personRow.isAbd"
                 class="tw-text-[11px] tw-text-on-surface-variant"
               >
                 {{ FEE_OFFSET_ABD_REASON }}
               </span>
             </span>
             <GradCheckbox
-              :isChecked="budget.hasFeeOffset && !budget.isAbd"
-              :canEdit="canEdit && !budget.isAbd"
-              :disabledReason="budget.isAbd ? FEE_OFFSET_ABD_REASON : undefined"
+              :isChecked="personRow.hasFeeOffset && !personRow.isAbd"
+              :canEdit="canEdit && !personRow.isAbd"
+              :disabledReason="
+                personRow.isAbd ? FEE_OFFSET_ABD_REASON : undefined
+              "
               :label="`Student fee offset for ${name}`"
-              @change="(isChecked) => editGrad({ hasFeeOffset: isChecked })"
+              @change="
+                (isChecked) => editGradSettings({ hasFeeOffset: isChecked })
+              "
             />
           </label>
           <label class="tw-flex tw-items-center tw-justify-between tw-gap-3">
             <span>International GA offset</span>
             <GradCheckbox
-              :isChecked="budget.isInternational"
+              :isChecked="personRow.isInternational"
               :canEdit="canEdit"
               :label="`International GA offset for ${name}`"
-              @change="(isChecked) => editGrad({ isInternational: isChecked })"
+              @change="
+                (isChecked) => editGradSettings({ isInternational: isChecked })
+              "
             />
           </label>
         </div>
       </div>
 
-      <div v-if="budget && budget.emplid !== null" class="tw-flex-none">
+      <div v-if="personRow && personRow.emplid !== null" class="tw-flex-none">
         <FieldLabel class="tw-mb-1.5">Cost this term</FieldLabel>
         <CostReceipt
-          :lines="budget.receipt"
+          :lines="personRow.receipt"
           :canEdit="canEdit"
           :personName="name"
           @editInput="(field, value) => emit('editInput', field, value)"
@@ -156,11 +164,11 @@
         </div>
       </div>
 
-      <div v-if="budget && budget.emplid !== null" class="tw-flex-none">
+      <div v-if="personRow && personRow.emplid !== null" class="tw-flex-none">
         <FieldLabel for="person-notes" class="tw-mb-1.5">Notes</FieldLabel>
         <textarea
           id="person-notes"
-          :value="budget.notes"
+          :value="personRow.notes"
           :disabled="!canEdit"
           rows="3"
           class="tw-box-border tw-w-full tw-resize-y tw-rounded-[10px] tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright tw-p-2.5 tw-text-[13px] tw-text-on-surface disabled:tw-cursor-default"
@@ -234,6 +242,7 @@ import CostReceipt from "./budget/CostReceipt.vue";
 import GradCheckbox from "./budget/GradCheckbox.vue";
 import MissingRate from "./budget/MissingRate.vue";
 import type { GradPerson } from "@/types";
+import { countLabel } from "../helpers/countLabel";
 import { FEE_OFFSET_ABD_REASON } from "../helpers/gradCost";
 import { formatWholeDollars } from "../helpers/money";
 import { gradPersonEditOf, type PersonRow } from "../helpers/peopleRows";
@@ -244,8 +253,11 @@ const props = defineProps<{
   name: string;
   title: string | null;
   /** Null outside the Budget view. */
-  budget: PersonRow | null;
-  /** Whether notes, a grad student's settings, and the receipt's inputs take edits. */
+  personRow: PersonRow | null;
+  /**
+   * Whether notes, a grad student's settings, and the
+   * receipt's inputs take edits.
+   */
   canEdit: boolean;
   isReadOnly: boolean;
   termSections: PersonTermSection[];
@@ -261,10 +273,10 @@ const emit = defineEmits<{
   editGradPerson: [edit: GradPerson];
 }>();
 
-function editGrad(change: Partial<Omit<GradPerson, "emplid">>) {
-  if (props.budget === null) return;
+function editGradSettings(change: Partial<Omit<GradPerson, "emplid">>) {
+  if (props.personRow === null) return;
 
-  const edit = gradPersonEditOf(props.budget, change);
+  const edit = gradPersonEditOf(props.personRow, change);
   if (edit !== null) emit("editGradPerson", edit);
 }
 
@@ -272,7 +284,11 @@ const historySummary = computed(() => {
   const [latest] = props.taughtTerms ?? [];
   if (!latest) return "";
 
-  const count = latest.sections.length;
-  return `${latest.termName} · ${count} ${count === 1 ? "section" : "sections"}`;
+  const sectionLabel = countLabel(
+    latest.sections.length,
+    "section",
+    "sections",
+  );
+  return `${latest.termName} · ${sectionLabel}`;
 });
 </script>

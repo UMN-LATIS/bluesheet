@@ -1,13 +1,14 @@
 <!--
-  The section as the term left it: every field of the sheet, read as its
-  value. Read-only is a subtraction rather than a graying-out, so a field
-  becomes plain text under the same label, in the same order — a scheduler
-  reading a closed term learns the sheet they will use on an open one. What
-  would have written is gone rather than dimmed: no remove ×, no Add, and
-  nothing blue, since blue is what says "you can act on this".
-
-  Nothing here takes a control, so the labels sit tighter against their values
-  than the same labels do on the form.
+  The section as the term left it: every field of the sheet,
+  read as its value. Read-only is a subtraction rather than
+  a graying-out, so a field becomes plain text under the
+  same label, in the same order — a scheduler reading a
+  closed term learns the sheet they will use on an open one.
+  What would have written is gone rather than dimmed: no
+  remove ×, no Add, and nothing blue, since blue is what
+  says "you can act on this".  Nothing here takes a control,
+  so the labels sit tighter against their values than the
+  same labels do on the form.
 -->
 <template>
   <div
@@ -70,9 +71,10 @@
     </div>
 
     <!--
-      Alongside the instructor of record rather than folded away below, since
-      a discussion or a lab is usually run by the people in this list and the
-      SIS names no instructor of record on it at all.
+      Alongside the instructor of record rather than folded
+      away below, since a discussion or a lab is usually run
+      by the people in this list and the SIS names no
+      instructor of record on it at all.
     -->
     <div>
       <FieldLabel class="tw-mb-px">Teaching assistants</FieldLabel>
@@ -196,7 +198,10 @@ const props = defineProps<{
 
 const emit = defineEmits<{ openPerson: [emplid: number] }>();
 
-/** "9:45 – 11:00 AM": the half is written once, on the end that carries it. */
+/**
+ * "9:45 – 11:00 AM": the half is written once, on the end
+ * that carries it.
+ */
 const timeOf = (pattern: SisSectionMeeting) =>
   `${formatClock(minutesFromClock(pattern.startTime))} – ${formatTime(minutesFromClock(pattern.endTime))}`;
 

@@ -8,8 +8,6 @@ export type InstructorType =
   | "graduate_instructor"
   | "teaching_assistant";
 
-export type Season = "fall" | "spring" | "summer";
-
 export type StudentStatus = "regular" | "abd";
 
 export interface JobCodeRate {
@@ -23,9 +21,11 @@ export interface JobCodeRate {
    * which is costed from `CostAssumptions.gradRates`.
    */
   salary: number | null;
-  /** A fraction: 0.385 is 38.5%. Null when Nova has no rate for the term. */
+  /**
+   * A fraction: 0.385 is 38.5%. Null when Nova has no rate
+   * for the term.
+   */
   fringeRate: number | null;
-  source: string | null;
   /** Null on a job code that is not a grad student's. */
   studentStatus: StudentStatus | null;
 }
@@ -58,7 +58,10 @@ export interface GradAppointmentLevel {
   hours: number;
 }
 
-/** One grad student's settings for one department and one term. */
+/**
+ * One grad student's settings for one department and one
+ * term.
+ */
 export interface GradPerson {
   emplid: number;
   hasFeeOffset: boolean;
@@ -89,14 +92,19 @@ export interface PersonInputRecord {
 
 export interface CostAssumptions {
   termCode: number;
-  season: Season;
-  jobCodes: JobCodeRate[];
+  jobCodeRates: JobCodeRate[];
   people: CostPerson[];
   gradRates: {
-    /** The admin's values for the term. Null when none are entered. */
+    /**
+     * The admin's values for the term. Null when none are
+     * entered.
+     */
     defaults: GradRateInputs | null;
     levels: GradAppointmentLevel[];
-    /** The admin's appointment per section. Null when none is entered. */
+    /**
+     * The admin's appointment per section. Null when none
+     * is entered.
+     */
     defaultAppointmentPercent: number | null;
   };
   gradPeople: GradPerson[];
@@ -110,7 +118,6 @@ export interface EnrollmentHistorySection {
   termCode: number;
   enrollmentTotal: number;
   enrollmentCap: number;
-  waitlistTotal: number;
   leadInstructorLastName: string | null;
   meetings: SisSectionMeeting[];
 }

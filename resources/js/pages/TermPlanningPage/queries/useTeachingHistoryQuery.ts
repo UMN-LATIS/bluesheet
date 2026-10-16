@@ -3,7 +3,10 @@ import { computed, type Ref } from "vue";
 import { fetchTeachingHistory } from "@/api";
 import { historyRangeOf } from "../helpers/personPanel";
 
-/** Disabled while `termCode` is null or `isEnabled` is false. */
+/**
+ * Disabled while `termCode` is null or `isEnabled` is
+ * false.
+ */
 export function useTeachingHistoryQuery(
   groupId: Readonly<Ref<number>>,
   termCode: Readonly<Ref<number | null>>,

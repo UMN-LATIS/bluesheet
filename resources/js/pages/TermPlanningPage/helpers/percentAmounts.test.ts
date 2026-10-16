@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { formatPercent, parseFringeRate } from "./percentAmounts";
+import {
+  formatPercent,
+  parseFringeRate,
+  refusalOfAppointmentPercent,
+} from "./percentAmounts";
 
 describe("formatPercent", () => {
   it("shows a fraction as a percent without trailing zeros", () => {
@@ -27,5 +31,25 @@ describe("parseFringeRate", () => {
     expect(parseFringeRate("12.345")).toHaveProperty("refusal");
     expect(parseFringeRate("abc")).toHaveProperty("refusal");
     expect(parseFringeRate("")).toHaveProperty("refusal");
+  });
+});
+
+describe("refusalOfAppointmentPercent", () => {
+  it("accepts 0 to 100%, fractions included", () => {
+    expect([0, 12.5, 100].map(refusalOfAppointmentPercent)).toEqual([
+      null,
+      null,
+      null,
+    ]);
+  });
+
+  it("refuses a non-number", () => {
+    expect(refusalOfAppointmentPercent(Number.NaN)).toBe("Enter a number.");
+    expect(refusalOfAppointmentPercent(Infinity)).toBe("Enter a number.");
+  });
+
+  it("refuses a percent outside 0 to 100", () => {
+    expect(refusalOfAppointmentPercent(-1)).toBe("Enter 0 to 100%.");
+    expect(refusalOfAppointmentPercent(100.5)).toBe("Enter 0 to 100%.");
   });
 });

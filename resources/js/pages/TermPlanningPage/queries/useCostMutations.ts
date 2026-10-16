@@ -3,6 +3,7 @@ import type { Ref } from "vue";
 import { saveGradPerson, savePersonInput } from "@/api";
 import type { GradPerson } from "@/types";
 import type { PersonInputEdit } from "../helpers/personInputs";
+import { costAssumptionsQueryKey } from "./useCostAssumptionsQuery";
 
 export function useCostMutations(
   groupId: Readonly<Ref<number>>,
@@ -13,7 +14,7 @@ export function useCostMutations(
   // edit before the refetch ends and the old value shows.
   const refetchAssumptions = () =>
     queryClient.invalidateQueries({
-      queryKey: ["termPlan", "costAssumptions"],
+      queryKey: costAssumptionsQueryKey(groupId, termCode),
     });
 
   const saveGradPersonEdit = useMutation({

@@ -27,11 +27,10 @@ export interface PersonPricing {
   rate: JobCodeRate | null;
 }
 
-export interface TermRates {
-  ratesByJobCode: Map<string, JobCodeRate>;
-}
-
-function rateOfJobCode(
+/**
+ * Null when the job code has no salary or no fringe rate.
+ */
+export function rateOfJobCode(
   jobCode: string,
   ratesByJobCode: Map<string, JobCodeRate>,
 ): Rate | null {
@@ -55,7 +54,7 @@ export function pricingOf(
   };
 }
 
-const UNRATED_SORTS_LAST = -1;
+const UNRATED_COST = -1;
 
 function highestRateJobCode(
   jobCodes: string[],
@@ -63,43 +62,43 @@ function highestRateJobCode(
 ): string | null {
   const costOf = (jobCode: string) => {
     const rate = rateOfJobCode(jobCode, ratesByJobCode);
-    return rate === null ? UNRATED_SORTS_LAST : costOfRate(rate);
+    return rate === null ? UNRATED_COST : costOfRate(rate);
   };
   const gradFirst = (jobCode: string) =>
     isGradJobCodeRate(ratesByJobCode.get(jobCode) ?? null) ? 0 : 1;
-  const byCostThenGrad = (a: string, b: string) =>
+  const byCostDescending = (a: string, b: string) =>
     costOf(b) - costOf(a) || gradFirst(a) - gradFirst(b);
 
-  const [highest] = [...jobCodes].sort(byCostThenGrad);
-  return highest ?? null;
+  const sortedByCost = [...jobCodes].sort(byCostDescending);
+
+  return sortedByCost[0] ?? null;
 }
 
-/** Null when the job code has no salary or no fringe rate. */
-export const jobCodeRateOf = (
-  jobCode: string,
-  { ratesByJobCode }: TermRates,
-): Rate | null => rateOfJobCode(jobCode, ratesByJobCode);
-
-export const unstaffedRateOf = (termRates: TermRates) =>
-  jobCodeRateOf(UNSTAFFED_JOB_CODE, termRates);
+export const unstaffedRateOf = (ratesByJobCode: Map<string, JobCodeRate>) =>
+  rateOfJobCode(UNSTAFFED_JOB_CODE, ratesByJobCode);
 
 /** Null when neither the job code nor TBA has a rate. */
 export function instructorRateOf(
   pricing: PersonPricing,
-  termRates: TermRates,
+  ratesByJobCode: Map<string, JobCodeRate>,
 ): Rate | null {
   const jobCodeRate =
-    pricing.jobCode === null ? null : jobCodeRateOf(pricing.jobCode, termRates);
+    pricing.jobCode === null
+      ? null
+      : rateOfJobCode(pricing.jobCode, ratesByJobCode);
 
-  return jobCodeRate ?? unstaffedRateOf(termRates);
+  return jobCodeRate ?? unstaffedRateOf(ratesByJobCode);
 }
 
-/** Null when the job code has no rate. A TA never falls back to TBA. */
+/**
+ * Null when the job code has no rate. A TA never falls back
+ * to TBA.
+ */
 export function taRateOf(
   pricing: PersonPricing,
-  termRates: TermRates,
+  ratesByJobCode: Map<string, JobCodeRate>,
 ): Rate | null {
   if (pricing.jobCode === null) return null;
 
-  return jobCodeRateOf(pricing.jobCode, termRates);
+  return rateOfJobCode(pricing.jobCode, ratesByJobCode);
 }

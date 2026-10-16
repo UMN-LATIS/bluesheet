@@ -5,10 +5,16 @@ import {
   type PersonInputs,
 } from "./personInputs";
 
-export interface RateOverrides {
-  /** Saved inputs with the pending edits on top, for anyone with a record. */
+export interface CostInputs {
+  /**
+   * Saved inputs with the pending edits applied, for anyone
+   * with a record.
+   */
   personInputsByEmplid: Map<number, PersonInputs>;
-  /** Only people with a setting: an absent person has the defaults. */
+  /**
+   * Only people with a setting: an absent person has the
+   * defaults.
+   */
   gradPeopleByEmplid: Map<number, GradPerson>;
 }
 
@@ -24,10 +30,10 @@ export const isDefaultGradPerson = ({
   isInternational,
 }: GradPerson) => !hasFeeOffset && !isInternational;
 
-export function rateOverridesOf(
+export function costInputsOf(
   assumptions: Pick<CostAssumptions, "personInputs" | "gradPeople">,
   edits: CostEdits,
-): RateOverrides {
+): CostInputs {
   const gradPeopleByEmplid = new Map(
     assumptions.gradPeople.map((person) => [person.emplid, person]),
   );

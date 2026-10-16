@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   selectDraftSectionCost,
-  selectRateOverrides,
+  selectCostInputs,
   selectSectionCosts,
   selectShownSections,
   selectWeekView,
@@ -22,9 +22,10 @@ import { initialState } from "./update";
 import type { EditorState, ScheduleContext } from "./types";
 
 /**
- * Two sections overlapping on Monday and one on Tuesday. Blocks are derived
- * from these rather than written by hand, so their ids are the ones the grid
- * uses; see `meetingIdOf`.
+ * Two sections overlapping on Monday and one on Tuesday.
+ * Blocks are derived from these rather than written by
+ * hand, so their ids are the ones the grid uses; see
+ * `meetingIdOf`.
  */
 const context: ScheduleContext = {
   sections: [
@@ -73,8 +74,8 @@ describe("selectWeekView while a meeting is carried", () => {
 
     expect(monday.ghostMeetingId).toBe(MON_9);
     expect(monday.overlay).toBeNull();
-    // The overlay names its meeting so the block can be labeled like the
-    // one the pointer picked up.
+    // The overlay names its meeting so the block can be
+    // labeled like the one the pointer picked up.
     expect(tuesday.overlay).toEqual({
       startMinute: 700,
       endMinute: 750,
@@ -250,7 +251,7 @@ describe("the budget view's selectors", () => {
     isWide: true,
     costAssumptions: costAssumptions({
       people: [costPerson(1, ["U"])],
-      jobCodes: [
+      jobCodeRates: [
         jobCodeRate("U", null),
         jobCodeRate("TBA", 4000, { instructorType: null }),
       ],
@@ -293,13 +294,13 @@ describe("the budget view's selectors", () => {
     ).toBe(7000);
   });
 
-  it("selectRateOverrides is null before the cost assumptions load", () => {
+  it("selectCostInputs is null before the cost assumptions load", () => {
     expect(
-      selectRateOverrides({ ...budgetContext, costAssumptions: null }, atRest),
+      selectCostInputs({ ...budgetContext, costAssumptions: null }, atRest),
     ).toBeNull();
   });
 
-  it("selectRateOverrides merges pending edits over the saved overrides", () => {
+  it("selectCostInputs merges pending edits over the saved overrides", () => {
     const withServer: ScheduleContext = {
       ...budgetContext,
       costAssumptions: costAssumptions({
@@ -312,7 +313,7 @@ describe("the budget view's selectors", () => {
         ],
       }),
     };
-    const shown = selectRateOverrides(withServer, {
+    const shown = selectCostInputs(withServer, {
       ...atRest,
       personInputEdits: {
         "1:salary": { emplid: 1, field: "salary", value: 150 },
@@ -340,7 +341,9 @@ describe("the budget view's selectors", () => {
       costAssumptions: costAssumptions({
         gradRates: roundGradRates(),
         people: [costPerson(10, ["9511"])],
-        jobCodes: [gradJobCodeRate("9511", "teaching_assistant", "regular")],
+        jobCodeRates: [
+          gradJobCodeRate("9511", "teaching_assistant", "regular"),
+        ],
       }),
     };
     const [section] = taContext.sections;

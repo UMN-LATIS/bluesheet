@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  gradPersonKeyOf,
-  rateOverridesOf,
-  type CostEdits,
-} from "./costOverrides";
+import { gradPersonKeyOf, costInputsOf, type CostEdits } from "./costOverrides";
 import { costAssumptions, personInputs } from "./costAssumptions.fixture";
 import { personInputKeyOf, type PersonInputEdit } from "./personInputs";
 
@@ -14,25 +10,25 @@ const inputEdit = (edit: PersonInputEdit): CostEdits => ({
   personInputEdits: { [personInputKeyOf(edit.emplid, edit.field)]: edit },
 });
 
-describe("rateOverridesOf", () => {
+describe("costInputsOf", () => {
   const saved = costAssumptions({
     personInputs: [personInputs(42, { salary: 7000, fringeRate: 0.2 })],
     gradPeople: [{ emplid: 7, hasFeeOffset: true, isInternational: false }],
   });
 
   it("keeps the saved overrides when nothing is pending", () => {
-    const overrides = rateOverridesOf(saved, noEdits);
+    const overrides = costInputsOf(saved, noEdits);
 
     expect(overrides.personInputsByEmplid.get(42)?.salary).toBe(7000);
     expect(overrides.gradPeopleByEmplid.get(7)?.hasFeeOffset).toBe(true);
   });
 
   it("shows a pending salary edit over the saved one, and a null edit as no override", () => {
-    const edited = rateOverridesOf(
+    const edited = costInputsOf(
       saved,
       inputEdit({ emplid: 42, field: "salary", value: 8000 }),
     );
-    const reset = rateOverridesOf(
+    const reset = costInputsOf(
       saved,
       inputEdit({ emplid: 42, field: "salary", value: null }),
     );
@@ -43,7 +39,7 @@ describe("rateOverridesOf", () => {
   });
 
   it("replaces a person's grad settings, and drops a person back to the defaults", () => {
-    const changed = rateOverridesOf(saved, {
+    const changed = costInputsOf(saved, {
       ...noEdits,
       gradPersonEdits: {
         [gradPersonKeyOf(7)]: {
@@ -62,7 +58,7 @@ describe("rateOverridesOf", () => {
     expect(changed.gradPeopleByEmplid.get(7)?.isInternational).toBe(true);
     expect(changed.gradPeopleByEmplid.has(8)).toBe(false);
 
-    const dropped = rateOverridesOf(saved, {
+    const dropped = costInputsOf(saved, {
       ...noEdits,
       gradPersonEdits: {
         [gradPersonKeyOf(7)]: {

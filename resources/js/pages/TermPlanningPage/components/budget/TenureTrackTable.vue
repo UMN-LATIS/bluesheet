@@ -29,14 +29,14 @@
           />
         </BudgetCell>
         <BudgetCell role="cell" class="tw-p-0">
-          <CountInputCell
+          <IntegerInputCell
             class="tw-w-full"
             :count="row.courseReleases"
             :canEdit="canEdit"
             :label="`Course releases for ${row.name}`"
             :min="0"
             :max="20"
-            @change="(count) => editCount(row, 'courseReleases', count)"
+            @change="(count) => editCourseReleases(row, count)"
           />
         </BudgetCell>
         <BudgetCell role="cell" class="tw-p-0">
@@ -79,7 +79,7 @@
 import BudgetCell from "./BudgetCell.vue";
 import BudgetTable, { type BudgetColumn } from "./BudgetTable.vue";
 import BudgetTableRow from "./BudgetTableRow.vue";
-import CountInputCell from "./CountInputCell.vue";
+import IntegerInputCell from "./IntegerInputCell.vue";
 import CellSubline from "./CellSubline.vue";
 import PersonNameCell from "./PersonNameCell.vue";
 import SectionLinks from "./SectionLinks.vue";
@@ -132,11 +132,8 @@ const UNASSIGNED_GROUP = {
   isInGroup: (row: TenureTrackRow) => !row.isAssigned,
 };
 
-const editCount = (
-  { emplid }: TenureTrackRow,
-  field: "courseReleases",
-  value: number | null,
-) => emit("editPersonInput", { emplid, field, value });
+const editCourseReleases = ({ emplid }: TenureTrackRow, value: number | null) =>
+  emit("editPersonInput", { emplid, field: "courseReleases", value });
 
 const editText = (
   { emplid }: TenureTrackRow,

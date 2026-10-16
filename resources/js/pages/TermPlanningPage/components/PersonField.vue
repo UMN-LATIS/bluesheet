@@ -1,7 +1,8 @@
 <!--
-  One person on a section, with a way to take them off it. The editable twin
-  of PersonRecord: a tinted row, which is how this sheet draws a group of
-  things hung on the section. A border is left to mean a control you type in.
+  One person on a section, with a way to take them off it.
+  The editable twin of PersonRecord: a tinted row, which is
+  how this sheet draws a group of things hung on the
+  section. A border is left to mean a control you type in.
 -->
 <template>
   <div

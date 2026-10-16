@@ -1,7 +1,8 @@
 <!--
-  One person on a section, with nothing to do to them. A tint and a box are
-  how this sheet draws a field; a record that cannot be changed is not a
-  field, so it is drawn as the page content it is.
+  One person on a section, with nothing to do to them. A
+  tint and a box are how this sheet draws a field; a record
+  that cannot be changed is not a field, so it is drawn as
+  the page content it is.
 -->
 <template>
   <div class="tw-flex tw-items-center tw-gap-2.5">

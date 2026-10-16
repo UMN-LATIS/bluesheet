@@ -107,7 +107,10 @@ const props = defineProps<{
   label: string;
   columns: BudgetColumn<Row>[];
   rows: Row[];
-  /** Rows listed after the others, behind a toggle that starts closed. */
+  /**
+   * Rows listed after the others, behind a toggle that
+   * starts closed.
+   */
   collapsedGroup?: { label: string; isInGroup: (row: Row) => boolean };
 }>();
 
@@ -119,12 +122,12 @@ defineSlots<{
 const sort = ref<RowSort | null>(null);
 
 const shownRows = computed(() => {
-  const sortValueOf =
-    sort.value && props.columns[sort.value.columnIndex]?.sortValueOf;
+  if (!sort.value) return props.rows;
 
-  return sort.value && sortValueOf
-    ? sortedRows(props.rows, sortValueOf, sort.value.direction)
-    : props.rows;
+  const sortValueOf = props.columns[sort.value.columnIndex]?.sortValueOf;
+  if (!sortValueOf) return props.rows;
+
+  return sortedRows(props.rows, sortValueOf, sort.value.direction);
 });
 
 const isGroupOpen = ref(false);

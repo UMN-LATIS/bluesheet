@@ -20,7 +20,6 @@ const offering = (
   termCode,
   enrollmentTotal,
   enrollmentCap: 30,
-  waitlistTotal: 0,
   leadInstructorLastName: null,
   meetings: [],
 });

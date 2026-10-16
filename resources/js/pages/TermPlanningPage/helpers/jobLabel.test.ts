@@ -9,7 +9,7 @@ import { jobLabelerOf } from "./jobLabel";
 describe("jobLabelerOf", () => {
   const jobLabelOf = jobLabelerOf(
     costAssumptions({
-      jobCodes: [jobCodeRate("9403", 0)],
+      jobCodeRates: [jobCodeRate("9403", 0)],
       people: [
         costPerson(1, ["9403"]),
         costPerson(2, ["9755"], { "9755": "Research Specialist" }),

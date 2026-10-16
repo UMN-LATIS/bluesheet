@@ -1,10 +1,11 @@
 import type { TeachingHistory } from "@/types";
 import type { PlannedSection } from "../types";
 import { meetingSummaryOf, sectionLabelerOf } from "./budgetRows";
-import { unpaidReasonOf } from "./costReason";
+import { notPaidHereReasonOf } from "./costReason";
 import { termNameOf, type Enrollment } from "./enrollmentHistory";
 import { TA_ROLE } from "./sectionPeople";
-import type { SectionCost } from "./termEstimate";
+import { sumOf } from "./sumOf";
+import type { CostLine, SectionCost } from "./termEstimate";
 
 export interface PersonTermSection {
   sectionId: number;
@@ -53,6 +54,28 @@ export const historyRangeOf = (termCode: number) => ({
 const isFallOrSpring = (termCode: number) =>
   termCode % 10 === 9 || termCode % 10 === 3;
 
+function totalAmountOf(
+  lines: CostLine[] | undefined,
+): number | null | undefined {
+  if (lines === undefined) return undefined;
+  if (lines.some((line) => line.amount === null)) return null;
+
+  return sumOf(lines.map(({ amount }) => amount));
+}
+
+function firstNotPaidHereReasonOf(
+  lines: CostLine[] | undefined,
+  labelOfSection: (sectionId: number) => string,
+): string | null {
+  if (lines === undefined) return null;
+
+  return (
+    lines
+      .map(({ basis }) => notPaidHereReasonOf(basis, labelOfSection))
+      .find((reason) => reason !== null) ?? null
+  );
+}
+
 export function personTermSectionsOf(
   emplid: number,
   sections: PlannedSection[],
@@ -71,9 +94,8 @@ export function personTermSectionsOf(
       const lines = costsBySectionId
         ?.get(section.id)
         ?.lines.filter((line) => line.emplid === emplid);
-      const amount = lines?.some((line) => line.amount === null)
-        ? null
-        : lines?.reduce((total, line) => total + (line.amount ?? 0), 0);
+      const amount = totalAmountOf(lines);
+      const unpaidReason = firstNotPaidHereReasonOf(lines, labelOfSection);
 
       return [
         {
@@ -84,28 +106,30 @@ export function personTermSectionsOf(
           meetingSummary: meetingSummaryOf(section.meetings),
           isTa: role === TA_ROLE,
           amount,
-          unpaidReason:
-            lines
-              ?.map(({ basis }) => unpaidReasonOf(basis, labelOfSection))
-              .find((reason) => reason !== null) ?? null,
+          unpaidReason,
         },
       ];
     })
     .sort((a, b) => a.label.localeCompare(b.label));
 }
 
-/** Newest term first, and only terms the person taught in. */
+/**
+ * Newest term first, and only terms the person taught in.
+ */
 export function taughtTermsOf(
   history: TeachingHistory,
   emplid: number,
 ): TaughtTerm[] {
-  const taught = history.sections.filter(
+  const taughtSections = history.sections.filter(
     ({ termCode, isPlanned, instructors }) =>
       !isPlanned &&
       isFallOrSpring(termCode) &&
       instructors.some((instructor) => instructor.emplid === emplid),
   );
-  const sectionsByTerm = Map.groupBy(taught, ({ termCode }) => termCode);
+  const sectionsByTerm = Map.groupBy(
+    taughtSections,
+    ({ termCode }) => termCode,
+  );
 
   return [...sectionsByTerm]
     .sort(([a], [b]) => b - a)

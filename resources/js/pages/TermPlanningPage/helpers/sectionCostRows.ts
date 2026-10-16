@@ -1,6 +1,6 @@
 import { lastNameFirst } from "@/utils/lastNameFirst";
-import type { PlannedSection } from "../types";
-import { unpaidReasonOf } from "./costReason";
+import type { PlannedSection, SisInstructor } from "../types";
+import { notPaidHereReasonOf } from "./costReason";
 import { formatWholeDollars } from "./money";
 import type { SectionCost } from "./termEstimate";
 
@@ -42,17 +42,22 @@ function sectionCostRowsOf(
 
     return {
       key: `${index}-${emplid}`,
-      name:
-        emplid === null
-          ? "TBA"
-          : person?.name
-            ? lastNameFirst(person.name, person.lastName)
-            : (person?.lastName ?? "Unknown"),
+      name: displayNameOf(emplid, person),
       isTa: role === "ta",
       amount,
-      unpaidReason: unpaidReasonOf(basis, labelOfSection),
+      unpaidReason: notPaidHereReasonOf(basis, labelOfSection),
     };
   });
+}
+
+function displayNameOf(
+  emplid: number | null,
+  person: SisInstructor | undefined,
+): string {
+  if (emplid === null) return "TBA";
+  if (person?.name) return lastNameFirst(person.name, person.lastName);
+
+  return person?.lastName ?? "Unknown";
 }
 
 function costSummaryOf(cost: SectionCost): string {

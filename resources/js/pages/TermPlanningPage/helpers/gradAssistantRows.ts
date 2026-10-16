@@ -1,5 +1,6 @@
 import { academicYearEndOf } from "./academicYear";
 import type { PersonRow } from "./peopleRows";
+import { sumOf } from "./sumOf";
 
 const GRAD_ASSISTANT_TYPES = ["teaching_assistant", "graduate_instructor"];
 const FIRST_OWED_YEAR = 1;
@@ -7,9 +8,15 @@ const LAST_OWED_YEAR = 5;
 
 export interface GradAssistantRow extends PersonRow {
   roleLabel: "TA" | "Grad instructor";
-  /** The academic year's end minus the year started. Null when no start year is entered. */
+  /**
+   * The academic year's end minus the year started. Null
+   * when no start year is entered.
+   */
   fundingYear: number | null;
-  /** The department owes funding in years 1 to 5. Null when the funding year is unknown. */
+  /**
+   * The department owes funding in years 1 to 5. Null when
+   * the funding year is unknown.
+   */
   isOwedSupport: boolean | null;
   isOutsideFundingWindow: boolean;
   isUnfunded: boolean;
@@ -78,6 +85,6 @@ export function gradAssistantTotalsOf(
     fundedCount: rows.filter(
       ({ appointmentPercent }) => (appointmentPercent ?? 0) > 0,
     ).length,
-    totalCost: rows.reduce((sum, { total }) => sum + total, 0),
+    totalCost: sumOf(rows.map(({ total }) => total)),
   };
 }

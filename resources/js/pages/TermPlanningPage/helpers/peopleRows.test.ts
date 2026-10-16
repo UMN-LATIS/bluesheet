@@ -7,7 +7,7 @@ import {
   costPerson,
   gradJobCodeRate,
   jobCodeRate,
-  rateOverrides,
+  costInputs,
   ROUND_GRAD_INPUTS,
   roundGradRates,
   sisInstructor,
@@ -18,7 +18,7 @@ import { estimateTermCost } from "./termEstimate";
 
 const assumptions = costAssumptions({
   gradRates: roundGradRates(),
-  jobCodes: [
+  jobCodeRates: [
     jobCodeRate("9401", 0, {
       instructorType: "recurring_budget_faculty",
     }),
@@ -54,7 +54,7 @@ const section = (id: number, extra: Partial<PlannedSection>) =>
 
 const rowsOf = (
   sections: PlannedSection[],
-  overrides = rateOverrides(),
+  overrides = costInputs(),
   roster: SisEmployee[] = [],
   leavesByEmplid = new Map<number, TermLeave[]>(),
   withAssumptions = assumptions,
@@ -64,7 +64,7 @@ const rowsOf = (
     estimateTermCost({
       sections,
       assumptions: withAssumptions,
-      rateOverrides: overrides,
+      costInputs: overrides,
     }),
     withAssumptions,
     overrides,
@@ -145,7 +145,7 @@ describe("peopleRowsOf", () => {
   });
 
   it("shows the planner's salary for a person, with fringe on top", () => {
-    const overrides = rateOverrides({
+    const overrides = costInputs({
       personInputsByEmplid: costInputsFor(4, { salary: 8000 }),
     });
     const [row] = rowsOf([section(1, { instructors: [pi(4)] })], overrides);
@@ -159,7 +159,7 @@ describe("peopleRowsOf", () => {
   });
 
   it("shows the planner's salary for a person, per section", () => {
-    const overrides = rateOverrides({
+    const overrides = costInputs({
       personInputsByEmplid: costInputsFor(2, { salary: 12000 }),
     });
     const [row] = rowsOf(
@@ -241,7 +241,7 @@ describe("peopleRowsOf", () => {
   });
 
   it("shows the flags, ABD status and the offset in the pay hint", () => {
-    const overrides = rateOverrides({
+    const overrides = costInputs({
       gradPeopleByEmplid: new Map([
         [
           10,
@@ -299,7 +299,7 @@ describe("peopleRowsOf", () => {
   });
 
   it("does not apply an instructor salary override to a TA", () => {
-    const overrides = rateOverrides({
+    const overrides = costInputs({
       personInputsByEmplid: costInputsFor(10, { salary: 99 }),
     });
     const rows = rowsOf([section(1, { instructors: [ta(10)] })], overrides);
@@ -323,7 +323,7 @@ describe("peopleRowsOf", () => {
         section(1, { instructors: [pi(2)] }),
         section(2, { instructors: [pi(1)] }),
       ],
-      rateOverrides({
+      costInputs({
         personInputsByEmplid: costInputsFor(2, { notes: "Prefers mornings" }),
       }),
     );
@@ -332,7 +332,7 @@ describe("peopleRowsOf", () => {
   });
 
   it("adds a read-only TA line to the receipt of a non-grad who is PI on one section and TA on another, so it sums to the total", () => {
-    const overrides = rateOverrides({
+    const overrides = costInputs({
       personInputsByEmplid: costInputsFor(4, { salary: 8000 }),
     });
     const [row] = rowsOf(
@@ -427,7 +427,7 @@ describe("peopleRowsOf", () => {
   });
 
   it("lists a rostered person whose job code has an instructor type but no sections", () => {
-    const rows = rowsOf([], rateOverrides(), [
+    const rows = rowsOf([], costInputs(), [
       employee(1, "Priya Raman"),
       employee(3, "Staff Person"),
     ]);
@@ -442,7 +442,7 @@ describe("peopleRowsOf", () => {
   });
 
   it("lists a rostered grad student with no assignments", () => {
-    const rows = rowsOf([], rateOverrides(), [employee(11, "Sam Grad")]);
+    const rows = rowsOf([], costInputs(), [employee(11, "Sam Grad")]);
 
     expect(rows).toMatchObject([
       {
@@ -469,7 +469,7 @@ describe("peopleRowsOf", () => {
     });
 
     it("shows Lastname, Firstname and sorts by last name", () => {
-      const rows = rowsOf([], rateOverrides(), [
+      const rows = rowsOf([], costInputs(), [
         named(1, "Zoe", "Adams"),
         named(2, "Aaron", "Zimmer"),
       ]);
@@ -481,7 +481,7 @@ describe("peopleRowsOf", () => {
     });
 
     it("keeps the single name when the first name is missing", () => {
-      const [row] = rowsOf([], rateOverrides(), [
+      const [row] = rowsOf([], costInputs(), [
         { ...employee(1, "Adams Staff"), lastName: "Adams" },
       ]);
 
@@ -503,7 +503,7 @@ describe("peopleRowsOf", () => {
     });
 
     it("lists a person on leave who teaches nothing", () => {
-      const rows = rowsOf([], rateOverrides(), [], new Map([[1, [leave(1)]]]));
+      const rows = rowsOf([], costInputs(), [], new Map([[1, [leave(1)]]]));
 
       expect(rows).toMatchObject([
         {
@@ -519,7 +519,7 @@ describe("peopleRowsOf", () => {
     it("attaches the leave to a person who also teaches", () => {
       const [row] = rowsOf(
         [section(1, { instructors: [pi(2)] })],
-        rateOverrides(),
+        costInputs(),
         [],
         new Map([[2, [leave(2)]]]),
       );
@@ -537,13 +537,13 @@ describe("peopleRowsOf", () => {
 });
 
 describe("gradPersonEditOf", () => {
-  const rowOfTa = (overrides = rateOverrides()) =>
+  const rowOfTa = (overrides = costInputs()) =>
     peopleRowsOf(
       [section(1, { instructors: [ta(10)] })],
       estimateTermCost({
         sections: [section(1, { instructors: [ta(10)] })],
         assumptions,
-        rateOverrides: overrides,
+        costInputs: overrides,
       }),
       assumptions,
       overrides,
@@ -553,7 +553,7 @@ describe("gradPersonEditOf", () => {
 
   it("keeps the person's other settings when one changes, and sends no appointment percent", () => {
     const row = rowOfTa(
-      rateOverrides({
+      costInputs({
         gradPeopleByEmplid: new Map([
           [
             10,

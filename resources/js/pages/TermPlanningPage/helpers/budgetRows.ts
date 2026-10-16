@@ -4,10 +4,14 @@ import type {
   SisSectionMeeting,
 } from "../types";
 import { lastNameFirst } from "@/utils/lastNameFirst";
-import { chargedElsewhereReasonOf, unpaidReasonOf } from "./costReason";
+import {
+  chargedElsewhereExplanationOf,
+  notPaidHereReasonOf,
+} from "./costReason";
 import type { EnrollmentPoint } from "./enrollmentHistory";
 import { daysMetLabel } from "./scheduleDays";
 import { instructorsOfRecord, TA_ROLE } from "./sectionPeople";
+import { sumOf } from "./sumOf";
 import type { CostLine, SectionCost } from "./termEstimate";
 import { formatTimeRange, minutesFromClock } from "./timeScale";
 
@@ -33,10 +37,16 @@ export interface BudgetRow {
   history: EnrollmentPoint[];
   isCancelled: boolean;
   isUnstaffed: boolean;
-  /** The first instructor of record, or "TBA", "Taught by TA" or "—". */
+  /**
+   * The first instructor of record, or "TBA", "Taught by
+   * TA" or "—".
+   */
   instructorName: string;
   otherInstructorNames: string[];
-  /** "9403 · Assistant Professor". Null when the section names no instructor with a job code. */
+  /**
+   * "9403 · Assistant Professor". Null when the section
+   * names no instructor with a job code.
+   */
   instructorJobLabel: string | null;
   /** Null when a line has no rate. */
   instructorCost: number | null;
@@ -74,12 +84,9 @@ export function budgetRowOf(
   const isUnstaffed = instructorLines.some(
     ({ role }) => role === "unstaffedSection",
   );
-  const leadNames = isUnstaffed
-    ? []
-    : instructorsOfRecord(section.instructors).map(nameOf);
-  const firstLead = isUnstaffed
-    ? undefined
-    : instructorsOfRecord(section.instructors)[0];
+  const leads = isUnstaffed ? [] : instructorsOfRecord(section.instructors);
+  const leadNames = leads.map(nameOf);
+  const firstLead = leads[0];
 
   return {
     sectionId: section.id,
@@ -118,7 +125,9 @@ function paidElsewhereOf(
   const paidSectionIds = new Set(instructorLines.map(paidSectionIdOf));
   const [onlyPaidSectionId] = paidSectionIds;
   const [first] = instructorLines;
-  const reason = first ? unpaidReasonOf(first.basis, labelOfSection) : null;
+  const reason = first
+    ? notPaidHereReasonOf(first.basis, labelOfSection)
+    : null;
   if (paidSectionIds.size !== 1 || onlyPaidSectionId == null || !reason) {
     return null;
   }
@@ -145,8 +154,11 @@ function placeholderNameOf(isUnstaffed: boolean, hasAssistants: boolean) {
   return hasAssistants ? "Taught by TA" : "—";
 }
 
-const nameOf = ({ name, lastName }: SisInstructor) =>
-  name === null ? (lastName ?? "Unknown") : lastNameFirst(name, lastName);
+function nameOf({ name, lastName }: SisInstructor): string {
+  if (name === null) return lastName ?? "Unknown";
+
+  return lastNameFirst(name, lastName);
+}
 
 function assistantNamesOf(section: PlannedSection): string {
   return section.instructors
@@ -177,13 +189,16 @@ function taCostCellOf(
       return {
         kind: "chargedOnOtherSection",
         sectionLabel: labelOfSection(otherSectionBasis.sectionId),
-        reason: chargedElsewhereReasonOf(otherSectionBasis, labelOfSection),
+        reason: chargedElsewhereExplanationOf(
+          otherSectionBasis,
+          labelOfSection,
+        ),
       };
     case "paidOnLecture":
       return {
         kind: "chargedOnOtherSection",
         sectionLabel: labelOfSection(otherSectionBasis.lectureSectionId),
-        reason: unpaidReasonOf(otherSectionBasis, labelOfSection) ?? "",
+        reason: notPaidHereReasonOf(otherSectionBasis, labelOfSection) ?? "",
       };
   }
 
@@ -193,5 +208,5 @@ function taCostCellOf(
 function sumOrNull(lines: CostLine[]): number | null {
   if (lines.some(({ amount }) => amount === null)) return null;
 
-  return lines.reduce((total, { amount }) => total + (amount ?? 0), 0);
+  return sumOf(lines.map(({ amount }) => amount));
 }

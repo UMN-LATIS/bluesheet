@@ -47,12 +47,14 @@ function titleOf(termLabel: string, offering: EnrollmentHistorySection | null) {
   if (!offering) return `${termLabel}: not offered`;
 
   const { enrollmentTotal, enrollmentCap, leadInstructorLastName } = offering;
-  const percentFull =
+  const percent =
     enrollmentCap > 0
-      ? ` (${Math.round((enrollmentTotal / enrollmentCap) * 100)}% full)`
-      : "";
+      ? Math.round((enrollmentTotal / enrollmentCap) * 100)
+      : null;
+  const percentFull = percent === null ? "" : ` (${percent}% full)`;
+  const instructorLabel = leadInstructorLastName ?? "no instructor";
 
-  return `${termLabel}: ${enrollmentTotal}/${enrollmentCap}${percentFull} · ${leadInstructorLastName ?? "no instructor"}`;
+  return `${termLabel}: ${enrollmentTotal}/${enrollmentCap}${percentFull} · ${instructorLabel}`;
 }
 
 const summary = computed(() =>

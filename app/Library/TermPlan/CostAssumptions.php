@@ -15,8 +15,7 @@ final class CostAssumptions {
     public static function forTerm(int $academicOrg, int $termCode): array {
         return [
             'termCode' => $termCode,
-            'season' => Season::ofTerm($termCode)->value,
-            'jobCodes' => self::jobCodes($termCode),
+            'jobCodeRates' => self::jobCodeRates($termCode),
             'people' => self::people($academicOrg),
             'gradRates' => self::gradRates($termCode),
             'gradPeople' => self::gradPeople($academicOrg, $termCode),
@@ -24,7 +23,7 @@ final class CostAssumptions {
         ];
     }
 
-    private static function jobCodes(int $termCode): array {
+    private static function jobCodeRates(int $termCode): array {
         return JobCode::query()
             ->with(['termRates' => fn($rates) => $rates->where('term_code', $termCode)])
             ->orderBy('code')
@@ -40,7 +39,6 @@ final class CostAssumptions {
                     'studentStatus' => $jobCode->student_status?->value,
                     'salary' => $termRate === null ? null : (float) $termRate->salary,
                     'fringeRate' => $termRate === null ? null : (float) $termRate->fringe_rate,
-                    'source' => $termRate?->source,
                 ];
             })
             ->all();
@@ -61,10 +59,22 @@ final class CostAssumptions {
     private static function gradRates(int $termCode): array {
         $gradRate = GradTermRate::query()->with('levels')->where('term_code', $termCode)->first();
 
+        if ($gradRate === null) {
+            return ['defaultAppointmentPercent' => null, 'defaults' => null, 'levels' => []];
+        }
+
         return [
-            'defaultAppointmentPercent' => $gradRate === null ? null : (float) $gradRate->default_appointment_percent,
-            'defaults' => $gradRate === null ? null : GradRateInputs::fromRow($gradRate),
-            'levels' => $gradRate === null ? [] : $gradRate->levels
+            'defaultAppointmentPercent' => (float) $gradRate->default_appointment_percent,
+            'defaults' => [
+                'hourlyRate' => (float) $gradRate->hourly_rate,
+                'healthRate' => (float) $gradRate->health_rate,
+                'tuitionPerHourRegular' => (float) $gradRate->tuition_per_hour_regular,
+                'tuitionPerHourAbd' => (float) $gradRate->tuition_per_hour_abd,
+                'feeOffset' => (float) $gradRate->fee_offset,
+                'internationalOffset' => (float) $gradRate->international_offset,
+                'perCreditPayment' => (float) $gradRate->per_credit_payment,
+            ],
+            'levels' => $gradRate->levels
                 ->map(fn(GradAppointmentLevel $level) => [
                     'appointmentPercent' => $level->appointment_percent,
                     'hours' => $level->hours,
@@ -130,7 +140,10 @@ final class CostAssumptions {
             ->all();
     }
 
-    /** @return array<string, string> without job codes that have no position description */
+    /**
+     * @return array<string, string> without job codes that
+     *   have no position description
+     */
     private static function positionTitlesByJobCode(Collection $appointments): array {
         return $appointments
             ->filter(fn(SisAppointment $appointment) => filled($appointment->position_desc))

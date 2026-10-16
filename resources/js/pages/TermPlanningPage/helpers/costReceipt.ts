@@ -1,4 +1,5 @@
 import type { GradCost, GradFigureField, GradStudent } from "./gradCost";
+import { countLabel } from "./countLabel";
 import { formatDollars } from "./money";
 import type { PersonNumberField } from "./personInputs";
 import { formatPercent } from "./percentAmounts";
@@ -85,7 +86,7 @@ export function gradReceiptOf(
     figures.creditsTaught !== figuresWithoutOverrides.creditsTaught;
   const creditsPart = ` ${figures.creditsTaught === 1 ? "credit" : "credits"} × `;
 
-  return [
+  const lines = [
     item(
       "Base pay",
       [
@@ -96,37 +97,39 @@ export function gradReceiptOf(
       ],
       cost.base,
     ),
-    ...(student.hasFeeOffset && !student.isAbd
-      ? [
-          item(
-            "Student fee offset",
-            [input("feeOffset", "dollars"), sharePart],
-            cost.feeOffset,
-          ),
-        ]
-      : []),
-    ...(student.isInternational
-      ? [
-          item(
-            "International GA offset",
-            [input("internationalOffset", "dollars"), sharePart],
-            cost.internationalOffset,
-          ),
-        ]
-      : []),
-    ...(isPayingCredits
-      ? [
-          item(
-            "Grad instructor pay",
-            [
-              input("creditsTaught", "count"),
-              creditsPart,
-              input("perCreditPayment", "dollars"),
-            ],
-            cost.instructorPay,
-          ),
-        ]
-      : []),
+  ];
+  if (student.hasFeeOffset && !student.isAbd) {
+    lines.push(
+      item(
+        "Student fee offset",
+        [input("feeOffset", "dollars"), sharePart],
+        cost.feeOffset,
+      ),
+    );
+  }
+  if (student.isInternational) {
+    lines.push(
+      item(
+        "International GA offset",
+        [input("internationalOffset", "dollars"), sharePart],
+        cost.internationalOffset,
+      ),
+    );
+  }
+  if (isPayingCredits) {
+    lines.push(
+      item(
+        "Grad instructor pay",
+        [
+          input("creditsTaught", "count"),
+          creditsPart,
+          input("perCreditPayment", "dollars"),
+        ],
+        cost.instructorPay,
+      ),
+    );
+  }
+  lines.push(
     subtotal("Pay", cost.pay),
     item("Health", [input("healthRate", "percent"), " of pay"], cost.health),
     item(
@@ -136,7 +139,9 @@ export function gradReceiptOf(
     ),
     subtotal("Fringe", cost.fringe),
     { label: "Total", parts: [], amount: cost.total, kind: "total" },
-  ];
+  );
+
+  return lines;
 }
 
 export interface ReceiptFigure {
@@ -160,7 +165,7 @@ function taReceiptLinesOf({ salary, fringeRate, courseCount }: TaWork): {
     salaryAmount === null || fringeRate.value === null
       ? null
       : salaryAmount * fringeRate.value;
-  const coursesPart = `${courseCount} ${courseCount === 1 ? "course" : "courses"} × `;
+  const coursesPart = `${countLabel(courseCount, "course", "courses")} × `;
 
   return {
     salaryLine: item(
@@ -206,7 +211,7 @@ export function salaryReceiptOf({
       isEditable,
     );
   const hasNothingToShow = salary.value === null && !isEditable;
-  const sectionsPart = `${sectionCount} ${sectionCount === 1 ? "section" : "sections"} × `;
+  const sectionsPart = `${countLabel(sectionCount, "section", "sections")} × `;
   const salaryAmount =
     salary.value === null ? null : salary.value * sectionCount;
   const fringeAmount =

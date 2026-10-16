@@ -10,12 +10,12 @@ import {
   gradJobCodeRate,
   gradRates,
   jobCodeRate,
-  rateOverrides,
+  costInputs,
   ROUND_GRAD_INPUTS,
   roundGradRates,
   sisInstructor,
 } from "./costAssumptions.fixture";
-import type { RateOverrides } from "./costOverrides";
+import type { CostInputs } from "./costOverrides";
 import { estimateTermCost, totalsOf } from "./termEstimate";
 import { plannedSection } from "./plannedSection.fixture";
 
@@ -32,7 +32,7 @@ const people: CostPerson[] = [
 
 const assumptions = costAssumptions({
   gradRates: roundGradRates(),
-  jobCodes: [
+  jobCodeRates: [
     jobCodeRate("A", 4000),
     jobCodeRate("B", 6000),
     jobCodeRate("R", 0, { instructorType: "recurring_budget_faculty" }),
@@ -45,8 +45,8 @@ const assumptions = costAssumptions({
 const withJobCodeRates = (...rates: JobCodeRate[]) =>
   costAssumptions({
     ...assumptions,
-    jobCodes: [
-      ...assumptions.jobCodes.filter(
+    jobCodeRates: [
+      ...assumptions.jobCodeRates.filter(
         ({ code }) => !rates.some((rate) => rate.code === code),
       ),
       ...rates,
@@ -55,13 +55,13 @@ const withJobCodeRates = (...rates: JobCodeRate[]) =>
 
 const estimate = (
   sections: PlannedSection[],
-  overrides: { rates?: RateOverrides } = {},
+  overrides: { rates?: CostInputs } = {},
   withAssumptions = assumptions,
 ) =>
   estimateTermCost({
     sections,
     assumptions: withAssumptions,
-    rateOverrides: overrides.rates ?? rateOverrides(),
+    costInputs: overrides.rates ?? costInputs(),
   });
 
 describe("estimateTermCost", () => {
@@ -315,7 +315,7 @@ describe("estimateTermCost with overrides", () => {
         section(2, { courseCode: "ANTH-2001", instructors: [pi(1)] }),
       ],
       {
-        rates: rateOverrides({
+        rates: costInputs({
           personInputsByEmplid: costInputsFor(1, { salary: 7000 }),
         }),
       },
@@ -328,7 +328,7 @@ describe("estimateTermCost with overrides", () => {
     const costs = estimate(
       [section(1, { instructors: [pi(1)] })],
       {
-        rates: rateOverrides({
+        rates: costInputs({
           personInputsByEmplid: costInputsFor(1, { salary: 7000 }),
         }),
       },
@@ -346,7 +346,7 @@ describe("estimateTermCost with overrides", () => {
     const costs = estimate(
       [section(1, { instructors: [pi(99)] })],
       {
-        rates: rateOverrides({
+        rates: costInputs({
           personInputsByEmplid: costInputsFor(99, { salary: 7000 }),
         }),
       },
@@ -365,7 +365,7 @@ describe("estimateTermCost with overrides", () => {
     const costs = estimate(
       [section(1, { instructors: [pi(1)] })],
       {
-        rates: rateOverrides({
+        rates: costInputs({
           personInputsByEmplid: costInputsFor(1, { fringeRate: 0.1 }),
         }),
       },
@@ -388,7 +388,7 @@ describe("estimateTermCost with overrides", () => {
       }),
     ];
     const costs = estimate(twoSections, {
-      rates: rateOverrides({
+      rates: costInputs({
         personInputsByEmplid: costInputsFor(10, { hourlyRate: 20 }),
       }),
     });
@@ -401,14 +401,14 @@ describe("estimateTermCost with overrides", () => {
     const costs = estimate(
       [section(1, { credits: 3, instructors: [pi(14)] })],
       {
-        rates: rateOverrides({
+        rates: costInputs({
           personInputsByEmplid: costInputsFor(14, { creditsTaught: 1 }),
         }),
       },
       costAssumptions({
         ...assumptions,
-        jobCodes: [
-          ...assumptions.jobCodes,
+        jobCodeRates: [
+          ...assumptions.jobCodeRates,
           gradJobCodeRate("9517", "graduate_instructor", "regular"),
         ],
         people: [...people, costPerson(14, ["9517"])],
@@ -424,7 +424,7 @@ describe("estimateTermCost with overrides", () => {
     const costs = estimate(
       [section(1, { instructors: [sisInstructor(10, "TA")] })],
       {
-        rates: rateOverrides({
+        rates: costInputs({
           personInputsByEmplid: costInputsFor(10, { salary: 4000 }),
         }),
       },
@@ -440,7 +440,7 @@ describe("estimateTermCost with overrides", () => {
         section(2, { section: "002", component: "LAB", instructors: [pi(1)] }),
       ],
       {
-        rates: rateOverrides({
+        rates: costInputs({
           personInputsByEmplid: costInputsFor(1, { salary: 7000 }),
         }),
       },
@@ -456,8 +456,8 @@ describe("estimateTermCost with overrides", () => {
         defaults: FALL_GRAD_INPUTS,
         levels: FALL_GRAD_LEVELS,
       }),
-      jobCodes: [
-        ...assumptions.jobCodes,
+      jobCodeRates: [
+        ...assumptions.jobCodeRates,
         gradJobCodeRate("9511", "teaching_assistant", "regular"),
         gradJobCodeRate("9519", "teaching_assistant", "abd"),
       ],
@@ -484,7 +484,7 @@ describe("estimateTermCost with overrides", () => {
     const costs = estimate(
       [section(1, { instructors: [sisInstructor(10, "TA")] })],
       {
-        rates: rateOverrides({
+        rates: costInputs({
           gradPeopleByEmplid: new Map([
             [10, { emplid: 10, hasFeeOffset: true, isInternational: false }],
           ]),
@@ -540,8 +540,8 @@ describe("estimateTermCost with overrides", () => {
   it("pays a grad instructor per credit across their paid sections, on the sum of their appointments, and charges once", () => {
     const gradInstructorAssumptions = {
       ...assumptions,
-      jobCodes: [
-        ...assumptions.jobCodes,
+      jobCodeRates: [
+        ...assumptions.jobCodeRates,
         gradJobCodeRate("9517", "graduate_instructor", "abd"),
       ],
       people: [...people, costPerson(14, ["9517"])],
@@ -584,8 +584,8 @@ describe("estimateTermCost with overrides", () => {
   it("does not count a lab paid on its lecture toward a grad instructor's credits", () => {
     const gradInstructorAssumptions = {
       ...assumptions,
-      jobCodes: [
-        ...assumptions.jobCodes,
+      jobCodeRates: [
+        ...assumptions.jobCodeRates,
         gradJobCodeRate("9517", "graduate_instructor", "abd"),
       ],
       people: [...people, costPerson(14, ["9517"])],

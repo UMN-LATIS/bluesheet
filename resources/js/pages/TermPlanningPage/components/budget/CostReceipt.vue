@@ -34,16 +34,12 @@
           <span
             v-else
             class="tw-inline-grid tw-min-h-7 tw-flex-none tw-rounded tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright"
-            :class="
-              part.kind === 'hours' || part.kind === 'count'
-                ? 'tw-w-16'
-                : 'tw-w-24'
-            "
+            :class="isWholeNumberKind(part.kind) ? 'tw-w-16' : 'tw-w-24'"
           >
             <EditableCell
               :kind="part.kind"
-              :amount="part.value"
-              :amountWithoutOverride="part.valueWithoutOverride"
+              :value="part.value"
+              :valueWithoutOverride="part.valueWithoutOverride"
               :isOverridden="part.isOverridden"
               :canEdit="canEdit"
               :label="`${RECEIPT_FIELD_LABELS[part.field]} for ${personName}`"
@@ -76,6 +72,9 @@ defineProps<{
 const emit = defineEmits<{
   editInput: [field: ReceiptField, value: number | null];
 }>();
+
+const isWholeNumberKind = (kind: string) =>
+  kind === "hours" || kind === "count";
 
 const roundedToCents = (dollars: number) => Math.round(dollars * 100) / 100;
 </script>

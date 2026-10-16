@@ -8,7 +8,7 @@ import type {
   StudentStatus,
 } from "@/types";
 import type { SisInstructor } from "../types";
-import type { RateOverrides } from "./costOverrides";
+import type { CostInputs } from "./costOverrides";
 import { noPersonInputs, type PersonInputs } from "./personInputs";
 
 export const jobCodeRate = (
@@ -21,14 +21,11 @@ export const jobCodeRate = (
   instructorType: "contract_visiting",
   salary,
   fringeRate: salary === null ? null : 0,
-  source: null,
   studentStatus: null,
   ...extra,
 });
 
-export const rateOverrides = (
-  extra: Partial<RateOverrides> = {},
-): RateOverrides => ({
+export const costInputs = (extra: Partial<CostInputs> = {}): CostInputs => ({
   personInputsByEmplid: new Map(),
   gradPeopleByEmplid: new Map(),
   ...extra,
@@ -55,8 +52,7 @@ export const costAssumptions = (
   extra: Partial<CostAssumptions> = {},
 ): CostAssumptions => ({
   termCode: 1269,
-  season: "fall",
-  jobCodes: [],
+  jobCodeRates: [],
   people: [],
   gradRates: { defaults: null, levels: [], defaultAppointmentPercent: null },
   gradPeople: [],
@@ -111,7 +107,10 @@ export const gradRates = (
   ...extra,
 });
 
-/** A 12.5% appointment costs $4,500, a 25% one $9,000, a 50% one $18,000, and each credit taught adds $100. */
+/**
+ * A 12.5% appointment costs $4,500, a 25% one $9,000, a
+ * 50% one $18,000, and each credit taught adds $100.
+ */
 export const ROUND_GRAD_INPUTS: GradRateInputs = {
   hourlyRate: 10,
   healthRate: 0,

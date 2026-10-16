@@ -1,8 +1,10 @@
 <!--
-  The sections with no meeting time. The week grid's Async column and the day
-  view's Async tab both show the same list, so this makes no assumptions about
-  the width or height of whatever contains it: the column asks for three to a
-  row, and the tab, which is as wide as the canvas, lets them wrap.
+  The sections with no meeting time. The week grid's Async
+  column and the day view's Async tab both show the same
+  list, so this makes no assumptions about the width or
+  height of whatever contains it: the column asks for three
+  to a row, and the tab, which is as wide as the canvas,
+  lets them wrap.
 -->
 <template>
   <p
@@ -46,7 +48,10 @@
         >
           {{ initialsOf(section) }}
         </span>
-        <!-- The empty ring, not a label, is what a scheduler scans this list for. -->
+        <!--
+          The empty ring, not a label, is what a scheduler
+          scans this list for.
+        -->
         <span
           v-else
           class="tw-h-[19px] tw-w-[19px] tw-rounded-full tw-border tw-border-dashed tw-border-outline"
@@ -71,7 +76,10 @@ const props = withDefaults(
     selectedSectionId: number | null;
     schedule: ScheduleEditor;
     unofficialCourseCodes: Set<string>;
-    /** "columns" fits three to a row, whatever the codes on them run to. */
+    /**
+     * "columns" fits three to a row, whatever the codes on
+     * them run to.
+     */
     layout?: "wrap" | "columns";
   }>(),
   { layout: "wrap" },
@@ -80,7 +88,10 @@ const props = withDefaults(
 const leadInstructorOf = (section: PlannedSection): SisInstructor | undefined =>
   instructorsOfRecord(section.instructors)[0];
 
-/** "Ana García" → "AG". A last name alone gives its first letter. */
+/**
+ * "Ana García" → "AG". A last name alone gives its first
+ * letter.
+ */
 const initialsOf = (section: PlannedSection): string | null => {
   const instructor = leadInstructorOf(section);
   if (!instructor) return null;
