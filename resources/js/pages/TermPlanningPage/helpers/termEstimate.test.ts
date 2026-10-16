@@ -301,6 +301,8 @@ describe("estimateTermCost", () => {
       total: 4000,
       taCost: 0,
       missingRateCount: 1,
+      hasMissingJobCodeRate: false,
+      hasMissingGradRate: true,
     });
   });
 
@@ -894,6 +896,8 @@ describe("totalsOf", () => {
       taCost: 4500,
       total: 14500,
       missingRateCount: 0,
+      hasMissingJobCodeRate: false,
+      hasMissingGradRate: false,
     });
   });
 });
@@ -1236,5 +1240,24 @@ describe("estimateTermCost section pay overrides", () => {
     });
 
     expect(costs.get(1)?.lines[0].amount).toBe(4500);
+  });
+});
+
+describe("totalsOf missing rates", () => {
+  it("tells a missing job code rate from a missing grad rate", () => {
+    const costs = estimate(
+      [section(1, { instructors: [sisInstructor(1, "PI")] })],
+      {},
+      withJobCodeRates(
+        jobCodeRate("A", null),
+        jobCodeRate("TBA", null, { instructorType: null }),
+      ),
+    );
+
+    expect(totalsOf([...costs.values()])).toMatchObject({
+      missingRateCount: 1,
+      hasMissingJobCodeRate: true,
+      hasMissingGradRate: false,
+    });
   });
 });

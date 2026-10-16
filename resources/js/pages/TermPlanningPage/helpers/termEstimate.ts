@@ -467,16 +467,24 @@ export interface CostTotals {
   total: number;
   /** Lines with no rate add nothing to the totals. */
   missingRateCount: number;
+  hasMissingJobCodeRate: boolean;
+  hasMissingGradRate: boolean;
 }
+
+const isGradPay = ({ gradAppointment }: CostLine) =>
+  gradAppointment !== undefined;
 
 export function totalsOf(costs: SectionCost[]): CostTotals {
   const lines = costs.flatMap(({ lines }) => lines);
+  const missingRateLines = lines.filter(({ amount }) => amount === null);
 
   return {
     instructorCost: sumOf(costs.map(({ instructorCost }) => instructorCost)),
     taCost: sumOf(costs.map(({ taCost }) => taCost)),
     total: sumOf(costs.map(({ total }) => total)),
-    missingRateCount: lines.filter(({ amount }) => amount === null).length,
+    missingRateCount: missingRateLines.length,
+    hasMissingJobCodeRate: missingRateLines.some((line) => !isGradPay(line)),
+    hasMissingGradRate: missingRateLines.some(isGradPay),
   };
 }
 

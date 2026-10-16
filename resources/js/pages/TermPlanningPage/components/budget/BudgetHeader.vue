@@ -4,9 +4,23 @@
   >
     <span
       v-if="totals.missingRateCount > 0"
-      class="tw-text-xs tw-font-semibold tw-text-brand"
+      class="tw-flex tw-flex-wrap tw-items-baseline tw-gap-x-3 tw-gap-y-1"
     >
-      {{ missingRateMessage }}
+      <span class="tw-text-xs tw-font-semibold tw-text-brand">
+        {{ missingRateMessage }}
+      </span>
+      <AdminRatesLink
+        v-if="totals.hasMissingJobCodeRate"
+        novaResourceUriKey="job-code-term-rates"
+      >
+        Add job code rates
+      </AdminRatesLink>
+      <AdminRatesLink
+        v-if="totals.hasMissingGradRate"
+        novaResourceUriKey="grad-term-rates"
+      >
+        Add grad rates
+      </AdminRatesLink>
     </span>
 
     <div
@@ -44,6 +58,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
+import AdminRatesLink from "./AdminRatesLink.vue";
 import CapsLabel from "./CapsLabel.vue";
 import OfTermTotal from "./OfTermTotal.vue";
 import { formatWholeDollars } from "../../helpers/money";

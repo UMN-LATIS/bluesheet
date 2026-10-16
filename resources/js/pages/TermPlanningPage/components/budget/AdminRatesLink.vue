@@ -5,7 +5,7 @@
     target="_blank"
     class="tw-text-xs tw-font-semibold tw-text-bs-blue hover:tw-underline"
   >
-    Edit rates in admin
+    <slot>Edit rates in admin</slot>
   </a>
 </template>
 
