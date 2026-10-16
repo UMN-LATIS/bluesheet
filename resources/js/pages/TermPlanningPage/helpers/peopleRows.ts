@@ -39,6 +39,8 @@ import {
 export interface SectionLink {
   sectionId: number;
   label: string;
+  component: string;
+  title: string;
 }
 
 export interface PersonRow {
@@ -471,6 +473,8 @@ function chargeSummaryOf(charges: Charge[]) {
       .map((section) => ({
         sectionId: section.id,
         label: shortLabelOf(section),
+        component: section.component,
+        title: section.title,
       }))
       .sort((a, b) => a.label.localeCompare(b.label)),
   };
