@@ -43,28 +43,9 @@
             </BudgetCell>
 
             <BudgetCell
-              v-if="row.salaryPerSection.kind === 'editable'"
-              role="cell"
-              class="tw-p-0"
-            >
-              <EditableCell
-                class="tw-w-full"
-                kind="dollars"
-                :amount="row.salaryPerSection.amount"
-                :amountWithoutOverride="
-                  row.salaryPerSection.amountWithoutOverride
-                "
-                :isOverridden="row.salaryPerSection.isOverridden"
-                :canEdit="canEdit"
-                :label="`Salary per section for ${row.name}`"
-                @change="(amount) => editSalary(row, amount)"
-              />
-            </BudgetCell>
-            <BudgetCell
-              v-else
               role="cell"
               align="end"
-              class="tw-flex-col tw-items-end tw-justify-center"
+              class="tw-relative tw-flex-col tw-items-end tw-justify-center"
             >
               <MissingRate v-if="row.salaryPerSection.amount === null" />
               <span v-else class="tw-font-semibold">{{
@@ -73,6 +54,7 @@
               <CellSubline v-if="row.salaryPerSection.hint">{{
                 row.salaryPerSection.hint
               }}</CellSubline>
+              <OverrideMarker v-if="row.salaryPerSection.isOverridden" />
             </BudgetCell>
 
             <BudgetCell role="cell" align="end">
@@ -125,12 +107,11 @@ import BudgetTable, { type BudgetColumn } from "./BudgetTable.vue";
 import BudgetTableRow from "./BudgetTableRow.vue";
 import CapsLabel from "./CapsLabel.vue";
 import CellSubline from "./CellSubline.vue";
-import EditableCell from "./EditableCell.vue";
 import MissingRate from "./MissingRate.vue";
+import OverrideMarker from "./OverrideMarker.vue";
 import PersonNameCell from "./PersonNameCell.vue";
 import TextInputCell from "./TextInputCell.vue";
 import TotalCell from "./TotalCell.vue";
-import type { PersonSalaryEdit } from "../../helpers/costOverrides";
 import type {
   InstructorCostGroup,
   InstructorCostRow,
@@ -148,7 +129,6 @@ const emit = defineEmits<{
   selectPerson: [emplid: number];
   selectLeave: [leaveId: number];
   editPersonInput: [edit: PersonInputEdit];
-  editPersonSalary: [edit: PersonSalaryEdit];
 }>();
 
 const COLUMNS: BudgetColumn<InstructorCostGroup>[] = [
@@ -162,10 +142,6 @@ const COLUMNS: BudgetColumn<InstructorCostGroup>[] = [
   { label: "Term cost", isNumeric: true },
   { label: "Notes" },
 ];
-
-function editSalary({ emplid }: InstructorCostRow, amount: number | null) {
-  if (emplid !== null) emit("editPersonSalary", { emplid, amount });
-}
 
 function editNotes({ emplid }: InstructorCostRow, value: string | null) {
   if (emplid !== null) {

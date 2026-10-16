@@ -7,7 +7,6 @@ const grad = personRow({
   name: "Grad, Gia",
   instructorType: "teaching_assistant",
   isGrad: true,
-  isSalaryReadOnly: true,
   salary: 4000,
   salaryHint: "50% · 2 credits",
   fringe: 900,
@@ -63,14 +62,9 @@ describe("instructorCostGroupsOf", () => {
     ]);
   });
 
-  it("lets only a named non-grad person's salary be edited", () => {
+  it("carries each row's salary, hint, and whether the salary is overridden", () => {
     const { groups } = instructorCostGroupsOf([
-      personRow({
-        emplid: 1,
-        salary: 8000,
-        salaryWithoutOverride: 6000,
-        isSalaryOverridden: true,
-      }),
+      personRow({ emplid: 1, salary: 8000, isSalaryOverridden: true }),
       unstaffedRow({ salary: 5000 }),
       grad,
     ]);
@@ -80,14 +74,9 @@ describe("instructorCostGroupsOf", () => {
         rows.map(({ salaryPerSection }) => salaryPerSection),
       ),
     ).toEqual([
-      {
-        kind: "editable",
-        amount: 8000,
-        amountWithoutOverride: 6000,
-        isOverridden: true,
-      },
-      { kind: "readOnly", amount: 5000, hint: null },
-      { kind: "readOnly", amount: 4000, hint: "50% · 2 credits" },
+      { amount: 8000, hint: null, isOverridden: true },
+      { amount: 5000, hint: null, isOverridden: false },
+      { amount: 4000, hint: "50% · 2 credits", isOverridden: false },
     ]);
   });
 

@@ -5,11 +5,9 @@ namespace App\Http\Controllers\TermPlanning;
 use App\Group;
 use App\Http\Controllers\Controller;
 use App\Library\TermPlan\TermCode;
-use App\Library\TermPlan\TermLock;
 use App\LocalCourse;
 use App\TermGradPerson;
 use App\TermPersonInput;
-use App\TermPersonRateOverride;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -17,37 +15,39 @@ use Illuminate\Validation\ValidationException;
 class CostOverrideController extends Controller {
     private const MONEY_RULES = ['numeric', 'decimal:0,2', 'min:0', 'max:99999999.99'];
 
+    private const FRACTION_RULES = ['numeric', 'decimal:0,4', 'between:0,5'];
+
+    private const DECIMAL_PERSON_INPUT_KEYS = [
+        'salary',
+        'fringeRate',
+        'hourlyRate',
+        'healthRate',
+        'tuitionPerHour',
+        'feeOffset',
+        'internationalOffset',
+        'perCreditPayment',
+    ];
+
     private const PERSON_INPUT_COLUMN_BY_KEY = [
         'notes' => 'notes',
         'yearStarted' => 'year_started',
         'courseReleases' => 'course_releases',
         'releaseSource' => 'release_source',
+        'salary' => 'salary',
+        'fringeRate' => 'fringe_rate',
+        'hourlyRate' => 'hourly_rate',
+        'hours' => 'hours',
+        'healthRate' => 'health_rate',
+        'tuitionPerHour' => 'tuition_per_hour',
+        'feeOffset' => 'fee_offset',
+        'internationalOffset' => 'international_offset',
+        'perCreditPayment' => 'per_credit_payment',
+        'creditsTaught' => 'credits_taught',
     ];
-
-    public function updatePersonRate(Request $request, Group $group, string $emplid) {
-        $academicOrg = $this->authorizeAndFindAcademicOrg($group);
-        $termCode = TermCode::fromRequest($request);
-        $this->abortIfTermIsReadOnly($academicOrg, $termCode);
-        $emplid = $this->emplidOrNotFound($emplid);
-
-        $validated = $request->validate([
-            'salary' => ['present', 'nullable', ...self::MONEY_RULES],
-        ])['salary'];
-        $salary = $validated === null ? null : (float) $validated;
-
-        $this->saveOrDelete(
-            TermPersonRateOverride::class,
-            ['academic_org' => $academicOrg, 'term_code' => $termCode, 'emplid' => $emplid],
-            $salary === null ? null : ['salary' => $salary],
-        );
-
-        return ['emplid' => $emplid, 'salary' => $salary];
-    }
 
     public function updateGradPerson(Request $request, Group $group, string $emplid) {
         $academicOrg = $this->authorizeAndFindAcademicOrg($group);
         $termCode = TermCode::fromRequest($request);
-        $this->abortIfTermIsReadOnly($academicOrg, $termCode);
         $emplid = $this->emplidOrNotFound($emplid);
 
         $validated = $request->validate([
@@ -77,7 +77,6 @@ class CostOverrideController extends Controller {
     public function updatePersonInputs(Request $request, Group $group, string $emplid) {
         $academicOrg = $this->authorizeAndFindAcademicOrg($group);
         $termCode = TermCode::fromRequest($request);
-        $this->abortIfTermIsReadOnly($academicOrg, $termCode);
         $emplid = $this->emplidOrNotFound($emplid);
 
         if (!$request->hasAny(array_keys(self::PERSON_INPUT_COLUMN_BY_KEY))) {
@@ -89,6 +88,16 @@ class CostOverrideController extends Controller {
             'releaseSource' => ['sometimes', 'nullable', 'string', 'max:255'],
             'yearStarted' => ['sometimes', 'nullable', 'integer', 'between:1950,2100'],
             'courseReleases' => ['sometimes', 'nullable', 'integer', 'between:0,20'],
+            'salary' => ['sometimes', 'nullable', ...self::MONEY_RULES],
+            'fringeRate' => ['sometimes', 'nullable', ...self::FRACTION_RULES],
+            'hourlyRate' => ['sometimes', 'nullable', ...self::MONEY_RULES],
+            'hours' => ['sometimes', 'nullable', 'integer', 'between:0,2080'],
+            'healthRate' => ['sometimes', 'nullable', ...self::FRACTION_RULES],
+            'tuitionPerHour' => ['sometimes', 'nullable', ...self::MONEY_RULES],
+            'feeOffset' => ['sometimes', 'nullable', ...self::MONEY_RULES],
+            'internationalOffset' => ['sometimes', 'nullable', ...self::MONEY_RULES],
+            'perCreditPayment' => ['sometimes', 'nullable', ...self::MONEY_RULES],
+            'creditsTaught' => ['sometimes', 'nullable', 'integer', 'between:0,40'],
         ]);
 
         $uniqueKey = ['academic_org' => $academicOrg, 'term_code' => $termCode, 'emplid' => $emplid];
@@ -97,7 +106,7 @@ class CostOverrideController extends Controller {
         $inputs = [];
         foreach (self::PERSON_INPUT_COLUMN_BY_KEY as $key => $column) {
             $inputs[$key] = array_key_exists($key, $changes)
-                ? $this->blankToNull($changes[$key])
+                ? $this->blankToNull($key, $changes[$key])
                 : $saved?->{$column};
         }
 
@@ -112,20 +121,20 @@ class CostOverrideController extends Controller {
         return ['emplid' => $emplid, ...$inputs];
     }
 
-    private function blankToNull(mixed $input): mixed {
+    private function blankToNull(string $key, mixed $input): mixed {
+        if ($input === null) {
+            return null;
+        }
+
+        if (in_array($key, self::DECIMAL_PERSON_INPUT_KEYS, true)) {
+            return (float) $input;
+        }
+
         if (is_string($input)) {
             return trim($input) === '' ? null : trim($input);
         }
 
-        return $input === null ? null : (int) $input;
-    }
-
-    private function abortIfTermIsReadOnly(int $academicOrg, int $termCode): void {
-        abort_if(
-            TermLock::isReadOnly($academicOrg, $termCode),
-            403,
-            'The SIS has published this term, so it can no longer be planned here.'
-        );
+        return (int) $input;
     }
 
     private function emplidOrNotFound(string $emplid): int {

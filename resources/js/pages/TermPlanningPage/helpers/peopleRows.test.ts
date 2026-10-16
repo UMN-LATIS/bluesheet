@@ -3,6 +3,7 @@ import type { SisEmployee, TermLeave } from "@/types";
 import type { PlannedSection } from "../types";
 import {
   costAssumptions,
+  costInputsFor,
   costPerson,
   gradJobCodeRate,
   jobCodeRate,
@@ -11,7 +12,7 @@ import {
   roundGradRates,
   sisInstructor,
 } from "./costAssumptions.fixture";
-import type { PersonInputs } from "./personInputs";
+import { noPersonInputs, type PersonInputs } from "./personInputs";
 import { gradPersonEditOf, peopleRowsOf, type PersonRow } from "./peopleRows";
 import { plannedSection } from "./plannedSection.fixture";
 import { estimateTermCost } from "./termEstimate";
@@ -125,7 +126,6 @@ describe("peopleRowsOf", () => {
       title: "Title 9753",
       fundLabel: "UI",
       salary: 10000,
-      salaryWithoutOverride: 10000,
       isSalaryOverridden: false,
       fringe: 0,
       total: 10000,
@@ -149,22 +149,21 @@ describe("peopleRowsOf", () => {
 
   it("shows the planner's salary for a person, with fringe on top", () => {
     const overrides = rateOverrides({
-      salaryByEmplid: new Map([[4, 8000]]),
+      costInputsByEmplid: costInputsFor(4, { salary: 8000 }),
     });
     const [row] = rowsOf([section(1, { instructors: [pi(4)] })], overrides);
 
     expect(row).toMatchObject({
       salary: 8000,
-      salaryWithoutOverride: 6000,
       isSalaryOverridden: true,
       fringe: 4000,
       total: 12000,
     });
   });
 
-  it("shows the planner's salary for a person, and the salary it replaced", () => {
+  it("shows the planner's salary for a person, per section", () => {
     const overrides = rateOverrides({
-      salaryByEmplid: new Map([[2, 12000]]),
+      costInputsByEmplid: costInputsFor(2, { salary: 12000 }),
     });
     const [row] = rowsOf(
       [
@@ -176,7 +175,6 @@ describe("peopleRowsOf", () => {
 
     expect(row).toMatchObject({
       salary: 12000,
-      salaryWithoutOverride: 10000,
       isSalaryOverridden: true,
       total: 24000,
     });
@@ -218,7 +216,6 @@ describe("peopleRowsOf", () => {
       salary: 4500,
       fringe: 0,
       total: 4500,
-      isSalaryReadOnly: true,
       isSalaryOverridden: false,
       salaryHint: null,
       loadLabel: "12.5%",
@@ -299,7 +296,6 @@ describe("peopleRowsOf", () => {
     expect(row).toMatchObject({
       emplid: 5,
       salary: 9300,
-      isSalaryReadOnly: true,
       salaryHint: "25% ABD · 3 credits",
       isAbd: true,
       appointmentPercent: 25,
@@ -307,7 +303,9 @@ describe("peopleRowsOf", () => {
   });
 
   it("does not apply an instructor salary override to a TA", () => {
-    const overrides = rateOverrides({ salaryByEmplid: new Map([[10, 99]]) });
+    const overrides = rateOverrides({
+      costInputsByEmplid: costInputsFor(10, { salary: 99 }),
+    });
     const rows = rowsOf([section(1, { instructors: [ta(10)] })], overrides);
 
     expect(rows[0]).toMatchObject({ salary: 4500, isSalaryOverridden: false });
@@ -318,7 +316,6 @@ describe("peopleRowsOf", () => {
 
     expect(row).toMatchObject({
       appointmentPercent: null,
-      isSalaryReadOnly: false,
       salaryHint: null,
       hasFeeOffset: false,
     });
@@ -333,17 +330,7 @@ describe("peopleRowsOf", () => {
       rateOverrides(),
       [],
       new Map(),
-      new Map([
-        [
-          2,
-          {
-            notes: "Prefers mornings",
-            yearStarted: null,
-            courseReleases: null,
-            releaseSource: null,
-          },
-        ],
-      ]),
+      new Map([[2, { ...noPersonInputs(), notes: "Prefers mornings" }]]),
     );
 
     expect(rows.map(({ notes }) => notes)).toEqual(["", "Prefers mornings"]);

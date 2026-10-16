@@ -12,6 +12,7 @@ import {
   hoursOfAppointment,
   gradTermOf,
   offsetShareOf,
+  type GradOverrides,
   type GradStudent,
   type GradTerm,
 } from "./gradCost";
@@ -110,8 +111,81 @@ describe("gradCostOf", () => {
 
   it("costs an appointment between levels from the nearest level's hours", () => {
     expect(
-      gradCostOf(fallTerm, student({ appointmentPercent: 30 }))?.hours,
+      gradCostOf(fallTerm, student({ appointmentPercent: 30 }))?.figures.hours,
     ).toBeCloseTo((196 * 30) / 25, 6);
+  });
+});
+
+describe("gradCostOf overrides", () => {
+  const costWith = (
+    overrides: GradOverrides,
+    extra: Partial<GradStudent> = {},
+  ) => {
+    const cost = gradCostOf(fallTerm, student(extra), overrides);
+    if (cost === null) throw new Error("No grad cost");
+
+    return cost;
+  };
+
+  it("falls back to the term's figures for a null override", () => {
+    const cost = costWith({ hourlyRate: null, hours: null, healthRate: null });
+
+    expect(cost.total).toBeCloseTo(12482.37, 2);
+    expect(cost.figures).toEqual(cost.figuresWithoutOverrides);
+  });
+
+  it("pays the overridden hourly rate over the overridden hours", () => {
+    const cost = costWith({ hourlyRate: 40, hours: 100 });
+
+    expect(cost.base).toBe(4000);
+    expect(cost.figures.hours).toBe(100);
+    expect(cost.figuresWithoutOverrides).toMatchObject({
+      hourlyRate: 29.95,
+      hours: 196,
+    });
+  });
+
+  it("charges no health for a health rate of 0", () => {
+    const cost = costWith({ healthRate: 0 });
+
+    expect(cost.health).toBe(0);
+    expect(cost.fringe).toBeCloseTo(cost.tuition, 6);
+  });
+
+  it("replaces the tuition rate of whichever standing applies", () => {
+    const regular = costWith({ tuitionPerHour: 10 });
+    const abd = costWith({ tuitionPerHour: 10 }, { isAbd: true });
+
+    expect(regular.tuition).toBe(1960);
+    expect(abd.tuition).toBe(1960);
+    expect(regular.figuresWithoutOverrides.tuitionPerHour).toBe(25.08);
+    expect(abd.figuresWithoutOverrides.tuitionPerHour).toBe(3.98);
+  });
+
+  it("applies the appointment's share to an overridden fee offset", () => {
+    const cost = costWith({ feeOffset: 400 }, { hasFeeOffset: true });
+
+    expect(cost.feeOffset).toBe(200);
+  });
+
+  it("applies the appointment's share to an overridden international offset", () => {
+    const cost = costWith(
+      { internationalOffset: 400 },
+      { appointmentPercent: 12.5, isInternational: true },
+    );
+
+    expect(cost.internationalOffset).toBe(100);
+  });
+
+  it("does not pay an overridden offset the student is not eligible for", () => {
+    expect(costWith({ feeOffset: 400 }).feeOffset).toBe(0);
+  });
+
+  it("pays the overridden credits at the overridden rate per credit", () => {
+    const cost = costWith({ creditsTaught: 4, perCreditPayment: 300 });
+
+    expect(cost.instructorPay).toBe(1200);
+    expect(cost.figuresWithoutOverrides.creditsTaught).toBe(0);
   });
 });
 

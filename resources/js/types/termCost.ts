@@ -41,15 +41,6 @@ export interface CostPerson {
   positionTitles: Partial<Record<string, string>>;
 }
 
-/**
- * A planner's salary for one person per paid section, in
- * one department and one term. Fringe is added on top.
- */
-export interface PersonRateOverride {
-  emplid: number;
-  salary: number;
-}
-
 export interface GradRateInputs {
   hourlyRate: number;
   /** A fraction of pay: 0.289 is 28.9%. */
@@ -81,6 +72,20 @@ export interface PersonInputRecord {
   yearStarted: number | null;
   courseReleases: number | null;
   releaseSource: string | null;
+  salary: number | null;
+  /** A fraction of salary: 0.385 is 38.5%. */
+  fringeRate: number | null;
+  hourlyRate: number | null;
+  hours: number | null;
+  /** A fraction of pay. Zero means no health cost. */
+  healthRate: number | null;
+  tuitionPerHour: number | null;
+  /** The full offset, before the appointment's share. */
+  feeOffset: number | null;
+  /** The full offset, before the appointment's share. */
+  internationalOffset: number | null;
+  perCreditPayment: number | null;
+  creditsTaught: number | null;
 }
 
 export interface CostAssumptions {
@@ -94,9 +99,6 @@ export interface CostAssumptions {
     levels: GradAppointmentLevel[];
     /** The admin's appointment per section. Null when none is entered. */
     defaultAppointmentPercent: number | null;
-  };
-  rateOverrides: {
-    people: PersonRateOverride[];
   };
   gradPeople: GradPerson[];
   personInputs: PersonInputRecord[];

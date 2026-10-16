@@ -1,23 +1,30 @@
 import { describe, expect, it } from "vitest";
-import { personInputKeyOf, personInputsOf } from "./personInputs";
+import { personInputs } from "./costAssumptions.fixture";
+import {
+  noPersonInputs,
+  personInputKeyOf,
+  personInputsOf,
+} from "./personInputs";
 
 const saved = [
-  {
-    emplid: 1,
+  personInputs(1, {
     notes: "On sabbatical in spring",
     yearStarted: 2019,
     courseReleases: 1,
     releaseSource: "Grant",
-  },
+    salary: 7000,
+  }),
 ];
 
 describe("personInputsOf", () => {
   it("keeps the saved inputs when nothing is pending", () => {
     expect(personInputsOf(saved, {}).get(1)).toEqual({
+      ...noPersonInputs(),
       notes: "On sabbatical in spring",
       yearStarted: 2019,
       courseReleases: 1,
       releaseSource: "Grant",
+      salary: 7000,
     });
   });
 
@@ -63,11 +70,31 @@ describe("personInputsOf", () => {
       },
     });
 
-    expect(inputs.get(9)).toEqual({
-      notes: null,
-      yearStarted: null,
-      courseReleases: 3,
-      releaseSource: null,
+    expect(inputs.get(9)).toEqual({ ...noPersonInputs(), courseReleases: 3 });
+  });
+
+  it("shows a pending cost input over the saved one, and null as no override", () => {
+    const edited = personInputsOf(saved, {
+      [personInputKeyOf(1, "salary")]: {
+        emplid: 1,
+        field: "salary",
+        value: 8000,
+      },
+      [personInputKeyOf(1, "healthRate")]: {
+        emplid: 1,
+        field: "healthRate",
+        value: 0,
+      },
     });
+    const reset = personInputsOf(saved, {
+      [personInputKeyOf(1, "salary")]: {
+        emplid: 1,
+        field: "salary",
+        value: null,
+      },
+    });
+
+    expect(edited.get(1)).toMatchObject({ salary: 8000, healthRate: 0 });
+    expect(reset.get(1)?.salary).toBeNull();
   });
 });

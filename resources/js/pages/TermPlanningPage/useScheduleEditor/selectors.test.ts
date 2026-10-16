@@ -10,9 +10,9 @@ import {
   costAssumptions,
   costPerson,
   jobCodeRate,
+  personInputs,
   sisInstructor,
 } from "../helpers/costAssumptions.fixture";
-import { personSalaryKeyOf } from "../helpers/costOverrides";
 import { NEW_SECTION_ID } from "./types";
 import { selectLocalSection } from "./selectors";
 import { plannedSection } from "../helpers/plannedSection.fixture";
@@ -278,8 +278,8 @@ describe("the budget view's selectors", () => {
   it("selectSectionCosts reflects a pending person salary", () => {
     const edited: EditorState = {
       ...atRest,
-      personSalaryEdits: {
-        [personSalaryKeyOf(1)]: { emplid: 1, amount: 7000 },
+      personInputEdits: {
+        "1:salary": { emplid: 1, field: "salary", value: 7000 },
       },
     };
 
@@ -301,12 +301,10 @@ describe("the budget view's selectors", () => {
     const withServer: ScheduleContext = {
       ...budgetContext,
       costAssumptions: costAssumptions({
-        rateOverrides: {
-          people: [
-            { emplid: 1, salary: 100 },
-            { emplid: 2, salary: 200 },
-          ],
-        },
+        personInputs: [
+          personInputs(1, { salary: 100 }),
+          personInputs(2, { salary: 200 }),
+        ],
         gradPeople: [
           { emplid: 10, hasFeeOffset: false, isInternational: false },
         ],
@@ -314,20 +312,16 @@ describe("the budget view's selectors", () => {
     };
     const shown = selectRateOverrides(withServer, {
       ...atRest,
-      personSalaryEdits: {
-        [personSalaryKeyOf(1)]: { emplid: 1, amount: 150 },
+      personInputEdits: {
+        "1:salary": { emplid: 1, field: "salary", value: 150 },
       },
       gradPersonEdits: {
         "10": { emplid: 10, hasFeeOffset: true, isInternational: false },
       },
     });
 
-    expect(shown?.salaryByEmplid).toEqual(
-      new Map([
-        [1, 150],
-        [2, 200],
-      ]),
-    );
+    expect(shown?.costInputsByEmplid.get(1)?.salary).toBe(150);
+    expect(shown?.costInputsByEmplid.get(2)?.salary).toBe(200);
     expect(shown?.gradPeopleByEmplid.get(10)?.hasFeeOffset).toBe(true);
   });
 
@@ -341,15 +335,7 @@ describe("the budget view's selectors", () => {
     const withServer: ScheduleContext = {
       ...budgetContext,
       costAssumptions: costAssumptions({
-        personInputs: [
-          {
-            emplid: 1,
-            notes: "Saved",
-            yearStarted: 2019,
-            courseReleases: null,
-            releaseSource: null,
-          },
-        ],
+        personInputs: [personInputs(1, { notes: "Saved", yearStarted: 2019 })],
       }),
     };
     const shown = selectPersonInputs(withServer, {

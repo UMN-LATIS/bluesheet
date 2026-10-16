@@ -35,20 +35,6 @@ export async function fetchEnrollmentHistory(
   return res.data;
 }
 
-/** A null salary restores the job code's rate. */
-export async function savePersonRateOverride(
-  groupId: T.Group["id"],
-  termCode: number,
-  emplid: number,
-  salary: number | null,
-): Promise<void> {
-  await axios.put(
-    `/api/term-planning/groups/${groupId}/cost-rate-overrides/people/${emplid}`,
-    { salary },
-    { ...WRITE_CONFIG, params: { term: termCode } },
-  );
-}
-
 /** A null value clears the field. */
 export async function savePersonInput(
   groupId: T.Group["id"],

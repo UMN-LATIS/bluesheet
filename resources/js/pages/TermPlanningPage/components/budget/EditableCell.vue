@@ -44,6 +44,7 @@
 import { computed, ref, watch } from "vue";
 import OverrideMarker from "./OverrideMarker.vue";
 import ResetButton from "./ResetButton.vue";
+import { refusalOfCredits } from "../../helpers/creditAmounts";
 import { refusalOfDollars } from "../../helpers/dollarAmounts";
 import {
   refusalOfAppointmentPercent,
@@ -58,7 +59,7 @@ const props = withDefaults(
     amountWithoutOverride: number | null;
     isOverridden: boolean;
     canEdit: boolean;
-    kind: "dollars" | "percent" | "hours" | "appointment";
+    kind: "dollars" | "percent" | "hours" | "count" | "appointment";
     label: string;
     placeholder?: string;
   }>(),
@@ -81,6 +82,7 @@ function formatAmount(amount: number): string {
     case "percent":
       return formatPercent(amount);
     case "hours":
+    case "count":
       return String(amount);
     case "appointment":
       return `${amount}%`;
@@ -114,6 +116,8 @@ function refusalOf(amount: number): string | null {
   switch (props.kind) {
     case "hours":
       return refusalOfHours(amount);
+    case "count":
+      return refusalOfCredits(amount);
     case "appointment":
       return refusalOfAppointmentPercent(amount);
     default:

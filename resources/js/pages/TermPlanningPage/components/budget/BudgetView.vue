@@ -78,9 +78,6 @@
           @selectPerson="selectPerson"
           @selectLeave="selectLeave"
           @editPersonInput="editPersonInput"
-          @editPersonSalary="
-            (edit) => schedule.dispatch({ type: 'personSalaryEdited', edit })
-          "
         />
 
         <template v-else-if="schedule.budgetTab === 'calculator'">

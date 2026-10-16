@@ -79,7 +79,7 @@
           <span
             class="tw-text-[11px] tw-font-bold tw-uppercase tw-tracking-[0.06em]"
           >
-            {{ term?.name ?? "This term" }} &middot; Read only
+            {{ term?.name ?? "This term" }} &middot; Sections read only
           </span>
         </div>
 
@@ -241,8 +241,6 @@
           :name="selectedPerson.name"
           :title="selectedPerson.title"
           :budget="selectedPerson.budget"
-          :salaryLabel="selectedPerson.salaryLabel"
-          :canEditSalary="selectedPerson.canEditSalary"
           :canEdit="schedule.canEditCosts"
           :isReadOnly="schedule.isReadOnly"
           :termSections="selectedPerson.termSections"
@@ -252,7 +250,7 @@
             (sectionId) =>
               schedule.dispatch({ type: 'selectedSection', sectionId })
           "
-          @editSalary="editSelectedPersonSalary"
+          @editInput="editSelectedPersonInput"
           @editNotes="editSelectedPersonNotes"
           @editGradPerson="
             (edit) => schedule.dispatch({ type: 'gradPersonEdited', edit })
@@ -307,6 +305,7 @@ import Notification from "@/components/Notification.vue";
 import LeavePanel from "@/components/planning/LeavePanel.vue";
 import PersonPanel from "./components/PersonPanel.vue";
 import { peopleRowsOf } from "./helpers/peopleRows";
+import type { PersonNumberField } from "./helpers/personInputs";
 import { personTermSectionsOf, taughtTermsOf } from "./helpers/personPanel";
 import { useTeachingHistoryQuery } from "./queries/useTeachingHistoryQuery";
 import LeavePanelLoading from "@/components/planning/LeavePanelLoading.vue";
@@ -561,8 +560,10 @@ const { createSection, saveSection, deleteSection } = useTermPlanMutations(
   activeTermCode,
 );
 
-const { savePersonSalaryEdit, saveGradPersonEdit, savePersonInputEdit } =
-  useCostMutations(groupId, activeTermCode);
+const { saveGradPersonEdit, savePersonInputEdit } = useCostMutations(
+  groupId,
+  activeTermCode,
+);
 
 const enrollmentHistoryQuery = useEnrollmentHistoryQuery(
   groupId,
@@ -689,7 +690,6 @@ const hasUnsavedWork = computed(
   () =>
     schedule.newSectionHasCourse ||
     Object.keys(schedule.pendingEdits).length > 0 ||
-    Object.keys(schedule.pendingPersonSalaryEdits).length > 0 ||
     Object.keys(schedule.pendingGradPersonEdits).length > 0 ||
     Object.keys(schedule.pendingPersonInputEdits).length > 0 ||
     localSections.value.some((section) => schedule.isDraftDirty(section)),
@@ -737,14 +737,6 @@ useTermPlanAutosave({
       sectionId: sectionId,
       saved: saved,
     }),
-  onRefused: showRefusal,
-});
-
-useCostEditsAutosave({
-  pendingEdits: computed(() => schedule.pendingPersonSalaryEdits),
-  save: (_key, edit) => savePersonSalaryEdit.mutateAsync(edit),
-  onSaved: (key, saved) =>
-    schedule.dispatch({ type: "personSalaryEditsPersisted", key, saved }),
   onRefused: showRefusal,
 });
 
@@ -858,11 +850,7 @@ const selectedPersonBudget = computed(() => {
   ).find(({ emplid }) => emplid === selectedEmplid);
   if (!row) return null;
 
-  return {
-    row,
-    salaryLabel: row.isSalaryReadOnly ? "Pay" : "Salary per section",
-    canEditSalary: schedule.canEditCosts && !row.isSalaryReadOnly,
-  };
+  return row;
 });
 
 const selectedPerson = computed(() => {
@@ -889,13 +877,11 @@ const selectedPerson = computed(() => {
       historyPerson?.name ??
       "Unknown",
     title:
-      budget?.row.title ||
+      budget?.title ||
       rosterEntry?.positionTitle ||
       historyPerson?.title ||
       null,
-    budget: budget?.row ?? null,
-    salaryLabel: budget?.salaryLabel ?? "Salary per section",
-    canEditSalary: budget?.canEditSalary ?? false,
+    budget,
     termSections: personTermSectionsOf(
       emplid,
       localSections.value,
@@ -905,13 +891,16 @@ const selectedPerson = computed(() => {
   };
 });
 
-function editSelectedPersonSalary(amount: number | null) {
+function editSelectedPersonInput(
+  field: PersonNumberField,
+  value: number | null,
+) {
   const emplid = schedule.selectedEmplid;
   if (emplid === null) return;
 
   schedule.dispatch({
-    type: "personSalaryEdited",
-    edit: { emplid, amount },
+    type: "personInputEdited",
+    edit: { emplid, field, value },
   });
 }
 

@@ -45,7 +45,7 @@
               : ''
           "
         >
-          {{ row.fundingYear ?? "–" }}
+          {{ row.fundingYear ?? "—" }}
         </BudgetCell>
 
         <BudgetCell

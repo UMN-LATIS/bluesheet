@@ -132,7 +132,6 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
         Route::put('/groups/{group}/sections/{section}', [TermPlanningGroupSectionController::class, 'update']);
         Route::delete('/groups/{group}/sections/{section}', [TermPlanningGroupSectionController::class, 'destroy']);
         Route::get('/groups/{group}/cost-assumptions', [TermPlanningCostAssumptionController::class, 'index']);
-        Route::put('/groups/{group}/cost-rate-overrides/people/{emplid}', [TermPlanningCostOverrideController::class, 'updatePersonRate']);
         Route::put('/groups/{group}/grad-people/{emplid}', [TermPlanningCostOverrideController::class, 'updateGradPerson']);
         Route::patch('/groups/{group}/person-inputs/{emplid}', [TermPlanningCostOverrideController::class, 'updatePersonInputs']);
         Route::get('/groups/{group}/enrollment-history', [TermPlanningEnrollmentHistoryController::class, 'index']);

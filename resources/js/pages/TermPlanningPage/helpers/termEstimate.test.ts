@@ -3,6 +3,7 @@ import type { CostPerson, JobCodeRate } from "@/types";
 import type { PlannedSection, SisSectionMeeting } from "../types";
 import {
   costAssumptions,
+  costInputsFor,
   costPerson,
   FALL_GRAD_INPUTS,
   FALL_GRAD_LEVELS,
@@ -315,7 +316,7 @@ describe("estimateTermCost with overrides", () => {
       ],
       {
         rates: rateOverrides({
-          salaryByEmplid: new Map([[1, 7000]]),
+          costInputsByEmplid: costInputsFor(1, { salary: 7000 }),
         }),
       },
     );
@@ -326,7 +327,11 @@ describe("estimateTermCost with overrides", () => {
   it("adds the job code's fringe on top of a person's salary override", () => {
     const costs = estimate(
       [section(1, { instructors: [pi(1)] })],
-      { rates: rateOverrides({ salaryByEmplid: new Map([[1, 7000]]) }) },
+      {
+        rates: rateOverrides({
+          costInputsByEmplid: costInputsFor(1, { salary: 7000 }),
+        }),
+      },
       withJobCodeRates(jobCodeRate("A", 4000, { fringeRate: 0.5 })),
     );
 
@@ -340,7 +345,11 @@ describe("estimateTermCost with overrides", () => {
   it("charges a person's salary override with no fringe when they have no rate", () => {
     const costs = estimate(
       [section(1, { instructors: [pi(99)] })],
-      { rates: rateOverrides({ salaryByEmplid: new Map([[99, 7000]]) }) },
+      {
+        rates: rateOverrides({
+          costInputsByEmplid: costInputsFor(99, { salary: 7000 }),
+        }),
+      },
       withJobCodeRates(
         jobCodeRate("TBA", 5000, { instructorType: null, fringeRate: 0.5 }),
       ),
@@ -352,11 +361,72 @@ describe("estimateTermCost with overrides", () => {
     });
   });
 
+  it("replaces the job code's fringe rate with a person's own", () => {
+    const costs = estimate(
+      [section(1, { instructors: [pi(1)] })],
+      {
+        rates: rateOverrides({
+          costInputsByEmplid: costInputsFor(1, { fringeRate: 0.1 }),
+        }),
+      },
+      withJobCodeRates(jobCodeRate("A", 4000, { fringeRate: 0.5 })),
+    );
+
+    expect(costs.get(1)?.lines[0]).toMatchObject({
+      salary: 4000,
+      fringe: 400,
+      amount: 4400,
+    });
+  });
+
+  it("splits a grad student's overridden appointment across their sections by each section's part", () => {
+    const twoSections = [
+      section(1, { instructors: [sisInstructor(10, "TA")] }),
+      section(2, {
+        courseCode: "ANTH-2001",
+        instructors: [sisInstructor(10, "TA")],
+      }),
+    ];
+    const costs = estimate(twoSections, {
+      rates: rateOverrides({
+        costInputsByEmplid: costInputsFor(10, { hourlyRate: 20 }),
+      }),
+    });
+
+    expect(costs.get(1)?.lines[0].amount).toBe(9000);
+    expect(costs.get(2)?.lines[0].amount).toBe(9000);
+  });
+
+  it("pays a grad instructor the overridden credits instead of the sections' credits", () => {
+    const costs = estimate(
+      [section(1, { credits: 3, instructors: [pi(14)] })],
+      {
+        rates: rateOverrides({
+          costInputsByEmplid: costInputsFor(14, { creditsTaught: 1 }),
+        }),
+      },
+      costAssumptions({
+        ...assumptions,
+        jobCodes: [
+          ...assumptions.jobCodes,
+          gradJobCodeRate("9517", "graduate_instructor", "regular"),
+        ],
+        people: [...people, costPerson(14, ["9517"])],
+      }),
+    );
+
+    expect(costs.get(1)?.lines[0]).toMatchObject({
+      gradAppointment: { cost: { instructorPay: 100 } },
+    });
+  });
+
   it("ignores a person's salary override on a TA", () => {
     const costs = estimate(
       [section(1, { instructors: [sisInstructor(10, "TA")] })],
       {
-        rates: rateOverrides({ salaryByEmplid: new Map([[10, 4000]]) }),
+        rates: rateOverrides({
+          costInputsByEmplid: costInputsFor(10, { salary: 4000 }),
+        }),
       },
     );
 
@@ -370,7 +440,9 @@ describe("estimateTermCost with overrides", () => {
         section(2, { section: "002", component: "LAB", instructors: [pi(1)] }),
       ],
       {
-        rates: rateOverrides({ salaryByEmplid: new Map([[1, 7000]]) }),
+        rates: rateOverrides({
+          costInputsByEmplid: costInputsFor(1, { salary: 7000 }),
+        }),
       },
     );
 
@@ -431,7 +503,7 @@ describe("estimateTermCost with overrides", () => {
     expect(costs.get(1)?.lines[0]).toMatchObject({
       salary: 10_050,
       amount: 10_050,
-      gradAppointment: { cost: { hours: 1000, feeOffset: 50 } },
+      gradAppointment: { cost: { figures: { hours: 1000 }, feeOffset: 50 } },
     });
   });
 
@@ -461,7 +533,7 @@ describe("estimateTermCost with overrides", () => {
     expect(costs.get(1)?.lines[0]).toMatchObject({
       role: "ta",
       amount: 13_500,
-      gradAppointment: { cost: { hours: 1350 } },
+      gradAppointment: { cost: { figures: { hours: 1350 } } },
     });
   });
 
@@ -749,7 +821,7 @@ describe("estimateTermCost with labs and discussions in a lecture course", () =>
 
     expect(costs.get(1)?.lines[0].gradAppointment).toMatchObject({
       student: { appointmentPercent: 75 },
-      cost: { hours: 2700, total: 27_000 },
+      cost: { figures: { hours: 2700 }, total: 27_000 },
     });
     for (const id of [1, 2, 3]) {
       expect(costs.get(id)?.total).toBe(9000);

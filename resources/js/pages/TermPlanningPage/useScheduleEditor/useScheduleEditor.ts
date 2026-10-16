@@ -86,11 +86,8 @@ export function useScheduleEditor(
       selectRateOverrides(context.value, state.value),
     ),
     canEditCosts: computed(
-      () =>
-        context.value.costAssumptions?.canEdit === true &&
-        !context.value.isReadOnly,
+      () => context.value.costAssumptions?.canEdit === true,
     ),
-    pendingPersonSalaryEdits: computed(() => state.value.personSalaryEdits),
     pendingGradPersonEdits: computed(() => state.value.gradPersonEdits),
     /** Null until the cost assumptions have loaded. */
     personInputs: computed(() =>

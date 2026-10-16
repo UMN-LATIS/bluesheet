@@ -31,7 +31,7 @@ import {
   encodeDayIndex,
   VIEW_KEYS,
 } from "../helpers/viewQuery";
-import { gradPersonKeyOf, personSalaryKeyOf } from "../helpers/costOverrides";
+import { gradPersonKeyOf } from "../helpers/costOverrides";
 import { personInputKeyOf } from "../helpers/personInputs";
 import { ASYNC_DAY_INDEX } from "../helpers/scheduleDays";
 import {
@@ -102,7 +102,6 @@ export const initialState = (dayIndex = 0): EditorState => ({
   filters: defaultFilters(),
   view: DEFAULT_VIEW,
   budgetTab: DEFAULT_BUDGET_TAB,
-  personSalaryEdits: {},
   gradPersonEdits: {},
   personInputEdits: {},
   gradScenario: {
@@ -198,7 +197,6 @@ const READING_EVENTS: EditorEvent["type"][] = [
   "viewSelected",
   "budgetTabSelected",
   // a term that locked mid-save still has to drop what was saved
-  "personSalaryEditsPersisted",
   "gradPersonEditsPersisted",
   "personInputEditsPersisted",
   "daySelected",
@@ -214,12 +212,22 @@ const READING_EVENTS: EditorEvent["type"][] = [
   "contextChanged",
 ];
 
+const BUDGET_EVENTS: EditorEvent["type"][] = [
+  "personInputEdited",
+  "gradPersonEdited",
+  "gradScenarioEdited",
+];
+
 export function update(
   state: EditorState,
   event: EditorEvent,
   context: ScheduleContext,
 ): Next {
-  if (context.isReadOnly && !READING_EVENTS.includes(event.type)) {
+  if (
+    context.isReadOnly &&
+    !READING_EVENTS.includes(event.type) &&
+    !BUDGET_EVENTS.includes(event.type)
+  ) {
     return { state, effects: [] };
   }
 
@@ -575,28 +583,6 @@ function reduce(
     case "budgetTabSelected":
       return { ...state, budgetTab: event.tab };
 
-    case "personSalaryEdited":
-      if (context.costAssumptions?.canEdit !== true) return state;
-
-      return {
-        ...state,
-        personSalaryEdits: {
-          ...state.personSalaryEdits,
-          [personSalaryKeyOf(event.edit.emplid)]: event.edit,
-        },
-      };
-
-    case "personSalaryEditsPersisted":
-      return isEqual(state.personSalaryEdits[event.key], event.saved)
-        ? {
-            ...state,
-            personSalaryEdits: omitStringKey(
-              state.personSalaryEdits,
-              event.key,
-            ),
-          }
-        : state;
-
     case "gradPersonEdited":
       if (context.costAssumptions?.canEdit !== true) return state;
 
@@ -698,7 +684,6 @@ function reduce(
         ...state,
         sectionEdits: {},
         drafts: {},
-        personSalaryEdits: {},
         gradPersonEdits: {},
         personInputEdits: {},
         selection: null,

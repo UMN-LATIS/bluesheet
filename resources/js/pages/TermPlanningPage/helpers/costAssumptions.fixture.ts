@@ -4,10 +4,12 @@ import type {
   GradAppointmentLevel,
   GradRateInputs,
   JobCodeRate,
+  PersonInputRecord,
   StudentStatus,
 } from "@/types";
 import type { SisInstructor } from "../types";
 import type { RateOverrides } from "./costOverrides";
+import { noPersonInputs, type PersonInputs } from "./personInputs";
 
 export const jobCodeRate = (
   code: string,
@@ -27,10 +29,21 @@ export const jobCodeRate = (
 export const rateOverrides = (
   extra: Partial<RateOverrides> = {},
 ): RateOverrides => ({
-  salaryByEmplid: new Map(),
+  costInputsByEmplid: new Map(),
   gradPeopleByEmplid: new Map(),
   ...extra,
 });
+
+export const costInputsFor = (
+  emplid: number,
+  extra: Partial<PersonInputs>,
+): Map<number, PersonInputs> =>
+  new Map([[emplid, { ...noPersonInputs(), ...extra }]]);
+
+export const personInputs = (
+  emplid: number,
+  extra: Partial<PersonInputRecord> = {},
+): PersonInputRecord => ({ emplid, ...noPersonInputs(), ...extra });
 
 export const costPerson = (
   emplid: number,
@@ -46,7 +59,6 @@ export const costAssumptions = (
   jobCodes: [],
   people: [],
   gradRates: { defaults: null, levels: [], defaultAppointmentPercent: null },
-  rateOverrides: { people: [] },
   gradPeople: [],
   personInputs: [],
   canEdit: true,

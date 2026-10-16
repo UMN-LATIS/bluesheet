@@ -1,14 +1,11 @@
 import type { InstructorType } from "@/types";
 import type { PersonRow } from "./peopleRows";
 
-export type SalaryPerSection =
-  | {
-      kind: "editable";
-      amount: number | null;
-      amountWithoutOverride: number | null;
-      isOverridden: boolean;
-    }
-  | { kind: "readOnly"; amount: number | null; hint: string | null };
+export interface SalaryPerSection {
+  amount: number | null;
+  hint: string | null;
+  isOverridden: boolean;
+}
 
 export type CostPerSection =
   | { kind: "missingRate" }
@@ -42,25 +39,11 @@ function typeLabelOf({ emplid, instructorType }: PersonRow): string {
   return TYPE_LABELS[instructorType];
 }
 
-const isSalaryEditable = ({ emplid, isGrad, isSalaryReadOnly }: PersonRow) =>
-  emplid !== null && !isGrad && !isSalaryReadOnly;
-
-function salaryPerSectionOf(person: PersonRow): SalaryPerSection {
-  if (!isSalaryEditable(person)) {
-    return {
-      kind: "readOnly",
-      amount: person.salary,
-      hint: person.salaryHint,
-    };
-  }
-
-  return {
-    kind: "editable",
-    amount: person.salary,
-    amountWithoutOverride: person.salaryWithoutOverride,
-    isOverridden: person.isSalaryOverridden,
-  };
-}
+const salaryPerSectionOf = (person: PersonRow): SalaryPerSection => ({
+  amount: person.salary,
+  hint: person.salaryHint,
+  isOverridden: person.isSalaryOverridden,
+});
 
 function costPerSectionOf(person: PersonRow): CostPerSection {
   if (person.isGrad) {

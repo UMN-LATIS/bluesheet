@@ -1,45 +1,45 @@
 import { describe, expect, it } from "vitest";
 import {
   gradPersonKeyOf,
-  personSalaryKeyOf,
   rateOverridesOf,
   type CostEdits,
-  type PersonSalaryEdit,
 } from "./costOverrides";
-import { costAssumptions } from "./costAssumptions.fixture";
+import { costAssumptions, personInputs } from "./costAssumptions.fixture";
+import { personInputKeyOf, type PersonInputEdit } from "./personInputs";
 
-const noEdits: CostEdits = { personSalaryEdits: {}, gradPersonEdits: {} };
+const noEdits: CostEdits = { personInputEdits: {}, gradPersonEdits: {} };
 
-const salaryEdit = (edit: PersonSalaryEdit): CostEdits => ({
+const inputEdit = (edit: PersonInputEdit): CostEdits => ({
   ...noEdits,
-  personSalaryEdits: { [personSalaryKeyOf(edit.emplid)]: edit },
+  personInputEdits: { [personInputKeyOf(edit.emplid, edit.field)]: edit },
 });
 
 describe("rateOverridesOf", () => {
   const saved = costAssumptions({
-    rateOverrides: { people: [{ emplid: 42, salary: 7000 }] },
+    personInputs: [personInputs(42, { salary: 7000, fringeRate: 0.2 })],
     gradPeople: [{ emplid: 7, hasFeeOffset: true, isInternational: false }],
   });
 
   it("keeps the saved overrides when nothing is pending", () => {
     const overrides = rateOverridesOf(saved, noEdits);
 
-    expect(overrides.salaryByEmplid.get(42)).toBe(7000);
+    expect(overrides.costInputsByEmplid.get(42)?.salary).toBe(7000);
     expect(overrides.gradPeopleByEmplid.get(7)?.hasFeeOffset).toBe(true);
   });
 
-  it("applies and resets a person's salary", () => {
+  it("shows a pending salary edit over the saved one, and a null edit as no override", () => {
     const edited = rateOverridesOf(
       saved,
-      salaryEdit({ emplid: 42, amount: 8000 }),
+      inputEdit({ emplid: 42, field: "salary", value: 8000 }),
     );
     const reset = rateOverridesOf(
       saved,
-      salaryEdit({ emplid: 42, amount: null }),
+      inputEdit({ emplid: 42, field: "salary", value: null }),
     );
 
-    expect(edited.salaryByEmplid.get(42)).toBe(8000);
-    expect(reset.salaryByEmplid.has(42)).toBe(false);
+    expect(edited.costInputsByEmplid.get(42)?.salary).toBe(8000);
+    expect(edited.costInputsByEmplid.get(42)?.fringeRate).toBe(0.2);
+    expect(reset.costInputsByEmplid.get(42)?.salary).toBeNull();
   });
 
   it("replaces a person's grad settings, and drops a person back to the defaults", () => {

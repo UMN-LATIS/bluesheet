@@ -18,6 +18,7 @@ import {
 import {
   gradReceiptOf,
   salaryReceiptOf,
+  type ReceiptFigure,
   type ReceiptLine,
 } from "./costReceipt";
 import { formatWholeDollars } from "./money";
@@ -53,12 +54,8 @@ export interface PersonRow {
    * rate exists.
    */
   salary: number | null;
-  /** Null when no rate exists. */
-  salaryWithoutOverride: number | null;
   /** Only a non-grad instructor's salary can be overridden. */
   isSalaryOverridden: boolean;
-  /** A grad student's pay comes from the admin's grad rates. */
-  isSalaryReadOnly: boolean;
   /** Null when there is nothing to add to the salary. */
   salaryHint: string | null;
   /** Per paid section or course. Null when no rate exists. */
@@ -195,14 +192,13 @@ export function peopleRowsOf(
       ? (gradAppointmentOf(lines)?.student.appointmentPercent ?? 0)
       : null;
 
-    const price = isGrad
-      ? gradPriceOf(lines)
-      : unitPriceOf(
-          isTa
-            ? taRateOf(pricing, termRates)
-            : instructorRateOf(pricing, termRates),
-          isTa ? undefined : rateOverrides.salaryByEmplid.get(emplid),
-        );
+    const unitFigures = unitFiguresOf(
+      isTa
+        ? taRateOf(pricing, termRates)
+        : instructorRateOf(pricing, termRates),
+      isTa ? undefined : rateOverrides.costInputsByEmplid.get(emplid),
+    );
+    const price = isGrad ? gradPriceOf(lines) : unitPriceOf(unitFigures);
     const chargeSummary = chargeSummaryOf(charges);
     const title =
       rate?.title ??
@@ -240,7 +236,13 @@ export function peopleRowsOf(
       hasFeeOffset: isGrad && (gradSetting?.hasFeeOffset ?? false),
       isInternational: isGrad && (gradSetting?.isInternational ?? false),
       isAbd: rate?.studentStatus === "abd",
-      receipt: receiptOf(lines, price, paidCount, chargeSummary.total),
+      receipt: receiptOf({
+        lines,
+        unitFigures,
+        paidCount,
+        total: chargeSummary.total,
+        isEditable: isGrad || !isTa,
+      }),
     };
 
     return { sortName: sortNameOf(person), row };
@@ -286,17 +288,37 @@ function nameOf(person: NamedPerson | undefined): string {
 const sortNameOf = (person: NamedPerson | undefined): string =>
   person?.lastName ?? person?.name ?? "Unknown";
 
-function unitPriceOf(rate: Rate | null, salaryOverride: number | undefined) {
+interface UnitFigures {
+  salary: ReceiptFigure;
+  fringeRate: ReceiptFigure;
+}
+
+function unitFiguresOf(
+  rate: Rate | null,
+  overrides: Pick<PersonInputs, "salary" | "fringeRate"> | undefined,
+): UnitFigures {
   const salaryWithoutOverride = rate?.salary ?? null;
-  const salary = salaryOverride ?? salaryWithoutOverride;
+  const fringeRateWithoutOverride = rate?.fringeRate ?? 0;
 
   return {
-    salary,
-    salaryWithoutOverride,
-    isSalaryOverridden: salaryOverride !== undefined,
-    isSalaryReadOnly: false,
+    salary: {
+      value: overrides?.salary ?? salaryWithoutOverride,
+      valueWithoutOverride: salaryWithoutOverride,
+    },
+    fringeRate: {
+      value: overrides?.fringeRate ?? fringeRateWithoutOverride,
+      valueWithoutOverride: fringeRateWithoutOverride,
+    },
+  };
+}
+
+function unitPriceOf({ salary, fringeRate }: UnitFigures) {
+  return {
+    salary: salary.value,
+    isSalaryOverridden: salary.value !== salary.valueWithoutOverride,
     salaryHint: null,
-    fringe: salary === null ? null : salary * (rate?.fringeRate ?? 0),
+    fringe:
+      salary.value === null ? null : salary.value * (fringeRate.value ?? 0),
   };
 }
 
@@ -309,36 +331,41 @@ function gradPriceOf(lines: CostLine[]) {
 
   return {
     salary: appointment?.cost?.pay ?? null,
-    salaryWithoutOverride: null,
     isSalaryOverridden: false,
-    isSalaryReadOnly: true,
     salaryHint: appointment === undefined ? null : gradHintOf(appointment),
     fringe: appointment?.cost?.fringe ?? null,
   };
 }
 
-function receiptOf(
-  lines: CostLine[],
-  price: { salary: number | null; fringe: number | null },
-  paidCount: number,
-  total: number,
-): ReceiptLine[] {
+function receiptOf({
+  lines,
+  unitFigures,
+  paidCount,
+  total,
+  isEditable,
+}: {
+  lines: CostLine[];
+  unitFigures: UnitFigures;
+  paidCount: number;
+  total: number;
+  isEditable: boolean;
+}): ReceiptLine[] {
   const appointment = gradAppointmentOf(lines);
   if (appointment?.cost) {
-    return gradReceiptOf(appointment.student, appointment.cost);
+    return gradReceiptOf(appointment.student, appointment.cost, isEditable);
   }
 
   return salaryReceiptOf({
-    salaryPerSection: price.salary,
-    fringePerSection: price.fringe,
+    ...unitFigures,
     sectionCount: paidCount,
     total,
+    isEditable,
   });
 }
 
 function gradHintOf({ student, cost }: GradAppointment): string | null {
-  if (student.creditsTaught > 0) {
-    const credits = student.creditsTaught;
+  const credits = cost?.figures.creditsTaught ?? student.creditsTaught;
+  if (credits > 0) {
     const standing = student.isAbd ? " ABD" : "";
 
     return `${student.appointmentPercent}%${standing} · ${credits} ${credits === 1 ? "credit" : "credits"}`;
@@ -353,7 +380,8 @@ function unstaffedRowsOf(charges: Charge[], rate: Rate | null): PersonRow[] {
   const paidCount = charges.filter(({ line }) => isPaid(line)).length;
   if (paidCount === 0) return [];
 
-  const price = unitPriceOf(rate, undefined);
+  const unitFigures = unitFiguresOf(rate, undefined);
+  const price = unitPriceOf(unitFigures);
   const chargeSummary = chargeSummaryOf(charges);
 
   return [
@@ -382,7 +410,13 @@ function unstaffedRowsOf(charges: Charge[], rate: Rate | null): PersonRow[] {
       hasFeeOffset: false,
       isInternational: false,
       isAbd: false,
-      receipt: receiptOf([], price, paidCount, chargeSummary.total),
+      receipt: receiptOf({
+        lines: [],
+        unitFigures,
+        paidCount,
+        total: chargeSummary.total,
+        isEditable: false,
+      }),
     },
   ];
 }

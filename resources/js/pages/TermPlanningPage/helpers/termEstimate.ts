@@ -23,6 +23,7 @@ import {
   type GradStudent,
   type GradTerm,
 } from "./gradCost";
+import type { PersonInputs } from "./personInputs";
 import { blockOwners } from "./sectionPlacement";
 import { assistantsOf, instructorsOfRecord, TA_ROLE } from "./sectionPeople";
 
@@ -202,7 +203,7 @@ function costLinesOf(
       {
         role: "unstaffedSection",
         emplid: null,
-        ...ratedLine(unstaffedRateOf(termRates)),
+        ...ratedLine(unstaffedRateOf(termRates), undefined),
       },
     ];
   }
@@ -228,8 +229,11 @@ const gradAppointmentPlaceholder: PricedLine = {
   basis: { kind: "rate" },
 };
 
-function ratedLine(rate: Rate | null, salaryOverride?: number): PricedLine {
-  const salary = salaryOverride ?? rate?.salary;
+function ratedLine(
+  rate: Rate | null,
+  overrides: Pick<PersonInputs, "salary" | "fringeRate"> | undefined,
+): PricedLine {
+  const salary = overrides?.salary ?? rate?.salary;
   if (salary === undefined) {
     return {
       salary: null,
@@ -239,7 +243,7 @@ function ratedLine(rate: Rate | null, salaryOverride?: number): PricedLine {
     };
   }
 
-  const fringe = salary * (rate?.fringeRate ?? 0);
+  const fringe = salary * (overrides?.fringeRate ?? rate?.fringeRate ?? 0);
 
   return { salary, fringe, amount: salary + fringe, basis: { kind: "rate" } };
 }
@@ -255,7 +259,7 @@ function leadPricedLineOf(
 
   return ratedLine(
     instructorRateOf(context.pricingOfEmplid(lead.emplid), context.termRates),
-    context.rateOverrides.salaryByEmplid.get(lead.emplid),
+    context.rateOverrides.costInputsByEmplid.get(lead.emplid),
   );
 }
 
@@ -285,7 +289,7 @@ function taLineOf(
   return {
     role: "ta",
     emplid: ta.emplid,
-    ...ratedLine(taRateOf(pricingOfEmplid(ta.emplid), termRates)),
+    ...ratedLine(taRateOf(pricingOfEmplid(ta.emplid), termRates), undefined),
   };
 }
 
@@ -536,7 +540,14 @@ function gradAppointmentsSplitAcrossSections(
           : 0,
     };
 
-    return { student, cost: gradCostOf(gradTerm, student) };
+    return {
+      student,
+      cost: gradCostOf(
+        gradTerm,
+        student,
+        rateOverrides.costInputsByEmplid.get(emplid),
+      ),
+    };
   };
 
   return new Map(

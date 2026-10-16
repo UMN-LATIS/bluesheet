@@ -45,7 +45,7 @@ const rowOf = (
   cost: GradCost,
 ): GradCalculatorRow => ({
   appointmentPercent,
-  hours: cost.hours,
+  hours: cost.figures.hours,
   base: cost.base,
   feeOffset: isAbd ? null : cost.feeOffset,
   internationalOffset: cost.internationalOffset,

@@ -9,7 +9,6 @@ use App\JobCodeTermRate;
 use App\SisAppointment;
 use App\TermGradPerson;
 use App\TermPersonInput;
-use App\TermPersonRateOverride;
 use Illuminate\Support\Collection;
 
 final class CostAssumptions {
@@ -19,9 +18,6 @@ final class CostAssumptions {
             'season' => Season::ofTerm($termCode)->value,
             'jobCodes' => self::jobCodes($termCode),
             'people' => self::people($academicOrg),
-            'rateOverrides' => [
-                'people' => self::personRateOverrides($academicOrg, $termCode),
-            ],
             'gradRates' => self::gradRates($termCode),
             'gradPeople' => self::gradPeople($academicOrg, $termCode),
             'personInputs' => self::personInputs($academicOrg, $termCode),
@@ -59,19 +55,6 @@ final class CostAssumptions {
                 'positionTitles' => self::positionTitlesByJobCode($appointments),
             ])
             ->values()
-            ->all();
-    }
-
-    private static function personRateOverrides(int $academicOrg, int $termCode): array {
-        return TermPersonRateOverride::query()
-            ->where('academic_org', $academicOrg)
-            ->where('term_code', $termCode)
-            ->orderBy('emplid')
-            ->get()
-            ->map(fn(TermPersonRateOverride $override) => [
-                'emplid' => $override->emplid,
-                'salary' => $override->salary,
-            ])
             ->all();
     }
 
@@ -116,6 +99,16 @@ final class CostAssumptions {
                 'yearStarted' => $input->year_started,
                 'courseReleases' => $input->course_releases,
                 'releaseSource' => $input->release_source,
+                'salary' => $input->salary,
+                'fringeRate' => $input->fringe_rate,
+                'hourlyRate' => $input->hourly_rate,
+                'hours' => $input->hours,
+                'healthRate' => $input->health_rate,
+                'tuitionPerHour' => $input->tuition_per_hour,
+                'feeOffset' => $input->fee_offset,
+                'internationalOffset' => $input->international_offset,
+                'perCreditPayment' => $input->per_credit_payment,
+                'creditsTaught' => $input->credits_taught,
             ])
             ->all();
     }

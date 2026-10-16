@@ -53,35 +53,6 @@
     >
       <div
         v-if="
-          budget &&
-          budget.emplid !== null &&
-          budget.appointmentPercent === null &&
-          canEditSalary
-        "
-        class="tw-flex-none"
-      >
-        <FieldLabel class="tw-mb-1.5">{{ salaryLabel }}</FieldLabel>
-        <div
-          class="tw-flex tw-items-center tw-gap-3 tw-rounded-[10px] tw-bg-surface tw-p-3"
-        >
-          <EditableCell
-            class="tw-h-11 tw-w-40 tw-flex-none tw-overflow-hidden tw-rounded-[10px] tw-border tw-border-solid tw-border-outline-variant tw-bg-surface-bright"
-            kind="dollars"
-            :amount="budget.salary"
-            :amountWithoutOverride="budget.salaryWithoutOverride"
-            :isOverridden="budget.isSalaryOverridden"
-            :canEdit="canEditSalary"
-            :label="`${salaryLabel} for ${name}`"
-            @change="(amount) => emit('editSalary', amount)"
-          />
-          <span class="tw-text-xs tw-text-on-surface-variant">
-            Job code salary: {{ jobCodeSalaryLabel }}
-          </span>
-        </div>
-      </div>
-
-      <div
-        v-if="
           budget && budget.emplid !== null && budget.appointmentPercent !== null
         "
         class="tw-flex-none"
@@ -124,7 +95,12 @@
 
       <div v-if="budget && budget.emplid !== null" class="tw-flex-none">
         <FieldLabel class="tw-mb-1.5">Cost this term</FieldLabel>
-        <CostReceipt :lines="budget.receipt" />
+        <CostReceipt
+          :lines="budget.receipt"
+          :canEdit="canEdit"
+          :personName="name"
+          @editInput="(field, value) => emit('editInput', field, value)"
+        />
       </div>
 
       <div class="tw-flex-none">
@@ -255,13 +231,13 @@ import Disclosure from "./Disclosure.vue";
 import EnrollmentTile from "./EnrollmentTile.vue";
 import SectionChip from "./SectionChip.vue";
 import CostReceipt from "./budget/CostReceipt.vue";
-import EditableCell from "./budget/EditableCell.vue";
 import GradCheckbox from "./budget/GradCheckbox.vue";
 import MissingRate from "./budget/MissingRate.vue";
 import type { GradPerson } from "@/types";
 import { FEE_OFFSET_ABD_REASON } from "../helpers/gradCost";
-import { formatDollars, formatWholeDollars } from "../helpers/money";
+import { formatWholeDollars } from "../helpers/money";
 import { gradPersonEditOf, type PersonRow } from "../helpers/peopleRows";
+import type { PersonNumberField } from "../helpers/personInputs";
 import type { PersonTermSection, TaughtTerm } from "../helpers/personPanel";
 
 const props = defineProps<{
@@ -269,9 +245,7 @@ const props = defineProps<{
   title: string | null;
   /** Null outside the Budget view. */
   budget: PersonRow | null;
-  salaryLabel: string;
-  canEditSalary: boolean;
-  /** Whether notes and a grad student's settings take edits. */
+  /** Whether notes, a grad student's settings, and the receipt's inputs take edits. */
   canEdit: boolean;
   isReadOnly: boolean;
   termSections: PersonTermSection[];
@@ -282,7 +256,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   close: [];
   selectSection: [sectionId: number];
-  editSalary: [amount: number | null];
+  editInput: [field: PersonNumberField, value: number | null];
   editNotes: [notes: string];
   editGradPerson: [edit: GradPerson];
 }>();
@@ -293,11 +267,6 @@ function editGrad(change: Partial<Omit<GradPerson, "emplid">>) {
   const edit = gradPersonEditOf(props.budget, change);
   if (edit !== null) emit("editGradPerson", edit);
 }
-
-const jobCodeSalaryLabel = computed(() => {
-  const amount = props.budget?.salaryWithoutOverride ?? null;
-  return amount === null ? "none" : formatDollars(amount);
-});
 
 const historySummary = computed(() => {
   const [latest] = props.taughtTerms ?? [];

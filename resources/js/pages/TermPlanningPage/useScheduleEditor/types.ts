@@ -9,10 +9,7 @@ import type {
   TimeRange,
 } from "../types";
 import type { CostAssumptions } from "@/types";
-import type {
-  GradPersonEdit,
-  PersonSalaryEdit,
-} from "../helpers/costOverrides";
+import type { GradPersonEdit } from "../helpers/costOverrides";
 import type { PersonInputEdit } from "../helpers/personInputs";
 import type { UrlQuery } from "@/utils/urlQuery";
 import type { BudgetTab, ScheduleView } from "../helpers/viewQuery";
@@ -176,8 +173,6 @@ export interface EditorState {
   /** Which canvas is showing. */
   view: ScheduleView;
   budgetTab: BudgetTab;
-  /** Edits not yet saved, keyed by `personSalaryKeyOf`. */
-  personSalaryEdits: Record<string, PersonSalaryEdit>;
   /** Edits not yet saved, keyed by `gradPersonKeyOf`. */
   gradPersonEdits: Record<string, GradPersonEdit>;
   /** Edits not yet saved, keyed by `personInputKeyOf`. */
@@ -238,12 +233,6 @@ export type EditorEvent =
   | { type: "importDismissed" }
   | { type: "viewSelected"; view: ScheduleView }
   | { type: "budgetTabSelected"; tab: BudgetTab }
-  | { type: "personSalaryEdited"; edit: PersonSalaryEdit }
-  /**
-   * The server has this value now. A newer edit to the same
-   * key stays.
-   */
-  | { type: "personSalaryEditsPersisted"; key: string; saved: PersonSalaryEdit }
   | { type: "gradPersonEdited"; edit: GradPersonEdit }
   | { type: "gradPersonEditsPersisted"; key: string; saved: GradPersonEdit }
   | { type: "personInputEdited"; edit: PersonInputEdit }

@@ -5,12 +5,7 @@ import {
   selectIsNewSectionSelected,
 } from "./selectors";
 import { costAssumptions } from "../helpers/costAssumptions.fixture";
-import {
-  gradPersonKeyOf,
-  personSalaryKeyOf,
-  type GradPersonEdit,
-  type PersonSalaryEdit,
-} from "../helpers/costOverrides";
+import { gradPersonKeyOf, type GradPersonEdit } from "../helpers/costOverrides";
 import {
   personInputKeyOf,
   type PersonInputEdit,
@@ -2015,9 +2010,10 @@ describe("budget view", () => {
     expect(state.sectionEdits).toEqual({});
   });
 
-  const personSalaryEdit = (amount: number | null): PersonSalaryEdit => ({
+  const salaryEdit = (value: number | null): PersonInputEdit => ({
     emplid: 2,
-    amount,
+    field: "salary",
+    value,
   });
   const notesEdit = (value: string | null): PersonInputEdit => ({
     emplid: 2,
@@ -2032,7 +2028,7 @@ describe("budget view", () => {
 
   const costEditKinds: {
     name: string;
-    overlay: "personSalaryEdits" | "personInputEdits" | "gradPersonEdits";
+    overlay: "personInputEdits" | "gradPersonEdits";
     key: string;
     edited: (version: number) => EditorEvent;
     persisted: (version: number) => EditorEvent;
@@ -2040,18 +2036,18 @@ describe("budget view", () => {
   }[] = [
     {
       name: "person salary",
-      overlay: "personSalaryEdits",
-      key: personSalaryKeyOf(2),
+      overlay: "personInputEdits",
+      key: personInputKeyOf(2, "salary"),
       edited: (version) => ({
-        type: "personSalaryEdited",
-        edit: personSalaryEdit(version),
+        type: "personInputEdited",
+        edit: salaryEdit(version),
       }),
       persisted: (version) => ({
-        type: "personSalaryEditsPersisted",
-        key: personSalaryKeyOf(2),
-        saved: personSalaryEdit(version),
+        type: "personInputEditsPersisted",
+        key: personInputKeyOf(2, "salary"),
+        saved: salaryEdit(version),
       }),
-      version: personSalaryEdit,
+      version: salaryEdit,
     },
     {
       name: "person input",
@@ -2101,13 +2097,13 @@ describe("budget view", () => {
       ).toEqual({});
     });
 
-    it("is refused on a published term", () => {
+    it("is recorded on a published term, whose sections stay locked", () => {
       const state = after([kind.edited(1)], initialState(), {
         ...editable,
         isReadOnly: true,
       });
 
-      expect(state[kind.overlay]).toEqual({});
+      expect(state[kind.overlay]).toEqual({ [kind.key]: kind.version(1) });
     });
 
     it("is recorded from someone who can edit costs", () => {
@@ -2211,7 +2207,7 @@ describe("budget view", () => {
   it("drops unsaved cost edits and person notes on moving to another department or term", () => {
     const edited = after(
       [
-        { type: "personSalaryEdited", edit: personSalaryEdit(1) },
+        { type: "personInputEdited", edit: salaryEdit(1) },
         { type: "gradPersonEdited", edit: gradPersonEdit(true) },
         { type: "personInputEdited", edit: notesEdit("a") },
       ],
@@ -2220,7 +2216,6 @@ describe("budget view", () => {
     );
     const moved = after([{ type: "contextChanged" }], edited, editable);
 
-    expect(moved.personSalaryEdits).toEqual({});
     expect(moved.gradPersonEdits).toEqual({});
     expect(moved.personInputEdits).toEqual({});
   });

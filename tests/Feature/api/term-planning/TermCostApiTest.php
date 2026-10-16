@@ -16,7 +16,6 @@ use App\SisDepartment;
 use App\SisEmployee;
 use App\TermGradPerson;
 use App\TermPersonInput;
-use App\TermPersonRateOverride;
 use App\User;
 use Database\Seeders\TestDatabaseSeeder;
 
@@ -50,9 +49,18 @@ function costAssumptionsUrl(Group $group, ?int $term = TERM_FALL_2026): string {
     return "/api/term-planning/groups/{$group->id}/cost-assumptions{$query}";
 }
 
-function personRateOverrideUrl(Group $group, string $emplid): string {
-    return "/api/term-planning/groups/{$group->id}/cost-rate-overrides/people/{$emplid}?term=" . TERM_FALL_2026;
-}
+const NO_COST_INPUTS = [
+    'salary' => null,
+    'fringeRate' => null,
+    'hourlyRate' => null,
+    'hours' => null,
+    'healthRate' => null,
+    'tuitionPerHour' => null,
+    'feeOffset' => null,
+    'internationalOffset' => null,
+    'perCreditPayment' => null,
+    'creditsTaught' => null,
+];
 
 function personInputsUrl(Group $group, string $emplid): string {
     return "/api/term-planning/groups/{$group->id}/person-inputs/{$emplid}?term=" . TERM_FALL_2026;
@@ -151,7 +159,7 @@ describe('override authorization', function () {
     it('refuses a courses viewer on every override', function () {
         actingAs($this->coursesViewer);
 
-        expect(putJson(personRateOverrideUrl($this->group, '100000001'), ['salary' => 1])->status())->toBe(403);
+        expect(patchJson(personInputsUrl($this->group, '100000001'), ['salary' => 1])->status())->toBe(403);
         expect(patchJson(personInputsUrl($this->group, '100000001'), ['notes' => 'x'])->status())->toBe(403);
         expect(putJson(gradPersonUrl($this->group, '100000001'), ['hasFeeOffset' => true, 'isInternational' => false])->status())->toBe(403);
     });
@@ -159,7 +167,7 @@ describe('override authorization', function () {
     it('lets a courses editor save every override', function () {
         actingAs($this->coursesEditor);
 
-        expect(putJson(personRateOverrideUrl($this->group, '100000001'), ['salary' => 1])->status())->toBe(200);
+        expect(patchJson(personInputsUrl($this->group, '100000001'), ['salary' => 1])->status())->toBe(200);
         expect(patchJson(personInputsUrl($this->group, '100000001'), ['notes' => 'x'])->status())->toBe(200);
     });
 });
@@ -249,69 +257,6 @@ describe('people', function () {
     });
 });
 
-describe('person rates', function () {
-    beforeEach(function () {
-        actingAs($this->groupManager);
-    });
-
-    it('saves a salary and lists it for its own term only', function () {
-        $res = putJson(personRateOverrideUrl($this->group, '100000001'), ['salary' => 7000.5]);
-
-        expect($res->status())->toBe(200);
-        expect($res->json())->toBe(['emplid' => 100000001, 'salary' => 7000.5]);
-        expect(getJson(costAssumptionsUrl($this->group))->json('rateOverrides.people'))
-            ->toBe([['emplid' => 100000001, 'salary' => 7000.5]]);
-        expect(getJson(costAssumptionsUrl($this->group, 1273))->json('rateOverrides.people'))->toBe([]);
-    });
-
-    it('lists overrides ordered by emplid', function () {
-        putJson(personRateOverrideUrl($this->group, '100000003'), ['salary' => 3]);
-        putJson(personRateOverrideUrl($this->group, '100000001'), ['salary' => 1]);
-
-        $emplids = collect(getJson(costAssumptionsUrl($this->group))->json('rateOverrides.people'))->pluck('emplid');
-
-        expect($emplids->all())->toBe([100000001, 100000003]);
-    });
-
-    it('updates the same override instead of adding a row', function () {
-        putJson(personRateOverrideUrl($this->group, '100000001'), ['salary' => 1]);
-        putJson(personRateOverrideUrl($this->group, '100000001'), ['salary' => 2]);
-
-        expect(TermPersonRateOverride::count())->toBe(1);
-        expect(TermPersonRateOverride::first()->salary)->toBe(2.0);
-    });
-
-    it('deletes the override when the salary is null', function () {
-        putJson(personRateOverrideUrl($this->group, '100000001'), ['salary' => 100]);
-
-        $res = putJson(personRateOverrideUrl($this->group, '100000001'), ['salary' => null]);
-
-        expect($res->json())->toBe(['emplid' => 100000001, 'salary' => null]);
-        expect(TermPersonRateOverride::count())->toBe(0);
-    });
-
-    it('returns 404 for an emplid that is not a positive whole number', function () {
-        expect(putJson(personRateOverrideUrl($this->group, 'abc'), ['salary' => 1])->status())->toBe(404);
-        expect(putJson(personRateOverrideUrl($this->group, '0'), ['salary' => 1])->status())->toBe(404);
-    });
-
-    it('rejects a negative salary and a body that omits it', function () {
-        expect(putJson(personRateOverrideUrl($this->group, '100000001'), ['salary' => -1])->status())->toBe(422);
-        expect(putJson(personRateOverrideUrl($this->group, '100000001'), [])->status())->toBe(422);
-    });
-
-    it('ignores an override saved by another department', function () {
-        TermPersonRateOverride::create([
-            'academic_org' => COST_API_OTHER_DEPT,
-            'term_code' => TERM_FALL_2026,
-            'emplid' => 100000001,
-            'salary' => 1,
-        ]);
-
-        expect(getJson(costAssumptionsUrl($this->group))->json('rateOverrides.people'))->toBe([]);
-    });
-});
-
 describe('person inputs', function () {
     beforeEach(function () {
         actingAs($this->groupManager);
@@ -330,6 +275,7 @@ describe('person inputs', function () {
             'yearStarted' => 2019,
             'courseReleases' => 2,
             'releaseSource' => 'Chair',
+            ...NO_COST_INPUTS,
         ];
 
         expect($res->status())->toBe(200);
@@ -358,6 +304,7 @@ describe('person inputs', function () {
             'yearStarted' => 2019,
             'courseReleases' => 1,
             'releaseSource' => null,
+            ...NO_COST_INPUTS,
         ]);
         expect(TermPersonInput::count())->toBe(1);
     });
@@ -397,8 +344,67 @@ describe('person inputs', function () {
             'yearStarted' => null,
             'courseReleases' => null,
             'releaseSource' => null,
+            ...NO_COST_INPUTS,
         ]);
         expect(TermPersonInput::count())->toBe(0);
+    });
+
+    it('saves every cost input and reports it as a number', function () {
+        $costInputs = [
+            'salary' => 7000.5,
+            'fringeRate' => 0.385,
+            'hourlyRate' => 22.75,
+            'hours' => 520,
+            'healthRate' => 0,
+            'tuitionPerHour' => 1450,
+            'feeOffset' => 300.25,
+            'internationalOffset' => 150,
+            'perCreditPayment' => 1200,
+            'creditsTaught' => 4,
+        ];
+
+        $res = patchJson(personInputsUrl($this->group, '100000001'), $costInputs);
+
+        expect($res->status())->toBe(200);
+        expect($res->json())->toBe(['emplid' => 100000001, 'notes' => null, 'yearStarted' => null, 'courseReleases' => null, 'releaseSource' => null, ...$costInputs]);
+        expect(getJson(costAssumptionsUrl($this->group))->json('personInputs.0'))->toBe($res->json());
+    });
+
+    it('clears a cost input with null and keeps the others', function () {
+        patchJson(personInputsUrl($this->group, '100000001'), ['salary' => 100, 'hours' => 10]);
+
+        $res = patchJson(personInputsUrl($this->group, '100000001'), ['salary' => null]);
+
+        expect($res->json('salary'))->toBeNull();
+        expect($res->json('hours'))->toBe(10);
+        expect(TermPersonInput::count())->toBe(1);
+    });
+
+    it('deletes the row when the only cost input is cleared', function () {
+        patchJson(personInputsUrl($this->group, '100000001'), ['salary' => 100]);
+        patchJson(personInputsUrl($this->group, '100000001'), ['salary' => null]);
+
+        expect(TermPersonInput::count())->toBe(0);
+    });
+
+    it('accepts a fraction of 0 and 5 and rejects 6 or a negative', function () {
+        expect(patchJson(personInputsUrl($this->group, '100000001'), ['healthRate' => 0])->status())->toBe(200);
+        expect(patchJson(personInputsUrl($this->group, '100000001'), ['fringeRate' => 5])->status())->toBe(200);
+        expect(patchJson(personInputsUrl($this->group, '100000001'), ['healthRate' => 6])->status())->toBe(422);
+        expect(patchJson(personInputsUrl($this->group, '100000001'), ['fringeRate' => -0.1])->status())->toBe(422);
+        expect(patchJson(personInputsUrl($this->group, '100000001'), ['fringeRate' => 0.12345])->status())->toBe(422);
+    });
+
+    it('bounds hours, credits taught, and money', function () {
+        expect(patchJson(personInputsUrl($this->group, '100000001'), ['hours' => 2080])->status())->toBe(200);
+        expect(patchJson(personInputsUrl($this->group, '100000001'), ['hours' => 2081])->status())->toBe(422);
+        expect(patchJson(personInputsUrl($this->group, '100000001'), ['hours' => -1])->status())->toBe(422);
+        expect(patchJson(personInputsUrl($this->group, '100000001'), ['hours' => 1.5])->status())->toBe(422);
+        expect(patchJson(personInputsUrl($this->group, '100000001'), ['creditsTaught' => 40])->status())->toBe(200);
+        expect(patchJson(personInputsUrl($this->group, '100000001'), ['creditsTaught' => 41])->status())->toBe(422);
+        expect(patchJson(personInputsUrl($this->group, '100000001'), ['salary' => -1])->status())->toBe(422);
+        expect(patchJson(personInputsUrl($this->group, '100000001'), ['hourlyRate' => 100000000])->status())->toBe(422);
+        expect(patchJson(personInputsUrl($this->group, '100000001'), ['tuitionPerHour' => 'abc'])->status())->toBe(422);
     });
 
     it('rejects an empty body and a body with no known key', function () {
@@ -420,13 +426,6 @@ describe('person inputs', function () {
 
     it('refuses a user who cannot edit the group', function () {
         actingAs($this->coursesViewer);
-
-        expect(patchJson(personInputsUrl($this->group, '100000001'), ['notes' => 'x'])->status())->toBe(403);
-        expect(TermPersonInput::count())->toBe(0);
-    });
-
-    it('refuses a term the SIS has published', function () {
-        SisClassSection::factory()->create(['academic_org' => COST_API_DEPT, 'term_code' => TERM_FALL_2026]);
 
         expect(patchJson(personInputsUrl($this->group, '100000001'), ['notes' => 'x'])->status())->toBe(403);
         expect(TermPersonInput::count())->toBe(0);
@@ -464,7 +463,7 @@ describe('grad rates in the payload', function () {
         $res = getJson(costAssumptionsUrl($this->group));
 
         expect($res->json('gradRates'))->toBe(['defaultAppointmentPercent' => null, 'defaults' => null, 'levels' => []]);
-        expect($res->json('rateOverrides'))->toHaveKeys(['people'])->not->toHaveKeys(['jobCodes', 'grad', 'gradHours']);
+        expect($res->json())->not->toHaveKey('rateOverrides');
         expect($res->json('gradPeople'))->toBe([]);
     });
 
@@ -551,21 +550,22 @@ describe('grad people', function () {
     });
 });
 
-describe('published terms', function () {
+describe('published terms keep their budget editable', function () {
     beforeEach(function () {
         SisClassSection::factory()->create(['academic_org' => COST_API_DEPT, 'term_code' => TERM_FALL_2026]);
         actingAs($this->coursesEditor);
     });
 
-    it('refuses a person salary override', function () {
-        expect(putJson(personRateOverrideUrl($this->group, '100000001'), ['salary' => 13000])->status())->toBe(403);
+    it('saves a person salary override', function () {
+        expect(patchJson(personInputsUrl($this->group, '100000001'), ['salary' => 13000])->status())->toBe(200);
+        expect(TermPersonInput::where('emplid', 100000001)->value('salary'))->toEqual(13000);
     });
 
-    it('refuses a grad person edit', function () {
+    it('saves a grad person edit', function () {
         gradTermRateWithLevels();
 
-        expect(putJson(gradPersonUrl($this->group, '100000001'), ['hasFeeOffset' => false, 'isInternational' => false])->status())->toBe(403);
-        expect(TermGradPerson::count())->toBe(0);
+        expect(putJson(gradPersonUrl($this->group, '100000001'), ['hasFeeOffset' => true, 'isInternational' => true])->status())->toBe(200);
+        expect(TermGradPerson::count())->toBe(1);
     });
 });
 
