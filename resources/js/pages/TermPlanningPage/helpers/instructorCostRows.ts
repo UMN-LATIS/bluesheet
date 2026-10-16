@@ -4,7 +4,7 @@ import type { PersonRow } from "./peopleRows";
 export type RatePerSection =
   | { kind: "missingRate" }
   | { kind: "amount"; dollars: number; isOverridden: boolean }
-  | { kind: "appointment"; percentLabel: string };
+  | { kind: "byAppointment" };
 
 export interface InstructorCostRow extends PersonRow {
   typeLabel: string;
@@ -33,9 +33,7 @@ function typeLabelOf({ emplid, instructorType }: PersonRow): string {
 }
 
 function ratePerSectionOf(person: PersonRow): RatePerSection {
-  if (person.isGrad) {
-    return { kind: "appointment", percentLabel: person.loadLabel };
-  }
+  if (person.isGrad) return { kind: "byAppointment" };
 
   if (person.salary === null) return { kind: "missingRate" };
 

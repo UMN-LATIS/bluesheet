@@ -53,9 +53,7 @@
                 {{ formatWholeDollars(row.ratePerSection.dollars) }}
                 <OverrideMarker v-if="row.ratePerSection.isOverridden" />
               </template>
-              <span v-else class="tw-text-on-surface-variant">{{
-                row.ratePerSection.percentLabel
-              }}</span>
+              <span v-else class="tw-text-on-surface-variant">—</span>
             </BudgetCell>
             <BudgetCell
               role="cell"

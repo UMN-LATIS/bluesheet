@@ -61,7 +61,7 @@ describe("instructorCostGroupsOf", () => {
     ]);
   });
 
-  it("prices a section at salary plus fringe, marks an overridden rate, and shows a grad's appointment instead", () => {
+  it("prices a section at salary plus fringe, marks an overridden rate, and has no per-section rate for a grad", () => {
     const { groups } = instructorCostGroupsOf([
       personRow({ emplid: 1, salary: 6000, fringe: 3000 }),
       personRow({ emplid: 2, salary: 8000, fringe: 0, isRateOverridden: true }),
@@ -77,7 +77,7 @@ describe("instructorCostGroupsOf", () => {
       { kind: "amount", dollars: 9000, isOverridden: false },
       { kind: "amount", dollars: 8000, isOverridden: true },
       { kind: "missingRate" },
-      { kind: "appointment", percentLabel: "50%" },
+      { kind: "byAppointment" },
     ]);
   });
 
