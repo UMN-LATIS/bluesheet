@@ -59,30 +59,10 @@
 
         <BudgetCell role="cell" align="end">{{ row.enrollmentCap }}</BudgetCell>
 
-        <BudgetCell role="cell" class="tw-py-[5px]">
-          <span class="tw-flex tw-min-w-0 tw-flex-col">
-            <span class="tw-flex tw-min-w-0 tw-items-center tw-gap-1">
-              <span
-                class="tw-truncate"
-                :class="{ 'tw-font-semibold tw-text-brand': row.isUnstaffed }"
-                :title="row.instructorName"
-              >
-                {{ row.instructorName }}
-              </span>
-              <span
-                v-if="row.otherInstructorNames.length > 0"
-                class="tw-flex-none tw-cursor-help tw-rounded-full tw-bg-surface-container tw-px-1.5 tw-py-0.5 tw-text-[10px] tw-font-semibold tw-leading-none tw-text-on-surface-variant"
-                :title="row.otherInstructorNames.join('; ')"
-                :aria-label="`and ${row.otherInstructorNames.length} more: ${row.otherInstructorNames.join('; ')}`"
-              >
-                +{{ row.otherInstructorNames.length }}
-              </span>
-            </span>
-            <CellSubline v-if="row.instructorJobLabel">
-              {{ row.instructorJobLabel }}
-            </CellSubline>
-          </span>
-        </BudgetCell>
+        <PeopleSummaryCell
+          :people="row.instructors"
+          :isUnstaffed="row.isUnstaffed"
+        />
 
         <BudgetCell role="cell" align="end" class="tw-font-semibold">
           <span
@@ -98,13 +78,9 @@
           }}</template>
         </BudgetCell>
 
-        <BudgetCell
-          role="cell"
-          :class="{ 'tw-text-on-surface-variant': !row.assistantNames }"
-        >
-          <span class="tw-truncate" :title="row.assistantNames">
-            {{ row.assistantNames || "–" }}
-          </span>
+        <PeopleSummaryCell v-if="row.assistants" :people="row.assistants" />
+        <BudgetCell v-else role="cell" class="tw-text-on-surface-variant">
+          –
         </BudgetCell>
 
         <BudgetCell
@@ -165,6 +141,7 @@ import CapsLabel from "./CapsLabel.vue";
 import CellSubline from "./CellSubline.vue";
 import EnrollmentTiles from "./EnrollmentTiles.vue";
 import MissingRate from "./MissingRate.vue";
+import PeopleSummaryCell from "./PeopleSummaryCell.vue";
 import TextInputCell from "./TextInputCell.vue";
 import TotalCell from "./TotalCell.vue";
 import type { BudgetRow } from "../../helpers/budgetRows";
@@ -201,7 +178,7 @@ const COLUMNS: BudgetColumn<BudgetRow>[] = [
     isNumeric: true,
     sortValueOf: ({ enrollmentCap }) => enrollmentCap,
   },
-  { label: "Instructor", sortValueOf: ({ instructorName }) => instructorName },
+  { label: "Instructor", sortValueOf: ({ instructors }) => instructors.name },
   {
     label: "Instr cost",
     isNumeric: true,
@@ -209,7 +186,7 @@ const COLUMNS: BudgetColumn<BudgetRow>[] = [
   },
   {
     label: "TA support",
-    sortValueOf: ({ assistantNames }) => assistantNames || null,
+    sortValueOf: ({ assistants }) => assistants?.name ?? null,
   },
   {
     label: "TA cost",

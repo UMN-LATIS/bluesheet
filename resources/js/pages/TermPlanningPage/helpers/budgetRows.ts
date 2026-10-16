@@ -26,6 +26,20 @@ export interface PaidElsewhere {
   reason: string;
 }
 
+export interface PeopleSummary {
+  /**
+   * The first person named, or a placeholder such as "TBA"
+   * or "Taught by TA".
+   */
+  name: string;
+  otherNames: string[];
+  /**
+   * "9403 · Assistant Professor". Null when the first
+   * person has no job code.
+   */
+  jobLabel: string | null;
+}
+
 export interface BudgetRow {
   sectionId: number;
   courseLabel: string;
@@ -37,17 +51,7 @@ export interface BudgetRow {
   history: EnrollmentPoint[];
   isCancelled: boolean;
   isUnstaffed: boolean;
-  /**
-   * The first instructor of record, or "TBA", "Taught by
-   * TA" or "—".
-   */
-  instructorName: string;
-  otherInstructorNames: string[];
-  /**
-   * "9403 · Assistant Professor". Null when the section
-   * names no instructor with a job code.
-   */
-  instructorJobLabel: string | null;
+  instructors: PeopleSummary;
   /** Null when a line has no rate. */
   instructorCost: number | null;
   /**
@@ -55,7 +59,8 @@ export interface BudgetRow {
    * Null when it is paid here, or on more than one section.
    */
   paidElsewhere: PaidElsewhere | null;
-  assistantNames: string;
+  /** Null when the section has no TA. */
+  assistants: PeopleSummary | null;
   taCostCell: TaCostCell;
   notes: string;
 }
@@ -80,13 +85,12 @@ export function budgetRowOf(
   const lines = cost?.lines ?? [];
   const instructorLines = lines.filter(({ role }) => role !== "ta");
   const taLines = lines.filter(({ role }) => role === "ta");
-  const assistantNames = assistantNamesOf(section);
+  const assistants = section.instructors.filter(({ role }) => role === TA_ROLE);
   const isUnstaffed = instructorLines.some(
     ({ role }) => role === "unstaffedSection",
   );
   const leads = isUnstaffed ? [] : instructorsOfRecord(section.instructors);
-  const leadNames = leads.map(nameOf);
-  const firstLead = leads[0];
+  const placeholderName = placeholderNameOf(isUnstaffed, taLines.length > 0);
 
   return {
     sectionId: section.id,
@@ -99,13 +103,14 @@ export function budgetRowOf(
     history,
     isCancelled: section.isCancelled,
     isUnstaffed,
-    instructorName:
-      leadNames[0] ?? placeholderNameOf(isUnstaffed, taLines.length > 0),
-    otherInstructorNames: leadNames.slice(1),
-    instructorJobLabel: firstLead ? jobLabelOf(firstLead.emplid) : null,
+    instructors: peopleSummaryOf(leads, jobLabelOf) ?? {
+      name: placeholderName,
+      otherNames: [],
+      jobLabel: null,
+    },
     instructorCost: sumOrNull(instructorLines),
     paidElsewhere: paidElsewhereOf(instructorLines, labelOfSection),
-    assistantNames,
+    assistants: peopleSummaryOf(assistants, jobLabelOf),
     taCostCell: taCostCellOf(taLines, labelOfSection),
     notes: section.notes,
   };
@@ -160,11 +165,18 @@ function nameOf({ name, lastName }: SisInstructor): string {
   return lastNameFirst(name, lastName);
 }
 
-function assistantNamesOf(section: PlannedSection): string {
-  return section.instructors
-    .filter(({ role }) => role === TA_ROLE)
-    .map(({ lastName }) => lastName ?? "Unknown")
-    .join(", ");
+function peopleSummaryOf(
+  people: SisInstructor[],
+  jobLabelOf: (emplid: number) => string | null,
+): PeopleSummary | null {
+  const [first, ...others] = people;
+  if (!first) return null;
+
+  return {
+    name: nameOf(first),
+    otherNames: others.map(nameOf),
+    jobLabel: jobLabelOf(first.emplid),
+  };
 }
 
 function taCostCellOf(

@@ -74,9 +74,7 @@ describe("budgetRowOf", () => {
 
     expect(row).toMatchObject({
       isUnstaffed: true,
-      instructorName: "TBA",
-      otherInstructorNames: [],
-      instructorJobLabel: null,
+      instructors: { name: "TBA", otherNames: [], jobLabel: null },
       instructorCost: 5000,
     });
   });
@@ -92,9 +90,11 @@ describe("budgetRowOf", () => {
     ]);
 
     expect(row).toMatchObject({
-      instructorName: "García, Ana",
-      otherInstructorNames: ["Li, Bo"],
-      instructorJobLabel: "9403 · Assistant Professor",
+      instructors: {
+        name: "García, Ana",
+        otherNames: ["Li, Bo"],
+        jobLabel: "9403 · Assistant Professor",
+      },
     });
   });
 
@@ -103,7 +103,7 @@ describe("budgetRowOf", () => {
       plannedSection(1, monday9, { instructors: [sisInstructor(10, "TA")] }),
     ]);
 
-    expect(row.instructorName).toBe("Taught by TA");
+    expect(row.instructors.name).toBe("Taught by TA");
   });
 
   it("sums the instructor lines", () => {
@@ -197,13 +197,17 @@ describe("budgetRowOf", () => {
     expect(row.taCostCell).toEqual({ kind: "missingRate" });
   });
 
-  it("lists a TA's last name on the section that is charged", () => {
+  it("names the TA on the section that is charged", () => {
     const ta = sisInstructor(10, "TA");
     const [lecture] = rowsOf([
       plannedSection(1, monday9, { component: "LEC", instructors: [ta] }),
     ]);
 
-    expect(lecture.assistantNames).toBe("Last10");
+    expect(lecture.assistants).toEqual({
+      name: "Person 10",
+      otherNames: [],
+      jobLabel: null,
+    });
     expect(lecture.taCostCell).toEqual({ kind: "amount", dollars: 4500 });
   });
 
@@ -230,7 +234,7 @@ describe("budgetRowOf", () => {
 
     expect(lecture.taCostCell).toEqual({ kind: "amount", dollars: 4500 });
     expect(discussion).toMatchObject({
-      assistantNames: "Last10",
+      assistants: { name: "Person 10", otherNames: [] },
       taCostCell: {
         kind: "chargedOnOtherSection",
         sectionLabel: "Label 1",
