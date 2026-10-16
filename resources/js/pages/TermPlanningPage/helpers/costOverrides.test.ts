@@ -3,7 +3,11 @@ import { gradPersonKeyOf, costInputsOf, type CostEdits } from "./costOverrides";
 import { costAssumptions, personInputs } from "./costAssumptions.fixture";
 import { personInputKeyOf, type PersonInputEdit } from "./personInputs";
 
-const noEdits: CostEdits = { personInputEdits: {}, gradPersonEdits: {} };
+const noEdits: CostEdits = {
+  personInputEdits: {},
+  gradPersonEdits: {},
+  sectionPayEdits: {},
+};
 
 const inputEdit = (edit: PersonInputEdit): CostEdits => ({
   ...noEdits,

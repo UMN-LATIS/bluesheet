@@ -11,6 +11,7 @@ import type {
 import type { CostAssumptions } from "@/types";
 import type { GradPerson } from "@/types";
 import type { PersonInputEdit } from "../helpers/personInputs";
+import type { SectionPayEdit } from "../helpers/sectionPayOverrides";
 import type { UrlQuery } from "@/utils/urlQuery";
 import type { BudgetTab, ScheduleView } from "../helpers/viewQuery";
 
@@ -196,6 +197,8 @@ export interface EditorState {
   gradPersonEdits: Record<string, GradPerson>;
   /** Edits not yet saved, keyed by `personInputKeyOf`. */
   personInputEdits: Record<string, PersonInputEdit>;
+  /** Edits not yet saved, keyed by `sectionPayEditKeyOf`. */
+  sectionPayEdits: Record<string, SectionPayEdit>;
   /**
    * The Grad calculator's what-if. Not saved and not in the
    * URL.
@@ -283,6 +286,12 @@ export type EditorEvent =
    * key stays.
    */
   | { type: "personInputEditsPersisted"; key: string; saved: PersonInputEdit }
+  | { type: "sectionPayEdited"; edit: SectionPayEdit }
+  /**
+   * The server has this value now. A newer edit to the same
+   * key stays.
+   */
+  | { type: "sectionPayEditsPersisted"; key: string; saved: SectionPayEdit }
   | { type: "gradScenarioEdited"; change: Partial<GradScenario> }
   | { type: "sectionNotesEdited"; sectionId: number; notes: string }
   | { type: "daySelected"; dayIndex: number }

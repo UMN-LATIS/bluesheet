@@ -145,7 +145,13 @@
 
       <template v-if="costDetails">
         <FieldDivider class="tw-mx-3" />
-        <SectionCostDisclosure :details="costDetails" />
+        <SectionCostDisclosure
+          :details="costDetails"
+          :canEdit="canEditCosts"
+          @editPay="
+            (emplid, field, value) => emit('editPay', emplid, field, value)
+          "
+        />
       </template>
 
       <FieldDivider class="tw-mx-3" />
@@ -188,15 +194,20 @@ import {
   formatTime,
   minutesFromClock,
 } from "../helpers/timeScale";
+import type { SectionPayField } from "../helpers/sectionPayOverrides";
 import type { PlannedSection, SisSectionMeeting } from "../types";
 
 const props = defineProps<{
   section: PlannedSection;
   previousOfferings: PreviousOffering[];
   costDetails: SectionCostDetails | null;
+  canEditCosts: boolean;
 }>();
 
-const emit = defineEmits<{ openPerson: [emplid: number] }>();
+const emit = defineEmits<{
+  openPerson: [emplid: number];
+  editPay: [emplid: number, field: SectionPayField, value: number | null];
+}>();
 
 /**
  * "9:45 – 11:00 AM": the half is written once, on the end

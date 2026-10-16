@@ -71,8 +71,6 @@ export interface SisInstructor {
   /** Sent separately: a narrow block cannot split a full name safely. */
   lastName: string | null;
   internetId: string | null;
-  /** A grad student's appointment for this assignment. Absent or null: the default for the role. */
-  appointmentPercent?: number | null;
 }
 
 export interface SisCrosslist {

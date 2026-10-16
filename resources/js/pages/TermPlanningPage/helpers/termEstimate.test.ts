@@ -13,6 +13,7 @@ import {
   costInputs,
   ROUND_GRAD_INPUTS,
   roundGradRates,
+  sectionPayOverridesOf,
   sisInstructor,
 } from "./costAssumptions.fixture";
 import type { CostInputs } from "./costOverrides";
@@ -62,6 +63,27 @@ const estimate = (
     sections,
     assumptions: withAssumptions,
     costInputs: overrides.rates ?? costInputs(),
+  });
+
+const plannerPercents = (
+  ...percents: {
+    sectionId: number;
+    emplid: number;
+    percent: number;
+    courseCode?: string;
+  }[]
+) =>
+  costInputs({
+    sectionPayOverridesByKey: sectionPayOverridesOf(
+      ...percents.map(
+        ({ sectionId, emplid, percent, courseCode = "ANTH-1001" }) => ({
+          courseCode,
+          section: section(sectionId).section,
+          emplid,
+          appointmentPercent: percent,
+        }),
+      ),
+    ),
   });
 
 describe("estimateTermCost", () => {
@@ -524,11 +546,12 @@ describe("estimateTermCost with overrides", () => {
   });
 
   it("costs an appointment between levels in proportion to the nearest level's hours", () => {
-    const costs = estimate([
-      section(1, {
-        instructors: [{ ...sisInstructor(10, "TA"), appointmentPercent: 37.5 }],
-      }),
-    ]);
+    const costs = estimate(
+      [section(1, { instructors: [sisInstructor(10, "TA")] })],
+      {
+        rates: plannerPercents({ sectionId: 1, emplid: 10, percent: 37.5 }),
+      },
+    );
 
     expect(costs.get(1)?.lines[0]).toMatchObject({
       role: "ta",
@@ -641,7 +664,7 @@ describe("estimateTermCost with labs and discussions in a lecture course", () =>
 
     expect(costs.get(1)?.total).toBe(4000);
     for (const id of [2, 3]) {
-      expect(costs.get(id)?.lines).toEqual([
+      expect(costs.get(id)?.lines).toMatchObject([
         {
           role: "instructor",
           emplid: 1,
@@ -775,12 +798,10 @@ describe("estimateTermCost with labs and discussions in a lecture course", () =>
     expect(totalsOf([...costs.values()]).total).toBe(4000 + 4500);
   });
 
-  it("uses an assignment's own appointment percent over the role's default", () => {
-    const costs = estimate([
-      section(1, {
-        instructors: [{ ...pi(10), appointmentPercent: 50 }],
-      }),
-    ]);
+  it("uses a planner's appointment percent over the role's default", () => {
+    const costs = estimate([section(1, { instructors: [pi(10)] })], {
+      rates: plannerPercents({ sectionId: 1, emplid: 10, percent: 50 }),
+    });
 
     expect(costs.get(1)?.lines[0]).toMatchObject({
       amount: 18_000,
@@ -793,12 +814,8 @@ describe("estimateTermCost with labs and discussions in a lecture course", () =>
     });
   });
 
-  it("uses the role's default for an assignment with a null appointment percent", () => {
-    const costs = estimate([
-      section(1, {
-        instructors: [{ ...pi(10), appointmentPercent: null }],
-      }),
-    ]);
+  it("uses the role's default when no planner set a percent", () => {
+    const costs = estimate([section(1, { instructors: [pi(10)] })]);
 
     expect(costs.get(1)?.lines[0]).toMatchObject({
       amount: 9000,
@@ -829,16 +846,18 @@ describe("estimateTermCost with labs and discussions in a lecture course", () =>
   });
 
   it("splits a grad student's cost by each section's own percent", () => {
-    const costs = estimate([
-      section(1, {
-        courseCode: "ANTH-1001",
-        instructors: [{ ...pi(10), appointmentPercent: 37.5 }],
-      }),
-      section(2, {
-        courseCode: "ANTH-2001",
-        instructors: [{ ...pi(10), appointmentPercent: 12.5 }],
-      }),
-    ]);
+    const costs = estimate(
+      [
+        section(1, { courseCode: "ANTH-1001", instructors: [pi(10)] }),
+        section(2, { courseCode: "ANTH-2001", instructors: [pi(10)] }),
+      ],
+      {
+        rates: plannerPercents(
+          { sectionId: 1, emplid: 10, percent: 37.5, courseCode: "ANTH-1001" },
+          { sectionId: 2, emplid: 10, percent: 12.5, courseCode: "ANTH-2001" },
+        ),
+      },
+    );
 
     expect(costs.get(1)?.total).toBe(13_500);
     expect(costs.get(2)?.total).toBe(4500);
@@ -967,7 +986,7 @@ describe("estimateTermCost with sections at the same meeting time", () => {
     ]);
 
     expect(costs.get(1)?.total).toBe(4000);
-    expect(costs.get(2)?.lines).toEqual([
+    expect(costs.get(2)?.lines).toMatchObject([
       {
         role: "instructor",
         emplid: 1,
@@ -1042,5 +1061,180 @@ describe("estimateTermCost with sections at the same meeting time", () => {
 
     expect(costs.get(2)?.total).toBe(4000);
     expect(costs.get(1)?.total).toBe(0);
+  });
+});
+
+describe("estimateTermCost section pay overrides", () => {
+  const pi = (emplid: number) => sisInstructor(emplid, "PI");
+  const ta = (emplid: number) => sisInstructor(emplid, "TA");
+  const lecture = section(1, { component: "LEC", instructors: [pi(1)] });
+  const lab = section(2, { component: "LAB", instructors: [pi(1)] });
+
+  const plannerSalaries = (
+    ...salaries: { sectionId: number; emplid: number; salary: number }[]
+  ) =>
+    costInputs({
+      sectionPayOverridesByKey: sectionPayOverridesOf(
+        ...salaries.map(({ sectionId, emplid, salary }) => ({
+          courseCode: "ANTH-1001",
+          section: section(sectionId).section,
+          emplid,
+          salary,
+        })),
+      ),
+    });
+
+  it("pays a lab its lecture would cover when a planner sets a salary", () => {
+    const costs = estimate([lecture, lab], {
+      rates: plannerSalaries({ sectionId: 2, emplid: 1, salary: 4000 }),
+    });
+
+    expect(costs.get(1)?.total).toBe(4000);
+    expect(costs.get(2)?.lines[0]).toMatchObject({
+      amount: 4000,
+      basis: {
+        kind: "plannerSet",
+        automaticBasis: { kind: "paidOnLecture", lectureSectionId: 1 },
+        automaticSalary: 0,
+      },
+    });
+  });
+
+  it("pays nothing on a section a planner set to $0", () => {
+    const costs = estimate([lecture], {
+      rates: plannerSalaries({ sectionId: 1, emplid: 1, salary: 0 }),
+    });
+
+    expect(costs.get(1)?.lines[0]).toMatchObject({
+      amount: 0,
+      basis: { kind: "plannerSet", automaticSalary: 4000 },
+    });
+  });
+
+  it("adds fringe at the person's rate to a planner's salary", () => {
+    const costs = estimate(
+      [lecture],
+      { rates: plannerSalaries({ sectionId: 1, emplid: 1, salary: 1000 }) },
+      withJobCodeRates(jobCodeRate("A", 4000, { fringeRate: 0.25 })),
+    );
+
+    expect(costs.get(1)?.lines[0]).toMatchObject({
+      salary: 1000,
+      fringe: 250,
+      amount: 1250,
+    });
+  });
+
+  it("pays the other section at the same time when a planner sets the first to $0", () => {
+    const monWed10 = [
+      {
+        days: ["mon" as const, "wed" as const],
+        startTime: "10:00",
+        endTime: "10:50",
+      },
+    ];
+    const costs = estimate(
+      [
+        section(1, { meetings: monWed10, instructors: [pi(1)] }),
+        section(2, { meetings: monWed10, instructors: [pi(1)] }),
+      ],
+      { rates: plannerSalaries({ sectionId: 1, emplid: 1, salary: 0 }) },
+    );
+
+    expect(costs.get(1)?.total).toBe(0);
+    expect(costs.get(2)?.total).toBe(4000);
+  });
+
+  it("offers a grad student on a lab their lecture covers a 0% appointment", () => {
+    const costs = estimate([
+      section(1, { component: "LEC", instructors: [ta(10)] }),
+      section(2, { component: "LAB", instructors: [ta(10)] }),
+    ]);
+
+    expect(costs.get(2)?.lines[0]).toMatchObject({
+      amount: 0,
+      sectionAppointment: {
+        percent: 0,
+        percentWithoutOverride: 0,
+        isOverridden: false,
+      },
+    });
+  });
+
+  it("pays a grad student on a lab their lecture covers when a planner sets a percent", () => {
+    const costs = estimate(
+      [
+        section(1, { component: "LEC", instructors: [ta(10)] }),
+        section(2, { component: "LAB", instructors: [ta(10)] }),
+      ],
+      { rates: plannerPercents({ sectionId: 2, emplid: 10, percent: 25 }) },
+    );
+
+    expect(costs.get(2)?.lines[0]).toMatchObject({
+      amount: 9000,
+      sectionAppointment: {
+        percent: 25,
+        percentWithoutOverride: 0,
+        isOverridden: true,
+      },
+      gradAppointment: { student: { appointmentPercent: 12.5 + 25 } },
+    });
+  });
+
+  const plannerFringe = (sectionId: number, fringeRate: number) =>
+    costInputs({
+      sectionPayOverridesByKey: sectionPayOverridesOf({
+        courseCode: "ANTH-1001",
+        section: section(sectionId).section,
+        emplid: 1,
+        fringeRate,
+      }),
+    });
+
+  it("charges a planner's fringe rate on the automatic salary", () => {
+    const costs = estimate(
+      [lecture],
+      { rates: plannerFringe(1, 0.1) },
+      withJobCodeRates(jobCodeRate("A", 4000, { fringeRate: 0.25 })),
+    );
+
+    expect(costs.get(1)?.lines[0]).toMatchObject({
+      salary: 4000,
+      fringe: 400,
+      amount: 4400,
+      basis: { kind: "rate" },
+      sectionSalary: {
+        salaryWithoutOverride: 4000,
+        isSalaryOverridden: false,
+        fringeRate: 0.1,
+        fringeRateWithoutOverride: 0.25,
+        isFringeRateOverridden: true,
+      },
+    });
+  });
+
+  it("pays nothing more on a lab its lecture covers when a planner sets only its fringe", () => {
+    const costs = estimate([lecture, lab], { rates: plannerFringe(2, 0.5) });
+
+    expect(costs.get(2)?.total).toBe(0);
+  });
+
+  it("reports a planner's salary against the salary the rules set", () => {
+    const costs = estimate([lecture, lab], {
+      rates: plannerSalaries({ sectionId: 2, emplid: 1, salary: 4000 }),
+    });
+
+    expect(costs.get(2)?.lines[0].sectionSalary).toMatchObject({
+      salaryWithoutOverride: 0,
+      isSalaryOverridden: true,
+    });
+  });
+
+  it("ignores a salary set for a grad student", () => {
+    const costs = estimate([section(1, { instructors: [ta(10)] })], {
+      rates: plannerSalaries({ sectionId: 1, emplid: 10, salary: 100 }),
+    });
+
+    expect(costs.get(1)?.lines[0].amount).toBe(4500);
   });
 });

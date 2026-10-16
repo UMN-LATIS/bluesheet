@@ -34,6 +34,7 @@ import {
 } from "../helpers/viewQuery";
 import { gradPersonKeyOf } from "../helpers/costOverrides";
 import { personInputKeyOf } from "../helpers/personInputs";
+import { sectionPayEditKeyOf } from "../helpers/sectionPayOverrides";
 import { ASYNC_DAY_INDEX } from "../helpers/scheduleDays";
 import {
   clockFromMinutes,
@@ -115,6 +116,7 @@ export const initialState = (dayIndex = 0): EditorState => ({
   budgetTab: DEFAULT_BUDGET_TAB,
   gradPersonEdits: {},
   personInputEdits: {},
+  sectionPayEdits: {},
   gradScenario: {
     hasFeeOffset: true,
     isInternational: false,
@@ -220,6 +222,7 @@ const READING_EVENTS: EditorEvent["type"][] = [
   // saved
   "gradPersonEditsPersisted",
   "personInputEditsPersisted",
+  "sectionPayEditsPersisted",
   "daySelected",
   "filterPanelOverridden",
   // a term that locked mid-save still has to show and drop
@@ -237,6 +240,7 @@ const READING_EVENTS: EditorEvent["type"][] = [
 
 const BUDGET_EVENTS: EditorEvent["type"][] = [
   "personInputEdited",
+  "sectionPayEdited",
   "gradPersonEdited",
   "gradScenarioEdited",
 ];
@@ -660,6 +664,25 @@ function reduce(
         personInputEdits: omitStringKey(state.personInputEdits, event.key),
       };
 
+    case "sectionPayEdited":
+      if (context.costAssumptions?.canEdit !== true) return state;
+
+      return {
+        ...state,
+        sectionPayEdits: {
+          ...state.sectionPayEdits,
+          [sectionPayEditKeyOf(event.edit)]: event.edit,
+        },
+      };
+
+    case "sectionPayEditsPersisted":
+      if (!isEqual(state.sectionPayEdits[event.key], event.saved)) return state;
+
+      return {
+        ...state,
+        sectionPayEdits: omitStringKey(state.sectionPayEdits, event.key),
+      };
+
     case "gradScenarioEdited":
       return {
         ...state,
@@ -718,6 +741,7 @@ function reduce(
         drafts: {},
         gradPersonEdits: {},
         personInputEdits: {},
+        sectionPayEdits: {},
         selection: null,
         lastPlacedId: null,
         interaction: { status: "idle" },

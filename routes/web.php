@@ -134,6 +134,7 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
         Route::get('/groups/{group}/cost-assumptions', [TermPlanningCostAssumptionController::class, 'index']);
         Route::put('/groups/{group}/grad-people/{emplid}', [TermPlanningCostOverrideController::class, 'updateGradPerson']);
         Route::patch('/groups/{group}/person-inputs/{emplid}', [TermPlanningCostOverrideController::class, 'updatePersonInputs']);
+        Route::patch('/groups/{group}/section-pay-overrides', [TermPlanningCostOverrideController::class, 'updateSectionPayOverride']);
         Route::get('/groups/{group}/enrollment-history', [TermPlanningEnrollmentHistoryController::class, 'index']);
     });
 

@@ -77,7 +77,9 @@
       :section="section"
       :previousOfferings="previousOfferings"
       :costDetails="costDetails"
+      :canEditCosts="schedule.canEditCosts"
       @openPerson="openPerson"
+      @editPay="editSectionPay"
     />
 
     <div
@@ -253,14 +255,7 @@
             role="Instructor of record"
             @remove="removeInstructor(instructor.emplid)"
             @open="openPerson(instructor.emplid)"
-          >
-            <AppointmentPercentField
-              :appointment="appointmentOf(instructor)"
-              :canEdit="!isReadOnly"
-              :label="`Appointment for ${instructor.name ?? 'instructor'} on this section`"
-              @change="(percent) => setAppointmentPercent(instructor, percent)"
-            />
-          </PersonField>
+          />
           <p
             v-if="instructorsOnRecord.length === 0"
             class="tw-m-0 tw-text-[13px] tw-text-on-surface-variant"
@@ -305,14 +300,7 @@
             :role="instructor.role"
             @remove="removeInstructor(instructor.emplid)"
             @open="openPerson(instructor.emplid)"
-          >
-            <AppointmentPercentField
-              :appointment="appointmentOf(instructor)"
-              :canEdit="!isReadOnly"
-              :label="`Appointment for ${instructor.name ?? 'assistant'} on this section`"
-              @change="(percent) => setAppointmentPercent(instructor, percent)"
-            />
-          </PersonField>
+          />
           <p
             v-if="assistants.length === 0"
             class="tw-m-0 tw-text-[13px] tw-text-on-surface-variant"
@@ -419,7 +407,11 @@
 
         <template v-if="costDetails">
           <FieldDivider class="tw-mx-3" />
-          <SectionCostDisclosure :details="costDetails" />
+          <SectionCostDisclosure
+            :details="costDetails"
+            :canEdit="schedule.canEditCosts"
+            @editPay="editSectionPay"
+          />
         </template>
 
         <FieldDivider class="tw-mx-3" />
@@ -630,7 +622,6 @@ import FieldDivider from "@/components/planning/FieldDivider.vue";
 import FieldHeader from "./FieldHeader.vue";
 import FieldLabel from "@/components/planning/FieldLabel.vue";
 import PersonField from "./PersonField.vue";
-import AppointmentPercentField from "./budget/AppointmentPercentField.vue";
 import PersonLeaveChip from "./PersonLeaveChip.vue";
 import PreviousEnrollment from "./PreviousEnrollment.vue";
 import SectionCostDisclosure from "./SectionCostDisclosure.vue";
@@ -642,6 +633,7 @@ import type { EnrollmentHistory, SisEmployee } from "@/types";
 import { sectionLabelerOf } from "../helpers/budgetRows";
 import { previousOfferingsOf } from "../helpers/enrollmentHistory";
 import { sectionCostDetailsOf } from "../helpers/sectionCostRows";
+import type { SectionPayField } from "../helpers/sectionPayOverrides";
 import { LockIcon } from "@/icons";
 import { colorOfType, labelOfComponent } from "@/utils/meetingTypeColors";
 import { DELIVERY_OPTIONS, labelOfDelivery } from "../constants/delivery";
@@ -660,7 +652,6 @@ import type {
   Delivery,
   PlannableCourse,
   PlannedSection,
-  SisInstructor,
   SisDay,
   SisSectionMeeting,
 } from "../types";
@@ -979,41 +970,20 @@ const costDetails = computed(() => {
     : null;
 });
 
-const sectionAppointmentByPerson = computed(() => {
-  const lines = budgetCost.value?.lines ?? [];
-
-  const appointedLines = lines.filter(
-    ({ emplid, sectionAppointment }) => emplid !== null && sectionAppointment,
-  );
-
-  return new Map(
-    appointedLines.map(({ emplid, role, sectionAppointment }) => [
-      personRoleKey(emplid!, role === "ta"),
-      sectionAppointment!,
-    ]),
-  );
-});
-
-const personRoleKey = (emplid: number, isTa: boolean) => `${emplid}|${isTa}`;
-
-const isTaAssignment = ({ role }: SisInstructor) => role === TA_ROLE;
-
-const appointmentOf = (instructor: SisInstructor) =>
-  sectionAppointmentByPerson.value.get(
-    personRoleKey(instructor.emplid, isTaAssignment(instructor)),
-  );
-
-const setAppointmentPercent = (
-  instructor: SisInstructor,
-  appointmentPercent: number | null,
+const editSectionPay = (
+  emplid: number,
+  field: SectionPayField,
+  value: number | null,
 ) =>
-  edit({
-    instructors: draft.value.instructors.map((assignment) =>
-      assignment.emplid === instructor.emplid &&
-      assignment.role === instructor.role
-        ? { ...assignment, appointmentPercent }
-        : assignment,
-    ),
+  props.schedule.dispatch({
+    type: "sectionPayEdited",
+    edit: {
+      courseCode: draft.value.courseCode,
+      section: draft.value.section,
+      emplid,
+      field,
+      value,
+    },
   });
 
 const hasNote = computed(() => draft.value.notes.trim() !== "");

@@ -1,8 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import type { Ref } from "vue";
-import { saveGradPerson, savePersonInput } from "@/api";
+import { saveGradPerson, savePersonInput, saveSectionPayOverride } from "@/api";
 import type { GradPerson } from "@/types";
 import type { PersonInputEdit } from "../helpers/personInputs";
+import type { SectionPayEdit } from "../helpers/sectionPayOverrides";
 import { costAssumptionsQueryKey } from "./useCostAssumptionsQuery";
 
 export function useCostMutations(
@@ -31,5 +32,14 @@ export function useCostMutations(
     onSuccess: refetchAssumptions,
   });
 
-  return { saveGradPersonEdit, savePersonInputEdit };
+  const saveSectionPayEdit = useMutation({
+    mutationFn: ({ field, value, ...sectionPerson }: SectionPayEdit) =>
+      saveSectionPayOverride(groupId.value, termCode.value ?? 0, {
+        ...sectionPerson,
+        [field]: value,
+      }),
+    onSuccess: refetchAssumptions,
+  });
+
+  return { saveGradPersonEdit, savePersonInputEdit, saveSectionPayEdit };
 }

@@ -8,6 +8,7 @@ use App\Library\TermPlan\TermCode;
 use App\LocalCourse;
 use App\TermGradPerson;
 use App\TermPersonInput;
+use App\TermSectionPayOverride;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -44,6 +45,12 @@ class CostOverrideController extends Controller {
         'internationalOffset' => 'international_offset',
         'perCreditPayment' => 'per_credit_payment',
         'creditsTaught' => 'credits_taught',
+    ];
+
+    private const SECTION_PAY_COLUMN_BY_KEY = [
+        'salary' => 'salary',
+        'fringeRate' => 'fringe_rate',
+        'appointmentPercent' => 'appointment_percent',
     ];
 
     public function updateGradPerson(Request $request, Group $group, string $emplid) {
@@ -110,6 +117,66 @@ class CostOverrideController extends Controller {
         $personInput = DB::transaction(fn() => $this->saveChangedPersonInputs($uniqueKey, $changedColumns));
 
         return ['emplid' => $emplid, ...$this->personInputsOf($personInput)];
+    }
+
+    public function updateSectionPayOverride(Request $request, Group $group) {
+        $academicOrg = $this->authorizeAndFindAcademicOrg($group);
+        $termCode = TermCode::fromRequest($request);
+
+        if (!$request->hasAny(array_keys(self::SECTION_PAY_COLUMN_BY_KEY))) {
+            throw ValidationException::withMessages(['salary' => 'Send a salary, a fringe rate or an appointment percent.']);
+        }
+
+        $validated = $request->validate([
+            'courseCode' => ['required', 'string', 'max:20'],
+            'section' => ['required', 'string', 'max:10'],
+            'emplid' => ['required', 'integer', 'between:1,999999999'],
+            'salary' => ['sometimes', 'nullable', ...self::MONEY_RULES],
+            'fringeRate' => ['sometimes', 'nullable', ...self::FRACTION_RULES],
+            'appointmentPercent' => ['sometimes', 'nullable', 'numeric', 'decimal:0,2', 'between:0,100'],
+        ]);
+
+        $uniqueKey = [
+            'academic_org' => $academicOrg,
+            'term_code' => $termCode,
+            'course_code' => $validated['courseCode'],
+            'class_section' => $validated['section'],
+            'emplid' => (int) $validated['emplid'],
+        ];
+        $changedColumns = [];
+        foreach (self::SECTION_PAY_COLUMN_BY_KEY as $key => $column) {
+            if (array_key_exists($key, $validated)) {
+                $changedColumns[$column] = $validated[$key] === null ? null : (float) $validated[$key];
+            }
+        }
+
+        $override = DB::transaction(fn() => $this->saveChangedSectionPayOverride($uniqueKey, $changedColumns));
+
+        return [
+            'courseCode' => $validated['courseCode'],
+            'section' => $validated['section'],
+            'emplid' => $uniqueKey['emplid'],
+            'salary' => $override?->salary,
+            'fringeRate' => $override?->fringe_rate,
+            'appointmentPercent' => $override?->appointment_percent,
+        ];
+    }
+
+    private function saveChangedSectionPayOverride(array $uniqueKey, array $changedColumns): ?TermSectionPayOverride {
+        $override = TermSectionPayOverride::where($uniqueKey)->lockForUpdate()->first()
+            ?? TermSectionPayOverride::createOrFirst($uniqueKey, ['created_by' => auth()->id(), 'updated_by' => auth()->id()]);
+
+        $override->update([...$changedColumns, 'updated_by' => auth()->id()]);
+
+        $hasAnyPay = collect(self::SECTION_PAY_COLUMN_BY_KEY)
+            ->contains(fn(string $column) => $override->{$column} !== null);
+        if ($hasAnyPay) {
+            return $override;
+        }
+
+        $override->delete();
+
+        return null;
     }
 
     private function saveChangedPersonInputs(array $uniqueKey, array $changedColumns): ?TermPersonInput {

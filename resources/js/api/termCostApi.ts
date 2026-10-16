@@ -50,6 +50,27 @@ export async function savePersonInput(
   return res.data;
 }
 
+/**
+ * A null value clears the field; both null deletes the
+ * row.
+ */
+export async function saveSectionPayOverride(
+  groupId: T.Group["id"],
+  termCode: number,
+  change: Pick<
+    T.SectionPayOverrideRecord,
+    "courseCode" | "section" | "emplid"
+  > &
+    Partial<Pick<T.SectionPayOverrideRecord, "salary" | "appointmentPercent">>,
+): Promise<T.SectionPayOverrideRecord> {
+  const res = await axios.patch<T.SectionPayOverrideRecord>(
+    `/api/term-planning/groups/${groupId}/section-pay-overrides`,
+    change,
+    { ...WRITE_CONFIG, params: { term: termCode } },
+  );
+  return res.data;
+}
+
 /** No fee offset and not international deletes the row. */
 export async function saveGradPerson(
   groupId: T.Group["id"],

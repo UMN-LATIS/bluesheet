@@ -43,28 +43,9 @@ describe("toSectionPayload", () => {
     expect(payload).not.toHaveProperty("crosslist");
   });
 
-  it("sends an instructor by emplid, role, and a null appointment percent when absent", () => {
+  it("sends an instructor by emplid and role only", () => {
     expect(toSectionPayload(section).instructors).toEqual([
-      { emplid: 4242, role: "PI", appointmentPercent: null },
-    ]);
-  });
-
-  it("sends an instructor's own appointment percent", () => {
-    const withPercent = plannedSection(7, [], {
-      instructors: [
-        {
-          emplid: 4242,
-          role: "TA",
-          name: "Ana García",
-          lastName: "García",
-          internetId: "garci123",
-          appointmentPercent: 37.5,
-        },
-      ],
-    });
-
-    expect(toSectionPayload(withPercent).instructors).toEqual([
-      { emplid: 4242, role: "TA", appointmentPercent: 37.5 },
+      { emplid: 4242, role: "PI" },
     ]);
   });
 });

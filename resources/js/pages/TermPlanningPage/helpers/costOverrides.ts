@@ -4,6 +4,11 @@ import {
   type PersonInputEdit,
   type PersonInputs,
 } from "./personInputs";
+import {
+  sectionPayOverridesOf,
+  type SectionPayEdit,
+  type SectionPayOverride,
+} from "./sectionPayOverrides";
 
 export interface CostInputs {
   /**
@@ -16,11 +21,17 @@ export interface CostInputs {
    * defaults.
    */
   gradPeopleByEmplid: Map<number, GradPerson>;
+  /**
+   * Saved overrides with the pending edits applied, by
+   * `sectionPayKeyOf`.
+   */
+  sectionPayOverridesByKey: Map<string, SectionPayOverride>;
 }
 
 export interface CostEdits {
   personInputEdits: Record<string, PersonInputEdit>;
   gradPersonEdits: Record<string, GradPerson>;
+  sectionPayEdits: Record<string, SectionPayEdit>;
 }
 
 export const gradPersonKeyOf = (emplid: number) => String(emplid);
@@ -31,7 +42,10 @@ export const isDefaultGradPerson = ({
 }: GradPerson) => !hasFeeOffset && !isInternational;
 
 export function costInputsOf(
-  assumptions: Pick<CostAssumptions, "personInputs" | "gradPeople">,
+  assumptions: Pick<
+    CostAssumptions,
+    "personInputs" | "gradPeople" | "sectionPayOverrides"
+  >,
   edits: CostEdits,
 ): CostInputs {
   const gradPeopleByEmplid = new Map(
@@ -48,5 +62,9 @@ export function costInputsOf(
       edits.personInputEdits,
     ),
     gradPeopleByEmplid,
+    sectionPayOverridesByKey: sectionPayOverridesOf(
+      assumptions.sectionPayOverrides,
+      edits.sectionPayEdits,
+    ),
   };
 }

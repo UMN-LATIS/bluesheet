@@ -16,6 +16,7 @@ use App\SisDepartment;
 use App\SisEmployee;
 use App\TermGradPerson;
 use App\TermPersonInput;
+use App\TermSectionPayOverride;
 use App\User;
 use Database\Seeders\TestDatabaseSeeder;
 
@@ -64,6 +65,14 @@ const NO_COST_INPUTS = [
 
 function personInputsUrl(Group $group, string $emplid): string {
     return "/api/term-planning/groups/{$group->id}/person-inputs/{$emplid}?term=" . TERM_FALL_2026;
+}
+
+function sectionPayOverridesUrl(Group $group): string {
+    return "/api/term-planning/groups/{$group->id}/section-pay-overrides?term=" . TERM_FALL_2026;
+}
+
+function sectionPayOverrideBody(array $pay): array {
+    return ['courseCode' => 'ANTH-1001', 'section' => '001', 'emplid' => 100000001, ...$pay];
 }
 
 function gradPersonUrl(Group $group, string $emplid): string {
@@ -437,6 +446,71 @@ describe('person inputs', function () {
         ]);
 
         expect(getJson(costAssumptionsUrl($this->group))->json('personInputs'))->toBe([]);
+    });
+});
+
+describe('section pay overrides', function () {
+    beforeEach(function () {
+        actingAs($this->groupManager);
+    });
+
+    it('sets a salary and lists it in the payload', function () {
+        $res = patchJson(sectionPayOverridesUrl($this->group), sectionPayOverrideBody(['salary' => 5000]));
+        $saved = [
+            'courseCode' => 'ANTH-1001',
+            'section' => '001',
+            'emplid' => 100000001,
+            'salary' => 5000,
+            'fringeRate' => null,
+            'appointmentPercent' => null,
+        ];
+
+        expect($res->status())->toBe(200);
+        expect($res->json())->toBe($saved);
+        expect(getJson(costAssumptionsUrl($this->group))->json('sectionPayOverrides'))->toBe([$saved]);
+    });
+
+    it('keeps the other column when only one is sent', function () {
+        patchJson(sectionPayOverridesUrl($this->group), sectionPayOverrideBody(['appointmentPercent' => 25.5]));
+
+        $res = patchJson(sectionPayOverridesUrl($this->group), sectionPayOverrideBody(['salary' => 5000]));
+
+        expect($res->json('salary'))->toBe(5000);
+        expect($res->json('appointmentPercent'))->toBe(25.5);
+        expect(TermSectionPayOverride::count())->toBe(1);
+    });
+
+    it('deletes the row when both columns are cleared', function () {
+        patchJson(sectionPayOverridesUrl($this->group), sectionPayOverrideBody(['salary' => 5000]));
+
+        $res = patchJson(sectionPayOverridesUrl($this->group), sectionPayOverrideBody(['salary' => null]));
+
+        expect($res->status())->toBe(200);
+        expect($res->json('salary'))->toBeNull();
+        expect($res->json('fringeRate'))->toBeNull();
+        expect($res->json('appointmentPercent'))->toBeNull();
+        expect(TermSectionPayOverride::count())->toBe(0);
+    });
+
+    it('keeps a fringe rate with no salary, and clearing the salary keeps the row', function () {
+        patchJson(sectionPayOverridesUrl($this->group), sectionPayOverrideBody(['salary' => 5000, 'fringeRate' => 0.12]));
+
+        $res = patchJson(sectionPayOverridesUrl($this->group), sectionPayOverrideBody(['salary' => null]));
+
+        expect($res->json('fringeRate'))->toBe(0.12);
+        expect(TermSectionPayOverride::count())->toBe(1);
+    });
+
+    it('rejects a body with no pay field', function () {
+        expect(patchJson(sectionPayOverridesUrl($this->group), sectionPayOverrideBody([]))->status())->toBe(422);
+        expect(TermSectionPayOverride::count())->toBe(0);
+    });
+
+    it('refuses a user who cannot edit the group', function () {
+        actingAs($this->basicUser);
+
+        expect(patchJson(sectionPayOverridesUrl($this->group), sectionPayOverrideBody(['salary' => 1]))->status())->toBe(403);
+        expect(TermSectionPayOverride::count())->toBe(0);
     });
 });
 

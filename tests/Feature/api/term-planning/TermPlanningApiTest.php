@@ -319,54 +319,6 @@ describe('POST /api/term-planning/groups/:groupId/sections', function () {
     });
 });
 
-describe('POST .../sections, instructor appointment percent', function () {
-    function instructorPayload(array $instructors): array {
-        return sectionPayload(['instructors' => $instructors]);
-    }
-
-    it('stores the percent and returns it', function () {
-        actingAs($this->admin);
-        $res = postJson(sectionsUrl($this->group), instructorPayload([
-            ['emplid' => 4242, 'role' => 'TA', 'appointmentPercent' => 25.5],
-        ]));
-
-        expect($res->status())->toBe(201);
-        expect($res->json('instructors.0.appointmentPercent'))->toBe(25.5);
-        expect(LocalClassInstructor::sole()->appointment_percent)->toBe(25.5);
-    });
-
-    it('stores null when the percent is omitted', function () {
-        actingAs($this->admin);
-        $res = postJson(sectionsUrl($this->group), instructorPayload([
-            ['emplid' => 4242, 'role' => 'PI'],
-        ]));
-
-        expect($res->status())->toBe(201);
-        expect($res->json('instructors.0.appointmentPercent'))->toBeNull();
-        expect(LocalClassInstructor::sole()->appointment_percent)->toBeNull();
-    });
-
-    it('keeps the first percent when the same person and role repeat', function () {
-        actingAs($this->admin);
-        postJson(sectionsUrl($this->group), instructorPayload([
-            ['emplid' => 4242, 'role' => 'TA', 'appointmentPercent' => 50],
-            ['emplid' => 4242, 'role' => 'TA', 'appointmentPercent' => 25],
-        ]))->assertCreated();
-
-        expect(LocalClassInstructor::sole()->appointment_percent)->toBe(50.0);
-    });
-
-    it('refuses a percent outside 0 to 100', function (int $percent) {
-        actingAs($this->admin);
-        $res = postJson(sectionsUrl($this->group), instructorPayload([
-            ['emplid' => 4242, 'role' => 'TA', 'appointmentPercent' => $percent],
-        ]));
-
-        expect($res->status())->toBe(422);
-        expect(LocalClassSection::count())->toBe(0);
-    })->with([101, -1]);
-});
-
 describe('PUT /api/term-planning/groups/:groupId/sections/:id', function () {
     it('replaces the section and its meetings', function () {
         $section = plannedSection(['subject' => 'ANTH', 'catalog_number' => '1001']);

@@ -19,6 +19,7 @@ import { NEW_SECTION_ID } from "./types";
 import { selectLocalSection } from "./selectors";
 import { plannedSection } from "../helpers/plannedSection.fixture";
 import { initialState } from "./update";
+import { sectionPayEditKeyOf } from "../helpers/sectionPayOverrides";
 import type { EditorState, ScheduleContext } from "./types";
 
 /**
@@ -333,41 +334,54 @@ describe("the budget view's selectors", () => {
       ...budgetContext,
       sections: [
         plannedSection(1, [], {
-          instructors: [
-            { ...sisInstructor(10, "TA"), appointmentPercent: 12.5 },
-          ],
+          instructors: [sisInstructor(10, "TA")],
         }),
       ],
       costAssumptions: costAssumptions({
         gradRates: roundGradRates(),
-        people: [costPerson(10, ["9511"])],
+        people: [costPerson(1, ["A"]), costPerson(10, ["9511"])],
         jobCodeRates: [
+          jobCodeRate("A", 4000),
           gradJobCodeRate("9511", "teaching_assistant", "regular"),
         ],
       }),
     };
     const [section] = taContext.sections;
-    const withDraftAppointment: EditorState = {
+    const withDraftInstructor: EditorState = {
       ...atRest,
       drafts: {
-        1: {
-          instructors: [{ ...sisInstructor(10, "TA"), appointmentPercent: 25 }],
-        },
+        1: { instructors: [sisInstructor(10, "TA"), sisInstructor(1, "PI")] },
       },
     };
 
-    it("prices the open draft while selectSectionCosts keeps the saved appointment", () => {
+    it("prices the open draft while selectSectionCosts keeps the saved section", () => {
+      expect(selectDraftSectionCost(taContext, atRest, section)?.total).toBe(
+        4500,
+      );
       expect(
-        selectDraftSectionCost(taContext, atRest, section)?.lines[0].amount,
+        selectDraftSectionCost(taContext, withDraftInstructor, section)?.total,
+      ).toBe(4500 + 4000);
+      expect(
+        selectSectionCosts(taContext, withDraftInstructor)?.get(1)?.total,
       ).toBe(4500);
+    });
+
+    it("prices a pending appointment percent before it saves", () => {
+      const edit = {
+        courseCode: section.courseCode,
+        section: section.section,
+        emplid: 10,
+        field: "appointmentPercent" as const,
+        value: 25,
+      };
+      const withPendingPercent: EditorState = {
+        ...atRest,
+        sectionPayEdits: { [sectionPayEditKeyOf(edit)]: edit },
+      };
+
       expect(
-        selectDraftSectionCost(taContext, withDraftAppointment, section)
-          ?.lines[0].amount,
+        selectSectionCosts(taContext, withPendingPercent)?.get(1)?.total,
       ).toBe(9000);
-      expect(
-        selectSectionCosts(taContext, withDraftAppointment)?.get(1)?.lines[0]
-          .amount,
-      ).toBe(4500);
     });
 
     it("is null before the cost assumptions load", () => {

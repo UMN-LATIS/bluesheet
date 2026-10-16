@@ -100,6 +100,7 @@ export function useScheduleEditor(
     ),
     pendingGradPersonEdits: computed(() => state.value.gradPersonEdits),
     pendingPersonInputEdits: computed(() => state.value.personInputEdits),
+    pendingSectionPayEdits: computed(() => state.value.sectionPayEdits),
     gradScenario: computed(() => state.value.gradScenario),
     dayIndex: computed(() => state.value.dayIndex),
     /**

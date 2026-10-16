@@ -19,6 +19,7 @@ export function notPaidHereReasonOf(
 ): string | null {
   switch (basis.kind) {
     case "rate":
+    case "plannerSet":
       return null;
     case "freeComponent":
       return "Not paid. Independent study and field work have no per-section cost.";

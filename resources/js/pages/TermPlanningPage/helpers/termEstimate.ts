@@ -23,6 +23,10 @@ import {
   type GradTerm,
 } from "./gradCost";
 import type { PersonInputs } from "./personInputs";
+import {
+  sectionPayKeyOf,
+  type SectionPayOverride,
+} from "./sectionPayOverrides";
 import { sumOf } from "./sumOf";
 import { blockOwners } from "./sectionPlacement";
 import { assistantsOf, instructorsOfRecord, TA_ROLE } from "./sectionPeople";
@@ -48,6 +52,21 @@ export interface CostLine {
    * This section's part of a grad student's appointment.
    */
   sectionAppointment?: SectionAppointment;
+  /** Present on the line of anyone but a grad student. */
+  sectionSalary?: SectionSalary;
+}
+
+export interface SectionSalary {
+  /** Null when the person has no rate. */
+  salaryWithoutOverride: number | null;
+  isSalaryOverridden: boolean;
+  /**
+   * A fraction of salary: 0.385 is 38.5%. Null when the
+   * person has no rate.
+   */
+  fringeRate: number | null;
+  fringeRateWithoutOverride: number | null;
+  isFringeRateOverridden: boolean;
 }
 
 export interface GradAppointment {
@@ -67,9 +86,7 @@ export interface SectionAppointment {
   percent: number;
   /** The default for the person's role on this section. */
   percentWithoutOverride: number;
-  /**
-   * True when the section names a percent for this person.
-   */
+  /** True when a planner set the percent. */
   isOverridden: boolean;
 }
 
@@ -156,9 +173,17 @@ export function estimateTermCost(
       sections.map((section) => [section.id, costLinesOf(section, context)]),
     ),
   );
+  const linesWithSectionSalaries = new Map(
+    sections.map((section) => [
+      section.id,
+      (linesBySectionId.get(section.id) ?? []).map((line) =>
+        withSectionSalary(line, section, context),
+      ),
+    ]),
+  );
   const linesWithGradAppointments = linesWithGradAppointmentShares(
     uncancelledSections,
-    linesBySectionId,
+    linesWithSectionSalaries,
     {
       gradTerm,
       pricingOfEmplid,
@@ -194,6 +219,126 @@ export const ratesByJobCodeOf = (assumptions: CostAssumptions) =>
   );
 
 function costLinesOf(
+  section: PlannedSection,
+  context: CostContext,
+): CostLine[] {
+  return automaticCostLinesOf(section, context).map((line) =>
+    withSectionPayOverride(line, section, context),
+  );
+}
+
+function sectionPayOverrideOf(
+  section: PlannedSection,
+  emplid: number,
+  costInputs: CostInputs,
+): SectionPayOverride | undefined {
+  return costInputs.sectionPayOverridesByKey.get(
+    sectionPayKeyOf({
+      courseCode: section.courseCode,
+      section: section.section,
+      emplid,
+    }),
+  );
+}
+
+function withSectionPayOverride(
+  line: CostLine,
+  section: PlannedSection,
+  context: CostContext,
+): CostLine {
+  if (line.emplid === null) return line;
+
+  const override = sectionPayOverrideOf(
+    section,
+    line.emplid,
+    context.costInputs,
+  );
+  const plannerSetBasis: CostBasis = {
+    kind: "plannerSet",
+    automaticBasis: line.basis,
+    automaticSalary: line.salary,
+  };
+
+  if (context.isGradStudent(line.emplid)) {
+    if (override?.appointmentPercent == null) return line;
+
+    return { ...line, ...NOTHING_OWED, basis: plannerSetBasis };
+  }
+
+  if (override?.salary == null) return line;
+
+  const plannerSetLine = ratedLine(salaryRateOf(line, line.emplid, context), {
+    salary: override.salary,
+    fringeRate: personFringeRateOf(line, line.emplid, context),
+  });
+
+  return { ...line, ...plannerSetLine, basis: plannerSetBasis };
+}
+
+function salaryRateOf(
+  { role }: CostLine,
+  emplid: number,
+  context: CostContext,
+): Rate | null {
+  const pricing = context.pricingOfEmplid(emplid);
+
+  return role === "ta"
+    ? taRateOf(pricing, context.ratesByJobCode)
+    : instructorRateOf(pricing, context.ratesByJobCode);
+}
+
+function personFringeRateOf(
+  line: CostLine,
+  emplid: number,
+  context: CostContext,
+): number | null {
+  const personInputs = context.costInputs.personInputsByEmplid.get(emplid);
+
+  return (
+    personInputs?.fringeRate ??
+    salaryRateOf(line, emplid, context)?.fringeRate ??
+    null
+  );
+}
+
+const automaticSalaryOf = ({ basis, salary }: CostLine) =>
+  basis.kind === "plannerSet" ? basis.automaticSalary : salary;
+
+// Run before `chargeOncePerMeetingTime`, a line that rule
+// zeroes keeps its rate as `salaryWithoutOverride`.
+function withSectionSalary(
+  line: CostLine,
+  section: PlannedSection,
+  context: CostContext,
+): CostLine {
+  if (line.emplid === null || context.isGradStudent(line.emplid)) return line;
+
+  const plannerFringeRate =
+    sectionPayOverrideOf(section, line.emplid, context.costInputs)
+      ?.fringeRate ?? null;
+  const fringeRateWithoutOverride = personFringeRateOf(
+    line,
+    line.emplid,
+    context,
+  );
+  const sectionSalary: SectionSalary = {
+    salaryWithoutOverride: automaticSalaryOf(line),
+    isSalaryOverridden: line.basis.kind === "plannerSet",
+    fringeRate: plannerFringeRate ?? fringeRateWithoutOverride,
+    fringeRateWithoutOverride,
+    isFringeRateOverridden: plannerFringeRate !== null,
+  };
+
+  if (plannerFringeRate === null || line.salary === null) {
+    return { ...line, sectionSalary };
+  }
+
+  const fringe = line.salary * plannerFringeRate;
+
+  return { ...line, fringe, amount: line.salary + fringe, sectionSalary };
+}
+
+function automaticCostLinesOf(
   section: PlannedSection,
   context: CostContext,
 ): CostLine[] {
@@ -483,6 +628,18 @@ function chargeOncePerMeetingTime(
   return chargedLinesBySectionId;
 }
 
+const isPaidHere = (basis: CostBasis) =>
+  basis.kind === "rate" || basis.kind === "plannerSet";
+
+const automaticBasisOf = (basis: CostBasis): CostBasis =>
+  basis.kind === "plannerSet" ? basis.automaticBasis : basis;
+
+const NOT_APPOINTED_HERE: SectionAppointment = {
+  percent: 0,
+  percentWithoutOverride: 0,
+  isOverridden: false,
+};
+
 interface GradCharging {
   gradTerm: GradTerm | null;
   pricingOfEmplid: (emplid: number) => PersonPricing;
@@ -502,12 +659,13 @@ function linesWithGradAppointmentShares(
     assumptions,
   }: GradCharging,
 ): Map<number, CostLine[]> {
+  const isGradLine = (line: CostLine): line is CostLine & { emplid: number } =>
+    line.emplid !== null && isGradStudent(line.emplid);
   const isGradAppointmentLine = (
     line: CostLine,
   ): line is CostLine & { emplid: number } =>
-    line.emplid !== null &&
-    line.basis.kind === "rate" &&
-    isGradStudent(line.emplid);
+    isGradLine(line) && isPaidHere(line.basis);
+
   const sectionAppointmentsByEmplid = new Map<
     number,
     Map<number, SectionAppointment>
@@ -520,23 +678,23 @@ function linesWithGradAppointmentShares(
 
       const { emplid } = line;
       const isTa = line.role === "ta";
-      const assignment = section.instructors.find(
-        (instructor) =>
-          instructor.emplid === emplid &&
-          (instructor.role === TA_ROLE) === isTa,
-      );
-      const percentWithoutOverride = appointmentPercentOfSection(
-        section.component,
-        isTa,
-        defaultAppointmentOf(assumptions.gradRates),
-      );
+      const plannerPercent =
+        sectionPayOverrideOf(section, emplid, costInputs)?.appointmentPercent ??
+        null;
+      const percentWithoutOverride = isPaidHere(automaticBasisOf(line.basis))
+        ? appointmentPercentOfSection(
+            section.component,
+            isTa,
+            defaultAppointmentOf(assumptions.gradRates),
+          )
+        : 0;
       const sectionAppointments =
         sectionAppointmentsByEmplid.get(emplid) ??
         new Map<number, SectionAppointment>();
       sectionAppointments.set(section.id, {
-        percent: assignment?.appointmentPercent ?? percentWithoutOverride,
+        percent: plannerPercent ?? percentWithoutOverride,
         percentWithoutOverride,
-        isOverridden: assignment?.appointmentPercent != null,
+        isOverridden: plannerPercent !== null,
       });
       sectionAppointmentsByEmplid.set(emplid, sectionAppointments);
       if (!isTa) {
@@ -583,7 +741,10 @@ function linesWithGradAppointmentShares(
     [...linesBySectionId].map(([sectionId, lines]) => [
       sectionId,
       lines.map((line): CostLine => {
-        if (!isGradAppointmentLine(line)) return line;
+        if (!isGradLine(line)) return line;
+        if (!isPaidHere(line.basis)) {
+          return { ...line, sectionAppointment: NOT_APPOINTED_HERE };
+        }
 
         const appointment = appointmentOf(line.emplid);
         const sectionAppointment = sectionAppointmentsByEmplid

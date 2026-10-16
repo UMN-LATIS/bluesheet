@@ -580,10 +580,8 @@ const { createSection, saveSection, deleteSection } = useTermPlanMutations(
   activeTermCode,
 );
 
-const { saveGradPersonEdit, savePersonInputEdit } = useCostMutations(
-  groupId,
-  activeTermCode,
-);
+const { saveGradPersonEdit, savePersonInputEdit, saveSectionPayEdit } =
+  useCostMutations(groupId, activeTermCode);
 
 /**
  * The section being created, in the shape every view
@@ -718,6 +716,7 @@ const hasUnsavedWork = computed(
     Object.keys(schedule.pendingEdits).length > 0 ||
     Object.keys(schedule.pendingGradPersonEdits).length > 0 ||
     Object.keys(schedule.pendingPersonInputEdits).length > 0 ||
+    Object.keys(schedule.pendingSectionPayEdits).length > 0 ||
     localSections.value.some((section) => schedule.isDraftDirty(section)),
 );
 
@@ -783,6 +782,14 @@ useCostEditsAutosave({
   save: (edit) => savePersonInputEdit.mutateAsync(edit),
   onSaved: (key, saved) =>
     schedule.dispatch({ type: "personInputEditsPersisted", key, saved }),
+  onRefused: showRefusal,
+});
+
+useCostEditsAutosave({
+  pendingEdits: computed(() => schedule.pendingSectionPayEdits),
+  save: (edit) => saveSectionPayEdit.mutateAsync(edit),
+  onSaved: (key, saved) =>
+    schedule.dispatch({ type: "sectionPayEditsPersisted", key, saved }),
   onRefused: showRefusal,
 });
 

@@ -90,6 +90,26 @@ export interface PersonInputRecord {
   creditsTaught: number | null;
 }
 
+/**
+ * One person's pay on one section, set by a planner. Keyed
+ * by course and section so it survives the term moving
+ * from planned to SIS sections.
+ */
+export interface SectionPayOverrideRecord {
+  courseCode: string;
+  section: string;
+  emplid: number;
+  /** For anyone but a grad student. */
+  salary: number | null;
+  /**
+   * For anyone but a grad student. A fraction of salary:
+   * 0.385 is 38.5%.
+   */
+  fringeRate: number | null;
+  /** For a grad student. 12.5 is a 12.5% appointment. */
+  appointmentPercent: number | null;
+}
+
 export interface CostAssumptions {
   termCode: number;
   jobCodeRates: JobCodeRate[];
@@ -109,6 +129,7 @@ export interface CostAssumptions {
   };
   gradPeople: GradPerson[];
   personInputs: PersonInputRecord[];
+  sectionPayOverrides: SectionPayOverrideRecord[];
   canEdit: boolean;
 }
 

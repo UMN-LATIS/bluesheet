@@ -9,6 +9,7 @@ use App\JobCodeTermRate;
 use App\SisAppointment;
 use App\TermGradPerson;
 use App\TermPersonInput;
+use App\TermSectionPayOverride;
 use Illuminate\Support\Collection;
 
 final class CostAssumptions {
@@ -20,6 +21,7 @@ final class CostAssumptions {
             'gradRates' => self::gradRates($termCode),
             'gradPeople' => self::gradPeople($academicOrg, $termCode),
             'personInputs' => self::personInputs($academicOrg, $termCode),
+            'sectionPayOverrides' => self::sectionPayOverrides($academicOrg, $termCode),
         ];
     }
 
@@ -119,6 +121,25 @@ final class CostAssumptions {
                 'internationalOffset' => $input->international_offset,
                 'perCreditPayment' => $input->per_credit_payment,
                 'creditsTaught' => $input->credits_taught,
+            ])
+            ->all();
+    }
+
+    private static function sectionPayOverrides(int $academicOrg, int $termCode): array {
+        return TermSectionPayOverride::query()
+            ->where('academic_org', $academicOrg)
+            ->where('term_code', $termCode)
+            ->orderBy('course_code')
+            ->orderBy('class_section')
+            ->orderBy('emplid')
+            ->get()
+            ->map(fn(TermSectionPayOverride $override) => [
+                'courseCode' => $override->course_code,
+                'section' => $override->class_section,
+                'emplid' => $override->emplid,
+                'salary' => $override->salary,
+                'fringeRate' => $override->fringe_rate,
+                'appointmentPercent' => $override->appointment_percent,
             ])
             ->all();
     }

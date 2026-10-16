@@ -47,7 +47,6 @@ class LocalSectionResource extends JsonResource {
         return [
             'emplid' => $instructor->emplid,
             'role' => $instructor->role,
-            'appointmentPercent' => $instructor->appointment_percent,
             'name' => $instructor->employee?->full_name,
             // sent separately: a client cannot
             // split "de la Cruz" out of a full name

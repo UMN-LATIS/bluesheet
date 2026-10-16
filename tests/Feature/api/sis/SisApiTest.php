@@ -216,7 +216,6 @@ describe('GET /api/sis/groups/:groupId/sections', function () {
         expect($res->json()[0]['instructors'])->toEqual([[
             'emplid' => $employee->emplid,
             'role' => 'PI',
-            'appointmentPercent' => null,
             'name' => 'Ana García',
             'lastName' => 'García',
             'internetId' => 'garci123',

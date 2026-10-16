@@ -11,6 +11,10 @@ import {
   personInputKeyOf,
   type PersonInputEdit,
 } from "../helpers/personInputs";
+import {
+  sectionPayEditKeyOf,
+  type SectionPayEdit,
+} from "../helpers/sectionPayOverrides";
 import { plannedSection } from "../helpers/plannedSection.fixture";
 import { NEW_SECTION_ID } from "./types";
 import type {
@@ -2050,6 +2054,13 @@ describe("budget view", () => {
     field: "notes",
     value,
   });
+  const sectionPayEdit = (value: number | null): SectionPayEdit => ({
+    courseCode: "ANTH-1001",
+    section: "002",
+    emplid: 2,
+    field: "salary",
+    value,
+  });
   const gradPersonEdit = (isInternational: boolean): GradPerson => ({
     emplid: 10,
     hasFeeOffset: false,
@@ -2058,7 +2069,7 @@ describe("budget view", () => {
 
   const costEditKinds: {
     name: string;
-    overlay: "personInputEdits" | "gradPersonEdits";
+    overlay: "personInputEdits" | "gradPersonEdits" | "sectionPayEdits";
     key: string;
     edited: (version: number) => EditorEvent;
     persisted: (version: number) => EditorEvent;
@@ -2108,6 +2119,21 @@ describe("budget view", () => {
         saved: gradPersonEdit(version === 1),
       }),
       version: (version) => gradPersonEdit(version === 1),
+    },
+    {
+      name: "section pay",
+      overlay: "sectionPayEdits",
+      key: sectionPayEditKeyOf(sectionPayEdit(1)),
+      edited: (version) => ({
+        type: "sectionPayEdited",
+        edit: sectionPayEdit(version),
+      }),
+      persisted: (version) => ({
+        type: "sectionPayEditsPersisted",
+        key: sectionPayEditKeyOf(sectionPayEdit(1)),
+        saved: sectionPayEdit(version),
+      }),
+      version: sectionPayEdit,
     },
   ];
 

@@ -170,7 +170,6 @@ class GroupSectionController extends Controller {
             'instructors' => 'present|array',
             'instructors.*.emplid' => 'required|integer',
             'instructors.*.role' => 'required|string|max:255',
-            'instructors.*.appointmentPercent' => 'sometimes|nullable|numeric|min:0|max:100',
         ];
     }
 
@@ -232,7 +231,6 @@ class GroupSectionController extends Controller {
             $section->instructors()->create([
                 'emplid' => $instructor['emplid'],
                 'role' => $instructor['role'],
-                'appointment_percent' => $instructor['appointmentPercent'] ?? null,
             ]);
         }
     }
