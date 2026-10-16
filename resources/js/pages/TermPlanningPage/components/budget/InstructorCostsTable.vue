@@ -10,7 +10,7 @@
       label="Instructor costs"
       :columns="COLUMNS"
       :rows="groups"
-      class="tw-min-w-[1100px] tw-grid-cols-[minmax(160px,1.2fr)_170px_88px_72px_136px_120px_72px_104px_minmax(140px,1fr)]"
+      class="tw-min-w-[980px] tw-grid-cols-[minmax(160px,1.2fr)_170px_88px_72px_120px_72px_104px_minmax(140px,1fr)]"
     >
       <template #default="{ rows: shownGroups }">
         <template v-for="group in shownGroups" :key="group.label">
@@ -25,10 +25,12 @@
             </SpanningLabelCell>
           </BudgetTableRow>
 
-          <BudgetTableRow
+          <PersonTableRow
             v-for="row in group.rows"
             :key="row.emplid ?? 'unstaffed'"
-            class="tw-min-h-10 tw-bg-surface-bright"
+            :emplid="row.emplid"
+            class="tw-min-h-10"
+            @selectPerson="(emplid) => emit('selectPerson', emplid)"
           >
             <PersonNameCell
               :row="row"
@@ -45,28 +47,14 @@
               {{ row.jobCode }}
             </BudgetCell>
 
-            <BudgetCell
-              role="cell"
-              align="end"
-              class="tw-relative tw-flex-col tw-items-end tw-justify-center"
-            >
-              <MissingRate v-if="row.salaryPerSection.amount === null" />
-              <span v-else class="tw-font-semibold">{{
-                formatWholeDollars(row.salaryPerSection.amount)
-              }}</span>
-              <CellSubline v-if="row.salaryPerSection.hint">{{
-                row.salaryPerSection.hint
-              }}</CellSubline>
-              <OverrideMarker v-if="row.salaryPerSection.isOverridden" />
-            </BudgetCell>
-
-            <BudgetCell role="cell" align="end">
-              <MissingRate v-if="row.costPerSection.kind === 'missingRate'" />
-              <template v-else-if="row.costPerSection.kind === 'amount'">{{
-                formatWholeDollars(row.costPerSection.dollars)
-              }}</template>
+            <BudgetCell role="cell" align="end" class="tw-relative">
+              <MissingRate v-if="row.ratePerSection.kind === 'missingRate'" />
+              <template v-else-if="row.ratePerSection.kind === 'amount'">
+                {{ formatWholeDollars(row.ratePerSection.dollars) }}
+                <OverrideMarker v-if="row.ratePerSection.isOverridden" />
+              </template>
               <span v-else class="tw-text-on-surface-variant">{{
-                row.costPerSection.percentLabel
+                row.ratePerSection.percentLabel
               }}</span>
             </BudgetCell>
             <BudgetCell
@@ -88,12 +76,12 @@
                 @change="(value) => editNotes(row, value)"
               />
             </BudgetCell>
-          </BudgetTableRow>
+          </PersonTableRow>
         </template>
       </template>
 
       <template #totals>
-        <SpanningLabelCell :columnCount="7" class="tw-col-span-7 tw-p-2">
+        <SpanningLabelCell :columnCount="6" class="tw-col-span-6 tw-p-2">
           Total
         </SpanningLabelCell>
         <TotalCell role="cell">{{ formatWholeDollars(totalCost) }}</TotalCell>
@@ -108,6 +96,7 @@ import AdminRatesLink from "./AdminRatesLink.vue";
 import BudgetCell from "./BudgetCell.vue";
 import BudgetTable, { type BudgetColumn } from "./BudgetTable.vue";
 import BudgetTableRow from "./BudgetTableRow.vue";
+import PersonTableRow from "./PersonTableRow.vue";
 import CapsLabel from "./CapsLabel.vue";
 import CellSubline from "./CellSubline.vue";
 import MissingRate from "./MissingRate.vue";
@@ -140,8 +129,7 @@ const COLUMNS: BudgetColumn<InstructorCostGroup>[] = [
   { label: "Instructor type" },
   { label: "Funding" },
   { label: "Job code" },
-  { label: "Salary per section", isNumeric: true },
-  { label: "Cost per section", isNumeric: true },
+  { label: "Rate per section", isNumeric: true },
   { label: "Load", isNumeric: true },
   { label: "Term cost", isNumeric: true },
   { label: "Notes" },

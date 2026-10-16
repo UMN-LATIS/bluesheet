@@ -427,10 +427,7 @@
           />
         </Disclosure>
 
-        <PreviousEnrollment
-          :offerings="previousOfferings"
-          :isReadOnly="isReadOnly"
-        />
+        <PreviousEnrollment :offerings="previousOfferings" />
       </div>
     </div>
 

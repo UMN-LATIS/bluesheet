@@ -1,21 +1,14 @@
 import type { InstructorType } from "@/types";
 import type { PersonRow } from "./peopleRows";
 
-export interface SalaryPerSection {
-  amount: number | null;
-  hint: string | null;
-  isOverridden: boolean;
-}
-
-export type CostPerSection =
+export type RatePerSection =
   | { kind: "missingRate" }
-  | { kind: "amount"; dollars: number }
-  | { kind: "appointment"; percentLabel: string; total: number };
+  | { kind: "amount"; dollars: number; isOverridden: boolean }
+  | { kind: "appointment"; percentLabel: string };
 
 export interface InstructorCostRow extends PersonRow {
   typeLabel: string;
-  salaryPerSection: SalaryPerSection;
-  costPerSection: CostPerSection;
+  ratePerSection: RatePerSection;
 }
 
 export interface InstructorCostGroup {
@@ -39,31 +32,24 @@ function typeLabelOf({ emplid, instructorType }: PersonRow): string {
   return TYPE_LABELS[instructorType];
 }
 
-const salaryPerSectionOf = (person: PersonRow): SalaryPerSection => ({
-  amount: person.salary,
-  hint: person.salaryHint,
-  isOverridden: person.isSalaryOverridden,
-});
-
-function costPerSectionOf(person: PersonRow): CostPerSection {
+function ratePerSectionOf(person: PersonRow): RatePerSection {
   if (person.isGrad) {
-    return {
-      kind: "appointment",
-      percentLabel: person.loadLabel,
-      total: person.total,
-    };
+    return { kind: "appointment", percentLabel: person.loadLabel };
   }
 
   if (person.salary === null) return { kind: "missingRate" };
 
-  return { kind: "amount", dollars: person.salary + (person.fringe ?? 0) };
+  return {
+    kind: "amount",
+    dollars: person.salary + (person.fringe ?? 0),
+    isOverridden: person.isRateOverridden,
+  };
 }
 
 const instructorCostRowOf = (person: PersonRow): InstructorCostRow => ({
   ...person,
   typeLabel: typeLabelOf(person),
-  salaryPerSection: salaryPerSectionOf(person),
-  costPerSection: costPerSectionOf(person),
+  ratePerSection: ratePerSectionOf(person),
 });
 
 export function instructorCostGroupsOf(people: PersonRow[]): {

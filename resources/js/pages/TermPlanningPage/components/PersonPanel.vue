@@ -219,7 +219,6 @@
                 <EnrollmentTile
                   class="tw-justify-self-end tw-rounded-sm tw-px-1.5 tw-py-0.5 tw-text-center tw-font-bold tw-tabular-nums"
                   :enrollment="taught.enrollment"
-                  :isReadOnly="isReadOnly"
                 >
                   {{ taught.enrolledOfCap ?? "—" }}
                 </EnrollmentTile>

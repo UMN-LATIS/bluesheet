@@ -8,7 +8,6 @@ const grad = personRow({
   instructorType: "teaching_assistant",
   isGrad: true,
   salary: 4000,
-  salaryHint: "50% · 2 credits",
   fringe: 900,
   appointmentPercent: 50,
   loadLabel: "50%",
@@ -62,39 +61,23 @@ describe("instructorCostGroupsOf", () => {
     ]);
   });
 
-  it("carries each row's salary, hint, and whether the salary is overridden", () => {
-    const { groups } = instructorCostGroupsOf([
-      personRow({ emplid: 1, salary: 8000, isSalaryOverridden: true }),
-      unstaffedRow({ salary: 5000 }),
-      grad,
-    ]);
-
-    expect(
-      groups.flatMap(({ rows }) =>
-        rows.map(({ salaryPerSection }) => salaryPerSection),
-      ),
-    ).toEqual([
-      { amount: 8000, hint: null, isOverridden: true },
-      { amount: 5000, hint: null, isOverridden: false },
-      { amount: 4000, hint: "50% · 2 credits", isOverridden: false },
-    ]);
-  });
-
-  it("adds fringe to a section's cost, and shows a grad's appointment instead", () => {
+  it("prices a section at salary plus fringe, marks an overridden rate, and shows a grad's appointment instead", () => {
     const { groups } = instructorCostGroupsOf([
       personRow({ emplid: 1, salary: 6000, fringe: 3000 }),
-      personRow({ emplid: 2, salary: null, fringe: null }),
+      personRow({ emplid: 2, salary: 8000, fringe: 0, isRateOverridden: true }),
+      personRow({ emplid: 3, salary: null, fringe: null }),
       grad,
     ]);
 
     expect(
       groups.flatMap(({ rows }) =>
-        rows.map(({ costPerSection }) => costPerSection),
+        rows.map(({ ratePerSection }) => ratePerSection),
       ),
     ).toEqual([
-      { kind: "amount", dollars: 9000 },
+      { kind: "amount", dollars: 9000, isOverridden: false },
+      { kind: "amount", dollars: 8000, isOverridden: true },
       { kind: "missingRate" },
-      { kind: "appointment", percentLabel: "50%", total: 4900 },
+      { kind: "appointment", percentLabel: "50%" },
     ]);
   });
 

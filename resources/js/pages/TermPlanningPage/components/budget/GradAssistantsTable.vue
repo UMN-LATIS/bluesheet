@@ -6,10 +6,12 @@
     class="tw-min-w-[1260px] tw-grid-cols-[minmax(160px,1.2fr)_130px_64px_72px_64px_120px_64px_minmax(120px,1fr)_60px_48px_96px_minmax(140px,1fr)]"
   >
     <template #default="{ rows: shownRows }">
-      <BudgetTableRow
+      <PersonTableRow
         v-for="row in shownRows"
         :key="row.emplid ?? 'unstaffed'"
-        class="tw-min-h-11 tw-bg-surface-bright"
+        :emplid="row.emplid"
+        class="tw-min-h-11"
+        @selectPerson="(emplid) => emit('selectPerson', emplid)"
       >
         <PersonNameCell
           :row="row"
@@ -105,10 +107,6 @@
             <MissingRate v-if="row.hasMissingRate" />
             {{ formatWholeDollars(row.total) }}
           </span>
-          <CellSubline>
-            {{ formatWholeDollars(row.termSalary) }} +
-            {{ formatWholeDollars(row.termFringe) }}
-          </CellSubline>
         </BudgetCell>
 
         <BudgetCell role="cell" :hasRightBorder="false" class="tw-p-0">
@@ -119,7 +117,7 @@
             @change="(notes) => editNotes(row, notes)"
           />
         </BudgetCell>
-      </BudgetTableRow>
+      </PersonTableRow>
     </template>
 
     <template #totals>
@@ -141,7 +139,7 @@
 import { computed } from "vue";
 import BudgetCell from "./BudgetCell.vue";
 import BudgetTable, { type BudgetColumn } from "./BudgetTable.vue";
-import BudgetTableRow from "./BudgetTableRow.vue";
+import PersonTableRow from "./PersonTableRow.vue";
 import { CheckIcon } from "@/icons";
 import CellSubline from "./CellSubline.vue";
 import IntegerInputCell from "./IntegerInputCell.vue";

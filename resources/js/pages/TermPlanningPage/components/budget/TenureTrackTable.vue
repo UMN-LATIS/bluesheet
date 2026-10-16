@@ -7,10 +7,12 @@
     class="tw-min-w-[1000px] tw-grid-cols-[minmax(170px,1.2fr)_80px_minmax(150px,1fr)_72px_minmax(150px,1fr)_96px_minmax(140px,1fr)]"
   >
     <template #default="{ rows: shownRows }">
-      <BudgetTableRow
+      <PersonTableRow
         v-for="row in shownRows"
         :key="row.emplid"
-        class="tw-min-h-11 tw-bg-surface-bright"
+        :emplid="row.emplid"
+        class="tw-min-h-11"
+        @selectPerson="(emplid) => emit('selectPerson', emplid)"
       >
         <PersonNameCell
           :row="row"
@@ -58,7 +60,7 @@
             @change="(value) => editText(row, 'notes', value)"
           />
         </BudgetCell>
-      </BudgetTableRow>
+      </PersonTableRow>
     </template>
 
     <template #totals>
@@ -78,7 +80,7 @@
 <script setup lang="ts">
 import BudgetCell from "./BudgetCell.vue";
 import BudgetTable, { type BudgetColumn } from "./BudgetTable.vue";
-import BudgetTableRow from "./BudgetTableRow.vue";
+import PersonTableRow from "./PersonTableRow.vue";
 import IntegerInputCell from "./IntegerInputCell.vue";
 import CellSubline from "./CellSubline.vue";
 import PersonNameCell from "./PersonNameCell.vue";

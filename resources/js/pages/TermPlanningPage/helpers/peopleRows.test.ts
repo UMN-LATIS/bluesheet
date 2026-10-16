@@ -123,13 +123,13 @@ describe("peopleRowsOf", () => {
       title: "Title 9753",
       fundLabel: "UI",
       salary: 10000,
-      isSalaryOverridden: false,
+      isRateOverridden: false,
       fringe: 0,
       total: 10000,
     });
   });
 
-  it("adds fringe on top of the salary, per section, per term, and in the total", () => {
+  it("adds fringe on top of the salary, per section and in the total", () => {
     const [row] = rowsOf([
       section(1, { instructors: [pi(4)] }),
       section(2, { instructors: [pi(4)] }),
@@ -138,8 +138,6 @@ describe("peopleRowsOf", () => {
     expect(row).toMatchObject({
       salary: 6000,
       fringe: 3000,
-      termSalary: 12000,
-      termFringe: 6000,
       total: 18000,
     });
   });
@@ -152,7 +150,7 @@ describe("peopleRowsOf", () => {
 
     expect(row).toMatchObject({
       salary: 8000,
-      isSalaryOverridden: true,
+      isRateOverridden: true,
       fringe: 4000,
       total: 12000,
     });
@@ -172,9 +170,18 @@ describe("peopleRowsOf", () => {
 
     expect(row).toMatchObject({
       salary: 12000,
-      isSalaryOverridden: true,
+      isRateOverridden: true,
       total: 24000,
     });
+  });
+
+  it("marks a person's rate as overridden when only their fringe rate is set", () => {
+    const overrides = costInputs({
+      personInputsByEmplid: costInputsFor(4, { fringeRate: 0.1 }),
+    });
+    const [row] = rowsOf([section(1, { instructors: [pi(4)] })], overrides);
+
+    expect(row).toMatchObject({ salary: 6000, isRateOverridden: true });
   });
 
   it("titles a job code Nova does not list from the appointment", () => {
@@ -213,8 +220,7 @@ describe("peopleRowsOf", () => {
       salary: 4500,
       fringe: 0,
       total: 4500,
-      isSalaryOverridden: false,
-      salaryHint: null,
+      isRateOverridden: false,
       loadLabel: "12.5%",
       hasFeeOffset: false,
       isInternational: false,
@@ -275,7 +281,6 @@ describe("peopleRowsOf", () => {
       hasFeeOffset: true,
       isInternational: true,
       salary: 4650,
-      salaryHint: "incl. $150 offset",
       loadLabel: "12.5%",
     });
   });
@@ -286,13 +291,12 @@ describe("peopleRowsOf", () => {
     expect(rows[0]).toMatchObject({ jobCode: "9519", isAbd: true });
   });
 
-  it("gives a grad instructor a read-only salary with the appointment and credits as the hint", () => {
+  it("gives a grad instructor a read-only salary from their appointment", () => {
     const [row] = rowsOf([section(1, { credits: 3, instructors: [pi(5)] })]);
 
     expect(row).toMatchObject({
       emplid: 5,
       salary: 9300,
-      salaryHint: "25% ABD · 3 credits",
       isAbd: true,
       appointmentPercent: 25,
     });
@@ -304,7 +308,7 @@ describe("peopleRowsOf", () => {
     });
     const rows = rowsOf([section(1, { instructors: [ta(10)] })], overrides);
 
-    expect(rows[0]).toMatchObject({ salary: 4500, isSalaryOverridden: false });
+    expect(rows[0]).toMatchObject({ salary: 4500, isRateOverridden: false });
   });
 
   it("leaves the grad fields empty for a non-grad instructor", () => {
@@ -312,7 +316,6 @@ describe("peopleRowsOf", () => {
 
     expect(row).toMatchObject({
       appointmentPercent: null,
-      salaryHint: null,
       hasFeeOffset: false,
     });
   });
@@ -398,32 +401,6 @@ describe("peopleRowsOf", () => {
 
     expect(rowFor(rows, 1).loadLabel).toBe("2");
     expect(rowFor(rows, 10).loadLabel).toBe("25%");
-  });
-
-  it("sums a non-grad's salary and fringe over their paid sections", () => {
-    const rows = rowsOf([
-      section(1, { instructors: [pi(4)] }),
-      section(2, { instructors: [pi(4)] }),
-      section(3, { instructors: [pi(2)] }),
-    ]);
-
-    expect(rowFor(rows, 4)).toMatchObject({
-      termSalary: 12000,
-      termFringe: 6000,
-    });
-    expect(rowFor(rows, 2)).toMatchObject({ termSalary: 10000, termFringe: 0 });
-  });
-
-  it("sums a grad's term salary and fringe from their lines", () => {
-    const rows = rowsOf([
-      section(1, { instructors: [ta(10)] }),
-      section(2, { instructors: [ta(10)] }),
-    ]);
-
-    expect(rowFor(rows, 10)).toMatchObject({
-      termSalary: 9000,
-      termFringe: 0,
-    });
   });
 
   it("lists a rostered person whose job code has an instructor type but no sections", () => {

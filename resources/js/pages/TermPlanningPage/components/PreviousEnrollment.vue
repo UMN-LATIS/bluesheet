@@ -33,7 +33,6 @@
                   !offering.isOffered,
               }"
               :enrollment="offering.enrollment"
-              :isReadOnly="isReadOnly"
             >
               {{ offering.enrolledOfCap }}
             </EnrollmentTile>
@@ -53,7 +52,6 @@ import type { PreviousOffering } from "../helpers/enrollmentHistory";
 
 const props = defineProps<{
   offerings: PreviousOffering[];
-  isReadOnly: boolean;
 }>();
 
 const summary = computed(() => {

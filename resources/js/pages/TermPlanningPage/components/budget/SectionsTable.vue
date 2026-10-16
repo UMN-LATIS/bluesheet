@@ -50,7 +50,7 @@
         </BudgetCell>
 
         <BudgetCell role="cell" class="tw-py-1">
-          <EnrollmentTiles :history="row.history" :isReadOnly="isReadOnly" />
+          <EnrollmentTiles :history="row.history" />
         </BudgetCell>
 
         <BudgetCell role="cell" align="end">{{

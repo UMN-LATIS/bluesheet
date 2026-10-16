@@ -15,7 +15,6 @@
           tile.offering === null,
       }"
       :enrollment="tile.offering"
-      :isReadOnly="isReadOnly"
     >
       {{ tile.offering?.enrollmentTotal ?? "" }}
     </EnrollmentTile>
@@ -36,7 +35,6 @@ import {
 
 const props = defineProps<{
   history: EnrollmentPoint[];
-  isReadOnly: boolean;
 }>();
 
 const hasHistory = computed(() =>

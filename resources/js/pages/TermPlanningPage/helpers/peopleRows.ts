@@ -22,8 +22,6 @@ import {
   type ReceiptLine,
   type TaWork,
 } from "./costReceipt";
-import { countLabel } from "./countLabel";
-import { formatWholeDollars } from "./money";
 import { fundLabelOf } from "./fundLabel";
 import { jobLabelOf, titleOf } from "./jobLabel";
 import type { PersonInputs } from "./personInputs";
@@ -32,7 +30,6 @@ import {
   pricerOf,
   ratesByJobCodeOf,
   type CostLine,
-  type GradAppointment,
   type SectionCost,
 } from "./termEstimate";
 
@@ -65,25 +62,14 @@ export interface PersonRow {
    */
   salary: number | null;
   /**
-   * Only a non-grad instructor's salary can be overridden.
+   * True when the person's salary or fringe rate is set
+   * for them. A grad's never is.
    */
-  isSalaryOverridden: boolean;
-  /** Null when there is nothing to add to the salary. */
-  salaryHint: string | null;
+  isRateOverridden: boolean;
   /**
    * Per paid section or course. Null when no rate exists.
    */
   fringe: number | null;
-  /**
-   * This term's salary, over every paid section. Lines with
-   * no rate add nothing.
-   */
-  termSalary: number;
-  /**
-   * This term's fringe, over every paid section. Lines with
-   * no rate add nothing.
-   */
-  termFringe: number;
   /**
    * Paid sections, or a grad student's appointment percent.
    */
@@ -250,8 +236,6 @@ export function peopleRowsOf(
           ? "TA/GI"
           : fundLabelOf(rate?.instructorType ?? null),
       ...price,
-      termSalary: sumOf(lines.map(({ salary }) => salary)),
-      termFringe: sumOf(lines.map(({ fringe }) => fringe)),
       loadLabel:
         appointmentPercent === null
           ? String(paidCount)
@@ -349,8 +333,9 @@ function unitFiguresOf(
 function unitPriceOf({ salary, fringeRate }: UnitFigures) {
   return {
     salary: salary.value,
-    isSalaryOverridden: salary.value !== salary.valueWithoutOverride,
-    salaryHint: null,
+    isRateOverridden:
+      salary.value !== salary.valueWithoutOverride ||
+      fringeRate.value !== fringeRate.valueWithoutOverride,
     fringe:
       salary.value === null ? null : salary.value * (fringeRate.value ?? 0),
   };
@@ -365,8 +350,7 @@ function gradPriceOf(lines: CostLine[]) {
 
   return {
     salary: appointment?.cost?.pay ?? null,
-    isSalaryOverridden: false,
-    salaryHint: appointment === undefined ? null : gradHintOf(appointment),
+    isRateOverridden: false,
     fringe: appointment?.cost?.fringe ?? null,
   };
 }
@@ -400,19 +384,6 @@ function receiptOf({
   });
 }
 
-function gradHintOf({ student, cost }: GradAppointment): string | null {
-  const credits = cost?.figures.creditsTaught ?? student.creditsTaught;
-  if (credits > 0) {
-    const standing = student.isAbd ? " ABD" : "";
-
-    return `${student.appointmentPercent}%${standing} · ${countLabel(credits, "credit", "credits")}`;
-  }
-
-  const offsets = (cost?.feeOffset ?? 0) + (cost?.internationalOffset ?? 0);
-
-  return offsets > 0 ? `incl. ${formatWholeDollars(offsets)} offset` : null;
-}
-
 function unstaffedRowsOf(charges: Charge[], rate: Rate | null): PersonRow[] {
   const paidCount = charges.filter(({ line }) => isPaid(line)).length;
   if (paidCount === 0) return [];
@@ -431,8 +402,6 @@ function unstaffedRowsOf(charges: Charge[], rate: Rate | null): PersonRow[] {
       instructorType: null,
       fundLabel: "UI",
       ...price,
-      termSalary: sumOf(charges.map(({ line }) => line.salary)),
-      termFringe: sumOf(charges.map(({ line }) => line.fringe)),
       loadLabel: String(paidCount),
       paidSectionCount: paidCount,
       courseReleases: null,
