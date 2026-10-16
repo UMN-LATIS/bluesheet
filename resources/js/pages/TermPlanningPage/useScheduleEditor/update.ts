@@ -1,6 +1,7 @@
 /**
- * The only writer of editor state. Pure: no DOM, clock, or randomness.
- * Gestures write only their draft until `released` commits.
+ * The only writer of editor state. Pure: no DOM, clock, or
+ * randomness. Gestures write only their draft until
+ * `released` commits.
  */
 
 import { isEqual } from "lodash-es";
@@ -23,12 +24,17 @@ import {
   SELECTION_KEYS,
 } from "../helpers/selectionQuery";
 import {
+  decodeBudgetTab,
   decodeDayIndex,
   decodeView,
+  DEFAULT_BUDGET_TAB,
   DEFAULT_VIEW,
   encodeDayIndex,
   VIEW_KEYS,
 } from "../helpers/viewQuery";
+import { gradPersonKeyOf } from "../helpers/costOverrides";
+import { personInputKeyOf } from "../helpers/personInputs";
+import { sectionPayEditKeyOf } from "../helpers/sectionPayOverrides";
 import { ASYNC_DAY_INDEX } from "../helpers/scheduleDays";
 import {
   clockFromMinutes,
@@ -68,13 +74,22 @@ import type {
   ScheduleContext,
 } from "./types";
 
-/** What a press with no drag creates: one standard fifty-minute period. */
+/**
+ * What a press with no drag creates: one standard
+ * fifty-minute period.
+ */
 const CLICK_DURATION = 50;
 
-/** Keeps a block tall enough to read and to grab; not a scheduling rule. */
+/**
+ * Keeps a block tall enough to read and to grab; not a
+ * scheduling rule.
+ */
 const MIN_DURATION = 15;
 
-/** In grid minutes (one per pixel): a shorter drag is still a click. */
+/**
+ * In grid minutes (one per pixel): a shorter drag is still
+ * a click.
+ */
 const DRAG_START_MINUTES = 10;
 
 export const emptyFilters = (): ScheduleFilters => ({
@@ -85,8 +100,9 @@ export const emptyFilters = (): ScheduleFilters => ({
 });
 
 /**
- * `dayIndex` is a parameter because today is a clock read, which belongs in the
- * shell: `useScheduleEditor` passes it in, and everything here stays pure.
+ * `dayIndex` is a parameter because today is a clock read,
+ * which belongs in the shell: `useScheduleEditor` passes it
+ * in, and everything here stays pure.
  */
 export const initialState = (dayIndex = 0): EditorState => ({
   sectionEdits: {},
@@ -97,6 +113,15 @@ export const initialState = (dayIndex = 0): EditorState => ({
   selection: null,
   filters: defaultFilters(),
   view: DEFAULT_VIEW,
+  budgetTab: DEFAULT_BUDGET_TAB,
+  gradPersonEdits: {},
+  personInputEdits: {},
+  sectionPayEdits: {},
+  gradScenario: {
+    hasFeeOffset: true,
+    isInternational: false,
+    creditsTaught: 0,
+  },
   dayIndex,
   lastImport: null,
   writeError: null,
@@ -105,13 +130,15 @@ export const initialState = (dayIndex = 0): EditorState => ({
 });
 
 /**
- * Events after which the sheet is showing something else, so a refusal or a
- * delete question raised against what it showed before no longer applies.
+ * Events after which the sheet is showing something else,
+ * so a refusal or a delete question raised against what it
+ * showed before no longer applies.
  */
 const SHEET_MOVED_ON: EditorEvent["type"][] = [
   "selectedSection",
   "selectedHour",
   "selectedLeave",
+  "selectedPerson",
   "deselected",
   "canceled",
   "sectionCreated",
@@ -123,9 +150,10 @@ const SHEET_MOVED_ON: EditorEvent["type"][] = [
 ];
 
 /**
- * Every query key the editor owns. The page clears these before writing an
- * effect's query over them, so a key the effect leaves out is cleared rather
- * than left standing from whatever the URL said before.
+ * Every query key the editor owns. The page clears these
+ * before writing an effect's query over them, so a key the
+ * effect leaves out is cleared rather than left standing
+ * from whatever the URL said before.
  */
 export const EDITOR_QUERY_KEYS = [
   ...FILTER_FACETS,
@@ -134,8 +162,9 @@ export const EDITOR_QUERY_KEYS = [
 ];
 
 /**
- * Events that drop a draft because that is what the reader asked for. The
- * shell does not ask again before letting one of these through.
+ * Events that drop a draft because that is what the reader
+ * asked for. The shell does not ask again before letting
+ * one of these through.
  */
 export const DISCARDS_ON_PURPOSE: EditorEvent["type"][] = [
   "contextChanged",
@@ -143,7 +172,8 @@ export const DISCARDS_ON_PURPOSE: EditorEvent["type"][] = [
   "sectionCreated",
   "sectionDeleted",
   "allSectionsDeleted",
-  // the server has already deleted the sections, so there is nothing left to ask
+  // the server has already deleted the sections, so there
+  // is nothing left to ask
   "importUndone",
   "draftCancelled",
   "draftSaved",
@@ -152,46 +182,67 @@ export const DISCARDS_ON_PURPOSE: EditorEvent["type"][] = [
 ];
 
 /**
- * What a read-only term still answers. Default-deny: anything not named here
- * is a write, whatever route it arrives by.
+ * What a read-only term still answers. Default-deny:
+ * anything not named here is a write, whatever route it
+ * arrives by.
  *
- * `pressedMeeting` and `released` are on the list because together they are
- * how the week grid selects a block. A press alone changes no data, and with
- * `pointerMoved` refused it can never become a drag, so the release that
+ * `pressedMeeting` and `released` are on the list because
+ * together they are how the week grid selects a block. A
+ * press alone changes no data, and with `pointerMoved`
+ * refused it can never become a drag, so the release that
  * follows can only ever select.
  */
 const READING_EVENTS: EditorEvent["type"][] = [
   "pressedMeeting",
   "released",
-  // bookkeeping, not an edit: it only drops an overlay the server already
-  // holds, and a term that locked mid-save still has to be able to let go
+  // bookkeeping, not an edit: it only drops an overlay the
+  // server already holds, and a term that locked mid-save
+  // still has to be able to let go
   "sectionEditsPersisted",
   "canceled",
   "deselected",
   "selectedSection",
   "selectedHour",
   "selectedLeave",
-  // nothing was ever written, so there is nothing a locked term protects
+  "selectedPerson",
+  // nothing was ever written, so there is nothing a locked
+  // term protects
   "newSectionDiscarded",
   "filterValuesAdded",
   "filterValuesRemoved",
   "filtersCleared",
   "importedSectionsShown",
-  // both only drop what the banner held, which a locked term still has to do
+  // both only drop what the banner held, which a locked
+  // term still has to do
   "importDismissed",
   "importUndone",
   "viewSelected",
+  "budgetTabSelected",
+  // a term that locked mid-save still has to drop what was
+  // saved
+  "gradPersonEditsPersisted",
+  "personInputEditsPersisted",
+  "sectionPayEditsPersisted",
   "daySelected",
   "filterPanelOverridden",
-  // a term that locked mid-save still has to show and drop what came back
+  // a term that locked mid-save still has to show and drop
+  // what came back
   "writeRefused",
   "writeErrorDismissed",
   "deleteCancelled",
   "asyncDayShown",
   "urlChanged",
   "dismissalCancelled",
-  // leaving a locked term still has to drop what was held for it
+  // leaving a locked term still has to drop what was held
+  // for it
   "contextChanged",
+];
+
+const BUDGET_EVENTS: EditorEvent["type"][] = [
+  "personInputEdited",
+  "sectionPayEdited",
+  "gradPersonEdited",
+  "gradScenarioEdited",
 ];
 
 export function update(
@@ -199,7 +250,11 @@ export function update(
   event: EditorEvent,
   context: ScheduleContext,
 ): Next {
-  if (context.isReadOnly && !READING_EVENTS.includes(event.type)) {
+  if (
+    context.isReadOnly &&
+    !READING_EVENTS.includes(event.type) &&
+    !BUDGET_EVENTS.includes(event.type)
+  ) {
     return { state, effects: [] };
   }
 
@@ -212,8 +267,9 @@ export function update(
     withoutAbandonedSection(state, reduce(state, event, context)),
   );
 
-  // Held rather than applied: the view asks, and the answer comes back as its
-  // own event. Nothing impure happens here, and nothing is lost meanwhile.
+  // Held rather than applied: the view asks, and the answer
+  // comes back as its own event. Nothing impure happens
+  // here, and nothing is lost meanwhile.
   if (
     !DISCARDS_ON_PURPOSE.includes(event.type) &&
     selectAbandonsUnsavedWork(state, nextState, context)
@@ -239,9 +295,10 @@ export function update(
 }
 
 /**
- * While a question is on screen the only events that mean anything are its
- * answers. Confirming drops the edits before replaying the held event, so the
- * replay cannot ask the same question again.
+ * While a question is on screen the only events that mean
+ * anything are its answers. Confirming drops the edits
+ * before replaying the held event, so the replay cannot ask
+ * the same question again.
  */
 function answeringDismissal(
   state: EditorState,
@@ -272,8 +329,9 @@ function answeringDismissal(
 
   const kept = { ...state, pendingDismissal: null };
 
-  // Drop this and "Keep editing" after a back button leaves the address bar
-  // naming the section the reader was heading for, not the one still open.
+  // Drop this and "Keep editing" after a back button leaves
+  // the address bar naming the section the reader was
+  // heading for, not the one still open.
   return {
     state: kept,
     effects:
@@ -284,9 +342,10 @@ function answeringDismissal(
 }
 
 /**
- * Writes that leave the banner's Undo unsafe to press. Undo deletes the
- * sections the import made, so once the server holds an edit to one of them,
- * pressing it would delete that edit too.
+ * Writes that leave the banner's Undo unsafe to press. Undo
+ * deletes the sections the import made, so once the server
+ * holds an edit to one of them, pressing it would delete
+ * that edit too.
  */
 const SUPERSEDES_IMPORT: EditorEvent["type"][] = [
   "sectionCreated",
@@ -304,14 +363,16 @@ function withoutSupersededImport(
 }
 
 /**
- * The sheet's unsaved form goes when the selection leaves the section it
- * belongs to: Escape, a click on another block, a chip, an hour. A section
- * drawn but never created goes with it, since its draft is the whole of it.
+ * The sheet's unsaved form goes when the selection leaves
+ * the section it belongs to: Escape, a click on another
+ * block, a chip, an hour. A section drawn but never created
+ * goes with it, since its draft is the whole of it.
  *
- * Keyed on which section is open rather than on what the event was, so that
- * editing a section's own days and times, which renames its blocks, does not
- * read as walking away from it. The shell asks first where the edits are worth
- * keeping; see `selectAbandonsUnsavedWork`.
+ * Keyed on which section is open rather than on what the
+ * event was, so that editing a section's own days and
+ * times, which renames its blocks, does not read as walking
+ * away from it. The shell asks first where the edits are
+ * worth keeping; see `selectAbandonsUnsavedWork`.
  */
 function withoutAbandonedSection(
   before: EditorState,
@@ -325,10 +386,12 @@ function withoutAbandonedSection(
 }
 
 /**
- * The URL is rewritten whenever it would now say something different, and only
- * then. That covers the whole loop guard between the page and the router:
- * `urlChanged` is the one event that writes URL-backed state, and it raises no
- * effect of its own, so a round trip always ends after a single pass.
+ * The URL is rewritten whenever it would now say something
+ * different, and only then. That covers the whole loop
+ * guard between the page and the router: `urlChanged` is
+ * the one event that writes URL-backed state, and it raises
+ * no effect of its own, so a round trip always ends after a
+ * single pass.
  */
 function effectsOf(
   event: EditorEvent,
@@ -337,11 +400,13 @@ function effectsOf(
 ): Effect[] {
   if (event.type === "urlChanged") return [];
 
-  // `contextChanged` is raised from a route guard, so the navigation carrying
-  // the new term has not committed yet. Let it through and `router.replace`
-  // runs against the term being left, which cancels the move: the reader picks
-  // a new term and stays on the old one's sections. The navigation is writing
-  // the query itself, so there is nothing here to write.
+  // `contextChanged` is raised from a route guard, so the
+  // navigation carrying the new term has not committed yet.
+  // Let it through and `router.replace` runs against the
+  // term being left, which cancels the move: the reader
+  // picks a new term and stays on the old one's sections.
+  // The navigation is writing the query itself, so there is
+  // nothing here to write.
   if (event.type === "contextChanged") return [];
 
   const query = urlQueryOf(after);
@@ -352,27 +417,31 @@ function effectsOf(
 }
 
 /**
- * The whole of what a link to this page carries. Written in one piece rather
- * than a key at a time, so no two writes can race and leave the day naming a
- * tab the view is not on.
+ * The whole of what a link to this page carries. Written in
+ * one piece rather than a key at a time, so no two writes
+ * can race and leave the day naming a tab the view is not
+ * on.
  */
 function urlQueryOf(state: EditorState): UrlQuery {
   return {
     ...encodeFilters(state.filters),
     ...encodeSelection(state.selection),
     view: state.view,
-    // The day list shows one day at a time, so a link to it has to say which.
-    // No other view has a day to name.
+    ...(state.view === "budget" ? { tab: state.budgetTab } : {}),
+    // The day list shows one day at a time, so a link to it
+    // has to say which. No other view has a day to name.
     ...(state.view === "day" ? { day: encodeDayIndex(state.dayIndex) } : {}),
   };
 }
 
 /**
- * Whether a selection read back out of the URL is the one already held. A
- * selected grid block encodes as the section it belongs to, so the query the
- * page just wrote for a block reads back as a plain section selection.
- * Comparing the encodings rather than the selections is what keeps the block
- * itself marked instead of every block its section has.
+ * Whether a selection read back out of the URL is the one
+ * already held. A selected grid block encodes as the
+ * section it belongs to, so the query the page just wrote
+ * for a block reads back as a plain section selection.
+ * Comparing the encodings rather than the selections is
+ * what keeps the block itself marked instead of every block
+ * its section has.
  */
 function namesHeldSelection(
   state: EditorState,
@@ -483,6 +552,12 @@ function reduce(
         selection: { kind: "leave", leaveId: event.leaveId },
       };
 
+    case "selectedPerson":
+      return {
+        ...state,
+        selection: { kind: "person", emplid: event.emplid },
+      };
+
     case "filterValuesAdded":
       return withFacet(state, event.facet, (checked) => [
         ...checked,
@@ -503,8 +578,9 @@ function reduce(
         filters: { ...emptyFilters(), section: event.sectionIds.map(String) },
       };
 
-    // The filters go so that the sections that just arrived are all on screen;
-    // a course checked before the import would hide most of them.
+    // The filters go so that the sections that just arrived
+    // are all on screen; a course checked before the import
+    // would hide most of them.
     case "sectionsImported":
       return {
         ...state,
@@ -515,9 +591,10 @@ function reduce(
         },
       };
 
-    // Everything still naming those sections goes with them: the `section`
-    // filter "Show these" wrote, which would otherwise hold the canvas empty
-    // behind a badge, and a sheet open on one of them.
+    // Everything still naming those sections goes with
+    // them: the `section` filter "Show these" wrote, which
+    // would otherwise hold the canvas empty behind a badge,
+    // and a sheet open on one of them.
     case "importUndone": {
       const undoneIds = state.lastImport?.sectionIds ?? [];
       const undoneValues = undoneIds.map(String);
@@ -545,6 +622,89 @@ function reduce(
     case "viewSelected":
       return { ...state, view: event.view };
 
+    case "budgetTabSelected":
+      return { ...state, budgetTab: event.tab };
+
+    case "gradPersonEdited":
+      if (context.costAssumptions?.canEdit !== true) return state;
+
+      return {
+        ...state,
+        gradPersonEdits: {
+          ...state.gradPersonEdits,
+          [gradPersonKeyOf(event.edit.emplid)]: event.edit,
+        },
+      };
+
+    case "gradPersonEditsPersisted":
+      if (!isEqual(state.gradPersonEdits[event.key], event.saved)) return state;
+
+      return {
+        ...state,
+        gradPersonEdits: omitStringKey(state.gradPersonEdits, event.key),
+      };
+
+    case "personInputEdited":
+      if (context.costAssumptions?.canEdit !== true) return state;
+
+      return {
+        ...state,
+        personInputEdits: {
+          ...state.personInputEdits,
+          [personInputKeyOf(event.edit.emplid, event.edit.field)]: event.edit,
+        },
+      };
+
+    case "personInputEditsPersisted":
+      if (!isEqual(state.personInputEdits[event.key], event.saved))
+        return state;
+
+      return {
+        ...state,
+        personInputEdits: omitStringKey(state.personInputEdits, event.key),
+      };
+
+    case "sectionPayEdited":
+      if (context.costAssumptions?.canEdit !== true) return state;
+
+      return {
+        ...state,
+        sectionPayEdits: {
+          ...state.sectionPayEdits,
+          [sectionPayEditKeyOf(event.edit)]: event.edit,
+        },
+      };
+
+    case "sectionPayEditsPersisted":
+      if (!isEqual(state.sectionPayEdits[event.key], event.saved)) return state;
+
+      return {
+        ...state,
+        sectionPayEdits: omitStringKey(state.sectionPayEdits, event.key),
+      };
+
+    case "gradScenarioEdited":
+      return {
+        ...state,
+        gradScenario: { ...state.gradScenario, ...event.change },
+      };
+
+    // An open sheet's draft is spread over sectionEdits on
+    // Save, so without the draft copy, Save would put the
+    // sheet's older notes back over these.
+    case "sectionNotesEdited":
+      return {
+        ...state,
+        drafts: draftsWithNotes(state.drafts, event.sectionId, event.notes),
+        sectionEdits: {
+          ...state.sectionEdits,
+          [event.sectionId]: {
+            ...state.sectionEdits[event.sectionId],
+            notes: event.notes,
+          },
+        },
+      };
+
     case "daySelected":
       return { ...state, dayIndex: event.dayIndex };
 
@@ -557,9 +717,11 @@ function reduce(
       return {
         ...state,
         view: decodeView(event.query),
-        // A URL that names no day is not asking for a particular one, so the
-        // tab a scheduler last opened stays open under a view that has no day
-        // to name.
+        budgetTab: decodeBudgetTab(event.query) ?? state.budgetTab,
+        // A URL that names no day is not asking for a
+        // particular one, so the tab a scheduler last
+        // opened stays open under a view that has no day to
+        // name.
         dayIndex: decodeDayIndex(event.query) ?? state.dayIndex,
         filters: decodeFilters(event.query),
         selection: namesHeldSelection(state, fromUrl)
@@ -568,20 +730,25 @@ function reduce(
       };
     }
 
-    // Everything keyed by a section id, and the drawn section with it. The
-    // view, the day and the filters are in the URL, which the toolbar rewrites
-    // for the department it is moving to.
+    // Everything keyed by a section id, and the drawn
+    // section with it. The view, the day and the filters
+    // are in the URL, which the toolbar rewrites for the
+    // department it is moving to.
     case "contextChanged":
       return {
         ...state,
         sectionEdits: {},
         drafts: {},
+        gradPersonEdits: {},
+        personInputEdits: {},
+        sectionPayEdits: {},
         selection: null,
         lastPlacedId: null,
         interaction: { status: "idle" },
         pendingDismissal: null,
-        // Undo would send this term's ids to the term now on screen, where
-        // they match nothing: a 204 and a banner that clears as if it worked.
+        // Undo would send this term's ids to the term now
+        // on screen, where they match nothing: a 204 and a
+        // banner that clears as if it worked.
         lastImport: null,
       };
 
@@ -603,7 +770,8 @@ function reduce(
         ...state.drafts[event.sectionId],
       };
 
-      // "Add meeting time" makes overlaps easy to create; saving merges them
+      // "Add meeting time" makes overlaps easy to create;
+      // saving merges them
       const edit = saved.meetings
         ? { ...saved, meetings: withoutOverlaps(saved.meetings) }
         : saved;
@@ -649,9 +817,10 @@ function reduce(
     case "draftCancelled":
       return withoutDraft(state, event.sectionId);
 
-    // Straight into the saved edits rather than the draft: the sheet has
-    // already asked, so there is nothing left for Save to confirm. The
-    // half-typed form goes with it, since none of it can apply now.
+    // Straight into the saved edits rather than the draft:
+    // the sheet has already asked, so there is nothing left
+    // for Save to confirm. The half-typed form goes with
+    // it, since none of it can apply now.
     case "sectionCancelled":
       return {
         ...withoutDraft(state, event.sectionId),
@@ -671,8 +840,9 @@ function reduce(
       );
 
     case "sectionEditsPersisted":
-      // a newer edit made while the save was in flight is not the one that
-      // was saved, so it stays and will be saved in its turn
+      // a newer edit made while the save was in flight is
+      // not the one that was saved, so it stays and will be
+      // saved in its turn
       return isEqual(state.sectionEdits[event.sectionId], event.saved)
         ? withoutEntry(state, event.sectionId)
         : state;
@@ -688,9 +858,10 @@ function reduce(
         ...state,
         drafts: {
           ...state.drafts,
-          // Keeping what is there makes a second press a no-op. Writing `{}`
-          // instead wipes the times off a rectangle already drawn out, and
-          // "keeps the times of a rectangle already drawn out" fails.
+          // Keeping what is there makes a second press a
+          // no-op. Writing `{}` instead wipes the times off
+          // a rectangle already drawn out, and "keeps the
+          // times of a rectangle already drawn out" fails.
           [NEW_SECTION_ID]: state.drafts[NEW_SECTION_ID] ?? {},
         },
         selection: { kind: "section", sectionId: NEW_SECTION_ID },
@@ -714,7 +885,8 @@ function reduce(
     case "filterPanelOverridden":
       return { ...state, filterPanelOverride: event.isOpen };
 
-    // answered in `update`, which never lets them reach here
+    // answered in `update`, which never lets them reach
+    // here
     case "dismissalConfirmed":
     case "dismissalCancelled":
       return state;
@@ -725,8 +897,9 @@ function reduce(
         selection: null,
       };
 
-    // Filters go too. A `section` filter names ids the term no longer has, so
-    // the canvas would stay empty through the next import as well.
+    // Filters go too. A `section` filter names ids the term
+    // no longer has, so the canvas would stay empty through
+    // the next import as well.
     case "allSectionsDeleted":
       return {
         ...state,
@@ -743,8 +916,9 @@ function reduce(
 }
 
 /**
- * Blocks are named for where they sit, so a save can rename the selected
- * one; reselect the section's first block, or the section itself if none.
+ * Blocks are named for where they sit, so a save can rename
+ * the selected one; reselect the section's first block, or
+ * the section itself if none.
  */
 function keepingSelection(
   state: EditorState,
@@ -805,6 +979,20 @@ const withoutEntry = (state: EditorState, sectionId: number): EditorState => ({
   sectionEdits: omitKey(state.sectionEdits, sectionId),
 });
 
+function draftsWithNotes(
+  drafts: EditorState["drafts"],
+  sectionId: number,
+  notes: string,
+): EditorState["drafts"] {
+  const draft = drafts[sectionId];
+  if (draft === undefined) return drafts;
+
+  return { ...drafts, [sectionId]: { ...draft, notes } };
+}
+
+const omitStringKey = <T>(record: Record<string, T>, key: string) =>
+  Object.fromEntries(Object.entries(record).filter(([held]) => held !== key));
+
 const omitKey = <T>(record: Record<number, T>, key: number) =>
   Object.fromEntries(
     Object.entries(record).filter(([held]) => Number(held) !== key),
@@ -845,7 +1033,8 @@ function pointerMoved(
       };
     }
 
-    // past the drag-start distance, promote to `moving` and re-run this event
+    // past the drag-start distance, promote to `moving` and
+    // re-run this event
     case "pressed": {
       const hasLeftPress =
         dayIndex !== interaction.dayIndex ||
@@ -940,8 +1129,8 @@ function commitDrawing(
   state: EditorState,
   drawing: Extract<Interaction, { status: "drawing" }>,
 ): EditorState {
-  // a drag shorter than MIN_DURATION is a click; this also keeps every meeting
-  // at least MIN_DURATION
+  // a drag shorter than MIN_DURATION is a click; this also
+  // keeps every meeting at least MIN_DURATION
   const isClick = drawing.endMinute - drawing.startMinute < MIN_DURATION;
   const range = isClick
     ? placeWithinDay(drawing.startMinute, CLICK_DURATION)
@@ -958,9 +1147,10 @@ function commitDrawing(
 
   return {
     ...state,
-    // Only the times: drawing again while the sheet is open on an uncreated
-    // section is how its times get changed, so the course, the number, and
-    // whoever is teaching it all stay put.
+    // Only the times: drawing again while the sheet is open
+    // on an uncreated section is how its times get changed,
+    // so the course, the number, and whoever is teaching it
+    // all stay put.
     drafts: {
       ...state.drafts,
       [NEW_SECTION_ID]: { ...state.drafts[NEW_SECTION_ID], meetings },
@@ -983,11 +1173,13 @@ function commitDrawing(
 }
 
 /**
- * Moving a block renames it; selection and the drop flash follow the new id.
+ * Moving a block renames it; selection and the drop flash
+ * follow the new id.
  *
- * The section being created is moved the same way, except that its times live
- * in its draft rather than in an overlay on a server row, so that is where the
- * new placement is written.
+ * The section being created is moved the same way, except
+ * that its times live in its draft rather than in an
+ * overlay on a server row, so that is where the new
+ * placement is written.
  */
 function withSectionPlacement(
   state: EditorState,

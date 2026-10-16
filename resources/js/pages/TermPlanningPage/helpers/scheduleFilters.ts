@@ -18,6 +18,30 @@ export function filterSections<T extends SisSection>(
   return sections.filter((section) => matchesAllFacets(section, filters));
 }
 
+export function filterPeople<Person extends { emplid: number | null }>(
+  people: Person[],
+  sections: SisSection[],
+  filters: ScheduleFilters,
+): Person[] {
+  const sectionFilters = { ...filters, person: [] };
+  const hasSectionFilters = FILTER_FACETS.some(
+    (facet) => sectionFilters[facet].length > 0,
+  );
+  const peopleOnMatchingSections = new Set(
+    filterSections(sections, sectionFilters).flatMap((section) =>
+      facetValues(section, "person"),
+    ),
+  );
+
+  return people.filter(({ emplid }) => {
+    const personValue = emplid === null ? TBA_PERSON : String(emplid);
+    return (
+      matchesFacet(filters.person, [personValue]) &&
+      (!hasSectionFilters || peopleOnMatchingSections.has(personValue))
+    );
+  });
+}
+
 /**
  * Which values are still standing in each facet: those carried by a section
  * that passes every *other* facet. A facet is left out of its own reckoning,

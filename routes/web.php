@@ -23,6 +23,9 @@ use App\Http\Controllers\Sis\GroupLeaveController as SisGroupLeaveController;
 use App\Http\Controllers\LeavePlanning\GroupController as LeavePlanningGroupController;
 use App\Http\Controllers\LeavePlanning\GroupLeaveController as LeavePlanningGroupLeaveController;
 use App\Http\Controllers\LeavePlanning\GroupTeachingHistoryController as LeavePlanningGroupTeachingHistoryController;
+use App\Http\Controllers\TermPlanning\CostAssumptionController as TermPlanningCostAssumptionController;
+use App\Http\Controllers\TermPlanning\CostOverrideController as TermPlanningCostOverrideController;
+use App\Http\Controllers\TermPlanning\EnrollmentHistoryController as TermPlanningEnrollmentHistoryController;
 use App\Http\Controllers\TermPlanning\CourseInstructorController as TermPlanningCourseInstructorController;
 use App\Http\Controllers\TermPlanning\GroupCourseController as TermPlanningGroupCourseController;
 use App\Http\Controllers\TermPlanning\GroupSectionController as TermPlanningGroupSectionController;
@@ -128,6 +131,11 @@ Route::group(['prefix' => '/api/', 'middleware' => 'auth'], function () {
         Route::delete('/groups/{group}/sections/batch', [TermPlanningSectionBatchController::class, 'destroy']);
         Route::put('/groups/{group}/sections/{section}', [TermPlanningGroupSectionController::class, 'update']);
         Route::delete('/groups/{group}/sections/{section}', [TermPlanningGroupSectionController::class, 'destroy']);
+        Route::get('/groups/{group}/cost-assumptions', [TermPlanningCostAssumptionController::class, 'index']);
+        Route::put('/groups/{group}/grad-people/{emplid}', [TermPlanningCostOverrideController::class, 'updateGradPerson']);
+        Route::patch('/groups/{group}/person-inputs/{emplid}', [TermPlanningCostOverrideController::class, 'updatePersonInputs']);
+        Route::patch('/groups/{group}/section-pay-overrides', [TermPlanningCostOverrideController::class, 'updateSectionPayOverride']);
+        Route::get('/groups/{group}/enrollment-history', [TermPlanningEnrollmentHistoryController::class, 'index']);
     });
 
     // Read-only views of the SIS data cached in the sis_ tables.

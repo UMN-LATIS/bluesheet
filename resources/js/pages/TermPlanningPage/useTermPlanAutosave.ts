@@ -9,7 +9,7 @@ import type { PlannedSection } from "./types";
  * Long enough that a name typed letter by letter is one save, short enough
  * that a scheduler who closes the tab straight after a change still keeps it.
  */
-const QUIET_PERIOD_MS = 800;
+export const QUIET_PERIOD_MS = 800;
 
 /**
  * Sends edits to the server once the scheduler stops making them.

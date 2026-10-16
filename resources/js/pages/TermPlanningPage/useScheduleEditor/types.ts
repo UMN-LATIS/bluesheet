@@ -8,35 +8,53 @@ import type {
   SisSectionMeeting,
   TimeRange,
 } from "../types";
+import type { CostAssumptions } from "@/types";
+import type { GradPerson } from "@/types";
+import type { PersonInputEdit } from "../helpers/personInputs";
+import type { SectionPayEdit } from "../helpers/sectionPayOverrides";
 import type { UrlQuery } from "@/utils/urlQuery";
-import type { ScheduleView } from "../helpers/viewQuery";
+import type { BudgetTab, ScheduleView } from "../helpers/viewQuery";
 
 /**
- * Read by `update`, never written: the schedule as it stands, edits applied.
+ * Read by `update`, never written: the schedule as it
+ * stands, edits applied.
  */
 export interface ScheduleContext {
   /**
-   * The term as the server sent it, before this browser's edits and before
-   * the filters. Everything else the editor reads is derived from it here, so
-   * nothing the editor owns travels back in as context.
+   * The term as the server sent it, before this browser's
+   * edits and before the filters. Everything else the
+   * editor reads is derived from it here, so nothing the
+   * editor owns travels back in as context.
    */
   sections: SisSection[];
   /**
-   * A closed term, or one the save endpoints cannot reach yet. Hiding the
-   * controls is not enforcement — keyboard, deep link, and stale tab all still
-   * reach `update` — so the refusal lives here too.
+   * A closed term, or one the save endpoints cannot reach
+   * yet. Hiding the controls is not enforcement — keyboard,
+   * deep link, and stale tab all still reach `update` — so
+   * the refusal lives here too.
    */
   isReadOnly: boolean;
-  /** Wide enough to dock the filter panel beside the canvas. */
+  /**
+   * Wide enough to dock the filter panel beside the canvas.
+   */
   isWide: boolean;
+  /** Null until the cost assumptions have loaded. */
+  costAssumptions: CostAssumptions | null;
+}
+
+export interface GradScenario {
+  hasFeeOffset: boolean;
+  isInternational: boolean;
+  creditsTaught: number;
 }
 
 /** Sparse: an absent field is unchanged. */
 export interface SectionEdit {
   /**
-   * Which course the section is on. Only the section being created sets
-   * these: an existing section's course is half of the key the server
-   * enforces, so moving one to another course is a delete and a create.
+   * Which course the section is on. Only the section being
+   * created sets these: an existing section's course is
+   * half of the key the server enforces, so moving one to
+   * another course is a delete and a create.
    */
   courseCode?: string;
   subject?: string;
@@ -98,11 +116,13 @@ export type Selection =
       kind: "section";
       sectionId: number;
       /**
-       * The hour list this section was picked from, for the sheet's back link.
+       * The hour list this section was picked from, for the
+       * sheet's back link.
        */
       from?: HourSelection;
     }
   | { kind: "leave"; leaveId: number }
+  | { kind: "person"; emplid: number }
   | HourSelection;
 
 /** A cell of the coverage heatmap: one hour of one day. */
@@ -113,43 +133,55 @@ export interface HourSelection {
 }
 
 /**
- * The id the section being created stands under while the sheet is open on
- * it. Negative because section ids are auto-increment, so no saved section
- * can ever collide with it.
+ * The id the section being created stands under while the
+ * sheet is open on it. Negative because section ids are
+ * auto-increment, so no saved section can ever collide with
+ * it.
  */
 export const NEW_SECTION_ID = -1;
 
 /**
- * An import the server has taken, which the banner offers to show or to undo.
- * Undo deletes exactly these sections, so the ids are held rather than
- * re-derived from what the term holds now.
+ * An import the server has taken, which the banner offers
+ * to show or to undo. Undo deletes exactly these sections,
+ * so the ids are held rather than re-derived from what the
+ * term holds now.
  */
 export interface LastImport {
   sectionIds: number[];
-  /** The term the sections were copied from, which the banner names. */
+  /**
+   * The term the sections were copied from, which the
+   * banner names.
+   */
   sourceTermName: string;
 }
 
-/** Only this browser's edits; the server's sections stay in the query cache. */
+/**
+ * Only this browser's edits; the server's sections stay in
+ * the query cache.
+ */
 export interface EditorState {
   sectionEdits: Record<number, SectionEdit>;
   /**
-   * The sheet's unsaved form per section; nothing here reaches the grid until
-   * Save. The exception is `NEW_SECTION_ID`, whose draft is the whole of the
-   * section being created: it has no row on the server and no entry in
-   * `context.sections`, so the grid draws its blocks straight from here.
+   * The sheet's unsaved form per section; nothing here
+   * reaches the grid until Save. The exception is
+   * `NEW_SECTION_ID`, whose draft is the whole of the
+   * section being created: it has no row on the server and
+   * no entry in `context.sections`, so the grid draws its
+   * blocks straight from here.
    */
   drafts: Record<number, SectionEdit>;
   /**
-   * The event held back because applying it would drop sheet edits nobody has
-   * saved. The view asks about it, and the answer arrives as
-   * `dismissalConfirmed` or `dismissalCancelled`, which is what keeps the
-   * question out of `update` and out of a browser dialog.
+   * The event held back because applying it would drop
+   * sheet edits nobody has saved. The view asks about it,
+   * and the answer arrives as `dismissalConfirmed` or
+   * `dismissalCancelled`, which is what keeps the question
+   * out of `update` and out of a browser dialog.
    *
-   * `interaction` is the gesture the event ended, parked here so that
-   * `interaction` above can go idle while the question stands. Drop it and a
-   * press whose release is held keeps `isGestureInFlight` true, so a phantom
-   * block follows the pointer across the grid.
+   * `interaction` is the gesture the event ended, parked
+   * here so that `interaction` above can go idle while the
+   * question stands. Drop it and a press whose release is
+   * held keeps `isGestureInFlight` true, so a phantom block
+   * follows the pointer across the grid.
    */
   pendingDismissal: { event: EditorEvent; interaction: Interaction } | null;
   interaction: Interaction;
@@ -160,19 +192,44 @@ export interface EditorState {
   filters: ScheduleFilters;
   /** Which canvas is showing. */
   view: ScheduleView;
-  /** Which tab the day list is on: a weekday, or the Async day past them. */
+  budgetTab: BudgetTab;
+  /** Edits not yet saved, keyed by `gradPersonKeyOf`. */
+  gradPersonEdits: Record<string, GradPerson>;
+  /** Edits not yet saved, keyed by `personInputKeyOf`. */
+  personInputEdits: Record<string, PersonInputEdit>;
+  /** Edits not yet saved, keyed by `sectionPayEditKeyOf`. */
+  sectionPayEdits: Record<string, SectionPayEdit>;
+  /**
+   * The Grad calculator's what-if. Not saved and not in the
+   * URL.
+   */
+  gradScenario: GradScenario;
+  /**
+   * Which tab the day list is on: a weekday, or the Async
+   * day past them.
+   */
   dayIndex: number;
-  /** The import the banner stands for, or null when no banner is showing. */
+  /**
+   * The import the banner stands for, or null when no
+   * banner is showing.
+   */
   lastImport: LastImport | null;
   /** The server's word on the last refused write. */
   writeError: string | null;
-  /** The sheet is asking whether to delete the open section. */
+  /**
+   * The sheet is asking whether to delete the open section.
+   */
   isConfirmingDelete: boolean;
-  /** Null follows the width; true or false is the reader overruling it. */
+  /**
+   * Null follows the width; true or false is the reader
+   * overruling it.
+   */
   filterPanelOverride: boolean | null;
 }
 
-/** Past-tense facts from the UI; minutes arrive unsnapped. */
+/**
+ * Past-tense facts from the UI; minutes arrive unsnapped.
+ */
 export type EditorEvent =
   | { type: "pressedEmptySpace"; dayIndex: number; minute: number }
   | { type: "pressedMeeting"; meetingId: string; minute: number }
@@ -191,44 +248,78 @@ export type EditorEvent =
   | { type: "canceled" }
   | { type: "deselected" }
   /**
-   * A chip in the no-set-time tray, or a row in the hour sheet (which names the
-   * hour it came from).
+   * A chip in the no-set-time tray, or a row in the hour
+   * sheet (which names the hour it came from).
    */
   | { type: "selectedSection"; sectionId: number; from?: HourSelection }
   | { type: "selectedHour"; dayIndex: number; startMinute: number }
   | { type: "selectedLeave"; leaveId: number }
+  | { type: "selectedPerson"; emplid: number }
   | { type: "filterValuesAdded"; facet: FilterFacet; values: string[] }
   | { type: "filterValuesRemoved"; facet: FilterFacet; values: string[] }
   | { type: "filtersCleared" }
   | { type: "importedSectionsShown"; sectionIds: number[] }
-  /** The server has copied these sections in from `sourceTermName`. */
+  /**
+   * The server has copied these sections in from
+   * `sourceTermName`.
+   */
   | { type: "sectionsImported"; sectionIds: number[]; sourceTermName: string }
   /**
-   * The server has deleted the imported sections again. The `section` filter
-   * and the open sheet may both still name them, and a filter naming ids the
-   * term no longer has holds the canvas empty behind a badge.
+   * The server has deleted the imported sections again. The
+   * `section` filter and the open sheet may both still name
+   * them, and a filter naming ids the term no longer has
+   * holds the canvas empty behind a badge.
    */
   | { type: "importUndone" }
-  /** The reader closed the banner, so the offer to undo goes with it. */
+  /**
+   * The reader closed the banner, so the offer to undo goes
+   * with it.
+   */
   | { type: "importDismissed" }
   | { type: "viewSelected"; view: ScheduleView }
+  | { type: "budgetTabSelected"; tab: BudgetTab }
+  | { type: "gradPersonEdited"; edit: GradPerson }
+  | { type: "gradPersonEditsPersisted"; key: string; saved: GradPerson }
+  | { type: "personInputEdited"; edit: PersonInputEdit }
+  /**
+   * The server has this value now. A newer edit to the same
+   * key stays.
+   */
+  | { type: "personInputEditsPersisted"; key: string; saved: PersonInputEdit }
+  | { type: "sectionPayEdited"; edit: SectionPayEdit }
+  /**
+   * The server has this value now. A newer edit to the same
+   * key stays.
+   */
+  | { type: "sectionPayEditsPersisted"; key: string; saved: SectionPayEdit }
+  | { type: "gradScenarioEdited"; change: Partial<GradScenario> }
+  | { type: "sectionNotesEdited"; sectionId: number; notes: string }
   | { type: "daySelected"; dayIndex: number }
-  /** The heatmap's Async cell: one step to the day list, on the Async tab. */
+  /**
+   * The heatmap's Async cell: one step to the day list, on
+   * the Async tab.
+   */
   | { type: "asyncDayShown" }
   /**
-   * The URL changed underneath the page: initial load, back button, pasted
-   * link, or the page's own `replaceUrlQuery` arriving back. The only way any
-   * URL-backed state is written, and the only event that raises no effect,
-   * which is what stops the page and the router answering each other forever.
+   * The URL changed underneath the page: initial load, back
+   * button, pasted link, or the page's own
+   * `replaceUrlQuery` arriving back. The only way any
+   * URL-backed state is written, and the only event that
+   * raises no effect, which is what stops the page and the
+   * router answering each other forever.
    */
   | { type: "urlChanged"; query: UrlQuery }
   /**
-   * The page is now on another department or term. Overlays and drafts name
-   * rows the new one does not have, and the drawn section belongs to neither.
+   * The page is now on another department or term. Overlays
+   * and drafts name rows the new one does not have, and the
+   * drawn section belongs to neither.
    */
   | { type: "contextChanged" }
   | { type: "sectionFieldEdited"; sectionId: number; change: SectionEdit }
-  /** A day pressed in the sheet. An index past the last pattern starts one. */
+  /**
+   * A day pressed in the sheet. An index past the last
+   * pattern starts one.
+   */
   | {
       type: "meetingDayToggled";
       sectionId: number;
@@ -244,49 +335,67 @@ export type EditorEvent =
     }
   | { type: "meetingPatternAdded"; sectionId: number }
   | { type: "meetingPatternRemoved"; sectionId: number; patternIndex: number }
-  /** The Async day: the section keeps no meeting time at all. */
+  /**
+   * The Async day: the section keeps no meeting time at
+   * all.
+   */
   | { type: "madeAsynchronous"; sectionId: number }
   | { type: "draftSaved"; sectionId: number }
   | { type: "draftCancelled"; sectionId: number }
   /**
-   * The section is struck from the term. Confirmed in the sheet before it is
-   * dispatched, and undone only by reverting the section.
+   * The section is struck from the term. Confirmed in the
+   * sheet before it is dispatched, and undone only by
+   * reverting the section.
    */
   | { type: "sectionCancelled"; sectionId: number }
   | { type: "sectionEditsReverted"; sectionId: number }
   /**
-   * Create was pressed and the server has the section now, so the draft that
-   * stood for it can go and the sheet can reopen on the real thing.
+   * Create was pressed and the server has the section now,
+   * so the draft that stood for it can go and the sheet can
+   * reopen on the real thing.
    */
   | { type: "sectionCreated"; sectionId: number }
   /**
-   * Create Section was pressed, rather than a rectangle drawn on the grid, so
-   * the new section starts with no meeting times and the sheet is where it
-   * gets them.
+   * Create Section was pressed, rather than a rectangle
+   * drawn on the grid, so the new section starts with no
+   * meeting times and the sheet is where it gets them.
    */
   | { type: "sectionCreationRequested" }
-  /** The sheet closed on a section that was never created. */
+  /**
+   * The sheet closed on a section that was never created.
+   */
   | { type: "newSectionDiscarded" }
-  /** A write came back refused, carrying what the server said. */
+  /**
+   * A write came back refused, carrying what the server
+   * said.
+   */
   | { type: "writeRefused"; message: string }
   | { type: "writeErrorDismissed" }
   | { type: "deleteRequested" }
   | { type: "deleteCancelled" }
   | { type: "filterPanelOverridden"; isOpen: boolean }
   /**
-   * The server no longer has this section. Its overlay and its draft go with
-   * it; leaving either would save a section back into existence.
+   * The server no longer has this section. Its overlay and
+   * its draft go with it; leaving either would save a
+   * section back into existence.
    */
   | { type: "sectionDeleted"; sectionId: number }
   | { type: "allSectionsDeleted" }
-  /** The reader let the held event through, losing the sheet's edits. */
+  /**
+   * The reader let the held event through, losing the
+   * sheet's edits.
+   */
   | { type: "dismissalConfirmed" }
-  /** The reader kept the edits, so the held event never happened. */
+  /**
+   * The reader kept the edits, so the held event never
+   * happened.
+   */
   | { type: "dismissalCancelled" }
   /**
-   * The server has these edits now, so the overlay holding them can go. The
-   * edits are named rather than assumed, because the scheduler may have typed
-   * again while the save was in flight, and that newer edit has to survive.
+   * The server has these edits now, so the overlay holding
+   * them can go. The edits are named rather than assumed,
+   * because the scheduler may have typed again while the
+   * save was in flight, and that newer edit has to survive.
    */
   | {
       type: "sectionEditsPersisted";
@@ -295,9 +404,10 @@ export type EditorEvent =
     };
 
 /**
- * Work for the page to do outside `update`, which never imports the router.
- * The query holds every key the editor owns, so the page clears that whole set
- * before writing this over it; a key the editor left out is one to remove.
+ * Work for the page to do outside `update`, which never
+ * imports the router. The query holds every key the editor
+ * owns, so the page clears that whole set before writing
+ * this over it; a key the editor left out is one to remove.
  */
 export type Effect = { type: "replaceUrlQuery"; query: UrlQuery };
 

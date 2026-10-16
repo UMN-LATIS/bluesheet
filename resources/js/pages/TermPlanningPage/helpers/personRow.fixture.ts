@@ -1,0 +1,44 @@
+import type { PersonRow } from "./peopleRows";
+
+export const personRow = (extra: Partial<PersonRow> = {}): PersonRow => ({
+  emplid: 1,
+  name: "Adams, Ada",
+  jobCode: "9401",
+  title: "Professor",
+  jobLabel: "9401 · Professor",
+  instructorType: "recurring_budget_faculty",
+  fundLabel: "Recurring",
+  salary: 1000,
+  isRateOverridden: false,
+  fringe: 100,
+  loadLabel: "0",
+  paidSectionCount: 0,
+  courseReleases: null,
+  releaseSource: null,
+  yearStarted: null,
+  total: 0,
+  hasMissingRate: false,
+  sections: [],
+  isAssigned: true,
+  notes: "",
+  leaves: [],
+  isGrad: false,
+  appointmentPercent: null,
+  hasFeeOffset: false,
+  isInternational: false,
+  isAbd: false,
+  receipt: [],
+  ...extra,
+});
+
+export const unstaffedRow = (extra: Partial<PersonRow> = {}): PersonRow =>
+  personRow({
+    emplid: null,
+    name: "Unstaffed",
+    jobCode: "TBA",
+    title: "Unstaffed",
+    jobLabel: "TBA · Unstaffed",
+    instructorType: null,
+    fundLabel: "UI",
+    ...extra,
+  });

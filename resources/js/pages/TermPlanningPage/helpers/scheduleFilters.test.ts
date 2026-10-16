@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { filterSections, reachableFacetValues } from "./scheduleFilters";
+import {
+  filterPeople,
+  filterSections,
+  reachableFacetValues,
+} from "./scheduleFilters";
 import type { ScheduleFilters, SisInstructor, SisSection } from "../types";
 import { TBA_PERSON } from "../types";
 
@@ -152,6 +156,50 @@ describe("filterSections", () => {
     });
 
     expect(result).toEqual([]);
+  });
+});
+
+describe("filterPeople", () => {
+  const people = [
+    { emplid: 1 },
+    { emplid: 2 },
+    { emplid: 3 },
+    { emplid: null },
+  ];
+  const sections = [
+    section(10, {
+      courseCode: "ANTH-1001",
+      instructors: [instructor(1, "PI"), instructor(2, "TA")],
+    }),
+    section(11, {
+      courseCode: "HIST-1082",
+      instructors: [instructor(2, "TA")],
+    }),
+    section(12, { courseCode: "HIST-1082" }),
+  ];
+  const emplidsWhere = (filters: Partial<ScheduleFilters>) =>
+    filterPeople(people, sections, { ...emptyFilters(), ...filters }).map(
+      ({ emplid }) => emplid,
+    );
+
+  it("keeps everyone, people with no sections included, when no facet is checked", () => {
+    expect(emplidsWhere({})).toEqual([1, 2, 3, null]);
+  });
+
+  it("keeps only the checked people, not others on their sections", () => {
+    expect(emplidsWhere({ person: ["1"] })).toEqual([1]);
+    expect(emplidsWhere({ person: [TBA_PERSON] })).toEqual([null]);
+  });
+
+  it("keeps people on a section that passes the other facets", () => {
+    expect(emplidsWhere({ course: ["HIST-1082"] })).toEqual([2, null]);
+    expect(emplidsWhere({ section: ["10"] })).toEqual([1, 2]);
+  });
+
+  it("ANDs the person facet with the others", () => {
+    expect(emplidsWhere({ course: ["HIST-1082"], person: ["1", "2"] })).toEqual(
+      [2],
+    );
   });
 });
 

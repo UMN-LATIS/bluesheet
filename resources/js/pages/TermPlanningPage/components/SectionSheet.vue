@@ -72,7 +72,15 @@
       </p>
     </div>
 
-    <SectionFacts v-if="isReadOnly" :section="section" />
+    <SectionFacts
+      v-if="isReadOnly"
+      :section="section"
+      :previousOfferings="previousOfferings"
+      :costDetails="costDetails"
+      :canEditCosts="schedule.canEditCosts"
+      @openPerson="openPerson"
+      @editPay="editSectionPay"
+    />
 
     <div
       v-else
@@ -175,7 +183,10 @@
               @choose="(day) => pressDay(patternIndex, day)"
             />
 
-            <!-- No pattern is the Async state, which has no time to show. -->
+            <!--
+              No pattern is the Async state, which has no
+              time to show.
+            -->
             <template v-if="pattern">
               <div class="tw-flex tw-items-center tw-gap-2">
                 <input
@@ -243,6 +254,7 @@
             :instructor="instructor"
             role="Instructor of record"
             @remove="removeInstructor(instructor.emplid)"
+            @open="openPerson(instructor.emplid)"
           />
           <p
             v-if="instructorsOnRecord.length === 0"
@@ -269,9 +281,10 @@
       </div>
 
       <!--
-        Alongside the instructor of record rather than folded away below, since
-        a discussion or a lab is usually run by the people in this list and the
-        SIS names no instructor of record on it at all.
+        Alongside the instructor of record rather than
+        folded away below, since a discussion or a lab is
+        usually run by the people in this list and the SIS
+        names no instructor of record on it at all.
       -->
       <div>
         <FieldHeader
@@ -286,6 +299,7 @@
             :instructor="instructor"
             :role="instructor.role"
             @remove="removeInstructor(instructor.emplid)"
+            @open="openPerson(instructor.emplid)"
           />
           <p
             v-if="assistants.length === 0"
@@ -391,6 +405,15 @@
           </p>
         </Disclosure>
 
+        <template v-if="costDetails">
+          <FieldDivider class="tw-mx-3" />
+          <SectionCostDisclosure
+            :details="costDetails"
+            :canEdit="schedule.canEditCosts"
+            @editPay="editSectionPay"
+          />
+        </template>
+
         <FieldDivider class="tw-mx-3" />
 
         <Disclosure label="Notes" :summary="notesSummary" :isMarked="hasNote">
@@ -403,6 +426,8 @@
             @input="edit({ notes: valueOf($event) })"
           />
         </Disclosure>
+
+        <PreviousEnrollment :offerings="previousOfferings" />
       </div>
     </div>
 
@@ -456,8 +481,9 @@
       </p>
 
       <!--
-        Reaching for Delete often means "not on Tuesdays" rather than "not at
-        all", so each meeting can go on its own from here.
+        Reaching for Delete often means "not on Tuesdays"
+        rather than "not at all", so each meeting can go on
+        its own from here.
       -->
       <div
         v-if="draft.meetings.length > 0"
@@ -507,8 +533,9 @@
     </p>
 
     <!--
-      Where Save stood. On a phone the sheet covers the screen, so this is the
-      only place the lock can be named.
+      Where Save stood. On a phone the sheet covers the
+      screen, so this is the only place the lock can be
+      named.
     -->
     <div
       v-if="isReadOnly"
@@ -593,11 +620,17 @@ import FieldHeader from "./FieldHeader.vue";
 import FieldLabel from "@/components/planning/FieldLabel.vue";
 import PersonField from "./PersonField.vue";
 import PersonLeaveChip from "./PersonLeaveChip.vue";
+import PreviousEnrollment from "./PreviousEnrollment.vue";
+import SectionCostDisclosure from "./SectionCostDisclosure.vue";
 import SectionFacts from "./SectionFacts.vue";
 import SegmentedControl, { type SegmentedOption } from "./SegmentedControl.vue";
 import { ComboBox, type ComboBoxOptionType } from "@/components/ComboBox";
 import { lastNameFirst } from "@/utils/lastNameFirst";
-import type { SisEmployee } from "@/types";
+import type { EnrollmentHistory, SisEmployee } from "@/types";
+import { sectionLabelerOf } from "../helpers/budgetRows";
+import { previousOfferingsOf } from "../helpers/enrollmentHistory";
+import { sectionCostDetailsOf } from "../helpers/sectionCostRows";
+import type { SectionPayField } from "../helpers/sectionPayOverrides";
 import { LockIcon } from "@/icons";
 import { colorOfType, labelOfComponent } from "@/utils/meetingTypeColors";
 import { DELIVERY_OPTIONS, labelOfDelivery } from "../constants/delivery";
@@ -625,34 +658,58 @@ import type { ScheduleEditor } from "../useScheduleEditor";
 const props = defineProps<{
   section: PlannedSection;
   schedule: ScheduleEditor;
-  /** Which department's catalogue the course picker offers. */
+  /**
+   * Which department's catalogue the course picker offers.
+   */
   groupId: number;
-  /** On a course a scheduler named, which the SIS has never published. */
+  /**
+   * On a course a scheduler named, which the SIS has never
+   * published.
+   */
   isUnofficial?: boolean;
-  /** The create is with the server, so Create must not fire again. */
+  /**
+   * The create is with the server, so Create must not fire
+   * again.
+   */
   isCreating?: boolean;
-  /** The term's sections, for reading a cross-list partner's cap. */
+  /**
+   * The term's sections, for reading a cross-list partner's
+   * cap.
+   */
   sections: PlannedSection[];
   roster: SisEmployee[];
   /** Leaves in this term, keyed by emplid. */
   leavesByEmplid: Map<number, TermLeave[]>;
-  /** Names the list this sheet was opened from, e.g. "Tue · 2 – 3p", if any. */
+  /**
+   * Names the list this sheet was opened from, e.g. "Tue ·
+   * 2 – 3p", if any.
+   */
   returnTo?: string | null;
-  /** Names the term in the cancel prompt, e.g. "Fall 2026". */
+  /**
+   * Names the term in the cancel prompt, e.g. "Fall 2026".
+   */
   termName?: string;
   /**
-   * A term that takes no edits: every field becomes its value, and everything
-   * that would have written is gone rather than dimmed.
+   * A term that takes no edits: every field becomes its
+   * value, and everything that would have written is gone
+   * rather than dimmed.
    */
   isReadOnly?: boolean;
+  /** Null until loaded, or when the term is not known. */
+  enrollmentHistory: EnrollmentHistory | null;
 }>();
 
 const emit = defineEmits<{
   close: [];
   back: [];
-  /** Create was pressed; the page writes the draft to the server. */
+  /**
+   * Create was pressed; the page writes the draft to the
+   * server.
+   */
   create: [];
-  /** Cancel was pressed on a section that was never created. */
+  /**
+   * Cancel was pressed on a section that was never created.
+   */
   discard: [];
   delete: [];
 }>();
@@ -693,7 +750,10 @@ const valueOf = (event: Event) =>
   (event.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement)
     .value;
 
-/** A code the import has never sent still shows, rather than reading as LEC. */
+/**
+ * A code the import has never sent still shows, rather than
+ * reading as LEC.
+ */
 const componentCodes = computed(() =>
   COMPONENT_CODES.includes(draft.value.component)
     ? COMPONENT_CODES
@@ -704,7 +764,8 @@ const componentSummary = computed(
   () => `${draft.value.component} · ${labelOfDelivery(draft.value.delivery)}`,
 );
 
-// one empty group when there are none, so the day buttons still show
+// one empty group when there are none, so the day buttons
+// still show
 const patterns = computed(() =>
   draft.value.meetings.length === 0 ? [undefined] : draft.value.meetings,
 );
@@ -735,7 +796,8 @@ const problemWith = (patternIndex: number) =>
   problems.value.find((problem) => problem.patternIndex === patternIndex)
     ?.message;
 
-// an emptied cap is NaN, not 0, so the field stays blank while retyped
+// an emptied cap is NaN, not 0, so the field stays blank
+// while retyped
 const capText = computed(() =>
   Number.isNaN(draft.value.enrollmentCap) ? "" : draft.value.enrollmentCap,
 );
@@ -773,7 +835,10 @@ const leavesFor = (option: ComboBoxOptionType): TermLeave[] =>
     ? (props.leavesByEmplid.get(option.id) ?? [])
     : [];
 
-/** "García, Ana", with their appointment under it; see `ComboBoxOptionType`. */
+/**
+ * "García, Ana", with their appointment under it; see
+ * `ComboBoxOptionType`.
+ */
 const optionFor = (person: SisEmployee) => ({
   id: person.emplid,
   label: lastNameFirst(person.name ?? String(person.emplid), person.lastName),
@@ -785,14 +850,16 @@ const ASSISTED_BEFORE = "Has assisted this course";
 const EVERYONE_ELSE = "Rest of the department";
 
 /**
- * The department, with whoever has had this course in the role being filled
- * at the top and the term they last had it beside their name. Staffing starts
- * from whoever taught it last, and a roster of seventy-four is too long to
- * scan for them.
+ * The department, with whoever has had this course in the
+ * role being filled at the top and the term they last had
+ * it beside their name. Staffing starts from whoever taught
+ * it last, and a roster of seventy-four is too long to scan
+ * for them.
  *
- * The two fields ask different questions. ANTH 1001 has ten primary
- * instructors and twenty-five assistants, so one shared "has taught" group
- * would bury the instructors under the TAs.
+ * The two fields ask different questions. ANTH 1001 has ten
+ * primary instructors and twenty-five assistants, so one
+ * shared "has taught" group would bury the instructors
+ * under the TAs.
  */
 function rosterGroupedBy(roles: string[], taughtLabel: string) {
   const history = new Map(
@@ -869,6 +936,53 @@ const instructorsOnRecord = computed(() =>
 
 const assistants = computed(() => assistantsOf(draft.value.instructors));
 
+const openPerson = (emplid: number) =>
+  props.schedule.dispatch({ type: "selectedPerson", emplid });
+
+const previousOfferings = computed(() =>
+  props.enrollmentHistory
+    ? previousOfferingsOf(
+        props.enrollmentHistory,
+        props.section.courseCode,
+        props.section.section,
+      )
+    : [],
+);
+
+const budgetCost = computed(() =>
+  props.schedule.view === "budget"
+    ? props.schedule.draftSectionCost(props.section)
+    : null,
+);
+
+const costDetails = computed(() => {
+  const cost = budgetCost.value;
+
+  return cost
+    ? sectionCostDetailsOf(
+        props.section,
+        cost,
+        sectionLabelerOf(props.sections),
+      )
+    : null;
+});
+
+const editSectionPay = (
+  emplid: number,
+  field: SectionPayField,
+  value: number | null,
+) =>
+  props.schedule.dispatch({
+    type: "sectionPayEdited",
+    edit: {
+      courseCode: draft.value.courseCode,
+      section: draft.value.section,
+      emplid,
+      field,
+      value,
+    },
+  });
+
 const hasNote = computed(() => draft.value.notes.trim() !== "");
 
 const notesSummary = computed(() => {
@@ -936,14 +1050,18 @@ const DAY_LABELS: Record<SisDay, string> = {
   sun: "Sun",
 };
 
-/** "Mon, Wed · 10:10 – 11a", as the delete prompt lists a meeting. */
+/**
+ * "Mon, Wed · 10:10 – 11a", as the delete prompt lists a
+ * meeting.
+ */
 const describePattern = (pattern: SisSectionMeeting) =>
   `${pattern.days.map((day) => DAY_LABELS[day]).join(", ")} · ${formatTimeRange(
     minutesFromClock(pattern.startTime),
     minutesFromClock(pattern.endTime),
   )}`;
 
-// straight through the draft to the saved edits: the prompt has already asked
+// straight through the draft to the saved edits: the prompt
+// has already asked
 function removeMeetingOnly(patternIndex: number) {
   props.schedule.dispatch({
     type: "meetingPatternRemoved",
@@ -964,10 +1082,11 @@ function confirmDelete() {
 
 <style scoped>
 /*
- * Every control on the sheet — text, number, time, select, textarea — wears
- * one border and one focus ring. Written here rather than repeated across
- * five kinds of element, and only the box: width and padding stay on the
- * element, where the field that needs a wider one can say so.
+ * Every control on the sheet — text, number, time, select,
+ * textarea — wears one border and one focus ring. Written
+ * here rather than repeated across five kinds of element,
+ * and only the box: width and padding stay on the element,
+ * where the field that needs a wider one can say so.
  */
 .field-control {
   min-height: 44px;

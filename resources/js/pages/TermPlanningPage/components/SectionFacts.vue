@@ -1,13 +1,14 @@
 <!--
-  The section as the term left it: every field of the sheet, read as its
-  value. Read-only is a subtraction rather than a graying-out, so a field
-  becomes plain text under the same label, in the same order — a scheduler
-  reading a closed term learns the sheet they will use on an open one. What
-  would have written is gone rather than dimmed: no remove ×, no Add, and
-  nothing blue, since blue is what says "you can act on this".
-
-  Nothing here takes a control, so the labels sit tighter against their values
-  than the same labels do on the form.
+  The section as the term left it: every field of the sheet,
+  read as its value. Read-only is a subtraction rather than
+  a graying-out, so a field becomes plain text under the
+  same label, in the same order — a scheduler reading a
+  closed term learns the sheet they will use on an open one.
+  What would have written is gone rather than dimmed: no
+  remove ×, no Add, and nothing blue, since blue is what
+  says "you can act on this".  Nothing here takes a control,
+  so the labels sit tighter against their values than the
+  same labels do on the form.
 -->
 <template>
   <div
@@ -58,6 +59,7 @@
           :key="instructor.emplid"
           :instructor="instructor"
           role="Instructor of record"
+          @open="emit('openPerson', instructor.emplid)"
         />
         <p
           v-if="instructorsOnRecord.length === 0"
@@ -69,9 +71,10 @@
     </div>
 
     <!--
-      Alongside the instructor of record rather than folded away below, since
-      a discussion or a lab is usually run by the people in this list and the
-      SIS names no instructor of record on it at all.
+      Alongside the instructor of record rather than folded
+      away below, since a discussion or a lab is usually run
+      by the people in this list and the SIS names no
+      instructor of record on it at all.
     -->
     <div>
       <FieldLabel class="tw-mb-px">Teaching assistants</FieldLabel>
@@ -81,6 +84,7 @@
           :key="instructor.emplid"
           :instructor="instructor"
           :role="instructor.role"
+          @open="emit('openPerson', instructor.emplid)"
         />
       </div>
       <p v-else class="tw-m-0 tw-text-[13px] tw-text-on-surface-variant">
@@ -90,7 +94,9 @@
 
     <FieldDivider />
 
-    <div class="tw-overflow-hidden tw-rounded-[10px] tw-bg-surface">
+    <div
+      class="tw-flex-none tw-overflow-hidden tw-rounded-[10px] tw-bg-surface"
+    >
       <Disclosure
         label="Component & delivery"
         :summary="`${section.component} · ${labelOfDelivery(section.delivery)}`"
@@ -137,6 +143,17 @@
         </div>
       </Disclosure>
 
+      <template v-if="costDetails">
+        <FieldDivider class="tw-mx-3" />
+        <SectionCostDisclosure
+          :details="costDetails"
+          :canEdit="canEditCosts"
+          @editPay="
+            (emplid, field, value) => emit('editPay', emplid, field, value)
+          "
+        />
+      </template>
+
       <FieldDivider class="tw-mx-3" />
 
       <Disclosure label="Notes" :summary="notesSummary">
@@ -151,6 +168,8 @@
           }}
         </p>
       </Disclosure>
+
+      <PreviousEnrollment :offerings="previousOfferings" />
     </div>
   </div>
 </template>
@@ -162,6 +181,10 @@ import FactValue from "@/components/planning/FactValue.vue";
 import FieldDivider from "@/components/planning/FieldDivider.vue";
 import FieldLabel from "@/components/planning/FieldLabel.vue";
 import PersonRecord from "./PersonRecord.vue";
+import PreviousEnrollment from "./PreviousEnrollment.vue";
+import SectionCostDisclosure from "./SectionCostDisclosure.vue";
+import type { PreviousOffering } from "../helpers/enrollmentHistory";
+import type { SectionCostDetails } from "../helpers/sectionCostRows";
 import { labelOfComponent } from "@/utils/meetingTypeColors";
 import { labelOfDelivery } from "../constants/delivery";
 import { daysMetSpelled } from "../helpers/scheduleDays";
@@ -171,11 +194,25 @@ import {
   formatTime,
   minutesFromClock,
 } from "../helpers/timeScale";
+import type { SectionPayField } from "../helpers/sectionPayOverrides";
 import type { PlannedSection, SisSectionMeeting } from "../types";
 
-const props = defineProps<{ section: PlannedSection }>();
+const props = defineProps<{
+  section: PlannedSection;
+  previousOfferings: PreviousOffering[];
+  costDetails: SectionCostDetails | null;
+  canEditCosts: boolean;
+}>();
 
-/** "9:45 – 11:00 AM": the half is written once, on the end that carries it. */
+const emit = defineEmits<{
+  openPerson: [emplid: number];
+  editPay: [emplid: number, field: SectionPayField, value: number | null];
+}>();
+
+/**
+ * "9:45 – 11:00 AM": the half is written once, on the end
+ * that carries it.
+ */
 const timeOf = (pattern: SisSectionMeeting) =>
   `${formatClock(minutesFromClock(pattern.startTime))} – ${formatTime(minutesFromClock(pattern.endTime))}`;
 

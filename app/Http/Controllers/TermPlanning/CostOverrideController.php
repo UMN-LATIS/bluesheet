@@ -1,0 +1,265 @@
+<?php
+
+namespace App\Http\Controllers\TermPlanning;
+
+use App\Group;
+use App\Http\Controllers\Controller;
+use App\Library\TermPlan\TermCode;
+use App\LocalCourse;
+use App\TermGradPerson;
+use App\TermPersonInput;
+use App\TermSectionPayOverride;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+
+class CostOverrideController extends Controller {
+    private const MONEY_RULES = ['numeric', 'decimal:0,2', 'min:0', 'max:99999999.99'];
+
+    private const FRACTION_RULES = ['numeric', 'decimal:0,4', 'between:0,5'];
+
+    private const DECIMAL_PERSON_INPUT_KEYS = [
+        'salary',
+        'fringeRate',
+        'hourlyRate',
+        'healthRate',
+        'tuitionPerHour',
+        'feeOffset',
+        'internationalOffset',
+        'perCreditPayment',
+    ];
+
+    private const PERSON_INPUT_COLUMN_BY_KEY = [
+        'notes' => 'notes',
+        'yearStarted' => 'year_started',
+        'courseReleases' => 'course_releases',
+        'releaseSource' => 'release_source',
+        'salary' => 'salary',
+        'fringeRate' => 'fringe_rate',
+        'hourlyRate' => 'hourly_rate',
+        'hours' => 'hours',
+        'healthRate' => 'health_rate',
+        'tuitionPerHour' => 'tuition_per_hour',
+        'feeOffset' => 'fee_offset',
+        'internationalOffset' => 'international_offset',
+        'perCreditPayment' => 'per_credit_payment',
+        'creditsTaught' => 'credits_taught',
+    ];
+
+    private const SECTION_PAY_COLUMN_BY_KEY = [
+        'salary' => 'salary',
+        'fringeRate' => 'fringe_rate',
+        'appointmentPercent' => 'appointment_percent',
+    ];
+
+    public function updateGradPerson(Request $request, Group $group, string $emplid) {
+        $academicOrg = $this->authorizeAndFindAcademicOrg($group);
+        $termCode = TermCode::fromRequest($request);
+        $emplid = $this->emplidOrNotFound($emplid);
+
+        $validated = $request->validate([
+            'hasFeeOffset' => ['present', 'boolean'],
+            'isInternational' => ['present', 'boolean'],
+        ]);
+        $hasFeeOffset = (bool) $validated['hasFeeOffset'];
+        $isInternational = (bool) $validated['isInternational'];
+        $isDefault = !$hasFeeOffset && !$isInternational;
+
+        $this->saveOrDelete(
+            TermGradPerson::class,
+            ['academic_org' => $academicOrg, 'term_code' => $termCode, 'emplid' => $emplid],
+            $isDefault ? null : [
+                'has_fee_offset' => $hasFeeOffset,
+                'is_international' => $isInternational,
+            ],
+        );
+
+        return [
+            'emplid' => $emplid,
+            'hasFeeOffset' => $hasFeeOffset,
+            'isInternational' => $isInternational,
+        ];
+    }
+
+    public function updatePersonInputs(Request $request, Group $group, string $emplid) {
+        $academicOrg = $this->authorizeAndFindAcademicOrg($group);
+        $termCode = TermCode::fromRequest($request);
+        $emplid = $this->emplidOrNotFound($emplid);
+
+        if (!$request->hasAny(array_keys(self::PERSON_INPUT_COLUMN_BY_KEY))) {
+            throw ValidationException::withMessages(['notes' => 'Send at least one person input.']);
+        }
+
+        $changes = $request->validate([
+            'notes' => ['sometimes', 'nullable', 'string', 'max:2000'],
+            'releaseSource' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'yearStarted' => ['sometimes', 'nullable', 'integer', 'between:1950,2100'],
+            'courseReleases' => ['sometimes', 'nullable', 'integer', 'between:0,20'],
+            'salary' => ['sometimes', 'nullable', ...self::MONEY_RULES],
+            'fringeRate' => ['sometimes', 'nullable', ...self::FRACTION_RULES],
+            'hourlyRate' => ['sometimes', 'nullable', ...self::MONEY_RULES],
+            'hours' => ['sometimes', 'nullable', 'integer', 'between:0,2080'],
+            'healthRate' => ['sometimes', 'nullable', ...self::FRACTION_RULES],
+            'tuitionPerHour' => ['sometimes', 'nullable', ...self::MONEY_RULES],
+            'feeOffset' => ['sometimes', 'nullable', ...self::MONEY_RULES],
+            'internationalOffset' => ['sometimes', 'nullable', ...self::MONEY_RULES],
+            'perCreditPayment' => ['sometimes', 'nullable', ...self::MONEY_RULES],
+            'creditsTaught' => ['sometimes', 'nullable', 'integer', 'between:0,40'],
+        ]);
+
+        $uniqueKey = ['academic_org' => $academicOrg, 'term_code' => $termCode, 'emplid' => $emplid];
+        $changedColumns = [];
+        foreach ($changes as $key => $value) {
+            $changedColumns[self::PERSON_INPUT_COLUMN_BY_KEY[$key]] = $this->normalizedPersonInput($key, $value);
+        }
+
+        $personInput = DB::transaction(fn() => $this->saveChangedPersonInputs($uniqueKey, $changedColumns));
+
+        return ['emplid' => $emplid, ...$this->personInputsOf($personInput)];
+    }
+
+    public function updateSectionPayOverride(Request $request, Group $group) {
+        $academicOrg = $this->authorizeAndFindAcademicOrg($group);
+        $termCode = TermCode::fromRequest($request);
+
+        if (!$request->hasAny(array_keys(self::SECTION_PAY_COLUMN_BY_KEY))) {
+            throw ValidationException::withMessages(['salary' => 'Send a salary, a fringe rate or an appointment percent.']);
+        }
+
+        $validated = $request->validate([
+            'courseCode' => ['required', 'string', 'max:20'],
+            'section' => ['required', 'string', 'max:10'],
+            'emplid' => ['required', 'integer', 'between:1,999999999'],
+            'salary' => ['sometimes', 'nullable', ...self::MONEY_RULES],
+            'fringeRate' => ['sometimes', 'nullable', ...self::FRACTION_RULES],
+            'appointmentPercent' => ['sometimes', 'nullable', 'numeric', 'decimal:0,2', 'between:0,100'],
+        ]);
+
+        $uniqueKey = [
+            'academic_org' => $academicOrg,
+            'term_code' => $termCode,
+            'course_code' => $validated['courseCode'],
+            'class_section' => $validated['section'],
+            'emplid' => (int) $validated['emplid'],
+        ];
+        $changedColumns = [];
+        foreach (self::SECTION_PAY_COLUMN_BY_KEY as $key => $column) {
+            if (array_key_exists($key, $validated)) {
+                $changedColumns[$column] = $validated[$key] === null ? null : (float) $validated[$key];
+            }
+        }
+
+        $override = DB::transaction(fn() => $this->saveChangedSectionPayOverride($uniqueKey, $changedColumns));
+
+        return [
+            'courseCode' => $validated['courseCode'],
+            'section' => $validated['section'],
+            'emplid' => $uniqueKey['emplid'],
+            'salary' => $override?->salary,
+            'fringeRate' => $override?->fringe_rate,
+            'appointmentPercent' => $override?->appointment_percent,
+        ];
+    }
+
+    private function saveChangedSectionPayOverride(array $uniqueKey, array $changedColumns): ?TermSectionPayOverride {
+        $override = TermSectionPayOverride::where($uniqueKey)->lockForUpdate()->first()
+            ?? TermSectionPayOverride::createOrFirst($uniqueKey, ['created_by' => auth()->id(), 'updated_by' => auth()->id()]);
+
+        $override->update([...$changedColumns, 'updated_by' => auth()->id()]);
+
+        $hasAnyPay = collect(self::SECTION_PAY_COLUMN_BY_KEY)
+            ->contains(fn(string $column) => $override->{$column} !== null);
+        if ($hasAnyPay) {
+            return $override;
+        }
+
+        $override->delete();
+
+        return null;
+    }
+
+    private function saveChangedPersonInputs(array $uniqueKey, array $changedColumns): ?TermPersonInput {
+        $personInput = TermPersonInput::where($uniqueKey)->lockForUpdate()->first()
+            ?? TermPersonInput::createOrFirst($uniqueKey, ['created_by' => auth()->id(), 'updated_by' => auth()->id()]);
+
+        $personInput->update([...$changedColumns, 'updated_by' => auth()->id()]);
+
+        $hasAnyInput = collect(self::PERSON_INPUT_COLUMN_BY_KEY)
+            ->contains(fn(string $column) => $personInput->{$column} !== null);
+        if ($hasAnyInput) {
+            return $personInput;
+        }
+
+        $personInput->delete();
+
+        return null;
+    }
+
+    /**
+     * Every key null when the person has no saved
+     * inputs.
+     */
+    private function personInputsOf(?TermPersonInput $personInput): array {
+        return array_map(
+            fn(string $column) => $personInput?->{$column},
+            self::PERSON_INPUT_COLUMN_BY_KEY,
+        );
+    }
+
+    private function normalizedPersonInput(string $key, mixed $input): mixed {
+        if ($input === null) {
+            return null;
+        }
+
+        if (in_array($key, self::DECIMAL_PERSON_INPUT_KEYS, true)) {
+            return (float) $input;
+        }
+
+        if (is_string($input)) {
+            return trim($input) === '' ? null : trim($input);
+        }
+
+        return (int) $input;
+    }
+
+    private function emplidOrNotFound(string $emplid): int {
+        abort_unless(ctype_digit($emplid) && (int) $emplid > 0 && strlen($emplid) <= 9, 404, 'An emplid is a positive whole number of at most nine digits.');
+
+        return (int) $emplid;
+    }
+
+    private function authorizeAndFindAcademicOrg(Group $group): int {
+        $this->authorize('editAnyCoursesForGroup', [LocalCourse::class, $group]);
+        abort_if($group->sis_dept_id === null, 404, 'This group has no department to estimate costs for.');
+
+        return (int) $group->sis_dept_id;
+    }
+
+    /**
+     * A null `$values` deletes the row.
+     *
+     * @param class-string<Model> $overrideClass
+     * @param array<string, mixed> $uniqueKey
+     * @param array<string, mixed>|null $values
+     */
+    private function saveOrDelete(string $overrideClass, array $uniqueKey, ?array $values): void {
+        if ($values === null) {
+            // A query delete() fires no model event, so
+            // laravel-auditing would record no deletion.
+            $overrideClass::where($uniqueKey)->first()?->delete();
+
+            return;
+        }
+
+        $override = $overrideClass::createOrFirst($uniqueKey, [
+            ...$values,
+            'created_by' => auth()->id(),
+            'updated_by' => auth()->id(),
+        ]);
+
+        if (!$override->wasRecentlyCreated) {
+            $override->update([...$values, 'updated_by' => auth()->id()]);
+        }
+    }
+}

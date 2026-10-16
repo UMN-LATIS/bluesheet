@@ -14,7 +14,7 @@ import type { HourSelection, Selection } from "../useScheduleEditor/types";
  * `sectionId` rather than `section`: that name is already a filter facet, and
  * a sheet opened on a section must not also check it in the filters.
  */
-export const SELECTION_KEYS = ["sectionId", "hour", "leaveId"];
+export const SELECTION_KEYS = ["sectionId", "hour", "leaveId", "personId"];
 
 /**
  * What a link can name. A grid block is left out: it stands for the section it
@@ -48,6 +48,9 @@ export function encodeSelection(selection: Selection | null): UrlQuery {
 
     case "leave":
       return { leaveId: String(selection.leaveId) };
+
+    case "person":
+      return { personId: String(selection.emplid) };
   }
 }
 
@@ -61,6 +64,9 @@ export function decodeSelection(query: UrlQuery): SheetSelection | null {
 
   const leaveId = decodePositiveId(query.leaveId);
   if (leaveId !== null) return { kind: "leave", leaveId };
+
+  const emplid = decodePositiveId(query.personId);
+  if (emplid !== null) return { kind: "person", emplid };
 
   return hour;
 }

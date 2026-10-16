@@ -91,7 +91,7 @@ interface BlockOwner {
  * would drop the listing from the page entirely, so the election is settled
  * again here among the partners actually on hand.
  */
-function blockOwners(sections: PlannedSection[]): Map<string, number> {
+export function blockOwners(sections: PlannedSection[]): Map<string, number> {
   const owners = new Map<string, BlockOwner>();
 
   for (const { id, crosslist } of sections) {

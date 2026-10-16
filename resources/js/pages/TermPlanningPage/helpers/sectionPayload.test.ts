@@ -43,7 +43,7 @@ describe("toSectionPayload", () => {
     expect(payload).not.toHaveProperty("crosslist");
   });
 
-  it("sends an instructor by emplid and role, not by the name it was shown", () => {
+  it("sends an instructor by emplid and role only", () => {
     expect(toSectionPayload(section).instructors).toEqual([
       { emplid: 4242, role: "PI" },
     ]);

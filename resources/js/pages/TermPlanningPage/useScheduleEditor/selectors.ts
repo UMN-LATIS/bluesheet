@@ -1,4 +1,6 @@
 import type { Meeting, PlannedSection, SisSection, TimeRange } from "../types";
+import { costInputsOf, type CostInputs } from "../helpers/costOverrides";
+import { estimateTermCost, type SectionCost } from "../helpers/termEstimate";
 import { FILTER_FACETS } from "../types";
 import { isEqual } from "lodash-es";
 import { type DayLayout, layOutDay } from "../helpers/dayLayout";
@@ -44,7 +46,8 @@ export function selectDraftSection(
   };
 }
 
-// compared by value, so retyping the original leaves the form clean
+// compared by value, so retyping the original leaves the
+// form clean
 export function selectIsDraftDirty(
   section: SisSection,
   state: EditorState,
@@ -63,13 +66,17 @@ export const selectHasEdits = (sectionId: number, state: EditorState) =>
   state.sectionEdits[sectionId] !== undefined;
 
 /**
- * How many values are checked across every facet, which is what the filter
- * button's badge counts and what the sidebar calls a filter being "active".
+ * How many values are checked across every facet, which is
+ * what the filter button's badge counts and what the
+ * sidebar calls a filter being "active".
  */
 export const selectActiveFilterCount = (state: EditorState): number =>
   FILTER_FACETS.reduce((sum, facet) => sum + state.filters[facet].length, 0);
 
-/** The chip or card the day list marks, if a section is what is selected. */
+/**
+ * The chip or card the day list marks, if a section is what
+ * is selected.
+ */
 export const selectSelectedSectionId = (state: EditorState): number | null =>
   state.selection?.kind === "section" ? state.selection.sectionId : null;
 
@@ -80,39 +87,123 @@ export const selectSelectedSectionId = (state: EditorState): number | null =>
 export const selectSelectedLeaveId = (state: EditorState): number | null =>
   state.selection?.kind === "leave" ? state.selection.leaveId : null;
 
-/** The block the week grid marks, if a block is what is selected. */
+export const selectSelectedEmplid = (state: EditorState): number | null =>
+  state.selection?.kind === "person" ? state.selection.emplid : null;
+
+/**
+ * The block the week grid marks, if a block is what is
+ * selected.
+ */
 export const selectSelectedMeetingId = (state: EditorState): string | null =>
   state.selection?.kind === "meeting" ? state.selection.meetingId : null;
 
-/** The hour whose own sheet is open, which is not the same as `markedHour`. */
+/**
+ * The hour whose own sheet is open, which is not the same
+ * as `markedHour`.
+ */
 export const selectOpenHour = (state: EditorState): HourSelection | null =>
   state.selection?.kind === "hour" ? state.selection : null;
 
-/** The hour list a selected section was picked from, for the sheet's back link. */
+/**
+ * The hour list a selected section was picked from, for the
+ * sheet's back link.
+ */
 export const selectHourReturnedTo = (
   state: EditorState,
 ): HourSelection | null =>
   state.selection?.kind === "section" ? (state.selection.from ?? null) : null;
 
 /**
- * The heatmap cell that reads as chosen: the hour whose sheet is open, or else
- * the hour a section was picked from, so the cell a scheduler came through
- * stays marked while that section's sheet stands in the hour sheet's place.
+ * The heatmap cell that reads as chosen: the hour whose
+ * sheet is open, or else the hour a section was picked
+ * from, so the cell a scheduler came through stays marked
+ * while that section's sheet stands in the hour sheet's
+ * place.
  */
 export const selectMarkedHour = (state: EditorState): HourSelection | null =>
   selectOpenHour(state) ?? selectHourReturnedTo(state);
 
-/** Every section as the reader sees it: the server's, this browser's edits on top. */
+/**
+ * Every section as the reader sees it: the server's, this
+ * browser's edits on top.
+ */
 export const selectLocalSections = (
   context: ScheduleContext,
   state: EditorState,
 ): PlannedSection[] =>
   context.sections.map((section) => selectLocalSection(section, state));
 
+/** In the server's order. */
+export const selectShownSections = (
+  context: ScheduleContext,
+  state: EditorState,
+): PlannedSection[] =>
+  filterSections(selectLocalSections(context, state), state.filters);
+
 /**
- * The sections the canvases draw, laid out in lanes. The filters are applied
- * here rather than by the page, so what the editor decides never has to travel
- * back in as context.
+ * By section id, over the whole term. Null until the cost
+ * assumptions have loaded.
+ */
+export function selectSectionCosts(
+  context: ScheduleContext,
+  state: EditorState,
+): Map<number, SectionCost> | null {
+  const assumptions = context.costAssumptions;
+  if (!assumptions) return null;
+
+  return estimateTermCost({
+    // Filtering first would charge a TA's appointment to a
+    // different section.
+    sections: selectLocalSections(context, state),
+    assumptions,
+    costInputs: costInputsOf(assumptions, state),
+  });
+}
+
+/**
+ * The cost of one section as its open draft would make it,
+ * with every other section as `selectSectionCosts` has it.
+ * Null until the cost assumptions have loaded, and for a
+ * section the term does not have yet.
+ */
+export function selectDraftSectionCost(
+  context: ScheduleContext,
+  state: EditorState,
+  section: SisSection,
+): SectionCost | null {
+  const assumptions = context.costAssumptions;
+  if (!assumptions) return null;
+
+  const sections = context.sections.map((candidate) =>
+    candidate.id === section.id
+      ? selectDraftSection(candidate, state)
+      : selectLocalSection(candidate, state),
+  );
+  const costs = estimateTermCost({
+    sections,
+    assumptions,
+    costInputs: costInputsOf(assumptions, state),
+  });
+
+  return costs.get(section.id) ?? null;
+}
+
+/** Null until the cost assumptions have loaded. */
+export function selectCostInputs(
+  context: ScheduleContext,
+  state: EditorState,
+): CostInputs | null {
+  const assumptions = context.costAssumptions;
+  if (!assumptions) return null;
+
+  return costInputsOf(assumptions, state);
+}
+
+/**
+ * The sections the canvases draw, laid out in lanes. The
+ * filters are applied here rather than by the page, so what
+ * the editor decides never has to travel back in as
+ * context.
  */
 export const selectPlaced = (
   context: ScheduleContext,
@@ -133,9 +224,10 @@ export function selectMeetings(
 }
 
 /**
- * The blocks for the section being created. It has no row on the server and
- * no entry in `context.sections`, so its draft is the only place its times
- * live and the grid reads them straight from here.
+ * The blocks for the section being created. It has no row
+ * on the server and no entry in `context.sections`, so its
+ * draft is the only place its times live and the grid reads
+ * them straight from here.
  */
 export function selectNewSectionMeetings(state: EditorState): Meeting[] {
   const patterns = state.drafts[NEW_SECTION_ID]?.meetings ?? [];
@@ -159,10 +251,11 @@ export function selectNewSectionMeetings(state: EditorState): Meeting[] {
 }
 
 /**
- * The section the sheet is open on, whether it was reached by its own chip or
- * by one of its blocks. A block's id is read rather than matched against the
- * blocks on the grid: changing the day in the sheet renames them, and the
- * sheet must not close when it does.
+ * The section the sheet is open on, whether it was reached
+ * by its own chip or by one of its blocks. A block's id is
+ * read rather than matched against the blocks on the grid:
+ * changing the day in the sheet renames them, and the sheet
+ * must not close when it does.
  */
 export function selectOpenSectionId(state: EditorState): number | null {
   const { selection } = state;
@@ -179,11 +272,13 @@ export const selectIsNewSectionSelected = (state: EditorState): boolean =>
   selectOpenSectionId(state) === NEW_SECTION_ID;
 
 /**
- * Whether this change would drop sheet edits nobody has saved. The shell asks
- * before letting it through, which is why this reports rather than acts.
+ * Whether this change would drop sheet edits nobody has
+ * saved. The shell asks before letting it through, which is
+ * why this reports rather than acts.
  *
- * A section being created counts only once it has a course: before that it is
- * a rectangle, and asking about it would make a stray click a question.
+ * A section being created counts only once it has a course:
+ * before that it is a rectangle, and asking about it would
+ * make a stray click a question.
  */
 export function selectAbandonsUnsavedWork(
   before: EditorState,
@@ -202,7 +297,10 @@ export function selectAbandonsUnsavedWork(
   return section !== undefined && selectIsDraftDirty(section, before);
 }
 
-/** A rectangle drawn on the grid that Create has not been pressed on yet. */
+/**
+ * A rectangle drawn on the grid that Create has not been
+ * pressed on yet.
+ */
 export const selectIsFilterPanelOpen = (
   context: ScheduleContext,
   state: EditorState,
@@ -212,10 +310,11 @@ export const selectIsCreatingSection = (state: EditorState): boolean =>
   state.drafts[NEW_SECTION_ID] !== undefined;
 
 /**
- * Whether the section being created is worth keeping: a rectangle with a
- * course picked for it. Read this rather than `selectIsCreatingSection`
- * wherever the reader is asked about losing work, or a stray click on the
- * grid becomes a question on the way out of the page.
+ * Whether the section being created is worth keeping: a
+ * rectangle with a course picked for it. Read this rather
+ * than `selectIsCreatingSection` wherever the reader is
+ * asked about losing work, or a stray click on the grid
+ * becomes a question on the way out of the page.
  */
 export const selectNewSectionHasCourse = (state: EditorState): boolean =>
   state.drafts[NEW_SECTION_ID]?.courseCode !== undefined;
@@ -223,7 +322,8 @@ export const selectNewSectionHasCourse = (state: EditorState): boolean =>
 export interface DayView {
   layout: DayLayout;
   /**
-   * A block being drawn or carried over this day; ids are null while drawing.
+   * A block being drawn or carried over this day; ids are
+   * null while drawing.
    */
   overlay:
     | (TimeRange & { meetingId: string | null; sectionId: number | null })
@@ -275,7 +375,8 @@ function selectDayView(
 }
 
 /**
- * Draws the resized meeting at its draft range without repacking its neighbors.
+ * Draws the resized meeting at its draft range without
+ * repacking its neighbors.
  */
 function withLiveResize(
   layout: DayLayout,

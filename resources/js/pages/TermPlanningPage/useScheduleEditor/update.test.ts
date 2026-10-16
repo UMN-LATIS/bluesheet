@@ -4,6 +4,17 @@ import {
   selectIsFilterPanelOpen,
   selectIsNewSectionSelected,
 } from "./selectors";
+import { costAssumptions } from "../helpers/costAssumptions.fixture";
+import type { GradPerson } from "@/types";
+import { gradPersonKeyOf } from "../helpers/costOverrides";
+import {
+  personInputKeyOf,
+  type PersonInputEdit,
+} from "../helpers/personInputs";
+import {
+  sectionPayEditKeyOf,
+  type SectionPayEdit,
+} from "../helpers/sectionPayOverrides";
 import { plannedSection } from "../helpers/plannedSection.fixture";
 import { NEW_SECTION_ID } from "./types";
 import type {
@@ -17,12 +28,21 @@ const emptyContext: ScheduleContext = {
   sections: [],
   isReadOnly: false,
   isWide: true,
+  costAssumptions: null,
 };
 
-/** The term as the server sent it; the editor places the blocks itself. */
+/**
+ * The term as the server sent it; the editor places the
+ * blocks itself.
+ */
 const contextOf = (
   ...sections: ReturnType<typeof plannedSection>[]
-): ScheduleContext => ({ sections, isReadOnly: false, isWide: true });
+): ScheduleContext => ({
+  sections,
+  isReadOnly: false,
+  isWide: true,
+  costAssumptions: null,
+});
 
 const after = (
   events: EditorEvent[],
@@ -35,12 +55,16 @@ const after = (
   );
 
 /**
- * The meeting patterns of the section being created, which is where a block
- * drawn on empty space lives until Create gives it a row.
+ * The meeting patterns of the section being created, which
+ * is where a block drawn on empty space lives until Create
+ * gives it a row.
  */
 const drawn = (state: EditorState) => state.drafts[NEW_SECTION_ID]?.meetings;
 
-/** A committed meeting drawn out on `dayIndex` from `from` to `to`. */
+/**
+ * A committed meeting drawn out on `dayIndex` from `from`
+ * to `to`.
+ */
 const draw = (dayIndex: number, from: number, to: number): EditorEvent[] => [
   { type: "pressedEmptySpace", dayIndex, minute: from },
   { type: "pointerMoved", dayIndex, minute: to },
@@ -267,7 +291,10 @@ describe("naming the meeting a gesture placed", () => {
 });
 
 describe("dragging a section's block", () => {
-  /** One section, Mon and Wed at 9, so a drag has a pattern to break up. */
+  /**
+   * One section, Mon and Wed at 9, so a drag has a pattern
+   * to break up.
+   */
   const monAndWed = () =>
     plannedSection(1, [
       { days: ["mon", "wed"], startTime: "09:00", endTime: "09:50" },
@@ -307,7 +334,8 @@ describe("dragging a section's block", () => {
 
     const state = after(
       [
-        // A press with no drag: the commit re-states the current placement.
+        // A press with no drag: the commit re-states the
+        // current placement.
         { type: "pressedMeeting", meetingId: "s1:thu:1140", minute: 1180 },
         { type: "released" },
       ],
@@ -721,6 +749,21 @@ describe("the URL", () => {
 
     expect(returned.state.selection).toEqual({ kind: "leave", leaveId: 42 });
   });
+
+  it("selecting a person writes their emplid to the URL", () => {
+    expect(step({ type: "selectedPerson", emplid: 5001 }).effects).toEqual([
+      {
+        type: "replaceUrlQuery",
+        query: { component: "LEC", view: "week", personId: "5001" },
+      },
+    ]);
+  });
+
+  it("a link naming a person restores that selection", () => {
+    const returned = step({ type: "urlChanged", query: { personId: "5001" } });
+
+    expect(returned.state.selection).toEqual({ kind: "person", emplid: 5001 });
+  });
 });
 
 describe("the sheet's draft", () => {
@@ -934,7 +977,8 @@ describe("days and times in the sheet", () => {
   it("saving collapses a day that ended up meeting twice at once", () => {
     const state = after(
       [
-        // "Add meeting time" lands on Monday, which the section already has.
+        // "Add meeting time" lands on Monday, which the
+        // section already has.
         { type: "meetingPatternAdded", sectionId: 1 },
         { type: "draftSaved", sectionId: 1 },
       ],
@@ -1110,7 +1154,10 @@ describe("sectionEditsPersisted", () => {
   const section = plannedSection(1, []);
   const context = contextOf(section);
 
-  /** A sheet edit, saved, which is how an edit reaches the overlay. */
+  /**
+   * A sheet edit, saved, which is how an edit reaches the
+   * overlay.
+   */
   const editAndSave = (notes: string): EditorEvent[] => [
     { type: "sectionFieldEdited", sectionId: 1, change: { notes } },
     { type: "draftSaved", sectionId: 1 },
@@ -1136,7 +1183,8 @@ describe("sectionEditsPersisted", () => {
   });
 
   it("keeps an edit made while the save was in flight", () => {
-    // "one" was the version sent; "two" was saved before the reply came back
+    // "one" was the version sent; "two" was saved before
+    // the reply came back
     const edited = after(
       [...editAndSave("one"), ...editAndSave("two")],
       initialState(),
@@ -1250,7 +1298,8 @@ describe("deleting a section", () => {
     { type: "selectedSection", sectionId: 1 },
   ]);
 
-  // an overlay left behind would be saved back, recreating the section
+  // an overlay left behind would be saved back, recreating
+  // the section
   it("takes the overlay and the draft with it", () => {
     const state = after([{ type: "sectionDeleted", sectionId: 1 }], edited);
 
@@ -1315,7 +1364,8 @@ describe("the import banner", () => {
     });
   });
 
-  // a course checked beforehand would hide most of what just arrived
+  // a course checked beforehand would hide most of what
+  // just arrived
   it("clears the filters so the arrivals are all on screen", () => {
     const narrowed = after(
       [{ type: "filterValuesAdded", facet: "course", values: ["ANTH-1001"] }],
@@ -1345,7 +1395,8 @@ describe("the import banner", () => {
       banner,
     );
 
-    // the filter would otherwise hold the canvas empty behind a badge
+    // the filter would otherwise hold the canvas empty
+    // behind a badge
     it("stops the section filter naming the sections it deleted", () => {
       const state = after([{ type: "importUndone" }], shown);
 
@@ -1365,7 +1416,8 @@ describe("the import banner", () => {
       ).toEqual(["3"]);
     });
 
-    // the delete has already happened, so there is nothing left to ask about
+    // the delete has already happened, so there is nothing
+    // left to ask about
     it("does not stop to ask about the open sheet's edits", () => {
       const context = contextOf(plannedSection(7, []));
       const typed = after(
@@ -1408,7 +1460,8 @@ describe("the import banner", () => {
     });
   });
 
-  // undo deletes the sections the import made, and would take the edit with them
+  // undo deletes the sections the import made, and would
+  // take the edit with them
   it.each<EditorEvent>([
     { type: "sectionCreated", sectionId: 9 },
     { type: "sectionDeleted", sectionId: 7 },
@@ -1417,8 +1470,9 @@ describe("the import banner", () => {
     expect(after([event], banner).lastImport).toBeNull();
   });
 
-  // the ids belong to the term that was left; undo would send them to the new
-  // one, match nothing, and clear the banner as if it had worked
+  // the ids belong to the term that was left; undo would
+  // send them to the new one, match nothing, and clear the
+  // banner as if it had worked
   it("goes when the page moves to another department or term", () => {
     expect(after([{ type: "contextChanged" }], banner).lastImport).toBeNull();
   });
@@ -1460,8 +1514,9 @@ describe("walking away from a section being created", () => {
     expect(drawn(state)).toBeUndefined();
   });
 
-  // the sheet renames its blocks as it edits them, which must not read as
-  // walking away from the section they belong to
+  // the sheet renames its blocks as it edits them, which
+  // must not read as walking away from the section they
+  // belong to
   it("editing its own days keeps it", () => {
     const state = after(
       [
@@ -1476,7 +1531,8 @@ describe("walking away from a section being created", () => {
     );
 
     expect(drawn(state)?.[0].days).toContain("thu");
-    // and the sheet stays open on it, though its blocks now have other ids
+    // and the sheet stays open on it, though its blocks now
+    // have other ids
     expect(selectIsNewSectionSelected(state)).toBe(true);
   });
 
@@ -1521,7 +1577,8 @@ describe("redrawing the times of a section being created", () => {
     ]);
   });
 
-  // redrawing used to replace the draft outright, losing the course
+  // redrawing used to replace the draft outright, losing
+  // the course
   it("keeps the course and everything else typed into the sheet", () => {
     const state = after(draw(3, 540, 590), inProgress);
 
@@ -1558,8 +1615,9 @@ describe("moving to another department or term", () => {
     expect(moved.selection).toBeNull();
   });
 
-  // the rectangle belongs to neither department, and Create would have posted
-  // it to whichever one the page landed on
+  // the rectangle belongs to neither department, and Create
+  // would have posted it to whichever one the page landed
+  // on
   it("drops a section drawn but never created", () => {
     const named = after(
       [
@@ -1675,7 +1733,8 @@ describe("asking before unsaved sheet edits are dropped", () => {
     expect(state.selection).toEqual(typed.selection);
   });
 
-  // retyping the value that was already there leaves nothing to discard
+  // retyping the value that was already there leaves
+  // nothing to discard
   it("does not ask when the form matches the section", () => {
     const section = plannedSection(1, []);
     const sameContext = contextOf(section);
@@ -1748,8 +1807,9 @@ describe("asking before unsaved sheet edits are dropped", () => {
     expect(state.selection).toEqual(typed.selection);
   });
 
-  // a held release used to leave the editor drawing, so a phantom block
-  // followed the pointer across the grid until the next press
+  // a held release used to leave the editor drawing, so a
+  // phantom block followed the pointer across the grid
+  // until the next press
   it("goes idle while it asks, and draws again once the answer is yes", () => {
     const held = after(
       [
@@ -1773,7 +1833,8 @@ describe("asking before unsaved sheet edits are dropped", () => {
     ]);
   });
 
-  // the back button had already rewritten it before the question went up
+  // the back button had already rewritten it before the
+  // question went up
   it("puts the address bar back when a held urlChanged is refused", () => {
     const wentBack = after([{ type: "urlChanged", query: {} }], typed, context);
     expect(wentBack.pendingDismissal?.event).toEqual({
@@ -1844,6 +1905,7 @@ describe("the write-error banner", () => {
       sections: [],
       isReadOnly: true,
       isWide: true,
+      costAssumptions: null,
     };
     const state = after(
       [{ type: "writeRefused", message: "This term is published." }],
@@ -1892,5 +1954,345 @@ describe("the filter panel", () => {
     );
 
     expect(selectIsFilterPanelOpen(locked, shut)).toBe(false);
+  });
+});
+
+describe("budget view", () => {
+  const editable: ScheduleContext = {
+    ...emptyContext,
+    costAssumptions: costAssumptions({ canEdit: true }),
+  };
+  const urlOf = (event: EditorEvent, state = initialState()) =>
+    update(state, event, emptyContext).effects[0];
+
+  it("writes view=budget and the open tab to the URL", () => {
+    expect(urlOf({ type: "viewSelected", view: "budget" })).toEqual({
+      type: "replaceUrlQuery",
+      query: expect.objectContaining({ view: "budget", tab: "sections" }),
+    });
+  });
+
+  it("writes the tab the reader picks", () => {
+    const onBudget = after([{ type: "viewSelected", view: "budget" }]);
+
+    expect(
+      urlOf({ type: "budgetTabSelected", tab: "calculator" }, onBudget),
+    ).toEqual({
+      type: "replaceUrlQuery",
+      query: expect.objectContaining({ tab: "calculator" }),
+    });
+  });
+
+  it("leaves the tab out of the URL on any other view", () => {
+    const effect = urlOf({ type: "viewSelected", view: "week" });
+
+    expect(effect?.type === "replaceUrlQuery" && "tab" in effect.query).toBe(
+      false,
+    );
+  });
+
+  it("opens the tab a link names", () => {
+    const state = after([
+      { type: "urlChanged", query: { view: "budget", tab: "calculator" } },
+    ]);
+
+    expect(state.budgetTab).toBe("calculator");
+  });
+
+  it("keeps the current tab when a link names none or an unknown one", () => {
+    const onCalculator = after([
+      { type: "budgetTabSelected", tab: "calculator" },
+    ]);
+
+    expect(
+      after([{ type: "urlChanged", query: { view: "budget" } }], onCalculator)
+        .budgetTab,
+    ).toBe("calculator");
+    expect(
+      after(
+        [{ type: "urlChanged", query: { view: "budget", tab: "nope" } }],
+        onCalculator,
+      ).budgetTab,
+    ).toBe("calculator");
+  });
+
+  it("writes typed comments into the section's edits, beside its other edits", () => {
+    const section = plannedSection(7, []);
+    const context = contextOf(section);
+    const state = after(
+      [
+        { type: "sectionNotesEdited", sectionId: 7, notes: "Ask Raman" },
+        { type: "sectionNotesEdited", sectionId: 7, notes: "Ask Raman?" },
+      ],
+      { ...initialState(), sectionEdits: { 7: { enrollmentCap: 40 } } },
+      context,
+    );
+
+    expect(state.sectionEdits[7]).toEqual({
+      enrollmentCap: 40,
+      notes: "Ask Raman?",
+    });
+  });
+
+  it("refuses typed comments on a published term", () => {
+    const state = after(
+      [{ type: "sectionNotesEdited", sectionId: 7, notes: "Ask Raman" }],
+      initialState(),
+      { ...contextOf(plannedSection(7, [])), isReadOnly: true },
+    );
+
+    expect(state.sectionEdits).toEqual({});
+  });
+
+  const salaryEdit = (value: number | null): PersonInputEdit => ({
+    emplid: 2,
+    field: "salary",
+    value,
+  });
+  const notesEdit = (value: string | null): PersonInputEdit => ({
+    emplid: 2,
+    field: "notes",
+    value,
+  });
+  const sectionPayEdit = (value: number | null): SectionPayEdit => ({
+    courseCode: "ANTH-1001",
+    section: "002",
+    emplid: 2,
+    field: "salary",
+    value,
+  });
+  const gradPersonEdit = (isInternational: boolean): GradPerson => ({
+    emplid: 10,
+    hasFeeOffset: false,
+    isInternational,
+  });
+
+  const costEditKinds: {
+    name: string;
+    overlay: "personInputEdits" | "gradPersonEdits" | "sectionPayEdits";
+    key: string;
+    edited: (version: number) => EditorEvent;
+    persisted: (version: number) => EditorEvent;
+    version: (version: number) => unknown;
+  }[] = [
+    {
+      name: "person salary",
+      overlay: "personInputEdits",
+      key: personInputKeyOf(2, "salary"),
+      edited: (version) => ({
+        type: "personInputEdited",
+        edit: salaryEdit(version),
+      }),
+      persisted: (version) => ({
+        type: "personInputEditsPersisted",
+        key: personInputKeyOf(2, "salary"),
+        saved: salaryEdit(version),
+      }),
+      version: salaryEdit,
+    },
+    {
+      name: "person input",
+      overlay: "personInputEdits",
+      key: personInputKeyOf(2, "notes"),
+      edited: (version) => ({
+        type: "personInputEdited",
+        edit: notesEdit(String(version)),
+      }),
+      persisted: (version) => ({
+        type: "personInputEditsPersisted",
+        key: personInputKeyOf(2, "notes"),
+        saved: notesEdit(String(version)),
+      }),
+      version: (version) => notesEdit(String(version)),
+    },
+    {
+      name: "grad person",
+      overlay: "gradPersonEdits",
+      key: gradPersonKeyOf(10),
+      edited: (version) => ({
+        type: "gradPersonEdited",
+        edit: gradPersonEdit(version === 1),
+      }),
+      persisted: (version) => ({
+        type: "gradPersonEditsPersisted",
+        key: gradPersonKeyOf(10),
+        saved: gradPersonEdit(version === 1),
+      }),
+      version: (version) => gradPersonEdit(version === 1),
+    },
+    {
+      name: "section pay",
+      overlay: "sectionPayEdits",
+      key: sectionPayEditKeyOf(sectionPayEdit(1)),
+      edited: (version) => ({
+        type: "sectionPayEdited",
+        edit: sectionPayEdit(version),
+      }),
+      persisted: (version) => ({
+        type: "sectionPayEditsPersisted",
+        key: sectionPayEditKeyOf(sectionPayEdit(1)),
+        saved: sectionPayEdit(version),
+      }),
+      version: sectionPayEdit,
+    },
+  ];
+
+  describe.each(costEditKinds)("a $name edit", (kind) => {
+    it("is ignored before the cost assumptions load", () => {
+      expect(after([kind.edited(1)])[kind.overlay]).toEqual({});
+    });
+
+    it("is ignored from someone who cannot edit costs", () => {
+      const viewOnly = {
+        ...emptyContext,
+        costAssumptions: costAssumptions({ canEdit: false }),
+      };
+
+      expect(
+        after([kind.edited(1)], initialState(), viewOnly)[kind.overlay],
+      ).toEqual({});
+    });
+
+    it("is recorded on a published term, whose sections stay locked", () => {
+      const state = after([kind.edited(1)], initialState(), {
+        ...editable,
+        isReadOnly: true,
+      });
+
+      expect(state[kind.overlay]).toEqual({ [kind.key]: kind.version(1) });
+    });
+
+    it("is recorded from someone who can edit costs", () => {
+      const state = after([kind.edited(1)], initialState(), editable);
+
+      expect(state[kind.overlay]).toEqual({ [kind.key]: kind.version(1) });
+    });
+
+    it("drops once saved, but a newer edit made while the save was in flight stays", () => {
+      const edited = after([kind.edited(1)], initialState(), editable);
+      const persisted = after([kind.persisted(1)], edited, editable);
+      const newer = after(
+        [kind.edited(0), kind.persisted(1)],
+        edited,
+        editable,
+      );
+
+      expect(persisted[kind.overlay]).toEqual({});
+      expect(newer[kind.overlay]).toEqual({ [kind.key]: kind.version(0) });
+    });
+
+    it("drops the saved edit even after the term locked mid-save", () => {
+      const edited = after([kind.edited(1)], initialState(), editable);
+      const persisted = after([kind.persisted(1)], edited, {
+        ...editable,
+        isReadOnly: true,
+      });
+
+      expect(persisted[kind.overlay]).toEqual({});
+    });
+  });
+
+  it("keeps each person input field and each person's fields apart", () => {
+    const state = after(
+      [
+        { type: "personInputEdited", edit: notesEdit("a") },
+        {
+          type: "personInputEdited",
+          edit: { emplid: 2, field: "yearStarted", value: 2019 },
+        },
+        {
+          type: "personInputEdited",
+          edit: { emplid: 3, field: "notes", value: "b" },
+        },
+      ],
+      initialState(),
+      editable,
+    );
+
+    expect(Object.keys(state.personInputEdits).sort()).toEqual([
+      "2:notes",
+      "2:yearStarted",
+      "3:notes",
+    ]);
+  });
+
+  it("keeps a person input edit when a save of a different value for the same field comes back", () => {
+    const edited = after(
+      [{ type: "personInputEdited", edit: notesEdit("b") }],
+      initialState(),
+      editable,
+    );
+    const state = after(
+      [
+        {
+          type: "personInputEditsPersisted",
+          key: personInputKeyOf(2, "notes"),
+          saved: notesEdit("a"),
+        },
+      ],
+      edited,
+      editable,
+    );
+
+    expect(state.personInputEdits).toEqual({
+      [personInputKeyOf(2, "notes")]: notesEdit("b"),
+    });
+  });
+
+  it("starts the grad scenario with a fee offset, domestic, and no credits", () => {
+    expect(initialState().gradScenario).toEqual({
+      hasFeeOffset: true,
+      isInternational: false,
+      creditsTaught: 0,
+    });
+  });
+
+  it("merges a grad scenario change over the rest of the scenario, even for someone who cannot edit costs", () => {
+    const state = after([
+      { type: "gradScenarioEdited", change: { creditsTaught: 3 } },
+      { type: "gradScenarioEdited", change: { isInternational: true } },
+    ]);
+
+    expect(state.gradScenario).toEqual({
+      hasFeeOffset: true,
+      isInternational: true,
+      creditsTaught: 3,
+    });
+  });
+
+  it("drops unsaved cost edits and person notes on moving to another department or term", () => {
+    const edited = after(
+      [
+        { type: "personInputEdited", edit: salaryEdit(1) },
+        { type: "gradPersonEdited", edit: gradPersonEdit(true) },
+        { type: "personInputEdited", edit: notesEdit("a") },
+      ],
+      initialState(),
+      editable,
+    );
+    const moved = after([{ type: "contextChanged" }], edited, editable);
+
+    expect(moved.gradPersonEdits).toEqual({});
+    expect(moved.personInputEdits).toEqual({});
+  });
+
+  it("copies typed comments into an open sheet's draft, so Save keeps them", () => {
+    const context = contextOf(plannedSection(7, []));
+    const state = after(
+      [
+        { type: "selectedSection", sectionId: 7 },
+        {
+          type: "sectionFieldEdited",
+          sectionId: 7,
+          change: { notes: "From the sheet" },
+        },
+        { type: "sectionNotesEdited", sectionId: 7, notes: "From the row" },
+        { type: "draftSaved", sectionId: 7 },
+      ],
+      initialState(),
+      context,
+    );
+
+    expect(state.sectionEdits[7]?.notes).toBe("From the row");
   });
 });

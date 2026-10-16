@@ -17,6 +17,7 @@ export { default as NoteIcon } from "./NoteIcon.vue";
 export { default as PencilIcon } from "./PencilIcon.vue";
 export { default as QuestionIcon } from "./QuestionIcon.vue";
 export { default as SparklesIcon } from "./SparklesIcon.vue";
+export { default as UndoIcon } from "./UndoIcon.vue";
 export { default as VDotsIcon } from "./VDotsIcon.vue";
 export { default as WarningIcon } from "./WarningIcon.vue";
 export { default as XIcon } from "./XIcon.vue";
