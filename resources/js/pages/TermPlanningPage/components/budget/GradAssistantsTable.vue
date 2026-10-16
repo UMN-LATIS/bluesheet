@@ -24,7 +24,12 @@
         <BudgetCell role="cell">{{ row.roleLabel }}</BudgetCell>
 
         <BudgetCell role="cell" class="tw-justify-center">
-          <CheckIcon v-if="row.isAbd" role="img" aria-label="ABD" />
+          <CircleCheckIcon
+            v-if="row.isAbd"
+            role="img"
+            aria-label="ABD"
+            class="tw-text-green-600"
+          />
         </BudgetCell>
 
         <BudgetCell role="cell" class="tw-p-0">
@@ -140,7 +145,7 @@ import { computed } from "vue";
 import BudgetCell from "./BudgetCell.vue";
 import BudgetTable, { type BudgetColumn } from "./BudgetTable.vue";
 import PersonTableRow from "./PersonTableRow.vue";
-import { CheckIcon } from "@/icons";
+import { CircleCheckIcon } from "@/icons";
 import CellSubline from "./CellSubline.vue";
 import IntegerInputCell from "./IntegerInputCell.vue";
 import GradCheckbox from "./GradCheckbox.vue";
